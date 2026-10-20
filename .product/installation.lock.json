@@ -1,0 +1,42 @@
+{
+  "schema": "product-definition-as-code/installation-lock/v1alpha1",
+  "version": "0.22.0",
+  "providers": {
+    "codex": {
+      "files": {
+        ".agents/commands/product/audit.md": "sha256:be966d3a7d7a717dab30477c3aadc6659c6418777665e2ede1b90d6b848ec4ce",
+        ".agents/commands/product/bind.md": "sha256:67765e598a8b59934e588a929ee443d10a03679f2352413f1607046cd6280136",
+        ".agents/commands/product/change.md": "sha256:b5e8262530cc1349c3cb7216a05a590f7c27fffe69387abed6aa5d4a720ca493",
+        ".agents/commands/product/define.md": "sha256:3ad1d90480b10112b44f4bf49754ce26a0135099cae8815ecf49b16d7fd2f0c3",
+        ".agents/commands/product/explore.md": "sha256:5686fefba2e22bccc3e9c7f7bb543994d52ed66cf0939bf7c8c9620d655b79f8",
+        ".agents/commands/product/impact.md": "sha256:311dd5d24d43f801fdcc28285bf881381e5df1d8431bf0e9ea63dd65bdd9b433",
+        ".agents/commands/product/recover.md": "sha256:5bd484119ca23aaf3c849c8f9d355031666253fb2fb6fdb1a925ec25b4ddb9dc",
+        ".agents/commands/product/refine.md": "sha256:7ce4572c78a75e6ced36ade45feb3bb5756700db9f3b0aee0323e537920ffa45",
+        ".agents/skills/analyze-product-change/references/change-template-guide.md": "sha256:ab2bf035d58e31b54f6ed9a41b6e6a3761305e4592a78a4cc0d4c7a43d931d77",
+        ".agents/skills/analyze-product-change/references/operations-checklist.md": "sha256:fbf52a33f7957cdbd0cd583744852c5c23331e472b3c5f891eaeeba9ea39d182",
+        ".agents/skills/analyze-product-change/SKILL.md": "sha256:2b55ea154bbbc6c5da116b6756eb3c494da68dd757de7297717f2de4b03a947a",
+        ".agents/skills/audit-product-model/references/diagnostic-codes.md": "sha256:dc6cedff0ef7f6cf826f6d97a1c4e1bbed7267976e0dee31a976b3196367e845",
+        ".agents/skills/audit-product-model/references/finding-classification.md": "sha256:77b68630049b31c81eb28245d0e2a5517fdea95d690940476eb69cf4b8a4d61a",
+        ".agents/skills/audit-product-model/SKILL.md": "sha256:2d36cb8cd1c917e4cf43e74132249ac65dcd698eaba5d26b38337b4dda5436e8",
+        ".agents/skills/bind-consumers/references/openspec.md": "sha256:2b03de0b705a4a122b3bdf91d2f45f510588d01c88ced67b8b4124401ebb5e0d",
+        ".agents/skills/bind-consumers/references/speckit.md": "sha256:30c58fe762c78b6a366ac16db01f49ad6787c72b3aa3acb7907a2939b716d3e1",
+        ".agents/skills/bind-consumers/SKILL.md": "sha256:d67aa971361a602f7e396172e42ee77ec73f461badf2b450091a47d583836ff4",
+        ".agents/skills/define-product/references/authoring-order.md": "sha256:ade820324a0e0dd55a8d851bbf139f3cf05fe3d59bc05f7a9dc51d8ebde2f22d",
+        ".agents/skills/define-product/SKILL.md": "sha256:34b559ad081a0a23fbc13a057bf729eb915d204133864a5b0d0506546c9c4214",
+        ".agents/skills/explore-product/references/exploration-heuristics.md": "sha256:fe6906c46548b995be6bb0600c1d0cf1ee21c18494d2afe604bec38392a25656",
+        ".agents/skills/explore-product/SKILL.md": "sha256:72751b48bafc3560eebf7afe13e75a1d0cccb3199e961c9847eb3c77eec74c19",
+        ".agents/skills/recover-product/references/artifact-extraction.md": "sha256:5dcfa68342b182bbbb7fcec4548fd010966da4c3eb148bad66b036d8a04b8031",
+        ".agents/skills/recover-product/references/completion-criteria.md": "sha256:459bce60259a8443a99cd33752c34145e0558a5b01bc602f912d5382579a4f95",
+        ".agents/skills/recover-product/references/evidence-classification.md": "sha256:b17b4847dd30af12655593de395f6260abf5b41874b46f698c1c5814483ee795",
+        ".agents/skills/recover-product/references/evidence-sources.md": "sha256:640eca65074a6a3d5c16bbfe32892997fe73f753ba199f18bed602124e773491",
+        ".agents/skills/recover-product/references/provenance-format.md": "sha256:2d34ba517e321874474b40bd4b6b05b7648edb693ecca264f8fe9de5d47bab11",
+        ".agents/skills/recover-product/references/reconciliation.md": "sha256:615e8e7c175ae9f55b508fa3afaaadbf02d4f9745be2a387bdb88d02d092408e",
+        ".agents/skills/recover-product/references/recovery-workflow.md": "sha256:e7ed0f193c5296589cf681044c06c19fcba8f9cc8de6b02aa637eee25dc751cb",
+        ".agents/skills/recover-product/SKILL.md": "sha256:7fcf9589155224f6f005b22b0ffcaef97fc13604642b57aeef8310a724174699",
+        ".agents/skills/refine-product/references/host-adapter.md": "sha256:8337f468081035209d8856dbf459cb0bc846e8a19f5f6bafcc781b719aab642e",
+        ".agents/skills/refine-product/references/question-writing.md": "sha256:086cc174d10cebd76de18492ae19966d43b1238fe04aeeed8f3736450e8fb091",
+        ".agents/skills/refine-product/SKILL.md": "sha256:0c6637f521ab4bced502cff84c5546475bdd9b649242cb67a370e829eb5f4f91"
+      }
+    }
+  }
+}

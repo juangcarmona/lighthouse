@@ -1,0 +1,11 @@
+{
+  "name": "@juangcarmona/lighthouse",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lighthouse adoption and verification CLI",
+  "files": ["src/lighthouse.mjs", "assets", "README.md"],
+  "bin": {
+    "lighthouse": "./src/lighthouse.mjs"
+  }
+}

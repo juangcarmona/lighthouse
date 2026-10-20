@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-manifest.schema.json",
+  "title": "Lighthouse repository manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "baseline", "product", "profiles", "integrations", "managed"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "baseline": {"const": "0.1.0"},
+    "product": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$"},
+    "profiles": {"type": "array", "items": {"enum": ["node-tooling", "dotnet-backend", "visual-theme"]}, "uniqueItems": true},
+    "integrations": {"type": "object", "additionalProperties": false, "required": ["productShape", "arcShape", "agenticSdlc"], "properties": {"productShape": {"$ref": "#/$defs/pin"}, "arcShape": {"$ref": "#/$defs/pin"}, "agenticSdlc": {"$ref": "#/$defs/pin"}}},
+    "managed": {"const": ["LIGHTHOUSE.md"]}
+  },
+  "$defs": {
+    "pin": {"type": ["string", "null"], "pattern": "^(?:\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})$"}
+  }
+}

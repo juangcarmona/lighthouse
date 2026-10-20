@@ -1,0 +1,61 @@
+{
+  "provider": "openspec",
+  "version": "0.22.0",
+  "openspecVersion": "1.14.3",
+  "installedAt": "2026-10-20T12:52:37.214Z",
+  "configPath": "openspec/config.yaml",
+  "ciExamplePath": ".product/integrations/openspec.ci.yml",
+  "managed": {
+    "rules": {
+      "proposal": [
+        "State which PDaC artifacts this change touches, each with a citation payload emitted by `npx prodshape cite --id <ID> --digest <digest>` and wrapped in the document native comment (`<!-- ... -->` in Markdown). Never write a citation record by hand.",
+        "Find the impacted artifacts as a separate step, before writing any proposal content. Read the whole product definition (docs/product/model by default), compare it with what this change wants — the backlog item behind it, if there is one — and list every artifact the change depends on, alters or contradicts. Then widen the list: run `npx prodshape impact <ID>` on each artifact you found and check its direct and indirect neighbours. Put the resulting list in the proposal, cite every impacted artifact from each document that uses it (proposal, specs, design, tasks), and name any neighbour you checked and left out.",
+        "If this change's goals contradict the product definition, or need behaviour it does not describe, that is product-definition drift. Record it in the proposal under a 'Product definition drift' note naming the artifacts involved, with the marker `<!-- pdac-drift ids=\"<ID>[, <ID>...]\" summary=\"<one line>\" -->` on its own line so `npx prodshape drift` can list it. The decision is human: the developer and the product owner agree whether to propose a Product Change or adjust this change. Never fix drift quietly, drop or weaken a citation to hide it, or write around the conflict.",
+        "If the change implements altered product behaviour, name the Product Change (CHG id) whose applied or accepted artifacts it implements. If no overlay-validated, apply-authorised Product Change exists yet, stop and ask for one instead of proceeding. A spec-driven OpenSpec change is not the Product Change; product intent travels through a Product Change, under docs/product/changes or hosted by a product-change OpenSpec change.",
+        "Every document of this change must end up bound or exempt, each with an explicit declaration: declare `pdac-scope: cited` on a line of its own and cite the canonical text the document depends on, or declare `pdac-scope: none` with a non-empty reason (`pdac-scope-reason: <why>` in frontmatter, or `<!-- pdac-scope: none reason=\"<why>\" -->`) when a human judges the document has no product-semantic dependency. Citations alone never bind, and never declare an exemption just because citations are missing."
+      ],
+      "specs": [
+        "Every requirement derived from canonical product text MUST carry a citation to every PDaC artifact it derives from — not only the closest one — one citation per line, placed after the requirement text and before the first scenario. Never place citations between the requirement heading and the requirement text; OpenSpec reads the first paragraph as the requirement.",
+        "Cite a specific verification scenario with an anchor when the requirement maps to one (anchor=\"<scenario id>\").",
+        "Never paraphrase canonical text as if it were new; either cite it inline or embed it in a marker-block citation (<!-- pdac:cite ... --> canonical text <!-- /pdac:cite -->).",
+        "Never invent artifact ids or digests. Read them with `npx prodshape inspect <ID>`."
+      ],
+      "design": [
+        "When a design decision depends on canonical product text, cite the artifact it depends on."
+      ],
+      "tasks": [
+        "A task that depends on a business rule's parameter cites the rule itself, not only the requirement derived from it: staleness follows the cited artifact's own digest, never its relationships.",
+        "A task that changes cited behaviour must include a follow-up task to refresh the affected citations.",
+        "Never infer implementation, verification, release or deployment from Product Change status; record that evidence in the delivery workflow."
+      ]
+    },
+    "operations": {
+      "apply": [
+        "Before finishing, run `npx prodshape citations verify --provider openspec` and fix every stale, tampered or unresolved citation, every unclassified document, every bound document without citations and every exemption without a reason. Refresh a stale digest by re-running `npx prodshape inspect <ID>`; never delete a citation or declare `pdac-scope: none` to silence a diagnostic."
+      ],
+      "archive": [
+        "Run `npx prodshape citations verify --provider openspec` one final time. Archive only when every document is bound or exempt and every citation is current."
+      ]
+    }
+  },
+  "productSchema": {
+    "name": "product-change",
+    "requiresOpenspec": "1.7.0",
+    "files": {
+      "openspec/schemas/product-change/schema.yaml": "sha256:b1442da5f418a81d959b9294848923dffb873124719116ff5efbb317563106bc",
+      "openspec/schemas/product-change/scripts/product-apply.mjs": "sha256:4493c80d2892aa84f1607023adbff74c3e2f256a63cfbb3d549673f1d7018911",
+      "openspec/schemas/product-change/scripts/product-validate.mjs": "sha256:c423f92f308a9b9e3bc7c70663f7dc33e93bc85a9d6c5fb91dfb1f91a91f55c1",
+      "openspec/schemas/product-change/templates/change.md": "sha256:af4fd10511f53a83ff5f452981178d62b74ae7128f8a84f1ad5ca5bd1b6748bb",
+      "openspec/schemas/product-change/templates/proposal.md": "sha256:150c2d313f939e1ceeac3416b073cc076487c990868a5cb1a22d2781a8b01f3d"
+    }
+  },
+  "recoverySchema": {
+    "name": "product-recovery",
+    "requiresOpenspec": "1.7.0",
+    "files": {
+      "openspec/schemas/product-recovery/schema.yaml": "sha256:ab6206a1a7fa43e233d2074c9f99e68c4e765807be6de2a948e844c798a4461d",
+      "openspec/schemas/product-recovery/templates/brief.md": "sha256:b00607c5c3f55fef6021c2377eaf52b189571f484aa2645c252f941a3d94f57b",
+      "openspec/schemas/product-recovery/templates/report.md": "sha256:b38d3a49f51f9b1a18b4ba7ddb3998ba46b625cdbec521a811f4c758f432fa14"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+:root {
+  color-scheme: light dark;
+
+  /* Lighthouse asset palette: night, navy, signal blue and clear whites. */
+  --lh-white: #ffffff;
+  --lh-night: #0d0f17;
+  --lh-navy: #111b2b;
+  --lh-slate: #26344b;
+  --lh-blue-deep: #1f6fd1;
+  --lh-blue: #4da3ff;
+  --lh-blue-light: #8fc2ff;
+  --lh-ice: #f8faff;
+  --lh-slate-light: #dce1eb;
+  --lh-slate-muted: #aab6c9;
+
+  --lh-canvas: light-dark(var(--lh-ice), var(--lh-night));
+  --lh-surface: light-dark(var(--lh-white), var(--lh-navy));
+  --lh-surface-muted: light-dark(var(--lh-slate-light), var(--lh-slate));
+  --lh-text: light-dark(var(--lh-night), var(--lh-ice));
+  --lh-text-muted: light-dark(var(--lh-slate), var(--lh-slate-muted));
+  --lh-border: light-dark(var(--lh-slate-light), var(--lh-slate));
+  --lh-border-strong: light-dark(var(--lh-slate-muted), var(--lh-blue-light));
+  --lh-action: light-dark(var(--lh-blue-deep), var(--lh-blue));
+  --lh-on-action: light-dark(var(--lh-white), var(--lh-night));
+  --lh-action-hover: light-dark(var(--lh-night), var(--lh-blue-light));
+  --lh-action-soft: light-dark(var(--lh-slate-light), var(--lh-slate));
+  --lh-focus: light-dark(var(--lh-blue-deep), var(--lh-blue-light));
+
+  --lh-positive: light-dark(#195c40, #96e4ad);
+  --lh-positive-surface: light-dark(#e3f3e9, #173e2b);
+  --lh-caution: light-dark(#765211, #f8cf79);
+  --lh-caution-surface: light-dark(#fff2d7, #473612);
+  --lh-negative: light-dark(#9a3434, #ffb6ab);
+  --lh-negative-surface: light-dark(#fce8e5, #492825);
+
+  --lh-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --lh-font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --lh-text-small: 0.8125rem;
+  --lh-text-base: 0.9375rem;
+  --lh-text-large: 1.125rem;
+  --lh-leading: 1.55;
+  --lh-space-1: 0.25rem;
+  --lh-space-2: 0.5rem;
+  --lh-space-3: 0.75rem;
+  --lh-space-4: 1rem;
+  --lh-space-6: 1.5rem;
+  --lh-space-8: 2rem;
+  --lh-space-12: 3rem;
+  --lh-radius-control: 0.375rem;
+  --lh-radius-panel: 0.625rem;
+  --lh-control-height: 2.5rem;
+  --lh-shadow-overlay: 0 16px 48px rgb(0 0 0 / 18%);
+  --lh-motion-fast: 120ms;
+}
+
+[data-lh-theme="light"] { color-scheme: light; }
+[data-lh-theme="dark"] { color-scheme: dark; }
+[data-lh-theme="system"] { color-scheme: light dark; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --lh-motion-fast: 0ms; }
+}

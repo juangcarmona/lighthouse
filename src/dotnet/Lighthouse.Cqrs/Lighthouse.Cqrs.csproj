@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>JuanGCarmona.Lighthouse.Cqrs</RootNamespace>
+  </PropertyGroup>
+</Project>

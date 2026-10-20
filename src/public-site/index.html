@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" data-lh-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Lighthouse is an adoptable engineering baseline for practical, AI-driven software development.">
+  <title>Lighthouse | A clear path to engineering excellence</title>
+  <link id="site-favicon" rel="icon" href="assets/lighthouse-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/lighthouse.css">
+  <link rel="stylesheet" href="site.css">
+  <script type="module" src="site.js"></script>
+</head>
+<body class="lh-root">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="site-sidebar" data-expanded="false">
+    <div class="sidebar-top">
+      <div class="sidebar-account">
+        <a class="sidebar-brand" href="#top" aria-label="Lighthouse home">
+          <img class="sidebar-brand-icon" data-theme-asset="icon" data-theme-light="assets/lighthouse-icon-light.svg" data-theme-dark="assets/lighthouse-icon.svg" src="assets/lighthouse-icon.svg" width="40" height="40" alt="">
+          <span class="sidebar-account-copy"><strong>Lighthouse</strong><small>Public baseline</small></span>
+        </a>
+      </div>
+      <button class="mobile-sidebar-close" type="button" data-mobile-toggle aria-label="Close navigation" title="Close navigation">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>
+      </button>
+    </div>
+    <div class="sidebar-search-wrap">
+      <button class="sidebar-search" type="button" data-search-open aria-label="Open search" title="Open search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="m15 15 4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+        <span>Quick search...</span><kbd>⌘ K</kbd>
+      </button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Primary navigation">
+      <div class="sidebar-group">
+        <p class="sidebar-group-label">Navigate</p>
+        <a class="sidebar-link is-active" href="#top" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5M6.5 10v9h11v-9M10 19v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+          <span>Overview</span>
+        </a>
+        <a class="sidebar-link" href="#foundation">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+          <span>Foundation</span>
+        </a>
+        <a class="sidebar-link" href="#adoption">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg>
+          <span>Adoption</span>
+        </a>
+        <a class="sidebar-link" href="#routes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 14h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v4h6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <span>Routes</span>
+        </a>
+      </div>
+      <div class="sidebar-group">
+        <p class="sidebar-group-label">Resources</p>
+        <details class="sidebar-node" open>
+          <summary class="sidebar-link">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 4.5 8v8l7.5 4 7.5-4V8L12 4Zm0 4v8m-7-8 7 4 7-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+            <span>Resources</span><b aria-hidden="true">⌄</b>
+          </summary>
+          <div class="sidebar-subnav">
+            <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse">Repository</a>
+            <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md">Design guide</a>
+            <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse/blob/main/docs/brand.md">Brand assets</a>
+          </div>
+        </details>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="sidebar-footer-copy">Lighthouse baseline<br><small>v0.1 / public</small></span>
+      <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="false" aria-label="Expand navigation" title="Expand navigation">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="sidebar-toggle-icon">
+          <path d="M21.25 6.72v10.56a2.97 2.97 0 0 1-2.97 2.97H5.72a2.97 2.97 0 0 1-2.97-2.97V6.72a2.97 2.97 0 0 1 2.97-2.97h12.56a2.97 2.97 0 0 1 2.97 2.97"></path>
+          <path d="M6.25 7.25v9.5" class="sidebar-toggle-indicator"></path>
+        </svg>
+      </button>
+    </div>
+  </aside>
+  <button class="mobile-backdrop" type="button" data-mobile-backdrop aria-label="Close navigation"></button>
+
+  <div class="page-column">
+    <header class="site-header">
+      <div class="header-inner">
+        <button class="mobile-menu-toggle" type="button" data-mobile-toggle aria-label="Open navigation" title="Open navigation">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12H21M3 6H21M3 18H11"></path></svg>
+        </button>
+        <div class="header-context">
+          <span class="header-kicker">PUBLIC BASELINE</span>
+          <span class="header-divider" aria-hidden="true">/</span>
+          <span>Lighthouse</span>
+        </div>
+        <div class="header-actions">
+          <a class="header-link" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source</span><span aria-hidden="true">↗</span></a>
+          <div class="theme-switcher" role="group" aria-label="Appearance">
+            <button type="button" class="theme-option" data-theme-choice="light" aria-label="Light appearance" aria-pressed="false" title="Light">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+            </button>
+            <button type="button" class="theme-option" data-theme-choice="dark" aria-label="Dark appearance" aria-pressed="false" title="Dark">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 15.5A7.5 7.5 0 0 1 8.5 5 7.5 7.5 0 1 0 19 15.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+            </button>
+            <button type="button" class="theme-option" data-theme-choice="system" aria-label="System appearance" aria-pressed="false" title="System">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"></rect><path d="M9 20h6M12 17v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">LIGHTHOUSE / ENGINEERING BASELINE</p>
+          <h1 id="hero-title">A clear path to <span>engineering excellence.</span></h1>
+          <p class="hero-intro">Proven techniques and best practices for a practical, AI-driven SDLC.</p>
+          <div class="actions">
+            <a class="lh-button" href="#foundation">See the baseline <span aria-hidden="true">↘</span></a>
+            <a class="hero-link" href="#adoption">Choose an adoption route</a>
+          </div>
+          <p class="hero-caption">Use <code>lighthouse verify</code> to check the manifest and generated guidance for drift.</p>
+        </div>
+        <div class="hero-visual" role="img" aria-label="Lighthouse beacon over an engineering grid">
+          <div class="hero-grid" aria-hidden="true"></div>
+          <img data-theme-asset="icon" data-theme-light="assets/lighthouse-icon-light.svg" data-theme-dark="assets/lighthouse-icon.svg" src="assets/lighthouse-icon.svg" width="224" height="224" alt="">
+        </div>
+      </section>
+
+      <section class="signal-strip" aria-label="Lighthouse baseline characteristics">
+        <div><span>01</span><strong>Adoptable</strong><small>Clear routes for new and existing projects.</small></div>
+        <div><span>02</span><strong>Evidence-backed</strong><small>Guidance stays close to executable checks.</small></div>
+        <div><span>03</span><strong>Profile-based</strong><small>Use the stack support your product needs.</small></div>
+        <div><span>04</span><strong>Human-owned</strong><small>Automation reports; maintainers decide.</small></div>
+      </section>
+
+      <section class="brand-section section" aria-labelledby="brand-title">
+        <div class="brand-copy">
+          <p class="eyebrow">IDENTITY / SIGNAL BLUE</p>
+          <h2 id="brand-title">The signal has a color.</h2>
+          <p>Signal blue is the Lighthouse accent for the beam, the grid and the moments that need to stand out.</p>
+          <div class="signal-token">
+            <span aria-hidden="true"></span>
+            <div><strong>Signal blue</strong><code>#4DA3FF</code></div>
+          </div>
+        </div>
+        <figure class="brand-banner">
+          <img data-theme-asset="banner" data-theme-light="assets/github-banner-light.svg" data-theme-dark="assets/github-banner.svg" src="assets/github-banner.svg" width="1280" height="640" alt="Lighthouse engineering baseline with a blue lighthouse beam">
+          <figcaption>Blue and white, with enough contrast to stay legible at a glance.</figcaption>
+        </figure>
+      </section>
+
+      <section class="section" id="foundation" aria-labelledby="foundation-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / FOUNDATION</p>
+            <h2 id="foundation-title">Engineering expectations you can adopt.</h2>
+          </div>
+          <p>One baseline for repository practice, profiles and interface work.</p>
+        </div>
+        <div class="foundation-grid">
+          <article class="lh-card foundation-card"><span class="card-index">01</span><h3>Repository baseline</h3><p>Concise conventions, evidence and verification keep the repository understandable to people and agents.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/AGENTS.md">Read the contributor entrypoint <span aria-hidden="true">↗</span></a></article>
+          <article class="lh-card foundation-card"><span class="card-index">02</span><h3>Clear boundaries</h3><p>Product intent, architecture, agent skills and operational tooling keep their own authorities and managed files.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/docs/adr/0001-lighthouse-and-factory-ownership.md">See the boundary decision <span aria-hidden="true">↗</span></a></article>
+          <article class="lh-card foundation-card"><span class="card-index">03</span><h3>Lighthouse .NET profile</h3><p>A creator, use-case contracts, Aspire orchestration and Roslyn guardrails give .NET work a small, testable starting point.</p><a href="https://github.com/juangcarmona/lighthouse/tree/main/docs/profiles/dotnet">Explore the profile <span aria-hidden="true">↗</span></a></article>
+          <article class="lh-card foundation-card"><span class="card-index">04</span><h3>Visual system</h3><p>Semantic tokens and native CSS recipes provide a calm interface foundation with light, dark and system appearance.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md">Read the design guide <span aria-hidden="true">↗</span></a></article>
+        </div>
+      </section>
+
+      <section class="section adoption-section" id="adoption" aria-labelledby="adoption-title">
+        <div class="section-heading"><div><p class="eyebrow">02 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
+        <div class="adoption-flow">
+          <article><span class="step-number">01</span><h3>Choose a route</h3><p>Start with the profile that matches the work. Keep the rest optional.</p></article>
+          <article><span class="step-number">02</span><h3>Adopt the contract</h3><p>Run the initializer, inspect its managed paths and record exceptions with an owner.</p></article>
+          <article><span class="step-number">03</span><h3>Verify the result</h3><p>Run the local checks, review the evidence and let a maintainer accept the change.</p></article>
+        </div>
+        <div class="command-panel"><div><span class="meta-label">LOCAL LOOP</span><p>Keep the feedback close to the repository.</p></div><code><span>$</span> lighthouse init<br><span>$</span> lighthouse verify</code></div>
+      </section>
+
+      <section class="section" id="routes" aria-labelledby="routes-title">
+        <div class="section-heading"><div><p class="eyebrow">03 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
+        <div class="route-grid">
+          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/docs/profiles/dotnet/adoption.md"><span class="route-label">Backend</span><h3>New or existing .NET work</h3><p>Use the creator for a new backend or follow the assessment route for an existing one.</p><span class="route-action">Open the .NET route <span aria-hidden="true">↗</span></span></a>
+          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md"><span class="route-label">Interface</span><h3>Adopt the visual system</h3><p>Use the UI package's semantic tokens and native recipes in an existing product.</p><span class="route-action">Open the design route <span aria-hidden="true">↗</span></span></a>
+          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/docs/adoption.md"><span class="route-label">Foundation</span><h3>Understand the whole baseline</h3><p>Read the adoption guide before choosing profiles, integrations or exceptions.</p><span class="route-action">Read the adoption guide <span aria-hidden="true">↗</span></span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div class="footer-inner"><span class="footer-credit">Made with <span class="footer-heart" aria-hidden="true">♥</span> by <a href="https://jgcarmona.com">Juan G Carmona</a></span><span class="footer-status"><i aria-hidden="true"></i>Design system / public</span><a class="footer-source" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source on GitHub</span><span aria-hidden="true">↗</span></a></div></footer>
+  </div>
+
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-dialog-title">
+    <div class="search-dialog-shell">
+      <div class="search-input-row">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="m15 15 4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+        <input id="search-input" type="search" placeholder="Search products, pages, and features..." autocomplete="off" spellcheck="false">
+        <button type="button" class="search-escape" data-search-close aria-label="Close search">Esc</button>
+      </div>
+      <div class="search-results" id="search-results">
+        <section class="search-section" aria-labelledby="search-dialog-title">
+          <h2 id="search-dialog-title">Recent</h2>
+          <button class="search-option" type="button" data-search-target="#foundation" data-search-name="Foundation">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Foundation <small>Baseline</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="#adoption" data-search-name="Adoption">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg><span>Adoption <small>Workflow</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="#routes" data-search-name="Routes">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 14h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v4h6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Routes <small>Profiles</small></span><b aria-hidden="true">↗</b>
+          </button>
+        </section>
+        <section class="search-section" aria-labelledby="search-tips-title">
+          <h2 id="search-tips-title">Search tips</h2>
+          <button class="search-option" type="button" data-search-target="#top" data-search-name="lighthouse verify">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span><code>verify</code><small>Check the baseline</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md" data-search-name="design guide">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM8 9h8M8 12h5M8 15h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Design guide<small>Tokens and recipes</small></span><b aria-hidden="true">↗</b>
+          </button>
+        </section>
+      </div>
+      <div class="search-hints"><span><kbd>↑</kbd><kbd>↓</kbd> to navigate</span><span><kbd>↵</kbd> to select</span><span><kbd>Esc</kbd> to close</span></div>
+    </div>
+  </dialog>
+</body>
+</html>

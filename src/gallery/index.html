@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" data-lh-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Lighthouse · Interface foundation</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="../packages/ui/index.css">
+  <link rel="stylesheet" href="gallery.css">
+</head>
+<body class="lh-root">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="#overview"><img class="brand-mark" src="../../assets/lighthouse-icon.svg" width="40" height="40" alt=""><span>Lighthouse<small>Interface foundation</small></span></a>
+    <label class="appearance">Appearance <select id="theme" class="lh-select" aria-label="Appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <p class="nav-label">DESIGN SYSTEM</p>
+      <nav aria-label="On this page">
+        <a href="#overview"><span>01</span> Overview</a>
+        <a href="#tokens"><span>02</span> Tokens</a>
+        <a href="#components"><span>03</span> Components</a>
+        <a href="#composition"><span>04</span> Composition</a>
+      </nav>
+      <div class="sidebar-note"><span class="lh-badge">v0.1 · Initial</span><p>A small, shared visual vocabulary.<br>Ready to adapt to your product.</p></div>
+    </aside>
+    <main id="main">
+      <section class="overview" id="overview">
+        <p class="eyebrow">THE SHARED STARTING POINT</p>
+        <h1>Interfaces with<br>a common language.</h1>
+        <p class="intro">Clear hierarchy. Familiar controls. A calm foundation for the products you build next.</p>
+        <div class="actions"><a href="#composition" class="lh-button">Explore the example <span aria-hidden="true">↗</span></a><a href="#tokens" class="text-link">View the tokens →</a></div>
+        <div class="principles"><span><b>01</b> Semantic tokens</span><span><b>02</b> Native interactions</span><span><b>03</b> Light &amp; dark</span></div>
+      </section>
+      <section id="tokens" class="section">
+        <div class="section-heading"><div><p class="eyebrow">02 / TOKENS</p><h2>Meaning before decoration.</h2></div><p>One set of roles,<br>two complementary appearances.</p></div>
+        <div class="swatches">
+          <article class="swatch lh-card"><div style="background:var(--lh-canvas)"></div><h3>Canvas</h3><code>--lh-canvas</code></article>
+          <article class="swatch lh-card"><div style="background:var(--lh-surface)"></div><h3>Surface</h3><code>--lh-surface</code></article>
+          <article class="swatch lh-card"><div style="background:var(--lh-action)"></div><h3>Action</h3><code>--lh-action</code></article>
+          <article class="swatch lh-card"><div style="background:var(--lh-text)"></div><h3>Text</h3><code>--lh-text</code></article>
+        </div>
+        <div class="token-details"><div><span class="meta-label">TYPE</span><p class="type-sample">Readable at every level.</p><p class="lh-hint">System sans for interfaces. Monospace for identifiers.</p></div><div><span class="meta-label">RHYTHM</span><div class="spacing-bars" role="img" aria-label="Spacing scale: 4, 8, 12, 16, 24 and 32 pixels"><i style="width:4px"></i><i style="width:8px"></i><i style="width:12px"></i><i style="width:16px"></i><i style="width:24px"></i><i style="width:32px"></i></div><p class="lh-hint">A four-pixel rhythm, from controls to page layout.</p></div></div>
+      </section>
+      <section id="components" class="section">
+        <div class="section-heading"><div><p class="eyebrow">03 / COMPONENTS</p><h2>Familiar by default.</h2></div><p>Simple controls.<br>Consistent behavior.</p></div>
+        <div class="component-grid">
+          <article class="lh-card"><h3>Actions</h3><p class="lh-hint">A clear primary action in each context.</p><div class="sample-row"><button type="button" class="lh-button" id="open-example">Open example</button><button type="button" class="lh-button" data-variant="secondary" id="reset-example">Reset example</button><button type="button" class="lh-button" disabled>Unavailable</button></div></article>
+          <article class="lh-card"><h3>Status</h3><p class="lh-hint">Every color comes with a readable label.</p><div class="sample-row"><span class="lh-badge" data-tone="positive">Ready</span><span class="lh-badge" data-tone="caution">Needs review</span><span class="lh-badge" data-tone="negative">Blocked</span><span class="lh-badge">Draft</span></div></article>
+          <article class="lh-card"><h3>Inputs</h3><div class="lh-field"><label for="sample-name">Product name</label><input id="sample-name" class="lh-input" placeholder="e.g. Workshop" aria-describedby="name-hint"><p id="name-hint" class="lh-hint">Use the name your team recognizes.</p></div></article>
+          <article class="lh-card"><h3>Feedback</h3><p class="lh-alert" data-tone="positive">Saved. Your changes are ready to review.</p><p class="lh-hint">Describe the result and the next useful step.</p></article>
+        </div>
+      </section>
+      <section id="composition" class="section">
+        <div class="section-heading"><div><p class="eyebrow">04 / COMPOSITION</p><h2>Small pieces, working together.</h2></div><p>A complete interaction,<br>built from the same tokens.</p></div>
+        <div class="workspace lh-card">
+          <div class="workspace-heading"><div><h3>Release review</h3><p class="lh-hint">The work that brings the next release together.</p></div><button type="button" class="lh-button" id="new-item">Add item <span aria-hidden="true">+</span></button></div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Release items"><table class="lh-table"><caption class="sr-only">Release review items</caption><thead><tr><th scope="col">Item</th><th scope="col">Area</th><th scope="col">Status</th></tr></thead><tbody id="review-items"><tr><td>Document the adoption flow</td><td>Engineering</td><td><span class="lh-badge" data-tone="positive">Ready</span></td></tr><tr><td>Check keyboard navigation</td><td>Interface</td><td><span class="lh-badge" data-tone="caution">Needs review</span></td></tr><tr><td>Prepare the release notes</td><td>Delivery</td><td><span class="lh-badge">Draft</span></td></tr></tbody></table></div>
+          <p id="result" class="lh-hint" role="status">3 items in this example.</p>
+        </div>
+      </section>
+      <footer><span>Lighthouse / juangcarmona</span><span>Designed to evolve with your products.</span></footer>
+    </main>
+  </div>
+  <dialog class="lh-dialog" id="item-dialog" aria-labelledby="dialog-title">
+    <form id="item-form">
+      <h2 id="dialog-title">Add a review item</h2>
+      <div class="lh-field"><label for="item-title">Item name</label><input class="lh-input" id="item-title" name="title" maxlength="80" required autofocus aria-describedby="item-hint"><p id="item-hint" class="lh-hint">Name the outcome you want to review.</p></div>
+      <div class="lh-field"><label for="item-area">Area</label><select class="lh-select" id="item-area" name="area"><option>Engineering</option><option>Interface</option><option>Delivery</option></select></div>
+      <div class="actions"><button class="lh-button" type="submit">Add item</button><button class="lh-button" data-variant="secondary" type="button" id="cancel-item">Cancel</button></div>
+    </form>
+  </dialog>
+  <script type="module" src="gallery.js"></script>
+</body>
+</html>

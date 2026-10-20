@@ -1,0 +1,15 @@
+node_modules/
+**/bin/
+**/obj/
+playwright-report/
+test-results/
+dist/
+.wrangler/
+.arcshape/
+TestResults/
+.DS_Store
+*.user
+
+# Product Definition as Code: regenerable outputs, never canonical.
+.product/generated/
+.product/cache/

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">Lighthouse engineering baseline</title>
+  <desc id="desc">A lighthouse casting the same continuous beam across the engineering baseline wordmark.</desc>
+  <defs>
+    <linearGradient id="banner-beam-light" x1="76" y1="0" x2="478" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4DA3FF" stop-opacity=".16"/>
+      <stop offset=".68" stop-color="#4DA3FF" stop-opacity=".05"/>
+      <stop offset="1" stop-color="#4DA3FF" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="banner-grid-light" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0v48" fill="none" stroke="#1F6FD1" stroke-opacity=".055" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="#F8FAFF"/>
+  <rect width="1280" height="640" fill="url(#banner-grid-light)"/>
+  <g transform="translate(68 154) scale(2.55)">
+    <path d="M76 31 520 8v58L76 42Z" fill="url(#banner-beam-light)"/>
+    <path d="M78 33 520 12M78 40 520 52" fill="none" stroke="#1F6FD1" stroke-width="1" opacity=".12"/>
+    <g transform="translate(-5 0)">
+      <path d="M54 49h32l9 58H44l10-58Z" fill="#1F6FD1"/>
+      <path d="M58 53h13l8 50H51l7-50Z" fill="#F8FAFF"/>
+      <path d="M73 53h9l9 50H79l-6-50Z" fill="#4DA3FF"/>
+      <path d="M58 72h25l2 5H57l1-5Zm-3 18h31l1 5H54l1-5Z" fill="#1F6FD1"/>
+      <path d="M51 49h38l-5-8H56l-5 8Z" fill="#8FC2FF"/>
+      <rect x="59" y="27" width="22" height="15" rx="2" fill="#4DA3FF" stroke="#1F6FD1" stroke-width="1.5"/>
+      <path d="M56 28h28l-4-6H60l-4 6Z" fill="#1F6FD1"/>
+      <circle cx="70" cy="34.5" r="3.4" fill="#FFFFFF"/>
+      <path d="M61 22v-4h18v4M53 109h34l8 6H45l8-6Z" fill="#1F6FD1"/>
+      <path d="M64 18v-4m-9 10-4-4" stroke="#1F6FD1" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+  <path d="M64 474c84-9 230-9 324 0" fill="none" stroke="#DCE1EB" stroke-width="2"/>
+  <g transform="translate(424 154)">
+    <text x="0" y="91" fill="#0D0F17" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="78" font-weight="680" letter-spacing="-2">Lighthouse</text>
+    <text x="0" y="168" fill="#1F6FD1" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="550">A clear path to engineering excellence.</text>
+    <text x="0" y="205" fill="#26344B" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="500">Proven techniques and best practices for a practical, AI-driven SDLC.</text>
+  </g>
+</svg>
