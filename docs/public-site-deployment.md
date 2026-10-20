@@ -1,25 +1,28 @@
 # Public site deployment
 
-The Lighthouse public site is a static Cloudflare Pages upload. Its current presentation source lives in `src/public-site/`; the build copies the brand assets and bundles the theme and component CSS into `dist/public-site/`. ProductShape and ArcShape projection is proposed product work and is not part of the current build.
+The Lighthouse public site is a static GitHub Pages publication built by `.github/workflows/public-site.yml`. The build copies the presentation source, bundles the UI package CSS and generates ProductShape and ArcShape snapshots under `model/` and `architecture/`.
 
-Build and verify the exact directory Wrangler will upload:
+## Local build and preview
+
+Build and verify the exact directory that GitHub Pages receives:
 
 ```sh
 npm run build:public-site
 npm run verify:public-site
 ```
 
-Preview it with Wrangler Pages:
+Preview the verified output locally with:
 
 ```sh
-npx wrangler@4.151.2 pages dev dist/public-site
+npm run preview:public-site
 ```
 
-Create a Cloudflare Pages project once, then deploy the prepared directory:
+The preview listens on `http://localhost:4174/` and serves the same `dist/public-site/` directory that the workflow uploads.
 
-```sh
-npx wrangler@4.151.2 pages project create lighthouse-public-site
-npx wrangler@4.151.2 pages deploy dist/public-site --project-name lighthouse-public-site
-```
+## GitHub Pages activation
 
-`wrangler.jsonc` points Pages at `./dist/public-site`. The deployment commands require a logged-in Wrangler session or Cloudflare credentials in the shell. A local Pages preview does not publish the site or configure a custom domain.
+In the repository settings, open **Pages**, choose **GitHub Actions** as the build and deployment source, and keep the `github-pages` environment available for the deployment job.
+
+Pull requests build, validate and upload the site as a review artifact without publishing it. Pushes to `main` and manual workflow runs validate the ProductShape and ArcShape inputs, build the static output and deploy it through GitHub Pages.
+
+The site is a projection. ProductShape remains the product authority, ArcShape remains the architecture authority and the source repository remains the authority for the package and site implementation.

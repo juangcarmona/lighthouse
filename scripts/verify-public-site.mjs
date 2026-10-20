@@ -13,16 +13,13 @@ const required = [
   'assets/lighthouse-icon-light.svg',
   'assets/github-banner.svg',
   'assets/github-banner-light.svg',
+  'model/index.html',
+  'architecture/index.html',
 ];
 const exists = async (path) => stat(path).then(() => true).catch(() => false);
 
 for (const file of required) {
   if (!(await exists(join(output, file)))) throw new Error(`Missing public-site output: ${file}`);
-}
-
-const config = await readFile(join(root, 'wrangler.jsonc'), 'utf8');
-if (!/"pages_build_output_dir"\s*:\s*"\.\/dist\/public-site"/u.test(config)) {
-  throw new Error('wrangler.jsonc must publish ./dist/public-site.');
 }
 
 const html = await readFile(join(output, 'index.html'), 'utf8');
@@ -33,6 +30,17 @@ for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/gu)) {
   if (relative(output, local).startsWith('..') || !(await exists(local))) {
     throw new Error(`Missing public-site reference: ${target}`);
   }
+}
+
+const [productSnapshot, architectureSnapshot] = await Promise.all([
+  readFile(join(output, 'model/index.html'), 'utf8'),
+  readFile(join(output, 'architecture/index.html'), 'utf8'),
+]);
+if (!productSnapshot.includes('<title>Product Snapshot</title>')) {
+  throw new Error('Published ProductShape snapshot is missing or stale.');
+}
+if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
+  throw new Error('Published ArcShape snapshot is missing or stale.');
 }
 
 const [bundle, tokens, components] = await Promise.all([

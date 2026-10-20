@@ -1,17 +1,12 @@
-# Decisions and conventions
+# Architecture decisions
 
-This index links the decisions with lasting effects. The rest of the baseline stays revisable guidance until experience justifies a durable commitment.
+This index links the accepted decisions with durable architectural consequences. Product scope remains in ProductShape, architecture documentation remains in ArcShape, and local implementation notes stay with the owning source.
 
-- [Lighthouse and adopter ownership](0001-lighthouse-and-factory-ownership.md)
-- [Distribution and versioning](0002-distribution.md)
-- [Lighthouse UI package](0004-lighthouse-ui-package.md)
-- [Source packages and adopter projections](0005-source-packages-and-adopter-projections.md)
-
-| Number | Decision | Status | Date |
+| Decision | ADR | Status | Date |
 | --- | --- | --- | --- |
-| 0001 | [Lighthouse / adopter ownership](0001-lighthouse-and-factory-ownership.md) | Accepted for initial implementation | 2026-10-20 |
-| 0002 | [Local distribution](0002-distribution.md) | Accepted for initial implementation | 2026-10-20 |
-| 0004 | [Lighthouse UI package](0004-lighthouse-ui-package.md) | Accepted | 2026-10-20 |
-| 0005 | [Source packages and adopter projections](0005-source-packages-and-adopter-projections.md) | Accepted | 2026-10-20 |
+| Lighthouse and adopters have separate ownership | [ADR-0001](0001-lighthouse-and-factory-ownership.md) | Accepted | 2026-10-20 |
+| Start with a private local tool and defer publication | [ADR-0002](0002-distribution.md) | Accepted | 2026-10-20 |
+| Deliver one Lighthouse UI package | [ADR-0004](0004-lighthouse-ui-package.md) | Accepted | 2026-10-20 |
+| Separate source packages from adopter projections | [ADR-0005](0005-source-packages-and-adopter-projections.md) | Accepted | 2026-10-20 |
 
-ADRs record decisions with durable cost or reversibility concerns. Product scope belongs in ProductShape, architecture realization belongs in ArcShape and local implementation notes stay with the owning source.
+Architecture section 09 links the accepted decisions that shape the current repository. Draft product decisions remain in their active Product Change until they are accepted and implemented.

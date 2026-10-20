@@ -1,0 +1,59 @@
+---
+kind: tip
+id: 8-10
+title: 'Tip 8-10: Use the collection from arc42 as checklist for concepts!'
+section: '08'
+category: concepts
+source_url: https://docs.arc42.org/tips/8-10/
+source_author: Dr. Gernot Starke
+source_contributors: []
+license: CC BY-SA 4.0
+source_revision: 3cb35782b62d0cd4103aedcc75fc4ba748f043ad
+tags:
+  - concept
+  - lean
+---
+
+> Source: [Tip 8-10: Use the collection from arc42 as checklist for concepts!](https://docs.arc42.org/tips/8-10/) — © 2016–2023 Dr. Gernot Starke; CC BY-SA 4.0.
+
+
+![Crosscutting concepts structure](https://docs.arc42.org/assets/images/sections/08/concepts-EN.drawio.png)
+
+
+| Category  | Topic | Explanation    |
+|----------|---------|--------------|
+| **Domain concepts**   | |i.e. domain models, business data model |
+| **User Experience concepts (UX)**| | |
+| |User interface | |
+| |Ergonomics | |
+| |Internationalization (i18n) |How to make the system usable in international settings, translation, screen-layout, wording and other |
+| **Safety and security concepts**| | |
+| |Security |i.e. how to achieve confidentiality, non-reputiability and other goals.  |
+| |Safety |Safety-critical systems are those whose failure or malfunction may result in death or injury or severe financial loss |
+| **Architecture and design patterns**| |recurring patterns within the system |
+| **“Under-the-hood” concepts**  | | |
+| |Persistency |how / where to store and retrieve data |
+| |Process control | |
+| |Transaction handling |How to handle technical or business transactions, i.e. to achieve ACID properties |
+| |Session handling |How to handle user/client sessions |
+| |Communication and integration |How to integrate with other systems, how to communicate (i.e. sync, async, pub-sub...) |
+| |Exception and error handling |What errors to handle, how to handle exceptional situations |
+| |Parallization and threading |How to parallelize tasks, how to create/spawn/manage processes |
+| |Plausibility checks and validation |i.e. client-side validation, how to verify/check data, input, results. |
+| |Business rules |i.e. how to use a rule-engine, how to implement/configure business rules, how to change those... |
+| |Batch processing |How to process data in batches (i.e. offline processing) |
+| |Reporting |How to create reports, how to gather the required data, how to render the results |
+| **Development concepts** | | |
+| | Build, test, deploy | |
+| | Code generation | |
+| | Migration | |
+| | Configurability| |
+| **Operational concepts** | | |
+| |Administration | |
+| |Management | |
+| |Disaster-Recovery | |
+| |Scaling | |
+| |Clustering | |
+| |Monitoring, Logging | |
+| |High Availability | |
+| |Load balancing | |

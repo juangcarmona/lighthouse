@@ -1,0 +1,96 @@
+name: Public site
+
+on:
+  pull_request:
+    paths:
+      - "src/public-site/**"
+      - "src/packages/ui/**"
+      - "assets/**"
+      - "docs/product/**"
+      - "docs/architecture/**"
+      - "docs/adr/**"
+      - ".product/config.yaml"
+      - "scripts/build-public-site.mjs"
+      - "scripts/verify-public-site.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/public-site.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/public-site/**"
+      - "src/packages/ui/**"
+      - "assets/**"
+      - "docs/product/**"
+      - "docs/architecture/**"
+      - "docs/adr/**"
+      - ".product/config.yaml"
+      - "scripts/build-public-site.mjs"
+      - "scripts/verify-public-site.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/public-site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('lighthouse-public-site-pr-{0}', github.event.pull_request.number) || 'lighthouse-public-site' }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Build and validate public site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate ProductShape
+        run: npx prodshape validate
+      - name: Validate Product Changes
+        run: npx prodshape change validate
+      - name: Validate ArcShape architecture
+        run: npx arcshape validate --docs docs/architecture --links --citations
+      - name: Build and verify the deployable site
+        run: npm run verify:public-site
+      - name: Upload the validated site for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-public-site-${{ github.run_id }}
+          path: dist/public-site
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    name: Publish GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/configure-pages@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Build the verified site output
+        run: npm run build:public-site
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/public-site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

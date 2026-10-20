@@ -1,0 +1,62 @@
+---
+kind: example
+id: concept-htmlsc-2
+title: 'Example Concept: HTML Sanity Checker (Multiple Checking Algorithms)'
+section: '08'
+category: concepts
+source_url: https://docs.arc42.org/examples/concept-htmlsc-2/
+source_author: Dr. Gernot Starke
+source_contributors: []
+license: CC BY-SA 4.0
+source_revision: 3cb35782b62d0cd4103aedcc75fc4ba748f043ad
+tags:
+  - concept
+  - example
+---
+
+> Source: [Example Concept: HTML Sanity Checker (Multiple Checking Algorithms)](https://docs.arc42.org/examples/concept-htmlsc-2/) — © 2016–2023 Dr. Gernot Starke; CC BY-SA 4.0.
+
+> **Illustrative example:** The system-specific names, design choices, constraints, and facts below describe the source example only. Do not treat them as evidence about another system.
+
+
+<p></p>
+
+
+## 8. Crosscutting Concepts
+
+
+
+### 8.3 Multiple Checking algorithms
+HtmlSC uses the <a target="_blank" rel="noopener noreferrer nofollow" href="https://sourcemaking.com/design_patterns/template_method/">template-method-pattern</a>
+to enable flexible checking algorithms:
+
+> >"The Template Method defines a _skeleton of an algorithm_ in an operation, and defers some steps to subclasses".
+
+We achieve that by defining the skeleton of the checking algorithm in one operation (`performCheck`), deferring the specific checking algorithm steps to subclasses. The invariant steps are implemented in the abstract base class, while the variant checking algorithms have to be provided by the subclasses.
+
+
+~~~~
+/**
+  * Prerequisite: pageToCheck has been successfully parsed,
+  * prior to constructing this Checker instance.
+**/
+public CheckingResultsCollector performCheck() {
+    // assert prerequisite
+    assert pageToCheck != null
+    initResults()
+    return check() // subclass executes the actual checking algorithm
+}
+~~~~
+
+![Template Method (excerpt)](https://docs.arc42.org/assets/images/examples/htmlsc/8-3-template-method.png)
+
+|Component         | Description |
+|------|:------|
+| Checker   | _abstract_ base class, containing the template method `check()` plus the public method `performCheck()` |
+|------|------|
+| `ImageFileExistChecker` | checks if referenced local image files exist |
+|------|------|
+| `InternalLinksChecker`    | checks if cross references (links referenced within the page) exist |
+|------|------|
+| `DuplicateIdChecker`        | checks if any id has multiple definitions |
+|------|------|

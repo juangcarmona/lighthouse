@@ -38,6 +38,14 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5M6.5 10v9h11v-9M10 19v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
           <span>Overview</span>
         </a>
+        <a class="sidebar-link" href="#authorities">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+          <span>Authorities</span>
+        </a>
+        <a class="sidebar-link" href="#flow">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <span>Flow</span>
+        </a>
         <a class="sidebar-link" href="#foundation">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
           <span>Foundation</span>
@@ -61,6 +69,8 @@
           <div class="sidebar-subnav">
             <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse">Repository</a>
             <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md">Design guide</a>
+            <a class="sidebar-sublink" href="model/index.html">Product model</a>
+            <a class="sidebar-sublink" href="architecture/index.html">Architecture snapshot</a>
             <a class="sidebar-sublink" href="https://github.com/juangcarmona/lighthouse/blob/main/docs/brand.md">Brand assets</a>
           </div>
         </details>
@@ -113,10 +123,10 @@
           <h1 id="hero-title">A clear path to <span>engineering excellence.</span></h1>
           <p class="hero-intro">Proven techniques and best practices for a practical, AI-driven SDLC.</p>
           <div class="actions">
-            <a class="lh-button" href="#foundation">See the baseline <span aria-hidden="true">↘</span></a>
+            <a class="lh-button" href="#authorities">See the baseline <span aria-hidden="true">↘</span></a>
             <a class="hero-link" href="#adoption">Choose an adoption route</a>
           </div>
-          <p class="hero-caption">Use <code>lighthouse verify</code> to check the manifest and generated guidance for drift.</p>
+          <p class="hero-caption">The public story is generated from ProductShape, ArcShape and the Lighthouse package contracts.</p>
         </div>
         <div class="hero-visual" role="img" aria-label="Lighthouse beacon over an engineering grid">
           <div class="hero-grid" aria-hidden="true"></div>
@@ -147,10 +157,36 @@
         </figure>
       </section>
 
+      <section class="section authority-section" id="authorities" aria-labelledby="authorities-title">
+        <div class="section-heading"><div><p class="eyebrow">01 / AUTHORITIES</p><h2 id="authorities-title">One story, two sources of truth.</h2></div><p>ProductShape defines what to build. ArcShape records how the system is shaped.</p></div>
+        <div class="authority-grid">
+          <a class="authority-card" href="model/index.html"><span class="card-index">PRODUCT</span><h3>Product model</h3><p>The generated ProductShape snapshot shows the accepted product model and its delivery capabilities.</p><span class="route-action">Open the product snapshot <span aria-hidden="true">↗</span></span></a>
+          <a class="authority-card" href="architecture/index.html"><span class="card-index">ARCHITECTURE</span><h3>Architecture snapshot</h3><p>The ArcShape reader separates the implemented Lighthouse repository from the target initialized application.</p><span class="route-action">Open the architecture snapshot <span aria-hidden="true">↗</span></span></a>
+        </div>
+        <div class="scope-compare" aria-label="Current repository and target initialized application">
+          <article><span class="meta-label">IMPLEMENTED TODAY</span><h3>Lighthouse repository</h3><p>CLI, UI package, .NET reference profile, verification, gallery and this generated site.</p></article>
+          <div class="scope-arrow" aria-hidden="true">→</div>
+          <article><span class="meta-label">TARGET ADOPTION</span><h3>Initialized application</h3><p>Predictable structure, selected profiles, Aspire composition and project-owned decisions.</p></article>
+        </div>
+      </section>
+
+      <section class="section flow-section" id="flow" aria-labelledby="flow-title">
+        <div class="section-heading"><div><p class="eyebrow">02 / DELIVERY FLOW</p><h2 id="flow-title">Make the next step visible.</h2></div><p>The target SDLC package keeps product, design, implementation and evidence connected.</p></div>
+        <div class="flow-grid" aria-label="Target Lighthouse delivery stages">
+          <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess urgency, complexity, dependencies and blast radius.</p></article>
+          <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Turn the work item into a bounded, reviewable change.</p></article>
+          <article class="flow-step"><span class="step-number">03</span><h3>Propose</h3><p>Describe the solution and its affected contracts.</p></article>
+          <article class="flow-step"><span class="step-number">04</span><h3>Implement</h3><p>Build from red to green with the applicable checks.</p></article>
+          <article class="flow-step"><span class="step-number">05</span><h3>Integrate</h3><p>Review the gate, merge the change and preserve evidence.</p></article>
+          <article class="flow-step"><span class="step-number">06</span><h3>Review</h3><p>Record what the delivery taught the project.</p></article>
+        </div>
+        <div class="flow-note"><span class="meta-label">TRACKER STATE</span><p>Labels expose state and route requests such as <code>Ready</code>, <code>Planned</code>, <code>WIP</code> and <code>Done</code>. The workflow does not infer state from issue prose.</p><span class="flow-note-status">Target package surface · current CLI does not execute this flow yet.</span></div>
+      </section>
+
       <section class="section" id="foundation" aria-labelledby="foundation-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">01 / FOUNDATION</p>
+            <p class="eyebrow">03 / FOUNDATION</p>
             <h2 id="foundation-title">Engineering expectations you can adopt.</h2>
           </div>
           <p>One baseline for repository practice, profiles and interface work.</p>
@@ -164,7 +200,7 @@
       </section>
 
       <section class="section adoption-section" id="adoption" aria-labelledby="adoption-title">
-        <div class="section-heading"><div><p class="eyebrow">02 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">04 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
         <div class="adoption-flow">
           <article><span class="step-number">01</span><h3>Choose a route</h3><p>Start with the profile that matches the work. Keep the rest optional.</p></article>
           <article><span class="step-number">02</span><h3>Adopt the contract</h3><p>Run the initializer, inspect its managed paths and record exceptions with an owner.</p></article>
@@ -174,7 +210,7 @@
       </section>
 
       <section class="section" id="routes" aria-labelledby="routes-title">
-        <div class="section-heading"><div><p class="eyebrow">03 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">05 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
         <div class="route-grid">
           <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/docs/profiles/dotnet/adoption.md"><span class="route-label">Backend</span><h3>New or existing .NET work</h3><p>Use the creator for a new backend or follow the assessment route for an existing one.</p><span class="route-action">Open the .NET route <span aria-hidden="true">↗</span></span></a>
           <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md"><span class="route-label">Interface</span><h3>Adopt the visual system</h3><p>Use the UI package's semantic tokens and native recipes in an existing product.</p><span class="route-action">Open the design route <span aria-hidden="true">↗</span></span></a>
@@ -183,7 +219,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><div class="footer-inner"><span class="footer-credit">Made with <span class="footer-heart" aria-hidden="true">♥</span> by <a href="https://jgcarmona.com">Juan G Carmona</a></span><span class="footer-status"><i aria-hidden="true"></i>Design system / public</span><a class="footer-source" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source on GitHub</span><span aria-hidden="true">↗</span></a></div></footer>
+    <footer class="site-footer"><div class="footer-inner"><span class="footer-credit">Made with <span class="footer-heart" aria-hidden="true">♥</span> by <a href="https://jgcarmona.com">Juan G Carmona</a></span><span class="footer-status"><i aria-hidden="true"></i>Product + architecture / public</span><a class="footer-source" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source on GitHub</span><span aria-hidden="true">↗</span></a></div></footer>
   </div>
 
   <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-dialog-title">
@@ -196,6 +232,12 @@
       <div class="search-results" id="search-results">
         <section class="search-section" aria-labelledby="search-dialog-title">
           <h2 id="search-dialog-title">Recent</h2>
+          <button class="search-option" type="button" data-search-target="#authorities" data-search-name="ProductShape ArcShape authorities">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Authorities <small>Product and architecture</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="#flow" data-search-name="delivery flow triage refine propose implement integrate review">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery flow <small>Stages and state</small></span><b aria-hidden="true">↗</b>
+          </button>
           <button class="search-option" type="button" data-search-target="#foundation" data-search-name="Foundation">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Foundation <small>Baseline</small></span><b aria-hidden="true">↗</b>
           </button>
@@ -204,6 +246,12 @@
           </button>
           <button class="search-option" type="button" data-search-target="#routes" data-search-name="Routes">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 14h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v4h6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Routes <small>Profiles</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="model/index.html" data-search-name="ProductShape model snapshot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM8 9h8M8 12h5M8 15h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Product model <small>Generated snapshot</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="architecture/index.html" data-search-name="ArcShape architecture snapshot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4 7 4v8l-7 4-7-4V8zM12 8v8M5 8l7 4 7-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg><span>Architecture <small>ArcShape reader</small></span><b aria-hidden="true">↗</b>
           </button>
         </section>
         <section class="search-section" aria-labelledby="search-tips-title">

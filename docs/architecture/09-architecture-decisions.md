@@ -1,16 +1,20 @@
 ---
 title: Architecture decisions
 arc42-section: "09"
-description: Index of durable architecture decisions kept outside the arc42 views.
+description: Index of accepted architecture decisions and the draft product change that currently shapes the target.
 ---
 
 # 9. Architecture decisions
 
-The decisions themselves live in [`docs/adr/`](../adr/README.md). This section only identifies the decisions that shape the current repository.
+The decisions themselves live in [`docs/adr/`](../adr/README.md). This section identifies accepted decisions that shape the current repository.
 
-- [Lighthouse and adopter ownership](../adr/0001-lighthouse-and-factory-ownership.md)
-- [Private local distribution](../adr/0002-distribution.md)
-- [Lighthouse UI package](../adr/0004-lighthouse-ui-package.md)
-- [Source packages and adopter projections](../adr/0005-source-packages-and-adopter-projections.md)
+| Decision | ADR | Affected architecture |
+| --- | --- | --- |
+| Lighthouse and adopters have separate ownership | [ADR-0001](../adr/0001-lighthouse-and-factory-ownership.md) | Context and scope; adoption boundary |
+| Start with a private local tool and defer publication | [ADR-0002](../adr/0002-distribution.md) | Distribution and adoption boundary |
+| Deliver one Lighthouse UI package | [ADR-0004](../adr/0004-lighthouse-ui-package.md) | UI package and initialization projections |
+| Separate source packages from adopter projections | [ADR-0005](../adr/0005-source-packages-and-adopter-projections.md) | Source layout; package boundaries; adopter root contracts |
 
-The arc42 sections describe the resulting structure. They do not repeat ADR rationale or alternatives.
+The profile-aware initialization architecture is currently described by the applied [CHG-INITIAL product change](../product/changes/completed/chg-initial/change.md); it is not an ADR or an implemented runtime contract yet.
+
+These arc42 sections describe resulting structure and evidence. ADRs retain rationale, rejected alternatives and consequences.

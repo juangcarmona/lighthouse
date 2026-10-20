@@ -1,12 +1,15 @@
 ---
+id: ADR-0005
 name: source-packages-and-adopter-projections
+title: Separate source packages from adopter projections
 description: Keep Lighthouse implementation under src while generating adopter root contracts explicitly.
 status: Accepted
-date: 2026-10-20
+date: "2026-10-20"
 deciders: [juangcarmona]
 tags: [distribution, packaging, repository-layout]
 ---
 
+<!-- markdownlint-disable-next-line MD025 -->
 # ADR-0005: Separate source packages from adopter projections
 
 ## Context
@@ -26,17 +29,17 @@ The source repository also owns a gallery, CSS packages, a .NET profile and repo
 
 ## Alternatives considered
 
-- **Keep the source checkout self-adopted:** rejected because it mixes the baseline's implementation with the files it generates for consumers. The CLI tests still exercise adoption through temporary fixtures.
-- **Move every root file into `src`:** rejected because npm workspaces, lockfiles, GitHub workflows, editor configuration and agent/provider integrations use root discovery contracts.
+- **Keep the source checkout self-adopted:** rejected because it mixes the baseline implementation with the files it generates for consumers. The CLI tests still exercise adoption through temporary fixtures.
+- **Move every root file into `src`:** rejected because npm workspaces, lockfiles, GitHub workflows, editor configuration and agent or provider integrations use root discovery contracts.
 - **Publish one package containing the full repository:** rejected because UI, CLI, .NET profile and agent integrations have different consumers and ownership boundaries.
-- **Keep tests at the root:** rejected for this repository because the tests are source code and can be colocated without changing the delivered package contracts.
+- **Keep tests at the root:** rejected because the tests are source code and can be colocated without changing delivered package contracts.
 
 ## Consequences
 
-- The Lighthouse source checkout has a smaller root and a clear distinction between implementation, documentation, automation and adopter output.
-- A future public or private CLI release has a package boundary ready for `npm pack` without publishing the gallery, .NET reference source or repository documentation.
-- The creator still produces consumer-root files because those files are adoption contracts, not package source.
-- Root verification no longer validates a Lighthouse self-manifest; unit tests validate the CLI against temporary adopter fixtures and the adoption check validates a generated product.
+- **Positive:** The Lighthouse source checkout has a smaller root and a clear distinction between implementation, documentation, automation and adopter output.
+- **Positive:** A future CLI release has a package boundary ready for `npm pack` without publishing the gallery, .NET reference source or repository documentation.
+- **Negative:** The creator still produces consumer-root files because those files are adoption contracts, not package source.
+- **Neutral:** Root verification no longer validates a Lighthouse self-manifest. Unit tests validate the CLI against temporary adopter fixtures and the adoption check validates a generated product.
 
 ## References
 

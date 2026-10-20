@@ -11,7 +11,7 @@
     "markdownlint": "npx -y markdownlint-cli2@0.23.3",
     "test": "node --test src/tests/*.test.mjs",
     "build:public-site": "node scripts/build-public-site.mjs",
-    "preview:public-site": "npm run build:public-site && npx wrangler@4.151.2 pages dev dist/public-site",
+    "preview:public-site": "npm run build:public-site && python3 -m http.server 4174 --directory dist/public-site",
     "verify:public-site": "npm run build:public-site && node scripts/verify-public-site.mjs",
     "verify": "npm run markdownlint && npm test && node scripts/check-doc-links.mjs && npm run verify:public-site",
     "verify:dotnet": "node src/packages/cli/internal/verify-dotnet.mjs",
@@ -25,7 +25,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@arcshape/cli": "0.1.1",
+    "@arcshape/cli": "0.1.2",
     "@axe-core/playwright": "4.14.0",
     "@fission-ai/openspec": "1.14.3",
     "@playwright/test": "1.64.1",

@@ -1,6 +1,10 @@
 # Architecture documentation
 
-This directory contains the system's canonical architecture documentation in Markdown. It follows the twelve sections of [arc42](https://arc42.org/).
+This directory is Lighthouse's canonical architecture source in the twelve arc42 sections.
+
+The documents distinguish the current Lighthouse repository from the target initialization architecture described by the applied [CHG-INITIAL product change](../product/changes/completed/chg-initial/change.md).
+
+Product intent remains owned by [ProductShape](../product/README.md), architecture remains owned here and decision rationale remains in [`docs/adr/`](../adr/README.md).
 
 ## Sections
 
@@ -17,4 +21,4 @@ This directory contains the system's canonical architecture documentation in Mar
 11. [Risks and technical debt](11-risks-and-technical-debt.md)
 12. [Glossary](12-glossary.md)
 
-Keep Markdown as the source of truth for architecture. Product intent belongs in ProductShape and decision rationale belongs in `docs/adr/`; do not repeat either in these views.
+ArcShape generates the reader site from these Markdown files; generated output is disposable.

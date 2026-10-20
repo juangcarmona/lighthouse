@@ -109,6 +109,27 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
 .brand-banner { min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--lh-border-strong); border-radius: 2px; background: var(--lh-surface); }
 .brand-banner img { display: block; width: 100%; height: auto; }
 .brand-banner figcaption { padding: 0.75rem 1rem; color: var(--lh-text-muted); font: 500 0.6875rem var(--lh-font-mono); letter-spacing: 0.04em; }
+.authority-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.authority-card { min-height: 260px; display: flex; flex-direction: column; padding: 1.5rem; border: 1px solid var(--lh-border); border-radius: 2px; background: var(--lh-surface); color: var(--lh-text) !important; text-decoration: none; transition: border-color var(--lh-motion-fast), background var(--lh-motion-fast), transform var(--lh-motion-fast); }
+.authority-card:hover { border-color: var(--lh-action); background: var(--lh-action-soft); transform: translateY(-2px); }
+.authority-card h3 { margin: 2.5rem 0 0.75rem; font-size: 1.2rem; letter-spacing: -0.025em; }
+.authority-card p { flex: 1; max-width: 32rem; margin: 0 0 1.5rem; color: var(--lh-text-muted); font-size: 0.875rem; }
+.scope-compare { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; margin-top: 0.75rem; padding: 1.5rem; border: 1px solid var(--lh-border); background: var(--lh-surface-muted); }
+.scope-compare article { min-width: 0; }
+.scope-compare h3 { margin: 0 0 0.55rem; font-size: 1rem; }
+.scope-compare p { margin: 0; color: var(--lh-text-muted); font-size: 0.8125rem; }
+.scope-arrow { color: var(--lh-action); font-size: 1.25rem; }
+.flow-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; }
+.flow-step { min-width: 0; min-height: 190px; padding: 1.15rem; border: 1px solid var(--lh-border); background: var(--lh-surface); }
+.flow-step + .flow-step { position: relative; }
+.flow-step + .flow-step::before { position: absolute; top: 1.45rem; left: -0.45rem; color: var(--lh-action); content: '→'; font-size: 0.9rem; }
+.flow-step h3 { margin: 2rem 0 0.65rem; font-size: 0.95rem; }
+.flow-step p { margin: 0; color: var(--lh-text-muted); font-size: 0.78rem; line-height: 1.5; }
+.flow-note { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; margin-top: 0.75rem; padding: 1rem 1.15rem; border: 1px solid var(--lh-border); background: var(--lh-surface-muted); }
+.flow-note .meta-label { margin: 0; }
+.flow-note p { margin: 0; color: var(--lh-text-muted); font-size: 0.8rem; }
+.flow-note code { color: var(--lh-action); font-family: var(--lh-font-mono); }
+.flow-note-status { color: var(--lh-text-muted); font: 500 0.625rem var(--lh-font-mono); text-align: right; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
 .section-heading .eyebrow { margin-bottom: 0.6rem; }
 .section-heading h2 { max-width: 18ch; margin: 0; font-size: clamp(1.8rem, 3.4vw, 2.75rem); font-weight: 560; letter-spacing: -0.045em; line-height: 1.04; }
@@ -196,6 +217,13 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
   .hero h1 { max-width: 15ch; }
   .hero-visual { min-height: 300px; }
   .brand-copy h2 { max-width: 14ch; }
+  .authority-grid { grid-template-columns: 1fr; }
+  .scope-compare { grid-template-columns: 1fr; }
+  .scope-arrow { transform: rotate(90deg); justify-self: center; }
+  .flow-grid { grid-template-columns: repeat(2, 1fr); }
+  .flow-step + .flow-step::before { display: none; }
+  .flow-note { grid-template-columns: 1fr; }
+  .flow-note-status { text-align: left; }
   .foundation-grid { grid-template-columns: repeat(2, 1fr); }
   .signal-strip { grid-template-columns: repeat(2, 1fr); }
   .signal-strip > div:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid var(--lh-border); }
@@ -217,6 +245,7 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
   .hero-visual { min-height: 260px; }
   .hero-visual img { width: 46%; }
   .signal-strip, .foundation-grid { grid-template-columns: 1fr; }
+  .flow-grid { grid-template-columns: 1fr; }
   .signal-strip > div, .signal-strip > div + div, .signal-strip > div:nth-child(3), .signal-strip > div:nth-child(4) { padding: 1rem 0; border-left: 0; border-top: 1px solid var(--lh-border); }
   .signal-strip > div:first-child { border-top: 0; }
   .section-heading { display: block; }
