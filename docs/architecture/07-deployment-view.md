@@ -15,7 +15,7 @@ description: Current package and site delivery boundaries and the target Aspire 
 | .NET reference profile | `src/dotnet/` | Reference assemblies and test output | .NET SDK |
 | Public site | `src/public-site/`, ProductShape, ArcShape, assets and UI CSS | `dist/public-site/` with `model/` and `architecture/` snapshots | GitHub Pages |
 
-GitHub Actions runs repository, .NET and visual checks. The public-site workflow validates the authorities and uploads the verified static output to GitHub Pages on `main` or a manual run.
+GitHub Actions runs repository, .NET and visual checks. The public-site workflow is the single serialized publisher for the public engineering site: it validates the authorities and uploads the verified static output to GitHub Pages on `main` or a manual run.
 
 ```mermaid
 flowchart LR

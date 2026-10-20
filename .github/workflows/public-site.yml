@@ -1,4 +1,4 @@
-name: Public site
+name: Public engineering site
 
 on:
   pull_request:
@@ -35,19 +35,20 @@ on:
 permissions:
   contents: read
 
+# One publisher owns the public engineering site; queue main updates so a deployment cannot be replaced mid-flight.
 concurrency:
   group: ${{ github.event_name == 'pull_request' && format('lighthouse-public-site-pr-{0}', github.event.pull_request.number) || 'lighthouse-public-site' }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   validate:
-    name: Build and validate public site
-    runs-on: ubuntu-latest
+    name: Build and validate public engineering site
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Install Chrome for architecture rendering
@@ -61,7 +62,7 @@ jobs:
       - name: Build and verify the deployable site
         run: npm run verify:public-site
       - name: Upload the validated site for review
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-public-site-${{ github.run_id }}
           path: dist/public-site
@@ -69,10 +70,10 @@ jobs:
           retention-days: 14
 
   deploy:
-    name: Publish GitHub Pages
+    name: Publish public engineering site
     if: github.event_name != 'pull_request'
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       pages: write
@@ -85,7 +86,7 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Install Chrome for architecture rendering
