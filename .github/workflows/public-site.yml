@@ -50,6 +50,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Install Chrome for architecture rendering
+        run: npx --no-install puppeteer browsers install chrome
       - name: Validate ProductShape
         run: npx prodshape validate
       - name: Validate Product Changes
@@ -86,6 +88,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Install Chrome for architecture rendering
+        run: npx --no-install puppeteer browsers install chrome
       - name: Build the verified site output
         run: npm run build:public-site
       - uses: actions/upload-pages-artifact@v5

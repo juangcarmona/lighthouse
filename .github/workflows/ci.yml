@@ -16,6 +16,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Install Chrome for architecture rendering
+        run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
   dotnet:
     runs-on: ubuntu-latest
