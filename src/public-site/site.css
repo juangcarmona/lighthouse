@@ -109,6 +109,11 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
 .brand-banner { min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--lh-border-strong); border-radius: 2px; background: var(--lh-surface); }
 .brand-banner img { display: block; width: 100%; height: auto; }
 .brand-banner figcaption { padding: 0.75rem 1rem; color: var(--lh-text-muted); font: 500 0.6875rem var(--lh-font-mono); letter-spacing: 0.04em; }
+.handover-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+.handover-card { min-height: 250px; padding: 1.35rem; border: 1px solid var(--lh-border); border-radius: 2px; background: var(--lh-surface); }
+.handover-card h3 { margin: 2.5rem 0 0.75rem; font-size: 1.05rem; letter-spacing: -0.02em; }
+.handover-card p { margin: 0; color: var(--lh-text-muted); font-size: 0.825rem; line-height: 1.5; }
+.handover-note { margin: 0.75rem 0 0; padding: 1rem 1.15rem; border: 1px solid var(--lh-border); background: var(--lh-surface-muted); color: var(--lh-text-muted); font-size: 0.8rem; }
 .authority-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
 .authority-card { min-height: 260px; display: flex; flex-direction: column; padding: 1.5rem; border: 1px solid var(--lh-border); border-radius: 2px; background: var(--lh-surface); color: var(--lh-text) !important; text-decoration: none; transition: border-color var(--lh-motion-fast), background var(--lh-motion-fast), transform var(--lh-motion-fast); }
 .authority-card:hover { border-color: var(--lh-action); background: var(--lh-action-soft); transform: translateY(-2px); }
@@ -224,6 +229,7 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
   .flow-step + .flow-step::before { display: none; }
   .flow-note { grid-template-columns: 1fr; }
   .flow-note-status { text-align: left; }
+  .handover-grid { grid-template-columns: repeat(3, 1fr); }
   .foundation-grid { grid-template-columns: repeat(2, 1fr); }
   .signal-strip { grid-template-columns: repeat(2, 1fr); }
   .signal-strip > div:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid var(--lh-border); }
@@ -244,7 +250,7 @@ main { padding-bottom: 46px; background-image: radial-gradient(color-mix(in srgb
   .hero h1 { font-size: clamp(2.8rem, 15vw, 4.5rem); }
   .hero-visual { min-height: 260px; }
   .hero-visual img { width: 46%; }
-  .signal-strip, .foundation-grid { grid-template-columns: 1fr; }
+  .signal-strip, .handover-grid, .foundation-grid { grid-template-columns: 1fr; }
   .flow-grid { grid-template-columns: 1fr; }
   .signal-strip > div, .signal-strip > div + div, .signal-strip > div:nth-child(3), .signal-strip > div:nth-child(4) { padding: 1rem 0; border-left: 0; border-top: 1px solid var(--lh-border); }
   .signal-strip > div:first-child { border-top: 0; }

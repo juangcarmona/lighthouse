@@ -42,6 +42,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
           <span>Authorities</span>
         </a>
+        <a class="sidebar-link" href="#delivery">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+          <span>Delivery bundle</span>
+        </a>
         <a class="sidebar-link" href="#flow">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           <span>Flow</span>
@@ -140,6 +144,18 @@
         <div><span>04</span><strong>Human-owned</strong><small>Automation reports; maintainers decide.</small></div>
       </section>
 
+      <section class="section handover-section" id="delivery" aria-labelledby="delivery-title">
+        <div class="section-heading"><div><p class="eyebrow">01 / DELIVERY BUNDLE</p><h2 id="delivery-title">What Lighthouse hands over.</h2></div><p>Adoption leaves a project with the code, rules, tools, workflows and evidence needed to keep moving.</p></div>
+        <div class="handover-grid">
+          <article class="handover-card"><span class="card-index">01</span><h3>Code</h3><p>The application remains the adopter's work. Lighthouse gives it predictable boundaries and selected profiles.</p></article>
+          <article class="handover-card"><span class="card-index">02</span><h3>Conventions</h3><p>Repository, stack and interface rules, with hard checks where the rule can be verified.</p></article>
+          <article class="handover-card"><span class="card-index">03</span><h3>Harness</h3><p>A versioned CLI and package contract that initializes, reconciles and verifies the baseline.</p></article>
+          <article class="handover-card"><span class="card-index">04</span><h3>Workflows</h3><p>The SDLC package, commands and agent guidance that move bounded work through its stages.</p></article>
+          <article class="handover-card"><span class="card-index">05</span><h3>Health</h3><p>Evidence from guardrails, projections and authority checks, with failures and gaps reported plainly.</p></article>
+        </div>
+        <p class="handover-note">Lighthouse owns the baseline and its evidence contract. The adopter owns the product, its decisions and the code that delivers it.</p>
+      </section>
+
       <section class="brand-section section" aria-labelledby="brand-title">
         <div class="brand-copy">
           <p class="eyebrow">IDENTITY / SIGNAL BLUE</p>
@@ -157,7 +173,7 @@
       </section>
 
       <section class="section authority-section" id="authorities" aria-labelledby="authorities-title">
-        <div class="section-heading"><div><p class="eyebrow">01 / AUTHORITIES</p><h2 id="authorities-title">One story, two sources of truth.</h2></div><p>ProductShape defines what to build. ArcShape records how the system is shaped.</p></div>
+          <div class="section-heading"><div><p class="eyebrow">02 / AUTHORITIES</p><h2 id="authorities-title">One story, two sources of truth.</h2></div><p>ProductShape defines what to build. ArcShape records how the system is shaped.</p></div>
         <div class="authority-grid">
           <a class="authority-card" href="model/index.html"><span class="card-index">PRODUCT</span><h3>Product model</h3><p>The generated ProductShape snapshot shows the accepted product model and its delivery capabilities.</p><span class="route-action">Open the product snapshot <span aria-hidden="true">↗</span></span></a>
           <a class="authority-card" href="architecture/index.html"><span class="card-index">ARCHITECTURE</span><h3>Architecture snapshot</h3><p>The ArcShape reader separates the implemented Lighthouse repository from the target initialized application.</p><span class="route-action">Open the architecture snapshot <span aria-hidden="true">↗</span></span></a>
@@ -170,7 +186,7 @@
       </section>
 
       <section class="section flow-section" id="flow" aria-labelledby="flow-title">
-        <div class="section-heading"><div><p class="eyebrow">02 / DELIVERY FLOW</p><h2 id="flow-title">Make the next step visible.</h2></div><p>The target SDLC package keeps product, design, implementation and evidence connected.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">03 / DELIVERY FLOW</p><h2 id="flow-title">Make the next step visible.</h2></div><p>The target SDLC package keeps product, design, implementation and evidence connected.</p></div>
         <div class="flow-grid" aria-label="Target Lighthouse delivery stages">
           <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess urgency, complexity, dependencies and blast radius.</p></article>
           <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Turn the work item into a bounded, reviewable change.</p></article>
@@ -185,7 +201,7 @@
       <section class="section" id="foundation" aria-labelledby="foundation-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">03 / FOUNDATION</p>
+            <p class="eyebrow">04 / FOUNDATION</p>
             <h2 id="foundation-title">Engineering expectations you can adopt.</h2>
           </div>
           <p>One baseline for repository practice, profiles and interface work.</p>
@@ -199,7 +215,7 @@
       </section>
 
       <section class="section adoption-section" id="adoption" aria-labelledby="adoption-title">
-        <div class="section-heading"><div><p class="eyebrow">04 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">05 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
         <div class="adoption-flow">
           <article><span class="step-number">01</span><h3>Choose a route</h3><p>Start with the profile that matches the work. Keep the rest optional.</p></article>
           <article><span class="step-number">02</span><h3>Adopt the contract</h3><p>Run the initializer, inspect its managed paths and record exceptions with an owner.</p></article>
@@ -209,7 +225,7 @@
       </section>
 
       <section class="section" id="routes" aria-labelledby="routes-title">
-        <div class="section-heading"><div><p class="eyebrow">05 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">06 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
         <div class="route-grid">
           <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/dotnet/profile/adoption.md"><span class="route-label">Backend</span><h3>New or existing .NET work</h3><p>Use the creator for a new backend or follow the assessment route for an existing one.</p><span class="route-action">Open the .NET route <span aria-hidden="true">↗</span></span></a>
           <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md"><span class="route-label">Interface</span><h3>Adopt the visual system</h3><p>Use the UI package's semantic tokens and native recipes in an existing product.</p><span class="route-action">Open the design route <span aria-hidden="true">↗</span></span></a>
@@ -233,6 +249,9 @@
           <h2 id="search-dialog-title">Recent</h2>
           <button class="search-option" type="button" data-search-target="#authorities" data-search-name="ProductShape ArcShape authorities">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Authorities <small>Product and architecture</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="#delivery" data-search-name="delivery bundle code conventions harness workflows health">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Delivery bundle <small>What Lighthouse hands over</small></span><b aria-hidden="true">↗</b>
           </button>
           <button class="search-option" type="button" data-search-target="#flow" data-search-name="delivery flow triage refine propose implement integrate review">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery flow <small>Stages and state</small></span><b aria-hidden="true">↗</b>

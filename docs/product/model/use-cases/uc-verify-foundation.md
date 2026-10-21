@@ -7,12 +7,12 @@ primary-actor: ACT-ADOPTER
 supporting-actors: [ACT-AGENT-HOST]
 bounded-context: BC-FOUNDATION
 governed-by: [BR-FAIL-CLOSED]
-uses-terms: [TERM-GUARDRAIL, TERM-MANAGED-PROJECTION]
+uses-terms: [TERM-FOUNDATION, TERM-DELIVERY-BUNDLE, TERM-GUARDRAIL, TERM-MANAGED-PROJECTION]
 ---
 
 ## Goal
 
-Know whether the selected Lighthouse foundation and profiles are present, coherent and verified.
+Know whether the selected Lighthouse delivery bundle and profiles are present, coherent and verified.
 
 ## Trigger
 
@@ -26,7 +26,7 @@ The project contains a Lighthouse manifest or an adoption route that defines the
 
 1. Lighthouse reads the declared baseline and selected profiles.
 2. It checks owned projections, documentation links, profile prerequisites and configured guardrails.
-3. It reports passing, failing, drifted, unavailable and unconfigured checks separately.
+3. It reports the health evidence for the bundle as passing, failing, drifted, unavailable or unconfigured checks.
 4. The adopter uses the report to repair, accept an exception or escalate a decision.
 
 ## Alternative Flows
@@ -39,4 +39,4 @@ The manifest is invalid, an owned projection drifts or a configured guardrail ca
 
 ## Postconditions
 
-The project has a deterministic verification result and a clear list of evidence gaps.
+The project has a deterministic health result and a clear list of evidence gaps.

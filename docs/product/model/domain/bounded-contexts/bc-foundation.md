@@ -7,11 +7,11 @@ status: draft
 
 ## Responsibility
 
-Provide a reusable, adoptable delivery harness that helps a project start consistently and keep its engineering expectations visible and verifiable.
+Provide a reusable, adoptable delivery bundle that helps a project start consistently and keep its engineering expectations, delivery workflows and health evidence visible and verifiable.
 
 ## Language
 
-The context defines foundations, profiles, adoption, guardrails, managed projections, integrations, lifecycle stages and verification as reusable project capabilities. Product and architecture meaning remains in the authorities that own those concerns.
+The context defines foundations, delivery bundles, profiles, adoption, guardrails, managed projections, integrations, lifecycle stages and verification as reusable project capabilities. Product and architecture meaning remains in the authorities that own those concerns.
 
 ## Boundaries
 
