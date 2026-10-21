@@ -34,6 +34,6 @@ Deliver one independent UI package under `src/packages/ui/`, separate from the L
 
 ## References
 
-- [Visual contract](../../src/packages/ui/DESIGN.md)
-- [UI package](../../src/packages/ui/README.md)
-- [Quality requirements](../architecture/10-quality-requirements.md)
+- [Visual contract](../../../src/packages/ui/DESIGN.md)
+- [UI package](../../../src/packages/ui/README.md)
+- [Quality requirements](../10-quality-requirements/README.md)

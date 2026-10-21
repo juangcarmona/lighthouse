@@ -16,7 +16,7 @@ The target product adds profile-aware initialization: every initialized project 
 
 The target full-stack profile provides a feature-aligned modular monolith when the adopter selects a Lighthouse-owned backend; frontend-only applications and requested microservices receive only the selected capabilities.
 
-The target is defined by the applied [CHG-INITIAL product change](../product/changes/completed/chg-initial/change.md) and is not implemented in full by the current CLI.
+The target is defined by the applied [CHG-INITIAL product change](../../product/changes/completed/chg-initial/change.md) and is not implemented in full by the current CLI.
 
 ## Architecture viewpoints
 

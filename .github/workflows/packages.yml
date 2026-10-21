@@ -1,0 +1,73 @@
+name: Lighthouse package contracts
+
+on:
+  pull_request:
+    paths:
+      - "src/packages/**"
+      - "src/tests/**"
+      - "scripts/verify-package-consumer.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/packages.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/packages/**"
+      - "src/tests/**"
+      - "scripts/verify-package-consumer.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/packages.yml"
+  workflow_dispatch:
+    inputs:
+      consumer_repository:
+        description: "Adopter repository to exercise with the packaged CLI"
+        required: true
+      consumer_ref:
+        description: "Adopter ref"
+        required: true
+        default: "main"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-packages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Check package contents
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
+
+  adopter:
+    if: github.event_name == 'workflow_dispatch'
+    name: Install CLI in adopter checkout
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ inputs.consumer_repository }}
+          ref: ${{ inputs.consumer_ref }}
+          path: .tmp/consumer
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run verify:package-consumer
+        env:
+          LIGHTHOUSE_CONSUMER_ROOT: .tmp/consumer
