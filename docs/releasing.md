@@ -8,7 +8,12 @@ The first `0.1.0` publication is a maintainer bootstrap because npm cannot attac
 
 From an SSH session in a clean checkout of the merged `main` commit, confirm the npm identity, install dependencies, inspect both tarballs, and publish both packages with `--access public --provenance=false`.
 
+The npm login is remote: use the web or device flow on the SSH host, open the displayed URL on your local device, and do not paste a password or token into the SSH session.
+
 ```bash
+npm whoami
+# If the command returns E401, start the remote device flow and complete it in a local browser.
+npm login --registry=https://registry.npmjs.org --auth-type=web
 npm whoami
 npm ci --ignore-scripts
 npm pack --workspace @juangcarmona/lighthouse --dry-run --json
