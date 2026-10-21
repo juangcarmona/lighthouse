@@ -1,9 +1,24 @@
 {
   "name": "@juangcarmona/lighthouse",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Lighthouse adoption and verification CLI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juangcarmona/lighthouse.git",
+    "directory": "src/packages/cli"
+  },
+  "homepage": "https://juangcarmona.github.io/lighthouse/",
+  "bugs": {
+    "url": "https://github.com/juangcarmona/lighthouse/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "files": ["src/lighthouse.mjs", "assets", "README.md"],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"
