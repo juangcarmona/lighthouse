@@ -4,7 +4,10 @@ on:
   pull_request:
     paths:
       - "src/dotnet/**"
-      - "src/packages/cli/**"
+      - "src/packages/cli/internal/create-dotnet.mjs"
+      - "src/packages/cli/internal/verify-dotnet.mjs"
+      - "src/packages/cli/src/lighthouse.mjs"
+      - "src/packages/cli/assets/schemas/**"
       - "scripts/verify-adoption.mjs"
       - "package.json"
       - "package-lock.json"
@@ -13,7 +16,10 @@ on:
     branches: [main]
     paths:
       - "src/dotnet/**"
-      - "src/packages/cli/**"
+      - "src/packages/cli/internal/create-dotnet.mjs"
+      - "src/packages/cli/internal/verify-dotnet.mjs"
+      - "src/packages/cli/src/lighthouse.mjs"
+      - "src/packages/cli/assets/schemas/**"
       - "scripts/verify-adoption.mjs"
       - "package.json"
       - "package-lock.json"
