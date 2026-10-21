@@ -8,9 +8,9 @@ on:
       - "assets/**"
       - "docs/product/**"
       - "docs/architecture/**"
-      - "docs/adr/**"
       - ".product/config.yaml"
       - "scripts/build-public-site.mjs"
+      - "scripts/capture-public-site.mjs"
       - "scripts/verify-public-site.mjs"
       - "package.json"
       - "package-lock.json"
@@ -23,9 +23,9 @@ on:
       - "assets/**"
       - "docs/product/**"
       - "docs/architecture/**"
-      - "docs/adr/**"
       - ".product/config.yaml"
       - "scripts/build-public-site.mjs"
+      - "scripts/capture-public-site.mjs"
       - "scripts/verify-public-site.mjs"
       - "package.json"
       - "package-lock.json"
@@ -53,6 +53,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Install Chrome for architecture rendering
         run: npx --no-install puppeteer browsers install chrome
+      - name: Install Chromium for portal screenshots
+        run: npx --no-install playwright install --with-deps chromium
       - name: Validate ProductShape
         run: npx prodshape validate
       - name: Validate Product Changes
@@ -61,6 +63,25 @@ jobs:
         run: npx arcshape validate --docs docs/architecture --links --citations
       - name: Build and verify the deployable site
         run: npm run verify:public-site
+      - name: Serve the validated site for screenshot capture
+        run: |
+          nohup python3 -m http.server 4174 --directory dist/public-site > /tmp/lighthouse-public-site.log 2>&1 &
+          for attempt in {1..10}; do
+            if curl --fail --silent http://127.0.0.1:4174/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/lighthouse-public-site.log
+          exit 1
+      - name: Capture portal screenshots
+        run: npm run capture:public-site
+      - name: Upload portal screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-public-site-screenshots-${{ github.event.pull_request.number || github.run_id }}
+          path: test-results/public-site
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload the validated site for review
         uses: actions/upload-artifact@v7
         with:

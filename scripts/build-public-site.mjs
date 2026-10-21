@@ -39,9 +39,23 @@ await mkdir(join(output, 'architecture'), { recursive: true });
 await execFile(npx, ['prodshape', 'graph', '--format', 'html'], { cwd: root });
 await cp(join(root, '.product/generated/snapshot.html'), join(output, 'model/index.html'));
 
+const architectureArgs = [
+  'arcshape',
+  'site',
+  'build',
+  '--docs',
+  join(root, 'docs/architecture'),
+  '--out',
+  join(output, 'architecture/index.html'),
+  '--title',
+  'Lighthouse',
+];
+const sourceRef = process.env.GITHUB_SHA || process.env.GITHUB_REF_NAME;
+if (sourceRef) architectureArgs.push('--source-ref', sourceRef);
+
 await execFile(
   npx,
-  ['arcshape', 'site', 'build', '--docs', join(root, 'docs/architecture'), '--out', join(output, 'architecture/index.html')],
+  architectureArgs,
   { cwd: root, env: { ...process.env, GITHUB_ACTIONS: process.env.GITHUB_ACTIONS ?? 'true' } },
 );
 
