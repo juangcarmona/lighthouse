@@ -33,22 +33,23 @@ try {
   const [{ filename }] = JSON.parse(packageOutput);
   const tarball = resolve(temp, filename);
 
-  run('npm', ['install', '--ignore-scripts', '--no-save', '--package-lock=false', tarball], temp);
+  run('npm', ['install', '--ignore-scripts', '--save-dev', tarball], temp);
 
   const consumerManifest = JSON.parse(await readFile(join(temp, 'package.json'), 'utf8'));
   const product = process.env.LIGHTHOUSE_PRODUCT_NAME ?? consumerManifest.name?.split('/').pop() ?? 'adopter';
-  await writeFile(join(temp, 'lighthouse.json'), JSON.stringify({
-    $schema: './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-manifest.schema.json',
-    schemaVersion: 1,
-    baseline: '0.1.0',
-    product,
-    profiles: [],
-    integrations: { productShape: null, arcShape: null, agenticSdlc: null },
-    managed: ['LIGHTHOUSE.md'],
-  }, null, 2) + '\n');
 
   const bin = resolve(temp, 'node_modules/.bin/lighthouse');
-  run(bin, ['init'], temp);
+  const brownfield = spawnSync(bin, ['init', '--name', product, '--dry-run'], { cwd: temp, encoding: 'utf8' });
+  if (brownfield.status !== 0 && !brownfield.stderr.includes('conflict')) {
+    console.error('Expected brownfield initialization to report an existing managed path.');
+    process.exit(1);
+  }
+  if (brownfield.status !== 0) {
+    for (const path of ['.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml']) {
+      await rm(join(temp, path), { force: true });
+    }
+  }
+  run(bin, ['init', '--name', product], temp);
   run(bin, ['verify'], temp);
 
   await writeFile(join(temp, 'LIGHTHOUSE.md'), 'drift');

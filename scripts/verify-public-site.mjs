@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const output = join(root, 'dist/public-site');
+let manifest = null;
+try { manifest = JSON.parse(await readFile(join(root, 'lighthouse.json'), 'utf8')); }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
+const publicSiteEnabled = manifest?.repository?.publicSite?.enabled !== false;
 const required = [
   'index.html',
   'site.css',
@@ -12,9 +16,8 @@ const required = [
   'assets/lighthouse-icon.svg',
   'assets/lighthouse-icon-light.svg',
   'assets/github-banner.svg',
-  'model/index.html',
-  'architecture/index.html',
 ];
+if (publicSiteEnabled) required.push('model/index.html', 'architecture/index.html');
 const exists = async (path) => stat(path).then(() => true).catch(() => false);
 
 for (const file of required) {
@@ -31,15 +34,17 @@ for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/gu)) {
   }
 }
 
-const [productSnapshot, architectureSnapshot] = await Promise.all([
-  readFile(join(output, 'model/index.html'), 'utf8'),
-  readFile(join(output, 'architecture/index.html'), 'utf8'),
-]);
-if (!productSnapshot.includes('<title>Product Snapshot</title>')) {
-  throw new Error('Published ProductShape snapshot is missing or stale.');
-}
-if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
-  throw new Error('Published ArcShape snapshot is missing or stale.');
+if (publicSiteEnabled) {
+  const [productSnapshot, architectureSnapshot] = await Promise.all([
+    readFile(join(output, 'model/index.html'), 'utf8'),
+    readFile(join(output, 'architecture/index.html'), 'utf8'),
+  ]);
+  if (!productSnapshot.includes('<title>Product Snapshot</title>')) {
+    throw new Error('Published ProductShape snapshot is missing or stale.');
+  }
+  if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
+    throw new Error('Published ArcShape snapshot is missing or stale.');
+  }
 }
 
 const [bundle, tokens, components] = await Promise.all([

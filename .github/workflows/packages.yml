@@ -50,6 +50,33 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
 
+  clean-consumer:
+    name: Exercise a clean consumer
+    needs: package
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Create empty consumer fixture
+        run: |
+          mkdir -p .tmp/consumer
+          cat > .tmp/consumer/package.json <<'EOF'
+          {
+            "name": "lighthouse-clean-consumer",
+            "private": true,
+            "version": "0.0.0"
+          }
+          EOF
+      - run: npm run verify:package-consumer
+        env:
+          LIGHTHOUSE_CONSUMER_ROOT: .tmp/consumer
+
   adopter:
     if: github.event_name == 'workflow_dispatch'
     name: Install CLI in adopter checkout
