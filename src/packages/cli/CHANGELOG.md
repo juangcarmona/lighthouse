@@ -1,0 +1,19 @@
+# @juangcarmona/lighthouse
+
+## 0.2.0
+
+### Minor Changes
+
+- 3efd7d4: # Authority initialization through provider CLIs
+
+  Add `lighthouse authorities` with a dry-run-first preflight for ProductShape and ArcShape, explicit application, provider-owned conflict handling and exact version recording in `lighthouse.json`.
+
+- abb6a35: # Repository foundation and atomic site builds
+
+  Extend `lighthouse init` and `lighthouse verify` with repository boundaries, brownfield conflict planning, installed guardrails and deterministic repository convention checks. Public-site builds now validate ProductShape and ArcShape before an atomic publication.
+
+### Patch Changes
+
+- b14f4ba: # Safe Lighthouse reconciliation
+
+  Add a dry-run-first `lighthouse reconcile` command that creates only missing Lighthouse-managed paths and reports drift as a conflict.
