@@ -65,7 +65,14 @@ jobs:
           node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
+      - name: Remove obsolete npm auth setting
+        run: |
+          if [ -f "$HOME/.npmrc" ]; then
+            sed -i '/^[[:space:]]*always-auth[[:space:]]*=/d' "$HOME/.npmrc"
+          fi
       - run: npm ci --ignore-scripts
+      - name: Install Chrome for architecture rendering
+        run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
       - name: Configure release identity
         run: |
