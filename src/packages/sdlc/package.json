@@ -1,0 +1,41 @@
+{
+  "name": "@juangcarmona/lighthouse-sdlc",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Provider-neutral SDLC skills, commands and route contracts for Lighthouse adopters",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juangcarmona/lighthouse.git",
+    "directory": "src/packages/sdlc"
+  },
+  "homepage": "https://juangcarmona.github.io/lighthouse/",
+  "bugs": {
+    "url": "https://github.com/juangcarmona/lighthouse/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "commands",
+    "contract.json",
+    "gates.json",
+    "meta-commands",
+    "README.md",
+    "routes.json",
+    "schemas",
+    "skills",
+    "src"
+  ],
+  "bin": {
+    "lighthouse-sdlc": "./src/sdlc.mjs"
+  },
+  "exports": {
+    ".": "./src/sdlc.mjs",
+    "./contract.json": "./contract.json",
+    "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json"
+  }
+}

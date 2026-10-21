@@ -10,7 +10,8 @@ description: Current package and site delivery boundaries and the target Aspire 
 
 | Surface | Input | Output | Runtime |
 | --- | --- | --- | --- |
-| CLI package | `src/packages/cli/` | Public npm package, with `0.1.0` bootstrap pending | Node.js |
+| CLI package | `src/packages/cli/` | Public npm package with Changesets-managed releases | Node.js |
+| SDLC package | `src/packages/sdlc/` | Provider-neutral lifecycle contract package | Node.js and agent host |
 | UI package | `src/packages/ui/` | CSS package with design contract | Consumer frontend toolchain |
 | .NET reference profile | `src/dotnet/` | Reference assemblies and test output | .NET SDK |
 | Public site | `src/public-site/`, ProductShape, ArcShape, assets and UI CSS | `dist/public-site/` with `model/` and `architecture/` snapshots | GitHub Pages |

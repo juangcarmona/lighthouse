@@ -64,7 +64,8 @@ try {
     $schema: './schemas/lighthouse-manifest.schema.json', schemaVersion: 1, baseline: '0.1.0',
     product: name, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
-    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml'],
+    packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' } },
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json'],
     repository: {
       layout: ['src', 'docs', 'infra', 'scripts'],
       publicSite: { enabled: true },

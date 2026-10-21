@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-sdlc-control-plane.schema.json",
+  "title": "Lighthouse SDLC control plane",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "package", "routes", "gates", "state", "memory", "roles", "adapters"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "@juangcarmona/lighthouse-sdlc" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "routes": { "type": "array", "items": { "type": "string" } },
+    "gates": { "type": "array", "items": { "type": "string" } },
+    "state": { "type": "object", "additionalProperties": false, "required": ["provider"], "properties": { "provider": { "type": "string" } } },
+    "memory": { "type": "object", "additionalProperties": false, "required": ["provider", "scopes"], "properties": { "provider": { "type": "string" }, "scopes": { "type": "array", "items": { "type": "string" } } } },
+    "roles": { "type": "object", "additionalProperties": { "type": "string" } },
+    "adapters": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}

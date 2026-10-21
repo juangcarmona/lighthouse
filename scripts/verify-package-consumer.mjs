@@ -33,8 +33,13 @@ try {
   ], root);
   const [{ filename }] = JSON.parse(packageOutput);
   const tarball = resolve(temp, filename);
+  const sdlcOutput = run('npm', [
+    'pack', '--workspace', '@juangcarmona/lighthouse-sdlc', '--pack-destination', temp, '--json'
+  ], root);
+  const [{ filename: sdlcFilename }] = JSON.parse(sdlcOutput);
+  const sdlcTarball = resolve(temp, sdlcFilename);
 
-  run('npm', ['install', '--ignore-scripts', '--save-dev', tarball], temp);
+  run('npm', ['install', '--ignore-scripts', '--save-dev', tarball, sdlcTarball], temp);
 
   const consumerManifest = JSON.parse(await readFile(join(temp, 'package.json'), 'utf8'));
   const product = process.env.LIGHTHOUSE_PRODUCT_NAME ?? consumerManifest.name?.split('/').pop() ?? 'adopter';

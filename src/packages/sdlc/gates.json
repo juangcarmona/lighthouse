@@ -1,0 +1,10 @@
+{
+  "$schema": "./schemas/gates.schema.json",
+  "version": 1,
+  "gates": [
+    { "id": "triaged", "stage": "triage", "question": "Is the work item understood enough to choose a route?", "decisionOwner": "adopter" },
+    { "id": "ready", "stage": "refine", "question": "Is the problem defined well enough to design a solution?", "decisionOwner": "adopter" },
+    { "id": "planned", "stage": "propose", "question": "Is the solution and its evidence plan ready to implement?", "decisionOwner": "adopter" },
+    { "id": "done", "stage": "implement", "question": "Does the change satisfy its deterministic and named judgement checks?", "decisionOwner": "adopter" }
+  ]
+}

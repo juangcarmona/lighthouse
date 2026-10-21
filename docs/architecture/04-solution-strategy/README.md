@@ -32,7 +32,7 @@ Python and other stacks receive profiles that define their own dependency, forma
 
 ## Package ownership
 
-The current workspace keeps the CLI and UI as separate packages. Profile assets may remain distributed by the Lighthouse installer until a profile needs an independent release or installation boundary.
+The current workspace keeps the CLI, SDLC and UI as separate packages. The CLI owns initialization and verification, the SDLC package owns lifecycle skills and route contracts, and the UI package owns visual tokens and recipes. Profile assets may remain distributed by the Lighthouse installer until a profile needs an independent release or installation boundary.
 
 ## Current repository versus target output
 
@@ -42,11 +42,13 @@ The current repository is the package authoring workspace. The target is the ado
 flowchart TB
     accTitle: Lighthouse authoring workspace and initialized output
     source[Current Lighthouse workspace] --> cli[CLI package]
+    source --> sdlc[SDLC package]
     source --> ui[UI package]
     source --> profiles[Reference profiles]
     cli --> init[Target initializer]
     ui --> init
     profiles --> init
+    sdlc --> init
     init --> adopter[Initialized adopter repository]
     source --> public[Generated public site]
     authorities[ProductShape and ArcShape] --> public
