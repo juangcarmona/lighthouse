@@ -63,7 +63,16 @@ try {
   await writeFile(resolve(stage, 'lighthouse.json'), JSON.stringify({
     $schema: './schemas/lighthouse-manifest.schema.json', schemaVersion: 1, baseline: '0.1.0',
     product: name, profiles: ['dotnet-backend'],
-    integrations: { productShape: null, arcShape: null, agenticSdlc: null }, managed: ['LIGHTHOUSE.md']
+    integrations: { productShape: null, arcShape: null },
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml'],
+    repository: {
+      layout: ['src', 'docs', 'infra', 'scripts'],
+      publicSite: { enabled: true },
+      conventions: {
+        commits: 'conventional',
+        branchPattern: '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$'
+      }
+    }
   }, null, 2) + '\n');
   await writeFile(resolve(stage, 'package.json'), JSON.stringify({
     name: `@juangcarmona/${name.toLowerCase()}`, private: true, type: 'module', engines: { node: '>=22' },

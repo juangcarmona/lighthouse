@@ -9,4 +9,4 @@
 | Use the visual system | [UI package README](../src/packages/ui/README.md) and [design guide](../src/packages/ui/DESIGN.md) |
 | Read durable decisions | [Architecture decisions](architecture/09-architecture-decisions/README.md) |
 
-ProductShape owns product intent, ArcShape owns architecture documentation and Lighthouse owns the implementation and adoption contract. The current command surface is `init` and `verify`; proposed delivery capabilities live in the active Product Change until they have executable evidence.
+ProductShape owns product intent, ArcShape owns architecture documentation and Lighthouse owns the implementation and adoption contract. The current command surface is `init` and `verify`; `init` creates the repository boundaries and `verify` checks them together with the managed projection and configured conventions.

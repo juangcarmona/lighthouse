@@ -1,12 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
-const manifest = { schemaVersion: 1, baseline: '0.1.0', product: 'fixture', profiles: [], integrations: { productShape: null, arcShape: null, agenticSdlc: null }, managed: ['LIGHTHOUSE.md'] };
+const manifest = {
+  schemaVersion: 1,
+  baseline: '0.1.0',
+  product: 'fixture',
+  profiles: [],
+  integrations: { productShape: null, arcShape: null },
+  managed: ['LIGHTHOUSE.md'],
+  repository: {
+    layout: ['src', 'docs', 'infra', 'scripts'],
+    publicSite: { enabled: false },
+    conventions: {
+      commits: 'conventional',
+      branchPattern: '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$'
+    }
+  }
+};
 async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); return dir; }
 function run(dir, command) { return spawnSync(process.execPath, [tool, command], { cwd: dir, encoding: 'utf8' }); }
 
@@ -16,6 +31,16 @@ test('init creates a projection and refuses to overwrite product work', async ()
     assert.equal(run(dir, 'init').status, 0);
     assert.equal(run(dir, 'verify').status, 0);
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /# fixture repository baseline/);
+    for (const file of ['scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml']) {
+      await access(join(dir, file));
+    }
+    const guard = join(dir, 'scripts/lighthouse-guard.mjs');
+    assert.equal(spawnSync(process.execPath, [guard, 'verify'], { cwd: dir }).status, 0);
+    const message = join(dir, 'message.txt');
+    await writeFile(message, 'feat: add a fixture\n');
+    assert.equal(spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir }).status, 0);
+    await writeFile(message, 'not conventional\n');
+    assert.notEqual(spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir }).status, 0);
     const again = run(dir, 'init');
     assert.equal(again.status, 1);
     assert.match(again.stderr, /refusing to overwrite/);
@@ -41,6 +66,7 @@ test('manifest cannot advertise unsupported checks or unverified managed files',
       { ...manifest, managed: ['LIGHTHOUSE.md', 'unverified.md'] },
       { ...manifest, baseline: '99.0.0' },
       { ...manifest, integrations: { ...manifest.integrations, arcShape: 'latest' } },
+      { ...manifest, integrations: { ...manifest.integrations, agenticSdlc: null } },
       { ...manifest, unexpected: true }
     ]) {
       await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(changed));
@@ -48,5 +74,30 @@ test('manifest cannot advertise unsupported checks or unverified managed files',
       assert.equal(result.status, 1);
       assert.match(result.stderr, /Invalid lighthouse.json/);
     }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('greenfield init creates the repository boundaries and a default manifest', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-greenfield-'));
+  try {
+    const result = spawnSync(process.execPath, [tool, 'init', '--name', 'Greenfield'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    for (const directory of ['src', 'docs', 'infra', 'scripts']) assert.equal((await stat(join(dir, directory))).isDirectory(), true);
+    const generated = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.equal(generated.repository.publicSite.enabled, true);
+    assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
+    assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
+    assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('init dry-run reports brownfield conflicts without writing', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-brownfield-'));
+  try {
+    await writeFile(join(dir, 'src'), 'project-owned file');
+    const result = spawnSync(process.execPath, [tool, 'init', '--name', 'Brownfield', '--dry-run'], { cwd: dir, encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /src exists but is not a directory/);
+    assert.equal(await readFile(join(dir, 'src'), 'utf8'), 'project-owned file');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

@@ -11,8 +11,26 @@
     "baseline": {"const": "0.1.0"},
     "product": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$"},
     "profiles": {"type": "array", "items": {"enum": ["node-tooling", "dotnet-backend", "visual-theme"]}, "uniqueItems": true},
-    "integrations": {"type": "object", "additionalProperties": false, "required": ["productShape", "arcShape", "agenticSdlc"], "properties": {"productShape": {"$ref": "#/$defs/pin"}, "arcShape": {"$ref": "#/$defs/pin"}, "agenticSdlc": {"$ref": "#/$defs/pin"}}},
-    "managed": {"const": ["LIGHTHOUSE.md"]}
+    "integrations": {"type": "object", "additionalProperties": false, "required": ["productShape", "arcShape"], "properties": {"productShape": {"$ref": "#/$defs/pin"}, "arcShape": {"$ref": "#/$defs/pin"}}},
+    "managed": {"anyOf": [
+      {"const": ["LIGHTHOUSE.md"]},
+      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml"]}
+    ]},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layout", "publicSite", "conventions"],
+      "properties": {
+        "layout": {"const": ["src", "docs", "infra", "scripts"]},
+        "publicSite": {"type": "object", "additionalProperties": false, "required": ["enabled"], "properties": {"enabled": {"type": "boolean"}}},
+        "conventions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commits", "branchPattern"],
+          "properties": {"commits": {"const": "conventional"}, "branchPattern": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
   },
   "$defs": {
     "pin": {"type": ["string", "null"], "pattern": "^(?:\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})$"}
