@@ -11,9 +11,10 @@ The decisions live beside this index in this section directory. This section ide
 | Decision | ADR | Affected architecture |
 | --- | --- | --- |
 | Lighthouse and adopters have separate ownership | [ADR-0001](0001-lighthouse-and-factory-ownership.md) | Context and scope; adoption boundary |
-| Start with a private local tool and defer publication | [ADR-0002](0002-distribution.md) | Distribution and adoption boundary |
+| Start with a private local tool and defer publication | [ADR-0002](0002-distribution.md) | Initial distribution phase |
 | Deliver one Lighthouse UI package | [ADR-0004](0004-lighthouse-ui-package.md) | UI package and initialization projections |
 | Separate source packages from adopter projections | [ADR-0005](0005-source-packages-and-adopter-projections.md) | Source layout; package boundaries; adopter root contracts |
+| Publish validated Lighthouse packages through protected release automation | [ADR-0006](0006-public-package-release.md) | Public package distribution and release control |
 
 The profile-aware initialization architecture is currently described by the applied [CHG-INITIAL product change](../../product/changes/completed/chg-initial/change.md); it is not an ADR or an implemented runtime contract yet.
 

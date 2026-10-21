@@ -15,7 +15,7 @@ description: Current implementation gaps and risks in the target profile-aware L
 | Feature mapping can become ceremony | Full-stack alignment is useful only when it helps tests and maintenance | Keep the mapping at bounded-context and feature boundaries and link to source evidence |
 | Hard checks can overclaim | Some conventions cannot be verified deterministically across stacks | Report unsupported checks as adoption gaps and preserve soft guidance |
 | Provider ownership can drift | ProductShape, ArcShape and OpenSpec have separate managed paths | Run each provider validator and keep Lighthouse integrations thin |
-| Distribution remains local | Package manifests are private and workflows do not publish them | Prove one consumer before choosing registry or release automation |
+| First package publication needs bootstrap | npm cannot attach a trusted publisher before each package exists | Publish `0.1.0` once from a clean repository checkout, then configure OIDC and the protected `npm-publish` environment |
 | Public snapshots can drift from their authorities | The site output is generated and ignored rather than stored as source | Build ProductShape and ArcShape snapshots in the same verified workflow that publishes the landing |
 
 The repository has no hosted Lighthouse runtime, tracker adapter, durable agent memory store or integrated CodeGraph client today.

@@ -12,13 +12,15 @@ tags: [distribution, packaging, adoption]
 <!-- markdownlint-disable-next-line MD025 -->
 # ADR-0002: Start with a private local tool and defer publication
 
+> Historical scope: the initial private phase ended after the package contract was validated; [ADR-0006](0006-public-package-release.md) records the public publication decision.
+
 ## Context
 
 Candidate consumers use different mechanisms, including npm packages and CLIs for ProductShape and ArcShape, plus configured tracker, forge and agent hosts. A broad package suite would commit to APIs before cross-repository adoption has proved them.
 
 ## Decision
 
-Use a private npm workspace and checked-in manifest, schema and scripts as the initial development interface. Keep the first command local and dependency-free. Do not publish public or private packages yet. After one existing product uses the interface, decide whether CLI distribution should be public, private registry or source-controlled local tooling. ADR-0005 refines the source layout without changing this local distribution decision.
+Use a private npm workspace and checked-in manifest, schema and scripts as the initial development interface. Keep the first command local and dependency-free. Do not publish public or private packages yet. After one existing product uses the interface, decide whether CLI distribution should be public, private registry or source-controlled local tooling. ADR-0005 refines the source layout without changing this initial phase; ADR-0006 records the later public package decision.
 
 ## Alternatives considered
 

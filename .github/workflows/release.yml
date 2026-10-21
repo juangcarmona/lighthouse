@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Release operation
+        type: choice
+        required: true
+        default: publish-current-stable
+        options:
+          - publish-current-stable
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  version-pr:
+    name: Maintain Version Packages PR
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1
+        with:
+          version: npm run version
+          commit: 'chore: Version Packages'
+          title: 'Version Packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish stable packages
+    if: >-
+      (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'chore: Version Packages') || startsWith(github.event.head_commit.message, 'Version Packages'))) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'publish-current-stable')
+    runs-on: ubuntu-latest
+    environment:
+      name: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/heads/main' || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      - run: npm run verify
+      - name: Configure release identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Install npm with Trusted Publishing support
+        run: npm install --global npm@11.5.1
+      - name: Publish committed package versions
+        run: npm run release
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
+      - name: Push package tags
+        run: git push origin --tags
