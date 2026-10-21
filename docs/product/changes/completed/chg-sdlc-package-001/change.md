@@ -2,7 +2,7 @@
 id: CHG-SDLC-PACKAGE-001
 type: product-change
 title: Define the Lighthouse SDLC package contract
-status: proposed
+status: applied
 base-revision: 'ec62d169a21adbd5a423f8a59a69ffaa60aee9df'
 operations:
   add:
