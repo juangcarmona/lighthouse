@@ -19,6 +19,10 @@
   "engines": {
     "node": ">=22"
   },
+  "dependencies": {
+    "@arcshape/cli": "0.1.3",
+    "@prodshape/cli": "0.22.0"
+  },
   "files": ["src/lighthouse.mjs", "assets", "README.md"],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"
