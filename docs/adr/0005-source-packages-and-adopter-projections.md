@@ -45,5 +45,5 @@ The source repository also owns a gallery, CSS packages, a .NET profile and repo
 
 - [Distribution and versioning](0002-distribution.md)
 - [Lighthouse UI package](0004-lighthouse-ui-package.md)
-- [Adoption guide](../adoption.md)
+- [Harness package guide](../../src/packages/cli/README.md)
 - [Lighthouse CLI package](../../src/packages/cli/README.md)

@@ -36,5 +36,5 @@ Use a private npm workspace and checked-in manifest, schema and scripts as the i
 ## References
 
 - [Source packages and adopter projections](0005-source-packages-and-adopter-projections.md)
-- [Adoption routes](../adoption.md)
+- [Harness package guide](../../src/packages/cli/README.md)
 - [Solution strategy](../architecture/04-solution-strategy.md)

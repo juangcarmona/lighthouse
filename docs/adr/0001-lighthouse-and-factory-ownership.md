@@ -34,4 +34,4 @@ Lighthouse owns the cross-product baseline, stack profiles and adoption contract
 ## References
 
 - [System context and scope](../architecture/03-context-and-scope.md)
-- [Adoption routes](../adoption.md)
+- [Harness package guide](../../src/packages/cli/README.md)
