@@ -101,3 +101,25 @@ test('init dry-run reports brownfield conflicts without writing', async () => {
     assert.equal(await readFile(join(dir, 'src'), 'utf8'), 'project-owned file');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('reconcile previews and applies missing managed paths without overwriting drift', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const missing = join(dir, '.github/workflows/lighthouse.yml');
+    await rm(missing);
+    const preview = run(dir, 'reconcile');
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /create \.github\/workflows\/lighthouse\.yml/);
+    assert.equal(await access(missing).then(() => true).catch(() => false), false);
+    const applied = spawnSync(process.execPath, [tool, 'reconcile', '--apply'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.match(applied.stdout, /Reconciled missing/);
+    const drifted = join(dir, 'LIGHTHOUSE.md');
+    await writeFile(drifted, 'project-owned content');
+    const conflict = run(dir, 'reconcile');
+    assert.equal(conflict.status, 1);
+    assert.match(conflict.stderr, /LIGHTHOUSE\.md exists with different content/);
+    assert.equal(await readFile(drifted, 'utf8'), 'project-owned content');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});

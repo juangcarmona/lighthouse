@@ -17,7 +17,7 @@ const managedPaths = [
 ];
 const legacyManagedPaths = [projection];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
-const usage = 'Usage: lighthouse <init|verify> [--name <product>] [--dry-run]';
+const usage = 'Usage: lighthouse <init|reconcile|verify> [--name <product>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -261,6 +261,32 @@ async function planInitialization(manifest, manifestMissing) {
   return { operations, conflicts };
 }
 
+async function planReconciliation(manifest) {
+  const operations = [];
+  const conflicts = [];
+  for (const [path, expected] of Object.entries(managedFiles(manifest))) {
+    const target = resolve(root, path);
+    if (!(await exists(target))) {
+      operations.push({ path, action: 'create', content: expected });
+      continue;
+    }
+    try {
+      const current = await readFile(target, 'utf8');
+      if (current === expected) operations.push({ path, action: 'unchanged' });
+      else conflicts.push(`${path} exists with different content; refusing to overwrite it`);
+    } catch {
+      conflicts.push(`${path} exists but is not a readable file; refusing to overwrite it`);
+    }
+  }
+  return { operations, conflicts };
+}
+
+function printReconciliationPlan(plan) {
+  console.log('Lighthouse reconciliation plan:');
+  for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
+  for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
+}
+
 async function initialize(args) {
   let manifest = await readManifest();
   const manifestMissing = !manifest;
@@ -294,6 +320,38 @@ async function initialize(args) {
     if (!configured) execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: root, stdio: 'ignore' });
   } catch { /* A non-git target can adopt the hooks when it creates its repository. */ }
   console.log(`Initialized ${manifest.product}. Review lighthouse.json and the managed guardrails, then run lighthouse verify.`);
+}
+
+async function reconcile(args) {
+  const manifest = await readManifest();
+  if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
+  const problems = validate(manifest);
+  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+  const plan = await planReconciliation(manifest);
+  printReconciliationPlan(plan);
+  const apply = args.includes('--apply');
+  const dryRun = args.includes('--dry-run') || !apply;
+  if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
+  if (plan.conflicts.length) {
+    if (dryRun) process.exitCode = 1;
+    else throw new Error('Reconciliation stopped; resolve the reported conflicts and run lighthouse reconcile again.');
+    return;
+  }
+  if (dryRun) {
+    console.log('Dry run: nothing was changed. Re-run with --apply to create missing managed paths.');
+    return;
+  }
+  for (const operation of plan.operations.filter((item) => item.action === 'create')) {
+    await mkdir(dirname(resolve(root, operation.path)), { recursive: true });
+    try {
+      await writeFile(resolve(root, operation.path), operation.content, { flag: 'wx', mode: operation.path.startsWith('.husky/') ? 0o755 : 0o644 });
+      if (operation.path.startsWith('.husky/')) await chmod(resolve(root, operation.path), 0o755);
+    } catch (error) {
+      if (error.code === 'EEXIST') throw new Error(`Reconciliation stopped; ${operation.path} appeared during the plan.`);
+      throw error;
+    }
+  }
+  console.log('Reconciled missing Lighthouse-managed paths. Run lighthouse verify to check the complete projection.');
 }
 
 function gitBranch() {
@@ -339,16 +397,18 @@ let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
   if (arg === '--dry-run') continue;
+  if (arg === '--apply') { if (command !== 'reconcile') invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   invalidArgument = true;
 }
-if (!['init', 'verify'].includes(command) || invalidArgument) {
+if (!['init', 'reconcile', 'verify'].includes(command) || invalidArgument) {
   console.error(usage);
   process.exit(2);
 }
 try {
   if (command === 'init') await initialize(args.slice(1));
+  else if (command === 'reconcile') await reconcile(args.slice(1));
   else {
     const manifest = await readManifest();
     if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
