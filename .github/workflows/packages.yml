@@ -76,6 +76,7 @@ jobs:
       - run: npm run verify:package-consumer
         env:
           LIGHTHOUSE_CONSUMER_ROOT: .tmp/consumer
+          LIGHTHOUSE_AUTHORITIES_APPLY: "true"
 
   adopter:
     if: github.event_name == 'workflow_dispatch'

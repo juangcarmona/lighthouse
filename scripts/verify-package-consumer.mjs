@@ -1,4 +1,4 @@
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -14,6 +14,7 @@ if (!consumer) {
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   if (result.status !== 0) {
+    process.stderr.write(result.stdout);
     process.stderr.write(result.stderr);
     process.exit(result.status ?? 1);
   }
@@ -50,6 +51,19 @@ try {
     }
   }
   run(bin, ['init', '--name', product], temp);
+  if (process.env.LIGHTHOUSE_AUTHORITIES_APPLY === 'true') {
+    run(bin, ['authorities', '--apply'], temp);
+    for (const path of ['docs/product/README.md', 'docs/architecture/README.md']) {
+      await access(join(temp, path));
+    }
+    const adopted = JSON.parse(await readFile(join(temp, 'lighthouse.json'), 'utf8'));
+    if (adopted.integrations.productShape !== '0.22.0' || adopted.integrations.arcShape !== '0.1.3') {
+      console.error('Expected the authority versions to be recorded after application.');
+      process.exit(1);
+    }
+  } else if (process.env.LIGHTHOUSE_AUTHORITIES_DRY_RUN === 'true') {
+    run(bin, ['authorities', '--dry-run'], temp);
+  }
   run(bin, ['verify'], temp);
 
   await writeFile(join(temp, 'LIGHTHOUSE.md'), 'drift');

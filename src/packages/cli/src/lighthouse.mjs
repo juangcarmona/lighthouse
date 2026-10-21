@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-import { access, chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import { constants } from 'node:fs';
+import { access, chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { constants, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const root = process.cwd();
+const packageRequire = createRequire(import.meta.url);
 const manifestPath = resolve(root, 'lighthouse.json');
 const projection = 'LIGHTHOUSE.md';
 const layout = ['src', 'docs', 'infra', 'scripts'];
@@ -17,7 +19,8 @@ const managedPaths = [
 ];
 const legacyManagedPaths = [projection];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
-const usage = 'Usage: lighthouse <init|reconcile|verify> [--name <product>] [--dry-run] [--apply]';
+const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
+const usage = 'Usage: lighthouse <init|authorities|reconcile|verify> [--name <product>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -298,8 +301,8 @@ async function initialize(args) {
   for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
   for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
   if (normalizeRepository(manifest.repository).publicSite.enabled) {
-    if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: run prodshape init and prodshape validate before publishing');
-    if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: run arcshape init and arcshape validate before publishing');
+    if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+    if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
   }
   if (args.includes('--dry-run')) {
     if (plan.conflicts.length) process.exitCode = 1;
@@ -354,6 +357,115 @@ async function reconcile(args) {
   console.log('Reconciled missing Lighthouse-managed paths. Run lighthouse verify to check the complete projection.');
 }
 
+const authorityCommands = [
+  {
+    label: 'ProductShape',
+    packageName: '@prodshape/cli',
+    command: 'prodshape',
+    initArgs: ['init', '--full', '--sdd', 'none', '--gitignore'],
+    repair: 'prodshape init --full --sdd none --gitignore',
+  },
+  {
+    label: 'ArcShape',
+    packageName: '@arcshape/cli',
+    command: 'arcshape',
+    initArgs: ['init', '--no-agents'],
+    applyArgs: ['init', '--no-agents', '--yes'],
+    repair: 'arcshape init --no-agents --yes',
+  },
+];
+
+function providerExecutable(authority) {
+  const packageJson = packageRequire.resolve(`${authority.packageName}/package.json`);
+  const metadata = JSON.parse(readFileSync(packageJson, 'utf8'));
+  const binary = typeof metadata.bin === 'string' ? metadata.bin : metadata.bin?.[authority.command];
+  if (!binary) throw new Error(`${authority.packageName} does not declare a ${authority.command} executable`);
+  return resolve(dirname(packageJson), binary);
+}
+
+function providerHasConflict(output) {
+  return output.split('\n').some((line) => /^\s*conflict\b/i.test(line))
+    || /Conflicts\s*\(\s*[1-9]\d*\s*\)/i.test(output);
+}
+
+function runAuthorityCommand(authority, dryRun) {
+  const initArgs = dryRun ? authority.initArgs : (authority.applyArgs ?? authority.initArgs);
+  const args = [providerExecutable(authority), ...initArgs];
+  if (dryRun) args.push('--dry-run');
+  const result = spawnSync(process.execPath, args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+  console.log(`\n${authority.label} ${dryRun ? 'preflight' : 'apply'}:`);
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  return {
+    ok: result.status === 0 && !providerHasConflict(output),
+    output,
+    status: result.status,
+  };
+}
+
+async function writeManifestAtomically(manifest) {
+  const temporary = `${manifestPath}.tmp-${process.pid}`;
+  await writeFile(temporary, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+  await rename(temporary, manifestPath);
+}
+
+async function ensureProjectionReady(manifest) {
+  const target = resolve(root, projection);
+  try {
+    const current = await readFile(target, 'utf8');
+    if (current !== render(manifest)) {
+      throw new Error(`${projection} has drifted; regenerate it from lighthouse.json before running lighthouse authorities --apply.`);
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
+
+async function writeProjection(manifest) {
+  const target = resolve(root, projection);
+  await writeFile(target, render(manifest), { flag: 'w' });
+}
+
+async function authorities(args) {
+  const manifest = await readManifest();
+  if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
+  const problems = validate(manifest);
+  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+  const apply = args.includes('--apply');
+  const dryRun = args.includes('--dry-run') || !apply;
+  if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
+  console.log('Lighthouse authority plan:');
+  console.log('  ProductShape: initialize the full ProductShape layout without an SDD integration');
+  console.log('  ArcShape: initialize arc42 documentation without installing agent capabilities');
+  console.log('  Provider-owned files remain under provider control; Lighthouse records only exact versions.');
+  const preflights = authorityCommands.map((authority) => ({ authority, result: runAuthorityCommand(authority, true) }));
+  const failed = preflights.filter(({ result }) => !result.ok);
+  if (failed.length) {
+    throw new Error(failed.map(({ authority }) => `${authority.label} preflight failed; repair with: ${authority.repair}`).join('\n'));
+  }
+  if (dryRun) {
+    console.log('Dry run: nothing was changed. Re-run with --apply to apply both provider plans.');
+    return;
+  }
+  await ensureProjectionReady(manifest);
+  for (const authority of authorityCommands) {
+    const result = runAuthorityCommand(authority, false);
+    if (!result.ok) throw new Error(`${authority.label} apply failed; repair with: ${authority.repair}`);
+  }
+  const updated = {
+    ...manifest,
+    integrations: { ...manifest.integrations, ...authorityVersions },
+  };
+  await writeManifestAtomically(updated);
+  await writeProjection(updated);
+  console.log(`Recorded ProductShape ${authorityVersions.productShape} and ArcShape ${authorityVersions.arcShape} in lighthouse.json.`);
+}
+
 function gitBranch() {
   try { return execFileSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' }).trim(); }
   catch { return ''; }
@@ -397,17 +509,18 @@ let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
   if (arg === '--dry-run') continue;
-  if (arg === '--apply') { if (command !== 'reconcile') invalidArgument = true; continue; }
+  if (arg === '--apply') { if (!['authorities', 'reconcile'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   invalidArgument = true;
 }
-if (!['init', 'reconcile', 'verify'].includes(command) || invalidArgument) {
+if (!['init', 'authorities', 'reconcile', 'verify'].includes(command) || invalidArgument) {
   console.error(usage);
   process.exit(2);
 }
 try {
   if (command === 'init') await initialize(args.slice(1));
+  else if (command === 'authorities') await authorities(args.slice(1));
   else if (command === 'reconcile') await reconcile(args.slice(1));
   else {
     const manifest = await readManifest();

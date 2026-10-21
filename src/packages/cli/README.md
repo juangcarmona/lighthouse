@@ -12,6 +12,8 @@ The harness package owns the baseline command and verification contract. The SDL
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration.
 
+Use `lighthouse authorities` to prepare the two baseline authorities through their own CLIs. The command previews both plans by default; `--apply` runs ProductShape's full model initialization and ArcShape's architecture initialization without installing agent capabilities. Provider-owned files remain owned by the provider, and Lighthouse records the exact adopted versions in `lighthouse.json` only after both applications succeed.
+
 The generated manifest enables the public-site route for greenfield repositories. Its build validates ProductShape and ArcShape before creating either snapshot; if the authorities are not ready, the build stops with the repair command instead of publishing a partial site.
 
 Initialization reports missing ProductShape and ArcShape authority inputs as adoption gaps. It does not copy or replace their provider-owned files.
@@ -34,7 +36,7 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 
 ## Current command scope
 
-The command supports `init`, `reconcile` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `authorities`, `reconcile` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 
