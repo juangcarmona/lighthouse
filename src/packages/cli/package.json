@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@arcshape/cli": "0.1.3",
-    "@prodshape/cli": "0.22.0"
+    "@prodshape/cli": "0.22.0",
+    "@juangcarmona/lighthouse-sdlc": "0.1.0"
   },
   "files": [
     "src/lighthouse.mjs",

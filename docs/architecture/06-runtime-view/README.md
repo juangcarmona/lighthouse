@@ -35,19 +35,21 @@ sequenceDiagram
     participant Adopter
     participant Init as Lighthouse init
     participant Selector as Profile selector
+    participant SDLC as SDLC package
     participant Providers as ProductShape, ArcShape and OpenSpec
     participant Host as Aspire composition
     participant Checks as Profile checks
     Adopter->>Init: Declare application shape and stacks
     Init->>Selector: Resolve baseline and compatible profiles
     Selector-->>Init: Repository, UI and stack assets
+    Init->>SDLC: Record selected package and project control plane
     Init->>Providers: Initialize or reconcile owned routes
     Init->>Host: Configure selected services
     Init->>Checks: Create deterministic checks and report gaps
     Checks-->>Adopter: Created, preserved and blocked paths
 ```
 
-This sequence is target architecture from the draft product change; the current CLI does not yet execute all participants.
+The current CLI executes the baseline and SDLC projection; profile selection, provider initialization and lifecycle execution remain separate integrations.
 
 ## Target delivery flow
 

@@ -10,7 +10,8 @@ description: Static decomposition of the current Lighthouse workspace and target
 
 | Building block | Source | Responsibility |
 | --- | --- | --- |
-| CLI package | `src/packages/cli/` | Validate a manifest and generate or verify `LIGHTHOUSE.md` |
+| CLI package | `src/packages/cli/` | Initialize the baseline, record the selected SDLC package and verify generated projections |
+| SDLC package | `src/packages/sdlc/` | Distribute lifecycle skills, commands, meta-commands, route and gate contracts and deterministic package checks |
 | UI package | `src/packages/ui/` | Export semantic tokens, native recipes and `DESIGN.md` |
 | .NET reference profile | `src/dotnet/` | Demonstrate modular monolith, CQRS/VSA, Aspire and Roslyn checks |
 | Gallery | `src/gallery/` | Exercise the UI package in a browser |
@@ -22,6 +23,7 @@ description: Static decomposition of the current Lighthouse workspace and target
 flowchart LR
     accTitle: Current Lighthouse package and public-site surfaces
     cli[CLI package] --> verify[Repository verification]
+    sdlc[SDLC package] --> verify
     ui[UI package] --> verify
     product[ProductShape source] --> site[Public-site build]
     architecture[ArcShape source] --> site
@@ -38,6 +40,7 @@ The product-defined initializer composes the following blocks only when their pr
 | Profile block | Responsibility |
 | --- | --- |
 | Repository baseline | Provide `src/`, `docs/`, automation and integration entrypoints |
+| SDLC package and control plane | Provide lifecycle assets and record selected routes, gates, state, memory and adapters under `.lighthouse/` |
 | Aspire AppHost | Compose and run the selected application services |
 | Frontend feature areas | Implement user-facing features using the shared visual contract |
 | Backend bounded contexts | Keep domain, application, contracts, infrastructure and tests aligned by feature |
@@ -45,7 +48,7 @@ The product-defined initializer composes the following blocks only when their pr
 | Stack profile | Supply language-specific conventions, examples and checks |
 | Evidence catalog | Associate integration and end-to-end evidence with bounded contexts |
 
-The target profile blocks are product decisions and templates; their full initializer implementation is not present in the current CLI.
+The target profile blocks are product decisions and templates. The current CLI projects the baseline and SDLC control plane; lifecycle execution remains a host-specific integration.
 
 ## Feature mapping
 

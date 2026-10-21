@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/sdlc-contract.schema.json",
+  "title": "Lighthouse SDLC package contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "name", "version", "stages", "utilities", "routes", "metaCommands", "gates", "assets"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "const": "@juangcarmona/lighthouse-sdlc" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "stages": { "type": "array", "minItems": 6, "items": { "$ref": "#/$defs/stage" } },
+    "utilities": { "type": "array", "items": { "type": "string" } },
+    "routes": { "type": "array", "items": { "type": "string" } },
+    "metaCommands": { "type": "array", "items": { "type": "string" } },
+    "gates": { "type": "array", "items": { "type": "string" } },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["routes", "gates", "controlPlaneSchema"],
+      "properties": {
+        "routes": { "type": "string" },
+        "gates": { "type": "string" },
+        "controlPlaneSchema": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "skill", "command", "gate"],
+      "properties": {
+        "name": { "type": "string" },
+        "skill": { "type": "string" },
+        "command": { "type": "string" },
+        "gate": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

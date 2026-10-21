@@ -12,6 +12,8 @@ ProductShape owns product intent, ArcShape owns architecture documentation and O
 
 Lighthouse owns its initializer, package contracts, repository checks and adopter projections.
 
+The SDLC package owns lifecycle skills, commands, meta-commands, routes and gates. The CLI records its selected version and host adapters in `.lighthouse/sdlc.json`; the file is configuration and evidence, not agent runtime state.
+
 ## Profile selection
 
 Initialization resolves a baseline plus compatible profiles from the declared application shape and stacks.
@@ -56,4 +58,5 @@ The UI package provides semantic tokens, native recipes and `DESIGN.md`; initial
 | Documentation authority | ProductShape and ArcShape sources in `docs/` | The adopter's initialized ProductShape and ArcShape routes |
 | Composition | No hosted Lighthouse runtime | Aspire AppHost composes the selected application services |
 | Verification | npm, .NET, link, visual and site checks | Profile checks plus project-owned unit, integration and end-to-end evidence |
+| SDLC contract | `src/packages/sdlc/` and `.lighthouse/sdlc.json` projection | Selected package contract and host-specific adapters |
 | Public explanation | Generated landing, ProductShape snapshot and ArcShape snapshot | Optional adopter documentation and package-owned guidance |

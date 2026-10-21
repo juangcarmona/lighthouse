@@ -1,0 +1,11 @@
+{
+  "$schema": "./schemas/routes.schema.json",
+  "version": 1,
+  "routes": [
+    { "id": "supervised", "stages": ["triage", "refine", "propose", "implement", "integrate", "review"], "humanGates": ["triaged", "ready", "planned", "done"] },
+    { "id": "plan-only", "stages": ["triage", "refine", "propose"], "humanGates": ["triaged", "ready", "planned"] },
+    { "id": "unattended", "stages": ["triage", "refine", "propose", "implement", "integrate", "review"], "humanGates": ["triaged", "ready", "planned", "done"], "requires": ["bounded-agent-run", "independent-review"] },
+    { "id": "hotfix", "stages": ["triage", "implement", "integrate", "review"], "humanGates": ["triaged", "done"], "requires": ["confirmed-defect", "rollback-plan"] },
+    { "id": "stacked", "stages": ["triage", "refine", "propose", "implement", "integrate", "review"], "humanGates": ["triaged", "ready", "planned", "done"], "requires": ["dependency-order", "isolated-change-scope"] }
+  ]
+}

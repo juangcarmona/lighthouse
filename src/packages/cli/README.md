@@ -8,7 +8,7 @@ Install the exact Lighthouse package artifact selected for the release and run `
 
 Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an existing adoption. It does not write by default; add `--apply` only after reviewing the plan. Existing files whose content differs from the generated projection are conflicts and are never overwritten by reconciliation.
 
-The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands and metacommands. The UI package owns visual tokens, native recipes and `DESIGN.md`. Stack profiles own their source templates, guidance and checks.
+The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes and `DESIGN.md`. Stack profiles own their source templates, guidance and checks.
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration.
 
@@ -16,7 +16,7 @@ Use `lighthouse authorities` to prepare the two baseline authorities through the
 
 The generated manifest enables the public-site route for greenfield repositories. Its build validates ProductShape and ArcShape before creating either snapshot; if the authorities are not ready, the build stops with the repair command instead of publishing a partial site.
 
-Initialization reports missing ProductShape and ArcShape authority inputs as adoption gaps. It does not copy or replace their provider-owned files.
+Initialization reports missing ProductShape and ArcShape authority inputs as adoption gaps. It does not copy or replace their provider-owned files. The SDLC package remains provider-neutral; an agent host decides where its skills and commands are projected.
 
 ## New repository
 
@@ -36,7 +36,7 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 
 ## Current command scope
 
-The command supports `init`, `authorities`, `reconcile` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `authorities`, `reconcile` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 
