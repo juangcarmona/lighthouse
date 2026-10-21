@@ -9,7 +9,7 @@ This matrix describes checks that exist in Lighthouse now. Product proposals and
 | Markdown prose layout | `markdownlint-cli2` plus `no-hard-wrapped-prose` | Lighthouse maintainers | `npm run markdownlint`; included in `npm run verify` | Nonzero exit | Keep provider-owned generated Markdown under its owning tool |
 | Common repository conventions | Documentation / agent guidance | Product maintainer | Review | Finding; no automatic block | Document scoped exception |
 | ProductShape / ArcShape integration | Documentation; tool only when adopted | Product/architecture owner | Their CLI and pinned version | Their configured validator result | Versioned opt-out recorded in manifest |
-| .NET handler/module rules | Roslyn local build + semantic tests + CI job | Lighthouse / product maintainers | `npm run verify:dotnet` | Build/test/verifier fails | [Narrow documented exceptions](profiles/dotnet/guardrails.md) |
+| .NET handler/module rules | Roslyn local build + semantic tests + CI job | Lighthouse / product maintainers | `npm run verify:dotnet` | Build/test/verifier fails | [Narrow documented exceptions](../src/dotnet/profile/guardrails.md) |
 | .NET auth/validation outcomes | Functional tests + CI job | Product maintainer | Same command, real ASP.NET test pipeline | Failed test | Product behavior decision |
 | Dependency resolution/audit | Locked NuGet restore, warnings-as-errors + CI job | Maintainer / security owner | Same command | Restore fails | Reviewed pin or expiring risk acceptance |
 | Visual contrast, semantics and interactions | Playwright + axe tests + CI job | Visual maintainer | `npm run test:visual` | Failed browser check | Fix behavior or document platform-specific compatibility |

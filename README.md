@@ -1,8 +1,6 @@
 # Lighthouse
 
-[![Lighthouse engineering baseline](assets/github-banner-light.svg#gh-light-mode-only)](https://juangcarmona.github.io/lighthouse/)
-
-[![Lighthouse engineering baseline](assets/github-banner.svg#gh-dark-mode-only)](https://juangcarmona.github.io/lighthouse/)
+[![Lighthouse engineering baseline](assets/github-banner.svg)](https://juangcarmona.github.io/lighthouse/)
 
 Lighthouse is a reusable engineering baseline with package-owned guidance, profiles and deterministic checks.
 

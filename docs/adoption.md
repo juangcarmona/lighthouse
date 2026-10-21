@@ -1,6 +1,6 @@
 # Adoption guide
 
-For a new backend, use the [.NET profile creator](profiles/dotnet/adoption.md#new-backend). For an existing backend, follow [the assessment route](profiles/dotnet/adoption.md#existing-backend). For a web interface, use [design adoption](design/adoption.md).
+For a new backend, use the [.NET profile creator](../src/dotnet/profile/adoption.md#new-backend). For an existing backend, follow [the assessment route](../src/dotnet/profile/adoption.md#existing-backend). For a web interface, install the [UI package](../src/packages/ui/README.md) and follow its [design guide](../src/packages/ui/DESIGN.md).
 
 ## New repository
 

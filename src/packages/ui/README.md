@@ -14,7 +14,7 @@ Install this package in an adopter and import `@juangcarmona/lighthouse-ui` thro
 
 Apply `class="lh-root"` to the body or themed container and set `data-lh-theme="light"`, `"dark"` or `"system"` on the root. The token implementation uses CSS `light-dark()`; products targeting browsers without it need a separately reviewed compatibility build.
 
-The package is private and unpublished; its tarball contains the tokens, native recipes, the design guide, its package manifest and this README. The source checkout keeps a short [design index](../../../docs/design/README.md) and the gallery for maintainers.
+The package is private and unpublished; its tarball contains the tokens, native recipes, the design guide, its package manifest and this README. The gallery remains in the source checkout as a maintainer reference.
 
 ```css
 @import "@juangcarmona/lighthouse-ui";

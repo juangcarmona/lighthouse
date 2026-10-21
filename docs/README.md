@@ -5,8 +5,8 @@
 | Adopt the baseline | [Adoption guide](adoption.md) |
 | Understand the current system | [Architecture](architecture/README.md) |
 | Read product intent | [Product definition](product/README.md) |
-| Use the backend profile | [.NET profile](profiles/dotnet/README.md) |
-| Use the visual system | [Design guide](design/README.md) |
+| Use the backend profile | [.NET profile](../src/dotnet/profile/README.md) |
+| Use the visual system | [UI package README](../src/packages/ui/README.md) and [design guide](../src/packages/ui/DESIGN.md) |
 | Check enforced rules | [Enforcement matrix](enforcement.md) |
 | Edit agent-facing documents | [Agent-facing writing](agent-writing.md) |
 | Make small engineering changes | [Pragmatic engineering](pragmatic-engineering.md) |

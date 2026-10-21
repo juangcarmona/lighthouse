@@ -10,7 +10,7 @@ This sitting checked the package boundary, initialization route, UI contract, SD
 - The current package manifests under `src/packages/`.
 - The current distributed visual contract under `src/packages/ui/DESIGN.md`, the UI package and the Lighthouse gallery and public site.
 - A reference `DESIGN.md` and architecture guide used as structural input, adapted to Lighthouse's framework-neutral CSS contract.
-- The current .NET profile, creator, Aspire AppHost example and Roslyn analyzer fixtures under `docs/profiles/dotnet/` and `src/dotnet/`.
+- The current .NET profile, creator, Aspire AppHost example and Roslyn analyzer fixtures under `src/dotnet/profile/` and `src/dotnet/`.
 - The current initialization and verification implementation under `src/packages/cli/`.
 - The maintainer's decisions recorded in this conversation.
 - `npm exec -- prodshape change validate CHG-INITIAL`, which currently reports zero errors and zero warnings for the live overlay.

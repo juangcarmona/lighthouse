@@ -20,7 +20,6 @@ for (const asset of [
   'lighthouse-icon.svg',
   'lighthouse-icon-light.svg',
   'github-banner.svg',
-  'github-banner-light.svg',
 ]) {
   await cp(join(brandAssets, asset), join(output, 'assets', asset));
 }

@@ -51,6 +51,5 @@ For unattended work, explain scope, limits, stop conditions, evidence, and who o
 - [`assets/lighthouse-icon.svg`](../assets/lighthouse-icon.svg) — editable square lighthouse mark; [`assets/lighthouse-icon.png`](../assets/lighthouse-icon.png) is a 512 × 512 raster export.
 - [`assets/lighthouse-icon-light.svg`](../assets/lighthouse-icon-light.svg) — light-surface variant for theme-aware interfaces; the original icon is the dark-surface variant.
 - [`assets/github-banner.svg`](../assets/github-banner.svg) — editable 1280 × 640 repository banner; [`assets/github-banner.png`](../assets/github-banner.png) is its raster export.
-- [`assets/github-banner-light.svg`](../assets/github-banner-light.svg) — light-surface variant for theme-aware interfaces; the original banner is the dark-surface variant.
 
 Keep the tower blue and white. Do not add red-and-white stripes, extra symbols inside the mark, or detail that disappears at icon size. This brand is specific to Lighthouse and does not establish shared design tokens for adopting products.

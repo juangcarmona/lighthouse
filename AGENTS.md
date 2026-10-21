@@ -1,8 +1,8 @@
 # Lighthouse contributor and adopter entrypoint
 
-Lighthouse is the juangcarmona engineering baseline. Start with [the adoption routes](docs/adoption.md). For a backend, read [the .NET profile](docs/profiles/dotnet/README.md), then its architecture, use-case and guardrail contracts. For interface work, read [the design guide](docs/design/README.md).
+Lighthouse is the juangcarmona engineering baseline. Start with [the adoption routes](docs/adoption.md). For a backend, read [the .NET profile](src/dotnet/profile/README.md), then its architecture, use-case and guardrail contracts. For interface work, read the UI package's [design guide](src/packages/ui/DESIGN.md).
 
-Keep implementation under `src/`, including packages and examples. Maintained documentation belongs under `docs/`, and repository automation stays in the conventional `scripts/` root. Root-level tool directories (`.agents/`, `.github/`, `.product/`, `.vscode/`, `openspec/`) and package entrypoint metadata are integration contracts; do not relocate them without checking their owning tool. The optional .NET profile is scoped under `src/dotnet/` and does not make the repository a root-level .NET solution.
+Keep implementation under `src/`, including packages and examples. Maintained documentation belongs under `docs/`, and repository automation stays in the conventional `scripts/` root. Root-level tool directories (`.agents/`, `.github/`, `.product/`, `.vscode/`, `openspec/`) and package entrypoint metadata are integration contracts; do not relocate them without checking their owning tool. The optional .NET profile and its guidance are scoped under `src/dotnet/` and do not make the repository a root-level .NET solution.
 
 - For agent-facing documents, follow [agent-facing writing](docs/agent-writing.md). For code and architecture work, follow [pragmatic engineering](docs/pragmatic-engineering.md).
 - For human-facing prose in docs, proposals, reports and change descriptions, run the Humanizer skill when available; preserve facts, links, commands, frontmatter and code.

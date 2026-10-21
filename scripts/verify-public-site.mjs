@@ -12,7 +12,6 @@ const required = [
   'assets/lighthouse-icon.svg',
   'assets/lighthouse-icon-light.svg',
   'assets/github-banner.svg',
-  'assets/github-banner-light.svg',
   'model/index.html',
   'architecture/index.html',
 ];
