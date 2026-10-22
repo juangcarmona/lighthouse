@@ -88,11 +88,32 @@ test('greenfield init creates the repository boundaries and a default manifest',
     for (const directory of ['src', 'docs', 'infra', 'scripts']) assert.equal((await stat(join(dir, directory))).isDirectory(), true);
     const generated = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
     assert.equal(generated.repository.publicSite.enabled, true);
+    assert.deepEqual(generated.application, { shape: 'unknown', stacks: [] });
     assert.deepEqual(generated.packages.sdlc, { name: sdlcPackage.name, version: sdlcPackage.version });
     assert.match(await readFile(join(dir, '.lighthouse/sdlc.json'), 'utf8'), /"provider": "agent-host"/);
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
     assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('profiles exposes applicability and verification layers without making them all mandatory', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-profiles-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'FullStack', '--profile', 'dotnet-backend']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    let composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'unconfigured');
+    assert.equal(composition.selected[0].status, 'unconfigured');
+    assert.deepEqual(composition.selected[0].verification.layers.map((layer) => layer.id), ['static', 'unit', 'architecture', 'integration', 'functional']);
+    const selectedManifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selectedManifest.application = { shape: 'full-stack', stacks: ['dotnet'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'passed');
+    const report = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    assert.equal(report.profiles.status, 'passed');
+    assert.equal(report.results.find((item) => item.id === 'foundation.profile-composition').status, 'passed');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

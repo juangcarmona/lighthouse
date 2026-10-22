@@ -6,6 +6,8 @@ This package is the core Lighthouse harness. It provides the `lighthouse` comman
 
 Install the exact Lighthouse package artifact selected for the release and run `lighthouse init --name <product>` in a new repository. Add `--profile visual-theme` when the project wants the Lighthouse UI contract. Lighthouse creates the manifest, the `src/`, `docs/`, `infra/` and `scripts/` boundaries, the repository guardrails and the generated `LIGHTHOUSE.md`. Inspect the plan and projection, then run `lighthouse verify` before adding project-specific policy or exceptions.
 
+The manifest can declare `application.shape` and `application.stacks` when the project has enough information to select compatible profiles. `lighthouse profiles --format json` reports selected profiles, applicability, owned surfaces and verification layers without changing the repository.
+
 Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an existing adoption. It does not write by default; add `--apply` only after reviewing the plan. Existing files whose content differs from the generated projection are conflicts and are never overwritten by reconciliation.
 
 Use `lighthouse upgrade` to preview a versioned foundation update. The command is dry-run by default, accepts `--scope harness`, `--scope sdlc` or `--scope all`, preserves customized projections and stops when ownership evidence is missing. Add `--apply` only after reviewing the plan, then run `lighthouse verify`.
@@ -51,6 +53,8 @@ The package does not contain the repository gallery, provider-owned integrations
 ## Guardrail catalog
 
 The CLI package owns a versioned catalog under `assets/guardrails/`; it describes the guardrails already present in the Lighthouse baseline and their applicability, level, kind, verification method and repair hint.
+
+The profile catalog under `assets/profiles/` describes the application shapes, stacks, owned surfaces and verification layers for each supported profile. A layer can be required, recommended or optional independently of whether its evidence is hard, soft, deterministic, semantic or human.
 
 `level` and `kind` are independent: `level` is `required`, `recommended` or `optional`, while `kind` is `hard` or `soft`; neither dimension selects the verification method.
 

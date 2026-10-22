@@ -49,7 +49,9 @@ try {
     ['src/packages/cli/internal/verify-dotnet.mjs', 'scripts/verify-dotnet.mjs'],
     ['src/packages/cli/src/lighthouse.mjs', 'scripts/lighthouse.mjs'],
     ['src/packages/cli/src/guardrails.mjs', 'scripts/guardrails.mjs'],
+    ['src/packages/cli/src/profiles.mjs', 'scripts/profiles.mjs'],
     ['src/packages/cli/assets/guardrails', 'assets/guardrails'],
+    ['src/packages/cli/assets/profiles', 'assets/profiles'],
     ['src/packages/cli/assets/schemas', 'schemas'], ['src/dotnet/Directory.Build.props', 'Directory.Build.props'],
     ['src/dotnet/Directory.Packages.props', 'Directory.Packages.props'], ['src/dotnet/global.json', 'global.json'],
     ['.gitignore', '.gitignore'], ['.editorconfig', '.editorconfig'], ['src/dotnet/Lighthouse.slnx', `${name}.slnx`]
@@ -64,7 +66,7 @@ try {
   await writeFile(solutionFile, `<Solution>\n${projects.map((project) => `  ${project}`).join('\n')}\n</Solution>\n`);
   await writeFile(resolve(stage, 'lighthouse.json'), JSON.stringify({
     $schema: './schemas/lighthouse-manifest.schema.json', schemaVersion: 1, baseline: '0.1.0',
-    product: name, profiles: ['dotnet-backend'],
+    product: name, application: { shape: 'backend', stacks: ['dotnet'] }, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
     packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' } },
     managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json'],

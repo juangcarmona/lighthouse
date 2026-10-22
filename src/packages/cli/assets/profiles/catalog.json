@@ -1,0 +1,48 @@
+{
+  "$schema": "../schemas/profile-catalog.schema.json",
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "node-tooling",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "Node.js tooling, package and command-line work.",
+      "appliesTo": { "shapes": ["library", "tooling", "cli", "worker"], "stacks": ["node"] },
+      "surfaces": ["package scripts", "Node.js verification"],
+      "verification": {
+        "layers": [
+          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "npm run verify" },
+          { "id": "unit", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": "npm test" }
+        ]
+      }
+    },
+    {
+      "id": "dotnet-backend",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": ".NET backend work with Aspire composition and a modular application boundary.",
+      "appliesTo": { "shapes": ["backend", "full-stack", "service"], "stacks": ["dotnet"] },
+      "surfaces": ["Aspire composition", "feature-aligned backend", "Roslyn guardrails", ".NET verification"],
+      "verification": {
+        "layers": [
+          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "npm run verify:dotnet" },
+          { "id": "unit", "level": "required", "kind": "hard", "verification": "deterministic", "command": "dotnet test" },
+          { "id": "architecture", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": "npm run verify:dotnet" },
+          { "id": "integration", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": null },
+          { "id": "functional", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": null }
+        ]
+      }
+    },
+    {
+      "id": "visual-theme",
+      "owner": "@juangcarmona/lighthouse-ui",
+      "purpose": "A framework-neutral visual contract for applications with a user interface.",
+      "appliesTo": { "shapes": ["frontend", "full-stack", "mobile"], "stacks": [] },
+      "surfaces": ["semantic design tokens", "DESIGN.md", "UI design skill"],
+      "verification": {
+        "layers": [
+          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "lighthouse verify" },
+          { "id": "browser-e2e", "level": "recommended", "kind": "soft", "verification": "semantic", "command": null }
+        ]
+      }
+    }
+  ]
+}

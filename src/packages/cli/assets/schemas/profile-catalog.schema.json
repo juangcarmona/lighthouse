@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/profile-catalog.schema.json",
+  "title": "Lighthouse profile catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "profiles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "profiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/profile" }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owner", "purpose", "appliesTo", "surfaces", "verification"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "owner": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "appliesTo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shapes", "stacks"],
+          "properties": {
+            "shapes": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+            "stacks": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        },
+        "surfaces": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+        "verification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["layers"],
+          "properties": {
+            "layers": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/layer" },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "level", "kind", "verification"],
+      "properties": {
+        "id": { "enum": ["static", "unit", "architecture", "integration", "functional", "browser-e2e", "operational"] },
+        "level": { "enum": ["required", "recommended", "optional"] },
+        "kind": { "enum": ["hard", "soft"] },
+        "verification": { "enum": ["deterministic", "semantic", "human"] },
+        "command": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
