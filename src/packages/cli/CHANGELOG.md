@@ -1,5 +1,20 @@
 # @juangcarmona/lighthouse
 
+## 0.2.1
+
+### Patch Changes
+
+- b58bf83: # Guardrail catalog
+
+  Expose the existing guardrail catalog and machine-readable verification output while preserving the current human-readable CLI route.
+
+- 8d6a833: # SDLC package contract
+
+  Add the first installable Lighthouse SDLC package contract and record it during CLI initialization.
+
+- Updated dependencies [8d6a833]
+  - @juangcarmona/lighthouse-sdlc@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes
