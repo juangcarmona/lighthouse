@@ -17,12 +17,16 @@
     "assets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["routes", "gates", "controlPlaneSchema", "triageSchema"],
+      "required": ["routes", "gates", "stages", "controlPlaneSchema", "triageSchema", "stageResultSchema", "stateSchema", "decompositionSchema"],
       "properties": {
         "routes": { "type": "string" },
         "gates": { "type": "string" },
+        "stages": { "type": "string" },
         "controlPlaneSchema": { "type": "string" },
-        "triageSchema": { "type": "string" }
+        "triageSchema": { "type": "string" },
+        "stageResultSchema": { "type": "string" },
+        "stateSchema": { "type": "string" },
+        "decompositionSchema": { "type": "string" }
       }
     }
   },

@@ -26,6 +26,7 @@
     "meta-commands",
     "README.md",
     "routes.json",
+    "stages.json",
     "schemas",
     "skills",
     "src"
@@ -36,8 +37,20 @@
   "exports": {
     ".": "./src/sdlc.mjs",
     "./triage": "./src/triage.mjs",
+    "./contracts": "./src/contracts.mjs",
+    "./control-plane": "./src/control-plane.mjs",
+    "./decompose": "./src/decompose.mjs",
+    "./github": "./src/github.mjs",
+    "./memory": "./src/memory.mjs",
+    "./routes": "./src/routes.mjs",
+    "./stacked": "./src/stacked.mjs",
+    "./workflow": "./src/workflow.mjs",
     "./contract.json": "./contract.json",
     "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
-    "./schemas/triage.schema.json": "./schemas/triage.schema.json"
+    "./schemas/triage.schema.json": "./schemas/triage.schema.json",
+    "./schemas/stages.schema.json": "./schemas/stages.schema.json",
+    "./schemas/stage-result.schema.json": "./schemas/stage-result.schema.json",
+    "./schemas/workflow-state.schema.json": "./schemas/workflow-state.schema.json",
+    "./schemas/decomposition.schema.json": "./schemas/decomposition.schema.json"
   }
 }

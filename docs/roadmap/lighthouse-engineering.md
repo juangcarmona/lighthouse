@@ -17,15 +17,13 @@ The applied adoption change defines repository boundaries, hard and soft guardra
 
 The applied SDLC package change defines the independent lifecycle package, its stages, routes, gates, provider-neutral control-plane contracts and deterministic checks.
 
-The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures and the generated public story; profile-aware initialization, full evidence contracts and host-specific execution remain incomplete.
+The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures and the generated public story; the SDLC package still needs its complete deterministic planning and execution contracts.
 
 ## Ownership boundary
 
 Lighthouse distributes the baseline, profiles, lifecycle contracts, guardrails and adoption checks that a project can run locally or in CI.
 
 An adopting project owns its product code, architecture decisions, infrastructure, exceptions and any local factory or operational tooling.
-
-SoFa is a planned first dogfooding consumer of Lighthouse. It is not a Lighthouse dependency, and its workers, scheduling, shared budgets, durable runtime state and fleet operations stay in SoFa.
 
 The `.lighthouse/` projection records configuration and evidence for the selected package; it is not a runtime database, transcript store or cross-repository orchestration service.
 
@@ -36,19 +34,16 @@ The `.lighthouse/` projection records configuration and evidence for the selecte
 | Foundation and ownership | Complete | Keep ProductShape, ArcShape, OpenSpec and factory boundaries explicit. |
 | Adoption contract | Complete | Preserve non-destructive initialization, package ownership and public-site failure hints. |
 | SDLC package contract | Contract delivered | Add host adapters and real execution only when a consumer requires them. |
-| Standards registry and verification | Next | Define applicable practices, profiles, exceptions and machine-readable verification without creating a package per concern. |
-| Engineering profiles | Partial | Extend the .NET and UI reference material only when a real stack has an owned contract and deterministic checks. |
-| Evidence engineering | Partial | Stabilize the evidence shape and validators from current checks before considering an independent evidence package. |
-| Distribution and dogfooding | Deferred | Keep clean-consumer and package checks green; begin SoFa dogfooding only after the baseline provides useful standards and verification. |
+| Standards registry and verification | Complete baseline | Keep the catalog extensible and verify existing guardrails without adding practices through implementation work. |
+| SDLC contract and planning | In progress | Add stage results, route planning, deterministic state, memory and decomposition contracts to the existing SDLC package. |
+| Tracker and forge projections | Next | Read GitHub issues, labels, dependencies and pull-request relationships, with read-only defaults and explicit mutations. |
+| Profiles and stack checks | Partial | Extend the .NET and UI reference material only when a real stack has an owned contract and deterministic checks. |
+| Distribution and adopter proof | Ongoing | Keep clean-consumer and package checks green and prove each new capability in an isolated adopter fixture. |
 | Continuous improvement | Later | Measure adoption, failures and maintenance cost before adding more standards or automation. |
 
 ## Immediate implementation slice
 
-The next Lighthouse slice is a standards registry and verifier that can report applicability, evidence, unsupported checks and explicit exceptions without claiming that unavailable checks passed.
-
-The slice should extend the existing CLI and package contracts only where the current product model permits it, and should prove its output in the clean consumer fixture before adding more profiles, runtime integrations or SoFa adoption work.
-
-SoFa remains a later validation target. Its product change, execution prompt and runtime implementation should wait until Lighthouse has a stable verifier, usable profile applicability and a release that adds value to the consuming project.
+The complete SDLC delivery plan is tracked in [the SDLC delivery plan](lighthouse-sdlc-delivery.md). Each slice adds a deterministic contract or projection to the existing packages, proves it with fixtures and keeps runtime ownership with the adopter's agent host.
 
 Do not create `@juangcarmona/lighthouse-evidence` yet. Keep evidence contracts in the existing packages until a second consumer proves that independent versioning and installation are useful.
 

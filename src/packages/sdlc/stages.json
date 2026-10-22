@@ -1,0 +1,12 @@
+{
+  "$schema": "./schemas/stages.schema.json",
+  "version": 1,
+  "stages": [
+    { "id": "triage", "gate": "triaged", "input": "work-item", "output": "triage-report", "mutation": "explicit" },
+    { "id": "refine", "gate": "ready", "input": "triage-report", "output": "ready-change", "mutation": "none" },
+    { "id": "propose", "gate": "planned", "input": "ready-change", "output": "change-artifacts", "mutation": "explicit" },
+    { "id": "implement", "gate": "done", "input": "change-artifacts", "output": "implementation-evidence", "mutation": "workspace" },
+    { "id": "integrate", "gate": "done", "input": "implementation-evidence", "output": "integration-evidence", "mutation": "explicit" },
+    { "id": "review", "gate": null, "input": "integration-evidence", "output": "review-report", "mutation": "explicit" }
+  ]
+}

@@ -13,8 +13,8 @@ Describe the smallest implementable solution for a Ready item.
 2. Create or update the OpenSpec change artifacts through the installed OpenSpec workflow.
 3. Describe the solution, interfaces, data effects, test impact, slices, risks and Definition of Done.
 4. Write `change-overview` prose with the Humanizer skill while preserving facts, links, commands, frontmatter and code.
-5. Stop at the `planned` gate and state the human decision required before implementation.
+5. Return a stage result with `stage: propose`, `gate: planned`, the change artifacts as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays.
 
 ## Completion
 
-The change artifacts explain the future state, the slices are dependency ordered, the evidence plan is explicit and the Planned decision remains visible.
+The change artifacts explain the future state, the slices are dependency ordered, the evidence plan is explicit and the `planned` decision remains visible.

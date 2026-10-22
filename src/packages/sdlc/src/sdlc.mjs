@@ -3,7 +3,15 @@ import { access, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildDecompositionPlan, applyDecompositionPlan } from './decompose.mjs';
+import { validateControlPlane, validateLaunchRequest } from './control-plane.mjs';
+import { createGithubSubIssues, mergeGithubTriage, readGithubIssue, replaceGithubLabels } from './github.mjs';
+import { buildRoutePlan } from './routes.mjs';
+import { buildStackedPlan } from './stacked.mjs';
 import { applyTriageLabels, buildTriageReport } from './triage.mjs';
+import { validateMemoryRecord } from './memory.mjs';
+import { replayWorkflow } from './workflow.mjs';
+import { validateStageResult } from './contracts.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const contractPath = resolve(packageRoot, 'contract.json');
@@ -29,10 +37,10 @@ async function verifyContract() {
   for (const stage of stages) {
     for (const asset of [stage.skill, stage.command]) if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing stage asset ${asset}`);
   }
-  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema]) {
+  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema]) {
     if (!asset || !(await exists(resolve(packageRoot, asset)))) problems.push(`missing contract asset ${asset ?? '(empty)'}`);
   }
-  for (const asset of ['routes.json', 'gates.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'src/triage.mjs']) {
+  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
     if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing package asset ${asset}`);
   }
   try {
@@ -45,7 +53,12 @@ async function verifyContract() {
     const gateIds = gates.gates?.map((gate) => gate.id) ?? [];
     if (gateIds.join(',') !== contract.gates.join(',')) problems.push('gates.json does not match contract gates');
   } catch (error) { problems.push(`Cannot read gates.json: ${error.message}`); }
-  for (const command of ['status', ...expectedStages]) if (!(await exists(resolve(packageRoot, `commands/${command}.md`)))) problems.push(`missing command asset ${command}`);
+  try {
+    const stages = await readJson(resolve(packageRoot, 'stages.json'));
+    const stageIds = stages.stages?.map((stage) => stage.id) ?? [];
+    if (stageIds.join(',') !== expectedStages.join(',')) problems.push('stages.json does not match contract stages');
+  } catch (error) { problems.push(`Cannot read stages.json: ${error.message}`); }
+  for (const command of ['status', ...expectedStages, ...(contract.utilities ?? []).filter((command) => command !== 'status')]) if (!(await exists(resolve(packageRoot, `commands/${command}.md`)))) problems.push(`missing command asset ${command}`);
   for (const metaCommand of contract.metaCommands ?? []) if (!(await exists(resolve(packageRoot, `meta-commands/${metaCommand}.md`)))) problems.push(`missing meta-command asset ${metaCommand}`);
   return problems;
 }
@@ -105,15 +118,168 @@ async function runTriage(args) {
   if (report.status !== 'ready') process.exit(1);
 }
 
+function output(value, format = 'json') {
+  if (format === 'json') console.log(JSON.stringify(value, null, 2));
+  else console.log(JSON.stringify(value));
+}
+
+async function runState(args) {
+  const inputPath = option(args, '--input');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath) { console.error('Usage: lighthouse-sdlc state --input <events.json> [--format <json|text>]'); process.exit(2); }
+  const input = await readJson(resolve(process.cwd(), inputPath));
+  const result = replayWorkflow(Array.isArray(input) ? input : input.events);
+  output(result, format);
+  if (!result.valid) process.exit(1);
+}
+
+async function runControlPlane(args) {
+  const inputPath = option(args, '--input');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath) { console.error('Usage: lighthouse-sdlc control-plane --input <control-plane.json> [--format <json|text>]'); process.exit(2); }
+  const input = await readJson(resolve(process.cwd(), inputPath));
+  const errors = validateControlPlane(input);
+  const result = { schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, errors };
+  output(result, format);
+  if (errors.length) process.exit(1);
+}
+
+async function runStageResult(args) {
+  const inputPath = option(args, '--input');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath) { console.error('Usage: lighthouse-sdlc stage-result --input <result.json> [--format <json|text>]'); process.exit(2); }
+  const result = await readJson(resolve(process.cwd(), inputPath));
+  const errors = validateStageResult(result);
+  output({ schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, errors }, format);
+  if (errors.length) process.exit(1);
+}
+
+async function runMemory(args) {
+  const inputPath = option(args, '--input');
+  const policyPath = option(args, '--policy');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath) { console.error('Usage: lighthouse-sdlc memory --input <record.json> [--policy <memory-policy.json>] [--format <json|text>]'); process.exit(2); }
+  const record = await readJson(resolve(process.cwd(), inputPath));
+  const policy = policyPath ? await readJson(resolve(process.cwd(), policyPath)) : {};
+  const errors = validateMemoryRecord(record, policy);
+  output({ schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, errors }, format);
+  if (errors.length) process.exit(1);
+}
+
+async function runLaunch(args) {
+  const inputPath = option(args, '--input');
+  const controlPlanePath = option(args, '--control-plane');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath || !controlPlanePath) { console.error('Usage: lighthouse-sdlc launch --input <request.json> --control-plane <control-plane.json> [--format <json|text>]'); process.exit(2); }
+  const request = await readJson(resolve(process.cwd(), inputPath));
+  const controlPlane = await readJson(resolve(process.cwd(), controlPlanePath));
+  const errors = [...validateControlPlane(controlPlane), ...validateLaunchRequest(request, controlPlane)];
+  output({ schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, executed: false, errors }, format);
+  if (errors.length) process.exit(1);
+}
+
+async function runDecompose(args) {
+  const inputPath = option(args, '--input');
+  const outputPath = option(args, '--output');
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!inputPath || (apply && !outputPath)) { console.error('Usage: lighthouse-sdlc decompose --input <file> [--format <json|text>] [--apply --output <file>]'); process.exit(2); }
+  const plan = buildDecompositionPlan(await readJson(resolve(process.cwd(), inputPath)));
+  if (apply && plan.canApply) await writeFile(resolve(process.cwd(), outputPath), `${JSON.stringify(applyDecompositionPlan(plan), null, 2)}\n`);
+  output({ ...plan, applied: Boolean(apply && plan.canApply) }, format);
+  if (!plan.valid) process.exit(1);
+}
+
+async function runRoute(args) {
+  const routeId = option(args, '--route');
+  const format = option(args, '--format') ?? 'json';
+  if (!routeId) { console.error('Usage: lighthouse-sdlc route --route <name> [--available <comma-separated-prerequisites>] [--format <json|text>]'); process.exit(2); }
+  const routes = await readJson(resolve(packageRoot, 'routes.json'));
+  const route = routes.routes?.find((candidate) => candidate.id === routeId);
+  if (!route) { output({ schemaVersion: 1, status: 'invalid', valid: false, errors: [{ code: 'route.unknown', message: `unknown route ${routeId}` }] }, format); process.exit(1); }
+  const available = (option(args, '--available') ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+  const plan = buildRoutePlan(route, { available });
+  output(plan, format);
+  if (!plan.valid) process.exit(1);
+}
+
+async function runStacked(args) {
+  const inputPath = option(args, '--input');
+  const outputPath = option(args, '--output');
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!inputPath || (apply && !outputPath)) { console.error('Usage: lighthouse-sdlc stacked --input <file> [--format <json|text>] [--apply --output <file>]'); process.exit(2); }
+  const plan = buildStackedPlan(await readJson(resolve(process.cwd(), inputPath)));
+  if (apply && plan.canApply) await writeFile(resolve(process.cwd(), outputPath), `${JSON.stringify({ ...plan, applied: true }, null, 2)}\n`);
+  output({ ...plan, applied: Boolean(apply && plan.canApply) }, format);
+  if (!plan.valid) process.exit(1);
+}
+
+async function runGithubTriage(args) {
+  const repo = option(args, '--repo');
+  const issueNumber = option(args, '--issue');
+  const assessmentPath = option(args, '--assessment');
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!repo || !issueNumber || !assessmentPath) { console.error('Usage: lighthouse-sdlc github-triage --repo <owner/repo> --issue <number> --assessment <file> [--apply] [--format <json|text>]'); process.exit(2); }
+  const assessmentInput = await readJson(resolve(process.cwd(), assessmentPath));
+  const issueMetadata = await readGithubIssue(repo, issueNumber);
+  const report = buildTriageReport(mergeGithubTriage(issueMetadata, assessmentInput.assessment, assessmentInput.configuration));
+  report.applied = false;
+  if (apply && report.canApply) {
+    const reread = await readGithubIssue(repo, issueNumber);
+    if (JSON.stringify(reread.currentLabels) !== JSON.stringify(report.labels.current)) throw new Error('GitHub labels changed since the triage read; refusing to apply the projection');
+    const applied = await replaceGithubLabels(repo, issueNumber, applyTriageLabels(report), { dryRun: false });
+    report.applied = applied.applied;
+  }
+  output(report, format);
+  if (report.status !== 'ready') process.exit(1);
+}
+
+async function runGithubDecompose(args) {
+  const repo = option(args, '--repo');
+  const issueNumber = option(args, '--issue');
+  const inputPath = option(args, '--input');
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!repo || !issueNumber || !inputPath) { console.error('Usage: lighthouse-sdlc github-decompose --repo <owner/repo> --issue <number> --input <file> [--apply] [--format <json|text>]'); process.exit(2); }
+  const parent = await readGithubIssue(repo, issueNumber);
+  const input = await readJson(resolve(process.cwd(), inputPath));
+  const plan = buildDecompositionPlan({ ...input, parent: { ...input.parent, id: parent.workItem.id, number: Number(issueNumber), title: parent.workItem.title } });
+  const result = plan.canApply ? await createGithubSubIssues(repo, issueNumber, plan, { dryRun: !apply }) : { applied: false, operations: [] };
+  output({ ...plan, github: result }, format);
+  if (!plan.valid) process.exit(1);
+}
+
 const command = process.argv[2] ?? 'verify';
-if (!['contract', 'verify', 'triage'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <contract|verify|triage>');
+if (!['contract', 'verify', 'triage', 'state', 'stage-result', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <contract|verify|triage|state|stage-result|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose>');
   process.exit(2);
 }
 if (command === 'contract') {
   console.log(await readFile(contractPath, 'utf8'));
 } else if (command === 'triage') {
   await runTriage(process.argv.slice(3));
+} else if (command === 'state') {
+  await runState(process.argv.slice(3));
+} else if (command === 'control-plane') {
+  await runControlPlane(process.argv.slice(3));
+} else if (command === 'stage-result') {
+  await runStageResult(process.argv.slice(3));
+} else if (command === 'memory') {
+  await runMemory(process.argv.slice(3));
+} else if (command === 'launch') {
+  await runLaunch(process.argv.slice(3));
+} else if (command === 'decompose') {
+  await runDecompose(process.argv.slice(3));
+} else if (command === 'route') {
+  await runRoute(process.argv.slice(3));
+} else if (command === 'stacked') {
+  await runStacked(process.argv.slice(3));
+} else if (command === 'github-triage') {
+  await runGithubTriage(process.argv.slice(3));
+} else if (command === 'github-decompose') {
+  await runGithubDecompose(process.argv.slice(3));
 } else {
   const problems = await verifyContract();
   if (problems.length) {
@@ -123,4 +289,4 @@ if (command === 'contract') {
   console.log('Lighthouse SDLC package contract is valid.');
 }
 
-export { contractPath, runTriage, verifyContract };
+export { contractPath, runTriage, verifyContract, runState, runStageResult, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose };

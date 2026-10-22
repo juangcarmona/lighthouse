@@ -13,8 +13,8 @@ Implement one planned slice at a time.
 2. Start with the smallest failing deterministic check when the stack supports red-green development.
 3. Make the smallest change that turns the check green, then run the required unit, integration and applicable higher-level checks.
 4. Record changed paths, commands, results, evidence and any finding that needs a human decision.
-5. Stop at the `done` gate when the Definition of Done is satisfied.
+5. Return a stage result with `stage: implement`, `gate: done`, implementation evidence as output and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays; stop at `done` when the Definition of Done is satisfied.
 
 ## Completion
 
-The slice has reviewable code and evidence for every required check, with no silent scope expansion or automatic transition to integration.
+The slice has reviewable code and a valid `done` stage result for every required check, with no silent scope expansion or automatic transition to integration.

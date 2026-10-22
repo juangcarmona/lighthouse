@@ -14,8 +14,8 @@ Classify one work item before refinement.
 3. Record size, urgency, impact, dependencies, risk, blast radius, route and owner with confidence and evidence for each assessment.
 4. Mark each evidence field as provided, unavailable or pending-review; leave absent fields without an evidence item.
 5. Propose only the project's declared workflow and classification labels and report the transition.
-6. Return the structured triage record and stop at the `triaged` gate.
+6. Return a stage result with `stage: triage`, `gate: triaged`, the triage record as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays.
 
 ## Completion
 
-The record names the route, owner, labels, assessments, confidence, evidence and next decision, and no later stage has started.
+The record names the route, owner, labels, assessments, confidence and next decision, and the stage result stops at `triaged` without starting a later stage.

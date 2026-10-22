@@ -1,10 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { buildDecompositionPlan } from '../packages/sdlc/src/decompose.mjs';
+import { validateControlPlane, validateLaunchRequest } from '../packages/sdlc/src/control-plane.mjs';
+import { createGithubSubIssues, readGithubIssue } from '../packages/sdlc/src/github.mjs';
+import { validateMemoryRecord } from '../packages/sdlc/src/memory.mjs';
+import { buildRoutePlan } from '../packages/sdlc/src/routes.mjs';
+import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
 import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
+import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
+import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
 
 const root = process.cwd();
 
@@ -17,6 +25,16 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
   for (const path of [
     'README.md',
     'commands/status.md',
+    'commands/control-plane.md',
+    'commands/decompose.md',
+    'commands/github-triage.md',
+    'commands/github-decompose.md',
+    'commands/memory.md',
+    'commands/launch.md',
+    'commands/route.md',
+    'commands/stacked.md',
+    'commands/stage-result.md',
+    'commands/state.md',
     'commands/triage.md',
     'skills/triage/SKILL.md',
     'skills/refine/SKILL.md',
@@ -31,10 +49,21 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'contract.json',
     'routes.json',
     'gates.json',
+    'stages.json',
     'schemas/control-plane.schema.json',
     'schemas/triage.schema.json',
+    'schemas/stage-result.schema.json',
+    'schemas/workflow-state.schema.json',
+    'schemas/decomposition.schema.json',
+    'src/contracts.mjs',
+    'src/control-plane.mjs',
+    'src/decompose.mjs',
+    'src/github.mjs',
+    'src/memory.mjs',
+    'src/routes.mjs',
     'src/sdlc.mjs',
     'src/triage.mjs',
+    'src/workflow.mjs',
     'package.json'
   ]) assert.ok(files.includes(path), `missing ${path}`);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
@@ -153,4 +182,111 @@ test('triage CLI is read-only by default and applies only after an explicit matc
     assert.equal(applied.status, 0, applied.stderr);
     assert.deepEqual(JSON.parse(await readFile(labelsPath, 'utf8')), ['blast-radius-low', 'impact-medium', 'refine', 'risk-low', 'size-m', 'unrelated', 'urgency-asap']);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('workflow state replays independently per run and rejects illegal transitions', () => {
+  const events = [
+    { schemaVersion: 1, eventId: 'e1', runId: 'run-a', route: 'supervised', stage: 'triage', from: null, to: 'ready', actor: 'fixture', timestamp: '2026-01-01T00:00:00Z', reason: 'created', evidence: [] },
+    { schemaVersion: 1, eventId: 'e2', runId: 'run-a', route: 'supervised', stage: 'triage', from: 'ready', to: 'running', actor: 'fixture', timestamp: '2026-01-01T00:01:00Z', reason: 'started', evidence: [] },
+    { schemaVersion: 1, eventId: 'e3', runId: 'run-b', route: 'plan-only', stage: 'triage', from: null, to: 'ready', actor: 'fixture', timestamp: '2026-01-01T00:00:00Z', reason: 'created', evidence: [] },
+  ];
+  const replayed = replayWorkflow(events);
+  assert.equal(replayed.valid, true);
+  assert.equal(replayed.runs['run-a'].state, 'running');
+  assert.equal(replayed.runs['run-b'].state, 'ready');
+  const invalid = replayWorkflow([...events, { ...events[1], eventId: 'e4', from: 'running', to: 'ready' }]);
+  assert.equal(invalid.valid, false);
+  assert.ok(invalid.errors.some((error) => error.code === 'state-event.transition'));
+});
+
+test('decomposition produces a deterministic dependency order and catches cycles', () => {
+  const input = { schemaVersion: 1, parent: { id: 'GH-10', title: 'Feature' }, slices: [
+    { id: 'slice-b', title: 'B', acceptance: ['B evidence'], dependencies: ['slice-a'], scope: ['src/b'] },
+    { id: 'slice-a', title: 'A', acceptance: ['A evidence'], dependencies: [], scope: ['src/a'] },
+  ] };
+  const plan = buildDecompositionPlan(input);
+  assert.equal(plan.status, 'ready');
+  assert.deepEqual(plan.order, ['slice-a', 'slice-b']);
+  assert.deepEqual(plan, buildDecompositionPlan(input));
+  const cycle = buildDecompositionPlan({ ...input, slices: input.slices.map((slice) => ({ ...slice, dependencies: slice.id === 'slice-a' ? ['slice-b'] : slice.dependencies })) });
+  assert.equal(cycle.status, 'invalid');
+  assert.ok(cycle.errors.some((error) => error.code === 'decompose.cycle'));
+});
+
+test('route plans expose unmet prerequisites before mutation', () => {
+  const route = { id: 'unattended', stages: ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'], humanGates: ['triaged', 'ready', 'planned', 'done'], requires: ['bounded-agent-run', 'independent-review'] };
+  const blocked = buildRoutePlan(route, { available: ['bounded-agent-run'] });
+  assert.equal(blocked.status, 'blocked');
+  assert.equal(blocked.canRun, false);
+  const ready = buildRoutePlan(route, { available: ['bounded-agent-run', 'independent-review'] });
+  assert.equal(ready.status, 'ready');
+  assert.equal(ready.canRun, true);
+});
+
+test('stacked plans follow dependency order and isolate pull-request bases', () => {
+  const plan = buildStackedPlan({ parent: { id: 'GH-10', title: 'Feature', base: 'main' }, slices: [
+    { id: 'slice-b', title: 'B', dependencies: ['slice-a'], acceptance: ['B evidence'] },
+    { id: 'slice-a', title: 'A', dependencies: [], acceptance: ['A evidence'] },
+  ] });
+  assert.equal(plan.status, 'ready');
+  assert.deepEqual(plan.order, ['slice-a', 'slice-b']);
+  assert.equal(plan.operations[0].base, 'main');
+  assert.equal(plan.operations[1].base, plan.slices.find((slice) => slice.id === 'slice-a').branch);
+});
+
+test('control-plane validation keeps provider runtime outside the declaration', () => {
+  const valid = validateControlPlane({ schemaVersion: 1, package: { name: '@juangcarmona/lighthouse-sdlc', version: '0.3.0' }, routes: ['supervised'], gates: ['triaged'], state: { provider: 'agent-host' }, memory: { provider: 'agent-host', scopes: ['run', 'project'] }, roles: {}, adapters: {} });
+  assert.deepEqual(valid, []);
+  const invalid = validateControlPlane({ schemaVersion: 1, package: { name: '@juangcarmona/lighthouse-sdlc', version: '0.3.0' }, routes: ['supervised'], gates: ['triaged'], state: { provider: 'agent-host' }, memory: { provider: 'agent-host', scopes: ['shared'] }, roles: { worker: { inputSchema: 'in.json', outputSchema: 'out.json', tools: ['read'], writeScope: [] } }, adapters: {} });
+  assert.ok(invalid.length > 0);
+});
+
+test('memory validation enforces typed run and project scopes', () => {
+  const valid = validateMemoryRecord({ id: 'm-1', scope: 'run', runId: 'run-1', owner: 'agent', source: 'fixture', confidence: 'high', retention: 'run', sensitivity: 'internal', value: { fact: 'known' } });
+  assert.deepEqual(valid, []);
+  const shared = validateMemoryRecord({ id: 'm-2', scope: 'shared', owner: 'agent', source: 'fixture', confidence: 'medium', retention: 'project', sensitivity: 'internal', value: {} });
+  assert.ok(shared.some((error) => error.code === 'memory.shared-disabled'));
+});
+
+test('agent launch validation is bounded by the declared role contract', () => {
+  const controlPlane = { roles: { worker: { inputSchema: 'in.json', outputSchema: 'out.json', tools: ['read'], writeScope: ['src/'] } } };
+  const valid = validateLaunchRequest({ runId: 'run-1', role: 'worker', outputSchema: 'out.json', tools: ['read'], writeScope: ['src/'], limits: { attempts: 1 }, stopConditions: ['schema-invalid'] }, controlPlane);
+  assert.deepEqual(valid, []);
+  const invalid = validateLaunchRequest({ runId: 'run-1', role: 'worker', outputSchema: 'out.json', tools: ['write'], writeScope: ['infra/'], limits: {}, stopConditions: [] }, controlPlane);
+  assert.ok(invalid.some((error) => error.code === 'launch.tool'));
+  assert.ok(invalid.some((error) => error.code === 'launch.write-path'));
+});
+
+test('stage results require an explicit next action and evidence statuses', () => {
+  const valid = validateStageResult({ schemaVersion: 1, runId: 'run-1', stage: 'triage', status: 'ready', gate: 'triaged', input: {}, output: {}, evidence: [{ id: 'issue-read', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'refine' });
+  assert.deepEqual(valid, []);
+  const invalid = validateStageResult({ schemaVersion: 1, runId: 'run-1', stage: 'triage', status: 'ready', gate: 'triaged', evidence: [{ id: 'issue-read', status: 'unknown' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: '' });
+  assert.ok(invalid.some((error) => error.code === 'stage-result.evidence-item'));
+  assert.ok(invalid.some((error) => error.code === 'stage-result.nextAction'));
+});
+
+test('GitHub issue projection is deterministic with a provider fixture', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-github-'));
+  try {
+    const fixture = join(dir, 'issue.json');
+    const command = join(dir, 'gh-fixture.mjs');
+    await writeFile(fixture, JSON.stringify({ number: 42, title: 'Add the report', html_url: 'https://github.com/example/project/issues/42', state: 'open', labels: [{ name: 'triage' }, { name: 'size-m' }], parent: { number: 10 }, sub_issues: [{ number: 43 }], dependencies: [{ number: 7, status: 'blocked-by' }] }));
+    await writeFile(command, `#!/usr/bin/env node\nimport { readFile } from 'node:fs/promises';\nprocess.stdout.write(await readFile(${JSON.stringify(fixture)}, 'utf8'));\n`);
+    await chmod(command, 0o755);
+    const first = await readGithubIssue('example/project', '42', { command });
+    const second = await readGithubIssue('example/project', '42', { command });
+    assert.deepEqual(first, second);
+    assert.deepEqual(first.currentLabels, ['size-m', 'triage']);
+    assert.equal(first.workItem.id, 'GH-42');
+    assert.deepEqual(first.links.subIssues, [{ number: 43 }]);
+    assert.deepEqual(first.dependencies, [{ number: 7, status: 'blocked-by' }]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('GitHub decomposition stays read-only until apply is explicit', async () => {
+  const plan = buildDecompositionPlan({ schemaVersion: 1, parent: { id: 'GH-10', title: 'Feature' }, slices: [{ id: 'slice-a', title: 'A', acceptance: ['A evidence'], dependencies: [] }] });
+  const preview = await createGithubSubIssues('example/project', 10, plan);
+  assert.equal(preview.applied, false);
+  assert.equal(preview.operations[0].parent, 10);
+  assert.match(preview.operations[0].body, /Parent issue: #10/);
 });

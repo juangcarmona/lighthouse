@@ -19,9 +19,24 @@
     },
     "routes": { "type": "array", "items": { "type": "string" } },
     "gates": { "type": "array", "items": { "type": "string" } },
-    "state": { "type": "object", "additionalProperties": false, "required": ["provider"], "properties": { "provider": { "type": "string" } } },
-    "memory": { "type": "object", "additionalProperties": false, "required": ["provider", "scopes"], "properties": { "provider": { "type": "string" }, "scopes": { "type": "array", "items": { "type": "string" } } } },
-    "roles": { "type": "object", "additionalProperties": { "type": "string" } },
+    "state": { "type": "object", "additionalProperties": false, "required": ["provider"], "properties": { "provider": { "type": "string" }, "states": { "type": "array", "items": { "enum": ["ready", "running", "waiting-human", "blocked", "succeeded", "failed", "cancelled"] } } } },
+    "memory": { "type": "object", "additionalProperties": false, "required": ["provider", "scopes"], "properties": { "provider": { "type": "string" }, "scopes": { "type": "array", "items": { "enum": ["run", "project", "shared"] } }, "shared": { "type": "boolean" } } },
+    "roles": { "type": "object", "additionalProperties": { "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/role" }] } },
     "adapters": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputSchema", "outputSchema", "tools", "writeScope"],
+      "properties": {
+        "inputSchema": { "type": "string" },
+        "outputSchema": { "type": "string" },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "writeScope": { "type": "array", "items": { "type": "string" } },
+        "limits": { "type": "object" },
+        "stopConditions": { "type": "array", "items": { "type": "string" } }
+      }
+    }
   }
 }
