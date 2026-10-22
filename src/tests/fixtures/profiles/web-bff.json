@@ -1,0 +1,10 @@
+{
+  "product": "WebBffProfileFixture",
+  "application": { "shape": "full-stack", "stacks": ["react", "dotnet"] },
+  "profiles": ["visual-theme", "react-web-platform", "dotnet-backend", "web-bff"],
+  "expected": {
+    "status": "passed",
+    "browserLayer": "browser-e2e",
+    "requiredProfiles": ["visual-theme", "react-web-platform", "dotnet-backend", "web-bff"]
+  }
+}
