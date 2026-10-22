@@ -1,0 +1,46 @@
+{
+  "$schema": "../schemas/guardrails.schema.json",
+  "schemaVersion": 1,
+  "guardrails": [
+    {
+      "id": "foundation.manifest",
+      "owner": "lighthouse",
+      "appliesTo": { "baseline": true, "profiles": [] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "manifest",
+      "failureHint": "Repair lighthouse.json and run lighthouse verify again."
+    },
+    {
+      "id": "repository.layout",
+      "owner": "lighthouse",
+      "appliesTo": { "baseline": true, "profiles": [] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "layout",
+      "failureHint": "Create the declared src/, docs/, infra/ and scripts/ repository boundaries."
+    },
+    {
+      "id": "repository.managed-projection",
+      "owner": "lighthouse",
+      "appliesTo": { "baseline": true, "profiles": [] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "managed-projection",
+      "failureHint": "Run lighthouse reconcile after reviewing the managed path plan."
+    },
+    {
+      "id": "repository.branch-convention",
+      "owner": "lighthouse",
+      "appliesTo": { "baseline": true, "profiles": [] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "branch",
+      "failureHint": "Use the branch pattern declared in lighthouse.json."
+    }
+  ]
+}

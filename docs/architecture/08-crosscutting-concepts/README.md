@@ -28,6 +28,8 @@ Hard guardrails are deterministic linters, analyzers, hooks, tests or CI checks 
 
 An unsupported or non-deterministic check remains visible as an adoption gap instead of being reported as compliant.
 
+The CLI package records these existing guardrails as data in its packaged catalog, including profile applicability, independent level and kind, verification method, evidence status and repair hint. The verifier reads catalog entries and preserves the default human-readable result while exposing the same result as JSON; adding a catalog entry does not require changing the CLI core.
+
 ## Feature and bounded-context alignment
 
 The full-stack profile keeps frontend feature areas, API boundaries, application handlers, domain behavior and evidence catalogues aligned with bounded contexts.

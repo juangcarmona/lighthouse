@@ -4,6 +4,7 @@ import { access, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/guardrails.mjs';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
 const manifest = {
@@ -23,7 +24,7 @@ const manifest = {
   }
 };
 async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); return dir; }
-function run(dir, command) { return spawnSync(process.execPath, [tool, command], { cwd: dir, encoding: 'utf8' }); }
+function run(dir, command, args = []) { return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8' }); }
 
 test('init creates a projection and refuses to overwrite product work', async () => {
   const dir = await fixture();
@@ -124,4 +125,46 @@ test('reconcile previews and applies missing managed paths without overwriting d
     assert.match(conflict.stderr, /LIGHTHOUSE\.md exists with different content/);
     assert.equal(await readFile(drifted, 'utf8'), 'project-owned content');
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('verify keeps the human output and exposes the existing catalog as JSON', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const text = run(dir, 'verify');
+    assert.equal(text.status, 0, text.stderr);
+    assert.equal(text.stdout.trim(), 'Lighthouse manifest, repository boundaries and managed projection are valid.');
+    const json = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(json.status, 0, json.stderr);
+    const report = JSON.parse(json.stdout);
+    assert.equal(report.summary.failed, 0);
+    assert.equal(report.summary.drift, 0);
+    assert.ok(report.results.some((item) => item.id === 'foundation.manifest' && item.status === 'passed'));
+    assert.ok(report.results.some((item) => item.id === 'repository.managed-projection' && item.status === 'passed'));
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('verify JSON distinguishes managed projection drift', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    await writeFile(join(dir, 'LIGHTHOUSE.md'), 'project-owned content');
+    const result = run(dir, 'verify', ['--format=json']);
+    assert.equal(result.status, 1);
+    const report = JSON.parse(result.stdout);
+    const managed = report.results.find((item) => item.id === 'repository.managed-projection');
+    assert.equal(managed.status, 'drift');
+    assert.match(managed.problems.join('\n'), /LIGHTHOUSE\.md has drifted/);
+    assert.deepEqual(report.blocking, ['repository.managed-projection']);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('catalog keeps level and kind independent and records pending human review', () => {
+  const catalog = readGuardrailCatalog();
+  const layout = catalog.guardrails.find((item) => item.id === 'repository.layout');
+  assert.equal(layout.level, 'required');
+  assert.equal(layout.kind, 'hard');
+  assert.equal(initialReviewStatus({ level: 'required', kind: 'soft', verification: 'human' }), 'pending-review');
+  assert.equal(initialReviewStatus({ level: 'required', kind: 'hard', verification: 'semantic' }), 'pending-review');
+  assert.equal(initialReviewStatus({ level: 'recommended', kind: 'soft', verification: 'deterministic' }), 'unavailable');
 });
