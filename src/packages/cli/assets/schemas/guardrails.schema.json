@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/guardrails.schema.json",
+  "title": "Lighthouse guardrail catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "guardrails"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "guardrails": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/guardrail" }
+    }
+  },
+  "$defs": {
+    "guardrail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owner", "appliesTo", "level", "kind", "verification", "check", "failureHint"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$" },
+        "owner": { "type": "string", "minLength": 1 },
+        "appliesTo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["baseline", "profiles"],
+          "properties": {
+            "baseline": { "type": "boolean" },
+            "profiles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        },
+        "level": { "enum": ["required", "recommended", "optional"] },
+        "kind": { "enum": ["hard", "soft"] },
+        "verification": { "enum": ["deterministic", "semantic", "human"] },
+        "check": { "type": "string", "minLength": 1 },
+        "failureHint": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

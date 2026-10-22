@@ -41,3 +41,19 @@ The command supports `init`, `authorities`, `reconcile` and `verify`. It checks 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 
 The package does not contain the repository gallery, provider-owned integrations or reference source. Those remain with the source repository or the profile that owns them.
+
+## Guardrail catalog
+
+The CLI package owns a versioned catalog under `assets/guardrails/`; it describes the guardrails already present in the Lighthouse baseline and their applicability, level, kind, verification method and repair hint.
+
+`level` and `kind` are independent: `level` is `required`, `recommended` or `optional`, while `kind` is `hard` or `soft`; neither dimension selects the verification method.
+
+`lighthouse verify` keeps its existing human-readable success and failure output; `lighthouse verify --format json` exposes the same run for agents and CI without changing the default route.
+
+The catalog uses `passed` when evidence satisfies a check, `failed` when a deterministic check finds a problem, `drift` when managed content differs, `unavailable` when a declared checker cannot run or produce evidence, `unconfigured` when an applicable check or integration is not enabled, `pending-review` when semantic or human judgement is still required, and `not-applicable` when the selected baseline or profiles do not include the guardrail.
+
+Only `passed` and `not-applicable` satisfy a required guardrail; `pending-review` is not evidence of compliance and is distinct from both `unconfigured` and `unavailable`.
+
+To add a future guardrail, the catalog owner adds a JSON entry under the packaged `assets/guardrails/` surface, validates it against `assets/schemas/guardrails.schema.json`, declares its profile applicability and repair hint, and uses an existing checker or an explicit semantic or human verification method; in this delivery the surface belongs to the CLI package, and the CLI core does not change.
+
+A new deterministic checker mechanism or a new engineering practice is outside this catalog and requires a separate Product Change.

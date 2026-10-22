@@ -4,6 +4,7 @@ import { constants, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
 
 const root = process.cwd();
 const packageRequire = createRequire(import.meta.url);
@@ -22,7 +23,7 @@ const managedPaths = [
 const legacyManagedPaths = [projection];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
-const usage = 'Usage: lighthouse <init|authorities|reconcile|verify> [--name <product>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|authorities|reconcile|verify> [--name <product>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -522,7 +523,13 @@ async function authorities(args) {
 }
 
 function gitBranch() {
-  try { return execFileSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' }).trim(); }
+  try {
+    return execFileSync('git', ['branch', '--show-current'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  }
   catch { return ''; }
 }
 
@@ -540,21 +547,37 @@ function validateGitConventions(repository) {
   return problems;
 }
 
-async function verify(manifest) {
-  const problems = validate(manifest);
-  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
-  const repository = normalizeRepository(manifest.repository);
-  for (const directory of repository.layout) if (!(await isDirectory(resolve(root, directory)))) {
-    problems.push(`missing repository boundary ${directory}/; run lighthouse init`);
+async function verify(manifest, format = 'text') {
+  const manifestProblems = validate(manifest);
+  const validManifest = manifestProblems.length === 0;
+  const repository = normalizeRepository(manifest?.repository);
+  const managed = validManifest ? managedFiles(manifest) : {};
+  const report = await evaluateGuardrails({
+    catalog: readGuardrailCatalog(),
+    manifest,
+    manifestProblems,
+    repository,
+    managedFiles: managed,
+    resolve: (path) => resolve(root, path),
+    exists,
+    isDirectory,
+    readFile,
+    validateGitConventions,
+    branch: gitBranch(),
+  });
+  if (format === 'json') {
+    console.log(JSON.stringify(report, null, 2));
+    if (report.problems.length) process.exitCode = 1;
+    return;
   }
-  for (const [file, expected] of Object.entries(managedFiles(manifest))) {
-    const target = resolve(root, file);
-    if (!(await exists(target))) problems.push(`${file} is missing; run lighthouse init after reviewing the plan`);
-    else if (await readFile(target, 'utf8') !== expected) problems.push(`${file} has drifted; regenerate it from lighthouse.json`);
-  }
-  problems.push(...validateGitConventions(repository));
-  if (problems.length) throw new Error(problems.join('\n'));
+  if (report.problems.length) throw new Error(report.problems.join('\n'));
   console.log('Lighthouse manifest, repository boundaries and managed projection are valid.');
+}
+
+function formatFromArgs(args) {
+  const index = args.indexOf('--format');
+  if (index !== -1) return args[index + 1];
+  return args.find((arg) => arg.startsWith('--format='))?.slice('--format='.length) ?? 'text';
 }
 
 const args = process.argv.slice(2);
@@ -567,6 +590,15 @@ for (let index = 0; index < commandArgs.length; index += 1) {
   if (arg === '--apply') { if (!['authorities', 'reconcile'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
+  if (arg === '--format') {
+    if (command !== 'verify' || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    else index += 1;
+    continue;
+  }
+  if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
+    if (command !== 'verify') invalidArgument = true;
+    continue;
+  }
   invalidArgument = true;
 }
 if (!['init', 'authorities', 'reconcile', 'verify'].includes(command) || invalidArgument) {
@@ -580,7 +612,7 @@ try {
   else {
     const manifest = await readManifest();
     if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
-    await verify(manifest);
+    await verify(manifest, formatFromArgs(commandArgs));
   }
 } catch (error) {
   console.error(error.message);
