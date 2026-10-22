@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/guardrails.mjs';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
+const sdlcPackage = JSON.parse(await readFile(new URL('../packages/sdlc/package.json', import.meta.url), 'utf8'));
 const manifest = {
   schemaVersion: 1,
   baseline: '0.1.0',
@@ -86,7 +87,7 @@ test('greenfield init creates the repository boundaries and a default manifest',
     for (const directory of ['src', 'docs', 'infra', 'scripts']) assert.equal((await stat(join(dir, directory))).isDirectory(), true);
     const generated = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
     assert.equal(generated.repository.publicSite.enabled, true);
-    assert.deepEqual(generated.packages.sdlc, { name: '@juangcarmona/lighthouse-sdlc', version: '0.2.0' });
+    assert.deepEqual(generated.packages.sdlc, { name: sdlcPackage.name, version: sdlcPackage.version });
     assert.match(await readFile(join(dir, '.lighthouse/sdlc.json'), 'utf8'), /"provider": "agent-host"/);
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
