@@ -1,5 +1,18 @@
 # @juangcarmona/lighthouse
 
+## 0.3.0
+
+### Minor Changes
+
+- e33b266: # Foundation upgrade route
+
+  Add the dry-run-first `lighthouse upgrade` route with selective scopes, ownership evidence, semantic classifications and the 0.3.0 upgrade guide.
+
+### Patch Changes
+
+- Updated dependencies [71847eb]
+  - @juangcarmona/lighthouse-sdlc@0.3.0
+
 ## 0.2.1
 
 ### Patch Changes
