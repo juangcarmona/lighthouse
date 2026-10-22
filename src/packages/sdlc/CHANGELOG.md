@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.5.0
+
+### Minor Changes
+
+- af833cd: # Capability adoption
+
+  Add a versioned SDLC capability catalog and an explicit, dry-run-first adoption flow for GitHub labels.
+
 ## 0.4.0
 
 ### Minor Changes
