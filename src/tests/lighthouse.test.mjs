@@ -235,6 +235,27 @@ test('PWA capability projects its offline contract as an optional React extensio
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('Expo mobile profile projects native guidance without selecting the React web profile', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-expo-profile-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'Mobile', '--profile', 'mobile-expo', '--profile', 'dotnet-backend']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    for (const file of [
+      'docs/profiles/mobile-expo/README.md',
+      'docs/profiles/mobile-expo/adoption.md',
+      'docs/profiles/mobile-expo/guardrails.md',
+      'docs/profiles/mobile-expo/testing.md',
+      '.agents/skills/lighthouse-mobile-expo/SKILL.md'
+    ]) await access(join(dir, file));
+    const selectedManifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selectedManifest.application = { shape: 'full-stack', stacks: ['expo', 'dotnet'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    const composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'passed');
+    assert.equal(composition.selected.some((profile) => profile.id === 'react-web-platform'), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('visual-theme init reports a brownfield design conflict without overwriting it', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-brownfield-'));
   try {

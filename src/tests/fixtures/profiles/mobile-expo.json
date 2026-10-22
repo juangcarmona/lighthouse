@@ -1,0 +1,10 @@
+{
+  "product": "ExpoProfileFixture",
+  "application": { "shape": "full-stack", "stacks": ["expo", "dotnet"] },
+  "profiles": ["mobile-expo", "dotnet-backend"],
+  "expected": {
+    "status": "passed",
+    "browserLayer": "browser-e2e",
+    "requiredProfiles": ["mobile-expo", "dotnet-backend"]
+  }
+}
