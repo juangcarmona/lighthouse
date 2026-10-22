@@ -376,7 +376,7 @@
           "purpose": "An authenticated web application with a server-side session boundary."
         }
       ],
-      "consumerFixture": "src/tests/react-web-profile.test.mjs",
+      "consumerFixture": "src/tests/profile-fixtures.test.mjs",
       "upgradeStrategy": "Preserve adopter-owned source and configuration; reconcile only Lighthouse-owned profile guidance and declared projections.",
       "guardrails": [
         {
@@ -539,7 +539,7 @@
           "purpose": "An authenticated web application with Lighthouse visual and backend profiles."
         }
       ],
-      "consumerFixture": "src/tests/web-bff-profile.test.mjs",
+      "consumerFixture": "src/tests/profile-fixtures.test.mjs",
       "upgradeStrategy": "Preserve adopter-owned identity and host code; reconcile only Lighthouse-owned guidance and declared profile projections.",
       "guardrails": [
         {
