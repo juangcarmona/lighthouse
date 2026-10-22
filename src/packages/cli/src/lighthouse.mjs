@@ -45,6 +45,7 @@ const managedPaths = [
 ];
 const profileManagedPaths = Object.freeze({
   'visual-theme': ['docs/design/DESIGN.md', '.agents/skills/lighthouse-ui/SKILL.md'],
+  'dotnet-backend': ['docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
 });
 const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
@@ -52,7 +53,7 @@ const supportedProfiles = ['node-tooling', 'dotnet-backend', 'visual-theme'];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
-const usage = 'Usage: lighthouse <init|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -78,15 +79,24 @@ function packageAsset(packageName, entry) {
 }
 
 function profileAssets(manifest) {
-  if (!(manifest?.profiles ?? []).includes('visual-theme')) return {};
-  try {
-    return {
-      'docs/design/DESIGN.md': packageAsset('@juangcarmona/lighthouse-ui', 'DESIGN.md'),
-      '.agents/skills/lighthouse-ui/SKILL.md': packageAsset('@juangcarmona/lighthouse-ui', 'skills/ui-design/SKILL.md'),
-    };
-  } catch (error) {
-    throw new Error(`Cannot read the installed Lighthouse UI profile: ${error.message}`);
+  const assets = {};
+  if ((manifest?.profiles ?? []).includes('visual-theme')) {
+    try {
+      assets['docs/design/DESIGN.md'] = packageAsset('@juangcarmona/lighthouse-ui', 'DESIGN.md');
+      assets['.agents/skills/lighthouse-ui/SKILL.md'] = packageAsset('@juangcarmona/lighthouse-ui', 'skills/ui-design/SKILL.md');
+    } catch (error) {
+      throw new Error(`Cannot read the installed Lighthouse UI profile: ${error.message}`);
+    }
   }
+  if ((manifest?.profiles ?? []).includes('dotnet-backend')) {
+    const files = ['README.md', 'adoption.md', 'architecture.md', 'guardrails.md', 'practices.md', 'testing-and-development.md', 'use-cases.md', 'SKILL.md'];
+    for (const file of files) {
+      const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-dotnet/SKILL.md' : `docs/profiles/dotnet/${file}`;
+      try { assets[target] = readFileSync(new URL(`../assets/profiles/dotnet/${file}`, import.meta.url), 'utf8'); }
+      catch (error) { throw new Error(`Cannot read the installed Lighthouse .NET profile: ${error.message}`); }
+    }
+  }
+  return assets;
 }
 
 function profileArguments(args) {
@@ -1147,6 +1157,11 @@ function formatFromArgs(args) {
 const args = process.argv.slice(2);
 const command = args[0];
 const commandArgs = args.slice(1);
+if (command === 'create-dotnet') {
+  process.argv.splice(2, 1);
+  await import('./create-dotnet.mjs');
+  process.exit(0);
+}
 let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];

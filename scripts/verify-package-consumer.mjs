@@ -87,6 +87,15 @@ try {
     process.exit(visualVerify.status ?? 1);
   }
 
+  const dotnetFixture = join(temp, '.fixture/dotnet-profile');
+  const dotnetCreate = spawnSync(bin, ['create-dotnet', dotnetFixture, '--name', 'Workshop'], { cwd: temp, encoding: 'utf8' });
+  if (dotnetCreate.status !== 0 || !(await readFile(join(dotnetFixture, 'docs/profiles/dotnet/README.md'), 'utf8')).includes('Minimal APIs')) {
+    process.stderr.write(dotnetCreate.stdout);
+    process.stderr.write(dotnetCreate.stderr);
+    console.error('Expected the packed .NET profile creator to seed guidance and the verifier.');
+    process.exit(dotnetCreate.status ?? 1);
+  }
+
   const labelsPath = join(temp, '.fixture/github-labels.json');
   const callsPath = join(temp, '.fixture/github-calls.json');
   const ghDirectory = join(temp, '.fixture/bin');

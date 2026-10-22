@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>JuanGCarmona.Lighthouse.Example.Modules.Catalog</AssemblyName>
+    <RootNamespace>JuanGCarmona.Lighthouse.Example.Modules.Catalog</RootNamespace>
+    <LighthouseModule>true</LighthouseModule>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../../../Lighthouse.Cqrs/Lighthouse.Cqrs.csproj" />
+    <ProjectReference Include="../../../../Lighthouse.Analyzers/Lighthouse.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

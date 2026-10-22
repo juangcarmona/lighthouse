@@ -10,10 +10,10 @@ description: Static decomposition of the current Lighthouse workspace and target
 
 | Building block | Source | Responsibility |
 | --- | --- | --- |
-| CLI package | `src/packages/cli/` | Initialize the baseline, record the selected SDLC package and verify generated projections |
+| CLI package | `src/packages/cli/` | Initialize the baseline, compose profiles, create the selected .NET starter and verify generated projections |
 | SDLC package | `src/packages/sdlc/` | Distribute lifecycle skills, commands, meta-commands, route and gate contracts and deterministic package checks |
 | UI package | `src/packages/ui/` | Export semantic tokens, native recipes and `DESIGN.md` |
-| .NET reference profile | `src/dotnet/` | Demonstrate modular monolith, CQRS/VSA, Aspire and Roslyn checks |
+| .NET reference profile | `src/dotnet/` and `src/packages/cli/assets/dotnet-template/` | Demonstrate and distribute the modular monolith, CQRS/VSA, Aspire and Roslyn checks |
 | Gallery | `src/gallery/` | Exercise the UI package in a browser |
 | Public site | `src/public-site/` and `scripts/build-public-site.mjs` | Present the current Lighthouse story and publish ProductShape and ArcShape snapshots |
 | Repository checks | `src/tests/` and `scripts/` | Verify package, link, adoption and site contracts |
@@ -55,7 +55,7 @@ The product-defined initializer composes the following blocks only when their pr
 | Stack profile | Supply language-specific conventions, examples and checks |
 | Evidence catalog | Associate integration and end-to-end evidence with bounded contexts |
 
-The target profile blocks are product decisions and templates. The current CLI projects the baseline and SDLC control plane; lifecycle execution remains a host-specific integration.
+The target profile blocks are product decisions and templates. The CLI projects selected guidance and the .NET creator seeds a product-owned starter; lifecycle execution remains a host-specific integration.
 
 ## Feature mapping
 
