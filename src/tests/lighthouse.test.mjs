@@ -170,6 +170,28 @@ test('visual-theme init projects the UI guide and skill and verifies the token c
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('react web profile projects its guidance and requires the visual contract', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-react-web-profile-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'Web', '--profile', 'visual-theme', '--profile', 'react-web-platform']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    for (const file of [
+      'docs/profiles/react-web-platform/README.md',
+      'docs/profiles/react-web-platform/adoption.md',
+      'docs/profiles/react-web-platform/structure.md',
+      'docs/profiles/react-web-platform/guardrails.md',
+      'docs/profiles/react-web-platform/testing.md',
+      '.agents/skills/lighthouse-react-web/SKILL.md'
+    ]) await access(join(dir, file));
+    const selectedManifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selectedManifest.application = { shape: 'frontend', stacks: ['react'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    const composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'passed');
+    assert.equal(composition.selected.find((profile) => profile.id === 'react-web-platform').dependencies[0], 'visual-theme');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('visual-theme init reports a brownfield design conflict without overwriting it', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-brownfield-'));
   try {

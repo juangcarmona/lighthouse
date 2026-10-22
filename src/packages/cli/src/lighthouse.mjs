@@ -46,10 +46,11 @@ const managedPaths = [
 const profileManagedPaths = Object.freeze({
   'visual-theme': ['docs/design/DESIGN.md', '.agents/skills/lighthouse-ui/SKILL.md'],
   'dotnet-backend': ['docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
+  'react-web-platform': ['docs/profiles/react-web-platform/README.md', 'docs/profiles/react-web-platform/adoption.md', 'docs/profiles/react-web-platform/structure.md', 'docs/profiles/react-web-platform/guardrails.md', 'docs/profiles/react-web-platform/testing.md', '.agents/skills/lighthouse-react-web/SKILL.md'],
 });
 const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
-const supportedProfiles = ['node-tooling', 'dotnet-backend', 'visual-theme'];
+const supportedProfiles = readProfileCatalog().profiles.map(({ id }) => id);
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
@@ -94,6 +95,14 @@ function profileAssets(manifest) {
       const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-dotnet/SKILL.md' : `docs/profiles/dotnet/${file}`;
       try { assets[target] = readFileSync(new URL(`../assets/profiles/dotnet/${file}`, import.meta.url), 'utf8'); }
       catch (error) { throw new Error(`Cannot read the installed Lighthouse .NET profile: ${error.message}`); }
+    }
+  }
+  if ((manifest?.profiles ?? []).includes('react-web-platform')) {
+    const files = ['README.md', 'adoption.md', 'structure.md', 'guardrails.md', 'testing.md', 'SKILL.md'];
+    for (const file of files) {
+      const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-react-web/SKILL.md' : `docs/profiles/react-web-platform/${file}`;
+      try { assets[target] = readFileSync(new URL(`../assets/profiles/react-web-platform/${file}`, import.meta.url), 'utf8'); }
+      catch (error) { throw new Error(`Cannot read the installed Lighthouse React web profile: ${error.message}`); }
     }
   }
   return assets;
