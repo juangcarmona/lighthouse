@@ -13,8 +13,8 @@ Prepare a completed slice for the project's forge and branch policy.
 2. Verify the branch, commit, pull request and required CI checks against project policy.
 3. Synchronize the work item and pull request state using the project's configured labels.
 4. Prepare the merge or stacked change action and leave protected or human decisions explicit.
-5. Return the integration record without merging unless the selected route and repository policy authorize it.
+5. Return a stage result with `stage: integrate`, the integration record as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays without merging unless the selected route and repository policy authorize it.
 
 ## Completion
 
-The change is ready for its configured merge action, every required check is linked and unresolved decisions have an owner.
+The change is ready for its configured merge action, every required check is linked and unresolved decisions have an owner in the integration result.

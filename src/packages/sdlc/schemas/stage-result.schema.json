@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-stage-result.schema.json",
+  "title": "Lighthouse SDLC stage result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "stage", "status", "gate", "evidence", "missingEvidence", "unavailableChecks", "pendingReview", "nextAction"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "stage": { "enum": ["triage", "refine", "propose", "implement", "integrate", "review"] },
+    "status": { "enum": ["ready", "blocked", "failed", "passed"] },
+    "gate": { "type": ["string", "null"] },
+    "input": { "type": "object" },
+    "output": { "type": "object" },
+    "evidence": { "type": "array", "items": { "type": "object", "required": ["id", "status"], "properties": { "id": { "type": "string" }, "status": { "enum": ["passed", "failed", "unavailable", "unconfigured", "pending-review", "not-applicable"] }, "source": { "type": "string" }, "reason": { "type": "string" } }, "additionalProperties": false } },
+    "missingEvidence": { "type": "array", "items": { "type": "string" } },
+    "unavailableChecks": { "type": "array", "items": { "type": "string" } },
+    "pendingReview": { "type": "array", "items": { "type": "string" } },
+    "nextAction": { "type": "string", "minLength": 1 }
+  }
+}

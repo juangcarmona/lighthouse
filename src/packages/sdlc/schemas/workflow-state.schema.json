@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-workflow-state.schema.json",
+  "title": "Lighthouse workflow state event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "runId", "route", "stage", "from", "to", "actor", "timestamp", "reason", "evidence"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "eventId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "parentRunId": { "type": "string" },
+    "route": { "type": "string", "minLength": 1 },
+    "stage": { "type": "string", "minLength": 1 },
+    "from": { "type": ["string", "null"] },
+    "to": { "type": "string", "enum": ["ready", "running", "waiting-human", "blocked", "succeeded", "failed", "cancelled"] },
+    "actor": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "minLength": 1 },
+    "reason": { "type": "string", "minLength": 1 },
+    "evidence": { "type": "array" }
+  }
+}
