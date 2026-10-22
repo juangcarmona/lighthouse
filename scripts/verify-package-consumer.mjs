@@ -46,8 +46,13 @@ try {
   ], root);
   const [{ filename: sdlcFilename }] = JSON.parse(sdlcOutput);
   const sdlcTarball = resolve(temp, sdlcFilename);
+  const uiOutput = run('npm', [
+    'pack', '--workspace', '@juangcarmona/lighthouse-ui', '--pack-destination', temp, '--json'
+  ], root);
+  const [{ filename: uiFilename }] = JSON.parse(uiOutput);
+  const uiTarball = resolve(temp, uiFilename);
 
-  run('npm', ['install', '--ignore-scripts', '--save-dev', tarball, sdlcTarball], temp);
+  run('npm', ['install', '--ignore-scripts', '--save-dev', tarball, sdlcTarball, uiTarball], temp);
 
   const consumerManifest = JSON.parse(await readFile(join(temp, 'package.json'), 'utf8'));
   const product = process.env.LIGHTHOUSE_PRODUCT_NAME ?? consumerManifest.name?.split('/').pop() ?? 'adopter';
@@ -59,11 +64,28 @@ try {
     process.exit(1);
   }
   if (brownfield.status !== 0) {
-    for (const path of ['.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml']) {
+    const conflicts = [...`${brownfield.stdout}\n${brownfield.stderr}`.matchAll(/^\s*conflict (.+?) already exists; refusing to overwrite it$/gmu)].map((match) => match[1]);
+    for (const path of conflicts) {
       await rm(join(temp, path), { force: true });
     }
   }
   run(bin, ['init', '--name', product], temp);
+
+  const visualFixture = join(temp, '.fixture/visual-profile');
+  await mkdir(visualFixture, { recursive: true });
+  const visualInit = spawnSync(bin, ['init', '--name', 'Visual', '--profile', 'visual-theme'], { cwd: visualFixture, encoding: 'utf8' });
+  if (visualInit.status !== 0) {
+    process.stderr.write(visualInit.stdout);
+    process.stderr.write(visualInit.stderr);
+    process.exit(visualInit.status ?? 1);
+  }
+  const visualVerify = spawnSync(bin, ['verify', '--format', 'json'], { cwd: visualFixture, encoding: 'utf8' });
+  if (visualVerify.status !== 0 || !JSON.parse(visualVerify.stdout).results.some((item) => item.id === 'visual.design-contract' && item.status === 'passed')) {
+    process.stderr.write(visualVerify.stdout);
+    process.stderr.write(visualVerify.stderr);
+    console.error('Expected the packed visual-theme profile to initialize and verify.');
+    process.exit(visualVerify.status ?? 1);
+  }
 
   const labelsPath = join(temp, '.fixture/github-labels.json');
   const callsPath = join(temp, '.fixture/github-calls.json');

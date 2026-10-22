@@ -41,6 +41,16 @@
       "verification": "deterministic",
       "check": "branch",
       "failureHint": "Use the branch pattern declared in lighthouse.json."
+    },
+    {
+      "id": "visual.design-contract",
+      "owner": "@juangcarmona/lighthouse-ui",
+      "appliesTo": { "baseline": false, "profiles": ["visual-theme"] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "ui-design",
+      "failureHint": "Run lighthouse reconcile after reviewing the visual-theme profile plan, then run lighthouse verify again."
     }
   ]
 }

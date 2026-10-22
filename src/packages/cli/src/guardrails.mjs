@@ -7,6 +7,7 @@ const allowedLevels = new Set(['required', 'recommended', 'optional']);
 const allowedKinds = new Set(['hard', 'soft']);
 const allowedVerification = new Set(['deterministic', 'semantic', 'human']);
 const allowedStatuses = new Set(['passed', 'failed', 'drift', 'unavailable', 'unconfigured', 'pending-review', 'not-applicable']);
+const requiredVisualTokens = ['--lh-canvas', '--lh-surface', '--lh-text', '--lh-action', '--lh-border', '--lh-focus'];
 
 function descriptorProblems(descriptor) {
   const problems = [];
@@ -102,16 +103,30 @@ async function runDeterministicCheck(descriptor, context) {
     const problems = context.validateGitConventions(context.repository);
     return result(descriptor, problems.length ? 'failed' : 'passed', [{ value: context.branch ?? '' }, { pattern: context.repository.conventions.branchPattern }], problems);
   }
+  if (descriptor.check === 'ui-design') {
+    const expected = ['docs/design/DESIGN.md', '.agents/skills/lighthouse-ui/SKILL.md'];
+    const missing = [];
+    const drifted = [];
+    for (const path of expected) {
+      const target = context.resolve(path);
+      if (!context.managedFiles[path] || !(await context.exists(target))) missing.push(path);
+      else if (await context.readFile(target, 'utf8') !== context.managedFiles[path]) drifted.push(`${path} has drifted; regenerate it from the visual-theme profile.`);
+    }
+    const tokenProblems = requiredVisualTokens.filter((token) => !context.uiTokens?.includes(token)).map((token) => `${token} is missing from the installed Lighthouse UI token source.`);
+    const problems = [...missing.map((path) => `${path} is missing; run lighthouse reconcile after reviewing the visual-theme profile plan.`), ...drifted, ...tokenProblems];
+    const status = drifted.length ? 'drift' : problems.length ? 'failed' : 'passed';
+    return result(descriptor, status, [...expected.map((path) => ({ path })), ...requiredVisualTokens.map((token) => ({ token }))], problems);
+  }
   return result(descriptor, 'unavailable', [], [`No deterministic checker is registered for ${descriptor.id}.`]);
 }
 
-export async function evaluateGuardrails({ catalog, manifest, manifestProblems, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch }) {
+export async function evaluateGuardrails({ catalog, manifest, manifestProblems, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens }) {
   if (manifestProblems.length) {
     const descriptor = catalog.guardrails.find((item) => item.check === 'manifest') ?? catalog.guardrails[0];
     const failed = result(descriptor, 'failed', [{ path: 'lighthouse.json' }], manifestProblems.map((problem) => `Invalid lighthouse.json: ${problem}`));
     return report([failed]);
   }
-  const context = { manifest, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch };
+  const context = { manifest, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens };
   const results = [];
   for (const descriptor of catalog.guardrails) {
     if (!appliesTo(descriptor, manifest)) {

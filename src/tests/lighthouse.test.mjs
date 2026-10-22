@@ -8,6 +8,7 @@ import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/g
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
 const sdlcPackage = JSON.parse(await readFile(new URL('../packages/sdlc/package.json', import.meta.url), 'utf8'));
+const uiPackage = JSON.parse(await readFile(new URL('../packages/ui/package.json', import.meta.url), 'utf8'));
 const manifest = {
   schemaVersion: 1,
   baseline: '0.1.0',
@@ -92,6 +93,61 @@ test('greenfield init creates the repository boundaries and a default manifest',
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
     assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('visual-theme init projects the UI guide and skill and verifies the token contract', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-profile-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'Visual', '--profile', 'visual-theme']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    const generated = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.deepEqual(generated.profiles, ['visual-theme']);
+    assert.deepEqual(generated.packages.ui, { name: '@juangcarmona/lighthouse-ui', version: uiPackage.version });
+    assert.ok(generated.managed.includes('docs/design/DESIGN.md'));
+    assert.ok(generated.managed.includes('.agents/skills/lighthouse-ui/SKILL.md'));
+    assert.match(await readFile(join(dir, 'docs/design/DESIGN.md'), 'utf8'), /--lh-action/);
+    assert.match(await readFile(join(dir, '.agents/skills/lighthouse-ui/SKILL.md'), 'utf8'), /semantic `--lh-\*` roles/);
+    const report = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    assert.equal(report.results.find((item) => item.id === 'visual.design-contract').status, 'passed');
+    const skill = await readFile(join(dir, '.agents/skills/lighthouse-ui/SKILL.md'), 'utf8');
+    await rm(join(dir, '.agents/skills/lighthouse-ui/SKILL.md'));
+    const missing = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    assert.equal(missing.results.find((item) => item.id === 'visual.design-contract').status, 'failed');
+    await writeFile(join(dir, '.agents/skills/lighthouse-ui/SKILL.md'), skill);
+    await writeFile(join(dir, 'docs/design/DESIGN.md'), 'project-owned visual guide');
+    const drift = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    assert.equal(drift.results.find((item) => item.id === 'visual.design-contract').status, 'drift');
+    assert.equal(run(dir, 'verify', ['--format', 'json']).status, 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('visual-theme init reports a brownfield design conflict without overwriting it', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-brownfield-'));
+  try {
+    await mkdir(join(dir, 'docs/design'), { recursive: true });
+    await writeFile(join(dir, 'docs/design/DESIGN.md'), 'project-owned design');
+    const preview = run(dir, 'init', ['--name', 'Visual', '--profile', 'visual-theme', '--dry-run']);
+    assert.equal(preview.status, 1);
+    assert.match(preview.stderr, /docs\/design\/DESIGN\.md already exists/);
+    assert.equal(await readFile(join(dir, 'docs/design/DESIGN.md'), 'utf8'), 'project-owned design');
+    assert.equal(await access(join(dir, 'lighthouse.json')).then(() => true).catch(() => false), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('visual-theme validation requires its pinned UI package', async () => {
+  const dir = await fixture();
+  try {
+    const selected = { ...manifest, profiles: ['visual-theme'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+    const missing = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(missing.status, 1);
+    assert.match(missing.stdout, /packages must declare/);
+    selected.packages = { sdlc: { name: sdlcPackage.name, version: sdlcPackage.version }, ui: { name: '@wrong/ui', version: '0.1.0' } };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+    const invalid = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(invalid.status, 1);
+    assert.match(invalid.stdout, /packages\.ui must declare/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

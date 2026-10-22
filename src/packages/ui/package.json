@@ -18,11 +18,14 @@
   "engines": {
     "node": ">=22"
   },
-  "files": ["DESIGN.md", "README.md", "components.css", "index.css", "tokens.css"],
+  "files": ["DESIGN.md", "README.md", "components.css", "index.css", "tokens.css", "skills/ui-design/SKILL.md"],
   "exports": {
     ".": "./index.css",
     "./components.css": "./components.css",
-    "./tokens.css": "./tokens.css"
+    "./tokens.css": "./tokens.css",
+    "./DESIGN.md": "./DESIGN.md",
+    "./skills/ui-design/SKILL.md": "./skills/ui-design/SKILL.md",
+    "./package.json": "./package.json"
   },
   "sideEffects": ["*.css"]
 }
