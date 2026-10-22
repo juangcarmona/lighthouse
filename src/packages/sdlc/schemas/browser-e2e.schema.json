@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/browser-e2e.schema.json",
+  "title": "Lighthouse browser end-to-end evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runner", "journey", "command", "status", "evidence", "artifacts", "nextAction"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runner": { "const": "playwright" },
+    "journey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "boundedContext"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "boundedContext": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "command": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["passed", "failed", "unavailable", "pending-review"] },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "source"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["passed", "failed", "unavailable", "pending-review"] },
+          "source": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "path"],
+        "properties": {
+          "type": { "enum": ["screenshot", "trace", "video", "report"] },
+          "path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "nextAction": { "type": "string", "minLength": 1 }
+  }
+}

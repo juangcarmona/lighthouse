@@ -48,6 +48,7 @@
     "./capabilities": "./src/capabilities.mjs",
     "./stacked": "./src/stacked.mjs",
     "./workflow": "./src/workflow.mjs",
+    "./browser-e2e": "./src/browser-e2e.mjs",
     "./contract.json": "./contract.json",
     "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
     "./schemas/triage.schema.json": "./schemas/triage.schema.json",
@@ -57,6 +58,7 @@
     "./schemas/decomposition.schema.json": "./schemas/decomposition.schema.json",
     "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json",
     "./schemas/capability-catalog.schema.json": "./schemas/capability-catalog.schema.json",
+    "./schemas/browser-e2e.schema.json": "./schemas/browser-e2e.schema.json",
     "./capabilities.json": "./capabilities.json"
   }
 }
