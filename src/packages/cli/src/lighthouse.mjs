@@ -47,6 +47,7 @@ const profileManagedPaths = Object.freeze({
   'visual-theme': ['docs/design/DESIGN.md', '.agents/skills/lighthouse-ui/SKILL.md'],
   'dotnet-backend': ['docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
   'react-web-platform': ['docs/profiles/react-web-platform/README.md', 'docs/profiles/react-web-platform/adoption.md', 'docs/profiles/react-web-platform/structure.md', 'docs/profiles/react-web-platform/guardrails.md', 'docs/profiles/react-web-platform/testing.md', '.agents/skills/lighthouse-react-web/SKILL.md'],
+  'web-bff': ['docs/profiles/web-bff/README.md', 'docs/profiles/web-bff/adoption.md', 'docs/profiles/web-bff/security.md', 'docs/profiles/web-bff/testing.md', '.agents/skills/lighthouse-web-bff/SKILL.md'],
 });
 const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
@@ -103,6 +104,14 @@ function profileAssets(manifest) {
       const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-react-web/SKILL.md' : `docs/profiles/react-web-platform/${file}`;
       try { assets[target] = readFileSync(new URL(`../assets/profiles/react-web-platform/${file}`, import.meta.url), 'utf8'); }
       catch (error) { throw new Error(`Cannot read the installed Lighthouse React web profile: ${error.message}`); }
+    }
+  }
+  if ((manifest?.profiles ?? []).includes('web-bff')) {
+    const files = ['README.md', 'adoption.md', 'security.md', 'testing.md', 'SKILL.md'];
+    for (const file of files) {
+      const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-web-bff/SKILL.md' : `docs/profiles/web-bff/${file}`;
+      try { assets[target] = readFileSync(new URL(`../assets/profiles/web-bff/${file}`, import.meta.url), 'utf8'); }
+      catch (error) { throw new Error(`Cannot read the installed Lighthouse web BFF profile: ${error.message}`); }
     }
   }
   return assets;

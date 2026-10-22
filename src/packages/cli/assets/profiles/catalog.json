@@ -366,6 +366,14 @@
             "visual-theme"
           ],
           "purpose": "A web application using the Lighthouse visual contract."
+        },
+        {
+          "with": [
+            "visual-theme",
+            "web-bff",
+            "dotnet-backend"
+          ],
+          "purpose": "An authenticated web application with a server-side session boundary."
         }
       ],
       "consumerFixture": "src/tests/react-web-profile.test.mjs",
@@ -462,6 +470,154 @@
             "level": "optional",
             "kind": "soft",
             "verification": "human",
+            "command": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-bff",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "A server-side session and API boundary for authenticated web applications.",
+      "appliesTo": {
+        "shapes": [
+          "full-stack"
+        ],
+        "stacks": [
+          "react",
+          "dotnet"
+        ]
+      },
+      "surfaces": [
+        "same-origin session",
+        "OAuth callback",
+        "CSRF policy",
+        "API proxy boundary",
+        "ProblemDetails",
+        "correlation and rate limiting"
+      ],
+      "prerequisites": [
+        "An identity provider or approved test identity",
+        "A web application with an API boundary"
+      ],
+      "dependencies": [
+        "react-web-platform",
+        "dotnet-backend"
+      ],
+      "incompatibleWith": [],
+      "libraries": [
+        "ASP.NET Core",
+        "OAuth Authorization Code with PKCE"
+      ],
+      "structure": [
+        "src/",
+        "tests/",
+        "session boundary",
+        "API routes"
+      ],
+      "commands": [
+        "npm run verify",
+        "npm run verify:dotnet",
+        "npm run test:e2e"
+      ],
+      "failureConsequence": "The authenticated web profile is not ready for delivery while session, CSRF, allowlist, logout or browser evidence is missing.",
+      "repairHints": [
+        "Verify cookie flags and the PKCE callback.",
+        "Run the negative CSRF, destination, logout and expiry tests.",
+        "Keep tokens outside browser storage."
+      ],
+      "exceptions": [
+        "Record a product and architecture decision for direct browser-to-API access or a separate BFF service."
+      ],
+      "combinations": [
+        {
+          "with": [
+            "react-web-platform",
+            "dotnet-backend",
+            "visual-theme"
+          ],
+          "purpose": "An authenticated web application with Lighthouse visual and backend profiles."
+        }
+      ],
+      "consumerFixture": "src/tests/web-bff-profile.test.mjs",
+      "upgradeStrategy": "Preserve adopter-owned identity and host code; reconcile only Lighthouse-owned guidance and declared profile projections.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run verify:dotnet",
+          "description": "The host and BFF static checks pass."
+        },
+        {
+          "id": "integration",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run verify:dotnet",
+          "description": "Session, callback and upstream integration checks pass."
+        },
+        {
+          "id": "browser-e2e",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run test:e2e",
+          "description": "Authenticated browser journeys have evidence."
+        },
+        {
+          "id": "functional",
+          "level": "required",
+          "kind": "soft",
+          "verification": "semantic",
+          "command": null,
+          "description": "Security policy and exception evidence have human review."
+        },
+        {
+          "id": "operational",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": null,
+          "description": "Correlation, rate limiting and observability checks are configured."
+        }
+      ],
+      "verification": {
+        "layers": [
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run verify:dotnet"
+          },
+          {
+            "id": "integration",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run verify:dotnet"
+          },
+          {
+            "id": "browser-e2e",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run test:e2e"
+          },
+          {
+            "id": "functional",
+            "level": "required",
+            "kind": "soft",
+            "verification": "semantic",
+            "command": null
+          },
+          {
+            "id": "operational",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
             "command": null
           }
         ]
