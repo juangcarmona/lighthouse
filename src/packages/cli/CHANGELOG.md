@@ -1,5 +1,18 @@
 # @juangcarmona/lighthouse
 
+## 0.5.0
+
+### Minor Changes
+
+- 2ee0394: # Visual theme profile
+
+  Add the framework-neutral `visual-theme` profile with the distributed UI design skill and deterministic profile verification.
+
+### Patch Changes
+
+- Updated dependencies [2ee0394]
+  - @juangcarmona/lighthouse-ui@0.2.0
+
 ## 0.4.0
 
 ### Minor Changes
