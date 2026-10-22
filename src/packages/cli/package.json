@@ -31,6 +31,8 @@
     "assets",
     "README.md",
     "src/profiles.mjs",
+    "src/create-dotnet.mjs",
+    "src/verify-dotnet.mjs",
     "upgrades"
   ],
   "bin": {

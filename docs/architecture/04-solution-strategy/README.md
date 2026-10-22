@@ -32,7 +32,7 @@ Python and other stacks receive profiles that define their own dependency, forma
 
 ## Package ownership
 
-The current workspace keeps the CLI, SDLC and UI as separate packages. The CLI owns initialization and verification, the SDLC package owns lifecycle skills and route contracts, and the UI package owns visual tokens and recipes. Profile assets may remain distributed by the Lighthouse installer until a profile needs an independent release or installation boundary.
+The current workspace keeps the CLI, SDLC and UI as separate packages. The CLI owns initialization, profile composition, the .NET creator and verification, the SDLC package owns lifecycle skills and route contracts, and the UI package owns visual tokens and recipes. The .NET starter remains a CLI-owned profile asset until it needs an independent release or installation boundary.
 
 ## Current repository versus target output
 

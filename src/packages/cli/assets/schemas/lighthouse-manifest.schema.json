@@ -22,13 +22,7 @@
     "profiles": {"type": "array", "items": {"enum": ["node-tooling", "dotnet-backend", "visual-theme"]}, "uniqueItems": true},
     "integrations": {"type": "object", "additionalProperties": false, "required": ["productShape", "arcShape"], "properties": {"productShape": {"$ref": "#/$defs/pin"}, "arcShape": {"$ref": "#/$defs/pin"}}},
     "packages": {"type": "object", "additionalProperties": false, "required": ["sdlc"], "properties": {"sdlc": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "@juangcarmona/lighthouse-sdlc"}, "version": {"$ref": "#/$defs/pin"}}}, "ui": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "@juangcarmona/lighthouse-ui"}, "version": {"$ref": "#/$defs/pin"}}}}},
-    "managed": {"anyOf": [
-      {"const": ["LIGHTHOUSE.md"]},
-      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml"]},
-      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json"]},
-      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json", ".lighthouse/upgrade.json"]},
-      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json", ".lighthouse/upgrade.json", "docs/design/DESIGN.md", ".agents/skills/lighthouse-ui/SKILL.md"]}
-    ]},
+    "managed": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
     "repository": {
       "type": "object",
       "additionalProperties": false,

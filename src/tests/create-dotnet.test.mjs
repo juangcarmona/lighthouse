@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const creator = fileURLToPath(new URL('../packages/cli/internal/create-dotnet.mjs', import.meta.url));
+const packagedCreator = fileURLToPath(new URL('../packages/cli/src/lighthouse.mjs', import.meta.url));
 test('creator seeds an independent product and refuses an occupied target', async () => {
   const parent = await mkdtemp(resolve(tmpdir(), 'lighthouse-adoption-'));
   const target = resolve(parent, 'Workshop');
@@ -37,4 +38,19 @@ test('creator seeds an independent product and refuses an occupied target', asyn
 test('creator rejects names that cannot be product identifiers', async () => {
   const result = spawnSync(process.execPath, [creator, '/tmp/unused-lighthouse-target', '--name', '../Bad'], { encoding: 'utf8' });
   assert.equal(result.status, 2);
+});
+
+test('packaged creator seeds the profile assets and verifier without remote writes', async () => {
+  const parent = await mkdtemp(resolve(tmpdir(), 'lighthouse-packaged-dotnet-'));
+  const target = resolve(parent, 'Product');
+  try {
+    const result = spawnSync(process.execPath, [packagedCreator, 'create-dotnet', target, '--name', 'Product'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.match(await readFile(resolve(target, 'docs/profiles/dotnet/README.md'), 'utf8'), /Minimal APIs/);
+    assert.match(await readFile(resolve(target, '.agents/skills/lighthouse-dotnet/SKILL.md'), 'utf8'), /Aspire/);
+    assert.match(await readFile(resolve(target, 'scripts/verify-dotnet.mjs'), 'utf8'), /LighthouseModule/);
+    assert.match(await readFile(resolve(target, 'Product.slnx'), 'utf8'), /src\/root\/Product.Api/);
+    const verify = spawnSync(process.execPath, [resolve(target, 'scripts/lighthouse.mjs'), 'verify', '--format', 'json'], { cwd: target, encoding: 'utf8' });
+    assert.equal(verify.status, 0, `${verify.stdout}\n${verify.stderr}`);
+  } finally { await rm(parent, { recursive: true, force: true }); }
 });

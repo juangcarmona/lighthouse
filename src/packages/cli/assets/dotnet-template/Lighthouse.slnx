@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/examples/src/modules/">
+    <Project Path="examples/src/modules/Lighthouse.Example.Modules.Catalog/Lighthouse.Example.Modules.Catalog.csproj" />
+  </Folder>
+  <Folder Name="/examples/src/root/">
+    <Project Path="examples/src/root/Lighthouse.Example.Api/Lighthouse.Example.Api.csproj" />
+    <Project Path="examples/src/root/Lighthouse.Example.AppHost/Lighthouse.Example.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lighthouse.Analyzers.Tests/Lighthouse.Analyzers.Tests.csproj" />
+    <Project Path="tests/Lighthouse.Example.Tests/Lighthouse.Example.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Lighthouse/">
+    <Project Path="Lighthouse.Analyzers/Lighthouse.Analyzers.csproj" />
+    <Project Path="Lighthouse.Cqrs/Lighthouse.Cqrs.csproj" />
+  </Folder>
+</Solution>
