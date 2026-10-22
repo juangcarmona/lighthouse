@@ -24,8 +24,14 @@ The package distributes contracts, validators, skills and projections; an adopte
 | 5 | Decomposition and stacked planning | Complete | A large item produces a dependency-checked child plan; explicit GitHub apply creates validated children and emits an ordered stacked plan. |
 | 6 | Route compositions | Complete | Supervised, plan-only, unattended, hotfix and stacked routes expose prerequisites, correction limits and human or forge gates before mutation. |
 | 7 | Change evidence and integration | Contract complete | Implement, integrate and review consume the same stage result contract and keep merge, protected branch and human decisions explicit. |
-| 8 | Capability reconciliation | In progress | A repository declares the label capability, previews a deterministic plan, preserves existing values, applies missing labels explicitly and records drift evidence. |
-| 9 | Adopter proof and release | Next | A clean consumer exercises the complete contract, package contents, CLI projection and one GitHub fixture before a stable release. |
+| 8 | Capability reconciliation | First vertical slice complete | A repository declares the label capability, previews a deterministic plan, preserves existing values, applies missing labels explicitly and records drift evidence. |
+| 9 | Adopter proof and release | First proof complete | A clean consumer upgraded to Lighthouse 0.4.0 and lighthouse-sdlc 0.5.0, adopted the label capability, passed `lighthouse verify` and kept its repository verification green. |
+
+## Current position
+
+The first capability adoption proof is complete. The release and adopter checks cover discovery during upgrade, dry-run planning, explicit external authorization, idempotent label reconciliation, verification and recorded evidence.
+
+The next implementation slice is driven by a demonstrated adopter need. Until then, keep the existing contracts and fixtures stable and use a second adopter or a second capability to validate that the adoption mechanism remains reusable.
 
 ## Boundaries
 
@@ -47,4 +53,4 @@ No slice stores agent transcripts, model output or shared budgets in the reposit
 
 ## Product Change
 
-The product boundaries for this plan are [CHG-SDLC-DELIVERY-001](../product/changes/active/chg-sdlc-delivery-001/change.md) and [CHG-CAPABILITY-RECONCILIATION-001](../product/changes/active/chg-capability-reconciliation-001/change.md). Their proposed requirements join the existing intent without applying or replacing the baseline during implementation.
+The product boundaries for this plan are [CHG-SDLC-DELIVERY-001](../product/changes/active/chg-sdlc-delivery-001/change.md) and [CHG-CAPABILITY-RECONCILIATION-001](../product/changes/active/chg-capability-reconciliation-001/change.md). ProductShape remains the source of record for their lifecycle state; this plan records the implementation evidence without replacing that authority.
