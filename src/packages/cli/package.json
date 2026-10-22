@@ -28,7 +28,8 @@
     "src/lighthouse.mjs",
     "src/guardrails.mjs",
     "assets",
-    "README.md"
+    "README.md",
+    "upgrades"
   ],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"

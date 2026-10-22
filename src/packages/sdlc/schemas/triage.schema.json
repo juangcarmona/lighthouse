@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-sdlc-triage.schema.json",
+  "title": "Lighthouse triage input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "workItem", "currentLabels", "assessment", "configuration"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "workItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "currentLabels": { "type": "array", "items": { "type": "string" } },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["size", "urgency", "impact", "risk", "blastRadius", "dependencies", "route", "nextState", "owner", "confidence", "evidence"],
+      "properties": {
+        "size": { "enum": ["S", "M", "L", "XL"] },
+        "urgency": { "enum": ["normal", "asap", "now"] },
+        "impact": { "enum": ["low", "medium", "high"] },
+        "risk": { "enum": ["low", "medium", "high"] },
+        "blastRadius": { "enum": ["low", "medium", "high", "unknown"] },
+        "dependencies": { "type": "array" },
+        "route": { "enum": ["supervised", "plan-only", "unattended", "hotfix", "stacked"] },
+        "nextState": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "confidence": { "type": "object" },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field"],
+            "properties": {
+              "field": { "enum": ["size", "urgency", "impact", "risk", "blast-radius"] },
+              "status": { "enum": ["provided", "unavailable", "pending-review"] },
+              "source": { "type": "string", "minLength": 1 },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["labels", "transitions"],
+      "properties": {
+        "labels": { "type": "array" },
+        "transitions": { "type": "array" }
+      }
+    }
+  }
+}

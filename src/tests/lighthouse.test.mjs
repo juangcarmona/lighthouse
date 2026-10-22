@@ -86,7 +86,7 @@ test('greenfield init creates the repository boundaries and a default manifest',
     for (const directory of ['src', 'docs', 'infra', 'scripts']) assert.equal((await stat(join(dir, directory))).isDirectory(), true);
     const generated = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
     assert.equal(generated.repository.publicSite.enabled, true);
-    assert.deepEqual(generated.packages.sdlc, { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' });
+    assert.deepEqual(generated.packages.sdlc, { name: '@juangcarmona/lighthouse-sdlc', version: '0.2.0' });
     assert.match(await readFile(join(dir, '.lighthouse/sdlc.json'), 'utf8'), /"provider": "agent-host"/);
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
@@ -124,6 +124,64 @@ test('reconcile previews and applies missing managed paths without overwriting d
     assert.equal(conflict.status, 1);
     assert.match(conflict.stderr, /LIGHTHOUSE\.md exists with different content/);
     assert.equal(await readFile(drifted, 'utf8'), 'project-owned content');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('upgrade previews and applies a missing owned projection', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const missing = join(dir, '.github/workflows/lighthouse.yml');
+    await rm(missing);
+    const preview = run(dir, 'upgrade', ['--scope', 'harness']);
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /additive add \.github\/workflows\/lighthouse\.yml/);
+    const machine = run(dir, 'upgrade', ['--scope', 'harness', '--format', 'json']);
+    assert.equal(machine.status, 0, machine.stderr);
+    assert.equal(JSON.parse(machine.stdout).changes.find((change) => change.path === '.github/workflows/lighthouse.yml').classification, 'additive');
+    assert.equal(await access(missing).then(() => true).catch(() => false), false);
+    const applied = run(dir, 'upgrade', ['--scope', 'harness', '--apply']);
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.equal(await access(missing).then(() => true).catch(() => false), true);
+    const state = JSON.parse(await readFile(join(dir, '.lighthouse/upgrade.json'), 'utf8'));
+    assert.equal(state.files['.github/workflows/lighthouse.yml'].scope, 'harness');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('upgrade preserves customized projections and reports missing ownership evidence', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const projection = join(dir, 'LIGHTHOUSE.md');
+    await writeFile(projection, 'project-owned content');
+    const preview = run(dir, 'upgrade', ['--scope=harness']);
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /customized preserve LIGHTHOUSE\.md/);
+    assert.equal(run(dir, 'upgrade', ['--scope', 'harness', '--apply']).status, 0);
+    assert.equal(await readFile(projection, 'utf8'), 'project-owned content');
+    await rm(join(dir, '.lighthouse/upgrade.json'));
+    const missing = run(dir, 'upgrade');
+    assert.equal(missing.status, 1);
+    assert.match(`${missing.stdout}${missing.stderr}`, /adoption gap/);
+    assert.match(`${missing.stdout}${missing.stderr}`, /reconcile --apply/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('upgrade stops a baseline mismatch for human review', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const statePath = join(dir, '.lighthouse/upgrade.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    state.baseline = '0.0.0';
+    await writeFile(statePath, JSON.stringify(state));
+    const preview = run(dir, 'upgrade');
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.match(preview.stdout, /breaking review baseline/);
+    const applied = run(dir, 'upgrade', ['--apply']);
+    assert.equal(applied.status, 1);
+    assert.match(applied.stderr, /Upgrade stopped/);
+    assert.equal(JSON.parse(await readFile(statePath, 'utf8')).baseline, '0.0.0');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

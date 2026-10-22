@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { access, chmod, mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { constants, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -8,10 +9,19 @@ import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
 
 const root = process.cwd();
 const packageRequire = createRequire(import.meta.url);
+const cliPackage = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+function installedPackageVersion(name, entry) {
+  try {
+    const entryPath = packageRequire.resolve(`${name}/${entry}`);
+    return JSON.parse(readFileSync(resolve(dirname(entryPath), 'package.json'), 'utf8')).version;
+  } catch { return null; }
+}
 const manifestPath = resolve(root, 'lighthouse.json');
 const projection = 'LIGHTHOUSE.md';
+const upgradeStateRelative = '.lighthouse/upgrade.json';
+const upgradeStatePath = resolve(root, upgradeStateRelative);
 const layout = ['src', 'docs', 'infra', 'scripts'];
-const sdlcPackage = { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' };
+const sdlcPackage = { name: '@juangcarmona/lighthouse-sdlc', version: installedPackageVersion('@juangcarmona/lighthouse-sdlc', 'contract.json') ?? '0.1.0' };
 const managedPaths = [
   projection,
   'scripts/lighthouse-guard.mjs',
@@ -19,11 +29,18 @@ const managedPaths = [
   '.husky/pre-push',
   '.github/workflows/lighthouse.yml',
   '.lighthouse/sdlc.json',
+  upgradeStateRelative,
 ];
+const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
-const usage = 'Usage: lighthouse <init|authorities|reconcile|verify> [--name <product>] [--format <text|json>] [--dry-run] [--apply]';
+const upgradeScopes = {
+  harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml'],
+  sdlc: ['.lighthouse/sdlc.json'],
+};
+const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
+const usage = 'Usage: lighthouse <init|authorities|reconcile|upgrade|verify> [--name <product>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -198,6 +215,132 @@ function managedFiles(manifest) {
   return files;
 }
 
+function contentHash(content) {
+  return createHash('sha256').update(content).digest('hex');
+}
+
+function upgradeState(manifest, files = managedFiles(manifest), previous = null) {
+  const entries = Object.fromEntries(Object.entries(files).map(([path, content]) => [path, {
+    hash: contentHash(content),
+    scope: Object.entries(upgradeScopes).find(([, paths]) => paths.includes(path))?.[0] ?? 'harness',
+  }]));
+  return {
+    $schema: upgradeSchema,
+    schemaVersion: 1,
+    package: { name: cliPackage.name, version: cliPackage.version },
+    baseline: manifest.baseline,
+    capabilities: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+    projections: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+    lastAppliedMigration: previous?.lastAppliedMigration ?? 'foundation-init-1',
+    files: entries,
+  };
+}
+
+async function readUpgradeState() {
+  try { return JSON.parse(await readFile(upgradeStatePath, 'utf8')); }
+  catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw new Error(`Cannot read ${upgradeStateRelative}: ${error.message}`);
+  }
+}
+
+async function writeUpgradeState(manifest, previous = null, files = managedFiles(manifest)) {
+  const state = upgradeState(manifest, files, previous);
+  await mkdir(dirname(upgradeStatePath), { recursive: true });
+  await writeFile(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`, { flag: 'w' });
+}
+
+function stateProblems(state) {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return [`${upgradeStateRelative} is missing; run lighthouse reconcile --apply to establish ownership evidence.`];
+  const problems = [];
+  if (state.schemaVersion !== 1) problems.push(`${upgradeStateRelative} has unsupported schemaVersion ${state.schemaVersion}.`);
+  if (!state.package || state.package.name !== cliPackage.name || typeof state.package.version !== 'string') problems.push(`${upgradeStateRelative} does not identify the installed Lighthouse package.`);
+  if (!state.files || typeof state.files !== 'object' || Array.isArray(state.files)) problems.push(`${upgradeStateRelative} does not contain file ownership evidence.`);
+  return problems;
+}
+
+function scopesFromArgs(args) {
+  const selected = new Set();
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== '--scope' && !args[index].startsWith('--scope=')) continue;
+    const value = args[index] === '--scope' ? args[index + 1] : args[index].slice('--scope='.length);
+    if (args[index] === '--scope') index += 1;
+    if (!value) throw new Error('--scope requires harness, sdlc or all');
+    for (const scope of value.split(',')) {
+      if (scope === 'all') { selected.add('harness'); selected.add('sdlc'); }
+      else if (scope === 'harness' || scope === 'sdlc') selected.add(scope);
+      else throw new Error(`Unknown upgrade scope ${scope}; use harness, sdlc or all.`);
+    }
+  }
+  return selected.size ? selected : new Set(Object.keys(upgradeScopes));
+}
+
+function selectedPaths(scopes) {
+  return new Set([...scopes].flatMap((scope) => upgradeScopes[scope]));
+}
+
+function classifyUpgradeFile(path, current, expected, recordedHash) {
+  if (current === null) return { classification: 'additive', action: 'add' };
+  const currentHash = contentHash(current);
+  if (current === expected && currentHash === recordedHash) return { classification: 'unchanged', action: 'keep' };
+  if (current === expected && currentHash !== recordedHash) return { classification: 'adoptable', action: 'record' };
+  if (recordedHash && currentHash === recordedHash) return { classification: 'adoptable', action: 'update' };
+  if (recordedHash) return { classification: 'customized', action: 'preserve', reason: 'current content differs from the recorded projection' };
+  return { classification: 'conflicting', action: 'review', reason: 'ownership is not recorded for this path' };
+}
+
+async function planUpgrade(manifest, scopes) {
+  const state = await readUpgradeState();
+  const problems = stateProblems(state);
+  const files = managedFiles(manifest);
+  const paths = selectedPaths(scopes);
+  const changes = [];
+  for (const path of Object.keys(files).filter((candidate) => paths.has(candidate))) {
+    const target = resolve(root, path);
+    const current = await exists(target) ? await readFile(target, 'utf8') : null;
+    const expected = files[path];
+    const recordedHash = state?.files?.[path]?.hash;
+    const result = classifyUpgradeFile(path, current, expected, recordedHash);
+    changes.push({ path, scope: Object.entries(upgradeScopes).find(([, values]) => values.includes(path))?.[0], ...result });
+  }
+  if (state?.baseline && state.baseline !== manifest.baseline) {
+    changes.unshift({ path: 'baseline', scope: 'harness', classification: 'breaking', action: 'review', reason: `baseline ${state.baseline} is not compatible with ${manifest.baseline}` });
+  }
+  return {
+    source: {
+      package: state?.package ?? null,
+      baseline: state?.baseline ?? null,
+      capabilities: state?.capabilities ?? null,
+      projections: state?.projections ?? null,
+      lastAppliedMigration: state?.lastAppliedMigration ?? null,
+    },
+    target: {
+      package: { name: cliPackage.name, version: cliPackage.version },
+      baseline: manifest.baseline,
+      capabilities: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+      projections: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+    },
+    scopes: [...scopes],
+    prerequisites: problems.length ? [{ status: 'failed', message: problems.join(' ') }] : [{ status: 'passed', message: 'Ownership metadata is readable.' }],
+    changes,
+    verification: ['lighthouse verify'],
+    recovery: 'Restore the pre-update commit or rerun lighthouse upgrade after resolving the reported ownership conflict.',
+    problems,
+  };
+}
+
+function printUpgradePlan(plan) {
+  console.log('Lighthouse upgrade plan:');
+  console.log(`  package ${plan.source.package?.version ?? 'unknown'} -> ${plan.target.package.version}`);
+  console.log(`  baseline ${plan.source.baseline ?? 'unknown'} -> ${plan.target.baseline}`);
+  console.log(`  scopes ${plan.scopes.join(', ')}`);
+  for (const prerequisite of plan.prerequisites) console.log(`  prerequisite ${prerequisite.status}: ${prerequisite.message}`);
+  for (const change of plan.changes) console.log(`  ${change.classification} ${change.action} ${change.path}${change.reason ? ` (${change.reason})` : ''}`);
+  if (plan.problems.length) for (const problem of plan.problems) console.error(`  adoption gap ${problem}`);
+  console.log(`  verify ${plan.verification[0]}`);
+  console.log(`  recovery ${plan.recovery}`);
+}
+
 function validate(manifest) {
   const problems = [];
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return ['manifest must be an object'];
@@ -244,8 +387,11 @@ function validate(manifest) {
   const completeManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === managedPaths.length
     && manifest.managed.every((entry, index) => entry === managedPaths[index]);
-  if (!legacyManaged && !completeManaged) {
-    problems.push(`managed must be ${legacyManagedPaths.join(', ')} or the complete Lighthouse guardrail set`);
+  const previousCompleteManaged = Array.isArray(manifest.managed)
+    && manifest.managed.length === previousManagedPaths.length
+    && manifest.managed.every((entry, index) => entry === previousManagedPaths[index]);
+  if (!legacyManaged && !previousCompleteManaged && !completeManaged) {
+    problems.push(`managed must be ${legacyManagedPaths.join(', ')}, the previous Lighthouse guardrail set or the current complete set`);
   }
   if ('repository' in manifest) {
     const repository = manifest.repository;
@@ -317,6 +463,8 @@ async function planInitialization(manifest, manifestMissing) {
     if (await exists(resolve(root, file))) conflicts.push(`${file} already exists; refusing to overwrite it`);
     else operations.push({ path: file, action: 'create' });
   }
+  if (await exists(upgradeStatePath)) conflicts.push(`${upgradeStateRelative} already exists; refusing to overwrite it`);
+  else operations.push({ path: upgradeStateRelative, action: 'create' });
   return { operations, conflicts };
 }
 
@@ -336,6 +484,9 @@ async function planReconciliation(manifest) {
     } catch {
       conflicts.push(`${path} exists but is not a readable file; refusing to overwrite it`);
     }
+  }
+  if (!(await exists(upgradeStatePath))) {
+    operations.push({ path: upgradeStateRelative, action: 'create', content: `${JSON.stringify(upgradeState(manifest), null, 2)}\n` });
   }
   return { operations, conflicts };
 }
@@ -374,6 +525,7 @@ async function initialize(args) {
     await writeFile(resolve(root, file), content, { flag: 'wx', mode: file.startsWith('.husky/') ? 0o755 : 0o644 });
     if (file.startsWith('.husky/')) await chmod(resolve(root, file), 0o755);
   }
+  await writeUpgradeState(manifest, null, files);
   try {
     const configured = execFileSync('git', ['config', '--get', 'core.hooksPath'], { cwd: root, encoding: 'utf8' }).trim();
     if (!configured) execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: root, stdio: 'ignore' });
@@ -411,6 +563,76 @@ async function reconcile(args) {
     }
   }
   console.log('Reconciled missing Lighthouse-managed paths. Run lighthouse verify to check the complete projection.');
+}
+
+async function writeTextAtomically(path, content) {
+  const temporary = `${path}.tmp-${process.pid}`;
+  await writeFile(temporary, content, { flag: 'wx' });
+  await rename(temporary, path);
+}
+
+async function applyUpgrade(manifest, plan) {
+  if (plan.problems.length) throw new Error(`Upgrade stopped; ${plan.problems.join(' ')}`);
+  const blocked = plan.changes.filter((change) => ['conflicting', 'breaking'].includes(change.classification));
+  if (blocked.length) throw new Error(`Upgrade stopped; resolve ownership conflicts for: ${blocked.map((change) => change.path).join(', ')}.`);
+  const files = managedFiles(manifest);
+  const previous = await readUpgradeState();
+  const snapshots = new Map();
+  const updates = plan.changes.filter((change) => ['add', 'update', 'record'].includes(change.action));
+  for (const change of updates) {
+    const target = resolve(root, change.path);
+    snapshots.set(change.path, await exists(target) ? await readFile(target, 'utf8') : null);
+  }
+  const stateSnapshot = await readFile(upgradeStatePath, 'utf8');
+  try {
+    for (const change of updates) {
+      const target = resolve(root, change.path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeTextAtomically(target, files[change.path]);
+    }
+    const next = upgradeState(manifest, files, { ...previous, lastAppliedMigration: `upgrade-${cliPackage.version}` });
+    for (const path of Object.keys(next.files)) {
+      const selected = plan.changes.find((change) => change.path === path);
+      if (!selected || selected.action === 'preserve' || selected.action === 'review') {
+        if (previous.files?.[path]) next.files[path] = previous.files[path];
+        else delete next.files[path];
+      }
+    }
+    next.lastAppliedMigration = `upgrade-${cliPackage.version}`;
+    await writeTextAtomically(upgradeStatePath, `${JSON.stringify(next, null, 2)}\n`);
+  } catch (error) {
+    for (const [path, content] of snapshots) {
+      const target = resolve(root, path);
+      if (content === null) await rm(target, { force: true });
+      else await writeFile(target, content);
+    }
+    await writeFile(upgradeStatePath, stateSnapshot);
+    throw new Error(`Upgrade rolled back: ${error.message}`);
+  }
+  const preserved = plan.changes.filter((change) => change.classification === 'customized').map((change) => change.path);
+  console.log(`Applied Lighthouse upgrade ${cliPackage.version}. Run lighthouse verify to check the result.`);
+  if (preserved.length) console.log(`Preserved customized paths for review: ${preserved.join(', ')}`);
+}
+
+async function upgrade(args) {
+  const manifest = await readManifest();
+  if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
+  const problems = validate(manifest);
+  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+  const plan = await planUpgrade(manifest, scopesFromArgs(args));
+  const format = formatFromArgs(args);
+  const apply = args.includes('--apply');
+  const dryRun = args.includes('--dry-run') || !apply;
+  if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
+  if (format === 'json' && apply) throw new Error('--format json is available for dry-run upgrade plans; use text when applying.');
+  if (format === 'json') console.log(JSON.stringify(plan, null, 2));
+  else printUpgradePlan(plan);
+  if (dryRun) {
+    if (format !== 'json') console.log('Dry run: nothing was changed. Re-run with --apply after reviewing the plan.');
+    if (plan.problems.length) process.exitCode = 1;
+    return;
+  }
+  await applyUpgrade(manifest, plan);
 }
 
 const authorityCommands = [
@@ -587,21 +809,30 @@ let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
   if (arg === '--dry-run') continue;
-  if (arg === '--apply') { if (!['authorities', 'reconcile'].includes(command)) invalidArgument = true; continue; }
+  if (arg === '--apply') { if (!['authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   if (arg === '--format') {
-    if (command !== 'verify' || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    if (!['verify', 'upgrade'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
     else index += 1;
     continue;
   }
   if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
-    if (command !== 'verify') invalidArgument = true;
+    if (!['verify', 'upgrade'].includes(command)) invalidArgument = true;
+    continue;
+  }
+  if (arg === '--scope') {
+    if (command !== 'upgrade' || !commandArgs[index + 1]) invalidArgument = true;
+    else index += 1;
+    continue;
+  }
+  if (arg.startsWith('--scope=') && arg.length > '--scope='.length) {
+    if (command !== 'upgrade') invalidArgument = true;
     continue;
   }
   invalidArgument = true;
 }
-if (!['init', 'authorities', 'reconcile', 'verify'].includes(command) || invalidArgument) {
+if (!['init', 'authorities', 'reconcile', 'upgrade', 'verify'].includes(command) || invalidArgument) {
   console.error(usage);
   process.exit(2);
 }
@@ -609,6 +840,7 @@ try {
   if (command === 'init') await initialize(args.slice(1));
   else if (command === 'authorities') await authorities(args.slice(1));
   else if (command === 'reconcile') await reconcile(args.slice(1));
+  else if (command === 'upgrade') await upgrade(args.slice(1));
   else {
     const manifest = await readManifest();
     if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');

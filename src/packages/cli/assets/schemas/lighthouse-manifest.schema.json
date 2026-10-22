@@ -16,7 +16,8 @@
     "managed": {"anyOf": [
       {"const": ["LIGHTHOUSE.md"]},
       {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml"]},
-      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json"]}
+      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json"]},
+      {"const": ["LIGHTHOUSE.md", "scripts/lighthouse-guard.mjs", ".husky/commit-msg", ".husky/pre-push", ".github/workflows/lighthouse.yml", ".lighthouse/sdlc.json", ".lighthouse/upgrade.json"]}
     ]},
     "repository": {
       "type": "object",

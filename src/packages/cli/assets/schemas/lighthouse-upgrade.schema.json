@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-upgrade.schema.json",
+  "title": "Lighthouse upgrade ownership state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "package", "baseline", "capabilities", "projections", "lastAppliedMigration", "files"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {"name": {"const": "@juangcarmona/lighthouse"}, "version": {"type": "string", "pattern": "^(?:\\d+\\.\\d+\\.\\d+|[a-f0-9]{40})$"}}
+    },
+    "baseline": {"type": "string", "minLength": 1},
+    "capabilities": {"$ref": "#/$defs/versions"},
+    "projections": {"$ref": "#/$defs/versions"},
+    "lastAppliedMigration": {"type": "string", "minLength": 1},
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hash", "scope"],
+        "properties": {
+          "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "scope": {"enum": ["harness", "sdlc"]}
+        }
+      }
+    }
+  },
+  "$defs": {"versions": {"type": "object", "additionalProperties": {"type": ["string", "null"]}}}
+}
