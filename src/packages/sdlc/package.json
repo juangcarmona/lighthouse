@@ -22,6 +22,7 @@
   "files": [
     "commands",
     "contract.json",
+    "capabilities.json",
     "gates.json",
     "meta-commands",
     "README.md",
@@ -44,6 +45,7 @@
     "./memory": "./src/memory.mjs",
     "./routes": "./src/routes.mjs",
     "./reconcile": "./src/reconcile.mjs",
+    "./capabilities": "./src/capabilities.mjs",
     "./stacked": "./src/stacked.mjs",
     "./workflow": "./src/workflow.mjs",
     "./contract.json": "./contract.json",
@@ -53,6 +55,8 @@
     "./schemas/stage-result.schema.json": "./schemas/stage-result.schema.json",
     "./schemas/workflow-state.schema.json": "./schemas/workflow-state.schema.json",
     "./schemas/decomposition.schema.json": "./schemas/decomposition.schema.json",
-    "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json"
+    "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json",
+    "./schemas/capability-catalog.schema.json": "./schemas/capability-catalog.schema.json",
+    "./capabilities.json": "./capabilities.json"
   }
 }

@@ -9,7 +9,7 @@ verification:
   - scenario: The fixture exercises greenfield initialization, brownfield conflict reporting, idempotent reinitialization, invalid guardrails and public-site failure when either ProductShape or ArcShape is missing or invalid.
   - scenario: The fixture publishes the public site only after both authorities validate and verifies that the generated site contains both snapshots.
   - scenario: The fixture previews and applies a safe selective update, preserves a customized projection, stops on a conflict or stale ownership record and verifies recovery after a failed update.
-  - scenario: The fixture declares the label capability, previews missing and customized labels, applies missing labels explicitly and verifies an idempotent rerun and recorded reconciliation evidence.
+  - scenario: The fixture installs a package with a new capability catalog, shows the capability in the update plan, declares the label capability, previews missing and customized labels, applies missing labels explicitly and verifies an idempotent rerun and recorded reconciliation evidence.
 uses-terms: [TERM-ADOPTION-RELEASE, TERM-PACKAGE-ARTIFACT, TERM-AUTHORITY-MAP, TERM-INTEGRATION, TERM-PUBLIC-SITE-PROJECTION, TERM-UPGRADE-PLAN, TERM-FOUNDATION-CAPABILITY]
 ---
 
@@ -17,7 +17,7 @@ uses-terms: [TERM-ADOPTION-RELEASE, TERM-PACKAGE-ARTIFACT, TERM-AUTHORITY-MAP, T
 
 The Lighthouse release workflow MUST provide an adoption fixture or integration job that installs the published artifacts into a clean consumer and runs the supported init, verify, ProductShape and ArcShape checks. The fixture MUST fail closed on checksum, package-content, ownership, guardrail, authority or verification drift, and MUST retain the failure output needed to follow the reported next action.
 
-The fixture MUST exercise the supported upgrade and capability reconciliation routes against managed, customized, conflicting and stale-ownership surfaces, and MUST verify that dry runs do not mutate the tree, selective updates preserve other scopes and failed applies recover the prior state.
+The fixture MUST exercise the supported upgrade, capability adoption and capability reconciliation routes against managed, customized, conflicting, stale-ownership, stale-plan and partial-provider-apply surfaces, and MUST verify that dry runs do not mutate the tree or call a provider, selective updates preserve other scopes, failed applies recover local state and a resumed provider apply reaches a verified idempotent result.
 
 ## Rationale
 

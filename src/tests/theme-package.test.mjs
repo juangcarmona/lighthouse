@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 test('the UI artifact contains the complete visual contract', () => {
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const packages = [
-    ['@juangcarmona/lighthouse', ['README.md', 'assets/guardrails/catalog.json', 'assets/schemas/guardrails.schema.json', 'assets/schemas/lighthouse-manifest.schema.json', 'assets/schemas/lighthouse-upgrade.schema.json', 'package.json', 'src/guardrails.mjs', 'src/lighthouse.mjs', 'upgrades/0.3.0.md']],
+    ['@juangcarmona/lighthouse', ['README.md', 'assets/guardrails/catalog.json', 'assets/schemas/guardrails.schema.json', 'assets/schemas/lighthouse-manifest.schema.json', 'assets/schemas/lighthouse-upgrade.schema.json', 'package.json', 'src/guardrails.mjs', 'src/lighthouse.mjs', 'upgrades/0.3.0.md', 'upgrades/0.4.0.md']],
     ['@juangcarmona/lighthouse-ui', ['DESIGN.md', 'README.md', 'components.css', 'index.css', 'package.json', 'tokens.css']]
   ];
   for (const [name, files] of packages) {

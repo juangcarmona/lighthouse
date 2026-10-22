@@ -30,6 +30,14 @@ An unsupported or non-deterministic check remains visible as an adoption gap ins
 
 The CLI package records these existing guardrails as data in its packaged catalog, including profile applicability, independent level and kind, verification method, evidence status and repair hint. The verifier reads catalog entries and preserves the default human-readable result while exposing the same result as JSON; adding a catalog entry does not require changing the CLI core.
 
+## Capability adoption
+
+The SDLC package publishes a versioned capability catalog. Every catalog entry names a registered adapter; package verification fails closed when a new entry has no adapter, so a future capability cannot become discoverable without an executable adoption route and its consumer fixture.
+
+Capability adoption is dry-run first. The CLI reads provider state to build a deterministic plan, requires an explicit plan hash for external writes, applies only allowed operations, re-reads before writing, verifies the final state and records desired, observed, target and operation evidence under `.lighthouse/reconciliation/`.
+
+The current adapter supports GitHub labels. It creates missing labels and preserves existing values; ambiguous equivalents, destructive operations, provider drift and partial failures stop or remain resumable. The provider remains the source of truth and no provider write occurs during package installation or ordinary upgrade discovery.
+
 ## Feature and bounded-context alignment
 
 The full-stack profile keeps frontend feature areas, API boundaries, application handlers, domain behavior and evidence catalogues aligned with bounded contexts.

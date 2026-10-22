@@ -111,17 +111,17 @@ export function buildLabelReconciliationPlan(declaration, existingLabels, previo
     if (!current) {
       const equivalents = existingByComparableName.get(comparableName(label.name)) ?? [];
       if (equivalents.length) {
-        changes.push({ name: label.name, status: 'conflict', desired: label, candidates: equivalents });
+        changes.push({ name: label.name, status: 'conflict', operation: 'ambiguous', desired: label, candidates: equivalents });
         continue;
       }
-      changes.push({ name: label.name, status: 'missing', desired: label });
-      operations.push({ type: 'create-label', name: label.name, color: label.color ?? '8B949E', description: label.description ?? '' });
+      changes.push({ name: label.name, status: 'missing', operation: 'create', desired: label });
+      operations.push({ type: 'create-label', kind: 'create', name: label.name, color: label.color ?? '8B949E', description: label.description ?? '' });
       continue;
     }
     const customized = (label.color !== null && current.color !== label.color) || (label.description !== null && current.description !== label.description);
-    changes.push({ name: label.name, status: customized ? 'customized' : 'unchanged', existing: current, desired: label });
+    changes.push({ name: label.name, status: customized ? 'customized' : 'unchanged', operation: 'preserve', blockedOperations: customized ? ['modify'] : [], existing: current, desired: label });
   }
-  for (const label of existing.labels) if (!desiredNames.has(label.name)) changes.push({ name: label.name, status: 'preserved', existing: label });
+  for (const label of existing.labels) if (!desiredNames.has(label.name)) changes.push({ name: label.name, status: 'preserved', operation: 'preserve', existing: label });
   changes.sort((left, right) => left.name.localeCompare(right.name));
   const target = [...existing.labels, ...operations.map((operation) => ({ name: operation.name, color: operation.color, description: operation.description }))].sort((left, right) => left.name.localeCompare(right.name));
   const observedHash = digest(existing.labels);
@@ -140,7 +140,10 @@ export function buildLabelReconciliationPlan(declaration, existingLabels, previo
     desiredHash: digest(desired),
     observedHash,
     targetHash,
+    target,
     drift,
+    operationPolicy: capability?.operations ?? { allowed: ['create', 'preserve'], blocked: ['modify', 'rename', 'remove', 'ambiguous'] },
+    blockedOperations: changes.flatMap((change) => change.blockedOperations ?? []),
     changes,
     operations,
     errors,
@@ -150,7 +153,8 @@ export function buildLabelReconciliationPlan(declaration, existingLabels, previo
       desiredHash: digest(desired),
       observedHash: targetHash,
       targetHash,
-      operations: operations.map(({ type, name, color: labelColor, description }) => ({ type, name, color: labelColor, description })),
+      operations: operations.map(({ type, kind, name, color: labelColor, description }) => ({ type, kind, name, color: labelColor, description })),
+      blockedOperations: changes.flatMap((change) => change.blockedOperations ?? []),
       verified: false,
     },
   };

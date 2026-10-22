@@ -16,9 +16,11 @@ flowchart LR
     checkout --> cli
     cli --> manifest[Project manifest]
     cli --> projection[LIGHTHOUSE.md]
+    cli --> adoption[Capability adoption plan and evidence]
     checkout --> packages[Source packages and profiles]
     checkout --> site[Static public site]
     tools[Node, npm and .NET tools] --> checkout
+    adoption --> provider[Provider API<br/>for example GitHub]
 ```
 
 The current checkout is the implemented system boundary. The CLI reads a project manifest and writes the managed `LIGHTHOUSE.md` projection in a consuming repository.
@@ -56,4 +58,5 @@ Lighthouse coordinates adoption and leaves product intent, architecture evidence
 | ArcShape | Author, validate and render architecture artifacts | ArcShape |
 | OpenSpec | Provide change schemas and change files | OpenSpec |
 | CodeGraph MCP | Index repository and worktree context outside the checkout | External service |
+| Capability provider | Supply and verify provider-owned state after explicit authorization | Provider, for example GitHub |
 | GitHub Pages | Static hosting for the verified public-site output | Site operator |

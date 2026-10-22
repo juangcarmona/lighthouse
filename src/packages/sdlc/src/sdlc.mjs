@@ -13,6 +13,7 @@ import { applyTriageLabels, buildTriageReport } from './triage.mjs';
 import { validateMemoryRecord } from './memory.mjs';
 import { replayWorkflow } from './workflow.mjs';
 import { validateStageResult } from './contracts.mjs';
+import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const contractPath = resolve(packageRoot, 'contract.json');
@@ -38,10 +39,10 @@ async function verifyContract() {
   for (const stage of stages) {
     for (const asset of [stage.skill, stage.command]) if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing stage asset ${asset}`);
   }
-  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema]) {
+  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema, contract.assets?.capabilityCatalog, contract.assets?.capabilityCatalogSchema]) {
     if (!asset || !(await exists(resolve(packageRoot, asset)))) problems.push(`missing contract asset ${asset ?? '(empty)'}`);
   }
-  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
+  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'schemas/capability-catalog.schema.json', 'src/capabilities.mjs', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
     if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing package asset ${asset}`);
   }
   try {
@@ -59,6 +60,10 @@ async function verifyContract() {
     const stageIds = stages.stages?.map((stage) => stage.id) ?? [];
     if (stageIds.join(',') !== expectedStages.join(',')) problems.push('stages.json does not match contract stages');
   } catch (error) { problems.push(`Cannot read stages.json: ${error.message}`); }
+  try {
+    const catalog = await readCapabilityCatalog();
+    problems.push(...validateCapabilityCatalog(catalog).map((error) => `${error.code}: ${error.message}`));
+  } catch (error) { problems.push(`Cannot read capabilities.json: ${error.message}`); }
   for (const command of ['status', ...expectedStages, ...(contract.utilities ?? []).filter((command) => command !== 'status')]) if (!(await exists(resolve(packageRoot, `commands/${command}.md`)))) problems.push(`missing command asset ${command}`);
   for (const metaCommand of contract.metaCommands ?? []) if (!(await exists(resolve(packageRoot, `meta-commands/${metaCommand}.md`)))) problems.push(`missing meta-command asset ${metaCommand}`);
   return problems;

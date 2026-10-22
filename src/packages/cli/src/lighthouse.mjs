@@ -6,6 +6,16 @@ import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
+let sdlcCapabilities;
+let sdlcReconcile;
+let sdlcGithub;
+try {
+  [sdlcCapabilities, sdlcReconcile, sdlcGithub] = await Promise.all([
+    import('@juangcarmona/lighthouse-sdlc/capabilities'),
+    import('@juangcarmona/lighthouse-sdlc/reconcile'),
+    import('@juangcarmona/lighthouse-sdlc/github'),
+  ]);
+} catch { /* Standalone generated starters can run without the optional SDLC package. */ }
 
 const root = process.cwd();
 const packageRequire = createRequire(import.meta.url);
@@ -40,7 +50,7 @@ const upgradeScopes = {
   sdlc: ['.lighthouse/sdlc.json'],
 };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
-const usage = 'Usage: lighthouse <init|authorities|reconcile|upgrade|verify> [--name <product>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -94,6 +104,45 @@ function sdlcContract() {
       gates: ['triaged', 'ready', 'planned', 'done'],
     };
   }
+}
+
+function sdlcCapabilityCatalog() {
+  if (!sdlcCapabilities) return null;
+  try {
+    const path = packageRequire.resolve('@juangcarmona/lighthouse-sdlc/capabilities.json');
+    const catalog = JSON.parse(readFileSync(path, 'utf8'));
+    const errors = sdlcCapabilities.validateCapabilityCatalog(catalog);
+    if (errors.length) throw new Error(errors.map((error) => error.message).join('; '));
+    return catalog;
+  } catch (error) {
+    throw new Error(`Cannot read the installed SDLC capability catalog: ${error.message}`);
+  }
+}
+
+function capabilityAdoption(previous = null) {
+  const catalog = sdlcCapabilityCatalog();
+  if (!catalog) return {};
+  return Object.fromEntries(catalog.capabilities.map((capability) => {
+    const current = previous?.adoption?.[capability.id];
+    const status = current?.catalogVersion === catalog.package.version
+      ? current.status
+      : sdlcCapabilities.initialAdoptionStatus?.(capability) ?? 'pending-adoption';
+    const nextAction = status === 'available'
+      ? `lighthouse capabilities select --id ${capability.id} --provider ${capability.provider}`
+      : ['adopted', 'declined'].includes(status)
+        ? null
+        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${capability.id}.plan.json`;
+    return [capability.id, {
+      id: capability.id,
+      status,
+      selection: capability.selection,
+      provider: capability.provider,
+      version: capability.version,
+      catalogVersion: catalog.package.version,
+      nextAction,
+      ...(current?.recordPath ? { recordPath: current.recordPath } : {}),
+    }];
+  }));
 }
 
 function sdlcControlPlane(manifest) {
@@ -230,6 +279,7 @@ function upgradeState(manifest, files = managedFiles(manifest), previous = null)
     package: { name: cliPackage.name, version: cliPackage.version },
     baseline: manifest.baseline,
     capabilities: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+    adoption: capabilityAdoption(previous),
     projections: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
     lastAppliedMigration: previous?.lastAppliedMigration ?? 'foundation-init-1',
     files: entries,
@@ -311,6 +361,7 @@ async function planUpgrade(manifest, scopes) {
       package: state?.package ?? null,
       baseline: state?.baseline ?? null,
       capabilities: state?.capabilities ?? null,
+      adoption: state?.adoption ?? null,
       projections: state?.projections ?? null,
       lastAppliedMigration: state?.lastAppliedMigration ?? null,
     },
@@ -318,6 +369,7 @@ async function planUpgrade(manifest, scopes) {
       package: { name: cliPackage.name, version: cliPackage.version },
       baseline: manifest.baseline,
       capabilities: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
+      adoption: capabilityAdoption(state),
       projections: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
     },
     scopes: [...scopes],
@@ -325,6 +377,11 @@ async function planUpgrade(manifest, scopes) {
     changes,
     verification: ['lighthouse verify'],
     recovery: 'Restore the pre-update commit or rerun lighthouse upgrade after resolving the reported ownership conflict.',
+    adoption: {
+      status: Object.values(capabilityAdoption(state)).some((item) => !['adopted', 'declined', 'available'].includes(item.status)) ? 'pending' : 'complete',
+      capabilities: capabilityAdoption(state),
+      externalWrites: 'none',
+    },
     problems,
   };
 }
@@ -336,6 +393,12 @@ function printUpgradePlan(plan) {
   console.log(`  scopes ${plan.scopes.join(', ')}`);
   for (const prerequisite of plan.prerequisites) console.log(`  prerequisite ${prerequisite.status}: ${prerequisite.message}`);
   for (const change of plan.changes) console.log(`  ${change.classification} ${change.action} ${change.path}${change.reason ? ` (${change.reason})` : ''}`);
+  if (plan.adoption) {
+    console.log(`  capability adoption ${plan.adoption.status} (external writes: ${plan.adoption.externalWrites})`);
+    for (const capability of Object.values(plan.adoption.capabilities)) {
+      console.log(`  capability ${capability.id ?? capability.provider} ${capability.status}${capability.nextAction ? `; next: ${capability.nextAction}` : ''}`);
+    }
+  }
   if (plan.problems.length) for (const problem of plan.problems) console.error(`  adoption gap ${problem}`);
   console.log(`  verify ${plan.verification[0]}`);
   console.log(`  recovery ${plan.recovery}`);
@@ -787,6 +850,30 @@ async function verify(manifest, format = 'text') {
     validateGitConventions,
     branch: gitBranch(),
   });
+  const adoption = Object.values(capabilityAdoption(await readUpgradeState()));
+  for (const item of adoption) {
+    if (item.status !== 'adopted' || !item.recordPath || await exists(resolve(root, item.recordPath))) continue;
+    item.status = 'failed';
+    item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${item.id}.plan.json`;
+  }
+  if (adoption.length) {
+    const pending = adoption.filter((item) => !['adopted', 'declined', 'available'].includes(item.status));
+    const available = adoption.some((item) => item.status === 'available');
+    const declined = adoption.some((item) => item.status === 'declined');
+    report.results.push({
+      id: 'foundation.capability-adoption',
+      owner: '@juangcarmona/lighthouse-sdlc',
+      level: 'recommended',
+      kind: 'hard',
+      verification: 'deterministic',
+      status: pending.length ? 'unconfigured' : available || declined ? 'not-applicable' : 'passed',
+      adoptionStatus: pending.length ? pending[0].status : available ? 'available' : declined ? 'declined' : 'adopted',
+      evidence: adoption.map((item) => ({ capability: item.id, catalogVersion: item.catalogVersion })),
+      problems: pending.map((item) => `${item.id} is ${item.status}; run ${item.nextAction}`),
+      nextAction: pending[0]?.nextAction ?? null,
+    });
+    report.summary.unconfigured = (report.summary.unconfigured ?? 0) + (pending.length ? 1 : 0);
+  }
   if (format === 'json') {
     console.log(JSON.stringify(report, null, 2));
     if (report.problems.length) process.exitCode = 1;
@@ -794,6 +881,158 @@ async function verify(manifest, format = 'text') {
   }
   if (report.problems.length) throw new Error(report.problems.join('\n'));
   console.log('Lighthouse manifest, repository boundaries and managed projection are valid.');
+}
+
+function planHash(plan) {
+  const { authorization, ...payload } = plan;
+  return contentHash(JSON.stringify(payload));
+}
+
+function capabilityPlanText(plan) {
+  const lines = [
+    `Capability adoption: ${plan.status}`,
+    `Capability: ${plan.capability.id}@${plan.capability.version} (${plan.capability.provider})`,
+    `Repository: ${plan.repository.repo}`,
+    `Remote writes: none`,
+    `Authorization: ${plan.authorization.planHash}`,
+  ];
+  for (const change of plan.reconciliation.changes) lines.push(`  ${change.status} ${change.name}`);
+  if (plan.nextAction) lines.push(`Next: ${plan.nextAction}`);
+  return `${lines.join('\n')}\n`;
+}
+
+async function writeCapabilityPlan(path, plan) {
+  const target = resolve(root, path);
+  await mkdir(dirname(target), { recursive: true });
+  await writeTextAtomically(target, `${JSON.stringify(plan, null, 2)}\n`);
+}
+
+async function writeCapabilityEvidence(plan, status, extra = {}) {
+  const path = resolve(root, '.lighthouse/reconciliation', `${plan.capability.id}.json`);
+  await mkdir(dirname(path), { recursive: true });
+  const evidence = {
+    schemaVersion: 1,
+    capability: plan.capability,
+    catalogVersion: plan.catalogVersion,
+    provider: plan.repository,
+    desiredHash: plan.reconciliation.desiredHash,
+    observedHash: extra.observedHash ?? plan.reconciliation.observedHash,
+    targetHash: extra.targetHash ?? plan.reconciliation.targetHash,
+    operations: extra.operations ?? plan.reconciliation.operations,
+    operationPolicy: plan.reconciliation.operationPolicy ?? plan.operationPolicy ?? null,
+    blockedOperations: extra.blockedOperations ?? plan.reconciliation.blockedOperations ?? [],
+    conflicts: extra.conflicts ?? plan.reconciliation.changes.filter((change) => change.status === 'conflict'),
+    status,
+    verified: status === 'adopted',
+  };
+  await writeTextAtomically(path, `${JSON.stringify(evidence, null, 2)}\n`);
+  return path;
+}
+
+async function capabilities(args) {
+  const action = args[0];
+  const id = args.includes('--id') ? args[args.indexOf('--id') + 1] : args.find((arg) => arg.startsWith('--id='))?.slice(5) ?? 'labels';
+  const provider = args.includes('--provider') ? args[args.indexOf('--provider') + 1] : args.find((arg) => arg.startsWith('--provider='))?.slice(11) ?? 'github';
+  const repo = args.includes('--repo') ? args[args.indexOf('--repo') + 1] : args.find((arg) => arg.startsWith('--repo='))?.slice(7);
+  const inputPath = args.includes('--input') ? args[args.indexOf('--input') + 1] : args.find((arg) => arg.startsWith('--input='))?.slice(8);
+  const format = formatFromArgs(args);
+  const planFile = args.includes('--plan-file') ? args[args.indexOf('--plan-file') + 1] : args.find((arg) => arg.startsWith('--plan-file='))?.slice(12);
+  if (['select', 'decline'].includes(action)) {
+    const catalog = sdlcCapabilityCatalog();
+    if (!catalog) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before selecting capabilities.');
+    const capability = catalog.capabilities.find((item) => item.id === id && item.provider === provider);
+    if (!capability) throw new Error(`Capability ${id} for provider ${provider} is not declared by the installed SDLC package.`);
+    const state = await readUpgradeState();
+    if (!state) throw new Error('Cannot select a capability before Lighthouse ownership evidence exists; run lighthouse init or reconcile --apply.');
+    state.adoption = state.adoption ?? {};
+    const status = action === 'decline' ? 'declined' : 'pending-adoption';
+    state.adoption[id] = {
+      id,
+      status,
+      selection: capability.selection,
+      provider: capability.provider,
+      version: capability.version,
+      catalogVersion: catalog.package.version,
+      nextAction: status === 'declined' ? null : `lighthouse capabilities plan --id ${id} --provider ${provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${id}.plan.json`,
+    };
+    await writeTextAtomically(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`);
+    const result = { schemaVersion: 1, capability: id, provider, status, applied: true };
+    if (format === 'json') console.log(JSON.stringify(result, null, 2)); else console.log(`Capability ${id}: ${status}.`);
+    return;
+  }
+  if (action === 'plan') {
+    if (!repo || !planFile) throw new Error('Usage: lighthouse capabilities plan --id <capability> --provider github --repo <owner/repo> --plan-file <path> [--input <capabilities.json>] [--format <text|json>]');
+    const catalog = sdlcCapabilityCatalog();
+    if (!catalog || !sdlcCapabilities || !sdlcReconcile || !sdlcGithub) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before planning adoption.');
+    const capability = catalog.capabilities.find((item) => item.id === id && item.provider === provider);
+    if (!capability) throw new Error(`Capability ${id} for provider ${provider} is not declared by the installed SDLC package.`);
+    const declaration = inputPath ? JSON.parse(await readFile(resolve(root, inputPath), 'utf8')) : sdlcCapabilities.declarationFromCatalog(catalog, id);
+    const labels = await sdlcGithub.readGithubLabels(repo);
+    const reconciliation = sdlcReconcile.buildLabelReconciliationPlan(declaration, labels, await (async () => {
+      const path = resolve(root, '.lighthouse/reconciliation', `${id}.json`);
+      try { return JSON.parse(await readFile(path, 'utf8')); } catch { return null; }
+    })());
+    const plan = {
+      schemaVersion: 1,
+      status: reconciliation.status,
+      capability: { id: capability.id, provider: capability.provider, selection: capability.selection, version: capability.version },
+      catalogVersion: catalog.package.version,
+      operationPolicy: capability.operations,
+      repository: { provider, repo },
+      declaration,
+      reconciliation,
+      authorization: { required: true, planHash: '' },
+      nextAction: reconciliation.canApply ? `lighthouse capabilities apply --plan-file ${planFile} --authorize <plan-hash>` : 'Resolve the reported conflicts before authorizing this plan.',
+    };
+    plan.authorization.planHash = planHash(plan);
+    await writeCapabilityPlan(planFile, plan);
+    if (format === 'json') console.log(JSON.stringify(plan, null, 2)); else process.stdout.write(capabilityPlanText(plan));
+    if (!reconciliation.valid || !reconciliation.canApply) process.exitCode = 1;
+    return;
+  }
+  if (action === 'apply') {
+    const authorization = args.includes('--authorize') ? args[args.indexOf('--authorize') + 1] : args.find((arg) => arg.startsWith('--authorize='))?.slice(12);
+    if (!planFile || !authorization) throw new Error('Usage: lighthouse capabilities apply --plan-file <path> --authorize <plan-hash> [--format <text|json>]');
+    const plan = JSON.parse(await readFile(resolve(root, planFile), 'utf8'));
+    if (authorization !== plan.authorization?.planHash || planHash(plan) !== authorization) throw new Error('Capability plan authorization does not match the plan file; generate a new plan.');
+    if (!plan.reconciliation?.canApply) throw new Error('Capability plan is blocked; resolve its conflicts and generate a new plan.');
+    if (!sdlcReconcile || !sdlcGithub) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before applying adoption.');
+    const current = await sdlcGithub.readGithubLabels(plan.repository.repo);
+    let reconciliation = sdlcReconcile.buildLabelReconciliationPlan(plan.declaration, current, plan.reconciliation.record);
+    const originalOperations = new Set(plan.reconciliation.operations.map((operation) => operation.name));
+    const plannedTarget = new Map((plan.reconciliation.target ?? []).map((label) => [label.name, JSON.stringify(label)]));
+    const outsidePlanDrift = current.some((label) => !plannedTarget.has(label.name) || (plannedTarget.has(label.name) && !originalOperations.has(label.name) && JSON.stringify(label) !== plannedTarget.get(label.name)));
+    if (reconciliation.observedHash !== plan.reconciliation.observedHash && (outsidePlanDrift || reconciliation.operations.some((operation) => !originalOperations.has(operation.name)))) {
+      throw new Error('GitHub labels changed outside this plan; refusing to apply. Generate a new plan.');
+    }
+    const completed = [];
+    try {
+      for (const operation of reconciliation.operations) {
+        await sdlcGithub.createGithubLabel(plan.repository.repo, operation, { dryRun: false });
+        completed.push(operation);
+      }
+    } catch (error) {
+      await writeCapabilityEvidence(plan, 'failed', { operations: completed, observedHash: reconciliation.observedHash });
+      throw new Error(`Capability adoption stopped after ${completed.length} operation(s): ${error.message}`);
+    }
+    const finalLabels = await sdlcGithub.readGithubLabels(plan.repository.repo);
+    const final = sdlcReconcile.buildLabelReconciliationPlan(plan.declaration, finalLabels, plan.reconciliation.record);
+    if (!final.valid || final.operations.length || final.changes.some((change) => change.status === 'conflict')) {
+      await writeCapabilityEvidence(plan, 'blocked', { operations: completed, observedHash: final.observedHash, targetHash: final.targetHash, conflicts: final.changes.filter((change) => change.status === 'conflict') });
+      throw new Error('Capability adoption did not reach the declared state; inspect the evidence and generate a new plan.');
+    }
+    const evidencePath = await writeCapabilityEvidence(plan, 'adopted', { operations: completed, observedHash: final.observedHash, targetHash: final.targetHash });
+    const state = await readUpgradeState();
+    if (state) {
+      state.adoption = state.adoption ?? {};
+      state.adoption[id] = { id, status: 'adopted', selection: plan.capability.selection, provider: plan.capability.provider, version: plan.capability.version, catalogVersion: plan.catalogVersion, nextAction: null, recordPath: '.lighthouse/reconciliation/labels.json' };
+      await writeTextAtomically(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`);
+    }
+    const result = { ...plan, status: 'adopted', evidencePath, reconciliation: final, applied: true };
+    if (format === 'json') console.log(JSON.stringify(result, null, 2)); else process.stdout.write(capabilityPlanText(result));
+    return;
+  }
+  throw new Error('Usage: lighthouse capabilities <select|decline|plan|apply> ...');
 }
 
 function formatFromArgs(args) {
@@ -808,17 +1047,18 @@ const commandArgs = args.slice(1);
 let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
+  if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply'].includes(arg)) continue;
   if (arg === '--dry-run') continue;
   if (arg === '--apply') { if (!['authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   if (arg === '--format') {
-    if (!['verify', 'upgrade'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    if (!['verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
     else index += 1;
     continue;
   }
   if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
-    if (!['verify', 'upgrade'].includes(command)) invalidArgument = true;
+    if (!['verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
     continue;
   }
   if (arg === '--scope') {
@@ -830,9 +1070,15 @@ for (let index = 0; index < commandArgs.length; index += 1) {
     if (command !== 'upgrade') invalidArgument = true;
     continue;
   }
+  if (['--id', '--provider', '--repo', '--input', '--plan-file', '--authorize'].includes(arg)) {
+    if (!commandArgs[index + 1]) invalidArgument = true;
+    else index += 1;
+    continue;
+  }
+  if (['--id=', '--provider=', '--repo=', '--input=', '--plan-file=', '--authorize='].some((prefix) => arg.startsWith(prefix) && arg.length > prefix.length)) continue;
   invalidArgument = true;
 }
-if (!['init', 'authorities', 'reconcile', 'upgrade', 'verify'].includes(command) || invalidArgument) {
+if (!['init', 'authorities', 'reconcile', 'upgrade', 'capabilities', 'verify'].includes(command) || invalidArgument) {
   console.error(usage);
   process.exit(2);
 }
@@ -841,6 +1087,7 @@ try {
   else if (command === 'authorities') await authorities(args.slice(1));
   else if (command === 'reconcile') await reconcile(args.slice(1));
   else if (command === 'upgrade') await upgrade(args.slice(1));
+  else if (command === 'capabilities') await capabilities(args.slice(1));
   else {
     const manifest = await readManifest();
     if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
