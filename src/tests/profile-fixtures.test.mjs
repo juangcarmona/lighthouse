@@ -10,6 +10,7 @@ const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).path
 const fixtures = [
   new URL('./fixtures/profiles/react-web-platform.json', import.meta.url),
   new URL('./fixtures/profiles/web-bff.json', import.meta.url),
+  new URL('./fixtures/profiles/pwa-capability.json', import.meta.url),
 ];
 function run(dir, command, args = []) {
   return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8' });

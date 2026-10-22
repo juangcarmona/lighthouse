@@ -622,6 +622,145 @@
           }
         ]
       }
+    },
+    {
+      "id": "pwa-capability",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "An optional installability and offline capability for a React web application.",
+      "appliesTo": {
+        "shapes": [
+          "frontend",
+          "full-stack"
+        ],
+        "stacks": [
+          "react"
+        ]
+      },
+      "surfaces": [
+        "manifest",
+        "icons",
+        "service worker",
+        "asset cache",
+        "update strategy",
+        "offline policy"
+      ],
+      "prerequisites": [
+        "The react-web-platform profile",
+        "A product requirement for installability or offline behavior"
+      ],
+      "dependencies": [
+        "react-web-platform"
+      ],
+      "incompatibleWith": [],
+      "libraries": [
+        "Web App Manifest",
+        "Service Worker"
+      ],
+      "structure": [
+        "public/manifest.webmanifest",
+        "public/icons/",
+        "src/service-worker.*"
+      ],
+      "commands": [
+        "npm run typecheck",
+        "npm run build",
+        "npm run test:e2e"
+      ],
+      "failureConsequence": "The PWA capability is not ready for delivery while installability, update, offline or session evidence is missing.",
+      "repairHints": [
+        "Declare the offline bounded contexts and cache policy.",
+        "Run fresh-install, update, logout, expiry and user-change journeys.",
+        "Select web-bff for authenticated sessions."
+      ],
+      "exceptions": [
+        "Record an explicit product decision for any online-only or push exception."
+      ],
+      "combinations": [
+        {
+          "with": [
+            "visual-theme",
+            "react-web-platform"
+          ],
+          "purpose": "A public installable React web application."
+        },
+        {
+          "with": [
+            "visual-theme",
+            "react-web-platform",
+            "web-bff",
+            "dotnet-backend"
+          ],
+          "purpose": "An authenticated installable React web application."
+        }
+      ],
+      "consumerFixture": "src/tests/profile-fixtures.test.mjs",
+      "upgradeStrategy": "Preserve adopter-owned manifest, icons and service-worker code; reconcile only Lighthouse-owned guidance and profile metadata.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run build",
+          "description": "Manifest and service-worker assets are included in the reproducible build."
+        },
+        {
+          "id": "browser-e2e",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run test:e2e",
+          "description": "Install, update and declared offline journeys have browser evidence."
+        },
+        {
+          "id": "functional",
+          "level": "required",
+          "kind": "soft",
+          "verification": "semantic",
+          "command": null,
+          "description": "Offline scope, private-data policy and recovery behavior have human review."
+        },
+        {
+          "id": "operational",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": null,
+          "description": "Cache invalidation and update telemetry are checked when selected."
+        }
+      ],
+      "verification": {
+        "layers": [
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run build"
+          },
+          {
+            "id": "browser-e2e",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run test:e2e"
+          },
+          {
+            "id": "functional",
+            "level": "required",
+            "kind": "soft",
+            "verification": "semantic",
+            "command": null
+          },
+          {
+            "id": "operational",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": null
+          }
+        ]
+      }
     }
   ]
 }
