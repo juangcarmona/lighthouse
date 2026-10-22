@@ -4,13 +4,13 @@ This package is the core Lighthouse harness. It provides the `lighthouse` comman
 
 ## Initialize a repository
 
-Install the exact Lighthouse package artifact selected for the release and run `lighthouse init --name <product>` in a new repository. Lighthouse creates the manifest, the `src/`, `docs/`, `infra/` and `scripts/` boundaries, the repository guardrails and the generated `LIGHTHOUSE.md`. Inspect the plan and projection, then run `lighthouse verify` before adding project-specific policy or exceptions.
+Install the exact Lighthouse package artifact selected for the release and run `lighthouse init --name <product>` in a new repository. Add `--profile visual-theme` when the project wants the Lighthouse UI contract. Lighthouse creates the manifest, the `src/`, `docs/`, `infra/` and `scripts/` boundaries, the repository guardrails and the generated `LIGHTHOUSE.md`. Inspect the plan and projection, then run `lighthouse verify` before adding project-specific policy or exceptions.
 
 Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an existing adoption. It does not write by default; add `--apply` only after reviewing the plan. Existing files whose content differs from the generated projection are conflicts and are never overwritten by reconciliation.
 
 Use `lighthouse upgrade` to preview a versioned foundation update. The command is dry-run by default, accepts `--scope harness`, `--scope sdlc` or `--scope all`, preserves customized projections and stops when ownership evidence is missing. Add `--apply` only after reviewing the plan, then run `lighthouse verify`.
 
-The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes and `DESIGN.md`. Stack profiles own their source templates, guidance and checks.
+The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes, `DESIGN.md` and its agent skill. Selecting `visual-theme` projects the guide and skill into the adopter and enables its deterministic guardrail. Stack profiles own their source templates, guidance and checks.
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration.
 
