@@ -6,43 +6,292 @@
       "id": "node-tooling",
       "owner": "@juangcarmona/lighthouse",
       "purpose": "Node.js tooling, package and command-line work.",
-      "appliesTo": { "shapes": ["library", "tooling", "cli", "worker"], "stacks": ["node"] },
-      "surfaces": ["package scripts", "Node.js verification"],
+      "appliesTo": {
+        "shapes": [
+          "library",
+          "tooling",
+          "cli",
+          "worker"
+        ],
+        "stacks": [
+          "node"
+        ]
+      },
+      "surfaces": [
+        "package scripts",
+        "Node.js verification"
+      ],
       "verification": {
         "layers": [
-          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "npm run verify" },
-          { "id": "unit", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": "npm test" }
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run verify"
+          },
+          {
+            "id": "unit",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm test"
+          }
         ]
-      }
+      },
+      "prerequisites": [],
+      "dependencies": [],
+      "incompatibleWith": [],
+      "libraries": [
+        "Node.js"
+      ],
+      "structure": [
+        "src/"
+      ],
+      "commands": [
+        "npm run verify",
+        "npm test"
+      ],
+      "failureConsequence": "The selected tooling profile cannot be reported as compliant until its required static checks pass.",
+      "repairHints": [
+        "Run npm run verify and inspect the reported repository check."
+      ],
+      "exceptions": [
+        "Record a project-owned exception with an owner and review date."
+      ],
+      "combinations": [],
+      "consumerFixture": "src/tests/lighthouse.test.mjs",
+      "upgradeStrategy": "Keep the catalog entry additive and rerun lighthouse profiles and lighthouse verify after upgrade.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run verify",
+          "description": "Repository verification passes."
+        },
+        {
+          "id": "unit",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm test",
+          "description": "Unit tests pass."
+        }
+      ]
     },
     {
       "id": "dotnet-backend",
       "owner": "@juangcarmona/lighthouse",
       "purpose": ".NET backend work with Aspire composition and a modular application boundary.",
-      "appliesTo": { "shapes": ["backend", "full-stack", "service"], "stacks": ["dotnet"] },
-      "surfaces": ["Aspire composition", "feature-aligned backend", "Roslyn guardrails", ".NET verification"],
+      "appliesTo": {
+        "shapes": [
+          "backend",
+          "full-stack",
+          "service"
+        ],
+        "stacks": [
+          "dotnet"
+        ]
+      },
+      "surfaces": [
+        "Aspire composition",
+        "feature-aligned backend",
+        "Roslyn guardrails",
+        ".NET verification"
+      ],
       "verification": {
         "layers": [
-          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "npm run verify:dotnet" },
-          { "id": "unit", "level": "required", "kind": "hard", "verification": "deterministic", "command": "dotnet test" },
-          { "id": "architecture", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": "npm run verify:dotnet" },
-          { "id": "integration", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": null },
-          { "id": "functional", "level": "recommended", "kind": "hard", "verification": "deterministic", "command": null }
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run verify:dotnet"
+          },
+          {
+            "id": "unit",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "dotnet test"
+          },
+          {
+            "id": "architecture",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run verify:dotnet"
+          },
+          {
+            "id": "integration",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": null
+          },
+          {
+            "id": "functional",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": null
+          }
         ]
-      }
+      },
+      "prerequisites": [
+        ".NET SDK and Aspire tooling"
+      ],
+      "dependencies": [],
+      "incompatibleWith": [],
+      "libraries": [
+        ".NET",
+        "Aspire",
+        "NSubstitute"
+      ],
+      "structure": [
+        "src/",
+        "tests/",
+        "Directory.Build.props"
+      ],
+      "commands": [
+        "npm run verify:dotnet",
+        "dotnet test"
+      ],
+      "failureConsequence": "The backend profile is not ready for delivery while its analyzer, architecture or test checks fail.",
+      "repairHints": [
+        "Run npm run verify:dotnet and dotnet test, then resolve the reported profile check."
+      ],
+      "exceptions": [
+        "Record a narrow, expiring exception for a suppressed diagnostic."
+      ],
+      "combinations": [],
+      "consumerFixture": "src/tests/create-dotnet.test.mjs",
+      "upgradeStrategy": "Regenerate only Lighthouse-owned starter and guidance surfaces after reviewing the profile upgrade guide.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run verify:dotnet",
+          "description": "Static backend and analyzer checks pass."
+        },
+        {
+          "id": "unit",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "dotnet test",
+          "description": "Backend unit tests pass."
+        },
+        {
+          "id": "architecture",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run verify:dotnet",
+          "description": "Architecture checks pass."
+        },
+        {
+          "id": "integration",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": null,
+          "description": "Integration evidence is available when the application requires it."
+        },
+        {
+          "id": "functional",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": null,
+          "description": "Functional evidence is available when the application requires it."
+        }
+      ]
     },
     {
       "id": "visual-theme",
       "owner": "@juangcarmona/lighthouse-ui",
       "purpose": "A framework-neutral visual contract for applications with a user interface.",
-      "appliesTo": { "shapes": ["frontend", "full-stack", "mobile"], "stacks": [] },
-      "surfaces": ["semantic design tokens", "DESIGN.md", "UI design skill"],
+      "appliesTo": {
+        "shapes": [
+          "frontend",
+          "full-stack",
+          "mobile"
+        ],
+        "stacks": []
+      },
+      "surfaces": [
+        "semantic design tokens",
+        "DESIGN.md",
+        "UI design skill"
+      ],
       "verification": {
         "layers": [
-          { "id": "static", "level": "required", "kind": "hard", "verification": "deterministic", "command": "lighthouse verify" },
-          { "id": "browser-e2e", "level": "recommended", "kind": "soft", "verification": "semantic", "command": null }
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "lighthouse verify"
+          },
+          {
+            "id": "browser-e2e",
+            "level": "recommended",
+            "kind": "soft",
+            "verification": "semantic",
+            "command": null
+          }
         ]
-      }
+      },
+      "prerequisites": [
+        "A user-interface surface"
+      ],
+      "dependencies": [],
+      "incompatibleWith": [],
+      "libraries": [
+        "@juangcarmona/lighthouse-ui"
+      ],
+      "structure": [
+        "docs/design/DESIGN.md",
+        ".agents/skills/lighthouse-ui/SKILL.md"
+      ],
+      "commands": [
+        "lighthouse verify",
+        "npm run test:visual"
+      ],
+      "failureConsequence": "The visual contract is incomplete until its tokens, guide, skill and applicable visual evidence are restored.",
+      "repairHints": [
+        "Run lighthouse reconcile after reviewing the visual-theme profile plan.",
+        "Run npm run test:visual for visual changes."
+      ],
+      "exceptions": [
+        "Record a project-owned visual exception with an owner and review date."
+      ],
+      "combinations": [],
+      "consumerFixture": "src/tests/lighthouse.test.mjs",
+      "upgradeStrategy": "Preserve project-owned design content and reconcile only Lighthouse-owned visual projections.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "lighthouse verify",
+          "description": "The token and design-guide contract passes."
+        },
+        {
+          "id": "browser-e2e",
+          "level": "recommended",
+          "kind": "soft",
+          "verification": "semantic",
+          "command": "npm run test:visual",
+          "description": "Critical visual journeys have reviewed evidence."
+        }
+      ]
     }
   ]
 }

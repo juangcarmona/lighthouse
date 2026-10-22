@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/guardrails.mjs';
+import { composeProfiles, readProfileCatalog } from '../packages/cli/src/profiles.mjs';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
 const sdlcPackage = JSON.parse(await readFile(new URL('../packages/sdlc/package.json', import.meta.url), 'utf8'));
@@ -115,6 +116,32 @@ test('profiles exposes applicability and verification layers without making them
     assert.equal(report.profiles.status, 'passed');
     assert.equal(report.results.find((item) => item.id === 'foundation.profile-composition').status, 'passed');
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('profile catalog exposes adoptable metadata and rejects missing or incompatible composition', () => {
+  const catalog = readProfileCatalog();
+  for (const profile of catalog.profiles) {
+    assert.ok(Array.isArray(profile.prerequisites));
+    assert.ok(Array.isArray(profile.dependencies));
+    assert.ok(Array.isArray(profile.incompatibleWith));
+    assert.ok(Array.isArray(profile.commands));
+    assert.ok(profile.guardrails.length > 0);
+    assert.equal(typeof profile.consumerFixture, 'string');
+    assert.equal(typeof profile.upgradeStrategy, 'string');
+  }
+
+  const custom = {
+    schemaVersion: 1,
+    profiles: [
+      { ...catalog.profiles[0], id: 'web', dependencies: ['api'], incompatibleWith: ['mobile'] },
+      { ...catalog.profiles[0], id: 'mobile', dependencies: [], incompatibleWith: [] },
+    ],
+  };
+  const composition = composeProfiles(custom, { application: { shape: 'tooling', stacks: ['node'] }, profiles: ['web', 'mobile'] });
+  assert.equal(composition.status, 'failed');
+  assert.match(composition.selected[0].problems.join(' '), /requires the api profile/);
+  assert.match(composition.selected[0].problems.join(' '), /incompatible with the mobile profile/);
+  assert.match(composition.selected[0].nextAction, /required profiles/);
 });
 
 test('visual-theme init projects the UI guide and skill and verifies the token contract', async () => {
