@@ -292,6 +292,180 @@
           "description": "Critical visual journeys have reviewed evidence."
         }
       ]
+    },
+    {
+      "id": "react-web-platform",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "React and TypeScript web applications with feature-oriented source, explicit browser contracts and reproducible evidence.",
+      "appliesTo": {
+        "shapes": [
+          "frontend",
+          "full-stack"
+        ],
+        "stacks": [
+          "react",
+          "typescript"
+        ]
+      },
+      "surfaces": [
+        "React application structure",
+        "feature slices",
+        "API client",
+        "server state",
+        "browser evidence",
+        "accessibility evidence"
+      ],
+      "prerequisites": [
+        "Node.js and a supported React toolchain"
+      ],
+      "dependencies": [
+        "visual-theme"
+      ],
+      "incompatibleWith": [],
+      "libraries": [
+        "React",
+        "TypeScript",
+        "TanStack Query",
+        "Testing Library",
+        "Vitest",
+        "Playwright",
+        "@axe-core/playwright",
+        "ESLint",
+        "typescript-eslint",
+        "Prettier"
+      ],
+      "structure": [
+        "src/app/",
+        "src/features/",
+        "src/shared/",
+        "src/api/",
+        "src/i18n/",
+        "src/design-system/",
+        "tests/"
+      ],
+      "commands": [
+        "npm run typecheck",
+        "npm run lint",
+        "npm run format:check",
+        "npm run build",
+        "npm test",
+        "npm run test:e2e"
+      ],
+      "failureConsequence": "The web profile is not ready for delivery while its required static, unit, browser or accessibility evidence is missing or failing.",
+      "repairHints": [
+        "Run the project typecheck, lint, format, build and unit commands.",
+        "Run the critical Playwright journeys and axe checks.",
+        "Select web-bff for authenticated browser sessions."
+      ],
+      "exceptions": [
+        "Record a project-owned exception with an owner, scope, reason and review date."
+      ],
+      "combinations": [
+        {
+          "with": [
+            "visual-theme"
+          ],
+          "purpose": "A web application using the Lighthouse visual contract."
+        }
+      ],
+      "consumerFixture": "src/tests/react-web-profile.test.mjs",
+      "upgradeStrategy": "Preserve adopter-owned source and configuration; reconcile only Lighthouse-owned profile guidance and declared projections.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run typecheck",
+          "description": "Strict TypeScript and static checks pass."
+        },
+        {
+          "id": "unit",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm test",
+          "description": "Unit and component tests pass."
+        },
+        {
+          "id": "browser-e2e",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm run test:e2e",
+          "description": "Critical browser journeys have Playwright evidence."
+        },
+        {
+          "id": "functional",
+          "level": "required",
+          "kind": "soft",
+          "verification": "semantic",
+          "command": null,
+          "description": "Critical accessibility surfaces have axe and required human evidence."
+        },
+        {
+          "id": "architecture",
+          "level": "recommended",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": null,
+          "description": "Feature import boundaries remain valid."
+        },
+        {
+          "id": "operational",
+          "level": "optional",
+          "kind": "soft",
+          "verification": "human",
+          "command": null,
+          "description": "The project has reviewed performance and runtime budgets when selected."
+        }
+      ],
+      "verification": {
+        "layers": [
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run typecheck"
+          },
+          {
+            "id": "unit",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm test"
+          },
+          {
+            "id": "browser-e2e",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm run test:e2e"
+          },
+          {
+            "id": "functional",
+            "level": "required",
+            "kind": "soft",
+            "verification": "semantic",
+            "command": null
+          },
+          {
+            "id": "architecture",
+            "level": "recommended",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": null
+          },
+          {
+            "id": "operational",
+            "level": "optional",
+            "kind": "soft",
+            "verification": "human",
+            "command": null
+          }
+        ]
+      }
     }
   ]
 }
