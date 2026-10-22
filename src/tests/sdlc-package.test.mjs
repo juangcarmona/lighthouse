@@ -14,6 +14,7 @@ import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
 import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
 import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
+import { declarationFromCatalog, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
 
 const root = process.cwd();
 
@@ -59,7 +60,10 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'schemas/workflow-state.schema.json',
     'schemas/decomposition.schema.json',
     'schemas/capabilities.schema.json',
+    'schemas/capability-catalog.schema.json',
+    'capabilities.json',
     'src/contracts.mjs',
+    'src/capabilities.mjs',
     'src/control-plane.mjs',
     'src/decompose.mjs',
     'src/github.mjs',
@@ -73,6 +77,16 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
   ]) assert.ok(files.includes(path), `missing ${path}`);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
+});
+
+test('the capability catalog is versioned, validates independently and projects the label declaration', async () => {
+  const catalog = await readCapabilityCatalog();
+  assert.deepEqual(validateCapabilityCatalog(catalog), []);
+  assert.equal(catalog.package.name, '@juangcarmona/lighthouse-sdlc');
+  const declaration = declarationFromCatalog(catalog, 'labels');
+  assert.equal(declaration.capabilities[0].provider, 'github');
+  assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'size-m').color, '80C2FF');
+  assert.deepEqual(declaration.capabilities[0].configuration.transitions, [{ from: 'triage', to: 'refine' }]);
 });
 
 function triageInput(overrides = {}) {

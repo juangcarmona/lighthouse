@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { access, chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -25,7 +25,7 @@ const manifest = {
   }
 };
 async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); return dir; }
-function run(dir, command, args = []) { return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8' }); }
+function run(dir, command, args = [], options = {}) { return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8', ...options, env: { ...process.env, ...options.env } }); }
 
 test('init creates a projection and refuses to overwrite product work', async () => {
   const dir = await fixture();
@@ -146,6 +146,93 @@ test('upgrade previews and applies a missing owned projection', async () => {
     assert.equal(await access(missing).then(() => true).catch(() => false), true);
     const state = JSON.parse(await readFile(join(dir, '.lighthouse/upgrade.json'), 'utf8'));
     assert.equal(state.files['.github/workflows/lighthouse.yml'].scope, 'harness');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('upgrade discovers pending SDLC capability adoption without writing remote or reconciliation state', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const statePath = join(dir, '.lighthouse/upgrade.json');
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    delete state.adoption;
+    await writeFile(statePath, JSON.stringify(state));
+    const preview = run(dir, 'upgrade', ['--format', 'json']);
+    assert.equal(preview.status, 0, preview.stderr);
+    const plan = JSON.parse(preview.stdout);
+    assert.equal(plan.adoption.status, 'pending');
+    assert.equal(plan.adoption.capabilities.labels.status, 'pending-adoption');
+    assert.match(plan.adoption.capabilities.labels.nextAction, /lighthouse capabilities plan/);
+    assert.equal(await access(join(dir, '.lighthouse/reconciliation/labels.plan.json')).then(() => true).catch(() => false), false);
+    assert.equal(run(dir, 'upgrade', ['--apply']).status, 0);
+    const applied = JSON.parse(await readFile(statePath, 'utf8'));
+    assert.equal(applied.adoption.labels.status, 'pending-adoption');
+    assert.equal(await access(join(dir, '.lighthouse/reconciliation/labels.json')).then(() => true).catch(() => false), false);
+    const verified = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    const adoption = verified.results.find((item) => item.id === 'foundation.capability-adoption');
+    assert.equal(adoption.status, 'unconfigured');
+    assert.equal(adoption.adoptionStatus, 'pending-adoption');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('capability adoption requires the plan hash, creates only missing labels and is idempotent', async () => {
+  const dir = await fixture();
+  const labelsPath = join(dir, 'github-labels.json');
+  const ghDirectory = join(dir, 'bin');
+  const gh = join(ghDirectory, 'gh');
+  try {
+    await mkdir(ghDirectory);
+    await writeFile(labelsPath, JSON.stringify([{ name: 'triage', color: '8B949E', description: 'project-owned' }]));
+    await writeFile(gh, `#!/usr/bin/env node
+import { readFileSync, writeFileSync } from 'node:fs';
+const file = process.env.LIGHTHOUSE_TEST_LABELS;
+const args = process.argv.slice(2);
+let labels = JSON.parse(readFileSync(file, 'utf8'));
+if (args[0] !== 'api') process.exit(2);
+if (args[1] === '--method' && args[2] === 'POST') {
+  const name = args.find((item) => item.startsWith('name='))?.slice(5);
+  const color = args.find((item) => item.startsWith('color='))?.slice(6);
+  const description = args.find((item) => item.startsWith('description='))?.slice(12) ?? '';
+  if (!labels.some((label) => label.name === name)) labels.push({ name, color, description });
+  writeFileSync(file, JSON.stringify(labels));
+  console.log(JSON.stringify({ name, color, description }));
+} else {
+  console.log(JSON.stringify(labels));
+}
+`);
+    await chmod(gh, 0o755);
+    assert.equal(run(dir, 'init').status, 0);
+    const environment = { PATH: `${ghDirectory}:${process.env.PATH}`, LIGHTHOUSE_TEST_LABELS: labelsPath };
+    const planned = run(dir, 'capabilities', ['plan', '--id', 'labels', '--provider', 'github', '--repo', 'juan/demo', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--format', 'json'], { env: environment });
+    assert.equal(planned.status, 0, planned.stderr);
+    const plan = JSON.parse(planned.stdout);
+    assert.equal(plan.reconciliation.operations.length, 20);
+    assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', 'wrong'], { env: environment }).status, 1);
+    const applied = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.equal(JSON.parse(applied.stdout).status, 'adopted');
+    assert.equal(JSON.parse(await readFile(join(dir, '.lighthouse/upgrade.json'), 'utf8')).adoption.labels.status, 'adopted');
+    assert.equal(JSON.parse(await readFile(join(dir, '.lighthouse/reconciliation/labels.json'), 'utf8')).verified, true);
+    const second = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
+    assert.equal(second.status, 0, second.stderr);
+    assert.equal(JSON.parse(second.stdout).reconciliation.operations.length, 0);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('capability selection and decline are explicit local decisions', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const declined = run(dir, 'capabilities', ['decline', '--id', 'labels', '--provider', 'github', '--format', 'json']);
+    assert.equal(declined.status, 0, declined.stderr);
+    assert.equal(JSON.parse(declined.stdout).status, 'declined');
+    const verified = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout);
+    const adoption = verified.results.find((item) => item.id === 'foundation.capability-adoption');
+    assert.equal(adoption.status, 'not-applicable');
+    assert.equal(adoption.adoptionStatus, 'declined');
+    assert.equal(run(dir, 'capabilities', ['select', '--id', 'labels', '--provider', 'github']).status, 0);
+    const selected = JSON.parse(run(dir, 'verify', ['--format', 'json']).stdout).results.find((item) => item.id === 'foundation.capability-adoption');
+    assert.equal(selected.adoptionStatus, 'pending-adoption');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

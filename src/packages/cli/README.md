@@ -38,11 +38,13 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 
 ## Current command scope
 
-The command supports `init`, `authorities`, `reconcile`, `upgrade` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `authorities`, `reconcile`, `upgrade`, `capabilities` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 
 The upgrade route records the ownership hashes in `.lighthouse/upgrade.json`. A missing or stale state file is an adoption gap; reconcile it first instead of allowing a full re-adoption. Upgrade plans report the source and target package and baseline, selected scopes, classifications, preserved paths, verification and recovery action.
+
+The installed SDLC package also publishes a versioned capability catalog. `lighthouse upgrade` reports newly available or pending capabilities without writing to an external provider; `lighthouse capabilities select` and `lighthouse capabilities decline` record an explicit local choice, and `lighthouse verify --format json` exposes the adoption status and next command. For the GitHub labels slice, generate a local plan with `lighthouse capabilities plan --id labels --provider github --repo <owner/repo> --plan-file .lighthouse/reconciliation/labels.plan.json`, then apply it only with the plan hash returned by that command.
 
 The package does not contain the repository gallery, provider-owned integrations or reference source. Those remain with the source repository or the profile that owns them.
 

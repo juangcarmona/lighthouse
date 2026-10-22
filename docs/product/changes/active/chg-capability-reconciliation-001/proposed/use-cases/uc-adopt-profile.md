@@ -26,8 +26,9 @@ The profile declares its prerequisites, owned surfaces, verification commands an
 
 1. Lighthouse inspects the target and identifies the profile and capability adoption routes.
 2. The adopter reviews the proposed files, dependencies, checks and capability reconciliation plan.
-3. Lighthouse applies only the profile-owned and capability-owned changes that the route permits.
-4. The adopter resolves or records any reported conflict and runs verification.
+3. Lighthouse applies only the profile-owned and local capability projection changes that the route permits.
+4. A provider adapter applies external changes only after the adopter authorizes the recorded plan.
+5. The adopter resolves or records any reported conflict and runs verification.
 
 ## Alternative Flows
 
@@ -39,4 +40,4 @@ Ownership cannot be proven, a prerequisite is missing, a capability provider is 
 
 ## Postconditions
 
-The project records the profile and capability state, their evidence and any explicit exception.
+The project records the profile and capability state, their evidence and any explicit exception; provider-owned data remains in the provider.

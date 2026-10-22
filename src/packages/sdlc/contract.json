@@ -1,7 +1,7 @@
 {
   "$schema": "./schemas/sdlc-contract.schema.json",
   "name": "@juangcarmona/lighthouse-sdlc",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "stages": [
     { "name": "triage", "skill": "skills/triage/SKILL.md", "command": "commands/triage.md", "gate": "triaged" },
     { "name": "refine", "skill": "skills/refine/SKILL.md", "command": "commands/refine.md", "gate": "ready" },
@@ -23,6 +23,8 @@
     "stageResultSchema": "schemas/stage-result.schema.json",
     "stateSchema": "schemas/workflow-state.schema.json",
     "decompositionSchema": "schemas/decomposition.schema.json",
-    "capabilitiesSchema": "schemas/capabilities.schema.json"
+    "capabilitiesSchema": "schemas/capabilities.schema.json",
+    "capabilityCatalog": "capabilities.json",
+    "capabilityCatalogSchema": "schemas/capability-catalog.schema.json"
   }
 }
