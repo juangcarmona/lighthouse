@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "Lighthouse adoption and verification CLI",
   "repository": {
@@ -23,7 +23,7 @@
     "@arcshape/cli": "0.1.3",
     "@juangcarmona/lighthouse-ui": "0.2.0",
     "@prodshape/cli": "0.22.0",
-    "@juangcarmona/lighthouse-sdlc": "0.5.0"
+    "@juangcarmona/lighthouse-sdlc": "0.6.0"
   },
   "files": [
     "src/lighthouse.mjs",
