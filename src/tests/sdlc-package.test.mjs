@@ -14,6 +14,7 @@ import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
 import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
 import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
+import { browserEvidenceReport, validateBrowserEvidence } from '../packages/sdlc/src/browser-e2e.mjs';
 import { capabilityAdapter, declarationFromCatalog, initialAdoptionStatus, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
 
 const root = process.cwd();
@@ -38,6 +39,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'commands/route.md',
     'commands/stacked.md',
     'commands/stage-result.md',
+    'commands/browser-e2e.md',
     'commands/state.md',
     'commands/triage.md',
     'skills/triage/SKILL.md',
@@ -46,6 +48,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'skills/implement/SKILL.md',
     'skills/integrate/SKILL.md',
     'skills/review/SKILL.md',
+    'skills/browser-e2e/SKILL.md',
     'meta-commands/ff.md',
     'meta-commands/hotfix.md',
     'meta-commands/decompose.md',
@@ -61,6 +64,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'schemas/decomposition.schema.json',
     'schemas/capabilities.schema.json',
     'schemas/capability-catalog.schema.json',
+    'schemas/browser-e2e.schema.json',
+    'src/browser-e2e.mjs',
     'capabilities.json',
     'src/contracts.mjs',
     'src/capabilities.mjs',
@@ -112,6 +117,26 @@ test('the catalog fails closed when a future capability has no registered adapte
   assert.ok(errors.some((error) => error.code === 'catalog.adapter-unsupported'));
   assert.equal(capabilityAdapter(future.capabilities[0]), null);
   assert.equal(initialAdoptionStatus({ selection: 'opt-in' }), 'available');
+});
+
+test('browser E2E evidence is deterministic and keeps missing, unavailable and pending states explicit', () => {
+  const evidence = {
+    schemaVersion: 1,
+    runner: 'playwright',
+    journey: { id: 'checkout.complete', boundedContext: 'checkout', title: 'Complete checkout' },
+    command: 'npm run test:e2e -- checkout.complete',
+    status: 'passed',
+    evidence: [{ id: 'checkout.page', status: 'passed', source: 'playwright:test' }],
+    artifacts: [{ type: 'trace', path: 'test-results/checkout/trace.zip' }],
+    nextAction: 'Proceed to review.'
+  };
+  assert.deepEqual(validateBrowserEvidence(evidence), []);
+  assert.equal(browserEvidenceReport(evidence).status, 'passed');
+  const pending = { ...evidence, status: 'pending-review', evidence: [{ id: 'checkout.page', status: 'pending-review', source: 'playwright:test', reason: 'Product owner review is pending.' }], artifacts: [] };
+  assert.deepEqual(validateBrowserEvidence(pending), []);
+  const invalid = browserEvidenceReport({ ...evidence, artifacts: [{ type: 'trace', path: '/tmp/trace.zip' }] });
+  assert.equal(invalid.valid, false);
+  assert.ok(invalid.errors.some((error) => error.code === 'browser-e2e.artifact'));
 });
 
 function triageInput(overrides = {}) {

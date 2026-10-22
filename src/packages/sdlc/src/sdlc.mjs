@@ -13,6 +13,7 @@ import { applyTriageLabels, buildTriageReport } from './triage.mjs';
 import { validateMemoryRecord } from './memory.mjs';
 import { replayWorkflow } from './workflow.mjs';
 import { validateStageResult } from './contracts.mjs';
+import { browserEvidenceReport } from './browser-e2e.mjs';
 import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,10 +40,10 @@ async function verifyContract() {
   for (const stage of stages) {
     for (const asset of [stage.skill, stage.command]) if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing stage asset ${asset}`);
   }
-  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema, contract.assets?.capabilityCatalog, contract.assets?.capabilityCatalogSchema]) {
+  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema, contract.assets?.capabilityCatalog, contract.assets?.capabilityCatalogSchema, contract.assets?.browserE2eSchema]) {
     if (!asset || !(await exists(resolve(packageRoot, asset)))) problems.push(`missing contract asset ${asset ?? '(empty)'}`);
   }
-  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'schemas/capability-catalog.schema.json', 'src/capabilities.mjs', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
+  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'schemas/capability-catalog.schema.json', 'schemas/browser-e2e.schema.json', 'src/browser-e2e.mjs', 'src/capabilities.mjs', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
     if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing package asset ${asset}`);
   }
   try {
@@ -158,6 +159,15 @@ async function runStageResult(args) {
   const errors = validateStageResult(result);
   output({ schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, errors }, format);
   if (errors.length) process.exit(1);
+}
+
+async function runBrowserE2e(args) {
+  const inputPath = option(args, '--input');
+  const format = option(args, '--format') ?? 'json';
+  if (!inputPath) { console.error('Usage: lighthouse-sdlc browser-e2e --input <evidence.json> [--format <json|text>]'); process.exit(2); }
+  const report = browserEvidenceReport(await readJson(resolve(process.cwd(), inputPath)));
+  output(report, format);
+  if (!report.valid || report.status !== 'passed') process.exit(1);
 }
 
 async function runMemory(args) {
@@ -318,8 +328,8 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['contract', 'verify', 'triage', 'state', 'stage-result', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <contract|verify|triage|state|stage-result|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
+if (!['contract', 'verify', 'triage', 'state', 'stage-result', 'browser-e2e', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <contract|verify|triage|state|stage-result|browser-e2e|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
 if (command === 'contract') {
@@ -332,6 +342,8 @@ if (command === 'contract') {
   await runControlPlane(process.argv.slice(3));
 } else if (command === 'stage-result') {
   await runStageResult(process.argv.slice(3));
+} else if (command === 'browser-e2e') {
+  await runBrowserE2e(process.argv.slice(3));
 } else if (command === 'memory') {
   await runMemory(process.argv.slice(3));
 } else if (command === 'launch') {
@@ -359,4 +371,4 @@ if (command === 'contract') {
   console.log('Lighthouse SDLC package contract is valid.');
 }
 
-export { contractPath, runTriage, verifyContract, runState, runStageResult, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose, runReconcileLabels, runGithubLabels };
+export { contractPath, runTriage, verifyContract, runState, runStageResult, runBrowserE2e, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose, runReconcileLabels, runGithubLabels };

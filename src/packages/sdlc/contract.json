@@ -10,7 +10,7 @@
     { "name": "integrate", "skill": "skills/integrate/SKILL.md", "command": "commands/integrate.md", "gate": "done" },
     { "name": "review", "skill": "skills/review/SKILL.md", "command": "commands/review.md", "gate": null }
   ],
-  "utilities": ["status", "route", "state", "stage-result", "control-plane", "memory", "launch", "decompose", "stacked", "github-triage", "github-decompose", "reconcile-labels", "github-labels"],
+  "utilities": ["status", "route", "state", "stage-result", "control-plane", "memory", "launch", "decompose", "stacked", "browser-e2e", "github-triage", "github-decompose", "reconcile-labels", "github-labels"],
   "routes": ["supervised", "plan-only", "unattended", "hotfix", "stacked"],
   "metaCommands": ["ff", "hotfix", "decompose", "stacked"],
   "gates": ["triaged", "ready", "planned", "done"],
@@ -24,6 +24,7 @@
     "stateSchema": "schemas/workflow-state.schema.json",
     "decompositionSchema": "schemas/decomposition.schema.json",
     "capabilitiesSchema": "schemas/capabilities.schema.json",
+    "browserE2eSchema": "schemas/browser-e2e.schema.json",
     "capabilityCatalog": "capabilities.json",
     "capabilityCatalogSchema": "schemas/capability-catalog.schema.json"
   }
