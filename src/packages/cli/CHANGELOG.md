@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse
 
+## 0.7.0
+
+### Minor Changes
+
+- 5c2cb4c: # Profile release
+
+  Add adoptable React web, web BFF, PWA, Expo and .NET MAUI profiles with deterministic composition, guidance and consumer fixtures.
+
 ## 0.6.0
 
 ### Minor Changes
