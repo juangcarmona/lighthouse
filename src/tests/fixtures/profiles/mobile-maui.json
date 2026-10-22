@@ -1,0 +1,10 @@
+{
+  "product": "MauiProfileFixture",
+  "application": { "shape": "full-stack", "stacks": ["maui", "dotnet"] },
+  "profiles": ["mobile-maui", "dotnet-backend"],
+  "expected": {
+    "status": "passed",
+    "nativeLayer": "functional",
+    "requiredProfiles": ["mobile-maui", "dotnet-backend"]
+  }
+}

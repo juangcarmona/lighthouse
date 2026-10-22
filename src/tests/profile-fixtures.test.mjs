@@ -11,6 +11,8 @@ const fixtures = [
   new URL('./fixtures/profiles/react-web-platform.json', import.meta.url),
   new URL('./fixtures/profiles/web-bff.json', import.meta.url),
   new URL('./fixtures/profiles/pwa-capability.json', import.meta.url),
+  new URL('./fixtures/profiles/mobile-expo.json', import.meta.url),
+  new URL('./fixtures/profiles/mobile-maui.json', import.meta.url),
 ];
 function run(dir, command, args = []) {
   return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8' });
@@ -23,7 +25,8 @@ for (const fixtureUrl of fixtures) {
     const composition = composeProfiles(catalog, fixture);
     assert.equal(composition.status, fixture.expected.status);
     assert.deepEqual(composition.selected.map((profile) => profile.id), fixture.expected.requiredProfiles);
-    assert.ok(composition.selected.some((profile) => profile.verification.layers.some((layer) => layer.id === fixture.expected.browserLayer)));
+    const evidenceLayer = fixture.expected.browserLayer ?? fixture.expected.nativeLayer;
+    assert.ok(composition.selected.some((profile) => profile.verification.layers.some((layer) => layer.id === evidenceLayer)));
     for (const profileId of ['react-web-platform', 'web-bff']) {
       const profile = composition.selected.find((item) => item.id === profileId);
       if (profile) assert.equal(profile.consumerFixture, 'src/tests/profile-fixtures.test.mjs');

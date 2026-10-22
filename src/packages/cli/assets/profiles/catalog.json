@@ -790,7 +790,9 @@
         "Expo tooling and a selected emulator or device target"
       ],
       "dependencies": [],
-      "incompatibleWith": [],
+      "incompatibleWith": [
+        "mobile-maui"
+      ],
       "libraries": [
         "Expo",
         "React Native",
@@ -900,6 +902,139 @@
             "kind": "hard",
             "verification": "deterministic",
             "command": "npx expo export --platform web"
+          },
+          {
+            "id": "operational",
+            "level": "recommended",
+            "kind": "soft",
+            "verification": "human",
+            "command": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "mobile-maui",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "A native .NET MAUI profile for products with real Android or iOS requirements.",
+      "appliesTo": {
+        "shapes": [
+          "mobile",
+          "full-stack"
+        ],
+        "stacks": [
+          "maui",
+          "dotnet"
+        ]
+      },
+      "surfaces": [
+        ".NET MAUI application",
+        "native lifecycle",
+        "secure storage",
+        "deep links",
+        "permissions",
+        "device capabilities",
+        "native builds"
+      ],
+      "prerequisites": [
+        "Android or iOS is a product requirement",
+        ".NET SDK and a selected emulator or device target"
+      ],
+      "dependencies": [],
+      "incompatibleWith": [
+        "mobile-expo"
+      ],
+      "libraries": [
+        ".NET MAUI",
+        "C#",
+        "XAML",
+        "OIDC Authorization Code with PKCE"
+      ],
+      "structure": [
+        "src/",
+        "tests/",
+        "platforms/"
+      ],
+      "commands": [
+        "dotnet restore --locked-mode",
+        "dotnet build",
+        "dotnet test"
+      ],
+      "failureConsequence": "The mobile profile is not ready for delivery while native authentication, storage, permissions or device evidence is missing.",
+      "repairHints": [
+        "Run locked restore, analyzers and the selected device test.",
+        "Verify secure storage, logout, expiry and user-change behavior.",
+        "Select exactly one native mobile profile unless a product decision says otherwise."
+      ],
+      "exceptions": [
+        "Record a product decision for each omitted target, device capability or signing step."
+      ],
+      "combinations": [
+        {
+          "with": [
+            "dotnet-backend"
+          ],
+          "purpose": "A native .NET mobile application with a Lighthouse backend."
+        }
+      ],
+      "consumerFixture": "src/tests/profile-fixtures.test.mjs",
+      "upgradeStrategy": "Preserve adopter-owned MAUI source, platform configuration and permissions; reconcile only Lighthouse-owned guidance and profile metadata.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "dotnet build",
+          "description": "Locked restore, analyzers and build checks pass."
+        },
+        {
+          "id": "unit",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "dotnet test",
+          "description": "Unit and client tests pass."
+        },
+        {
+          "id": "functional",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "dotnet test",
+          "description": "Authentication, secure storage and native interaction evidence passes on the selected target."
+        },
+        {
+          "id": "operational",
+          "level": "recommended",
+          "kind": "soft",
+          "verification": "human",
+          "command": null,
+          "description": "Permissions, device capabilities and signing decisions have human review."
+        }
+      ],
+      "verification": {
+        "layers": [
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "dotnet build"
+          },
+          {
+            "id": "unit",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "dotnet test"
+          },
+          {
+            "id": "functional",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "dotnet test"
           },
           {
             "id": "operational",

@@ -17,7 +17,7 @@ The applied adoption change defines repository boundaries, hard and soft guardra
 
 The applied SDLC package change defines the independent lifecycle package, its stages, routes, gates, provider-neutral control-plane contracts and deterministic checks.
 
-The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures, the React web and web BFF profiles and the generated public story; the published packages now include deterministic SDLC planning, execution contracts and the first capability-adoption vertical slice.
+The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures, the React web, web BFF, PWA, Expo and .NET MAUI profiles and the generated public story; the published packages now include deterministic SDLC planning, execution contracts and the first capability-adoption vertical slice.
 
 ## Ownership boundary
 
@@ -38,7 +38,7 @@ The `.lighthouse/` projection records configuration and evidence for the selecte
 | Capability adoption and reconciliation | First vertical slice complete | Keep catalog, plan, explicit apply, verification and evidence stable; extend the contract only for a demonstrated adopter need. |
 | SDLC contract and planning | Complete baseline | Keep stage results, route planning, deterministic state, memory, triage and decomposition contracts stable while adopters exercise them. |
 | Tracker and forge projections | Complete baseline | Keep GitHub issue, label, dependency and pull-request projections read-only by default with explicit mutations. |
-| Profiles and stack checks | React web and web BFF complete | Extend the profile catalog only when a real stack has an owned contract, deterministic checks and a consumer fixture. PWA, Expo and MAUI remain later slices. |
+| Profiles and stack checks | Web, PWA and native mobile profiles complete | Keep React web, web BFF, PWA, Expo and .NET MAUI contracts explicit, mutually compatible and backed by deterministic consumer fixtures. Add another profile only for a real stack with an owned contract and verification path. |
 | Distribution and adopter proof | First proof complete | Keep clean-consumer and package checks green and repeat the upgrade proof for future capabilities. |
 | Continuous improvement | Later | Measure adoption, failures and maintenance cost before adding more standards or automation. |
 

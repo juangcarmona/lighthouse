@@ -50,6 +50,7 @@ const profileManagedPaths = Object.freeze({
   'web-bff': ['docs/profiles/web-bff/README.md', 'docs/profiles/web-bff/adoption.md', 'docs/profiles/web-bff/security.md', 'docs/profiles/web-bff/testing.md', '.agents/skills/lighthouse-web-bff/SKILL.md'],
   'pwa-capability': ['docs/profiles/pwa-capability/README.md', 'docs/profiles/pwa-capability/adoption.md', 'docs/profiles/pwa-capability/guardrails.md', 'docs/profiles/pwa-capability/offline.md', 'docs/profiles/pwa-capability/testing.md', '.agents/skills/lighthouse-pwa/SKILL.md'],
   'mobile-expo': ['docs/profiles/mobile-expo/README.md', 'docs/profiles/mobile-expo/adoption.md', 'docs/profiles/mobile-expo/guardrails.md', 'docs/profiles/mobile-expo/testing.md', '.agents/skills/lighthouse-mobile-expo/SKILL.md'],
+  'mobile-maui': ['docs/profiles/mobile-maui/README.md', 'docs/profiles/mobile-maui/adoption.md', 'docs/profiles/mobile-maui/guardrails.md', 'docs/profiles/mobile-maui/testing.md', '.agents/skills/lighthouse-mobile-maui/SKILL.md'],
 });
 const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
@@ -130,6 +131,14 @@ function profileAssets(manifest) {
       const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-mobile-expo/SKILL.md' : `docs/profiles/mobile-expo/${file}`;
       try { assets[target] = readFileSync(new URL(`../assets/profiles/mobile-expo/${file}`, import.meta.url), 'utf8'); }
       catch (error) { throw new Error(`Cannot read the installed Lighthouse Expo mobile profile: ${error.message}`); }
+    }
+  }
+  if ((manifest?.profiles ?? []).includes('mobile-maui')) {
+    const files = ['README.md', 'adoption.md', 'guardrails.md', 'testing.md', 'SKILL.md'];
+    for (const file of files) {
+      const target = file === 'SKILL.md' ? '.agents/skills/lighthouse-mobile-maui/SKILL.md' : `docs/profiles/mobile-maui/${file}`;
+      try { assets[target] = readFileSync(new URL(`../assets/profiles/mobile-maui/${file}`, import.meta.url), 'utf8'); }
+      catch (error) { throw new Error(`Cannot read the installed Lighthouse .NET MAUI mobile profile: ${error.message}`); }
     }
   }
   return assets;

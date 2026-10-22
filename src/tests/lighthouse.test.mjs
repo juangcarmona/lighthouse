@@ -256,6 +256,31 @@ test('Expo mobile profile projects native guidance without selecting the React w
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('MAUI mobile profile projects native guidance and rejects the Expo combination', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-maui-profile-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'Maui', '--profile', 'mobile-maui', '--profile', 'dotnet-backend']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    for (const file of [
+      'docs/profiles/mobile-maui/README.md',
+      'docs/profiles/mobile-maui/adoption.md',
+      'docs/profiles/mobile-maui/guardrails.md',
+      'docs/profiles/mobile-maui/testing.md',
+      '.agents/skills/lighthouse-mobile-maui/SKILL.md'
+    ]) await access(join(dir, file));
+    const selectedManifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selectedManifest.application = { shape: 'full-stack', stacks: ['maui', 'dotnet'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    let composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'passed');
+    selectedManifest.profiles.push('mobile-expo');
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'failed');
+    assert.match(composition.selected.find((profile) => profile.id === 'mobile-maui').problems.join(' '), /incompatible with the mobile-expo profile/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('visual-theme init reports a brownfield design conflict without overwriting it', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-brownfield-'));
   try {
