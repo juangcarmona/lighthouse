@@ -51,6 +51,7 @@ try {
     ['src/packages/cli/src/guardrails.mjs', 'scripts/guardrails.mjs'],
     ['src/packages/cli/src/profiles.mjs', 'scripts/profiles.mjs'],
     ['src/packages/cli/assets/guardrails', 'assets/guardrails'],
+    ['src/packages/cli/assets/profiles', 'assets/profiles'],
     ['src/packages/cli/assets/schemas', 'schemas'], ['src/dotnet/Directory.Build.props', 'Directory.Build.props'],
     ['src/dotnet/Directory.Packages.props', 'Directory.Packages.props'], ['src/dotnet/global.json', 'global.json'],
     ['.gitignore', '.gitignore'], ['.editorconfig', '.editorconfig'], ['src/dotnet/Lighthouse.slnx', `${name}.slnx`]
