@@ -17,7 +17,7 @@ The applied adoption change defines repository boundaries, hard and soft guardra
 
 The applied SDLC package change defines the independent lifecycle package, its stages, routes, gates, provider-neutral control-plane contracts and deterministic checks.
 
-The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures and the generated public story; the SDLC package still needs its complete deterministic planning and execution contracts.
+The current repository implements the CLI, UI and SDLC package boundaries, package verification, adoption fixtures and the generated public story; the published packages now include deterministic SDLC planning, execution contracts and the first capability-adoption vertical slice.
 
 ## Ownership boundary
 
@@ -33,12 +33,13 @@ The `.lighthouse/` projection records configuration and evidence for the selecte
 | --- | --- | --- |
 | Foundation and ownership | Complete | Keep ProductShape, ArcShape, OpenSpec and factory boundaries explicit. |
 | Adoption contract | Complete | Preserve non-destructive initialization, package ownership and public-site failure hints. |
-| SDLC package contract | Contract delivered | Add host adapters and real execution only when a consumer requires them. |
+| SDLC package contract | Complete baseline | Add host adapters and real execution only when a consumer requires them. |
 | Standards registry and verification | Complete baseline | Keep the catalog extensible and verify existing guardrails without adding practices through implementation work. |
-| SDLC contract and planning | In progress | Add stage results, route planning, deterministic state, memory and decomposition contracts to the existing SDLC package. |
-| Tracker and forge projections | Next | Read GitHub issues, labels, dependencies and pull-request relationships, with read-only defaults and explicit mutations. |
+| Capability adoption and reconciliation | First vertical slice complete | Keep catalog, plan, explicit apply, verification and evidence stable; extend the contract only for a demonstrated adopter need. |
+| SDLC contract and planning | Complete baseline | Keep stage results, route planning, deterministic state, memory, triage and decomposition contracts stable while adopters exercise them. |
+| Tracker and forge projections | Complete baseline | Keep GitHub issue, label, dependency and pull-request projections read-only by default with explicit mutations. |
 | Profiles and stack checks | Partial | Extend the .NET and UI reference material only when a real stack has an owned contract and deterministic checks. |
-| Distribution and adopter proof | Ongoing | Keep clean-consumer and package checks green and prove each new capability in an isolated adopter fixture. |
+| Distribution and adopter proof | First proof complete | Keep clean-consumer and package checks green and repeat the upgrade proof for future capabilities. |
 | Continuous improvement | Later | Measure adoption, failures and maintenance cost before adding more standards or automation. |
 
 ## Immediate implementation slice
