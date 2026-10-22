@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.6.0
+
+### Minor Changes
+
+- dd3b7b1: # Lighthouse profile and SDLC release
+
+  Add profile composition, packaged .NET creation and verification, and deterministic browser E2E evidence for the Lighthouse baseline.
+
 ## 0.5.0
 
 ### Minor Changes
