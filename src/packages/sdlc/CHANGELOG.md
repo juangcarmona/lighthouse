@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.4.0
+
+### Minor Changes
+
+- 1df5765: # SDLC contract
+
+  Extend the SDLC package with stage results, route inspection, rebuildable workflow state, scoped control-plane validation, deterministic decomposition, GitHub triage projection and explicit label reconciliation.
+
 ## 0.3.0
 
 ### Minor Changes
