@@ -19,7 +19,7 @@ Each product maintainer owns activation and exceptions. Lighthouse maintainers o
 
 ## Activation
 
-Attach the analyzer as an analyzer-only project reference, set `LighthouseModule=true` on implementation projects, and expose that property with `CompilerVisibleProperty`. Module assembly names follow `<Root>.Modules.<Name>` and separate contract assemblies end in `.Contracts`. The [Catalog project](../../../src/dotnet/examples/src/modules/Lighthouse.Example.Modules.Catalog/Lighthouse.Example.Modules.Catalog.csproj) and [build properties](../../../src/dotnet/Directory.Build.props) are the executable contract.
+Attach the analyzer as an analyzer-only project reference, set `LighthouseModule=true` on implementation projects, and expose that property with `CompilerVisibleProperty`. Module assembly names follow `<Root>.Modules.<Name>` and separate contract assemblies end in `.Contracts`. The distributed Catalog project and build properties are the executable contract.
 
 `LH1001` recognizes the supplied CQRS interfaces semantically, including aliases/inheritance. A different mediator/handler abstraction needs an adapter or another tested rule; class-name conventions alone are not enforcement. The rule skips compiler-generated code. `LH1002` checks compilation references for the configured naming family; it does not inspect payload semantics, reflection-based access, network calls or dependency injection at runtime. Use architecture/functional tests for those boundaries.
 

@@ -18,7 +18,7 @@ src/
 src/dotnet/tests/                     analyzer, HTTP and architecture tests
 ```
 
-Paths describe responsibilities; create folders only when they hold real code. The [reference](../../../src/dotnet/examples/README.md) keeps examples under `src/dotnet/examples/src/`; generated products start directly under `src/`.
+Paths describe responsibilities; create folders only when they hold real code. The distributed starter keeps its examples under `src/`; generated products start directly under `src/`.
 
 ## Dependencies
 

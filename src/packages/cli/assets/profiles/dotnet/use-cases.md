@@ -1,6 +1,6 @@
 # One file per use case
 
-Read [CreateEntry.cs](../../../src/dotnet/examples/src/modules/Lighthouse.Example.Modules.Catalog/Features/Entries/CreateEntry.cs) and [GetEntry.cs](../../../src/dotnet/examples/src/modules/Lighthouse.Example.Modules.Catalog/Features/Entries/GetEntry.cs). Each file owns a concrete behavior rather than a technical layer.
+Read the distributed starter's `CreateEntry.cs` and `GetEntry.cs` examples. Each file owns a concrete behavior rather than a technical layer.
 
 | Part | Responsibility | Boundary |
 | --- | --- | --- |

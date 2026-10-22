@@ -27,6 +27,6 @@ npm run verify:dotnet
 dotnet run --project src/dotnet/examples/src/root/Lighthouse.Example.Api
 ```
 
-The [Catalog example](../../../src/dotnet/examples/README.md) exercises a POST command and GET query. Its store is in memory and deliberately disposable. JWT authorization is enforced; test identities live only in the test assembly. Production persistence, multitenancy, migrations, distributed caching and outbox delivery require product-specific design and tests.
+The distributed starter includes a Catalog example that exercises a POST command and GET query. Its store is in memory and deliberately disposable. JWT authorization is enforced; test identities live only in the test assembly. Production persistence, multitenancy, migrations, distributed caching and outbox delivery require product-specific design and tests.
 
 The [enforcement table](guardrails.md) distinguishes implemented rules from recommendations. No rule implies remote branch protection or production readiness.
