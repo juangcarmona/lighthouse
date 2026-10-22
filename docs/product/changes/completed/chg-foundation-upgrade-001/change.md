@@ -2,7 +2,7 @@
 id: CHG-FOUNDATION-UPGRADE-001
 type: product-change
 title: Define safe selective foundation upgrades
-status: draft
+status: applied
 base-revision: '71847ebc4a166319480f985fd7679bb474035dca'
 operations:
   add:

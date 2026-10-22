@@ -8,6 +8,8 @@ Install the exact Lighthouse package artifact selected for the release and run `
 
 Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an existing adoption. It does not write by default; add `--apply` only after reviewing the plan. Existing files whose content differs from the generated projection are conflicts and are never overwritten by reconciliation.
 
+Use `lighthouse upgrade` to preview a versioned foundation update. The command is dry-run by default, accepts `--scope harness`, `--scope sdlc` or `--scope all`, preserves customized projections and stops when ownership evidence is missing. Add `--apply` only after reviewing the plan, then run `lighthouse verify`.
+
 The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes and `DESIGN.md`. Stack profiles own their source templates, guidance and checks.
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration.
@@ -36,9 +38,11 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 
 ## Current command scope
 
-The command supports `init`, `authorities`, `reconcile` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `authorities`, `reconcile`, `upgrade` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
+
+The upgrade route records the ownership hashes in `.lighthouse/upgrade.json`. A missing or stale state file is an adoption gap; reconcile it first instead of allowing a full re-adoption. Upgrade plans report the source and target package and baseline, selected scopes, classifications, preserved paths, verification and recovery action.
 
 The package does not contain the repository gallery, provider-owned integrations or reference source. Those remain with the source repository or the profile that owns them.
 
