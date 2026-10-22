@@ -761,6 +761,155 @@
           }
         ]
       }
+    },
+    {
+      "id": "mobile-expo",
+      "owner": "@juangcarmona/lighthouse",
+      "purpose": "An Expo and React Native profile for products with real Android or iOS requirements.",
+      "appliesTo": {
+        "shapes": [
+          "mobile",
+          "full-stack"
+        ],
+        "stacks": [
+          "expo",
+          "react-native"
+        ]
+      },
+      "surfaces": [
+        "Expo application",
+        "native navigation",
+        "secure storage",
+        "deep links",
+        "permissions",
+        "push notifications",
+        "native builds"
+      ],
+      "prerequisites": [
+        "Android or iOS is a product requirement",
+        "Expo tooling and a selected emulator or device target"
+      ],
+      "dependencies": [],
+      "incompatibleWith": [],
+      "libraries": [
+        "Expo",
+        "React Native",
+        "Expo Router",
+        "TypeScript",
+        "TanStack Query",
+        "Expo SecureStore"
+      ],
+      "structure": [
+        "app/",
+        "src/features/",
+        "src/shared/",
+        "tests/"
+      ],
+      "commands": [
+        "npx expo doctor",
+        "npm test",
+        "npx expo start"
+      ],
+      "failureConsequence": "The mobile profile is not ready for delivery while native authentication, storage, permissions or device evidence is missing.",
+      "repairHints": [
+        "Run npx expo doctor and the selected native test target.",
+        "Verify secure storage, logout, expiry and user-change behavior.",
+        "Keep optional web export evidence separate."
+      ],
+      "exceptions": [
+        "Record a product decision for each omitted native platform capability or web export."
+      ],
+      "combinations": [
+        {
+          "with": [
+            "dotnet-backend"
+          ],
+          "purpose": "A TypeScript mobile application with a Lighthouse backend."
+        }
+      ],
+      "consumerFixture": "src/tests/profile-fixtures.test.mjs",
+      "upgradeStrategy": "Preserve adopter-owned Expo source, native configuration and permissions; reconcile only Lighthouse-owned guidance and profile metadata.",
+      "guardrails": [
+        {
+          "id": "static",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npx expo doctor",
+          "description": "Expo configuration and static checks pass."
+        },
+        {
+          "id": "unit",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npm test",
+          "description": "Unit and component tests pass."
+        },
+        {
+          "id": "functional",
+          "level": "required",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npx expo start",
+          "description": "Authentication, secure storage and native interaction evidence passes on the selected target."
+        },
+        {
+          "id": "browser-e2e",
+          "level": "optional",
+          "kind": "hard",
+          "verification": "deterministic",
+          "command": "npx expo export --platform web",
+          "description": "Selected web export has separate browser evidence."
+        },
+        {
+          "id": "operational",
+          "level": "recommended",
+          "kind": "soft",
+          "verification": "human",
+          "command": null,
+          "description": "Permissions, push and signing decisions have human review."
+        }
+      ],
+      "verification": {
+        "layers": [
+          {
+            "id": "static",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npx expo doctor"
+          },
+          {
+            "id": "unit",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npm test"
+          },
+          {
+            "id": "functional",
+            "level": "required",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npx expo start"
+          },
+          {
+            "id": "browser-e2e",
+            "level": "optional",
+            "kind": "hard",
+            "verification": "deterministic",
+            "command": "npx expo export --platform web"
+          },
+          {
+            "id": "operational",
+            "level": "recommended",
+            "kind": "soft",
+            "verification": "human",
+            "command": null
+          }
+        ]
+      }
     }
   ]
 }
