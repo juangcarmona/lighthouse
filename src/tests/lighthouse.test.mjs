@@ -213,6 +213,28 @@ test('web BFF profile projects its security contract and requires the private we
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('PWA capability projects its offline contract as an optional React extension', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-pwa-profile-'));
+  try {
+    const initialized = run(dir, 'init', ['--name', 'Pwa', '--profile', 'visual-theme', '--profile', 'react-web-platform', '--profile', 'pwa-capability']);
+    assert.equal(initialized.status, 0, initialized.stderr);
+    for (const file of [
+      'docs/profiles/pwa-capability/README.md',
+      'docs/profiles/pwa-capability/adoption.md',
+      'docs/profiles/pwa-capability/guardrails.md',
+      'docs/profiles/pwa-capability/offline.md',
+      'docs/profiles/pwa-capability/testing.md',
+      '.agents/skills/lighthouse-pwa/SKILL.md'
+    ]) await access(join(dir, file));
+    const selectedManifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selectedManifest.application = { shape: 'frontend', stacks: ['react'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selectedManifest));
+    const composition = JSON.parse(run(dir, 'profiles', ['--format', 'json']).stdout);
+    assert.equal(composition.status, 'passed');
+    assert.deepEqual(composition.selected.find((profile) => profile.id === 'pwa-capability').dependencies, ['react-web-platform']);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('visual-theme init reports a brownfield design conflict without overwriting it', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-ui-brownfield-'));
   try {

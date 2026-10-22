@@ -1,0 +1,10 @@
+{
+  "product": "PwaProfileFixture",
+  "application": { "shape": "frontend", "stacks": ["react"] },
+  "profiles": ["visual-theme", "react-web-platform", "pwa-capability"],
+  "expected": {
+    "status": "passed",
+    "browserLayer": "browser-e2e",
+    "requiredProfiles": ["visual-theme", "react-web-platform", "pwa-capability"]
+  }
+}
