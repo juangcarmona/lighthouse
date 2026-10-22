@@ -35,7 +35,9 @@
   },
   "exports": {
     ".": "./src/sdlc.mjs",
+    "./triage": "./src/triage.mjs",
     "./contract.json": "./contract.json",
-    "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json"
+    "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
+    "./schemas/triage.schema.json": "./schemas/triage.schema.json"
   }
 }

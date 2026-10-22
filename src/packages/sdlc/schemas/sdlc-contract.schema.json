@@ -17,11 +17,12 @@
     "assets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["routes", "gates", "controlPlaneSchema"],
+      "required": ["routes", "gates", "controlPlaneSchema", "triageSchema"],
       "properties": {
         "routes": { "type": "string" },
         "gates": { "type": "string" },
-        "controlPlaneSchema": { "type": "string" }
+        "controlPlaneSchema": { "type": "string" },
+        "triageSchema": { "type": "string" }
       }
     }
   },

@@ -17,6 +17,7 @@
   "assets": {
     "routes": "routes.json",
     "gates": "gates.json",
-    "controlPlaneSchema": "schemas/control-plane.schema.json"
+    "controlPlaneSchema": "schemas/control-plane.schema.json",
+    "triageSchema": "schemas/triage.schema.json"
   }
 }
