@@ -47,7 +47,7 @@ jobs:
   publish:
     name: Publish stable packages
     if: >-
-      (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'chore: Version Packages') || startsWith(github.event.head_commit.message, 'Version Packages'))) ||
+      (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'chore: Version Packages') || startsWith(github.event.head_commit.message, 'Version Packages') || contains(github.event.head_commit.message, '/changeset-release/main'))) ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.task == 'publish-current-stable')
     runs-on: ubuntu-latest
     environment:
