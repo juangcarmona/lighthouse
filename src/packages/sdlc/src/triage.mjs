@@ -54,7 +54,7 @@ function addIssue(issues, code, message, field) {
   issues.push(issue(code, message, field));
 }
 
-function validateConfiguration(configuration) {
+export function validateConfiguration(configuration) {
   const errors = [];
   const labels = Array.isArray(configuration?.labels) ? configuration.labels : null;
   const byName = new Map();
@@ -281,4 +281,4 @@ export function applyTriageLabels(report) {
   return [...report.labels.proposed];
 }
 
-export { DIMENSIONS, ROUTES, validateConfiguration };
+export { DIMENSIONS, ROUTES };

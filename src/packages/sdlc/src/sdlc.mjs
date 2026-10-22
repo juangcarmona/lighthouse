@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-import { access, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDecompositionPlan, applyDecompositionPlan } from './decompose.mjs';
 import { validateControlPlane, validateLaunchRequest } from './control-plane.mjs';
-import { createGithubSubIssues, mergeGithubTriage, readGithubIssue, replaceGithubLabels } from './github.mjs';
+import { createGithubLabel, createGithubSubIssues, mergeGithubTriage, readGithubIssue, readGithubLabels, replaceGithubLabels } from './github.mjs';
+import { applyLabelReconciliationPlan, buildLabelReconciliationPlan } from './reconcile.mjs';
 import { buildRoutePlan } from './routes.mjs';
 import { buildStackedPlan } from './stacked.mjs';
 import { applyTriageLabels, buildTriageReport } from './triage.mjs';
@@ -37,10 +38,10 @@ async function verifyContract() {
   for (const stage of stages) {
     for (const asset of [stage.skill, stage.command]) if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing stage asset ${asset}`);
   }
-  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema]) {
+  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema]) {
     if (!asset || !(await exists(resolve(packageRoot, asset)))) problems.push(`missing contract asset ${asset ?? '(empty)'}`);
   }
-  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
+  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
     if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing package asset ${asset}`);
   }
   try {
@@ -251,9 +252,69 @@ async function runGithubDecompose(args) {
   if (!plan.valid) process.exit(1);
 }
 
+async function optionalJson(path) {
+  if (!path || !(await exists(path))) return null;
+  return readJson(path);
+}
+
+async function writeRecord(path, plan, verified = true) {
+  const recordPath = resolve(process.cwd(), path);
+  await mkdir(dirname(recordPath), { recursive: true });
+  await writeFile(recordPath, `${JSON.stringify({ ...plan.record, observedHash: plan.targetHash, verified }, null, 2)}\n`);
+}
+
+async function runReconcileLabels(args) {
+  const declarationPath = option(args, '--input');
+  const existingPath = option(args, '--existing');
+  const recordPath = option(args, '--record') ?? '.lighthouse/reconciliation/labels.json';
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!declarationPath || !existingPath) { console.error('Usage: lighthouse-sdlc reconcile-labels --input <capabilities.json> --existing <labels.json> [--record <path>] [--apply] [--format <json|text>]'); process.exit(2); }
+  const declaration = await readJson(resolve(process.cwd(), declarationPath));
+  const existing = await readJson(resolve(process.cwd(), existingPath));
+  const plan = buildLabelReconciliationPlan(declaration, existing, await optionalJson(resolve(process.cwd(), recordPath)));
+  if (apply && plan.canApply) {
+    const current = await readJson(resolve(process.cwd(), existingPath));
+    const reread = buildLabelReconciliationPlan(declaration, current);
+    if (reread.observedHash !== plan.observedHash) throw new Error('Label reconciliation changed since the plan was created; refusing to apply.');
+    const updated = applyLabelReconciliationPlan(reread, current);
+    await writeFile(resolve(process.cwd(), existingPath), `${JSON.stringify(updated, null, 2)}\n`);
+    await writeRecord(recordPath, reread);
+    plan.applied = true;
+    plan.record = { ...reread.record, observedHash: reread.targetHash, verified: true };
+  } else plan.applied = false;
+  output(plan, format);
+  if (!plan.valid || !plan.canApply) process.exit(1);
+}
+
+async function runGithubLabels(args) {
+  const repo = option(args, '--repo');
+  const declarationPath = option(args, '--input');
+  const recordPath = option(args, '--record') ?? '.lighthouse/reconciliation/labels.json';
+  const format = option(args, '--format') ?? 'json';
+  const apply = args.includes('--apply');
+  if (!repo || !declarationPath) { console.error('Usage: lighthouse-sdlc github-labels --repo <owner/repo> --input <capabilities.json> [--record <path>] [--apply] [--format <json|text>]'); process.exit(2); }
+  const declaration = await readJson(resolve(process.cwd(), declarationPath));
+  const labels = await readGithubLabels(repo);
+  const plan = buildLabelReconciliationPlan(declaration, labels, await optionalJson(resolve(process.cwd(), recordPath)));
+  if (apply && plan.canApply) {
+    const current = await readGithubLabels(repo);
+    if (buildLabelReconciliationPlan(declaration, current).observedHash !== plan.observedHash) throw new Error('GitHub labels changed since the plan was created; refusing to apply.');
+    for (const operation of plan.operations) await createGithubLabel(repo, operation, { dryRun: false });
+    const finalLabels = await readGithubLabels(repo);
+    const appliedPlan = buildLabelReconciliationPlan(declaration, finalLabels);
+    if (!appliedPlan.canApply || appliedPlan.operations.length > 0) throw new Error('GitHub label reconciliation did not reach the declared state.');
+    await writeRecord(recordPath, appliedPlan);
+    plan.applied = true;
+    plan.record = { ...appliedPlan.record, observedHash: appliedPlan.targetHash, verified: true };
+  } else plan.applied = false;
+  output(plan, format);
+  if (!plan.valid || !plan.canApply) process.exit(1);
+}
+
 const command = process.argv[2] ?? 'verify';
-if (!['contract', 'verify', 'triage', 'state', 'stage-result', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <contract|verify|triage|state|stage-result|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose>');
+if (!['contract', 'verify', 'triage', 'state', 'stage-result', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <contract|verify|triage|state|stage-result|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
 if (command === 'contract') {
@@ -280,6 +341,10 @@ if (command === 'contract') {
   await runGithubTriage(process.argv.slice(3));
 } else if (command === 'github-decompose') {
   await runGithubDecompose(process.argv.slice(3));
+} else if (command === 'reconcile-labels') {
+  await runReconcileLabels(process.argv.slice(3));
+} else if (command === 'github-labels') {
+  await runGithubLabels(process.argv.slice(3));
 } else {
   const problems = await verifyContract();
   if (problems.length) {
@@ -289,4 +354,4 @@ if (command === 'contract') {
   console.log('Lighthouse SDLC package contract is valid.');
 }
 
-export { contractPath, runTriage, verifyContract, runState, runStageResult, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose };
+export { contractPath, runTriage, verifyContract, runState, runStageResult, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose, runReconcileLabels, runGithubLabels };

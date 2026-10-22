@@ -25,6 +25,19 @@ export async function readGithubIssue(repo, number, options = {}) {
   };
 }
 
+export async function readGithubLabels(repo, options = {}) {
+  if (!repo) throw new Error('repo is required');
+  const labels = await ghJson([`repos/${repo}/labels?per_page=100`], options);
+  return Array.isArray(labels) ? labels.map((label) => ({ name: label.name, color: label.color, description: label.description ?? null })).sort((left, right) => left.name.localeCompare(right.name)) : [];
+}
+
+export async function createGithubLabel(repo, label, options = {}) {
+  if (!label?.name) throw new Error('label name is required');
+  if (options.dryRun !== false) return { applied: false, label };
+  const created = await ghJson(['--method', 'POST', `repos/${repo}/labels`, '-f', `name=${label.name}`, '-f', `color=${String(label.color ?? '8B949E').replace(/^#/u, '')}`, '-f', `description=${label.description ?? ''}`], options);
+  return { applied: true, label: { name: created.name, color: created.color, description: created.description ?? null } };
+}
+
 export function mergeGithubTriage(issueRecord, assessment, configuration) {
   if (!issueRecord || typeof issueRecord !== 'object') return { errors: [issue('github.issue', 'issue metadata is required')] };
   if (!assessment || typeof assessment !== 'object') return { errors: [issue('github.assessment', 'structured assessment is required')] };

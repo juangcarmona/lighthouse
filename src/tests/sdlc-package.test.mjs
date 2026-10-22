@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildDecompositionPlan } from '../packages/sdlc/src/decompose.mjs';
 import { validateControlPlane, validateLaunchRequest } from '../packages/sdlc/src/control-plane.mjs';
-import { createGithubSubIssues, readGithubIssue } from '../packages/sdlc/src/github.mjs';
+import { createGithubSubIssues, readGithubIssue, readGithubLabels } from '../packages/sdlc/src/github.mjs';
+import { applyLabelReconciliationPlan, buildLabelReconciliationPlan } from '../packages/sdlc/src/reconcile.mjs';
 import { validateMemoryRecord } from '../packages/sdlc/src/memory.mjs';
 import { buildRoutePlan } from '../packages/sdlc/src/routes.mjs';
 import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
@@ -29,6 +30,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'commands/decompose.md',
     'commands/github-triage.md',
     'commands/github-decompose.md',
+    'commands/reconcile-labels.md',
+    'commands/github-labels.md',
     'commands/memory.md',
     'commands/launch.md',
     'commands/route.md',
@@ -55,11 +58,13 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'schemas/stage-result.schema.json',
     'schemas/workflow-state.schema.json',
     'schemas/decomposition.schema.json',
+    'schemas/capabilities.schema.json',
     'src/contracts.mjs',
     'src/control-plane.mjs',
     'src/decompose.mjs',
     'src/github.mjs',
     'src/memory.mjs',
+    'src/reconcile.mjs',
     'src/routes.mjs',
     'src/sdlc.mjs',
     'src/triage.mjs',
@@ -184,6 +189,59 @@ test('triage CLI is read-only by default and applies only after an explicit matc
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('label reconciliation preserves existing values, adds only missing labels and is idempotent', async () => {
+  const declaration = {
+    schemaVersion: 1,
+    capabilities: [{
+      id: 'labels',
+      provider: 'github',
+      version: '1',
+      configuration: {
+        labels: [
+          { name: 'triage', role: 'state', color: '4DA3FF', description: 'workflow state' },
+          { name: 'size-s', role: 'classification', dimension: 'size', value: 'S' },
+          { name: 'size-m', role: 'classification', dimension: 'size', value: 'M' },
+        ],
+        transitions: [],
+      },
+    }],
+  };
+  const existing = [
+    { name: 'triage', color: '123456', description: 'project-owned' },
+    { name: 'custom', color: 'abcdef', description: 'keep' },
+  ];
+  const first = buildLabelReconciliationPlan(declaration, existing);
+  assert.deepEqual(first, buildLabelReconciliationPlan(declaration, existing));
+  assert.equal(first.status, 'ready');
+  assert.deepEqual(first.operations.map((operation) => operation.name), ['size-m', 'size-s']);
+  assert.equal(first.changes.find((change) => change.name === 'triage').status, 'customized');
+  assert.equal(first.changes.find((change) => change.name === 'custom').status, 'preserved');
+  const applied = applyLabelReconciliationPlan(first, existing);
+  assert.deepEqual(applied.map((label) => label.name), ['custom', 'size-m', 'size-s', 'triage']);
+  assert.equal(applied.find((label) => label.name === 'triage').color, '123456');
+  const second = buildLabelReconciliationPlan(declaration, applied, first.record);
+  assert.equal(second.operations.length, 0);
+  assert.equal(second.drift.status, 'none');
+});
+
+test('label reconciliation blocks unsupported providers and malformed declarations', () => {
+  const plan = buildLabelReconciliationPlan({ schemaVersion: 1, capabilities: [{ id: 'labels', provider: 'gitlab', version: '1', configuration: { labels: [], transitions: [] } }] }, []);
+  assert.equal(plan.canApply, false);
+  assert.ok(plan.errors.some((error) => error.code === 'capability.provider-unsupported'));
+});
+
+test('label reconciliation stops on a possible equivalent with a different name', () => {
+  const declaration = {
+    schemaVersion: 1,
+    capabilities: [{ id: 'labels', provider: 'github', version: '1', configuration: { labels: [{ name: 'size-s', role: 'classification', dimension: 'size', value: 'S' }], transitions: [] } }],
+  };
+  const plan = buildLabelReconciliationPlan(declaration, [{ name: 'Size: S', color: 'BFE3FF' }]);
+  assert.equal(plan.status, 'blocked');
+  assert.equal(plan.canApply, false);
+  assert.equal(plan.changes.find((change) => change.name === 'size-s').status, 'conflict');
+  assert.equal(plan.operations.length, 0);
+});
+
 test('workflow state replays independently per run and rejects illegal transitions', () => {
   const events = [
     { schemaVersion: 1, eventId: 'e1', runId: 'run-a', route: 'supervised', stage: 'triage', from: null, to: 'ready', actor: 'fixture', timestamp: '2026-01-01T00:00:00Z', reason: 'created', evidence: [] },
@@ -280,6 +338,18 @@ test('GitHub issue projection is deterministic with a provider fixture', async (
     assert.equal(first.workItem.id, 'GH-42');
     assert.deepEqual(first.links.subIssues, [{ number: 43 }]);
     assert.deepEqual(first.dependencies, [{ number: 7, status: 'blocked-by' }]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('GitHub label projection is sorted and read-only by default', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-github-labels-'));
+  try {
+    const fixture = join(dir, 'labels.json');
+    const command = join(dir, 'gh-fixture.mjs');
+    await writeFile(fixture, JSON.stringify([{ name: 'size-m', color: '4DA3FF', description: null }, { name: 'triage', color: '8B949E' }]));
+    await writeFile(command, `#!/usr/bin/env node\nimport { readFile } from 'node:fs/promises';\nprocess.stdout.write(await readFile(${JSON.stringify(fixture)}, 'utf8'));\n`);
+    await chmod(command, 0o755);
+    assert.deepEqual(await readGithubLabels('example/project', { command }), [{ name: 'size-m', color: '4DA3FF', description: null }, { name: 'triage', color: '8B949E', description: null }]);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
