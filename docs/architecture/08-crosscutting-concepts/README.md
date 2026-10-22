@@ -16,9 +16,11 @@ The SDLC package owns lifecycle skills, commands, meta-commands, routes and gate
 
 ## Profile selection
 
-Initialization resolves a baseline plus compatible profiles from the declared application shape and stacks.
+Initialization resolves a baseline plus compatible profiles from the declared application shape and stacks. The CLI publishes the profile catalog as data and exposes the same composition through `lighthouse profiles` and machine-readable verification output.
 
 Profiles declare prerequisites, owned content, examples, verification commands, failure consequences and exception routes.
+
+Profile verification layers are applicability metadata and do not make every test layer mandatory. Each layer carries its own level, kind and evidence method so a project can distinguish required deterministic checks from recommended semantic or human review.
 
 ## Soft and hard guardrails
 

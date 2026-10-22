@@ -10,6 +10,15 @@
     "schemaVersion": {"const": 1},
     "baseline": {"const": "0.1.0"},
     "product": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$"},
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shape", "stacks"],
+      "properties": {
+        "shape": {"enum": ["unknown", "frontend", "backend", "full-stack", "service", "library", "tooling", "cli", "worker", "mobile"]},
+        "stacks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
     "profiles": {"type": "array", "items": {"enum": ["node-tooling", "dotnet-backend", "visual-theme"]}, "uniqueItems": true},
     "integrations": {"type": "object", "additionalProperties": false, "required": ["productShape", "arcShape"], "properties": {"productShape": {"$ref": "#/$defs/pin"}, "arcShape": {"$ref": "#/$defs/pin"}}},
     "packages": {"type": "object", "additionalProperties": false, "required": ["sdlc"], "properties": {"sdlc": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "@juangcarmona/lighthouse-sdlc"}, "version": {"$ref": "#/$defs/pin"}}}, "ui": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "@juangcarmona/lighthouse-ui"}, "version": {"$ref": "#/$defs/pin"}}}}},

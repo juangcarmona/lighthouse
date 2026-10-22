@@ -30,6 +30,7 @@
     "src/guardrails.mjs",
     "assets",
     "README.md",
+    "src/profiles.mjs",
     "upgrades"
   ],
   "bin": {

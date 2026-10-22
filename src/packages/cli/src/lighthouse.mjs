@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
+import { composeProfiles, normalizeApplication, profileCompositionResult, readProfileCatalog } from './profiles.mjs';
 let sdlcCapabilities;
 let sdlcReconcile;
 let sdlcGithub;
@@ -51,7 +52,7 @@ const supportedProfiles = ['node-tooling', 'dotnet-backend', 'visual-theme'];
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
-const usage = 'Usage: lighthouse <init|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -108,6 +109,7 @@ function defaultManifest(product, profiles = []) {
     schemaVersion: 1,
     baseline: '0.1.0',
     product,
+    application: { shape: 'unknown', stacks: [] },
     profiles: [...profiles],
     integrations: { productShape: null, arcShape: null },
     packages,
@@ -458,7 +460,7 @@ function printUpgradePlan(plan) {
 function validate(manifest) {
   const problems = [];
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return ['manifest must be an object'];
-  const allowed = ['$schema', 'schemaVersion', 'baseline', 'product', 'profiles', 'integrations', 'packages', 'managed', 'repository'];
+  const allowed = ['$schema', 'schemaVersion', 'baseline', 'product', 'application', 'profiles', 'integrations', 'packages', 'managed', 'repository'];
   for (const key of Object.keys(manifest)) if (!allowed.includes(key)) problems.push(`unknown field ${key}`);
   for (const key of ['schemaVersion', 'baseline', 'product', 'profiles', 'integrations', 'managed']) {
     if (!(key in manifest)) problems.push(`missing ${key}`);
@@ -468,6 +470,15 @@ function validate(manifest) {
   if ('$schema' in manifest && typeof manifest.$schema !== 'string') problems.push('$schema must be a string');
   if (typeof manifest.product !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$/.test(manifest.product)) {
     problems.push('product must be a readable name of 1–64 characters');
+  }
+  if ('application' in manifest) {
+    const application = manifest.application;
+    if (!application || typeof application !== 'object' || Array.isArray(application)
+        || !['unknown', 'frontend', 'backend', 'full-stack', 'service', 'library', 'tooling', 'cli', 'worker', 'mobile'].includes(application.shape)
+        || !Array.isArray(application.stacks) || application.stacks.some((stack) => typeof stack !== 'string' || !stack)
+        || new Set(application.stacks).size !== application.stacks.length) {
+      problems.push('application must declare a supported shape and unique stack names');
+    }
   }
   const profiles = supportedProfiles;
   if (!Array.isArray(manifest.profiles) || manifest.profiles.some((p) => !profiles.includes(p))
@@ -923,6 +934,11 @@ async function verify(manifest, format = 'text') {
     branch: gitBranch(),
     uiTokens: manifest?.profiles?.includes('visual-theme') ? packageAsset('@juangcarmona/lighthouse-ui', 'tokens.css') : null,
   });
+  const profileComposition = composeProfiles(readProfileCatalog(), manifest);
+  report.profiles = profileComposition;
+  const profileResult = profileCompositionResult(profileComposition);
+  report.results.push(profileResult);
+  report.summary[profileResult.status] = (report.summary[profileResult.status] ?? 0) + 1;
   const adoption = Object.values(capabilityAdoption(await readUpgradeState()));
   for (const item of adoption) {
     if (item.status !== 'adopted' || !item.recordPath || await exists(resolve(root, item.recordPath))) continue;
@@ -954,6 +970,20 @@ async function verify(manifest, format = 'text') {
   }
   if (report.problems.length) throw new Error(report.problems.join('\n'));
   console.log('Lighthouse manifest, repository boundaries and managed projection are valid.');
+}
+
+async function profiles(manifest, format = 'text') {
+  const composition = composeProfiles(readProfileCatalog(), manifest);
+  if (format === 'json') {
+    console.log(JSON.stringify(composition, null, 2));
+    if (composition.status === 'failed') process.exitCode = 1;
+    return;
+  }
+  console.log(`Lighthouse profile composition: ${composition.status}`);
+  console.log(`  application ${composition.application.shape}${composition.application.stacks.length ? ` (${composition.application.stacks.join(', ')})` : ''}`);
+  for (const profile of composition.selected) console.log(`  ${profile.id}: ${profile.status}${profile.nextAction ? `; next: ${profile.nextAction}` : ''}`);
+  if (!composition.selected.length) console.log('  no profiles selected');
+  if (composition.status === 'failed') process.exitCode = 1;
 }
 
 function planHash(plan) {
@@ -1135,12 +1165,12 @@ for (let index = 0; index < commandArgs.length; index += 1) {
     continue;
   }
   if (arg === '--format') {
-    if (!['verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    if (!['profiles', 'verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
     else index += 1;
     continue;
   }
   if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
-    if (!['verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
+    if (!['profiles', 'verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
     continue;
   }
   if (arg === '--scope') {
@@ -1160,7 +1190,7 @@ for (let index = 0; index < commandArgs.length; index += 1) {
   if (['--id=', '--provider=', '--repo=', '--input=', '--plan-file=', '--authorize='].some((prefix) => arg.startsWith(prefix) && arg.length > prefix.length)) continue;
   invalidArgument = true;
 }
-if (!['init', 'authorities', 'reconcile', 'upgrade', 'capabilities', 'verify'].includes(command) || invalidArgument) {
+if (!['init', 'profiles', 'authorities', 'reconcile', 'upgrade', 'capabilities', 'verify'].includes(command) || invalidArgument) {
   console.error(usage);
   process.exit(2);
 }
@@ -1170,6 +1200,11 @@ try {
   else if (command === 'reconcile') await reconcile(args.slice(1));
   else if (command === 'upgrade') await upgrade(args.slice(1));
   else if (command === 'capabilities') await capabilities(args.slice(1));
+  else if (command === 'profiles') {
+    const manifest = await readManifest();
+    if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
+    await profiles(manifest, formatFromArgs(commandArgs));
+  }
   else {
     const manifest = await readManifest();
     if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
