@@ -34,4 +34,4 @@ description: Repository, runtime, ownership and profile constraints that shape L
 
 ## Current implementation constraint
 
-The current Lighthouse CLI implements only manifest validation, initialization of the managed projection and verification of that projection; the profile-aware initializer described in the draft product change remains target architecture.
+The current Lighthouse CLI implements manifest validation, initialization of the managed projection, package upgrade planning, capability discovery and explicit provider reconciliation; the profile-aware initializer described in the draft product change remains target architecture.

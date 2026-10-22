@@ -14,7 +14,7 @@ import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
 import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
 import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
-import { declarationFromCatalog, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
+import { capabilityAdapter, declarationFromCatalog, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
 
 const root = process.cwd();
 
@@ -83,10 +83,33 @@ test('the capability catalog is versioned, validates independently and projects 
   const catalog = await readCapabilityCatalog();
   assert.deepEqual(validateCapabilityCatalog(catalog), []);
   assert.equal(catalog.package.name, '@juangcarmona/lighthouse-sdlc');
+  assert.equal(catalog.capabilities[0].adapter, 'github-labels');
+  assert.equal(capabilityAdapter(catalog.capabilities[0]), 'github-labels');
   const declaration = declarationFromCatalog(catalog, 'labels');
   assert.equal(declaration.capabilities[0].provider, 'github');
+  assert.equal(declaration.capabilities[0].adapter, 'github-labels');
   assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'size-m').color, '80C2FF');
   assert.deepEqual(declaration.capabilities[0].configuration.transitions, [{ from: 'triage', to: 'refine' }]);
+});
+
+test('the catalog fails closed when a future capability has no registered adapter', async () => {
+  const catalog = await readCapabilityCatalog();
+  const future = {
+    ...catalog,
+    capabilities: [{
+      id: 'hooks',
+      provider: 'git',
+      adapter: 'git-hooks',
+      version: '1',
+      title: 'Future hooks',
+      selection: 'opt-in',
+      configuration: { hooks: [] },
+      operations: { allowed: ['create', 'preserve'], blocked: ['modify', 'rename', 'remove', 'ambiguous'] },
+    }],
+  };
+  const errors = validateCapabilityCatalog(future);
+  assert.ok(errors.some((error) => error.code === 'catalog.adapter-unsupported'));
+  assert.equal(capabilityAdapter(future.capabilities[0]), null);
 });
 
 function triageInput(overrides = {}) {

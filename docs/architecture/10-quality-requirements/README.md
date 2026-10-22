@@ -16,5 +16,6 @@ description: Current measurements and target quality outcomes for profile-aware 
 | Package isolation | Package `files` and export declarations | Each profile distributes only its owned templates, guidance and checks |
 | Documentation hygiene | Markdownlint and local link checks | ArcShape keeps architecture canonical and ProductShape keeps product intent canonical |
 | Adoption safety | Creator tests preserve occupied targets | `init` reports created, preserved, blocked and unsupported paths |
+| Capability upgrade safety | Catalog and CLI tests cover pending adoption, explicit authorization and evidence | A packaged-consumer fixture covers conflict, stale plan, partial provider failure, resume, idempotency and later drift; CI runs it on package changes |
 
 The target rows describe the draft product architecture and remain unimplemented until the initializer and profiles provide the corresponding evidence.

@@ -12,6 +12,14 @@ function issue(code, message, field) {
   return field ? { code, message, field } : { code, message };
 }
 
+const capabilityAdapters = Object.freeze({
+  'labels/github': 'github-labels',
+});
+
+export function capabilityAdapter(capability) {
+  return capabilityAdapters[`${capability?.id ?? ''}/${capability?.provider ?? ''}`] ?? null;
+}
+
 export async function readCapabilityCatalog(path = resolve(packageRoot, 'capabilities.json')) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
@@ -33,8 +41,20 @@ export function validateCapabilityCatalog(catalog) {
     ids.add(capability.id);
     if (typeof capability.provider !== 'string' || !capability.provider) errors.push(issue('catalog.provider', `catalog capability ${capability.id} needs a provider`, 'capabilities'));
     if (typeof capability.version !== 'string' || !capability.version) errors.push(issue('catalog.version', `catalog capability ${capability.id} needs a version`, 'capabilities'));
-    if (!isRecord(capability.configuration) || !Array.isArray(capability.configuration.labels)) errors.push(issue('catalog.configuration', `catalog capability ${capability.id} needs configuration.labels`, 'capabilities'));
+    if (typeof capability.adapter !== 'string' || !capability.adapter) errors.push(issue('catalog.adapter', `catalog capability ${capability.id} needs an adapter`, 'capabilities'));
+    else if (capability.adapter !== capabilityAdapter(capability)) errors.push(issue('catalog.adapter-unsupported', `catalog capability ${capability.id} does not have a registered ${capability.adapter} adapter`, 'capabilities'));
+    if (!isRecord(capability.configuration)) errors.push(issue('catalog.configuration', `catalog capability ${capability.id} needs a configuration object`, 'capabilities'));
+    if (capability.adapter === 'github-labels' && (!Array.isArray(capability.configuration?.labels) || !Array.isArray(capability.configuration?.transitions))) {
+      errors.push(issue('catalog.configuration', `catalog capability ${capability.id} needs labels and transitions for the github-labels adapter`, 'capabilities'));
+    }
     if (!isRecord(capability.operations) || !Array.isArray(capability.operations.allowed) || !Array.isArray(capability.operations.blocked)) errors.push(issue('catalog.operations', `catalog capability ${capability.id} needs operation policy`, 'capabilities'));
+    else {
+      const allowed = new Set(capability.operations.allowed);
+      const blocked = new Set(capability.operations.blocked);
+      const operationKinds = new Set(['create', 'preserve', 'modify', 'rename', 'remove', 'ambiguous', 'unsupported']);
+      for (const kind of [...allowed, ...blocked]) if (!operationKinds.has(kind)) errors.push(issue('catalog.operation-kind', `catalog capability ${capability.id} uses unknown operation ${kind}`, 'capabilities'));
+      for (const kind of allowed) if (blocked.has(kind)) errors.push(issue('catalog.operation-overlap', `catalog capability ${capability.id} marks ${kind} as both allowed and blocked`, 'capabilities'));
+    }
   }
   return errors;
 }
@@ -52,6 +72,7 @@ export function declarationFromCatalog(catalog, id = 'labels') {
       id: capability.id,
       provider: capability.provider,
       version: capability.version,
+      adapter: capability.adapter,
       catalogVersion: catalog.package.version,
       configuration: capability.configuration,
     }],

@@ -17,6 +17,7 @@ description: Static decomposition of the current Lighthouse workspace and target
 | Gallery | `src/gallery/` | Exercise the UI package in a browser |
 | Public site | `src/public-site/` and `scripts/build-public-site.mjs` | Present the current Lighthouse story and publish ProductShape and ArcShape snapshots |
 | Repository checks | `src/tests/` and `scripts/` | Verify package, link, adoption and site contracts |
+| Capability adoption boundary | `src/packages/sdlc/src/capabilities.mjs`, `src/packages/sdlc/src/reconcile.mjs` and CLI capability commands | Validate the package catalog, plan provider changes, require authorization and record evidence |
 | Product and architecture sources | `docs/product/` and `docs/architecture/` | Keep ProductShape and ArcShape sources reviewable |
 
 ```mermaid
@@ -24,6 +25,11 @@ flowchart LR
     accTitle: Current Lighthouse package and public-site surfaces
     cli[CLI package] --> verify[Repository verification]
     sdlc[SDLC package] --> verify
+    sdlc --> catalog[Versioned capability catalog]
+    cli --> adapter[Explicit capability adapter]
+    catalog --> adapter
+    adapter --> provider[Provider-owned state]
+    adapter --> evidence[Adoption evidence]
     ui[UI package] --> verify
     product[ProductShape source] --> site[Public-site build]
     architecture[ArcShape source] --> site

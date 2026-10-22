@@ -6,6 +6,7 @@
     {
       "id": "labels",
       "provider": "github",
+      "adapter": "github-labels",
       "version": "1",
       "title": "Lighthouse tracker labels",
       "selection": "selected-by-default",

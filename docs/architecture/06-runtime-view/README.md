@@ -49,7 +49,34 @@ sequenceDiagram
     Checks-->>Adopter: Created, preserved and blocked paths
 ```
 
-The current CLI executes the baseline and SDLC projection; profile selection, provider initialization and lifecycle execution remain separate integrations.
+The current CLI executes the baseline and SDLC projection, discovers the installed capability catalog during upgrades and runs provider adapters only through explicit plan authorization; profile selection and lifecycle execution remain separate integrations.
+
+## Adopt a published capability
+
+```mermaid
+sequenceDiagram
+    accTitle: Capability discovery and explicit provider adoption
+    participant Maintainer
+    participant CLI as Lighthouse CLI
+    participant Package as Installed SDLC package
+    participant Provider as Provider API
+    participant Evidence as Local evidence
+    Maintainer->>CLI: lighthouse upgrade --format json
+    CLI->>Package: Read and validate capabilities.json
+    Package-->>CLI: Capability, adapter and version
+    CLI-->>Maintainer: Dry-run update and pending adoption
+    Maintainer->>CLI: capabilities plan
+    CLI->>Provider: Read current state only
+    Provider-->>CLI: Current labels or provider state
+    CLI-->>Maintainer: Deterministic plan and hash
+    Maintainer->>CLI: capabilities apply --authorize hash
+    CLI->>Provider: Re-read and apply allowed operations
+    Provider-->>CLI: Updated provider state
+    CLI->>Evidence: Verify and write adoption record
+    Evidence-->>Maintainer: Adopted, blocked or resumable result
+```
+
+The package owns the catalog and adapter contract, the CLI owns the local declaration and evidence, and the provider remains the authority for remote state. `npm install`, package loading and upgrade discovery do not write to the provider.
 
 ## Target delivery flow
 
