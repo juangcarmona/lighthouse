@@ -2,7 +2,7 @@
 id: CHG-GUARDRAIL-CATALOG-001
 type: product-change
 title: Make adopted guardrails discoverable and verifiable
-status: proposed
+status: applied
 base-revision: '7813c48'
 operations:
   add: []
