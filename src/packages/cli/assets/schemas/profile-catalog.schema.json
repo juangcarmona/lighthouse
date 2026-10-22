@@ -4,59 +4,325 @@
   "title": "Lighthouse profile catalog",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schemaVersion", "profiles"],
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "profiles"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "schemaVersion": { "const": 1 },
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
     "profiles": {
       "type": "array",
-      "items": { "$ref": "#/$defs/profile" }
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
     }
   },
   "$defs": {
     "profile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "owner", "purpose", "appliesTo", "surfaces", "verification"],
+      "required": [
+        "id",
+        "owner",
+        "purpose",
+        "appliesTo",
+        "surfaces",
+        "prerequisites",
+        "dependencies",
+        "incompatibleWith",
+        "libraries",
+        "structure",
+        "commands",
+        "guardrails",
+        "failureConsequence",
+        "repairHints",
+        "exceptions",
+        "combinations",
+        "consumerFixture",
+        "upgradeStrategy",
+        "verification"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "owner": { "type": "string", "minLength": 1 },
-        "purpose": { "type": "string", "minLength": 1 },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
         "appliesTo": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["shapes", "stacks"],
+          "required": [
+            "shapes",
+            "stacks"
+          ],
           "properties": {
-            "shapes": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
-            "stacks": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+            "shapes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "stacks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
           }
         },
-        "surfaces": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
         "verification": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["layers"],
+          "required": [
+            "layers"
+          ],
           "properties": {
             "layers": {
               "type": "array",
-              "items": { "$ref": "#/$defs/layer" },
+              "items": {
+                "$ref": "#/$defs/layer"
+              },
               "minItems": 1,
               "uniqueItems": true
             }
           }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profileId"
+          },
+          "uniqueItems": true
+        },
+        "incompatibleWith": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profileId"
+          },
+          "uniqueItems": true
+        },
+        "libraries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "structure": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "guardrails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/guardrail"
+          },
+          "uniqueItems": true
+        },
+        "failureConsequence": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repairHints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "combinations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/combination"
+          },
+          "uniqueItems": true
+        },
+        "consumerFixture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "upgradeStrategy": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
     "layer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "level", "kind", "verification"],
+      "required": [
+        "id",
+        "level",
+        "kind",
+        "verification"
+      ],
       "properties": {
-        "id": { "enum": ["static", "unit", "architecture", "integration", "functional", "browser-e2e", "operational"] },
-        "level": { "enum": ["required", "recommended", "optional"] },
-        "kind": { "enum": ["hard", "soft"] },
-        "verification": { "enum": ["deterministic", "semantic", "human"] },
-        "command": { "type": ["string", "null"] }
+        "id": {
+          "enum": [
+            "static",
+            "unit",
+            "architecture",
+            "integration",
+            "functional",
+            "browser-e2e",
+            "operational"
+          ]
+        },
+        "level": {
+          "enum": [
+            "required",
+            "recommended",
+            "optional"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "deterministic",
+            "semantic",
+            "human"
+          ]
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "profileId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "guardrail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "level",
+        "kind",
+        "verification",
+        "command",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "enum": [
+            "required",
+            "recommended",
+            "optional"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "hard",
+            "soft"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "deterministic",
+            "semantic",
+            "human"
+          ]
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "combination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "with",
+        "purpose"
+      ],
+      "properties": {
+        "with": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profileId"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     }
   }
