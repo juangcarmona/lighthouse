@@ -124,14 +124,22 @@ function capabilityAdoption(previous = null) {
   if (!catalog) return {};
   return Object.fromEntries(catalog.capabilities.map((capability) => {
     const current = previous?.adoption?.[capability.id];
-    const status = current?.catalogVersion === catalog.package.version ? current.status : 'pending-adoption';
+    const status = current?.catalogVersion === catalog.package.version
+      ? current.status
+      : sdlcCapabilities.initialAdoptionStatus?.(capability) ?? 'pending-adoption';
+    const nextAction = status === 'available'
+      ? `lighthouse capabilities select --id ${capability.id} --provider ${capability.provider}`
+      : ['adopted', 'declined'].includes(status)
+        ? null
+        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${capability.id}.plan.json`;
     return [capability.id, {
       id: capability.id,
       status,
+      selection: capability.selection,
       provider: capability.provider,
       version: capability.version,
       catalogVersion: catalog.package.version,
-      nextAction: ['adopted', 'declined'].includes(status) ? null : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${capability.id}.plan.json`,
+      nextAction,
       ...(current?.recordPath ? { recordPath: current.recordPath } : {}),
     }];
   }));
@@ -370,7 +378,7 @@ async function planUpgrade(manifest, scopes) {
     verification: ['lighthouse verify'],
     recovery: 'Restore the pre-update commit or rerun lighthouse upgrade after resolving the reported ownership conflict.',
     adoption: {
-      status: Object.values(capabilityAdoption(state)).some((item) => !['adopted', 'declined'].includes(item.status)) ? 'pending' : 'complete',
+      status: Object.values(capabilityAdoption(state)).some((item) => !['adopted', 'declined', 'available'].includes(item.status)) ? 'pending' : 'complete',
       capabilities: capabilityAdoption(state),
       externalWrites: 'none',
     },
@@ -849,15 +857,17 @@ async function verify(manifest, format = 'text') {
     item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${item.id}.plan.json`;
   }
   if (adoption.length) {
-    const pending = adoption.filter((item) => !['adopted', 'declined'].includes(item.status));
+    const pending = adoption.filter((item) => !['adopted', 'declined', 'available'].includes(item.status));
+    const available = adoption.some((item) => item.status === 'available');
+    const declined = adoption.some((item) => item.status === 'declined');
     report.results.push({
       id: 'foundation.capability-adoption',
       owner: '@juangcarmona/lighthouse-sdlc',
       level: 'recommended',
       kind: 'hard',
       verification: 'deterministic',
-      status: pending.length ? 'unconfigured' : adoption.some((item) => item.status === 'declined') ? 'not-applicable' : 'passed',
-      adoptionStatus: pending.length ? pending[0].status : adoption.some((item) => item.status === 'declined') ? 'declined' : 'adopted',
+      status: pending.length ? 'unconfigured' : available || declined ? 'not-applicable' : 'passed',
+      adoptionStatus: pending.length ? pending[0].status : available ? 'available' : declined ? 'declined' : 'adopted',
       evidence: adoption.map((item) => ({ capability: item.id, catalogVersion: item.catalogVersion })),
       problems: pending.map((item) => `${item.id} is ${item.status}; run ${item.nextAction}`),
       nextAction: pending[0]?.nextAction ?? null,
@@ -939,6 +949,7 @@ async function capabilities(args) {
     state.adoption[id] = {
       id,
       status,
+      selection: capability.selection,
       provider: capability.provider,
       version: capability.version,
       catalogVersion: catalog.package.version,
@@ -964,7 +975,7 @@ async function capabilities(args) {
     const plan = {
       schemaVersion: 1,
       status: reconciliation.status,
-      capability: { id: capability.id, provider: capability.provider, version: capability.version },
+      capability: { id: capability.id, provider: capability.provider, selection: capability.selection, version: capability.version },
       catalogVersion: catalog.package.version,
       operationPolicy: capability.operations,
       repository: { provider, repo },
@@ -1014,7 +1025,7 @@ async function capabilities(args) {
     const state = await readUpgradeState();
     if (state) {
       state.adoption = state.adoption ?? {};
-      state.adoption[id] = { id, status: 'adopted', provider: plan.capability.provider, version: plan.capability.version, catalogVersion: plan.catalogVersion, nextAction: null, recordPath: '.lighthouse/reconciliation/labels.json' };
+      state.adoption[id] = { id, status: 'adopted', selection: plan.capability.selection, provider: plan.capability.provider, version: plan.capability.version, catalogVersion: plan.catalogVersion, nextAction: null, recordPath: '.lighthouse/reconciliation/labels.json' };
       await writeTextAtomically(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`);
     }
     const result = { ...plan, status: 'adopted', evidencePath, reconciliation: final, applied: true };

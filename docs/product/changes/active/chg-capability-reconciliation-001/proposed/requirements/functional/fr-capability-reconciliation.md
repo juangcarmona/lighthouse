@@ -9,7 +9,7 @@ verification:
   - scenario: "A repository selects the label capability and receives a deterministic plan that classifies create, preserve, modify, rename, remove, conflict and unsupported operations without writing to GitHub."
   - scenario: "An explicit provider apply creates only missing labels, preserves existing names, colors and descriptions, rereads state before writing, verifies the result and produces an equivalent no-op plan when run again."
   - scenario: "An ambiguous equivalence, ownership conflict, destructive operation, stale plan or unverifiable provider state stops the plan and reports the decision required without further mutation."
-  - scenario: "`lighthouse verify` reports an installed capability that is unselected, pending, conflicted, unavailable or drifted with the exact command that continues the adoption."
+  - scenario: "`lighthouse verify` reports a selected-by-default capability that remains unselected, pending, conflicted, unavailable or drifted with the exact command that continues the adoption, while an opt-in capability remains available until selected."
 uses-terms: [TERM-FOUNDATION-CAPABILITY, TERM-MANAGED-PROJECTION, TERM-UPGRADE-PLAN, TERM-LABEL-STATE]
 ---
 
@@ -25,7 +25,7 @@ The first supported adapter MUST reconcile the configured GitHub label vocabular
 
 Package installation and local Lighthouse projection updates MUST NOT call a remote provider. External application MUST be a separate explicit operation that consumes a recorded plan and refuses a stale or changed observed hash.
 
-`lighthouse verify` MUST inspect local capability declarations and evidence and report an installed but unselected, pending, conflicted, unavailable or drifted capability as an adoption gap with the exact next command. It MUST preserve the distinction between a declined optional capability and an incomplete selected capability.
+`lighthouse verify` MUST inspect local capability declarations and evidence and report a selected capability that is pending, conflicted, unavailable or drifted as an adoption gap with the exact next command. An opt-in capability that has not been selected remains available and does not block verification. The verifier MUST preserve the distinction between a declined optional capability and an incomplete selected capability.
 
 Agent assistance MAY propose an equivalence or interpretation, but the CLI MUST validate the proposal and perform the concrete provider mutation deterministically.
 

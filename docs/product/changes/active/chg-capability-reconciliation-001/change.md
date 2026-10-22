@@ -39,6 +39,7 @@ Capability declarations, package updates, profile adoption, integration boundari
 ## Decisions
 
 - The label capability is selected by default for a new adoption and remains pending until the adopter applies or declines it explicitly.
+- Catalog availability is not adoption obligation: `selected-by-default` capabilities require an explicit select or decline decision, while `opt-in` capabilities remain available and do not block `upgrade` or `verify` until selected.
 
 ## Open Questions
 

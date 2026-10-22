@@ -20,6 +20,10 @@ export function capabilityAdapter(capability) {
   return capabilityAdapters[`${capability?.id ?? ''}/${capability?.provider ?? ''}`] ?? null;
 }
 
+export function initialAdoptionStatus(capability) {
+  return capability?.selection === 'opt-in' ? 'available' : 'pending-adoption';
+}
+
 export async function readCapabilityCatalog(path = resolve(packageRoot, 'capabilities.json')) {
   return JSON.parse(await readFile(path, 'utf8'));
 }

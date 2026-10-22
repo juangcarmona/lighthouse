@@ -14,7 +14,7 @@ import { buildStackedPlan } from '../packages/sdlc/src/stacked.mjs';
 import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
 import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
-import { capabilityAdapter, declarationFromCatalog, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
+import { capabilityAdapter, declarationFromCatalog, initialAdoptionStatus, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
 
 const root = process.cwd();
 
@@ -85,6 +85,7 @@ test('the capability catalog is versioned, validates independently and projects 
   assert.equal(catalog.package.name, '@juangcarmona/lighthouse-sdlc');
   assert.equal(catalog.capabilities[0].adapter, 'github-labels');
   assert.equal(capabilityAdapter(catalog.capabilities[0]), 'github-labels');
+  assert.equal(initialAdoptionStatus(catalog.capabilities[0]), 'pending-adoption');
   const declaration = declarationFromCatalog(catalog, 'labels');
   assert.equal(declaration.capabilities[0].provider, 'github');
   assert.equal(declaration.capabilities[0].adapter, 'github-labels');
@@ -110,6 +111,7 @@ test('the catalog fails closed when a future capability has no registered adapte
   const errors = validateCapabilityCatalog(future);
   assert.ok(errors.some((error) => error.code === 'catalog.adapter-unsupported'));
   assert.equal(capabilityAdapter(future.capabilities[0]), null);
+  assert.equal(initialAdoptionStatus({ selection: 'opt-in' }), 'available');
 });
 
 function triageInput(overrides = {}) {

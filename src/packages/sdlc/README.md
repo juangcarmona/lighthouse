@@ -24,6 +24,8 @@ The catalog is descriptive until a consumer creates an explicit plan. `lighthous
 
 Every catalog entry must name a registered adapter. Package verification fails when an entry has no adapter, and a new adapter is complete only when its plan, apply, verification, evidence and packaged-consumer fixture are covered by CI.
 
+`selected-by-default` capabilities appear as pending until the adopter selects or declines them. `opt-in` capabilities appear as available and do not make `upgrade` or `verify` fail until the adopter selects them.
+
 Evidence is explicit: an absent field appears in `missingEvidence`, a check that cannot run appears in `unavailableChecks`, and a judgement awaiting review appears in `pendingReview`. Only `provided` evidence can make a report ready to apply.
 
 The package is a source of lifecycle instructions and contracts; an adopter's host adapter decides where provider-specific projections are installed.

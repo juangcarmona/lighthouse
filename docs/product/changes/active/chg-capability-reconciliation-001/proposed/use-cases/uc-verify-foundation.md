@@ -28,7 +28,7 @@ The project contains a Lighthouse manifest or an adoption route that defines the
 2. It resolves the guardrails and installed capability catalog that apply to that baseline and profile selection.
 3. It reads capability declarations and reconciliation evidence without writing to a provider.
 4. It runs the available deterministic checks and records the declared method for semantic or human checks.
-5. It reports `passed`, `failed`, `drift`, `unavailable`, `unconfigured`, `pending-review`, `pending-adoption` and `not-applicable` checks separately.
+5. It reports `passed`, `failed`, `drift`, `unavailable`, `unconfigured`, `pending-review`, `pending-adoption`, `available` and `not-applicable` checks separately.
 6. The adopter uses the report to repair, complete the pending adoption or review, accept an exception or escalate a decision.
 
 ## Alternative Flows

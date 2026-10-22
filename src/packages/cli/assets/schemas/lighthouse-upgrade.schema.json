@@ -24,7 +24,8 @@
         "required": ["id", "status", "provider", "version", "catalogVersion", "nextAction"],
         "properties": {
           "id": {"type": "string"},
-          "status": {"enum": ["pending-adoption", "adopted", "declined", "drifted", "blocked", "failed", "unavailable"]},
+          "status": {"enum": ["available", "pending-adoption", "adopted", "declined", "drifted", "blocked", "failed", "unavailable"]},
+          "selection": {"enum": ["selected-by-default", "opt-in"]},
           "provider": {"type": "string"},
           "version": {"type": "string"},
           "catalogVersion": {"type": "string"},
