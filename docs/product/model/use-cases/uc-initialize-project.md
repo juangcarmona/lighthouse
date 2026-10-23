@@ -16,7 +16,7 @@ Start a project with a coherent Lighthouse baseline, explicit profiles and a rev
 
 ## Trigger
 
-An adopter creates a new project or asks Lighthouse to prepare an existing target.
+An adopter creates a new project, asks Lighthouse to prepare an existing target, invokes the agent-facing `/lh:init` or `/lighthouse:init` command, or runs the `lighthouse init` CLI route.
 
 ## Preconditions
 
@@ -27,7 +27,7 @@ The target is new or can be assessed without overwriting project-owned content, 
 1. The adopter identifies the application shape, selected stacks and whether Lighthouse owns a backend, a service or only the frontend, either directly or through the initialization skill.
 2. When the request is semantic, the agent optionally records a reference project, asks the unanswered questions needed to resolve the selection and writes a versioned initialization plan. A missing reference is valid and does not block the route.
 3. Lighthouse validates the plan, profiles and resolved questions, then plans the baseline, profiles, repository conventions and public-site route. Greenfield initialization enables the public site by default; brownfield initialization reports the route and any conflicts before writing.
-4. Lighthouse installs the selected harness, SDLC and UI package assets and records their versions and managed paths.
+4. Lighthouse installs the selected harness, SDLC and UI package assets, records their versions and managed paths, and exposes the package-owned command alias contracts.
 5. Lighthouse writes the starter structure, manifest, profile guidance, agent-readable examples, visual design guidance and supported hard verifiers.
 6. Lighthouse initializes or reconciles the ProductShape and ArcShape authority integrations through their owned routes.
 7. Lighthouse installs or verifies the selected local guardrails and their CI equivalents, including Conventional Commits and the configured branch convention when GitHub delivery is selected.
@@ -45,4 +45,4 @@ An unsupported stack, conflicting file, failed prerequisite, invalid authority, 
 
 ## Postconditions
 
-The project has a recorded foundation selection, predictable repository boundaries, visible ownership for generated content and enough evidence to continue with its own product and architecture decisions.
+The project has a recorded foundation selection, predictable repository boundaries, visible ownership for generated content, discoverable canonical and short agent commands, and enough evidence to continue with its own product and architecture decisions.
