@@ -17,7 +17,7 @@
     "assets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["routes", "gates", "stages", "controlPlaneSchema", "triageSchema", "stageResultSchema", "stateSchema", "decompositionSchema", "capabilitiesSchema"],
+      "required": ["routes", "gates", "stages", "controlPlaneSchema", "triageSchema", "stageResultSchema", "stateSchema", "decompositionSchema", "capabilitiesSchema", "evidenceRecordSchema", "evidenceIndexSchema"],
       "properties": {
         "routes": { "type": "string" },
         "gates": { "type": "string" },
@@ -27,7 +27,9 @@
         "stageResultSchema": { "type": "string" },
         "stateSchema": { "type": "string" },
         "decompositionSchema": { "type": "string" },
-        "capabilitiesSchema": { "type": "string" }
+        "capabilitiesSchema": { "type": "string" },
+        "evidenceRecordSchema": { "type": "string" },
+        "evidenceIndexSchema": { "type": "string" }
       }
     }
   },

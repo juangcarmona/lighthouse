@@ -40,6 +40,7 @@ The `.lighthouse/` projection records configuration and evidence for the selecte
 | Tracker and forge projections | Complete baseline | Keep GitHub issue, label, dependency and pull-request projections read-only by default with explicit mutations. |
 | Profiles and stack checks | Web, PWA and native mobile profiles complete | Keep React web, web BFF, PWA, Expo and .NET MAUI contracts explicit, mutually compatible and backed by deterministic consumer fixtures. Add another profile only for a real stack with an owned contract and verification path. |
 | Distribution and adopter proof | First proof complete | Keep clean-consumer and package checks green and repeat the upgrade proof for future capabilities. |
+| Evidence contract and coverage | First vertical slice in progress | Keep producer payloads compatible, relate evidence to ProductShape and ArcShape subjects and defer quality evaluation to a separate product until a second consumer justifies it. |
 | Continuous improvement | Later | Measure adoption, failures and maintenance cost before adding more standards or automation. |
 
 ## Immediate implementation slice
@@ -47,6 +48,8 @@ The `.lighthouse/` projection records configuration and evidence for the selecte
 The complete SDLC delivery plan is tracked in [the SDLC delivery plan](lighthouse-sdlc-delivery.md). Each slice adds a deterministic contract or projection to the existing packages, proves it with fixtures and keeps runtime ownership with the adopter's agent host.
 
 Do not create `@juangcarmona/lighthouse-evidence` yet. Keep evidence contracts in the existing packages until a second consumer proves that independent versioning and installation are useful.
+
+The active evidence change adds the common record and coverage projection inside the SDLC package. It deliberately does not create QuaShape, score quality or make incomplete evidence a delivery blocker.
 
 ## References
 
@@ -56,3 +59,4 @@ Do not create `@juangcarmona/lighthouse-evidence` yet. Keep evidence contracts i
 - [Lighthouse and adopter ownership](../architecture/09-architecture-decisions/0001-lighthouse-and-factory-ownership.md)
 - [Distribution and versioning](../architecture/09-architecture-decisions/0002-distribution.md)
 - [Source packages and adopter projections](../architecture/09-architecture-decisions/0005-source-packages-and-adopter-projections.md)
+- [Evidence contract product change](../product/changes/active/chg-lh-evidence-contract-001/change.md)

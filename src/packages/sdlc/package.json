@@ -51,6 +51,7 @@
     "./stacked": "./src/stacked.mjs",
     "./workflow": "./src/workflow.mjs",
     "./browser-e2e": "./src/browser-e2e.mjs",
+    "./evidence": "./src/evidence.mjs",
     "./contract.json": "./contract.json",
     "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
     "./schemas/triage.schema.json": "./schemas/triage.schema.json",
@@ -61,6 +62,8 @@
     "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json",
     "./schemas/capability-catalog.schema.json": "./schemas/capability-catalog.schema.json",
     "./schemas/browser-e2e.schema.json": "./schemas/browser-e2e.schema.json",
+    "./schemas/evidence-record.schema.json": "./schemas/evidence-record.schema.json",
+    "./schemas/evidence-index.schema.json": "./schemas/evidence-index.schema.json",
     "./capabilities.json": "./capabilities.json",
     "./command-aliases.json": "./command-aliases.json",
     "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json"

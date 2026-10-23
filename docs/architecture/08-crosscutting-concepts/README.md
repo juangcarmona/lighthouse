@@ -52,6 +52,12 @@ Init, reconcile and upgrade refuse to overwrite an occupied path. Capability app
 
 The verifier uses explicit statuses for deterministic, semantic and human checks. A pending review or unavailable checker is visible and does not satisfy a required guardrail.
 
+The SDLC package also exposes a neutral evidence record contract. A record carries a run, producer, scope, status, payload, optional subject, authority references and artifact hashes. Stage results and browser journeys are adapted without replacing their source contracts.
+
+An evidence index is a deterministic projection over records. It can relate ProductShape requirements and ArcShape decisions to observed, verified, incomplete, conflicting or missing evidence, but it does not mutate either authority or assign a quality score. Lighthouse reports an incomplete index as a recommended finding by default; a future profile may choose a stricter policy.
+
+Evidence records and indexes are adopter-owned files under `.lighthouse/evidence/`. Large reports remain owned by their producer and are referenced by relative path and hash. This keeps the contract portable and leaves future quality evaluation outside Lighthouse.
+
 <!-- pdac:cite id="UC-VERIFY-FOUNDATION" digest="sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11" -->
 
 ## Visual contract
