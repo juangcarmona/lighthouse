@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { access, chmod, cp, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -189,6 +189,63 @@ test('semantic init does not require a declared reference to exist', async () =>
     const applied = run(dir, 'init', ['--plan-file', planPath, '--apply']);
     assert.equal(applied.status, 0, applied.stderr);
     assert.equal(JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8')).product, 'Reference Optional');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('existing-authority adoption is dry-run by default and does not initialize missing providers', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-authority-adoption-absent-'));
+  try {
+    assert.equal(run(dir, 'init', ['--name', 'Existing']).status, 0);
+    const before = await readFile(join(dir, 'lighthouse.json'), 'utf8');
+    const plan = run(dir, 'authorities', ['--adopt-existing', '--format', 'json']);
+    assert.equal(plan.status, 1);
+    const report = JSON.parse(plan.stdout);
+    assert.equal(report.status, 'blocked');
+    assert.deepEqual(report.authorities.map((authority) => authority.status), ['absent', 'absent']);
+    assert.equal(await readFile(join(dir, 'lighthouse.json'), 'utf8'), before);
+    const applied = run(dir, 'authorities', ['--adopt-existing', '--apply']);
+    assert.equal(applied.status, 1);
+    assert.equal(await readFile(join(dir, 'lighthouse.json'), 'utf8'), before);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('existing-authority adoption validates providers, records only Lighthouse files and is idempotent', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-authority-adoption-valid-'));
+  try {
+    await mkdir(join(dir, 'docs'), { recursive: true });
+    await cp(join(process.cwd(), 'docs/product'), join(dir, 'docs/product'), { recursive: true });
+    await cp(join(process.cwd(), 'docs/architecture'), join(dir, 'docs/architecture'), { recursive: true });
+    await cp(join(process.cwd(), 'docs/releasing.md'), join(dir, 'docs/releasing.md'));
+    await cp(join(process.cwd(), '.product'), join(dir, '.product'), { recursive: true });
+    await mkdir(join(dir, 'src/packages/cli'), { recursive: true });
+    await mkdir(join(dir, 'src/packages/ui'), { recursive: true });
+    await cp(join(process.cwd(), 'src/packages/cli/README.md'), join(dir, 'src/packages/cli/README.md'));
+    await cp(join(process.cwd(), 'src/packages/ui/README.md'), join(dir, 'src/packages/ui/README.md'));
+    await cp(join(process.cwd(), 'src/packages/ui/DESIGN.md'), join(dir, 'src/packages/ui/DESIGN.md'));
+    await symlink(join(process.cwd(), 'node_modules'), join(dir, 'node_modules'), 'dir');
+    assert.equal(run(dir, 'init', ['--name', 'Existing']).status, 0);
+    const providerFiles = [
+      'docs/product/model/requirements/functional/fr-verify-foundation.md',
+      'docs/architecture/README.md',
+    ];
+    const before = await Promise.all(providerFiles.map(async (path) => [path, await readFile(join(dir, path), 'utf8')]));
+    const preview = run(dir, 'authorities', ['--adopt-existing', '--format', 'json']);
+    assert.equal(preview.status, 0, `${preview.stdout}\n${preview.stderr}`);
+    const plan = JSON.parse(preview.stdout);
+    assert.equal(plan.status, 'ready');
+    assert.deepEqual(plan.authorities.map((authority) => authority.status), ['ready', 'ready']);
+    const manifestBeforeApply = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
+    assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
+    const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.deepEqual(manifest.integrations, { productShape: '0.22.0', arcShape: '0.1.4' });
+    for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
+    const verified = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
+    assert.equal(JSON.parse(verified.stdout).results.find((result) => result.id === 'foundation.authorities').status, 'passed');
+    const repeated = run(dir, 'authorities', ['--adopt-existing', '--apply']);
+    assert.equal(repeated.status, 0, `${repeated.stdout}\n${repeated.stderr}`);
+    assert.match(repeated.stdout, /Recorded and verified/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

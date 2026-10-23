@@ -18,7 +18,7 @@ Use `lighthouse upgrade` to preview a versioned foundation update. The command i
 
 The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes, `DESIGN.md` and its agent skill. Selecting `visual-theme` projects the guide and skill into the adopter and enables its deterministic guardrail. Stack profiles own their source templates, guidance and checks; the .NET creator is the packaged entry point for the selected backend profile.
 
-ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration.
+ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration. In an existing repository, run `lighthouse authorities --adopt-existing` to validate the current ProductShape and ArcShape surfaces without running either initializer; review the dry-run plan and add `--apply` only to record both exact versions in Lighthouse-owned configuration.
 
 Use `lighthouse authorities` to prepare the two baseline authorities through their own CLIs. The command previews both plans by default; `--apply` runs ProductShape's full model initialization and ArcShape's architecture initialization without installing agent capabilities. Provider-owned files remain owned by the provider, and Lighthouse records the exact adopted versions in `lighthouse.json` only after both applications succeed.
 
@@ -39,12 +39,13 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 1. Inventory the current source layout, tools, managed files and CI before editing.
 2. Map existing files to the selected Lighthouse contracts and identify collisions.
 3. Adopt the manifest and verifier first; the initializer reports conflicts and preserves product-owned guidance and generated outputs.
-4. Add profiles one at a time and measure their checks before making a workflow status required.
-5. Record each exception in the project-owned documentation and remove it when the product is ready.
+4. If ProductShape or ArcShape already exists, run `lighthouse authorities --adopt-existing` and repair any provider validation result before applying it.
+5. Add profiles one at a time and measure their checks before making a workflow status required.
+6. Record each exception in the project-owned documentation and remove it when the product is ready.
 
 ## Current command scope
 
-The command supports `init`, `aliases`, `create-dotnet`, `authorities`, `reconcile`, `upgrade`, `capabilities` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. `lighthouse aliases --format json` exposes the installed `/lh:*` aliases and their canonical `/lighthouse:*` commands. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `aliases`, `create-dotnet`, `authorities`, `reconcile`, `upgrade`, `capabilities` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. `lighthouse aliases --format json` exposes the installed `/lh:*` aliases and their canonical `/lighthouse:*` commands. `lighthouse authorities --adopt-existing` validates existing ProductShape and ArcShape authorities without writing provider-owned files. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 

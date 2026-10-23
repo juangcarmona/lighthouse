@@ -66,7 +66,7 @@ const supportedProfiles = readProfileCatalog().profiles.map(({ id }) => id);
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.4' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
-const usage = 'Usage: lighthouse <init|aliases|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--plan-file <path>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|aliases|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--plan-file <path>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--adopt-existing] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -1022,6 +1022,25 @@ const authorityCommands = [
   },
 ];
 
+const authorityAdoptionCommands = [
+  {
+    id: 'productShape',
+    label: 'ProductShape',
+    packageName: '@prodshape/cli',
+    command: 'prodshape',
+    path: 'docs/product/model',
+    validateArgs: ['validate', '--format', 'json'],
+  },
+  {
+    id: 'arcShape',
+    label: 'ArcShape',
+    packageName: '@arcshape/cli',
+    command: 'arcshape',
+    path: 'docs/architecture',
+    validateArgs: ['validate', '--docs', 'docs/architecture', '--links', '--citations', '--format', 'json'],
+  },
+];
+
 function providerExecutable(authority) {
   const packageJson = packageRequire.resolve(`${authority.packageName}/package.json`);
   const metadata = JSON.parse(readFileSync(packageJson, 'utf8'));
@@ -1055,6 +1074,132 @@ function runAuthorityCommand(authority, dryRun) {
   };
 }
 
+function parseProviderReport(output) {
+  const text = output.trim();
+  try { return JSON.parse(text); } catch { /* The provider may prefix JSON with a diagnostic line. */ }
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  try { return JSON.parse(text.slice(start, end + 1)); } catch { return null; }
+}
+
+function authorityStatus(present, validation, recordedVersion, providerVersion) {
+  if (!present) return 'absent';
+  if (validation.status === 'unavailable') return 'unavailable';
+  if (!validation.valid) return 'invalid';
+  if (recordedVersion && recordedVersion !== providerVersion) return 'drifted';
+  return recordedVersion ? 'adopted' : 'ready';
+}
+
+async function runAuthorityValidation(authority, manifest) {
+  const providerVersion = installedPackageVersion(authority.packageName, 'package.json');
+  const present = await isDirectory(resolve(root, authority.path));
+  const command = `${authority.command} ${authority.validateArgs.join(' ')}`;
+  if (!present) {
+    return {
+      id: authority.id,
+      label: authority.label,
+      provider: authority.packageName,
+      version: providerVersion,
+      path: authority.path,
+      command,
+      recordedVersion: manifest.integrations[authority.id],
+      status: 'absent',
+      valid: false,
+      diagnostics: [`${authority.path} is missing`],
+      nextAction: `Create the ${authority.label} authority through its supported initializer, then rerun lighthouse authorities --adopt-existing.`,
+    };
+  }
+  if (!providerVersion) {
+    return {
+      id: authority.id,
+      label: authority.label,
+      provider: authority.packageName,
+      version: null,
+      path: authority.path,
+      command,
+      recordedVersion: manifest.integrations[authority.id],
+      status: 'unavailable',
+      valid: false,
+      diagnostics: [`${authority.packageName} is not installed`],
+      nextAction: `Install ${authority.packageName}, then rerun lighthouse authorities --adopt-existing.`,
+    };
+  }
+  let result;
+  try {
+    result = spawnSync(process.execPath, [providerExecutable(authority), ...authority.validateArgs], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    return {
+      id: authority.id,
+      label: authority.label,
+      provider: authority.packageName,
+      version: providerVersion,
+      path: authority.path,
+      command,
+      recordedVersion: manifest.integrations[authority.id],
+      status: 'unavailable',
+      valid: false,
+      diagnostics: [error.message],
+      nextAction: `Run ${command} directly, repair the provider and rerun lighthouse authorities --adopt-existing.`,
+    };
+  }
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+  const report = parseProviderReport(output);
+  const valid = result.status === 0 && report?.valid !== false;
+  const status = authorityStatus(present, { status: result.status === null ? 'unavailable' : 'completed', valid }, manifest.integrations[authority.id], providerVersion);
+  return {
+    id: authority.id,
+    label: authority.label,
+    provider: authority.packageName,
+    version: providerVersion,
+    path: authority.path,
+    command,
+    recordedVersion: manifest.integrations[authority.id],
+    status,
+    valid,
+    diagnostics: report?.diagnostics ?? (valid ? [] : [output.trim().split('\n').filter(Boolean).slice(-3).join(' ') || `${authority.label} validation failed`]),
+    nextAction: status === 'invalid' ? `Run ${command} directly, repair the reported authority and rerun lighthouse authorities --adopt-existing.` : null,
+  };
+}
+
+async function authorityAdoptionPlan(manifest) {
+  const authorities = await Promise.all(authorityAdoptionCommands.map((authority) => runAuthorityValidation(authority, manifest)));
+  const blocking = authorities.filter((authority) => ['absent', 'invalid', 'unavailable'].includes(authority.status));
+  const changed = authorities.some((authority) => ['ready', 'drifted'].includes(authority.status));
+  const status = blocking.length ? 'blocked' : changed ? 'ready' : 'adopted';
+  return {
+    schemaVersion: 1,
+    command: 'lighthouse authorities --adopt-existing',
+    status,
+    remoteWrites: 'none',
+    providerWrites: 'none',
+    authorities,
+    operations: changed ? [
+      { action: 'record', path: 'lighthouse.json', values: Object.fromEntries(authorities.map((authority) => [authority.id, authority.version])) },
+      { action: 'regenerate', path: 'LIGHTHOUSE.md' },
+    ] : [],
+    apply: 'lighthouse authorities --adopt-existing --apply',
+  };
+}
+
+function printAuthorityAdoptionPlan(plan) {
+  console.log(`Lighthouse existing-authority adoption plan: ${plan.status}`);
+  console.log('  ProductShape and ArcShape provider files remain untouched.');
+  console.log('  Remote writes: none.');
+  for (const authority of plan.authorities) {
+    const version = authority.version ?? 'unavailable';
+    console.log(`  ${authority.label}: ${authority.status} (${version}) ${authority.path}`);
+    for (const diagnostic of authority.diagnostics) console.error(`    ${diagnostic}`);
+    if (authority.nextAction) console.error(`    next: ${authority.nextAction}`);
+  }
+  for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
+  console.log('  default is dry-run; apply only after review with --apply');
+}
+
 async function writeManifestAtomically(manifest) {
   const temporary = `${manifestPath}.tmp-${process.pid}`;
   await writeFile(temporary, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
@@ -1075,7 +1220,7 @@ async function ensureProjectionReady(manifest) {
 
 async function writeProjection(manifest) {
   const target = resolve(root, projection);
-  await writeFile(target, render(manifest), { flag: 'w' });
+  await writeTextAtomically(target, render(manifest));
 }
 
 async function authorities(args) {
@@ -1111,6 +1256,37 @@ async function authorities(args) {
   await writeManifestAtomically(updated);
   await writeProjection(updated);
   console.log(`Recorded ProductShape ${authorityVersions.productShape} and ArcShape ${authorityVersions.arcShape} in lighthouse.json.`);
+}
+
+async function adoptExistingAuthorities(args) {
+  const manifest = await readManifest();
+  if (!manifest) throw new Error('Cannot read lighthouse.json: file does not exist; run lighthouse init --name <product>.');
+  const problems = validate(manifest);
+  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+  const apply = args.includes('--apply');
+  const dryRun = args.includes('--dry-run') || !apply;
+  const format = formatFromArgs(args);
+  if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
+  if (format === 'json' && apply) throw new Error('--format json is available for existing-authority adoption dry runs; omit it when applying.');
+  const plan = await authorityAdoptionPlan(manifest);
+  if (format === 'json') console.log(JSON.stringify(plan, null, 2));
+  else printAuthorityAdoptionPlan(plan);
+  if (dryRun) {
+    if (plan.status === 'blocked') process.exitCode = 1;
+    return;
+  }
+  if (plan.status === 'blocked') throw new Error('Existing-authority adoption stopped; resolve the reported provider conditions and rerun the plan.');
+  await ensureProjectionReady(manifest);
+  const updated = {
+    ...manifest,
+    integrations: Object.fromEntries(plan.authorities.map((authority) => [authority.id, authority.version])),
+  };
+  if (JSON.stringify(updated) !== JSON.stringify(manifest)) await writeManifestAtomically(updated);
+  if (!await exists(resolve(root, projection))) await writeProjection(updated);
+  else if (await readFile(resolve(root, projection), 'utf8') !== render(updated)) await writeProjection(updated);
+  const verified = await authorityAdoptionPlan(updated);
+  if (verified.status !== 'adopted') throw new Error('Existing-authority adoption was written but did not verify; rerun lighthouse authorities --adopt-existing and inspect the provider report.');
+  console.log('Recorded and verified the existing ProductShape and ArcShape authorities. Provider-owned files were not changed.');
 }
 
 function gitBranch() {
@@ -1162,6 +1338,40 @@ async function verify(manifest, format = 'text') {
   const profileResult = profileCompositionResult(profileComposition);
   report.results.push(profileResult);
   report.summary[profileResult.status] = (report.summary[profileResult.status] ?? 0) + 1;
+  if (validManifest) {
+    const recordedAuthorities = [manifest.integrations.productShape, manifest.integrations.arcShape];
+    const anyRecorded = recordedAuthorities.some((version) => version !== null);
+    const authorityPlan = anyRecorded ? await authorityAdoptionPlan(manifest) : null;
+    const authorityStatuses = authorityPlan?.authorities.map((authority) => authority.status) ?? [];
+    const authorityStatus = !anyRecorded ? 'unconfigured'
+      : authorityStatuses.includes('unavailable') ? 'unavailable'
+        : authorityStatuses.some((status) => ['absent', 'invalid'].includes(status)) ? 'failed'
+          : authorityStatuses.includes('drifted') ? 'drift'
+            : 'passed';
+    const authorityProblems = !anyRecorded
+      ? ['ProductShape and ArcShape are not recorded; run lighthouse authorities --adopt-existing after reviewing its dry-run plan.']
+      : authorityPlan.authorities.filter((authority) => authority.status !== 'adopted').flatMap((authority) => [
+        `${authority.label} is ${authority.status}${authority.diagnostics.length ? `: ${authority.diagnostics.join('; ')}` : ''}`,
+        ...(authority.nextAction ? [authority.nextAction] : []),
+      ]);
+    const authorityResult = {
+      id: 'foundation.authorities',
+      owner: 'lighthouse',
+      level: anyRecorded ? 'required' : 'recommended',
+      kind: 'hard',
+      verification: 'deterministic',
+      status: authorityStatus,
+      evidence: authorityPlan?.authorities.map((authority) => ({ id: authority.id, path: authority.path, version: authority.version, recordedVersion: authority.recordedVersion, command: authority.command })) ?? [],
+      problems: authorityProblems,
+      nextAction: authorityProblems.length ? 'lighthouse authorities --adopt-existing' : null,
+    };
+    report.results.push(authorityResult);
+    report.summary[authorityStatus] = (report.summary[authorityStatus] ?? 0) + 1;
+    if (authorityResult.level === 'required' && !['passed', 'not-applicable'].includes(authorityStatus)) {
+      report.blocking.push(authorityResult.id);
+      report.problems.push(...authorityProblems);
+    }
+  }
   const adoption = Object.values(capabilityAdoption(await readUpgradeState()));
   for (const item of adoption) {
     if (item.status !== 'adopted' || !item.recordPath || await exists(resolve(root, item.recordPath))) continue;
@@ -1381,6 +1591,7 @@ for (let index = 0; index < commandArgs.length; index += 1) {
   if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply'].includes(arg)) continue;
   if (arg === '--dry-run') continue;
   if (arg === '--apply') { if (!['init', 'authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
+  if (arg === '--adopt-existing') { if (command !== 'authorities') invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   if (arg === '--profile') {
@@ -1393,12 +1604,12 @@ for (let index = 0; index < commandArgs.length; index += 1) {
     continue;
   }
   if (arg === '--format') {
-    if (!['init', 'aliases', 'profiles', 'verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    if (!['init', 'aliases', 'profiles', 'authorities', 'verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
     else index += 1;
     continue;
   }
   if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
-    if (!['init', 'aliases', 'profiles', 'verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
+    if (!['init', 'aliases', 'profiles', 'authorities', 'verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
     continue;
   }
   if (arg === '--scope') {
@@ -1428,6 +1639,7 @@ if (!['init', 'aliases', 'profiles', 'authorities', 'reconcile', 'upgrade', 'cap
 try {
   if (command === 'init') await initialize(args.slice(1));
   else if (command === 'aliases') await commandAliases(formatFromArgs(commandArgs));
+  else if (command === 'authorities' && commandArgs.includes('--adopt-existing')) await adoptExistingAuthorities(args.slice(1));
   else if (command === 'authorities') await authorities(args.slice(1));
   else if (command === 'reconcile') await reconcile(args.slice(1));
   else if (command === 'upgrade') await upgrade(args.slice(1));
