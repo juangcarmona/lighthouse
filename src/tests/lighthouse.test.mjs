@@ -95,6 +95,28 @@ test('greenfield init creates the repository boundaries and a default manifest',
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
     assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
+    const aliases = JSON.parse(await readFile(join(dir, '.lighthouse/commands.json'), 'utf8'));
+    assert.equal(aliases.aliases.find((item) => item.alias === '/lh:init').canonical, '/lighthouse:init');
+    assert.equal(aliases.aliases.find((item) => item.alias === '/lh:control').canonical, '/lighthouse:control-plane');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('aliases reports the harness and SDLC command contracts without duplicating implementations', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-aliases-'));
+  try {
+    const result = run(dir, 'aliases', ['--format', 'json']);
+    assert.equal(result.status, 0, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.status, 'valid');
+    assert.deepEqual(report.aliases.find((item) => item.alias === '/lh:init'), {
+      alias: '/lh:init',
+      canonical: '/lighthouse:init',
+      asset: 'skills/init/SKILL.md',
+      owner: '@juangcarmona/lighthouse',
+      packageVersion: JSON.parse(await readFile(new URL('../packages/cli/package.json', import.meta.url), 'utf8')).version,
+    });
+    assert.equal(report.aliases.find((item) => item.alias === '/lh:impl').canonical, '/lighthouse:implement');
+    assert.equal(report.aliases.filter((item) => item.alias === '/lh:impl').length, 1);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
@@ -216,7 +238,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
     assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
     const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
-    assert.deepEqual(manifest.integrations, { productShape: '0.22.0', arcShape: '0.1.3' });
+    assert.deepEqual(manifest.integrations, { productShape: '0.22.0', arcShape: '0.1.4' });
     for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
@@ -490,6 +512,22 @@ test('upgrade previews and applies a missing owned projection', async () => {
     assert.equal(await access(missing).then(() => true).catch(() => false), true);
     const state = JSON.parse(await readFile(join(dir, '.lighthouse/upgrade.json'), 'utf8'));
     assert.equal(state.files['.github/workflows/lighthouse.yml'].scope, 'harness');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('upgrade projects the alias map as an SDLC-owned projection', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const aliasesPath = join(dir, '.lighthouse/commands.json');
+    await rm(aliasesPath);
+    const preview = run(dir, 'upgrade', ['--scope', 'sdlc', '--format', 'json']);
+    assert.equal(preview.status, 0, preview.stderr);
+    const plan = JSON.parse(preview.stdout);
+    assert.equal(plan.changes.find((change) => change.path === '.lighthouse/commands.json').classification, 'additive');
+    assert.equal(run(dir, 'upgrade', ['--scope', 'sdlc', '--apply']).status, 0);
+    const aliases = JSON.parse(await readFile(aliasesPath, 'utf8'));
+    assert.equal(aliases.aliases.find((item) => item.alias === '/lh:impl').canonical, '/lighthouse:implement');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

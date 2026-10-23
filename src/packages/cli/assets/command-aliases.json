@@ -1,0 +1,11 @@
+{
+  "$schema": "./schemas/command-aliases.schema.json",
+  "schemaVersion": 1,
+  "contractVersion": 1,
+  "package": { "name": "@juangcarmona/lighthouse" },
+  "canonicalNamespace": "/lighthouse",
+  "aliasNamespace": "/lh",
+  "aliases": [
+    { "alias": "/lh:init", "canonical": "/lighthouse:init", "asset": "skills/init/SKILL.md" }
+  ]
+}

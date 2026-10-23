@@ -48,12 +48,13 @@ try {
     ['src/dotnet/examples/src', 'src'], ['src/dotnet/tests', 'tests/dotnet'],
     ['src/packages/cli/internal/verify-dotnet.mjs', 'scripts/verify-dotnet.mjs'],
     ['src/packages/cli/src/lighthouse.mjs', 'scripts/lighthouse.mjs'],
+    ['src/packages/cli/src/aliases.mjs', 'scripts/aliases.mjs'],
     ['src/packages/cli/src/init-plan.mjs', 'scripts/init-plan.mjs'],
     ['src/packages/cli/src/guardrails.mjs', 'scripts/guardrails.mjs'],
     ['src/packages/cli/src/profiles.mjs', 'scripts/profiles.mjs'],
     ['src/packages/cli/assets/guardrails', 'assets/guardrails'],
     ['src/packages/cli/assets/profiles', 'assets/profiles'],
-    ['src/packages/cli/assets/schemas', 'schemas'], ['src/packages/cli/assets/skills/init', 'assets/skills/init'], ['src/dotnet/Directory.Build.props', 'Directory.Build.props'],
+    ['src/packages/cli/assets/schemas', 'schemas'], ['src/packages/cli/assets/command-aliases.json', 'assets/command-aliases.json'], ['src/packages/cli/assets/skills/init', 'assets/skills/init'], ['src/dotnet/Directory.Build.props', 'Directory.Build.props'],
     ['src/dotnet/Directory.Packages.props', 'Directory.Packages.props'], ['src/dotnet/global.json', 'global.json'],
     ['.gitignore', '.gitignore'], ['.editorconfig', '.editorconfig'], ['src/dotnet/Lighthouse.slnx', `${name}.slnx`]
   ]) await copy(resolve(source, from), resolve(stage, to));
@@ -70,7 +71,7 @@ try {
     product: name, application: { shape: 'backend', stacks: ['dotnet'] }, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
     packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' } },
-    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md'],
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json'],
     repository: {
       layout: ['src', 'docs', 'infra', 'scripts'],
       publicSite: { enabled: true },

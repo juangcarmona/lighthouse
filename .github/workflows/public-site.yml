@@ -5,7 +5,9 @@ on:
     paths:
       - "src/public-site/**"
       - "src/packages/ui/*.css"
-      - "assets/**"
+      - "assets/lighthouse-icon.svg"
+      - "assets/lighthouse-icon-light.svg"
+      - "assets/github-banner.svg"
       - "docs/product/**"
       - "docs/architecture/**"
       - "lighthouse.json"
@@ -21,7 +23,9 @@ on:
     paths:
       - "src/public-site/**"
       - "src/packages/ui/*.css"
-      - "assets/**"
+      - "assets/lighthouse-icon.svg"
+      - "assets/lighthouse-icon-light.svg"
+      - "assets/github-banner.svg"
       - "docs/product/**"
       - "docs/architecture/**"
       - "lighthouse.json"

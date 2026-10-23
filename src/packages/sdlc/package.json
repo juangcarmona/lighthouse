@@ -21,6 +21,7 @@
   },
   "files": [
     "commands",
+    "command-aliases.json",
     "contract.json",
     "capabilities.json",
     "gates.json",
@@ -46,6 +47,7 @@
     "./routes": "./src/routes.mjs",
     "./reconcile": "./src/reconcile.mjs",
     "./capabilities": "./src/capabilities.mjs",
+    "./aliases": "./src/aliases.mjs",
     "./stacked": "./src/stacked.mjs",
     "./workflow": "./src/workflow.mjs",
     "./browser-e2e": "./src/browser-e2e.mjs",
@@ -59,6 +61,8 @@
     "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json",
     "./schemas/capability-catalog.schema.json": "./schemas/capability-catalog.schema.json",
     "./schemas/browser-e2e.schema.json": "./schemas/browser-e2e.schema.json",
-    "./capabilities.json": "./capabilities.json"
+    "./capabilities.json": "./capabilities.json",
+    "./command-aliases.json": "./command-aliases.json",
+    "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json"
   }
 }

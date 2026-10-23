@@ -8,6 +8,7 @@ test('the UI artifact contains the complete visual contract', () => {
   const packages = [
     ['@juangcarmona/lighthouse', [
       'README.md',
+      'assets/command-aliases.json',
       'assets/dotnet-template/Directory.Build.props',
       'assets/dotnet-template/Directory.Packages.props',
       'assets/dotnet-template/Lighthouse.Analyzers/BackendContractAnalyzer.cs',
@@ -76,6 +77,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'assets/profiles/web-bff/adoption.md',
       'assets/profiles/web-bff/security.md',
       'assets/profiles/web-bff/testing.md',
+      'assets/schemas/command-aliases.schema.json',
       'assets/schemas/guardrails.schema.json',
       'assets/schemas/init-plan.schema.json',
       'assets/schemas/lighthouse-manifest.schema.json',
@@ -83,6 +85,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'assets/schemas/profile-catalog.schema.json',
       'assets/skills/init/SKILL.md',
       'package.json',
+      'src/aliases.mjs',
       'src/create-dotnet.mjs',
       'src/guardrails.mjs',
       'src/init-plan.mjs',

@@ -1,21 +1,20 @@
 ---
 title: Risks and technical debt
 arc42-section: "11"
-description: Current implementation gaps and risks in the target profile-aware Lighthouse architecture.
+description: Prioritized architectural risks, implementation gaps and technical debt.
 ---
 
 # 11. Risks and technical debt
 
-| Risk | Evidence | Response |
-| --- | --- | --- |
-| Product target is ahead of the CLI | The current CLI supports manifest projection and verification only | Keep target behavior in the active Product Change until implementation and adoption evidence exist |
-| Reference profile can drift from generated profiles | The .NET profile is source and test material inside Lighthouse | Extract profile contracts from verified examples and check generated output |
-| Profile explosion | The product may support many stacks and application shapes | Keep one baseline and add profiles only when a stack has owned guidance and deterministic checks |
-| Aspire scope can be misunderstood | Aspire is mandatory as composition even when no Lighthouse-owned backend exists | Document Aspire as the host boundary and keep backend selection explicit |
-| Feature mapping can become ceremony | Full-stack alignment is useful only when it helps tests and maintenance | Keep the mapping at bounded-context and feature boundaries and link to source evidence |
-| Hard checks can overclaim | Some conventions cannot be verified deterministically across stacks | Report unsupported checks as adoption gaps and preserve soft guidance |
-| Provider ownership can drift | ProductShape, ArcShape and OpenSpec have separate managed paths | Run each provider validator and keep Lighthouse integrations thin |
-| First package publication needs bootstrap | npm cannot attach a trusted publisher before each package exists | Publish `0.1.0` once from a clean repository checkout, then configure OIDC and the protected `npm-publish` environment |
-| Public snapshots can drift from their authorities | The site output is generated and ignored rather than stored as source | Build ProductShape and ArcShape snapshots in the same verified workflow that publishes the landing |
+| Risk or debt | Architectural impact | Evidence | Priority | Mitigation or decision |
+| --- | --- | --- | --- | --- |
+| Product-defined initializer is ahead of the CLI | The model asks for Aspire composition, CodeGraph checks and fuller application shaping | Product model and CLI implementation | Medium | Keep those claims explicitly target-only and add implementation evidence before moving them into the current view |
+| Product model status is still `draft` | Architecture can be mistaken for accepted product intent | `docs/product/model/` frontmatter | High | Keep citations, state the status and avoid presenting draft requirements as delivered acceptance |
+| Reference profile can drift from generated assets | The .NET profile exists both as source and packaged template | Profile source, creator and tests | Medium | Keep the creator and profile tests green and compare source and packaged assets |
+| Profile surface can grow faster than evidence | More profiles increase compatibility and upgrade obligations | Profile catalog and consumer fixtures | Medium | Add a profile only with owned surfaces, prerequisites, checks, exceptions and a consumer fixture |
+| Provider ownership can drift | ProductShape, ArcShape, OpenSpec and GitHub each have separate managed paths | Provider commands and CLI adapters | High | Keep integrations thin, run provider validators and stop on conflicts or unavailable evidence |
+| Capability adoption has one provider slice | The catalog mechanism is reusable, but broader provider semantics are not proven | GitHub labels fixture | Medium | Preserve the fixture and add another adapter only for a demonstrated adopter need |
+| Public snapshots can drift from authorities | Site output is generated and ignored rather than stored as source | Public-site workflow and verifier | Medium | Build and validate both provider snapshots in the same workflow that publishes the landing |
+| The workspace has no hosted runtime | Agent execution, durable memory and cross-repository dispatch remain external | SDLC package and deployment topology | Low | Keep the SDLC package provider-neutral and document host ownership |
 
-The repository has no hosted Lighthouse runtime, tracker adapter, durable agent memory store or integrated CodeGraph client today.
+<!-- pdac:cite id="QR-LOW-COUPLING" digest="sha256:6892a1030f2bbc6d41c16ae1199b557028e3ed98b8bb392af9a38cd7fda413b8" -->

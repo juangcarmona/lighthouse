@@ -25,4 +25,6 @@ Review the generated plan with the adopter, then run `lighthouse init --plan-fil
 
 The CLI owns deterministic validation, profile compatibility, conflict detection and local writes. It does not inspect or copy the reference and it performs no remote writes. A plan with `openQuestions` is not ready to apply.
 
+Use `lighthouse aliases --format json` to discover the installed `/lh:*` aliases and their canonical `/lighthouse:*` commands. The generated `.lighthouse/commands.json` is the host-readable projection; aliases reference the package-owned command or skill asset and never create a second implementation.
+
 After applying, run `lighthouse verify` and report the created, preserved and conflicting paths. Keep product and architecture work in ProductShape and ArcShape's own routes.
