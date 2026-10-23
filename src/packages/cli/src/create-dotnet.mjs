@@ -74,6 +74,7 @@ try {
   await writeFile(solutionFile, `<Solution>\n${projects.map((project) => `  ${project}`).join('\n')}\n</Solution>\n`);
 
   await copy(resolve(packageRoot, 'src/lighthouse.mjs'), resolve(stage, 'scripts/lighthouse.mjs'));
+  await copy(resolve(packageRoot, 'src/aliases.mjs'), resolve(stage, 'scripts/aliases.mjs'));
   await copy(resolve(packageRoot, 'src/init-plan.mjs'), resolve(stage, 'scripts/init-plan.mjs'));
   await copy(resolve(packageRoot, 'src/guardrails.mjs'), resolve(stage, 'scripts/guardrails.mjs'));
   await copy(resolve(packageRoot, 'src/profiles.mjs'), resolve(stage, 'scripts/profiles.mjs'));
@@ -81,6 +82,7 @@ try {
   await copy(resolve(packageRoot, 'assets/guardrails'), resolve(stage, 'assets/guardrails'));
   await copy(resolve(packageRoot, 'assets/profiles'), resolve(stage, 'assets/profiles'));
   await copy(resolve(packageRoot, 'assets/schemas'), resolve(stage, 'schemas'));
+  await copy(resolve(packageRoot, 'assets/command-aliases.json'), resolve(stage, 'assets/command-aliases.json'));
   await copy(resolve(packageRoot, 'assets/skills/init'), resolve(stage, 'assets/skills/init'));
 
   await writeFile(resolve(stage, 'lighthouse.json'), `${JSON.stringify({
@@ -88,7 +90,7 @@ try {
     product: name, application: { shape: 'backend', stacks: ['dotnet'] }, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
     packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: sdlcContract.version } },
-    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', 'docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json', 'docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
     repository: {
       layout: ['src', 'docs', 'infra', 'scripts'], publicSite: { enabled: true },
       conventions: { commits: 'conventional', branchPattern: '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$' },

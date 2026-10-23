@@ -16,6 +16,7 @@ import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
 import { browserEvidenceReport, validateBrowserEvidence } from '../packages/sdlc/src/browser-e2e.mjs';
 import { capabilityAdapter, declarationFromCatalog, initialAdoptionStatus, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
+import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from '../packages/sdlc/src/aliases.mjs';
 
 const root = process.cwd();
 
@@ -28,6 +29,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
   for (const path of [
     'README.md',
     'commands/status.md',
+    'commands/aliases.md',
     'commands/control-plane.md',
     'commands/decompose.md',
     'commands/github-triage.md',
@@ -54,6 +56,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'meta-commands/decompose.md',
     'meta-commands/stacked.md',
     'contract.json',
+    'command-aliases.json',
     'routes.json',
     'gates.json',
     'stages.json',
@@ -65,6 +68,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'schemas/capabilities.schema.json',
     'schemas/capability-catalog.schema.json',
     'schemas/browser-e2e.schema.json',
+    'schemas/command-aliases.schema.json',
+    'src/aliases.mjs',
     'src/browser-e2e.mjs',
     'capabilities.json',
     'src/contracts.mjs',
@@ -82,6 +87,23 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
   ]) assert.ok(files.includes(path), `missing ${path}`);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
+  const aliases = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'aliases', '--format', 'json'], { cwd: root, encoding: 'utf8' });
+  assert.equal(aliases.status, 0, aliases.stderr);
+  const aliasReport = JSON.parse(aliases.stdout);
+  assert.equal(aliasReport.status, 'valid');
+  assert.equal(aliasReport.aliases.find((item) => item.alias === '/lh:impl').canonical, '/lighthouse:implement');
+});
+
+test('the SDLC alias contract is deterministic and fails closed on collisions', async () => {
+  const contract = await readCommandAliases();
+  assert.deepEqual(validateCommandAliases(contract), []);
+  assert.equal(contract.aliases.find((item) => item.alias === '/lh:control').canonical, '/lighthouse:control-plane');
+  const duplicateAlias = { ...contract, aliases: [...contract.aliases, { ...contract.aliases[0], canonical: '/lighthouse:status' }] };
+  assert.ok(validateCommandAliases(duplicateAlias).some((error) => error.code === 'aliases.duplicate'));
+  const duplicateTarget = { ...contract, aliases: [...contract.aliases, { ...contract.aliases[0], alias: '/lh:other' }] };
+  assert.ok(validateCommandAliases(duplicateTarget).some((error) => error.code === 'aliases.duplicate-target'));
+  const unknownAsset = { ...contract, aliases: contract.aliases.map((item, index) => index === 0 ? { ...item, asset: 'commands/missing.md' } : item) };
+  assert.ok((await verifyCommandAliases(unknownAsset)).some((error) => error.code === 'aliases.missing-asset'));
 });
 
 test('the capability catalog is versioned, validates independently and projects the label declaration', async () => {

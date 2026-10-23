@@ -1,0 +1,20 @@
+{
+  "$schema": "./schemas/command-aliases.schema.json",
+  "schemaVersion": 1,
+  "contractVersion": 1,
+  "package": { "name": "@juangcarmona/lighthouse-sdlc" },
+  "canonicalNamespace": "/lighthouse",
+  "aliasNamespace": "/lh",
+  "aliases": [
+    { "alias": "/lh:control", "canonical": "/lighthouse:control-plane", "asset": "commands/control-plane.md" },
+    { "alias": "/lh:gh-decompose", "canonical": "/lighthouse:github-decompose", "asset": "commands/github-decompose.md" },
+    { "alias": "/lh:gh-triage", "canonical": "/lighthouse:github-triage", "asset": "commands/github-triage.md" },
+    { "alias": "/lh:result", "canonical": "/lighthouse:stage-result", "asset": "commands/stage-result.md" },
+    { "alias": "/lh:e2e", "canonical": "/lighthouse:browser-e2e", "asset": "commands/browser-e2e.md" },
+    { "alias": "/lh:caps", "canonical": "/lighthouse:capabilities", "asset": "commands/capabilities.md" },
+    { "alias": "/lh:labels", "canonical": "/lighthouse:reconcile-labels", "asset": "commands/reconcile-labels.md" },
+    { "alias": "/lh:gh-labels", "canonical": "/lighthouse:github-labels", "asset": "commands/github-labels.md" },
+    { "alias": "/lh:mem", "canonical": "/lighthouse:memory", "asset": "commands/memory.md" },
+    { "alias": "/lh:impl", "canonical": "/lighthouse:implement", "asset": "commands/implement.md" }
+  ]
+}
