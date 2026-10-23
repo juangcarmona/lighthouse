@@ -1,18 +1,21 @@
 ---
 title: Building block view
 arc42-section: "05"
-description: Static decomposition of the current Lighthouse workspace and target initialized application profiles.
+description: Static decomposition of the Lighthouse workspace, packages, catalogs and adopter projections.
 ---
 
 # 5. Building block view
 
-## Current Lighthouse workspace
+## Whitebox overall system
+
+The Lighthouse workspace has a package authoring side and an adopter contract side. The authoring side contains source, profiles, tests and site tooling. The CLI projects the selected contract into a consuming repository; the SDLC package supplies lifecycle contracts that an agent host may execute.
 
 | Building block | Source | Responsibility |
 | --- | --- | --- |
-| CLI package | `src/packages/cli/` | Initialize the baseline, compose profiles, create the selected .NET starter and verify generated projections |
-| SDLC package | `src/packages/sdlc/` | Distribute lifecycle skills, commands, meta-commands, route and gate contracts and deterministic package checks |
+| CLI package | `src/packages/cli/` | Initialize and verify adopter foundations, compose profiles, create the .NET starter, adopt authorities and plan upgrades |
+| SDLC package | `src/packages/sdlc/` | Distribute lifecycle skills, commands, routes, gates, schemas, deterministic planning and provider adapters |
 | UI package | `src/packages/ui/` | Export semantic tokens, native recipes and `DESIGN.md` |
+| Profile assets | `src/packages/cli/assets/profiles/` | Declare application applicability, owned surfaces, prerequisites, checks and repair hints |
 | .NET reference profile | `src/dotnet/` and `src/packages/cli/assets/dotnet-template/` | Demonstrate and distribute the modular monolith, CQRS/VSA, Aspire and Roslyn checks |
 | Gallery | `src/gallery/` | Exercise the UI package in a browser |
 | Public site | `src/public-site/` and `scripts/build-public-site.mjs` | Present the current Lighthouse story and publish ProductShape and ArcShape snapshots |
@@ -40,34 +43,30 @@ flowchart LR
     site --> landing[Public landing]
 ```
 
-## Target initialized application
+## Important interfaces
 
-The product-defined initializer composes the following blocks only when their profile is selected.
+The CLI's important interfaces are the manifest and managed paths in an adopter, the package catalogs and schemas, the ProductShape and ArcShape provider commands, and the optional GitHub adapter exposed by the SDLC package. The source locations above are evidence links; the source code remains authoritative for exact fields and file lists.
 
-| Profile block | Responsibility |
-| --- | --- |
-| Repository baseline | Provide `src/`, `docs/`, automation and integration entrypoints |
-| SDLC package and control plane | Provide lifecycle assets and record selected routes, gates, state, memory and adapters under `.lighthouse/` |
-| Aspire AppHost | Compose and run the selected application services |
-| Frontend feature areas | Implement user-facing features using the shared visual contract |
-| Backend bounded contexts | Keep domain, application, contracts, infrastructure and tests aligned by feature |
-| Service profile | Supply a selected microservice without creating the default backend |
-| Stack profile | Supply language-specific conventions, examples and checks |
-| Evidence catalog | Associate integration and end-to-end evidence with bounded contexts |
+| Interface | Direction | Contract |
+| --- | --- | --- |
+| CLI to adopter | writes | `lighthouse.json`, `LIGHTHOUSE.md`, `.lighthouse/`, hooks, workflows and selected profile paths |
+| CLI to authorities | invokes | Provider-owned initialization or read-only validation commands |
+| CLI to capability provider | reads then explicitly writes | Provider adapter plan, authorization hash and adoption evidence |
+| Agent host to SDLC package | reads and validates | Skills, commands, route/gate descriptors and provider-neutral schemas |
 
-The target profile blocks are product decisions and templates. The CLI projects selected guidance and the .NET creator seeds a product-owned starter; lifecycle execution remains a host-specific integration.
-
-## Feature mapping
+## Dependency direction
 
 ```mermaid
 flowchart LR
-    accTitle: Feature alignment in the target full-stack profile
-    ui[Frontend feature] --> api[API boundary]
-    api --> app[Application handler]
-    app --> domain[Bounded-context behavior]
-    domain --> data[Persistence or external port]
-    ui -. tests .-> unit[Unit tests]
-    api -. tests .-> integration[Integration tests]
-    ui -. evidence .-> e2e[End-to-end evidence]
-    domain --> evidence[Bounded-context evidence catalog]
+    accTitle: Lighthouse package and adopter contract dependencies
+    cli[CLI package] --> manifest[Adopter manifest]
+    cli --> catalogs[Profile and guardrail catalogs]
+    cli --> sdlc[SDLC package contract]
+    cli --> authorities[Provider validators]
+    sdlc --> adapter[Provider adapters]
+    adapter --> provider[Provider-owned state]
+    ui[UI package] --> visual[Visual profile assets]
+    profiles[Profile assets] --> cli
+    sources[Product and architecture sources] --> site[Public-site build]
+    ui --> site
 ```

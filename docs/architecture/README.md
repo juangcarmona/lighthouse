@@ -2,7 +2,7 @@
 
 This directory is Lighthouse's canonical architecture source in the twelve arc42 sections.
 
-The documents distinguish the current Lighthouse repository from the target initialization architecture described by the applied [CHG-INITIAL product change](../product/changes/completed/chg-initial/change.md).
+The documents distinguish the current Lighthouse repository from product-defined target behavior. The current architecture is evidenced by the CLI, packages, scripts, tests and workflows in this checkout; target behavior is named only where the implementation is incomplete.
 
 Product intent remains owned by [ProductShape](../product/README.md), architecture remains owned here and decision rationale remains in [the architecture decisions](09-architecture-decisions/README.md).
 
@@ -21,4 +21,4 @@ Product intent remains owned by [ProductShape](../product/README.md), architectu
 11. [Risks and technical debt](11-risks-and-technical-debt/README.md)
 12. [Glossary](12-glossary/README.md)
 
-ArcShape generates the reader site from these Markdown files; generated output is disposable.
+ArcShape validates and generates the reader site from these Markdown files; generated output is disposable. The product model is the source for product intent, although its current artifacts are still marked `draft` even though `prodshape validate` reports no diagnostics.

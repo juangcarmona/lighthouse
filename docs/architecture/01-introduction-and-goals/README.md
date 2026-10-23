@@ -1,47 +1,51 @@
 ---
 title: Introduction and goals
 arc42-section: "01"
-description: Purpose, scope and quality goals of the current Lighthouse repository and its target initializer.
+description: Architectural orientation, quality goals and scope of the Lighthouse authoring workspace and distributed adopter contracts.
 ---
 
 # 1. Introduction and goals
 
 ## Requirements overview
 
-Lighthouse is a project-owned engineering baseline that distributes a harness, profiles, guidance and deterministic checks through an initialization route.
+Lighthouse is a project-owned engineering baseline that distributes a CLI harness, an SDLC contract package, a UI package, technical profiles and deterministic checks through versioned package boundaries.
 
-The current repository contains the Node/npm workspace, the Lighthouse CLI, the independent UI package, a .NET reference profile, verification scripts, a browser gallery and a static public site.
+The current repository is the package authoring workspace. It contains the Node/npm workspace, the CLI, the independent UI and SDLC packages, profile assets, a .NET reference profile, verification scripts, a browser gallery and a static public site.
 
-The target product adds profile-aware initialization: every initialized project receives a predictable repository structure and Aspire as its composition boundary, while application-specific capabilities are selected through profiles.
+The CLI already initializes predictable repository roots, managed projections, local hooks, the SDLC control-plane projection and selected profile assets. It also supports semantic initialization plans, authority initialization or adoption, profile composition, upgrade planning, capability reconciliation and machine-readable verification.
 
-The target full-stack profile provides a feature-aligned modular monolith when the adopter selects a Lighthouse-owned backend; frontend-only applications and requested microservices receive only the selected capabilities.
+The product model describes a broader application initializer that selects an application shape, configures Aspire, checks an external CodeGraph service and can seed a feature-aligned backend. Those parts remain target behavior; the current CLI does not create an Aspire application or run CodeGraph.
 
-The target is defined by the applied [CHG-INITIAL product change](../../product/changes/completed/chg-initial/change.md) and is not implemented in full by the current CLI.
+The product-dependent statements in this section are grounded in the current ProductShape model. The model validates with zero errors and warnings, but its artifacts remain marked `draft` and therefore describe intent rather than an accepted product baseline.
+
+<!-- pdac:cite id="UC-INITIALIZE-PROJECT" digest="sha256:8947536c1e8c68fadb767d343d337bbbeb396e58427890dd0fbd1345dc0f95eb" -->
 
 ## Architecture viewpoints
 
-The public story joins two views without treating them as the same system: the current checkout is the implementation evidence, while the target application is the architecture that the packages are intended to generate.
+The public story joins two views without treating them as the same system: the current checkout is the implementation evidence, while an adopter repository is a consumer of the package contracts. ProductShape supplies intent and ArcShape supplies architecture documentation; Lighthouse integrates their routes without becoming either authority.
 
 ```mermaid
 flowchart LR
-    accTitle: Current Lighthouse repository and target initialized application
+    accTitle: Current Lighthouse repository and adopter contract
     current[Lighthouse repository<br/>implemented today]
     authorities[ProductShape and ArcShape<br/>canonical inputs]
     site[Generated public site<br/>projection]
-    target[Initialized application<br/>target architecture]
+    target[Adopter repository<br/>selected contracts]
     current --> site
     authorities --> site
     current -. package contracts .-> target
-    authorities -. product and architecture context .-> target
+    authorities -. optional provider routes .-> target
 ```
 
 ## Quality goals
 
-- **Predictable adoption:** an initialized repository has a known structure and a clear first action.
-- **Profile fit:** guidance and checks match the selected application shape and stack.
-- **Feature traceability:** full-stack features map clearly between frontend, backend modules and bounded-context evidence.
-- **Deterministic verification:** hard guardrails fail with reproducible, actionable evidence.
-- **Low maintenance:** each fact has one owner and generated projections do not become new authorities.
+- Predictable adoption: a consumer can inspect a plan, apply owned projections and reach a first verification result.
+- Ownership safety: package updates and authority integrations preserve project-owned and provider-owned files.
+- Deterministic evidence: verification, profile composition and capability plans expose explicit statuses and next actions.
+- Reproducible distribution: package contents and the public site are checked from the source workspace.
+- Low coupling: ProductShape, ArcShape, OpenSpec, the SDLC package and adopter infrastructure retain separate ownership.
+
+<!-- pdac:cite id="QR-ADOPTABILITY" digest="sha256:97827599b046672b59f27be39008c158d043d8c11a8f54cf9dd9b1478b1d6e55" -->
 
 ## Stakeholders
 
@@ -51,4 +55,4 @@ flowchart LR
 | Adopting project | A suitable starting structure and local verification | Owns product code, configuration and exceptions |
 | ProductShape | Product intent and product changes | Owns the product definition when adopted |
 | ArcShape | Architecture evidence and reader documentation | Owns the architecture source when adopted |
-| Agent or developer | Clear guidance, examples and failure evidence | Uses the project contract and reports gaps |
+| Agent host or developer | Package contracts, guidance and failure evidence | Executes or consumes the routes and reports gaps |
