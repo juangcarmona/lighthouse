@@ -44,7 +44,7 @@ Initialization reports missing ProductShape and ArcShape authority inputs as ado
 
 ## Current command scope
 
-The command supports `init`, `create-dotnet`, `authorities`, `reconcile`, `upgrade`, `capabilities` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
+The command supports `init`, `aliases`, `create-dotnet`, `authorities`, `reconcile`, `upgrade`, `capabilities` and `verify`. It checks the manifest, repository boundaries, Conventional Commits metadata, branch naming, the selected SDLC package projection and generated content. `lighthouse aliases --format json` exposes the installed `/lh:*` aliases and their canonical `/lighthouse:*` commands. Lifecycle stages, tracker operations, agent runs and CodeGraph checks require their own configured integrations.
 
 Initialization installs `.husky/commit-msg`, `.husky/pre-push`, `scripts/lighthouse-guard.mjs` and `.github/workflows/lighthouse.yml` when those paths are free. Existing files remain project-owned and are reported as conflicts. Reconciliation can add missing managed paths after adoption, but it does not overwrite a path that has drifted or belongs to another tool.
 
