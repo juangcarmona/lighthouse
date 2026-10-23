@@ -1,7 +1,7 @@
 ---
 id: UC-INITIALIZE-AUTHORITIES
 type: use-case
-title: Initialize product and architecture authorities
+title: Initialize or adopt product and architecture authorities
 status: draft
 primary-actor: ACT-ADOPTER
 supporting-actors: [ACT-INTEGRATED-SYSTEM]
@@ -12,33 +12,33 @@ uses-terms: [TERM-AUTHORITY-MAP, TERM-INTEGRATION, TERM-MANAGED-PROJECTION]
 
 ## Goal
 
-Prepare a greenfield project with the Lighthouse baseline and the owned ProductShape and ArcShape initialization routes so product and architecture work can begin when the project needs them.
+Prepare a project to use ProductShape and ArcShape while preserving each provider's source of truth, whether the target is new or already contains valid authority documentation.
 
 ## Trigger
 
-The adopter initializes a new project from Lighthouse or asks Lighthouse to prepare an empty target.
+The adopter initializes a new Lighthouse project, or asks Lighthouse to inspect an existing project's product and architecture authorities.
 
 ## Preconditions
 
-The target is new or empty enough for the selected initializer, the pinned ProductShape and ArcShape integrations are available, and their managed paths are known.
+The pinned ProductShape and ArcShape integrations are available, their supported commands are discoverable, and the target's ownership and managed paths can be inspected.
 
 ## Main Flow
 
-1. Lighthouse creates the foundation manifest, baseline projection and selected profile surfaces.
-2. Lighthouse initializes ProductShape in its owned product paths and records the product integration version and verification route.
-3. Lighthouse initializes ArcShape in its owned architecture paths and records the architecture integration version and verification route.
-4. The project may leave both authorities at their initial empty or draft state while still retaining their initialization and ownership contracts.
-5. Lighthouse writes or links a concise first-use orientation that explains the lifecycle stages, available routes, gates, authority ownership and next action.
-6. Lighthouse verifies the resulting authority map, managed paths and integration health, then reports what was created, preserved or deferred.
+1. Lighthouse reads the target and chooses the greenfield initializer or the explicit brownfield adoption route.
+2. For greenfield initialization, Lighthouse previews and then runs each provider's supported initializer through its owned route.
+3. For brownfield adoption, Lighthouse discovers the canonical ProductShape and ArcShape surfaces and runs their read-only validators.
+4. Lighthouse reports the authority status, provider version, inspected path, ownership boundary, evidence and next action for each authority.
+5. The adopter reviews the dry-run plan and explicitly applies only a valid brownfield adoption or a conflict-free greenfield initialization.
+6. Lighthouse records the adopted versions in its own manifest, verifies the authorities and reports what it created, preserved or deferred.
 
 ## Alternative Flows
 
-An existing project may adopt the authority integrations incrementally after an ownership inventory; a missing integration is reported as an explicit adoption gap rather than silently replaced.
+An existing project may adopt either authority independently only when the manifest records the other as absent or out of scope; a missing or invalid authority never becomes adopted through an implicit initializer.
 
 ## Failure Conditions
 
-An initializer cannot prove its managed paths, a pinned tool is unavailable, a target file is project-owned or a provider validator fails.
+An authority path is absent, its validator fails, its provider is unavailable, the Lighthouse projection has drifted or a target file is owned by another system.
 
 ## Postconditions
 
-The project has a Lighthouse baseline, initialized ProductShape and ArcShape integration contracts, recorded versions, first-use orientation and an explicit route for starting product, architecture and delivery work.
+The project has either a recorded and verified authority adoption or a bounded report that identifies the provider, path, validator, conflict and next supported action. Provider-owned files remain unchanged by Lighthouse.
