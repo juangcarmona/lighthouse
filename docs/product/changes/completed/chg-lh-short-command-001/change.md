@@ -2,7 +2,7 @@
 id: CHG-LH-SHORT-COMMAND-001
 type: product-change
 title: Add a short agent command namespace
-status: draft
+status: applied
 base-revision: 'cec24e0'
 operations:
   add:
@@ -40,7 +40,11 @@ Agent-facing command discovery, the Lighthouse harness, the SDLC package command
 
 ## Open Questions
 
-- The configured agent host still determines the final slash-command projection. The harness and SDLC packages must publish the alias contract and the host adapter must expose it without copying command bodies.
+There are no unresolved product questions for this change.
+
+## Projection constraint
+
+The configured agent host determines the final slash-command projection. The harness and SDLC packages publish the alias contract, and the host adapter exposes it without copying command bodies.
 
 ## Product Acceptance
 
