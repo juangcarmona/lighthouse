@@ -17,6 +17,7 @@ description: Architectural realization and evidence for Lighthouse quality requi
 | Reproducible distribution | Locked dependencies, package manifests and static-site verification | `npm run verify:public-site` builds ProductShape and ArcShape snapshots |
 | Traceable guardrails | Catalog entries name owner, level, kind, method and repair hint | Guardrail and profile catalog validators fail closed on malformed entries |
 | Capability adoption safety | Dry-run plans, plan-hash authorization, reread, idempotency and evidence | Packaged consumer test covers conflict, stale state, partial failure, resume and drift |
+| Evidence coverage | Common records, source hashes and subject references | SDLC evidence fixtures adapt stage and browser results; `lighthouse verify` reports missing or drifted indexes without blocking by default |
 | Full application topology | .NET profile and Aspire example provide reference source | CLI does not yet generate Aspire topology or run CodeGraph; treat this as a target gap |
 
 <!-- pdac:cite id="QR-ADOPTABILITY" digest="sha256:97827599b046672b59f27be39008c158d043d8c11a8f54cf9dd9b1478b1d6e55" -->

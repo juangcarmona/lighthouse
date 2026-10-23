@@ -13,6 +13,7 @@ let sdlcCapabilities;
 let sdlcReconcile;
 let sdlcGithub;
 let sdlcAliases;
+let sdlcEvidence;
 try {
   [sdlcCapabilities, sdlcReconcile, sdlcGithub] = await Promise.all([
     import('@juangcarmona/lighthouse-sdlc/capabilities'),
@@ -21,6 +22,7 @@ try {
   ]);
 } catch { /* Standalone generated starters can run without the optional SDLC package. */ }
 try { sdlcAliases = await import('@juangcarmona/lighthouse-sdlc/aliases'); } catch { /* Older standalone installations may not publish aliases. */ }
+try { sdlcEvidence = await import('@juangcarmona/lighthouse-sdlc/evidence'); } catch { /* Older standalone installations may not publish evidence. */ }
 
 const root = process.cwd();
 const packageRequire = createRequire(import.meta.url);
@@ -1396,6 +1398,9 @@ async function verify(manifest, format = 'text') {
     });
     report.summary.unconfigured = (report.summary.unconfigured ?? 0) + (pending.length ? 1 : 0);
   }
+  const evidenceResult = await verifyEvidenceIndex();
+  report.results.push(evidenceResult);
+  report.summary[evidenceResult.status] = (report.summary[evidenceResult.status] ?? 0) + 1;
   if (format === 'json') {
     console.log(JSON.stringify(report, null, 2));
     if (report.problems.length) process.exitCode = 1;
@@ -1403,6 +1408,72 @@ async function verify(manifest, format = 'text') {
   }
   if (report.problems.length) throw new Error(report.problems.join('\n'));
   console.log('Lighthouse manifest, repository boundaries and managed projection are valid.');
+}
+
+async function verifyEvidenceIndex() {
+  const evidencePath = '.lighthouse/evidence/index.json';
+  const result = {
+    id: 'foundation.evidence',
+    owner: '@juangcarmona/lighthouse-sdlc',
+    level: 'recommended',
+    kind: 'hard',
+    verification: 'deterministic',
+    status: 'unconfigured',
+    evidence: [],
+    problems: [],
+    nextAction: `lighthouse-sdlc evidence --build --input <records.json> --output ${evidencePath}`,
+  };
+  if (!(await exists(resolve(root, evidencePath)))) return result;
+  if (!sdlcEvidence) {
+    result.status = 'unavailable';
+    result.problems.push('The installed SDLC package does not expose the evidence contract.');
+    result.nextAction = 'Install a Lighthouse SDLC package that exports the evidence contract.';
+    return result;
+  }
+  let index;
+  try { index = JSON.parse(await readFile(resolve(root, evidencePath), 'utf8')); }
+  catch (error) {
+    result.status = 'failed';
+    result.problems.push(`Cannot read ${evidencePath}: ${error.message}`);
+    result.nextAction = `Repair ${evidencePath} and run lighthouse verify again.`;
+    return result;
+  }
+  const errors = sdlcEvidence.validateEvidenceIndex(index);
+  for (const error of errors) result.problems.push(`${error.field ?? 'index'}: ${error.message}`);
+  const records = [];
+  for (const reference of Array.isArray(index.records) ? index.records : []) {
+    if (!reference || typeof reference !== 'object' || typeof reference.path !== 'string') continue;
+    const path = resolve(root, '.lighthouse/evidence', reference.path);
+    if (!(await exists(path))) {
+      result.problems.push(`Missing evidence record ${reference.path}.`);
+      continue;
+    }
+    try {
+      const content = await readFile(path, 'utf8');
+      const record = JSON.parse(content);
+      for (const error of sdlcEvidence.validateEvidenceRecord(record)) result.problems.push(`${reference.path}: ${error.message}`);
+      const observedHash = createHash('sha256').update(JSON.stringify(record)).digest('hex');
+      if (observedHash !== reference.sha256) result.problems.push(`${reference.path}: SHA-256 does not match the index.`);
+      result.evidence.push({ id: reference.id, path: reference.path, status: record.status, sha256: observedHash });
+      records.push(record);
+    } catch (error) {
+      result.problems.push(`${reference.path}: ${error.message}`);
+    }
+  }
+  if (!errors.length && records.length === (index.records ?? []).length) {
+    const rebuilt = sdlcEvidence.buildEvidenceIndex(records, {
+      indexId: index.indexId,
+      runId: index.runId,
+      repository: index.repository,
+      revision: index.revision,
+      subjects: (index.coverage ?? []).map((item) => item.subject),
+      recordPaths: Object.fromEntries((index.records ?? []).map((item) => [item.id, item.path])),
+    });
+    if (rebuilt.errors.length || JSON.stringify(rebuilt.index?.coverage) !== JSON.stringify(index.coverage)) result.problems.push('Evidence coverage does not match the referenced records; rebuild the index.');
+  }
+  result.status = result.problems.length ? 'failed' : 'passed';
+  result.nextAction = result.problems.length ? `Repair ${evidencePath} or its records, then run lighthouse verify again.` : null;
+  return result;
 }
 
 async function profiles(manifest, format = 'text') {

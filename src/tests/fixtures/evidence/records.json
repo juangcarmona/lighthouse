@@ -1,0 +1,34 @@
+{
+  "indexId": "fixture-evidence-index",
+  "runId": "fixture-index-run",
+  "repository": "fixture/project",
+  "revision": "abc123",
+  "subjects": [
+    { "type": "product-requirement", "id": "FR-1" },
+    { "type": "architecture-decision", "id": "ADR-0001" }
+  ],
+  "records": [
+    {
+      "schemaVersion": 1,
+      "id": "stage-1",
+      "runId": "fixture-delivery-run",
+      "kind": "stage-result",
+      "scope": "delivery",
+      "status": "passed",
+      "producer": "fixture",
+      "subject": { "type": "product-requirement", "id": "FR-1" },
+      "payload": { "stage": "implement", "status": "passed" }
+    },
+    {
+      "schemaVersion": 1,
+      "id": "browser-1",
+      "runId": "fixture-browser-run",
+      "kind": "browser-e2e",
+      "scope": "delivery",
+      "status": "passed",
+      "producer": "fixture",
+      "subject": { "type": "architecture-decision", "id": "ADR-0001" },
+      "payload": { "journey": "checkout.complete", "status": "passed" }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/guardrails.mjs';
 import { composeProfiles, readProfileCatalog } from '../packages/cli/src/profiles.mjs';
+import { buildEvidenceIndex } from '../packages/sdlc/src/evidence.mjs';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
 const sdlcPackage = JSON.parse(await readFile(new URL('../packages/sdlc/package.json', import.meta.url), 'utf8'));
@@ -684,6 +685,40 @@ test('verify JSON distinguishes managed projection drift', async () => {
     assert.equal(managed.status, 'drift');
     assert.match(managed.problems.join('\n'), /LIGHTHOUSE\.md has drifted/);
     assert.deepEqual(report.blocking, ['repository.managed-projection']);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('verify validates evidence indexes and reports drift without blocking delivery', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const evidence = {
+      schemaVersion: 1,
+      id: 'stage-1',
+      runId: 'run-1',
+      kind: 'stage-result',
+      scope: 'delivery',
+      status: 'passed',
+      producer: 'fixture',
+      subject: { type: 'product-requirement', id: 'FR-1' },
+      payload: { status: 'passed' }
+    };
+    const built = buildEvidenceIndex([evidence], { indexId: 'index-1', repository: 'fixture/project', revision: 'abc123' });
+    assert.deepEqual(built.errors, []);
+    await mkdir(join(dir, '.lighthouse/evidence/records'), { recursive: true });
+    await writeFile(join(dir, '.lighthouse/evidence/records/stage-1.json'), `${JSON.stringify(evidence, null, 2)}\n`);
+    await writeFile(join(dir, '.lighthouse/evidence/index.json'), `${JSON.stringify(built.index, null, 2)}\n`);
+    const verified = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(verified.status, 0, verified.stderr);
+    const report = JSON.parse(verified.stdout);
+    assert.equal(report.results.find((item) => item.id === 'foundation.evidence').status, 'passed');
+    await writeFile(join(dir, '.lighthouse/evidence/records/stage-1.json'), `${JSON.stringify({ ...evidence, status: 'failed', nextAction: 'Repair the check.' }, null, 2)}\n`);
+    const drift = run(dir, 'verify', ['--format', 'json']);
+    assert.equal(drift.status, 0, drift.stderr);
+    const driftReport = JSON.parse(drift.stdout);
+    const evidenceResult = driftReport.results.find((item) => item.id === 'foundation.evidence');
+    assert.equal(evidenceResult.status, 'failed');
+    assert.equal(driftReport.blocking.includes('foundation.evidence'), false);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

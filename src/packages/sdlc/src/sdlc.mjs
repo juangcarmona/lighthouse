@@ -14,6 +14,7 @@ import { validateMemoryRecord } from './memory.mjs';
 import { replayWorkflow } from './workflow.mjs';
 import { validateStageResult } from './contracts.mjs';
 import { browserEvidenceReport } from './browser-e2e.mjs';
+import { buildEvidenceIndex, evidenceReport, validateEvidenceIndex, validateEvidenceRecord } from './evidence.mjs';
 import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
 import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from './aliases.mjs';
 
@@ -41,10 +42,10 @@ async function verifyContract() {
   for (const stage of stages) {
     for (const asset of [stage.skill, stage.command]) if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing stage asset ${asset}`);
   }
-  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema, contract.assets?.capabilityCatalog, contract.assets?.capabilityCatalogSchema, contract.assets?.browserE2eSchema, contract.assets?.commandAliases, contract.assets?.commandAliasesSchema]) {
+  for (const asset of [contract.assets?.routes, contract.assets?.gates, contract.assets?.stages, contract.assets?.controlPlaneSchema, contract.assets?.triageSchema, contract.assets?.stageResultSchema, contract.assets?.stateSchema, contract.assets?.decompositionSchema, contract.assets?.capabilitiesSchema, contract.assets?.capabilityCatalog, contract.assets?.capabilityCatalogSchema, contract.assets?.browserE2eSchema, contract.assets?.evidenceRecordSchema, contract.assets?.evidenceIndexSchema, contract.assets?.commandAliases, contract.assets?.commandAliasesSchema]) {
     if (!asset || !(await exists(resolve(packageRoot, asset)))) problems.push(`missing contract asset ${asset ?? '(empty)'}`);
   }
-  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'command-aliases.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'schemas/capability-catalog.schema.json', 'schemas/browser-e2e.schema.json', 'schemas/command-aliases.schema.json', 'src/aliases.mjs', 'src/browser-e2e.mjs', 'src/capabilities.mjs', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
+  for (const asset of ['routes.json', 'gates.json', 'stages.json', 'command-aliases.json', 'schemas/routes.schema.json', 'schemas/gates.schema.json', 'schemas/stages.schema.json', 'schemas/control-plane.schema.json', 'schemas/triage.schema.json', 'schemas/stage-result.schema.json', 'schemas/workflow-state.schema.json', 'schemas/decomposition.schema.json', 'schemas/capabilities.schema.json', 'schemas/capability-catalog.schema.json', 'schemas/browser-e2e.schema.json', 'schemas/evidence-record.schema.json', 'schemas/evidence-index.schema.json', 'schemas/command-aliases.schema.json', 'src/aliases.mjs', 'src/browser-e2e.mjs', 'src/evidence.mjs', 'src/capabilities.mjs', 'src/contracts.mjs', 'src/control-plane.mjs', 'src/decompose.mjs', 'src/github.mjs', 'src/memory.mjs', 'src/reconcile.mjs', 'src/routes.mjs', 'src/stacked.mjs', 'src/triage.mjs', 'src/workflow.mjs']) {
     if (!(await exists(resolve(packageRoot, asset)))) problems.push(`missing package asset ${asset}`);
   }
   try {
@@ -188,6 +189,44 @@ async function runBrowserE2e(args) {
   const report = browserEvidenceReport(await readJson(resolve(process.cwd(), inputPath)));
   output(report, format);
   if (!report.valid || report.status !== 'passed') process.exit(1);
+}
+
+async function runEvidence(args) {
+  const inputPath = option(args, '--input');
+  const outputPath = option(args, '--output');
+  const format = option(args, '--format') ?? 'json';
+  const build = args.includes('--build');
+  if (!inputPath || !['json', 'text'].includes(format) || (build && !outputPath)) {
+    console.error('Usage: lighthouse-sdlc evidence --input <record|index|records.json> [--build --output <index.json>] [--format <json|text>]');
+    process.exit(2);
+  }
+  const input = await readJson(resolve(process.cwd(), inputPath));
+  let report;
+  if (build) {
+    const result = buildEvidenceIndex(input.records, input);
+    report = { schemaVersion: 1, status: result.errors.length ? 'invalid' : 'valid', valid: result.errors.length === 0, index: result.index, errors: result.errors };
+    if (result.index) {
+      const output = resolve(process.cwd(), outputPath);
+      await mkdir(dirname(output), { recursive: true });
+      for (const reference of result.index.records) {
+        const record = input.records.find((item) => item.id === reference.id);
+        const recordPath = resolve(dirname(output), reference.path);
+        await mkdir(dirname(recordPath), { recursive: true });
+        await writeFile(recordPath, `${JSON.stringify(record, null, 2)}\n`);
+      }
+      await writeFile(output, `${JSON.stringify(result.index, null, 2)}\n`);
+    }
+  } else {
+    const errors = input?.kind ? validateEvidenceRecord(input) : validateEvidenceIndex(input);
+    report = { ...evidenceReport(input), errors };
+  }
+  if (format === 'json') output(report, format);
+  else {
+    console.log(`Evidence: ${report.status}`);
+    for (const error of report.errors) console.error(`  ${error.code}: ${error.message}`);
+    if (report.index) console.log(`  Coverage entries: ${report.index.coverage.length}`);
+  }
+  if (!report.valid) process.exit(1);
 }
 
 async function runMemory(args) {
@@ -348,8 +387,8 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <contract|verify|aliases|triage|state|stage-result|browser-e2e|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
+if (!['contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
 if (command === 'contract') {
@@ -366,6 +405,8 @@ if (command === 'contract') {
   await runStageResult(process.argv.slice(3));
 } else if (command === 'browser-e2e') {
   await runBrowserE2e(process.argv.slice(3));
+} else if (command === 'evidence') {
+  await runEvidence(process.argv.slice(3));
 } else if (command === 'memory') {
   await runMemory(process.argv.slice(3));
 } else if (command === 'launch') {
@@ -393,4 +434,4 @@ if (command === 'contract') {
   console.log('Lighthouse SDLC package contract is valid.');
 }
 
-export { contractPath, runTriage, verifyContract, runAliases, runState, runStageResult, runBrowserE2e, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose, runReconcileLabels, runGithubLabels };
+export { contractPath, runTriage, verifyContract, runAliases, runState, runStageResult, runBrowserE2e, runEvidence, runControlPlane, runMemory, runLaunch, runDecompose, runRoute, runStacked, runGithubTriage, runGithubDecompose, runReconcileLabels, runGithubLabels };

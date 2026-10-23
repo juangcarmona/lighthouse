@@ -21,6 +21,7 @@ The Lighthouse workspace has a package authoring side and an adopter contract si
 | Public site | `src/public-site/` and `scripts/build-public-site.mjs` | Present the current Lighthouse story and publish ProductShape and ArcShape snapshots |
 | Repository checks | `src/tests/` and `scripts/` | Verify package, link, adoption and site contracts |
 | Capability adoption boundary | `src/packages/sdlc/src/capabilities.mjs`, `src/packages/sdlc/src/reconcile.mjs` and CLI capability commands | Validate the package catalog, plan provider changes, require authorization and record evidence |
+| Evidence contract boundary | `src/packages/sdlc/src/evidence.mjs`, evidence schemas and CLI verification | Adapt producer results into neutral records and build coverage indexes without owning ProductShape or ArcShape |
 | Profile catalog | `src/packages/cli/assets/profiles/` and `src/packages/cli/src/profiles.mjs` | Describe application applicability, owned surfaces and verification layers without adding runtime behavior |
 | Product and architecture sources | `docs/product/` and `docs/architecture/` | Keep ProductShape and ArcShape sources reviewable |
 
@@ -34,6 +35,10 @@ flowchart LR
     catalog --> adapter
     adapter --> provider[Provider-owned state]
     adapter --> evidence[Adoption evidence]
+    sdlc --> records[Evidence records]
+    records --> coverage[Coverage index]
+    product --> coverage
+    architecture --> coverage
     ui[UI package] --> verify
     product[ProductShape source] --> site[Public-site build]
     architecture[ArcShape source] --> site
@@ -53,6 +58,8 @@ The CLI's important interfaces are the manifest and managed paths in an adopter,
 | CLI to authorities | invokes | Provider-owned initialization or read-only validation commands |
 | CLI to capability provider | reads then explicitly writes | Provider adapter plan, authorization hash and adoption evidence |
 | Agent host to SDLC package | reads and validates | Skills, commands, route/gate descriptors and provider-neutral schemas |
+| Producers to evidence contract | writes locally | Stage, browser and future profile results adapted into evidence records; source payloads remain producer-owned |
+| Evidence index to authorities | reads references | ProductShape and ArcShape identifiers, revisions, paths and hashes; no authority mutation |
 
 ## Dependency direction
 

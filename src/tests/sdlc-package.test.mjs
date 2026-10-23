@@ -15,6 +15,7 @@ import { buildTriageReport } from '../packages/sdlc/src/triage.mjs';
 import { replayWorkflow } from '../packages/sdlc/src/workflow.mjs';
 import { validateStageResult } from '../packages/sdlc/src/contracts.mjs';
 import { browserEvidenceReport, validateBrowserEvidence } from '../packages/sdlc/src/browser-e2e.mjs';
+import { adaptBrowserEvidence, adaptStageResult, buildEvidenceIndex, validateEvidenceIndex, validateEvidenceRecord } from '../packages/sdlc/src/evidence.mjs';
 import { capabilityAdapter, declarationFromCatalog, initialAdoptionStatus, readCapabilityCatalog, validateCapabilityCatalog } from '../packages/sdlc/src/capabilities.mjs';
 import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from '../packages/sdlc/src/aliases.mjs';
 
@@ -42,6 +43,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'commands/stacked.md',
     'commands/stage-result.md',
     'commands/browser-e2e.md',
+    'commands/evidence.md',
     'commands/state.md',
     'commands/triage.md',
     'skills/triage/SKILL.md',
@@ -68,9 +70,12 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'schemas/capabilities.schema.json',
     'schemas/capability-catalog.schema.json',
     'schemas/browser-e2e.schema.json',
+    'schemas/evidence-record.schema.json',
+    'schemas/evidence-index.schema.json',
     'schemas/command-aliases.schema.json',
     'src/aliases.mjs',
     'src/browser-e2e.mjs',
+    'src/evidence.mjs',
     'capabilities.json',
     'src/contracts.mjs',
     'src/capabilities.mjs',
@@ -159,6 +164,73 @@ test('browser E2E evidence is deterministic and keeps missing, unavailable and p
   const invalid = browserEvidenceReport({ ...evidence, artifacts: [{ type: 'trace', path: '/tmp/trace.zip' }] });
   assert.equal(invalid.valid, false);
   assert.ok(invalid.errors.some((error) => error.code === 'browser-e2e.artifact'));
+});
+
+test('evidence adapters preserve existing producer payloads and build deterministic coverage', () => {
+  const stage = {
+    schemaVersion: 1,
+    runId: 'run-1',
+    stage: 'implement',
+    status: 'passed',
+    gate: 'done',
+    evidence: [{ id: 'unit', status: 'passed', source: 'vitest' }],
+    missingEvidence: [],
+    unavailableChecks: [],
+    pendingReview: [],
+    nextAction: 'Continue to integrate.'
+  };
+  const browser = {
+    schemaVersion: 1,
+    runner: 'playwright',
+    journey: { id: 'checkout.complete', boundedContext: 'checkout' },
+    command: 'npm run test:e2e',
+    status: 'passed',
+    evidence: [{ id: 'checkout.page', status: 'passed', source: 'playwright:test' }],
+    artifacts: [{ type: 'trace', path: 'test-results/checkout/trace.zip' }],
+    nextAction: 'Proceed to review.'
+  };
+  const stageRecord = adaptStageResult(stage, { id: 'stage-1', subject: { type: 'product-requirement', id: 'FR-EVIDENCE-CONTRACT-001' } });
+  const browserRecord = adaptBrowserEvidence(browser, { id: 'browser-1', subject: { type: 'architecture-decision', id: 'ADR-0001' } });
+  assert.deepEqual(stageRecord.errors, []);
+  assert.deepEqual(browserRecord.errors, []);
+  assert.deepEqual(validateEvidenceRecord(stageRecord.record), []);
+  assert.deepEqual(validateEvidenceRecord(browserRecord.record), []);
+  assert.deepEqual(stageRecord.record.payload, stage);
+  const first = buildEvidenceIndex([stageRecord.record, browserRecord.record], { indexId: 'index-1', repository: 'fixture/project', revision: 'abc123', subjects: [{ type: 'product-requirement', id: 'FR-EVIDENCE-CONTRACT-001' }, { type: 'architecture-decision', id: 'ADR-0001' }] });
+  const second = buildEvidenceIndex([stageRecord.record, browserRecord.record], { indexId: 'index-1', repository: 'fixture/project', revision: 'abc123', subjects: [{ type: 'product-requirement', id: 'FR-EVIDENCE-CONTRACT-001' }, { type: 'architecture-decision', id: 'ADR-0001' }] });
+  assert.deepEqual(first.errors, []);
+  assert.deepEqual(first.index, second.index);
+  assert.deepEqual(first.index.coverage.map((item) => item.status), ['verified', 'verified']);
+  assert.deepEqual(validateEvidenceIndex(first.index), []);
+});
+
+test('evidence coverage distinguishes missing, incomplete and conflicting observations', () => {
+  const base = { schemaVersion: 1, id: 'e-1', runId: 'run-1', kind: 'verification', scope: 'delivery', producer: 'fixture', payload: {}, subject: { type: 'product-requirement', id: 'FR-1' } };
+  const incomplete = buildEvidenceIndex([{ ...base, status: 'pending-review', nextAction: 'Ask for human review.' }], { subjects: [{ type: 'product-requirement', id: 'FR-2' }] });
+  assert.equal(incomplete.index.coverage.find((item) => item.subject.id === 'FR-1').status, 'incomplete');
+  assert.equal(incomplete.index.coverage.find((item) => item.subject.id === 'FR-2').status, 'unverified');
+  const conflict = buildEvidenceIndex([{ ...base, id: 'e-passed', status: 'passed' }, { ...base, id: 'e-failed', status: 'failed', nextAction: 'Resolve the failed check.' }]);
+  assert.equal(conflict.index.coverage[0].status, 'conflict');
+});
+
+test('evidence CLI builds and validates an index only when output is explicit', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-evidence-cli-'));
+  try {
+    const inputPath = join(dir, 'records.json');
+    const outputPath = join(dir, 'index.json');
+    await writeFile(inputPath, await readFile(new URL('./fixtures/evidence/records.json', import.meta.url), 'utf8'));
+    const build = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'evidence', '--input', inputPath, '--build', '--output', outputPath, '--format', 'json'], { cwd: root, encoding: 'utf8' });
+    assert.equal(build.status, 0, build.stderr);
+    const report = JSON.parse(build.stdout);
+    assert.equal(report.status, 'valid');
+    assert.equal(JSON.parse(await readFile(join(dir, 'records/stage-1.json'), 'utf8')).id, 'stage-1');
+    const index = JSON.parse(await readFile(outputPath, 'utf8'));
+    assert.equal(index.coverage.length, 2);
+    assert.deepEqual(validateEvidenceIndex(index), []);
+    const validate = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'evidence', '--input', outputPath, '--format', 'json'], { cwd: root, encoding: 'utf8' });
+    assert.equal(validate.status, 0, validate.stderr);
+    assert.equal(JSON.parse(validate.stdout).status, 'valid');
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 function triageInput(overrides = {}) {

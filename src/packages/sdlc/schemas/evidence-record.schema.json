@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-evidence-record.schema.json",
+  "title": "Lighthouse evidence record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "runId", "kind", "scope", "status", "producer", "payload"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "scope": { "enum": ["product", "architecture", "delivery", "release", "run"] },
+    "status": { "enum": ["passed", "failed", "unavailable", "unconfigured", "pending-review", "not-applicable"] },
+    "producer": { "type": "string", "minLength": 1 },
+    "subject": { "$ref": "#/$defs/subject" },
+    "authorityRefs": { "type": "array", "items": { "$ref": "#/$defs/authorityRef" } },
+    "source": { "$ref": "#/$defs/source" },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/artifact" } },
+    "payload": { "type": "object" },
+    "nextAction": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "authorityRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "id"],
+      "properties": {
+        "authority": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+" },
+        "command": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "path"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}
