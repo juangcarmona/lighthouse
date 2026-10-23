@@ -7,6 +7,7 @@ import { basename, dirname, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
 import { composeProfiles, normalizeApplication, profileCompositionResult, readProfileCatalog } from './profiles.mjs';
+import { hasUnresolvedQuestions, manifestFromInitPlan, validateInitPlan } from './init-plan.mjs';
 let sdlcCapabilities;
 let sdlcReconcile;
 let sdlcGithub;
@@ -41,6 +42,7 @@ const managedPaths = [
   '.husky/pre-push',
   '.github/workflows/lighthouse.yml',
   '.lighthouse/sdlc.json',
+  '.agents/skills/lighthouse-init/SKILL.md',
   upgradeStateRelative,
 ];
 const profileManagedPaths = Object.freeze({
@@ -54,11 +56,13 @@ const profileManagedPaths = Object.freeze({
 });
 const previousManagedPaths = managedPaths.slice(0, -1);
 const legacyManagedPaths = [projection];
+const preSemanticManagedPaths = [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', upgradeStateRelative];
+const preSemanticWithoutUpgradePaths = preSemanticManagedPaths.slice(0, -1);
 const supportedProfiles = readProfileCatalog().profiles.map(({ id }) => id);
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
 const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
-const usage = 'Usage: lighthouse <init|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
+const usage = 'Usage: lighthouse <init|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--plan-file <path>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
 const defaultRepository = () => ({
   layout: [...layout],
@@ -73,7 +77,7 @@ function managedPathsFor(manifest) {
 
 function upgradeScopesFor(manifest) {
   return {
-    harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', ...((manifest?.profiles ?? []).flatMap((profile) => profileManagedPaths[profile] ?? []))],
+    harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.agents/skills/lighthouse-init/SKILL.md', ...((manifest?.profiles ?? []).flatMap((profile) => profileManagedPaths[profile] ?? []))],
     sdlc: ['.lighthouse/sdlc.json'],
   };
 }
@@ -361,6 +365,7 @@ function managedFiles(manifest) {
     '.husky/commit-msg': commitHook(),
     '.husky/pre-push': prePushHook(),
     '.github/workflows/lighthouse.yml': workflow(),
+    '.agents/skills/lighthouse-init/SKILL.md': readFileSync(new URL('../assets/skills/init/SKILL.md', import.meta.url), 'utf8'),
   };
   Object.assign(files, profileAssets(manifest));
   const controlPlane = sdlcControlPlane(manifest);
@@ -586,7 +591,13 @@ function validate(manifest) {
   const previousCompleteManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === previousManagedPaths.length
     && manifest.managed.every((entry, index) => entry === previousManagedPaths[index]);
-  if (!legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged) {
+  const preSemanticManaged = Array.isArray(manifest.managed)
+    && manifest.managed.length === preSemanticManagedPaths.length
+    && manifest.managed.every((entry, index) => entry === preSemanticManagedPaths[index]);
+  const preSemanticWithoutUpgrade = Array.isArray(manifest.managed)
+    && manifest.managed.length === preSemanticWithoutUpgradePaths.length
+    && manifest.managed.every((entry, index) => entry === preSemanticWithoutUpgradePaths[index]);
+  if (!legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
     problems.push(`managed must be ${legacyManagedPaths.join(', ')}, the previous Lighthouse guardrail set or the selected profile set`);
   }
   if ('repository' in manifest) {
@@ -635,6 +646,103 @@ function productNameFromArgs(args) {
   if (index === -1 && !value) return basename(root).replace(/[^A-Za-z0-9 ._-]/gu, '').slice(0, 64) || 'adopter';
   if (!value) throw new Error('--name requires a product name');
   return value;
+}
+
+function valueFromArgs(args, name) {
+  const index = args.indexOf(name);
+  if (index !== -1) return args[index + 1];
+  return args.find((arg) => arg.startsWith(`${name}=`))?.slice(name.length + 1);
+}
+
+async function readInitPlan(planFile) {
+  let plan;
+  try { plan = JSON.parse(await readFile(resolve(root, planFile), 'utf8')); }
+  catch (error) { throw new Error(`Cannot read initialization plan ${planFile}: ${error.message}`); }
+  const problems = validateInitPlan(plan, supportedProfiles);
+  if (problems.length) throw new Error(`Invalid initialization plan:\n${problems.map((problem) => `  ${problem}`).join('\n')}`);
+  return plan;
+}
+
+function printInitializationPlan(plan, result, format) {
+  const report = {
+    schemaVersion: 1,
+    intent: plan.intent,
+    product: plan.product,
+    application: plan.application,
+    profiles: plan.profiles,
+    reference: plan.reference ?? null,
+    openQuestions: plan.openQuestions,
+    status: result.plan.conflicts.length || plan.openQuestions.length ? 'blocked' : 'ready',
+    manifest: {
+      product: result.manifest.product,
+      application: result.manifest.application,
+      profiles: result.manifest.profiles,
+    },
+    operations: result.plan.operations.map(({ path, action }) => ({ path, action })),
+    conflicts: result.plan.conflicts,
+    apply: 'lighthouse init --plan-file <path> --apply',
+  };
+  if (format === 'json') {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+  console.log('Lighthouse semantic initialization plan:');
+  console.log(`  product ${plan.product}`);
+  console.log(`  intent ${plan.intent}`);
+  console.log(`  application ${plan.application.shape} (${plan.application.stacks.join(', ') || 'no stack'})`);
+  console.log(`  profiles ${plan.profiles.join(', ') || 'none'}`);
+  console.log(`  reference ${plan.reference?.kind ?? 'none'}`);
+  if (plan.openQuestions.length) for (const question of plan.openQuestions) console.error(`  question ${question}`);
+  for (const operation of result.plan.operations) console.log(`  ${operation.action} ${operation.path}`);
+  for (const conflict of result.plan.conflicts) console.error(`  conflict ${conflict}`);
+  console.log('  default is dry-run; apply only after review with --apply');
+}
+
+async function initializeFromPlan(args, planFile) {
+  const plan = await readInitPlan(planFile);
+  const format = formatFromArgs(args);
+  const apply = args.includes('--apply');
+  const dryRun = args.includes('--dry-run') || !apply;
+  if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
+  if (format === 'json' && apply) throw new Error('--format json is available for semantic initialization dry runs; omit it when applying.');
+  const existing = await readManifest();
+  let manifest;
+  if (existing) {
+    const problems = validate(existing);
+    if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+    if (existing.product !== plan.product) throw new Error(`Initialization plan targets ${plan.product}, but lighthouse.json belongs to ${existing.product}.`);
+    if (JSON.stringify(existing.profiles ?? []) !== JSON.stringify(plan.profiles)) throw new Error('Initialization plan profiles differ from lighthouse.json; resolve the selection before applying.');
+    if (JSON.stringify(normalizeApplication(existing.application)) !== JSON.stringify(plan.application)) throw new Error('Initialization plan application differs from lighthouse.json; resolve the selection before applying.');
+    manifest = existing;
+  } else {
+    manifest = manifestFromInitPlan(plan, defaultManifest);
+  }
+  const problems = validate(manifest);
+  if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
+  const composition = composeProfiles(readProfileCatalog(), manifest);
+  if (composition.status === 'failed') throw new Error(`Initialization plan has incompatible profiles:\n${composition.selected.flatMap((profile) => profile.problems).map((problem) => `  ${problem}`).join('\n')}`);
+  const initialization = { manifest, plan: await planInitialization(manifest, !existing) };
+  printInitializationPlan(plan, initialization, format);
+  if (initialization.plan.conflicts.length) {
+    if (dryRun) process.exitCode = 1;
+    else throw new Error('Initialization stopped; resolve the reported conflicts and run the plan again.');
+    return;
+  }
+  if (hasUnresolvedQuestions(plan)) {
+    if (dryRun) process.exitCode = 1;
+    else throw new Error('Initialization stopped; answer the open questions before using --apply.');
+    return;
+  }
+  if (dryRun) return;
+  if (!existing) await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
+  for (const operation of initialization.plan.operations.filter((item) => item.path.endsWith('/'))) await mkdir(resolve(root, operation.path), { recursive: true });
+  const files = managedFiles(manifest);
+  for (const [file, content] of Object.entries(files)) {
+    await writeFile(resolve(root, file), content, { flag: 'wx', mode: file.startsWith('.husky/') ? 0o755 : 0o644 });
+    if (file.startsWith('.husky/')) await chmod(resolve(root, file), 0o755);
+  }
+  await writeUpgradeState(manifest, null, files);
+  console.log(`Initialized ${manifest.product} from the semantic plan. Run lighthouse verify.`);
 }
 
 async function planInitialization(manifest, manifestMissing) {
@@ -694,6 +802,8 @@ function printReconciliationPlan(plan) {
 }
 
 async function initialize(args) {
+  const planFile = valueFromArgs(args, '--plan-file');
+  if (planFile) return initializeFromPlan(args, planFile);
   let manifest = await readManifest();
   const manifestMissing = !manifest;
   const selectedProfiles = profileArguments(args);
@@ -1212,7 +1322,7 @@ for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
   if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply'].includes(arg)) continue;
   if (arg === '--dry-run') continue;
-  if (arg === '--apply') { if (!['authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
+  if (arg === '--apply') { if (!['init', 'authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--name') { if (!commandArgs[index + 1]) invalidArgument = true; else index += 1; continue; }
   if (arg.startsWith('--name=') && arg.length > '--name='.length) continue;
   if (arg === '--profile') {
@@ -1225,12 +1335,12 @@ for (let index = 0; index < commandArgs.length; index += 1) {
     continue;
   }
   if (arg === '--format') {
-    if (!['profiles', 'verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
+    if (!['init', 'profiles', 'verify', 'upgrade', 'capabilities'].includes(command) || !['text', 'json'].includes(commandArgs[index + 1])) invalidArgument = true;
     else index += 1;
     continue;
   }
   if (arg.startsWith('--format=') && ['text', 'json'].includes(arg.slice('--format='.length))) {
-    if (!['profiles', 'verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
+    if (!['init', 'profiles', 'verify', 'upgrade', 'capabilities'].includes(command)) invalidArgument = true;
     continue;
   }
   if (arg === '--scope') {
@@ -1243,11 +1353,14 @@ for (let index = 0; index < commandArgs.length; index += 1) {
     continue;
   }
   if (['--id', '--provider', '--repo', '--input', '--plan-file', '--authorize'].includes(arg)) {
-    if (!commandArgs[index + 1]) invalidArgument = true;
+    if (!commandArgs[index + 1] || (arg === '--plan-file' && !['init', 'capabilities'].includes(command))) invalidArgument = true;
     else index += 1;
     continue;
   }
-  if (['--id=', '--provider=', '--repo=', '--input=', '--plan-file=', '--authorize='].some((prefix) => arg.startsWith(prefix) && arg.length > prefix.length)) continue;
+  if (['--id=', '--provider=', '--repo=', '--input=', '--plan-file=', '--authorize='].some((prefix) => arg.startsWith(prefix) && arg.length > prefix.length)) {
+    if (arg.startsWith('--plan-file=') && !['init', 'capabilities'].includes(command)) invalidArgument = true;
+    continue;
+  }
   invalidArgument = true;
 }
 if (!['init', 'profiles', 'authorities', 'reconcile', 'upgrade', 'capabilities', 'verify'].includes(command) || invalidArgument) {

@@ -27,6 +27,7 @@
   },
   "files": [
     "src/lighthouse.mjs",
+    "src/init-plan.mjs",
     "src/guardrails.mjs",
     "assets",
     "README.md",

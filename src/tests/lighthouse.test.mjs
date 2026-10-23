@@ -98,6 +98,78 @@ test('greenfield init creates the repository boundaries and a default manifest',
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('semantic init previews without a reference and applies only after explicit authorization', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-semantic-init-'));
+  try {
+    const planPath = join(dir, 'init-plan.json');
+    await writeFile(planPath, JSON.stringify({
+      schemaVersion: 1,
+      product: 'Semantic Web',
+      intent: 'A small authenticated web application for managing work.',
+      application: { shape: 'frontend', stacks: ['react'] },
+      profiles: ['visual-theme', 'react-web-platform'],
+      openQuestions: [],
+    }));
+    const preview = run(dir, 'init', ['--plan-file', planPath, '--format', 'json']);
+    assert.equal(preview.status, 0, preview.stderr);
+    const report = JSON.parse(preview.stdout);
+    assert.equal(report.reference, null);
+    assert.deepEqual(report.application, { shape: 'frontend', stacks: ['react'] });
+    assert.ok(report.operations.some((operation) => operation.path === 'lighthouse.json'));
+    assert.equal(await access(join(dir, 'lighthouse.json')).then(() => true).catch(() => false), false);
+    const applied = run(dir, 'init', ['--plan-file', planPath, '--apply']);
+    assert.equal(applied.status, 0, applied.stderr);
+    const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.deepEqual(manifest.application, { shape: 'frontend', stacks: ['react'] });
+    assert.deepEqual(manifest.profiles, ['visual-theme', 'react-web-platform']);
+    await access(join(dir, '.agents/skills/lighthouse-init/SKILL.md'));
+    assert.equal(run(dir, 'verify').status, 0);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('semantic init stops on unresolved questions before writing', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-semantic-questions-'));
+  try {
+    const planPath = join(dir, 'init-plan.json');
+    await writeFile(planPath, JSON.stringify({
+      schemaVersion: 1,
+      product: 'Needs Answers',
+      intent: 'A project whose deployment target is not known yet.',
+      application: { shape: 'unknown', stacks: [] },
+      profiles: [],
+      reference: { kind: 'none' },
+      openQuestions: ['Which deployment target should the project support?'],
+    }));
+    const preview = run(dir, 'init', ['--plan-file', planPath, '--format', 'json']);
+    assert.equal(preview.status, 1);
+    assert.match(preview.stdout, /Which deployment target/);
+    assert.equal(await access(join(dir, 'lighthouse.json')).then(() => true).catch(() => false), false);
+    const applied = run(dir, 'init', ['--plan-file', planPath, '--apply']);
+    assert.equal(applied.status, 1);
+    assert.match(applied.stderr, /answer the open questions/);
+    assert.equal(await access(join(dir, 'lighthouse.json')).then(() => true).catch(() => false), false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('semantic init does not require a declared reference to exist', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-semantic-reference-'));
+  try {
+    const planPath = join(dir, 'init-plan.json');
+    await writeFile(planPath, JSON.stringify({
+      schemaVersion: 1,
+      product: 'Reference Optional',
+      intent: 'A command-line tool with a declared but unavailable reference.',
+      application: { shape: 'cli', stacks: ['node'] },
+      profiles: [],
+      reference: { kind: 'local', location: '/tmp/reference-that-does-not-exist', purpose: 'Compare naming only when available.' },
+      openQuestions: [],
+    }));
+    const applied = run(dir, 'init', ['--plan-file', planPath, '--apply']);
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.equal(JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8')).product, 'Reference Optional');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('profiles exposes applicability and verification layers without making them all mandatory', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-profiles-'));
   try {
