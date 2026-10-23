@@ -1,62 +1,42 @@
 ---
 title: System scope and context
 arc42-section: "03"
-description: Current and target boundaries between Lighthouse, adopters, authorities and external tooling.
+description: Current boundaries between Lighthouse, adopters, authority providers and external tooling.
 ---
 
 # 3. System scope and context
 
-## Current system context
+## System context
 
 ```mermaid
 flowchart LR
     accTitle: Current Lighthouse repository context
-    maintainer[Maintainer] --> checkout[Lighthouse checkout]
-    adopter[Adopting project] --> cli[Lighthouse CLI]
-    checkout --> cli
-    cli --> manifest[Project manifest]
-    cli --> projection[LIGHTHOUSE.md]
-    cli --> adoption[Capability adoption plan and evidence]
-    checkout --> packages[Source packages and profiles]
-    checkout --> site[Static public site]
-    tools[Node, npm and .NET tools] --> checkout
-    adoption --> provider[Provider API<br/>for example GitHub]
+    maintainer[Maintainer] --> workspace[Lighthouse workspace]
+    adopter[Adopter] --> cli[Lighthouse CLI]
+    workspace --> packages[CLI, SDLC, UI and profile packages]
+    cli --> manifest[lighthouse.json]
+    cli --> projections[Managed projections and evidence]
+    cli --> providers[ProductShape, ArcShape and provider adapters]
+    sdlc[SDLC package] --> cli
+    workspace --> site[Public-site build]
+    tools[Node, npm and .NET tools] --> workspace
+    providers --> remote[Provider-owned state]
 ```
 
-The current checkout is the implemented system boundary. The CLI reads a project manifest and writes the managed `LIGHTHOUSE.md` projection in a consuming repository.
+The current system boundary is the Lighthouse workspace plus the package contracts it emits. In a consuming repository, the CLI reads `lighthouse.json`, loads installed package assets, plans owned changes and writes only declared Lighthouse-managed paths. Provider-owned paths and remote state remain outside the Lighthouse boundary.
 
-## Target initialization context
+<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
 
-The following context describes the product-defined initializer and its external authorities; it is a target view until the corresponding implementation is delivered.
+## External interfaces
 
-```mermaid
-flowchart LR
-    accTitle: Target Lighthouse initialization context
-    adopter[Adopter] --> init[Lighthouse init]
-    init --> baseline[Repository baseline]
-    init --> profiles[Selected stack profiles]
-    profiles --> aspire[Aspire composition boundary]
-    profiles --> guidance[Soft guidance and examples]
-    profiles --> checks[Hard guardrails and checks]
-    init --> product[ProductShape]
-    init --> architecture[ArcShape]
-    init --> changes[OpenSpec]
-    init --> codegraph[External CodeGraph MCP]
-    init --> result[Initialization report]
-```
-
-Lighthouse coordinates adoption and leaves product intent, architecture evidence, change artifacts and repository indexing with their owning tools or services.
-
-## External boundaries
-
-| External system | Current or target interaction | Owner |
+| External system | Current interaction | Boundary owner |
 | --- | --- | --- |
-| Node and npm | Install workspace dependencies and run scripts | Project toolchain |
-| .NET SDK | Build and verify the .NET reference profile and selected adopters | .NET profile or adopter |
-| Aspire | Compose and run initialized application services | Initialized application |
-| ProductShape | Author and validate product artifacts | ProductShape |
-| ArcShape | Author, validate and render architecture artifacts | ArcShape |
-| OpenSpec | Provide change schemas and change files | OpenSpec |
-| CodeGraph MCP | Index repository and worktree context outside the checkout | External service |
-| Capability provider | Supply and verify provider-owned state after explicit authorization | Provider, for example GitHub |
-| GitHub Pages | Static hosting for the verified public-site output | Site operator |
+| Node and npm | Install packages and run CLI, tests and site scripts | Project toolchain |
+| .NET SDK | Build and verify the reference profile and generated .NET starter | .NET profile or adopter |
+| ProductShape | Validate product files and initialize or adopt `docs/product/model/` | ProductShape |
+| ArcShape | Validate, link-check and render `docs/architecture/` | ArcShape |
+| OpenSpec | Own change schemas and managed change files | OpenSpec |
+| GitHub CLI and provider | Read or explicitly mutate labels, issues and child issues through SDLC adapters | Provider |
+| GitHub Pages | Host the verified static site output | Site operator |
+
+The product-defined CodeGraph MCP and Aspire application boundary are planned adopter integrations. No CodeGraph client or Lighthouse-hosted application runtime is present in this repository.

@@ -1,42 +1,38 @@
 ---
 title: Solution strategy
 arc42-section: "04"
-description: Structural strategy for the current workspace and the profile-aware Lighthouse initializer.
+description: Fundamental strategies for package ownership, safe adoption and evidence-backed verification.
 ---
 
 # 4. Solution strategy
 
-## One baseline with bounded profiles
+## Package boundaries with data-driven composition
 
-Lighthouse keeps a small baseline for repository structure, authorities, managed projections and verification, then composes application profiles that own their templates, guidance and checks.
+Lighthouse keeps a small baseline for repository structure, authorities, managed projections and verification. The CLI, SDLC and UI contracts are independent packages, while profile and guardrail catalogs describe composition without requiring a new CLI branch for each entry.
 
-Initialization selects profiles from the application shape and requested stacks; it does not install a backend or a stack-specific rule set that the adopter did not select.
+The CLI composes selected profiles from `application.shape`, `application.stacks` and the profile catalog. It reports missing prerequisites, incompatibilities and unconfigured choices before writing profile-owned paths.
 
-## Aspire as composition boundary
+## Dry-run, explicit mutation and recorded ownership
 
-Every initialized application receives an Aspire composition boundary, including frontend-only applications. Aspire provides the application host and local composition; the selected profiles decide which services participate.
+Initialization, reconciliation, upgrade planning and authority adoption are previewable. External provider writes require an explicit apply route; capability adoption additionally requires the plan hash. Managed projections carry hashes in `.lighthouse/upgrade.json`, so customized or unowned content is preserved or blocked.
 
-## Feature-aligned modular monolith
+## Provider-owned authorities
 
-When Lighthouse owns a backend, the default full-stack profile uses a modular monolith organized around bounded contexts and vertical feature slices.
+ProductShape, ArcShape and OpenSpec retain their own files and validators. Greenfield authority initialization delegates to the provider CLIs; brownfield adoption runs provider validators read-only and records exact versions only in `lighthouse.json`.
 
-The frontend mirrors the feature vocabulary needed by the backend so that a feature can be traced from user interaction through API boundary, application handler, domain behavior, persistence and tests.
+<!-- pdac:cite id="UC-INITIALIZE-AUTHORITIES" digest="sha256:7243c8af149a2199dd2e9e9f9984a6b7a72de8d98b24917af07fa40861058a51" -->
 
-The profile applies red-green development, starts with unit tests, adds integration and other applicable layers, and records end-to-end evidence by bounded context.
+## Explicit evidence states
 
-## Selective service and stack profiles
+The verifier preserves the distinction between `passed`, `failed`, `drift`, `unavailable`, `unconfigured`, `pending-review` and `not-applicable`. Required guardrails pass only with `passed` or `not-applicable`; semantic and human checks remain visible until their evidence exists.
 
-A requested microservice receives a service profile with only its relevant host, contracts, checks and guidance.
+<!-- pdac:cite id="UC-VERIFY-FOUNDATION" digest="sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11" -->
 
-Python and other stacks receive profiles that define their own dependency, formatting, typing, testing, packaging and CI practices.
+## Target application strategy
 
-## Package ownership
+The product model still describes Aspire as the composition boundary for an initialized application and a feature-aligned modular monolith when Lighthouse owns a backend. The current repository contains the .NET profile and an Aspire example, but the CLI does not generate that application topology. This remains a profile delivery concern for a future adopter integration.
 
-The current workspace keeps the CLI, SDLC and UI as separate packages. The CLI owns initialization, profile composition, the .NET creator and verification, the SDLC package owns lifecycle skills and route contracts, and the UI package owns visual tokens and recipes. The .NET starter remains a CLI-owned profile asset until it needs an independent release or installation boundary.
-
-## Current repository versus target output
-
-The current repository is the package authoring workspace. The target is the adopter repository produced by the selected baseline and profiles. The public site is a generated explanation of both views, not another authority.
+<!-- pdac:cite id="FR-INITIALIZE-FOUNDATION" digest="sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4" -->
 
 ```mermaid
 flowchart TB
@@ -56,4 +52,4 @@ flowchart TB
 
 ## Authority boundaries
 
-ProductShape owns product intent, ArcShape owns architecture documentation and OpenSpec owns change artifacts. Lighthouse integrates their supported routes and does not create replacement authorities.
+ProductShape owns product intent, ArcShape owns architecture documentation and OpenSpec owns change artifacts. Lighthouse integrates supported routes and does not create replacement authorities.

@@ -1,7 +1,7 @@
 ---
 title: Crosscutting concepts
 arc42-section: "08"
-description: Ownership, profile, verification, visual and projection mechanisms shared by Lighthouse blocks.
+description: Ownership, projection, catalog, verification and adoption mechanisms shared by Lighthouse blocks.
 ---
 
 # 8. Crosscutting concepts
@@ -14,9 +14,11 @@ Lighthouse owns its initializer, package contracts, repository checks and adopte
 
 The SDLC package owns lifecycle skills, commands, meta-commands, routes and gates. The CLI records its selected version and host adapters in `.lighthouse/sdlc.json`; the file is configuration and evidence, not agent runtime state.
 
-## Profile selection
+<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
 
-Initialization resolves a baseline plus compatible profiles from the declared application shape and stacks. The CLI publishes the profile catalog as data and exposes the same composition through `lighthouse profiles` and machine-readable verification output.
+## Profile and guardrail catalogs
+
+Initialization resolves the baseline plus compatible profiles from the declared application shape and stacks. The CLI publishes profile and guardrail catalogs as data and exposes the same composition through `lighthouse profiles` and machine-readable verification output.
 
 Profiles declare prerequisites, owned content, examples, verification commands, failure consequences and exception routes.
 
@@ -40,23 +42,17 @@ Capability adoption is dry-run first. The CLI reads provider state to build a de
 
 The current adapter supports GitHub labels. It creates missing labels and preserves existing values; ambiguous equivalents, destructive operations, provider drift and partial failures stop or remain resumable. The provider remains the source of truth and no provider write occurs during package installation or ordinary upgrade discovery.
 
-## Feature and bounded-context alignment
+## Managed projections and safe mutation
 
-The full-stack profile keeps frontend feature areas, API boundaries, application handlers, domain behavior and evidence catalogues aligned with bounded contexts.
+`LIGHTHOUSE.md`, `.lighthouse/sdlc.json` and selected profile files are generated from the manifest and installed package assets. `.lighthouse/upgrade.json` records hashes and scope ownership for upgrade planning.
 
-The mapping is a structural aid for maintenance and testing; it does not require a particular frontend framework.
+Init, reconcile and upgrade refuse to overwrite an occupied path. Capability apply rereads provider state, requires the authorized plan hash and records partial or completed operations for verification and recovery.
 
-## Test progression
+## Evidence states
 
-The target .NET profile starts with red-green unit development, adds integration and other applicable layers, and records end-to-end evidence by bounded context.
+The verifier uses explicit statuses for deterministic, semantic and human checks. A pending review or unavailable checker is visible and does not satisfy a required guardrail.
 
-NSubstitute is the default .NET test-double library where the profile applies.
-
-## Managed projections
-
-`LIGHTHOUSE.md` is generated from a consuming project's manifest and is not edited as an independent source.
-
-ProductShape, ArcShape and OpenSpec generated files remain provider-owned and are changed through their provider routes.
+<!-- pdac:cite id="UC-VERIFY-FOUNDATION" digest="sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11" -->
 
 ## Visual contract
 
@@ -68,7 +64,7 @@ The UI package provides semantic tokens, native recipes and `DESIGN.md`; initial
 | --- | --- | --- |
 | Source boundary | `src/packages/`, `src/dotnet/`, `src/gallery/` and `src/public-site/` | Product-owned `src/` with selected profiles and application code |
 | Documentation authority | ProductShape and ArcShape sources in `docs/` | The adopter's initialized ProductShape and ArcShape routes |
-| Composition | No hosted Lighthouse runtime | Aspire AppHost composes the selected application services |
+| Composition | No hosted Lighthouse runtime; .NET profile contains a reference AppHost | Aspire AppHost is a product-defined adopter boundary that the current CLI does not generate |
 | Verification | npm, .NET, link, visual and site checks | Profile checks plus project-owned unit, integration and end-to-end evidence |
 | SDLC contract | `src/packages/sdlc/` and `.lighthouse/sdlc.json` projection | Selected package contract and host-specific adapters |
 | Public explanation | Generated landing, ProductShape snapshot and ArcShape snapshot | Optional adopter documentation and package-owned guidance |
