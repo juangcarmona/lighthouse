@@ -20,7 +20,7 @@ test('creator seeds an independent product and refuses an occupied target', asyn
     assert.doesNotMatch(solution, /<Folder/);
     const manifest = JSON.parse(await readFile(resolve(target, 'lighthouse.json'), 'utf8'));
     assert.equal(manifest.product, 'Workshop');
-    assert.deepEqual(manifest.managed, ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json']);
+    assert.deepEqual(manifest.managed, ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md']);
     assert.deepEqual(manifest.packages.sdlc, { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' });
     await access(resolve(target, '.lighthouse/sdlc.json'));
     assert.match(await readFile(resolve(target, '.github/workflows/lighthouse.yml'), 'utf8'), /node scripts\/lighthouse\.mjs verify/);

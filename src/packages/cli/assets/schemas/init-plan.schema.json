@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/init-plan.schema.json",
+  "title": "Lighthouse semantic initialization plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "product", "intent", "application", "profiles", "openQuestions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "product": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$"},
+    "intent": {"type": "string", "minLength": 1},
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shape", "stacks"],
+      "properties": {
+        "shape": {"enum": ["unknown", "frontend", "backend", "full-stack", "service", "library", "tooling", "cli", "worker", "mobile"]},
+        "stacks": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "profiles": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}, "uniqueItems": true},
+    "reference": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": {"enum": ["none", "local", "repository"]},
+            "location": {"type": "string", "minLength": 1},
+            "purpose": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "openQuestions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}
