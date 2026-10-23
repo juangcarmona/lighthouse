@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.7.0
+
+### Minor Changes
+
+- df290ab: # Short command aliases
+
+  Publish versioned `/lh:*` command aliases and a host-readable command projection while retaining the canonical `/lighthouse:*` commands.
+
 ## 0.6.0
 
 ### Minor Changes

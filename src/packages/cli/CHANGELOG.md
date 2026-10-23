@@ -1,5 +1,30 @@
 # @juangcarmona/lighthouse
 
+## 0.8.0
+
+### Minor Changes
+
+- 13972a6: # Existing authority adoption
+
+  Add dry-run-first adoption and verification for existing ProductShape and ArcShape authorities without writing provider-owned files.
+
+- 058d8d9: # Semantic initialization
+
+  Add semantic initialization plans with optional references, deterministic dry runs and explicit apply authorization.
+
+- df290ab: # Short command aliases
+
+  Publish versioned `/lh:*` command aliases and a host-readable command projection while retaining the canonical `/lighthouse:*` commands.
+
+### Patch Changes
+
+- 15927a0: # ArcShape 0.1.4
+
+  Update the ArcShape authority integration to 0.1.4 for improved nested architecture documentation and rendering.
+
+- Updated dependencies [df290ab]
+  - @juangcarmona/lighthouse-sdlc@0.7.0
+
 ## 0.7.0
 
 ### Minor Changes
