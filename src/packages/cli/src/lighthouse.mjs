@@ -60,7 +60,7 @@ const preSemanticManagedPaths = [projection, 'scripts/lighthouse-guard.mjs', '.h
 const preSemanticWithoutUpgradePaths = preSemanticManagedPaths.slice(0, -1);
 const supportedProfiles = readProfileCatalog().profiles.map(({ id }) => id);
 const branchPattern = '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$';
-const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.3' };
+const authorityVersions = { productShape: '0.22.0', arcShape: '0.1.4' };
 const upgradeSchema = './node_modules/@juangcarmona/lighthouse/assets/schemas/lighthouse-upgrade.schema.json';
 const usage = 'Usage: lighthouse <init|create-dotnet|profiles|authorities|reconcile|upgrade|capabilities|verify> [--name <product>] [--plan-file <path>] [--profile <profile>] [--scope <harness|sdlc|all>] [--format <text|json>] [--dry-run] [--apply]';
 
