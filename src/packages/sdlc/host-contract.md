@@ -23,6 +23,8 @@ A host policy declares `repository`, `owner`, `stages`, `workflowRevision`, `pac
 
 The engine writes `{schemaVersion: 1, result, effect}`. `result` follows the existing stage-result contract and must match the admitted run, stage and gate. A `passed` result must also pass completion validation. `ready`, `blocked` and `failed` remain distinct reports; none approves a human gate.
 
+Outer evidence and blocker arrays cover the requested stage. Keep unperformed later-stage checks in `result.output` with their status and intended stage; do not report them as passing or as blockers for a stage that does not require them. Missing evidence required by the current stage still blocks completion. The engine cites admitted request identities as host-supplied provenance; authenticating them remains the host's obligation before execution and publication, not an unavailable engine check.
+
 The only effect is `{type: "issue-comment", body: "..."}` with 1–16000 characters. The engine cannot select a repository, issue, credential or merge action. The publisher reserves `<!-- lighthouse-run:` markers and derives the destination from admission. It may publish clarification or blocked-stage reports but must never treat those as completed stages.
 
 Before applying an effect, the host rechecks authority and work-item freshness, persists publication intent and fences the publisher. It retains an immutable receipt or an explicit uncertain outcome. A retry must reconcile that outcome before emitting another effect. A completed stage waits for a verifiable owner decision; the envelope itself grants no approval.
