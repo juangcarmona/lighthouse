@@ -8,7 +8,7 @@ runs-on-slim: ubuntu-24.04
 strict: true
 env:
   LIGHTHOUSE_STAGE: review
-  LIGHTHOUSE_SKILL: src/packages/sdlc/skills/review/SKILL.md
+  LIGHTHOUSE_SKILL: node_modules/@juangcarmona/lighthouse-sdlc/skills/review/SKILL.md
 on:
   workflow_call:
     inputs:

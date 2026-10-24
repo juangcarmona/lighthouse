@@ -8,7 +8,7 @@ runs-on-slim: ubuntu-24.04
 strict: true
 env:
   LIGHTHOUSE_STAGE: propose
-  LIGHTHOUSE_SKILL: src/packages/sdlc/skills/propose/SKILL.md
+  LIGHTHOUSE_SKILL: node_modules/@juangcarmona/lighthouse-sdlc/skills/propose/SKILL.md
 on:
   workflow_call:
     inputs:
