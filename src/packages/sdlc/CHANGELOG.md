@@ -1,5 +1,27 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.9.0
+
+### Minor Changes
+
+- cd4dfdb: # Consumer resolution and external stage host
+
+  Resolve worker commands and skills from the locked installed package and verify the adopted version before execution. Add the initial supervised triage/refine host contract, constrained issue-comment effects and an opt-in external-host workflow. Host admission, execution, approval verification and publication remain adopter responsibilities.
+
+### Patch Changes
+
+- 5c2bba0: # Include the stage-result schema in engine context
+
+  Supply the exact result schema to external engines so assessment vocabulary is not confused with stage evidence statuses. Clarify that a later human gate decision does not itself make the current stage incomplete.
+
+- b2c331e: # Require completed stage results
+
+  Fail workers when stage results are unresolved or do not match the dispatched run, stage and gate. Reject gh-aw fast-forward composition until human gate approvals can be verified, and preserve JSON stage input without appending a closing brace.
+
+- 4d97cc7: # Enforce declared stage-result properties
+
+  Reject undeclared result/evidence properties and malformed optional evidence text so runtime validation follows the published schema.
+
 ## 0.8.0
 
 ### Minor Changes
