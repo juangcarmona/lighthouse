@@ -31,10 +31,18 @@ L1 precedes L2. L3 needs L2 and an operational host; L4 needs L3 and that host's
 
 ## First-consumer readiness
 
-The operator selected a personal frontend repository already using Lighthouse `0.9.0`. Its local verification passes the required foundation checks, while authorities, labels and evidence remain unconfigured. Its adoption files are still uncommitted. The concrete repository inventory and pilot scenario belong to the factory's [pilot plan](https://github.com/juangcarmona/sofa/blob/main/docs/roadmap/first-pilot.md), where operator-specific details can evolve independently of this reusable baseline.
+The operator selected a personal frontend repository whose published pilot preparation now records committed Lighthouse CLI `0.9.1` and SDLC `0.9.0`. Authorities, labels and evidence integration remain explicit adoption gaps; real supervised triage/refine is recorded in the host pilot evidence. The concrete repository inventory and pilot scenario belong to the factory's [pilot plan](https://github.com/juangcarmona/sofa/blob/main/docs/roadmap/first-pilot.md), where operator-specific details can evolve independently of this reusable baseline.
 
-Before a real run, preserve and complete the consumer's current work, establish its verification command, resolve its authority requirements or explicit exceptions, adopt labels through the plan/apply route and verify its own runner registration. A green `lighthouse verify` confirms configured guardrails; it does not establish runtime, event delivery or product acceptance.
+Before the next capability rollout, preserve the consumer's current work, recheck its verification command and authority requirements or exceptions, adopt label changes through the plan/apply route and verify its runner and host compatibility. A green `lighthouse verify` confirms configured guardrails; it does not establish runtime, event delivery or product acceptance.
 
 ## Acceptance of this design
 
 The architecture accepted by the maintainer on 2026-10-24 keeps the existing product baseline intact. Implementation should turn each gap into a bounded work item. Any change to product scope, human decision substitution or supported engines goes through the owning product process. A package fixture, an installed runner and a successful model response are three different proofs; none alone proves delivery.
+
+## Authorized entry and autonomy revision
+
+The maintainer accepted the two-entry direction on 2026-10-24; [ADR-0008](../architecture/09-architecture-decisions/0008-separate-entry-and-autonomy.md) records it. [CHG-AUTHORIZED-WORKFLOW-ENTRY-001](../product/changes/active/chg-authorized-workflow-entry-001/change.md) proposes the product correction. This revision replaces mandatory triage as the entry for every actor and repeated human stops as the only progression model. It preserves required evidence and separately authorized integration.
+
+The current host contract remains schema 1, supervised, triage/refine only, with comment publication. Its `refine` request requires an approved triage predecessor. The declared unattended route still contains supervised human gates. Those are migration gaps, not the intended two-entry behavior.
+
+[OpenSpec delivery change](../../openspec/changes/authorized-workflow-entry/proposal.md) owns the implementation design, scenario matrix and ordered tasks for [#70](https://github.com/juangcarmona/lighthouse/issues/70). Product semantics remain in ProductShape. The first executable slice must prove direct authorized refinement through the shared decision contract and trusted host; it must not add another independently maintained command router. Later slices add requester intake and continuation, implementation with real OpenSpec artifacts and bounded PR correction, then separately authorized integration. Installation, fixture validation and live acceptance remain distinct evidence.
