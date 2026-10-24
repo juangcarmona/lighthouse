@@ -1,5 +1,22 @@
 # @juangcarmona/lighthouse
 
+## 0.9.0
+
+### Minor Changes
+
+- 543ae60: # Lighthouse SDLC gh-aw workflows
+
+  Project the Lighthouse SDLC gh-aw router, workers and compiled workflows into adopters through the explicit SDLC upgrade scope.
+
+- f963d05: <!-- markdownlint-disable MD041 --> Add a neutral evidence contract, deterministic coverage indexes and non-blocking Lighthouse verification for evidence integrity.
+
+### Patch Changes
+
+- d00c11c: <!-- markdownlint-disable MD041 --> Update the packaged ArcShape and ProductShape authorities to 0.1.6 and 0.23.0.
+- Updated dependencies [543ae60]
+- Updated dependencies [f963d05]
+  - @juangcarmona/lighthouse-sdlc@0.8.0
+
 ## 0.8.0
 
 ### Minor Changes

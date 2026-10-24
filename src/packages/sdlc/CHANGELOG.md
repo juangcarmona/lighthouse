@@ -1,5 +1,15 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.8.0
+
+### Minor Changes
+
+- 543ae60: # Lighthouse SDLC gh-aw workflows
+
+  Project the Lighthouse SDLC gh-aw router, workers and compiled workflows into adopters through the explicit SDLC upgrade scope.
+
+- f963d05: <!-- markdownlint-disable MD041 --> Add a neutral evidence contract, deterministic coverage indexes and non-blocking Lighthouse verification for evidence integrity.
+
 ## 0.7.0
 
 ### Minor Changes
