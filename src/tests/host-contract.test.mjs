@@ -57,3 +57,18 @@ test('packed consumer resolves preflight and result validation with no Lighthous
     assert.equal(run(join(target,'src/installation.mjs')).status,1);
   } finally { await rm(dir,{recursive:true,force:true}); }
 });
+
+
+test('engine context includes the exact stage-result schema and preserves the requested identity', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-context-'));
+  try {
+    await writeFile(join(dir, 'request.json'), JSON.stringify(request));
+    await writeFile(join(dir, 'issue.json'), JSON.stringify({ title: 'A small change' }));
+    const command = spawnSync(process.execPath, ['src/packages/sdlc/src/host-contract.mjs', 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' });
+    assert.equal(command.status, 0, command.stderr);
+    const context = JSON.parse(command.stdout);
+    assert.equal(context.contract.envelope.result.runId, request.runId);
+    assert.deepEqual(context.contract.resultSchema.properties.evidence.items.properties.status.enum, ['passed', 'failed', 'unavailable', 'unconfigured', 'pending-review', 'not-applicable']);
+    assert.equal(context.contract.resultSchema.properties.unavailableChecks.items.type, 'string');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
