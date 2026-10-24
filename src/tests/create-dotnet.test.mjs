@@ -20,7 +20,7 @@ test('creator seeds an independent product and refuses an occupied target', asyn
     assert.doesNotMatch(solution, /<Folder/);
     const manifest = JSON.parse(await readFile(resolve(target, 'lighthouse.json'), 'utf8'));
     assert.equal(manifest.product, 'Workshop');
-    assert.deepEqual(manifest.managed, ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json']);
+    assert.deepEqual(manifest.managed, ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.github/workflows/lighthouse-sdlc-router.yml', '.github/workflows/lighthouse-sdlc-triage.md', '.github/workflows/lighthouse-sdlc-triage.lock.yml', '.github/workflows/lighthouse-sdlc-refine.md', '.github/workflows/lighthouse-sdlc-refine.lock.yml', '.github/workflows/lighthouse-sdlc-propose.md', '.github/workflows/lighthouse-sdlc-propose.lock.yml', '.github/workflows/lighthouse-sdlc-implement.md', '.github/workflows/lighthouse-sdlc-implement.lock.yml', '.github/workflows/lighthouse-sdlc-integrate.md', '.github/workflows/lighthouse-sdlc-integrate.lock.yml', '.github/workflows/lighthouse-sdlc-review.md', '.github/workflows/lighthouse-sdlc-review.lock.yml', '.github/workflows/shared/lighthouse-sdlc-stage.md', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json']);
     assert.deepEqual(manifest.packages.sdlc, { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' });
     await access(resolve(target, '.lighthouse/sdlc.json'));
     await access(resolve(target, '.lighthouse/commands.json'));
@@ -51,6 +51,7 @@ test('packaged creator seeds the profile assets and verifier without remote writ
     assert.match(await readFile(resolve(target, '.agents/skills/lighthouse-dotnet/SKILL.md'), 'utf8'), /Aspire/);
     assert.match(await readFile(resolve(target, 'scripts/verify-dotnet.mjs'), 'utf8'), /LighthouseModule/);
     assert.match(await readFile(resolve(target, 'Product.slnx'), 'utf8'), /src\/root\/Product.Api/);
+    await access(resolve(target, '.github/workflows/lighthouse-sdlc-triage.lock.yml'));
     const verify = spawnSync(process.execPath, [resolve(target, 'scripts/lighthouse.mjs'), 'verify', '--format', 'json'], { cwd: target, encoding: 'utf8' });
     assert.equal(verify.status, 0, `${verify.stdout}\n${verify.stderr}`);
   } finally { await rm(parent, { recursive: true, force: true }); }

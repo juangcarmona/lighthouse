@@ -1,0 +1,176 @@
+name: Lighthouse SDLC router
+
+# This router owns the only automatic composition boundary. A normal dispatch calls exactly one
+# worker. `ff` follows the selected route and stops when a worker fails; it never adds a stage.
+on:
+  workflow_dispatch:
+    inputs:
+      route:
+        description: Lighthouse route from src/packages/sdlc/routes.json.
+        required: true
+        type: choice
+        options: [supervised, plan-only, unattended, hotfix, stacked]
+      stage:
+        description: One declared stage to run, or the first stage when composition is ff.
+        required: true
+        default: triage
+        type: choice
+        options: [triage, refine, propose, implement, integrate, review]
+      composition:
+        description: Run one stage, or explicitly compose the selected route through ff.
+        required: true
+        default: stage
+        type: choice
+        options: [stage, ff]
+      available:
+        description: Comma-separated route prerequisites already available to the host.
+        required: false
+        default: ''
+        type: string
+      run-id:
+        description: Stable Lighthouse run identifier; defaults to the GitHub run id.
+        required: false
+        default: ''
+        type: string
+      input:
+        description: Compact JSON input for the first stage.
+        required: false
+        default: '{}'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-sdlc-${{ inputs.run-id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Lighthouse route
+    runs-on: ubuntu-24.04
+    outputs:
+      valid: ${{ steps.route.outputs.valid }}
+      triage: ${{ steps.route.outputs.triage }}
+      refine: ${{ steps.route.outputs.refine }}
+      propose: ${{ steps.route.outputs.propose }}
+      implement: ${{ steps.route.outputs.implement }}
+      integrate: ${{ steps.route.outputs.integrate }}
+      review: ${{ steps.route.outputs.review }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate route, prerequisites and selected composition
+        id: route
+        env:
+          ROUTE: ${{ inputs.route }}
+          STAGE: ${{ inputs.stage }}
+          COMPOSITION: ${{ inputs.composition }}
+          AVAILABLE: ${{ inputs.available }}
+        run: |
+          set -euo pipefail
+          node src/packages/sdlc/src/sdlc.mjs route --route "$ROUTE" --available "$AVAILABLE" --format json > route.json
+          jq -e '.valid == true and .canRun == true' route.json >/dev/null
+          jq -e --arg stage "$STAGE" '.stages | index($stage) != null' route.json >/dev/null
+          if [ "$COMPOSITION" = ff ]; then
+            first_stage=$(jq -r '.stages[0]' route.json)
+            [ "$STAGE" = "$first_stage" ] || { echo "ff must start at $first_stage" >&2; exit 1; }
+          fi
+          echo 'valid=true' >> "$GITHUB_OUTPUT"
+          for stage in triage refine propose implement integrate review; do
+            printf '%s=%s\n' "$stage" "$(jq -r --arg stage "$stage" 'if (.stages | index($stage)) then "true" else "false" end' route.json)" >> "$GITHUB_OUTPUT"
+          done
+
+  call-triage:
+    needs: validate
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'triage') || inputs.composition == 'ff')
+    uses: ./.github/workflows/lighthouse-sdlc-triage.lock.yml
+    permissions: write-all # gh-aw workers request read-all; the reusable-workflow caller must satisfy it.
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ''
+
+  call-refine:
+    needs: [validate, call-triage]
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'refine') ||
+      (inputs.composition == 'ff' && needs.validate.outputs.refine == 'true' && needs.call-triage.result == 'success'))
+    uses: ./.github/workflows/lighthouse-sdlc-refine.lock.yml
+    permissions: write-all
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ${{ inputs.composition == 'ff' && 'triage' || '' }}
+
+  call-propose:
+    needs: [validate, call-triage, call-refine]
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'propose') ||
+      (inputs.composition == 'ff' && needs.validate.outputs.propose == 'true' &&
+      needs.call-triage.result == 'success' && needs.call-refine.result == 'success'))
+    uses: ./.github/workflows/lighthouse-sdlc-propose.lock.yml
+    permissions: write-all
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ${{ inputs.composition == 'ff' && 'refine' || '' }}
+
+  call-implement:
+    needs: [validate, call-triage, call-refine, call-propose]
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'implement') ||
+      (inputs.composition == 'ff' && needs.validate.outputs.implement == 'true' &&
+      needs.call-triage.result == 'success' &&
+      (needs.validate.outputs.refine != 'true' || needs.call-refine.result == 'success') &&
+      (needs.validate.outputs.propose != 'true' || needs.call-propose.result == 'success')))
+    uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
+    permissions: write-all
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ${{ inputs.composition == 'ff' && 'propose' || '' }}
+
+  call-integrate:
+    needs: [validate, call-triage, call-refine, call-propose, call-implement]
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'integrate') ||
+      (inputs.composition == 'ff' && needs.validate.outputs.integrate == 'true' &&
+      needs.call-triage.result == 'success' &&
+      (needs.validate.outputs.refine != 'true' || needs.call-refine.result == 'success') &&
+      (needs.validate.outputs.propose != 'true' || needs.call-propose.result == 'success') &&
+      needs.call-implement.result == 'success'))
+    uses: ./.github/workflows/lighthouse-sdlc-integrate.lock.yml
+    permissions: write-all
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ${{ inputs.composition == 'ff' && 'implement' || '' }}
+
+  call-review:
+    needs: [validate, call-triage, call-refine, call-propose, call-implement, call-integrate]
+    if: >-
+      always() && needs.validate.outputs.valid == 'true' &&
+      ((inputs.composition == 'stage' && inputs.stage == 'review') ||
+      (inputs.composition == 'ff' && needs.validate.outputs.review == 'true' &&
+      needs.call-triage.result == 'success' &&
+      (needs.validate.outputs.refine != 'true' || needs.call-refine.result == 'success') &&
+      (needs.validate.outputs.propose != 'true' || needs.call-propose.result == 'success') &&
+      needs.call-implement.result == 'success' && needs.call-integrate.result == 'success'))
+    uses: ./.github/workflows/lighthouse-sdlc-review.lock.yml
+    permissions: write-all
+    with:
+      route: ${{ inputs.route }}
+      run-id: ${{ inputs.run-id || github.run_id }}
+      input: ${{ inputs.input }}
+      previous-stage: ${{ inputs.composition == 'ff' && 'integrate' || '' }}

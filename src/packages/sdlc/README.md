@@ -12,6 +12,14 @@ It provides a neutral evidence contract for delivery, product and architecture r
 
 It does not run agents, store transcripts, dispatch work between repositories or replace ProductShape, ArcShape, OpenSpec or an agent host.
 
+## gh-aw workflow projection
+
+The package includes the six Lighthouse SDLC worker sources, their compiled `.lock.yml` workflows and the router projection. The Lighthouse CLI projects them into `.github/workflows` during initialization, reconciliation or an explicit `lighthouse upgrade --scope sdlc --apply`; package installation alone does not write repository files.
+
+The host must provide the runner capability `[self-hosted, linux, lighthouse-sdlc]`, the GitHub and gh-aw credentials required by the compiled workflow, the selected route and stage input, and durable evidence handling for the uploaded stage result. Each worker executes one declared stage and writes `/tmp/gh-aw/agent/stage-result.json`; the host remains responsible for runtime, queues, budgets and model selection. The generic runner capability is a contract, not a SoFa or Bastion identity.
+
+The router validates the existing Lighthouse route and `requires` declarations. A normal dispatch runs one stage. Only an explicit `ff` composition chains the selected route, and it stops when a worker fails. The `integrate` worker prepares the configured merge action without merging unless repository policy authorizes it; `review` closes the flow with `gate: null`.
+
 Install it with the Lighthouse CLI or run `lighthouse-sdlc verify` from the package installation to check the distributed contract.
 
 Run `lighthouse-sdlc triage --input <file>` to validate one structured triage result and receive its proposed workflow and classification labels. The command is read-only by default; `--apply --labels-file <file>` writes only after the report is ready and the labels file still matches the input.

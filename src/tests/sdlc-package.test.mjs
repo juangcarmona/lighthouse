@@ -21,7 +21,7 @@ import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from
 
 const root = process.cwd();
 
-test('the SDLC artifact contains its contract and lifecycle assets', () => {
+test('the SDLC artifact contains its contract and lifecycle assets', async () => {
   const packed = spawnSync('npm', ['pack', '--workspace', '@juangcarmona/lighthouse-sdlc', '--dry-run', '--json'], { cwd: root, encoding: 'utf8' });
   assert.equal(packed.status, 0, packed.stderr);
   const [artifact] = JSON.parse(packed.stdout);
@@ -88,8 +88,28 @@ test('the SDLC artifact contains its contract and lifecycle assets', () => {
     'src/sdlc.mjs',
     'src/triage.mjs',
     'src/workflow.mjs',
+    'workflows/lighthouse-sdlc-router.yml',
+    'workflows/lighthouse-sdlc-triage.md', 'workflows/lighthouse-sdlc-triage.lock.yml',
+    'workflows/lighthouse-sdlc-refine.md', 'workflows/lighthouse-sdlc-refine.lock.yml',
+    'workflows/lighthouse-sdlc-propose.md', 'workflows/lighthouse-sdlc-propose.lock.yml',
+    'workflows/lighthouse-sdlc-implement.md', 'workflows/lighthouse-sdlc-implement.lock.yml',
+    'workflows/lighthouse-sdlc-integrate.md', 'workflows/lighthouse-sdlc-integrate.lock.yml',
+    'workflows/lighthouse-sdlc-review.md', 'workflows/lighthouse-sdlc-review.lock.yml',
+    'workflows/shared/lighthouse-sdlc-stage.md',
     'package.json'
   ]) assert.ok(files.includes(path), `missing ${path}`);
+  for (const path of [
+    'lighthouse-sdlc-router.yml',
+    'lighthouse-sdlc-triage.md', 'lighthouse-sdlc-triage.lock.yml',
+    'lighthouse-sdlc-refine.md', 'lighthouse-sdlc-refine.lock.yml',
+    'lighthouse-sdlc-propose.md', 'lighthouse-sdlc-propose.lock.yml',
+    'lighthouse-sdlc-implement.md', 'lighthouse-sdlc-implement.lock.yml',
+    'lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-integrate.lock.yml',
+    'lighthouse-sdlc-review.md', 'lighthouse-sdlc-review.lock.yml',
+  ]) {
+    assert.equal(await readFile(join(root, `.github/workflows/${path}`), 'utf8'), await readFile(join(root, `src/packages/sdlc/workflows/${path}`), 'utf8'));
+  }
+  assert.equal(await readFile(join(root, '.github/workflows/shared/lighthouse-sdlc-stage.md'), 'utf8'), await readFile(join(root, 'src/packages/sdlc/workflows/shared/lighthouse-sdlc-stage.md'), 'utf8'));
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
   const aliases = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'aliases', '--format', 'json'], { cwd: root, encoding: 'utf8' });
