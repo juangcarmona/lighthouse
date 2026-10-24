@@ -1,4 +1,5 @@
 import stageContract from '../stages.json' with { type: 'json' };
+import resultSchema from '../schemas/stage-result.schema.json' with { type: 'json' };
 
 export const STAGES = Object.freeze(['triage', 'refine', 'propose', 'implement', 'integrate', 'review']);
 export const GATES = Object.freeze(['triaged', 'ready', 'planned', 'done']);
@@ -21,6 +22,7 @@ function isRecord(value) {
 export function validateStageResult(value) {
   const errors = [];
   if (!isRecord(value)) return [issue('stage-result.invalid', 'stage result must be an object')];
+  for (const key of Object.keys(value)) if (!(key in resultSchema.properties)) errors.push(issue('stage-result.unknown-field', `${key} is unsupported`, key));
   if (value.schemaVersion !== 1) errors.push(issue('stage-result.schema-version', 'schemaVersion must be 1', 'schemaVersion'));
   for (const field of ['runId', 'nextAction']) if (typeof value[field] !== 'string' || !value[field].trim()) errors.push(issue(`stage-result.${field}`, `${field} must be a non-empty string`, field));
   if (!stageSet.has(value.stage)) errors.push(issue('stage-result.stage', `stage must be one of ${STAGES.join(', ')}`, 'stage'));
@@ -28,6 +30,10 @@ export function validateStageResult(value) {
   if (value.gate !== null && !gateSet.has(value.gate)) errors.push(issue('stage-result.gate', `gate must be one of ${GATES.join(', ')} or null`, 'gate'));
   if (!Array.isArray(value.evidence)) errors.push(issue('stage-result.evidence', 'evidence must be an array', 'evidence'));
   else for (const [index, evidence] of value.evidence.entries()) {
+    if (isRecord(evidence)) {
+      for (const key of Object.keys(evidence)) if (!(key in resultSchema.properties.evidence.items.properties)) errors.push(issue('stage-result.evidence-field', `evidence[${index}].${key} is unsupported`, `evidence[${index}]`));
+      for (const key of ['source', 'reason']) if (evidence[key] !== undefined && typeof evidence[key] !== 'string') errors.push(issue('stage-result.evidence-field', `evidence[${index}].${key} must be a string`, `evidence[${index}]`));
+    }
     if (!isRecord(evidence) || typeof evidence.id !== 'string' || !evidence.id.trim() || !evidenceStatusSet.has(evidence.status)) errors.push(issue('stage-result.evidence-item', `evidence[${index}] needs an id and a supported status`, `evidence[${index}]`));
   }
   for (const field of ['missingEvidence', 'unavailableChecks', 'pendingReview']) if (!Array.isArray(value[field]) || value[field].some((item) => typeof item !== 'string' || !item.trim())) errors.push(issue(`stage-result.${field}`, `${field} must be an array of names`, field));
