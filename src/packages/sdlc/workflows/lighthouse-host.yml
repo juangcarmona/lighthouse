@@ -25,11 +25,10 @@ jobs:
        startsWith(github.event.comment.body, '/lh:refine '))
     runs-on: [self-hosted, linux, lighthouse-host]
     timeout-minutes: 20
-    env:
-      LIGHTHOUSE_RECEIPT: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}.json
     steps:
       - name: Submit one stage to the registered host
         env:
+          LIGHTHOUSE_RECEIPT: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}.json
           LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
           LIGHTHOUSE_WORKFLOW_REVISION: ${{ github.workflow_sha }}
         run: lighthouse-host-bridge github-event
@@ -38,6 +37,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-host-${{ github.run_id }}
-          path: ${{ env.LIGHTHOUSE_RECEIPT }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}.json
           if-no-files-found: warn
           retention-days: 14
