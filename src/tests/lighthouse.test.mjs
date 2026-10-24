@@ -249,7 +249,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
     assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
     const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
-    assert.deepEqual(manifest.integrations, { productShape: '0.22.0', arcShape: '0.1.4' });
+    assert.deepEqual(manifest.integrations, { productShape: '0.23.0', arcShape: '0.1.6' });
     for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
