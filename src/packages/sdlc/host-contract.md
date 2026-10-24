@@ -2,6 +2,18 @@
 
 Schema version 1 supports one triage or refinement stage. The executable validator in `src/host-contract.mjs` is authoritative; unknown request and effect fields fail validation. Hosts install an exact package version outside the execution workspace.
 
+## Direct entry and work reservation
+
+Schema version 2 adds direct engineering refinement. It retains the fields below, sets `predecessor` and `approvalCommentId` to null, and adds `authorization: {kind: "label", actor, eventId}`. It requires `directRefine: true` policy, the registered owner and a verified label event ID. It grants one supervised refinement, with no source writes or integration permission. Schema 1 retains its predecessor requirements.
+
+The host authenticates the GitHub workflow, retrieves the current issue and latest `refine` event, and calls `host-contract.mjs route-event facts.json policy.json`. The shared router rejects unknown actors, unrelated events, disabled policy, closed issues, pull requests and work reservations. The workflow rejects non-owner events before assigning the runner. Opening an issue does not automatically consume model capacity in this projection.
+
+The host binds authorization to the latest owner label event and its corresponding workflow, then rechecks it before execution and publication. Removing `refine`, relabeling it or changing policy revokes the old grant. Retry identity derives from repository, issue, stage and label event. An exact workflow retry retrieves its durable receipt even after the command label was consumed.
+
+`agent-working` projects the host's durable reservation. The host reserves capacity before adding it and releases capacity after terminating execution and removing it. Restart reconciles both. `human-working` blocks admission and asks a running agent to stop; humans wait until `agent-working` disappears before editing. Labels cannot lock the GitHub editor or coordinate tools that ignore this protocol.
+
+After a validated direct-refinement comment is published, `passed` projects `ready`; other published statuses project `needs-info`. The host removes `refine` and clears the opposite outcome label, preserving unrelated labels. `ready` means refinement passed, not permission to implement or merge. Execution failure retains `refine` for an explicit remove-and-add retry. Clarification can be answered in the issue body and resubmitted with `refine`; automatic conversation continuation remains a later slice.
+
 ## Request
 
 | Field | Meaning |

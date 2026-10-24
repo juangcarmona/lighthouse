@@ -1,7 +1,7 @@
 ---
 id: BR-TRIAGE-CONTRACT
 type: business-rule
-title: Every work item has an explicit triage result
+title: Requester intake produces an explicit triage result
 status: draft
 applies-to: [BC-FOUNDATION, UC-TRIAGE-WORK-ITEM, UC-RUN-SDLC]
 uses-terms: [TERM-TRIAGE, TERM-WORK-ITEM-SIZE, TERM-BLAST-RADIUS, TERM-LABEL-STATE]
@@ -9,7 +9,7 @@ uses-terms: [TERM-TRIAGE, TERM-WORK-ITEM-SIZE, TERM-BLAST-RADIUS, TERM-LABEL-STA
 
 ## Rule
 
-Every work item entering a delivery route MUST have a triage result that records its type, size, urgency, impact, dependencies, risks, blast radius, next route, decision owner, confidence and supporting evidence, or an explicit out-of-scope reason.
+Every work item entering through requester intake MUST have a triage result that records its type, size, urgency, impact, dependencies, risks, blast radius, next route, decision owner, confidence and supporting evidence, or an explicit out-of-scope reason.
 
 The result MUST identify missing evidence and unresolved judgement separately, and MUST NOT derive lifecycle state from issue prose.
 
@@ -26,5 +26,7 @@ A feature may proceed to refinement, a confirmed defect may select hotfix and a 
 An issue with an unknown dependency records the dependency as unresolved and keeps the proposed route visible without pretending that the dependency is absent.
 
 ## Exceptions
+
+An engineer authorized under BR-ENTRY-AUTHORITY may enter refinement, implementation or planning without a triage run. The entry authorization and downstream prerequisite evidence remain explicit; neither is reported as a completed triage.
 
 An emergency may use the hotfix route with a reduced triage form, but it still records impact, blast radius, containment, owner and verification evidence.

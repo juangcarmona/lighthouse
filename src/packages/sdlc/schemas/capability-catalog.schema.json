@@ -35,7 +35,7 @@
             "type": "object",
             "additionalProperties": true,
             "properties": {
-              "roles": { "type": "array", "items": { "enum": ["state", "command", "classification"] } },
+              "roles": { "type": "array", "items": { "enum": ["state", "command", "classification", "overlay"] } },
               "labels": {
                 "type": "array",
                 "items": {
@@ -44,7 +44,7 @@
                   "required": ["name", "role", "description"],
                   "properties": {
                     "name": { "type": "string", "minLength": 1 },
-                    "role": { "enum": ["state", "command", "classification"] },
+                    "role": { "enum": ["state", "command", "classification", "overlay"] },
                     "dimension": { "type": "string" },
                     "value": { "type": "string" },
                     "color": { "type": "string", "pattern": "^[0-9A-Fa-f]{6}$" },

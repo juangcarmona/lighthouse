@@ -41,7 +41,7 @@ The architecture accepted by the maintainer on 2026-10-24 keeps the existing pro
 
 ## Authorized entry and autonomy revision
 
-The maintainer accepted the two-entry direction on 2026-10-24; [ADR-0008](../architecture/09-architecture-decisions/0008-separate-entry-and-autonomy.md) records it. [CHG-AUTHORIZED-WORKFLOW-ENTRY-001](../product/changes/active/chg-authorized-workflow-entry-001/change.md) proposes the product correction. This revision replaces mandatory triage as the entry for every actor and repeated human stops as the only progression model. It preserves required evidence and separately authorized integration.
+The maintainer accepted the two-entry direction on 2026-10-24; [ADR-0008](../architecture/09-architecture-decisions/0008-separate-entry-and-autonomy.md) records it. [CHG-AUTHORIZED-WORKFLOW-ENTRY-001](../product/changes/completed/chg-authorized-workflow-entry-001/change.md) proposes the product correction. This revision replaces mandatory triage as the entry for every actor and repeated human stops as the only progression model. It preserves required evidence and separately authorized integration.
 
 The current host contract remains schema 1, supervised, triage/refine only, with comment publication. Its `refine` request requires an approved triage predecessor. The declared unattended route still contains supervised human gates. Those are migration gaps, not the intended two-entry behavior.
 

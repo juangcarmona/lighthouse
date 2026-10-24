@@ -11,12 +11,16 @@
       "title": "Lighthouse tracker labels",
       "selection": "selected-by-default",
       "configuration": {
-        "roles": ["state", "command", "classification"],
+        "roles": ["state", "command", "classification", "overlay"],
         "labels": [
           { "name": "triage", "role": "state", "color": "8B949E", "description": "Work item is being assessed." },
           { "name": "refine", "role": "state", "color": "4DA3FF", "description": "Work item is being refined." },
           { "name": "implement", "role": "state", "color": "1F6FEB", "description": "Work item is being implemented." },
           { "name": "wip", "role": "state", "color": "D29922", "description": "Work item is actively in progress." },
+          { "name": "agent-working", "role": "overlay", "color": "D29922", "description": "An agent holds the host reservation; wait before editing." },
+          { "name": "human-working", "role": "overlay", "color": "A371F7", "description": "Human reservation: agents must stop and release their work." },
+          { "name": "ready", "role": "state", "color": "238636", "description": "Refinement passed; this does not authorize implementation or merge." },
+          { "name": "needs-info", "role": "state", "color": "D876E3", "description": "Refinement needs information or a decision; inspect its report." },
           { "name": "review", "role": "state", "color": "A371F7", "description": "Work item is awaiting review." },
           { "name": "size-s", "role": "classification", "dimension": "size", "value": "S", "color": "BFE3FF", "description": "Small work item." },
           { "name": "size-m", "role": "classification", "dimension": "size", "value": "M", "color": "80C2FF", "description": "Medium work item." },
