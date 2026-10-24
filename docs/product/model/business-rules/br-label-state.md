@@ -9,7 +9,7 @@ uses-terms: [TERM-LABEL-STATE, TERM-GATE, TERM-DELIVERY-ROUTE, TERM-WORK-ITEM-SI
 
 ## Rule
 
-The configured tracker MUST expose a finite set of simple labels with one declared role per label: persistent work-item state, transient route command or persistent triage classification.
+The configured tracker MUST expose a finite set of simple labels with one declared role per label: persistent work-item state, transient route command, persistent triage classification or independent work overlay.
 
 Triage MUST validate the current labels against that vocabulary and the legal transitions before proposing or applying a change.
 
@@ -40,3 +40,7 @@ The configured tracker may use different label names, but the project MUST decla
 A tracker without transient labels can use explicit tool invocation for commands and retain only persistent state labels.
 
 An adopter may retain its existing colors. Lighthouse's suggested colors are a projection default, not permission to overwrite adopter-owned labels.
+
+## Work reservations
+
+Work overlays MUST remain independent of lifecycle state and MUST survive unrelated label transitions. An agent reservation MUST remain visible until execution and cleanup finish. A human reservation MUST block new admission and request active agent work to stop. The host MUST own the durable reservation and reconcile its label after interruption; the label itself MUST NOT grant authority or be treated as an atomic lock.

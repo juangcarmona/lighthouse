@@ -227,6 +227,8 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'docs/product'), join(dir, 'docs/product'), { recursive: true });
     await cp(join(process.cwd(), 'docs/architecture'), join(dir, 'docs/architecture'), { recursive: true });
     await cp(join(process.cwd(), 'docs/roadmap'), join(dir, 'docs/roadmap'), { recursive: true });
+    await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
+    await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/workflows'), join(dir, 'src/packages/sdlc/workflows'), { recursive: true });
     await cp(join(process.cwd(), 'docs/releasing.md'), join(dir, 'docs/releasing.md'));
     await cp(join(process.cwd(), '.product'), join(dir, '.product'), { recursive: true });
@@ -619,7 +621,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
     const planned = run(dir, 'capabilities', ['plan', '--id', 'labels', '--provider', 'github', '--repo', 'juan/demo', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--format', 'json'], { env: environment });
     assert.equal(planned.status, 0, planned.stderr);
     const plan = JSON.parse(planned.stdout);
-    assert.equal(plan.reconciliation.operations.length, 20);
+    assert.equal(plan.reconciliation.operations.length, 24);
     assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', 'wrong'], { env: environment }).status, 1);
     const applied = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
     assert.equal(applied.status, 0, applied.stderr);

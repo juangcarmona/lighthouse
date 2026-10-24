@@ -163,3 +163,9 @@ Persist validated transition events with correlation and source references. Rebu
 <!-- pdac:cite id="BR-WORKFLOW-STATE" digest="sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8" -->
 
 GitHub label writes made with `GITHUB_TOKEN` do not trigger another issue-label workflow. Use explicit reusable-workflow composition or an authorized dispatch for continuation, or a separately configured GitHub App when its event behavior is required. PR CI trigger/approval behavior must be tested with the actual publisher identity; a successful push is not evidence that required CI ran. See [GitHub workflow triggering](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
+
+## Implemented direct refinement
+
+The external-host projection accepts an owner-added `refine` label. The host authenticates event facts and invokes the package's deterministic event router; schema-2 admission carries the verified label-event identity without a triage predecessor. Schema 1 preserves the prior supervised contract. Source remains read-only and the stage publishes a validated refinement comment plus its readiness labels. See the [packaged host contract](../../../src/packages/sdlc/host-contract.md).
+
+The host owns the persistent reservation and projects it as `agent-working`. `human-working` prevents new agent admission and requests termination of active work. Outcome publication and reservation cleanup must finish before capacity is released. Labels are cooperative signals; they cannot prevent a human or an unrelated tool from editing the issue.

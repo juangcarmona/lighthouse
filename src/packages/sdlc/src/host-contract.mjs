@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { validateStageCompletion, validateStageResult } from './contracts.mjs';
 import stages from '../stages.json' with { type: 'json' };
 import pkg from '../package.json' with { type: 'json' };
+import { routeEvent } from './event-router.mjs';
 
 export const digest = (text) => createHash('sha256').update(text).digest('hex');
 const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -19,8 +20,9 @@ function exact(value, keys, name, errors) {
 export function validateExecutionRequest(value, policy, policyDigest, now = Date.now()) {
   const errors = [];
   if (!Number.isInteger(policy.maxSeconds) || policy.maxSeconds < 1 || policy.maxSeconds > 3600) errors.push('host policy must set maxSeconds between 1 and 3600');
-  if (!exact(value, ['schemaVersion', 'runId', 'repository', 'issue', 'stage', 'route', 'sourceRevision', 'workflowRevision', 'workflowRunId', 'packageVersion', 'policyDigest', 'deadline', 'writeScope', 'predecessor', 'approvalCommentId'], 'request', errors)) return errors;
-  if (value.schemaVersion !== 1) errors.push('unsupported request schemaVersion');
+  const direct = value?.schemaVersion === 2;
+  if (!exact(value, ['schemaVersion', 'runId', 'repository', 'issue', 'stage', 'route', 'sourceRevision', 'workflowRevision', 'workflowRunId', 'packageVersion', 'policyDigest', 'deadline', 'writeScope', 'predecessor', 'approvalCommentId', ...(direct ? ['authorization'] : [])], 'request', errors)) return errors;
+  if (![1, 2].includes(value.schemaVersion)) errors.push('unsupported request schemaVersion');
   if (!hex.test(value.runId ?? '')) errors.push('runId must be a SHA-256 event identity');
   if (value.repository !== policy.repository) errors.push('repository is not registered');
   if (!Number.isSafeInteger(value.issue) || value.issue < 1) errors.push('issue must be a positive integer');
@@ -35,7 +37,13 @@ export function validateExecutionRequest(value, policy, policyDigest, now = Date
   if (!Number.isFinite(deadline) || deadline <= now || deadline > now + policy.maxSeconds * 1000) errors.push('deadline is outside the current policy limit');
   if (!Array.isArray(value.writeScope) || value.writeScope.length) errors.push('triage/refine have no source write scope');
   if (value.stage === 'triage' && (value.predecessor !== null || value.approvalCommentId !== null)) errors.push('triage cannot claim predecessor approval');
-  if (value.stage === 'refine') {
+  if (direct) {
+    if (policy.directRefine !== true || value.stage !== 'refine' || value.predecessor !== null || value.approvalCommentId !== null) errors.push('schema 2 requires enabled direct refinement without predecessor approval');
+    if (exact(value.authorization, ['kind', 'actor', 'eventId'], 'authorization', errors)) {
+      if (value.authorization.kind !== 'label' || value.authorization.actor !== policy.owner || !Number.isSafeInteger(value.authorization.eventId) || value.authorization.eventId < 1) errors.push('direct refinement requires an owner label event');
+      if (value.runId !== digest(`${value.repository}:${value.issue}:refine:${value.authorization.eventId}`)) errors.push('runId must bind the authorized label event');
+    }
+  } else if (value.stage === 'refine') {
     if (exact(value.predecessor, ['runId', 'resultDigest'], 'predecessor', errors)) {
       if (!hex.test(value.predecessor.runId ?? '') || !hex.test(value.predecessor.resultDigest ?? '')) errors.push('predecessor must bind a run and result digest');
     }
@@ -70,7 +78,10 @@ export async function hostContractMain(args) {
   }
   const request = JSON.parse(await readFile(requestFile, 'utf8'));
   let errors;
-  if (command === 'request') {
+  if (command === 'route-event') {
+    console.log(JSON.stringify(routeEvent(request, JSON.parse(await readFile(policyFile, 'utf8')))));
+    return;
+  } else if (command === 'request') {
     const raw = await readFile(policyFile, 'utf8');
     errors = validateExecutionRequest(request, JSON.parse(raw), digest(raw));
   } else if (command === 'result') {

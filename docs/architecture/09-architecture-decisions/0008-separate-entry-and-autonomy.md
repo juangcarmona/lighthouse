@@ -11,7 +11,7 @@ tags: [authorization, routing, autonomy]
 
 ## Context
 
-The current pilot supports supervised triage/refine and binds refinement to an owner-approved triage predecessor. That delivery slice does not distinguish requester intake from an engineer's direct work instruction. The maintainer accepted the two-entry direction on 2026-10-24. The detailed product changes remain proposed under CHG-AUTHORIZED-WORKFLOW-ENTRY-001; this decision records the agreed architectural direction, not completed implementation.
+The current pilot supports supervised triage/refine and binds refinement to an owner-approved triage predecessor. That delivery slice does not distinguish requester intake from an engineer's direct work instruction. The maintainer accepted the two-entry direction on 2026-10-24. The maintainer subsequently authorized implementation and CHG-AUTHORIZED-WORKFLOW-ENTRY-001 was applied. Direct label refinement is the first implementation slice; the remaining workflows retain their delivery gates.
 
 ## Decision
 
@@ -39,6 +39,6 @@ Replies resolve a matching question and do not grant privileges. Trusted bot con
 
 ## References
 
-- [Product Change](../../product/changes/active/chg-authorized-workflow-entry-001/change.md)
+- [Product Change](../../product/changes/completed/chg-authorized-workflow-entry-001/change.md)
 - [Work item](https://github.com/juangcarmona/lighthouse/issues/70)
 - [Delivery roadmap](../../roadmap/factory-reconciliation.md)

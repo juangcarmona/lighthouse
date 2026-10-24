@@ -299,6 +299,16 @@ test('triage produces a deterministic ready report and label projection', () => 
   assert.equal(first.transition.to, 'refine');
 });
 
+test('work overlays survive a triage transition independently of lifecycle state', () => {
+  const input = triageInput();
+  input.currentLabels.push('agent-working');
+  input.configuration.labels.push({ name: 'agent-working', role: 'overlay' });
+  const report = buildTriageReport(input);
+  assert.equal(report.canApply, true);
+  assert.ok(report.labels.proposed.includes('agent-working'));
+  assert.ok(report.labels.proposed.includes('refine'));
+});
+
 test('triage rejects ambiguous classifications and reports missing evidence', () => {
   const input = triageInput({
     currentLabels: ['triage', 'size-m', 'size-s'],

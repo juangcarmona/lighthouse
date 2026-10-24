@@ -4,13 +4,13 @@
 
 ## 1. Product and contract alignment
 
-- [ ] 1.1 Resolve the declared drift through CHG-AUTHORIZED-WORKFLOW-ENTRY-001 and refresh affected product citations after apply.
-- [ ] 1.2 Define and version normalized event facts, capability evidence, bounded authorization and routing decision; prove schema-1 compatibility or explicit rejection.
+- [x] 1.1 Resolve the declared drift through CHG-AUTHORIZED-WORKFLOW-ENTRY-001 and refresh affected product citations after apply.
+- [x] 1.2 Define and version normalized event facts, capability evidence, bounded authorization and routing decision; prove schema-1 compatibility or explicit rejection.
 - [ ] 1.3 Implement the shared deterministic router and the scenario matrix, including invalid identity and revoked/stale authority.
 
 ## 2. Direct engineering refinement
 
-- [ ] 2.1 Project authorized refine entry into the GitHub adapter and remove duplicate classification from the host bridge.
+- [x] 2.1 Project authorized refine entry into the GitHub adapter and remove duplicate classification from the host bridge.
 - [ ] 2.2 Update SoFa admission, context and publisher to retain and verify the same authorization without a triage predecessor.
 - [ ] 2.3 Run packed-consumer and real-host acceptance after publication, preserving existing consumer work.
 

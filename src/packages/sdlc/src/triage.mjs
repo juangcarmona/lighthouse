@@ -7,7 +7,7 @@ const DIMENSIONS = Object.freeze({
 });
 
 const CONFIDENCE = new Set(['low', 'medium', 'high']);
-const ROLES = new Set(['state', 'command', 'classification']);
+const ROLES = new Set(['state', 'command', 'classification', 'overlay']);
 const ROUTES = new Set(['supervised', 'plan-only', 'unattended', 'hotfix', 'stacked']);
 const DEPENDENCY_STATES = new Set(['resolved', 'open', 'unknown']);
 const EVIDENCE_STATES = new Set(['provided', 'unavailable', 'pending-review']);
@@ -72,7 +72,7 @@ export function validateConfiguration(configuration) {
     if (byName.has(name)) addIssue(errors, 'label.duplicate', `label ${name} is declared more than once`, 'configuration.labels');
     byName.set(name, descriptor);
     if (!ROLES.has(descriptor.role)) {
-      addIssue(errors, 'label.role', `label ${name} must use role state, command or classification`, 'configuration.labels');
+      addIssue(errors, 'label.role', `label ${name} must use role state, command, classification or overlay`, 'configuration.labels');
       continue;
     }
     if (descriptor.role === 'state') stateLabels.add(name);
