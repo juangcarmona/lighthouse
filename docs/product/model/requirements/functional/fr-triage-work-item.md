@@ -13,9 +13,9 @@ uses-terms: [TERM-TRIAGE, TERM-WORK-ITEM-SIZE, TERM-BLAST-RADIUS, TERM-LABEL-STA
 
 ## Requirement
 
-Lighthouse MUST provide a triage capability that reads one work item and its available repository context, records size, urgency, impact, dependencies, risks and blast radius with confidence and evidence, selects the next route and proposes the configured workflow and classification labels before refinement or implementation begins.
+Lighthouse MUST provide a triage capability that reads one work item and its available repository context, records size, urgency, impact, dependencies, risks and blast radius with confidence and evidence, selects the next route and proposes the configured workflow and classification labels when requester intake or an explicit triage request selects that capability. Direct authorized engineering entry preserves downstream scope and risk checks without requiring a triage execution.
 
-Triage MUST be read-only by default. Lighthouse MUST support an explicit application request for a valid label transition and MUST preserve the previous tracker state when evidence is insufficient, labels are ambiguous or the transition is illegal.
+Triage MUST be read-only by default. Lighthouse MUST support an explicit application request or standing bounded intake authorization for a valid label transition and MUST preserve the previous tracker state when evidence is insufficient, labels are ambiguous or the transition is illegal.
 
 Triage MUST distinguish missing evidence and unresolved judgement in its structured result and MUST NOT infer lifecycle state from issue prose.
 

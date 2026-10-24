@@ -20,7 +20,7 @@ The adopter starts `implement` after `propose` has produced a reviewable solutio
 
 ## Preconditions
 
-The change has a triage result with valid labels, a bounded scope, a Planned gate result, named Definition of Done items, the relevant project instructions and any required ProductShape, ArcShape, OpenSpec or agent workflow integration is healthy.
+The change has a triage result or direct engineer entry authorization, valid labels, a bounded scope, a Planned gate result, named Definition of Done items, the relevant project instructions and any required ProductShape, ArcShape, OpenSpec or agent workflow integration is healthy.
 
 ## Main Flow
 
@@ -30,6 +30,8 @@ The change has a triage result with valid labels, a bounded scope, a Planned gat
 4. The stage reports the Done result, unresolved findings and the next `integrate` decision without invoking it.
 
 ## Alternative Flows
+
+An authorized implementation workflow may enter before the internal proposal stage has completed. It must produce the real OpenSpec proposal, design and task artifacts and satisfy their applicable gate before applying code. The implementation stage itself still consumes a Planned result.
 
 A project can use a manual route when no supported agent workflow is installed; the same project guardrails, stage contract and human decisions still apply.
 

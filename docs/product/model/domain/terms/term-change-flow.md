@@ -10,7 +10,7 @@ uses-terms: [TERM-FOUNDATION, TERM-HARNESS, TERM-GUARDRAIL, TERM-INTEGRATION]
 
 ## Definition
 
-A bounded route that carries one triaged project change from clarified intent through its declared artifacts, implementation evidence and review outcome.
+A bounded route that carries one admitted project change from clarified intent through its declared artifacts, implementation evidence and review outcome.
 
 ## Distinguish From
 

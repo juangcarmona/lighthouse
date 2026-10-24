@@ -6,7 +6,7 @@ status: draft
 primary-actor: ACT-ADOPTER
 supporting-actors: [ACT-AGENT-HOST, ACT-INTEGRATED-SYSTEM]
 bounded-context: BC-FOUNDATION
-governed-by: [BR-AUTHORITY-BOUNDARIES, BR-STAGE-GATES, BR-ROUTE-CONTRACT, BR-TRIAGE-CONTRACT, BR-LABEL-STATE, BR-FAIL-CLOSED, BR-HUMAN-AUTHORITY]
+governed-by: [BR-AUTHORITY-BOUNDARIES, BR-STAGE-GATES, BR-ROUTE-CONTRACT, BR-TRIAGE-CONTRACT, BR-LABEL-STATE, BR-FAIL-CLOSED, BR-HUMAN-AUTHORITY, BR-ENTRY-AUTHORITY]
 uses-terms: [TERM-HARNESS, TERM-AUTHORITY-MAP, TERM-GATE, TERM-CHANGE-OVERVIEW, TERM-DELIVERY-ROUTE, TERM-CHANGE-FLOW, TERM-WORKFLOW-STAGE, TERM-TRIAGE, TERM-LABEL-STATE]
 ---
 
@@ -24,14 +24,14 @@ The project has a declared authority map, an adopted Lighthouse profile, a confi
 
 ## Main Flow
 
-1. `triage` classifies the item, records complexity, blast radius and confidence, applies valid configured labels and selects a route.
-2. The adopter selects that route and reviews its stage composition, tools, limits and decision owners.
-3. `refine` turns the item into a sufficiently defined problem, evaluates the Definition of Ready and stops at the Ready gate.
-4. `propose` prepares the solution and test impact through the OpenSpec-provided change contract, writes the human-readable change overview, names the Definition of Done items and stops at the Planned gate.
-5. `implement` applies the accepted plan in bounded slices, runs deterministic checks and named judgement roles against the Definition of Done, and stops at the Done gate.
+1. The adapter authenticates the actor and supplies effective repository capabilities. The router admits requester intake through triage or a directly authorized engineering workflow.
+2. The router records the authorization, entry point, autonomy, scope, tools, limits and separate integration policy. Requester intake may continue under a standing bounded policy; engineering entry validates the selected workflow prerequisites.
+3. `refine` turns the item into a sufficiently defined problem, evaluates the Definition of Ready and evaluates the Ready gate.
+4. `propose` prepares the solution and test impact through the OpenSpec-provided change contract, writes the human-readable change overview, names the Definition of Done items and evaluates the Planned gate.
+5. `implement` applies the accepted plan in bounded slices, runs deterministic checks and named judgement roles against the Definition of Done, and evaluates the Done gate.
 6. `integrate` rechecks Done, synchronizes completion artifacts, updates the tracker and performs the project's merge or stacked-PR closure steps.
 7. `review` records the cycle's evidence and process learning without reopening a delivery gate.
-8. The harness reports the next stage after every gate and invokes it only when the selected route explicitly composes stages through `ff`.
+8. The router evaluates the next event against the recorded authorization and evidence. An authorized composition continues automatically; a missing decision, exhausted limit or revoked authority produces a specific stop. An implementation workflow may compose proposal, application and verification without losing their artifacts or gates.
 
 ## Alternative Flows
 

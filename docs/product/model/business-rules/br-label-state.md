@@ -21,6 +21,8 @@ Lighthouse MUST NOT infer label state from prose, create a namespace or silently
 
 ## Rationale
 
+An explicit application request may be supplied by a still-effective bounded workflow authorization. A label requests or projects work; its presence does not grant permission. The deterministic publisher applies authorized transitions after result validation.
+
 Finite labels let the harness read workflow state and triage classification deterministically without repeatedly interpreting issue or pull-request prose.
 
 An explicit application boundary keeps human-visible changes reviewable and prevents a failed assessment from partially changing the work item.

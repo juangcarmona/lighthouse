@@ -9,7 +9,7 @@ uses-terms: [TERM-DELIVERY-ROUTE, TERM-GATE, TERM-TOOL-CONTRACT, TERM-LABEL-STAT
 
 ## Rule
 
-Every delivery route MUST declare its stage composition, entry conditions, permitted tools, label transitions, gate policy, correction limit, evidence location and decision owners. A route MUST reuse the SDLC stage contracts and MUST NOT bypass triage, Ready, Planned or Done.
+Every delivery route MUST declare its stage composition, entry conditions, permitted tools, label transitions, gate policy, correction limit, evidence location and decision owners. A route MUST reuse the SDLC stage contracts and preserve the applicable Ready, Planned and Done evidence. Requester intake requires triage; a verified engineer authorization may enter directly under BR-ENTRY-AUTHORITY. Entry point, autonomy and integration permission MUST remain independent.
 
 ## Rationale
 

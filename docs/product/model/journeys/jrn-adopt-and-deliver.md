@@ -25,7 +25,7 @@ The adopter has a project idea or repository and can select an initial technical
 
 ## Journey Narrative
 
-The adopter initializes or assesses the repository, checks external CodeGraph coverage, selects the smallest useful foundation profile, reviews ownership and checks, and verifies the result. ProductShape refines product intent and records a Product Change, ArcShape records the applicable architecture evidence, and Lighthouse triages the work item with complexity and blast-radius estimates before running the SDLC flow through OpenSpec or a manual route. Configured workflow labels carry the current handoff, while each stage stops at its configured gate before the next decision.
+The adopter initializes or assesses the repository, checks external CodeGraph coverage, selects the smallest useful foundation profile, reviews ownership and checks, and verifies the result. ProductShape refines product intent and records a Product Change, ArcShape records the applicable architecture evidence, and Lighthouse admits requester work through triage or accepts a directly authorized engineering entry before running the SDLC flow through OpenSpec or a manual route. Configured workflow labels carry the current handoff, while each stage evaluates its evidence and continues or stops according to the recorded authorization.
 
 ## Variants and Branches
 

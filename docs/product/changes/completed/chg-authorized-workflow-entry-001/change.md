@@ -2,7 +2,7 @@
 id: CHG-AUTHORIZED-WORKFLOW-ENTRY-001
 type: product-change
 title: Separate requester intake, engineer entry and per-run autonomy
-status: proposed
+status: applied
 base-revision: 'a9c3069'
 operations:
   add:
@@ -52,3 +52,7 @@ The definition permits direct engineering entry without fabricated triage eviden
 ## Out of Scope
 
 Runtime deployment, package publication, consumer migration, a new identity provider, organization membership requirements, provider selection, blanket automatic merge and modification of provider-owned content.
+
+## Maintainer approval
+
+On 2026-10-24 the maintainer instructed: "Dejaste dos PRs , mergea y continua hasta que yo sea capaz, mañana, de crear una issue y ponerle un refine..." This approves the recorded product direction and its first direct-refinement implementation. Other runtime capabilities retain their delivery and acceptance gates.

@@ -9,11 +9,11 @@ uses-terms: [TERM-WORKFLOW-STAGE, TERM-GATE, TERM-GUARDRAIL]
 
 ## Rule
 
-Each SDLC stage MUST stop at its configured gate and MUST NOT invoke the next stage by default. `ff` MAY compose configured stages only when its independent review, correction limit and durable evidence are present, and it MUST preserve human-only and forge-protected decisions.
+Each SDLC stage MUST evaluate its configured gate. A gate requires a human stop only when its policy names a human decision that has not been recorded. An explicitly authorized unattended workflow or `ff` composition MAY continue automatically when evidence, independent review, correction limits and current authorization permit it. A supervised invocation MUST retain its configured stops. Every composition MUST preserve human-only and forge-protected decisions.
 
 ## Rationale
 
-Stopping at a gate keeps product, design and implementation decisions visible while still allowing a project to opt into a bounded fast-forward route.
+Evaluating every gate preserves evidence while allowing a repository to delegate routine continuation without a human acknowledgement at every phase.
 
 ## Examples
 

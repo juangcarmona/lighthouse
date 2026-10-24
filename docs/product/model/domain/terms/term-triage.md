@@ -18,4 +18,4 @@ Triage does not design the solution, approve product intent or replace architect
 
 ## Usage
 
-Every issue entering a Lighthouse delivery route receives a triage result or an explicit decision that triage is out of scope.
+Requester intake receives a triage result. Authorized engineering entry records its direct-entry authorization and validates downstream prerequisites without pretending that triage ran.

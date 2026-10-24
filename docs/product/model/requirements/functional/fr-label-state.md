@@ -25,6 +25,8 @@ The suggested palette MUST map size to Lighthouse blue, urgency to neutral, ambe
 
 ## Rationale
 
+An explicit application request may be supplied by a still-effective bounded workflow authorization. A label requests or projects work; its presence does not grant permission. The deterministic publisher applies authorized transitions after result validation.
+
 Deterministic labels make the harness state readable to humans, agents and automation without semantic loops over issue prose.
 
 Separating the proposed transition from its application keeps tracker mutations reviewable and leaves execution leases and run state outside the label projection.
