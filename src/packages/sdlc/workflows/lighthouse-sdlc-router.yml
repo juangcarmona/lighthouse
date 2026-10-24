@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       route:
-        description: Lighthouse route from src/packages/sdlc/routes.json.
+        description: Lighthouse route from the installed SDLC package.
         required: true
         type: choice
         options: [supervised, plan-only, unattended, hotfix, stacked]
@@ -59,6 +59,11 @@ jobs:
       review: ${{ steps.route.outputs.review }}
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts
+      - run: node node_modules/@juangcarmona/lighthouse-sdlc/src/installation.mjs
       - name: Validate route, prerequisites and selected composition
         id: route
         env:
@@ -68,7 +73,7 @@ jobs:
           AVAILABLE: ${{ inputs.available }}
         run: |
           set -euo pipefail
-          node src/packages/sdlc/src/sdlc.mjs route --route "$ROUTE" --available "$AVAILABLE" --composition "$COMPOSITION" --format json > route.json
+          node node_modules/@juangcarmona/lighthouse-sdlc/src/sdlc.mjs route --route "$ROUTE" --available "$AVAILABLE" --composition "$COMPOSITION" --format json > route.json
           jq -e '.valid == true and .canRun == true' route.json >/dev/null
           jq -e --arg stage "$STAGE" '.stages | index($stage) != null' route.json >/dev/null
           if [ "$COMPOSITION" = ff ]; then

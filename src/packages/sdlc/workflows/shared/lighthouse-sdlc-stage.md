@@ -17,6 +17,10 @@ safe-outputs:
     max: 1
     report-as-issue: false
 steps:
+  - name: Install the locked consumer packages
+    run: npm ci --ignore-scripts
+  - name: Check the installed SDLC version
+    run: node node_modules/@juangcarmona/lighthouse-sdlc/src/installation.mjs
   - name: Materialize the host input
     shell: bash
     env:
@@ -54,7 +58,7 @@ post-steps:
       RESULT_FILE: /tmp/gh-aw/agent/stage-result.json
     run: |
       set -euo pipefail
-      node src/packages/sdlc/src/sdlc.mjs stage-result --input "$RESULT_FILE" \
+      node node_modules/@juangcarmona/lighthouse-sdlc/src/sdlc.mjs stage-result --input "$RESULT_FILE" \
         --require-complete --stage "$EXPECTED_STAGE" --run-id "$EXPECTED_RUN_ID" --format json
   - name: Upload stage evidence
     if: always()

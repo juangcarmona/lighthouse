@@ -12,9 +12,17 @@ It provides a neutral evidence contract for delivery, product and architecture r
 
 It does not run agents, store transcripts, dispatch work between repositories or replace ProductShape, ArcShape, OpenSpec or an agent host.
 
+## External host contract
+
+`src/host-contract.mjs` validates a supervised `triage` or `refine` request against a trusted host policy and validates the resulting stage/effect envelope. It is exported as `@juangcarmona/lighthouse-sdlc/host-contract`. See [the wire contract](host-contract.md) for fields and host obligations. Execution, credentials, admission, cancellation and publication remain host responsibilities.
+
+Print the opt-in GitHub adapter with `node node_modules/@juangcarmona/lighthouse-sdlc/src/host-contract.mjs workflow`. It expects a provisioned `lighthouse-host-bridge` on a repository runner labelled `lighthouse-host`. Installing the package does not enable that adapter. The existing gh-aw projection remains a separate execution path.
+
 ## gh-aw workflow projection
 
 The package includes the six Lighthouse SDLC worker sources, their compiled `.lock.yml` workflows and the router projection. The Lighthouse CLI projects them into `.github/workflows` during initialization, reconciliation or an explicit `lighthouse upgrade --scope sdlc --apply`; package installation alone does not write repository files.
+
+Workers resolve instructions and validators from the installed SDLC package and reject a version mismatch with `.lighthouse/sdlc.json` before execution. Consumers need a committed npm lockfile.
 
 The host must provide the runner capability `[self-hosted, linux, lighthouse-sdlc]`, the GitHub and gh-aw credentials required by the compiled workflow, the selected route and stage input, and durable evidence handling for the uploaded stage result. Each worker executes one declared stage and writes `/tmp/gh-aw/agent/stage-result.json`; the host remains responsible for runtime, queues, budgets and model selection. The generic runner capability is a contract, not a SoFa or Bastion identity.
 
