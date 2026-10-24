@@ -1,3 +1,5 @@
+import stageContract from '../stages.json' with { type: 'json' };
+
 export const STAGES = Object.freeze(['triage', 'refine', 'propose', 'implement', 'integrate', 'review']);
 export const GATES = Object.freeze(['triaged', 'ready', 'planned', 'done']);
 export const EVIDENCE_STATUSES = Object.freeze(['passed', 'failed', 'unavailable', 'unconfigured', 'pending-review', 'not-applicable']);
@@ -36,4 +38,23 @@ export function validateStageResult(value) {
 
 export function isValidStageResult(value) {
   return validateStageResult(value).length === 0;
+}
+
+export function validateStageCompletion(value, { stage, runId } = {}) {
+  const errors = validateStageResult(value);
+  const expected = stageContract.stages.find((item) => item.id === stage);
+  if (!expected) errors.push(issue('stage-completion.expected-stage', 'a declared expected stage is required'));
+  if (typeof runId !== 'string' || !runId.trim()) errors.push(issue('stage-completion.expected-run', 'a non-empty expected runId is required'));
+  if (!isRecord(value)) return errors;
+  if (value.stage !== stage) errors.push(issue('stage-completion.stage', 'result stage does not match the dispatched stage', 'stage'));
+  if (expected && value.gate !== expected.gate) errors.push(issue('stage-completion.gate', 'result gate does not match stages.json', 'gate'));
+  if (value.runId !== runId) errors.push(issue('stage-completion.run', 'result runId does not match the dispatched run', 'runId'));
+  if (value.status !== 'passed') errors.push(issue('stage-completion.status', 'only a passed result can complete a worker', 'status'));
+  for (const field of ['missingEvidence', 'unavailableChecks', 'pendingReview']) {
+    if (Array.isArray(value[field]) && value[field].length) errors.push(issue(`stage-completion.${field}`, `${field} must be empty to complete a worker`, field));
+  }
+  if (Array.isArray(value.evidence)) for (const [index, evidence] of value.evidence.entries()) {
+    if (!['passed', 'not-applicable'].includes(evidence?.status)) errors.push(issue('stage-completion.evidence', 'unresolved evidence prevents worker completion', `evidence[${index}]`));
+  }
+  return errors;
 }

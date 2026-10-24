@@ -1,7 +1,7 @@
 name: Lighthouse SDLC router
 
 # This router owns the only automatic composition boundary. A normal dispatch calls exactly one
-# worker. `ff` follows the selected route and stops when a worker fails; it never adds a stage.
+# worker. `ff` is blocked for routes with human gates until approvals can be verified.
 on:
   workflow_dispatch:
     inputs:
@@ -68,7 +68,7 @@ jobs:
           AVAILABLE: ${{ inputs.available }}
         run: |
           set -euo pipefail
-          node src/packages/sdlc/src/sdlc.mjs route --route "$ROUTE" --available "$AVAILABLE" --format json > route.json
+          node src/packages/sdlc/src/sdlc.mjs route --route "$ROUTE" --available "$AVAILABLE" --composition "$COMPOSITION" --format json > route.json
           jq -e '.valid == true and .canRun == true' route.json >/dev/null
           jq -e --arg stage "$STAGE" '.stages | index($stage) != null' route.json >/dev/null
           if [ "$COMPOSITION" = ff ]; then

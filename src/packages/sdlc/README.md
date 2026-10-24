@@ -18,7 +18,9 @@ The package includes the six Lighthouse SDLC worker sources, their compiled `.lo
 
 The host must provide the runner capability `[self-hosted, linux, lighthouse-sdlc]`, the GitHub and gh-aw credentials required by the compiled workflow, the selected route and stage input, and durable evidence handling for the uploaded stage result. Each worker executes one declared stage and writes `/tmp/gh-aw/agent/stage-result.json`; the host remains responsible for runtime, queues, budgets and model selection. The generic runner capability is a contract, not a SoFa or Bastion identity.
 
-The router validates the existing Lighthouse route and `requires` declarations. A normal dispatch runs one stage. Only an explicit `ff` composition chains the selected route, and it stops when a worker fails. The `integrate` worker prepares the configured merge action without merging unless repository policy authorizes it; `review` closes the flow with `gate: null`.
+The router validates the existing Lighthouse route and `requires` declarations. A normal dispatch runs one stage. The current worker host cannot verify human gate decisions, so it rejects `ff` for every bundled route. Use individual stage dispatches under host supervision until an approval adapter exists. The `integrate` worker prepares the configured merge action without merging unless repository policy authorizes it; `review` closes the flow with `gate: null`.
+
+Workers require `stage-result --require-complete --stage <stage> --run-id <id>` before reporting success. This checks the dispatched identity, the gate in `stages.json`, `status: passed`, empty blocker arrays and resolved evidence statuses. Plain `stage-result --input <file>` still validates the structure of reports, including blocked reports. Completion validation does not verify evidence provenance or grant approval to cross a human gate; the host owns those checks.
 
 Install it with the Lighthouse CLI or run `lighthouse-sdlc verify` from the package installation to check the distributed contract.
 
