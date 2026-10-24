@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.9.1
+
+### Patch Changes
+
+- a9c3069: # Stage evidence scope
+
+  Clarify that outer completion evidence belongs to the requested stage. Retain unperformed later-stage checks in output without claiming they passed or weakening validation, and distinguish host-supplied provenance from engine verification.
+
+- bbd12b1: # External host receipt context
+
+  Resolve the external host receipt path in step contexts so GitHub accepts the workflow before dispatch.
+
 ## 0.9.0
 
 ### Minor Changes
