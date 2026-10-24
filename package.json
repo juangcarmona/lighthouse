@@ -30,11 +30,11 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@arcshape/cli": "0.1.4",
+    "@arcshape/cli": "0.1.6",
     "@axe-core/playwright": "4.14.0",
     "@changesets/cli": "2.31.1",
-    "@fission-ai/openspec": "1.14.3",
+    "@fission-ai/openspec": "1.15.0",
     "@playwright/test": "1.64.1",
-    "@prodshape/cli": "0.22.0"
+    "@prodshape/cli": "0.23.0"
   }
 }
