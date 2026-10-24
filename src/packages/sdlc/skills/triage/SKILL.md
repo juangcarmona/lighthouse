@@ -19,3 +19,5 @@ Classify one work item before refinement.
 ## Completion
 
 The record names the route, owner, labels, assessments, confidence and next decision, and the stage result stops at `triaged` without starting a later stage.
+
+The outer result evidence and blocker arrays describe this stage's completion. Preserve unperformed checks for later stages inside the triage `output`, with their status and intended stage. They are not unavailable triage checks unless their absence prevents classification. A `passed` result has empty `missingEvidence`, `unavailableChecks` and `pendingReview` arrays and only resolved outer evidence. If required triage evidence remains unresolved, return `blocked`; never relabel an unperformed check as passing.
