@@ -12,7 +12,7 @@ import { buildStackedPlan } from './stacked.mjs';
 import { applyTriageLabels, buildTriageReport } from './triage.mjs';
 import { validateMemoryRecord } from './memory.mjs';
 import { replayWorkflow } from './workflow.mjs';
-import { validateStageResult } from './contracts.mjs';
+import { validateStageCompletion, validateStageResult } from './contracts.mjs';
 import { browserEvidenceReport } from './browser-e2e.mjs';
 import { buildEvidenceIndex, evidenceReport, validateEvidenceIndex, validateEvidenceRecord } from './evidence.mjs';
 import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
@@ -175,9 +175,15 @@ async function runControlPlane(args) {
 async function runStageResult(args) {
   const inputPath = option(args, '--input');
   const format = option(args, '--format') ?? 'json';
-  if (!inputPath) { console.error('Usage: lighthouse-sdlc stage-result --input <result.json> [--format <json|text>]'); process.exit(2); }
+  const requireComplete = args.includes('--require-complete');
+  const stage = option(args, '--stage');
+  const runId = option(args, '--run-id');
+  if (!inputPath || (requireComplete && (!stage || !runId)) || (!requireComplete && (stage !== undefined || runId !== undefined))) {
+    console.error('Usage: lighthouse-sdlc stage-result --input <result.json> [--require-complete --stage <stage> --run-id <id>] [--format <json|text>]');
+    process.exit(2);
+  }
   const result = await readJson(resolve(process.cwd(), inputPath));
-  const errors = validateStageResult(result);
+  const errors = requireComplete ? validateStageCompletion(result, { stage, runId }) : validateStageResult(result);
   output({ schemaVersion: 1, status: errors.length ? 'invalid' : 'valid', valid: errors.length === 0, errors }, format);
   if (errors.length) process.exit(1);
 }
@@ -268,12 +274,12 @@ async function runDecompose(args) {
 async function runRoute(args) {
   const routeId = option(args, '--route');
   const format = option(args, '--format') ?? 'json';
-  if (!routeId) { console.error('Usage: lighthouse-sdlc route --route <name> [--available <comma-separated-prerequisites>] [--format <json|text>]'); process.exit(2); }
+  if (!routeId) { console.error('Usage: lighthouse-sdlc route --route <name> [--available <comma-separated-prerequisites>] [--composition <stage|ff>] [--format <json|text>]'); process.exit(2); }
   const routes = await readJson(resolve(packageRoot, 'routes.json'));
   const route = routes.routes?.find((candidate) => candidate.id === routeId);
   if (!route) { output({ schemaVersion: 1, status: 'invalid', valid: false, errors: [{ code: 'route.unknown', message: `unknown route ${routeId}` }] }, format); process.exit(1); }
   const available = (option(args, '--available') ?? '').split(',').map((item) => item.trim()).filter(Boolean);
-  const plan = buildRoutePlan(route, { available });
+  const plan = buildRoutePlan(route, { available, composition: option(args, '--composition') });
   output(plan, format);
   if (!plan.valid) process.exit(1);
 }

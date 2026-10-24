@@ -14,8 +14,11 @@ export function validateRouteDescriptor(route, contract = {}) {
   return errors;
 }
 
-export function buildRoutePlan(route, { available = [], decisions = {} } = {}) {
+export function buildRoutePlan(route, { available = [], decisions = {}, composition } = {}) {
   const errors = validateRouteDescriptor(route);
+  if (composition !== undefined && !['stage', 'ff'].includes(composition)) errors.push(issue('route.composition', 'composition must be stage or ff', 'composition'));
+  // shortcut: gh-aw has no verified approval adapter; enable ff when host decisions can be verified.
+  if (composition === 'ff' && route.humanGates?.length) errors.push(issue('route.human-gates-unverified', 'ff requires verified human gate decisions; dispatch one stage while the approval adapter is unavailable', 'humanGates'));
   const prerequisites = (route.requires ?? []).map((requirement) => ({ id: requirement, status: available.includes(requirement) ? 'passed' : 'pending-review' }));
   const status = errors.length ? 'invalid' : prerequisites.some((item) => item.status !== 'passed') ? 'blocked' : 'ready';
   return { schemaVersion: 1, status, valid: errors.length === 0, canRun: status === 'ready', route: route.id, stages: [...(route.stages ?? [])], humanGates: [...(route.humanGates ?? [])], requires: prerequisites, decisions, errors };
