@@ -77,3 +77,11 @@ flowchart LR
     sources[Product and architecture sources] --> site[Public-site build]
     ui --> site
 ```
+
+## Workflow projection and proposed host adapter
+
+The [workflow sources](../../../src/packages/sdlc/workflows/) distribute a manual router, six reusable workers and compiled gh-aw jobs. GitHub Actions executes those jobs; the package has no persistent server. The current shared source selects Copilot and exposes only `noop` as a safe output. Package distribution is implemented; an external-host callback is not.
+
+Under proposed [ADR-0007](../09-architecture-decisions/0007-host-execution-boundary.md), the SDLC package additionally owns execution-request validation and stage-effect validation. The GitHub projection resolves these from the installed package and invokes an adopter-provided host adapter. The host owns process supervision and a privileged publication service; the publisher consumes Lighthouse validation rather than inventing stage semantics. No host SDK or plugin framework is required for the first consumer.
+
+<!-- pdac:cite id="UC-RUN-AGENT" digest="sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e" -->

@@ -74,3 +74,11 @@ The UI package provides semantic tokens, native recipes and `DESIGN.md`; initial
 | Verification | npm, .NET, link, visual and site checks | Profile checks plus project-owned unit, integration and end-to-end evidence |
 | SDLC contract | `src/packages/sdlc/` and `.lighthouse/sdlc.json` projection | Selected package contract and host-specific adapters |
 | Public explanation | Generated landing, ProductShape snapshot and ArcShape snapshot | Optional adopter documentation and package-owned guidance |
+
+## Execution, evidence and authority
+
+Three independent checks govern proposed host execution: the host validates operational authority, Lighthouse validates stage completion, and the publisher validates each external effect. A lease is not gate approval. A valid JSON result is not completion. A CI pass is not merge authorization. The publisher binds every write to the current source revision, policy and lease, then records an idempotent receipt.
+
+The initial adapter should grant the engine local workspace capabilities and model access only. Branch publication, issue edits and integration use narrowly scoped publisher credentials. Enforcement loads validators and policy from a pinned trusted installation outside the agent-writable checkout; edits to repository dependencies or workflow files cannot replace the validator for the active run. The adapter must demonstrate its own isolation, cancellation and egress controls; naming gh-aw in a workflow does not preserve gh-aw's controls after replacing its engine path.
+
+<!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->

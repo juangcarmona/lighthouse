@@ -17,3 +17,7 @@ The decisions live beside this index in this section directory. This section is 
 | Publish validated Lighthouse packages through protected release automation | [ADR-0006](0006-public-package-release.md) | Public package distribution and release control |
 
 The product model and completed Product Changes define product intent for application profiles, semantic initialization, authority adoption and SDLC behavior. Those artifacts are not ADRs. The arc42 sections describe the current realized structure and name remaining target behavior without treating it as implemented.
+
+## Proposals
+
+[ADR-0007: Separate delivery decisions, execution and publication](0007-host-execution-boundary.md) is Proposed (2026-10-24). It is not an accepted decision or implemented runtime.
