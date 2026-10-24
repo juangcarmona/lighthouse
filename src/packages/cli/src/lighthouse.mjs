@@ -40,6 +40,22 @@ const upgradeStatePath = resolve(root, upgradeStateRelative);
 const layout = ['src', 'docs', 'infra', 'scripts'];
 const sdlcPackage = { name: '@juangcarmona/lighthouse-sdlc', version: installedPackageVersion('@juangcarmona/lighthouse-sdlc', 'contract.json') ?? '0.1.0' };
 const uiPackage = { name: '@juangcarmona/lighthouse-ui', version: installedPackageVersion('@juangcarmona/lighthouse-ui', 'DESIGN.md') ?? '0.1.0' };
+const sdlcWorkflowPaths = Object.freeze([
+  '.github/workflows/lighthouse-sdlc-router.yml',
+  '.github/workflows/lighthouse-sdlc-triage.md',
+  '.github/workflows/lighthouse-sdlc-triage.lock.yml',
+  '.github/workflows/lighthouse-sdlc-refine.md',
+  '.github/workflows/lighthouse-sdlc-refine.lock.yml',
+  '.github/workflows/lighthouse-sdlc-propose.md',
+  '.github/workflows/lighthouse-sdlc-propose.lock.yml',
+  '.github/workflows/lighthouse-sdlc-implement.md',
+  '.github/workflows/lighthouse-sdlc-implement.lock.yml',
+  '.github/workflows/lighthouse-sdlc-integrate.md',
+  '.github/workflows/lighthouse-sdlc-integrate.lock.yml',
+  '.github/workflows/lighthouse-sdlc-review.md',
+  '.github/workflows/lighthouse-sdlc-review.lock.yml',
+  '.github/workflows/shared/lighthouse-sdlc-stage.md',
+]);
 const managedPaths = [
   projection,
   'scripts/lighthouse-guard.mjs',
@@ -47,6 +63,7 @@ const managedPaths = [
   '.husky/pre-push',
   '.github/workflows/lighthouse.yml',
   '.lighthouse/sdlc.json',
+  ...sdlcWorkflowPaths,
   '.agents/skills/lighthouse-init/SKILL.md',
   upgradeStateRelative,
   '.lighthouse/commands.json',
@@ -60,7 +77,7 @@ const profileManagedPaths = Object.freeze({
   'mobile-expo': ['docs/profiles/mobile-expo/README.md', 'docs/profiles/mobile-expo/adoption.md', 'docs/profiles/mobile-expo/guardrails.md', 'docs/profiles/mobile-expo/testing.md', '.agents/skills/lighthouse-mobile-expo/SKILL.md'],
   'mobile-maui': ['docs/profiles/mobile-maui/README.md', 'docs/profiles/mobile-maui/adoption.md', 'docs/profiles/mobile-maui/guardrails.md', 'docs/profiles/mobile-maui/testing.md', '.agents/skills/lighthouse-mobile-maui/SKILL.md'],
 });
-const previousManagedPaths = managedPaths.slice(0, -1);
+const previousManagedPaths = [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md'];
 const legacyManagedPaths = [projection];
 const preSemanticManagedPaths = [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', upgradeStateRelative];
 const preSemanticWithoutUpgradePaths = preSemanticManagedPaths.slice(0, -1);
@@ -84,13 +101,25 @@ function managedPathsFor(manifest) {
 function upgradeScopesFor(manifest) {
   return {
     harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.agents/skills/lighthouse-init/SKILL.md', ...((manifest?.profiles ?? []).flatMap((profile) => profileManagedPaths[profile] ?? []))],
-    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json'],
+    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json', ...sdlcWorkflowPaths],
   };
 }
 
 function packageAsset(packageName, entry) {
   const path = packageRequire.resolve(`${packageName}/${entry}`);
   return readFileSync(path, 'utf8');
+}
+
+function sdlcWorkflowFiles() {
+  const files = {};
+  for (const target of sdlcWorkflowPaths) {
+    try {
+      files[target] = packageAsset('@juangcarmona/lighthouse-sdlc', `workflows/${target.slice('.github/workflows/'.length)}`);
+    } catch {
+      return {};
+    }
+  }
+  return files;
 }
 
 function profileAssets(manifest) {
@@ -427,6 +456,7 @@ function managedFiles(manifest) {
     '.agents/skills/lighthouse-init/SKILL.md': readFileSync(new URL('../assets/skills/init/SKILL.md', import.meta.url), 'utf8'),
   };
   Object.assign(files, profileAssets(manifest));
+  Object.assign(files, sdlcWorkflowFiles());
   const controlPlane = sdlcControlPlane(manifest);
   if (controlPlane) files['.lighthouse/sdlc.json'] = controlPlane;
   files['.lighthouse/commands.json'] = commandAliasProjectionText(commandAliasesProjection());

@@ -31,6 +31,7 @@
     "stages.json",
     "schemas",
     "skills",
+    "workflows",
     "src"
   ],
   "bin": {
@@ -66,6 +67,7 @@
     "./schemas/evidence-index.schema.json": "./schemas/evidence-index.schema.json",
     "./capabilities.json": "./capabilities.json",
     "./command-aliases.json": "./command-aliases.json",
-    "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json"
+    "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json",
+    "./workflows/*": "./workflows/*"
   }
 }
