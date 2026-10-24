@@ -105,7 +105,7 @@ sequenceDiagram
     Site-->>Maintainer: Output paths and failures
 ```
 
-## Proposed supervised host execution
+## Target supervised host execution
 
 ```mermaid
 sequenceDiagram
@@ -132,7 +132,7 @@ sequenceDiagram
     end
 ```
 
-This is a proposed implementation of the bounded-role use case, not the current gh-aw execution path. The agent supplies candidate results; a deterministic validator interprets them and a separately credentialed publisher performs effects. Automated triage/refine may gather information and prepare artifacts while a required human gate prevents the next stage. Unattended progression requires an accepted policy for the named gate; setting `composition: ff` alone grants none.
+This is the accepted target implementation of the bounded-role use case, not the current gh-aw execution path. The agent supplies candidate results; a deterministic validator interprets them and a separately credentialed publisher performs effects. Automated triage/refine may gather information and prepare artifacts while a required human gate prevents the next stage. Unattended progression requires an accepted policy for the named gate; setting `composition: ff` alone grants none.
 
 <!-- pdac:cite id="UC-RUN-AGENT" digest="sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e" -->
 

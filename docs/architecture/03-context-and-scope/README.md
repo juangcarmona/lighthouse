@@ -56,4 +56,4 @@ The product-defined CodeGraph MCP and Aspire application boundary are planned ad
 
 <!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
 
-Lighthouse can be installed and verified without a factory process. A factory consumes its contract without importing Lighthouse's repository layout or replacing its product authorities. [ADR-0007](../09-architecture-decisions/0007-host-execution-boundary.md) proposes the execution/publication seam; [the roadmap](../../roadmap/factory-reconciliation.md) records the current gaps.
+Lighthouse can be installed and verified without a factory process. A factory consumes its contract without importing Lighthouse's repository layout or replacing its product authorities. [ADR-0007](../09-architecture-decisions/0007-host-execution-boundary.md) defines the accepted execution/publication seam; [the roadmap](../../roadmap/factory-reconciliation.md) records the current gaps.

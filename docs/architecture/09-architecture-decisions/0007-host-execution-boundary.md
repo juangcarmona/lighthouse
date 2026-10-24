@@ -1,7 +1,7 @@
 ---
 name: host-execution-boundary
 description: Separate repository delivery decisions from host execution and privileged publication.
-status: Proposed
+status: Accepted
 date: 2026-10-24
 deciders: [juangcarmona]
 tags: [sdlc, execution, ownership]

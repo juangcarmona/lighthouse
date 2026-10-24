@@ -1,6 +1,6 @@
 # Repository delivery and factory integration
 
-The implementation sequence below closes the gap between installing Lighthouse and delivering a real change through an external execution host. The ownership map is in [architecture section 03](../architecture/03-context-and-scope/README.md#delivery-authorities); the proposed host boundary is [ADR-0007](../architecture/09-architecture-decisions/0007-host-execution-boundary.md). This plan does not replace product intent or claim runtime completion.
+The implementation sequence below closes the gap between installing Lighthouse and delivering a real change through an external execution host. The ownership map is in [architecture section 03](../architecture/03-context-and-scope/README.md#delivery-authorities); the accepted host boundary is [ADR-0007](../architecture/09-architecture-decisions/0007-host-execution-boundary.md). This plan does not replace product intent or claim runtime completion.
 
 ## Evidence at reconciliation
 
@@ -37,4 +37,4 @@ Before a real run, preserve and complete the consumer's current work, establish 
 
 ## Acceptance of this design
 
-The architecture proposal keeps the existing product baseline intact. Implementation should turn each gap into a bounded work item. Any change to product scope, human decision substitution or supported engines goes through the owning product process. A package fixture, an installed runner and a successful model response are three different proofs; none alone proves delivery.
+The architecture accepted by the maintainer on 2026-10-24 keeps the existing product baseline intact. Implementation should turn each gap into a bounded work item. Any change to product scope, human decision substitution or supported engines goes through the owning product process. A package fixture, an installed runner and a successful model response are three different proofs; none alone proves delivery.
