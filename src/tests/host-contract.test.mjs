@@ -77,7 +77,8 @@ test('engine context includes the exact stage-result schema and preserves the re
 test('stage result rejects undeclared authority and malformed evidence fields', () => {
   const envelope = { schemaVersion: 1, result, effect: { type: 'issue-comment', body: 'Assessment' } };
   assert.ok(validateStageEnvelope({ ...envelope, result: { ...result, humanApproved: true } }, request).length);
-  for (const change of [{ source: {} }, { reason: [] }, { undeclared: 'extra' }]) {
+  assert.ok(validateStageEnvelope({ ...envelope, result: { ...result, constructor: 'extra' } }, request).length);
+  for (const change of [{ source: {} }, { reason: [] }, { undeclared: 'extra' }, { constructor: 'extra' }]) {
     assert.ok(validateStageEnvelope({ ...envelope, result: { ...result, evidence: [{ id: 'issue', status: 'passed', ...change }] } }, request).length);
   }
 });

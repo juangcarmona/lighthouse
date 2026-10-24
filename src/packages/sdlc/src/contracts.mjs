@@ -22,7 +22,7 @@ function isRecord(value) {
 export function validateStageResult(value) {
   const errors = [];
   if (!isRecord(value)) return [issue('stage-result.invalid', 'stage result must be an object')];
-  for (const key of Object.keys(value)) if (!(key in resultSchema.properties)) errors.push(issue('stage-result.unknown-field', `${key} is unsupported`, key));
+  for (const key of Object.keys(value)) if (!(Object.hasOwn(resultSchema.properties, key))) errors.push(issue('stage-result.unknown-field', `${key} is unsupported`, key));
   if (value.schemaVersion !== 1) errors.push(issue('stage-result.schema-version', 'schemaVersion must be 1', 'schemaVersion'));
   for (const field of ['runId', 'nextAction']) if (typeof value[field] !== 'string' || !value[field].trim()) errors.push(issue(`stage-result.${field}`, `${field} must be a non-empty string`, field));
   if (!stageSet.has(value.stage)) errors.push(issue('stage-result.stage', `stage must be one of ${STAGES.join(', ')}`, 'stage'));
@@ -31,7 +31,7 @@ export function validateStageResult(value) {
   if (!Array.isArray(value.evidence)) errors.push(issue('stage-result.evidence', 'evidence must be an array', 'evidence'));
   else for (const [index, evidence] of value.evidence.entries()) {
     if (isRecord(evidence)) {
-      for (const key of Object.keys(evidence)) if (!(key in resultSchema.properties.evidence.items.properties)) errors.push(issue('stage-result.evidence-field', `evidence[${index}].${key} is unsupported`, `evidence[${index}]`));
+      for (const key of Object.keys(evidence)) if (!(Object.hasOwn(resultSchema.properties.evidence.items.properties, key))) errors.push(issue('stage-result.evidence-field', `evidence[${index}].${key} is unsupported`, `evidence[${index}]`));
       for (const key of ['source', 'reason']) if (evidence[key] !== undefined && typeof evidence[key] !== 'string') errors.push(issue('stage-result.evidence-field', `evidence[${index}].${key} must be a string`, `evidence[${index}]`));
     }
     if (!isRecord(evidence) || typeof evidence.id !== 'string' || !evidence.id.trim() || !evidenceStatusSet.has(evidence.status)) errors.push(issue('stage-result.evidence-item', `evidence[${index}] needs an id and a supported status`, `evidence[${index}]`));
