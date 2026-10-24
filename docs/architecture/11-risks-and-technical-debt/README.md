@@ -18,3 +18,7 @@ description: Prioritized architectural risks, implementation gaps and technical 
 | The workspace has no hosted runtime | Agent execution, durable memory and cross-repository dispatch remain external | SDLC package and deployment topology | Low | Keep the SDLC package provider-neutral and document host ownership |
 
 <!-- pdac:cite id="QR-LOW-COUPLING" digest="sha256:6892a1030f2bbc6d41c16ae1199b557028e3ed98b8bb392af9a38cd7fda413b8" -->
+
+## Execution gaps blocking a factory pilot
+
+The [reconciliation backlog](../../roadmap/factory-reconciliation.md#evidence-at-reconciliation) identifies source-path coupling, incomplete continuation enforcement, missing automatic intake, missing host handoff and missing stage-effect publication. These block an end-to-end factory claim even when the package and repository checks pass. Use the packed consumer and real host proof described there before enabling unattended execution.

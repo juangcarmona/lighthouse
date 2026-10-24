@@ -14,6 +14,7 @@ The decisions live beside this index in this section directory. This section is 
 | Start with a private local tool and defer publication | [ADR-0002](0002-distribution.md) | Historical bootstrap phase; superseded by ADR-0006 for publication |
 | Deliver one Lighthouse UI package | [ADR-0004](0004-lighthouse-ui-package.md) | UI package and initialization projections |
 | Separate source packages from adopter projections | [ADR-0005](0005-source-packages-and-adopter-projections.md) | Source layout; package boundaries; adopter root contracts |
+| Separate delivery decisions, execution and publication | [ADR-0007](0007-host-execution-boundary.md) | Stage execution, host contracts and publication authority |
 | Publish validated Lighthouse packages through protected release automation | [ADR-0006](0006-public-package-release.md) | Public package distribution and release control |
 
 The product model and completed Product Changes define product intent for application profiles, semantic initialization, authority adoption and SDLC behavior. Those artifacts are not ADRs. The arc42 sections describe the current realized structure and name remaining target behavior without treating it as implemented.

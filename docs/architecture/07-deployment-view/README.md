@@ -49,3 +49,9 @@ Production hosting, persistence, secrets, telemetry, scaling and recovery remain
 | Adopter projections | Adopter repository and its CI | Consumer-owned environment |
 
 <!-- pdac:cite id="BR-PUBLIC-SITE-PROJECTION" digest="sha256:e300dc42b79accf48aafa2877f68d42d5ce77edd218057f29b61ff81f97b47b9" -->
+
+## Adopter execution host
+
+The published workers request `[self-hosted, linux, lighthouse-sdlc]`; this selects a runner and does not call a factory service. An external-host projection must make that call explicitly. The host's database, account credentials, engine installation and operational configuration remain outside Lighthouse packages and consuming source trees.
+
+A personal-account adopter may register one runner per repository on a shared machine. Cross-repository capacity and process isolation belong to the factory. Repository-level workflow concurrency cannot enforce a machine-wide capacity limit. GitHub documents the scope distinction in [self-hosted runners](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners).
