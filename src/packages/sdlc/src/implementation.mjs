@@ -1,17 +1,19 @@
-import { readFile, writeFile, mkdir, readdir, lstat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, lstat, mkdtemp, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { proposalRoot } from './proposal.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
 const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/');
-const generated = new Set(['node_modules', 'dist', '.git', '.cache', '.vite', 'coverage', 'test-results', 'playwright-report']);
 export const changesDigest = changes => hash(JSON.stringify(changes));
 export function validateImplementationPolicy(policy, issue) {
-  if (!policy || Object.keys(policy).sort().join(',') !== 'checks,paths,proposal,reviewRequired,scope' || typeof policy.reviewRequired !== 'boolean' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
+  if (!policy || Object.keys(policy).filter(k => k !== 'seed').sort().join(',') !== 'checks,paths,proposal,reviewRequired,scope' || typeof policy.reviewRequired !== 'boolean' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
   if (!Array.isArray(policy.paths) || !policy.paths.length || policy.paths.length > 40 || policy.paths.some(p => !safePath(p.replace(/\/$/, '')) || protectedPath(p) || p.startsWith('openspec/') && p !== `${proposalRoot(issue)}/tasks.md` || p.startsWith('.github/') && !/^\.github\/workflows\/[\w-]+\.ya?ml$/.test(p))) throw Error('Implementation policy needs explicit safe paths; only this proposal tasks file may change');
   if (!Array.isArray(policy.checks) || !policy.checks.length || policy.checks.length > 12 || policy.checks.some(c => !Array.isArray(c) || !c.length || c.length > 30 || c.some(a => typeof a !== 'string' || !a || a.length > 1000 || /[\0\r\n]/.test(a)))) throw Error('Implementation policy needs bounded command argument arrays');
+  if ('seed' in policy && (!policy.seed || typeof policy.seed !== 'object' || Object.keys(policy.seed).sort().join(',') !== 'base,head' || !/^[a-f0-9]{40}$/.test(policy.seed.base ?? '') || !/^[a-f0-9]{40}$/.test(policy.seed.head ?? ''))) throw Error('Seed must identify immutable base and head commits');
   return policy;
 }
 export const withinScope = (path, policy) => safePath(path) && !protectedPath(path) && policy.paths.some(p => p.endsWith('/') ? path.startsWith(p) : path === p);
@@ -31,13 +33,56 @@ export async function loadImplementation(api, issue, owner, revision, defaultBra
   return { policy, proposal: { number: pr.number, url: pr.html_url, head: pr.head.sha, merge: pr.merge_commit_sha, root: proposalRoot(issue) } };
 }
 
-// Enumerate regular source only; never follow engine-created links or publish dependency/build output.
-export async function sourceFiles(root) {
+// A reviewed immutable seed recovers a failed attempt without updating its branch.
+export async function loadImplementationSeed(api, policy, revision) {
+  if (!policy.seed) return null;
+  const { base, head } = policy.seed;
+  const commit = await api(`git/commits/${head}`);
+  if (commit.parents?.length !== 1 || commit.parents[0].sha !== base) throw Error('Seed must be one commit directly based on the declared revision');
+  const trees = [];
+  for (const sha of [base, head, revision]) {
+    const tree = await api(`git/trees/${sha}?recursive=1`);
+    if (tree.truncated || !Array.isArray(tree.tree) || tree.tree.length > 10000) throw Error('Seed tree exceeds bounds');
+    trees.push(new Map(tree.tree.filter(f => f.type !== 'tree').map(f => [f.path, f])));
+  }
+  const [before, after, current] = trees, changes = [];
+  let bytes = 0;
+  for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
+    const old = before.get(path), next = after.get(path), live = current.get(path);
+    if (old?.sha === next?.sha && old?.mode === next?.mode) continue;
+    if (!withinScope(path, policy) || old?.sha !== live?.sha || old?.mode !== live?.mode) throw Error('Seed conflicts with current source or write scope');
+    if ([old, next].filter(Boolean).some(f => f.type !== 'blob' || !['100644', '100755'].includes(f.mode))) throw Error('Seed contains a link or non-regular change');
+    if (changes.length >= 512) throw Error('Seed exceeds changed-file bound');
+    let content = null;
+    if (next) {
+      const blob = await api(`git/blobs/${next.sha}`);
+      if (blob.encoding !== 'base64' || blob.size > 4 * 1024 * 1024) throw Error('Seed blob exceeds bounds');
+      content = blob.content.replaceAll('\n', '');
+      bytes += Buffer.byteLength(content, 'base64');
+      if (bytes > 16 * 1024 * 1024) throw Error('Seed exceeds byte bounds');
+    }
+    changes.push({ path, mode: next?.mode ?? old.mode, content });
+  }
+  return validateChanges(changes, policy);
+}
+
+// Honor Git ignores for new output without hiding tracked edits or following source links.
+export async function sourceFiles(root, baseline) {
+  const metadata = baseline ? await mkdtemp(join(tmpdir(), 'lighthouse-ignore-')) : null;
+  const gitEnv = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0' };
+  if (metadata) execFileSync('git', ['init', '--bare', '-q', metadata], { env: gitEnv });
+  const trackedDirectories = new Set();
+  for (const path of baseline?.keys() ?? []) { let parent = dirname(path); while (parent !== '.') { trackedDirectories.add(parent); parent = dirname(parent); } }
   const files = new Map(); let bytes = 0;
   async function visit(dir, relative = '') {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
-      if (generated.has(entry.name)) continue;
+      if (entry.name === '.git') continue;
       const path = relative ? `${relative}/${entry.name}` : entry.name, target = join(dir, entry.name);
+      if (metadata && !baseline.has(path) && !trackedDirectories.has(path)) {
+        const ignored = spawnSync('git', ['--git-dir', metadata, '--work-tree', root, 'check-ignore', '--no-index', '-z', '--stdin'], { input: path + '\0', env: gitEnv, timeout: 10000, maxBuffer: 4096 });
+        if (ignored.status === 0) continue;
+        if (ignored.status !== 1) throw Error('Unable to resolve ignored implementation output');
+      }
       const stat = await lstat(target);
       if (!safePath(path) || stat.isSymbolicLink() || !stat.isDirectory() && !stat.isFile()) throw Error(`Unsafe implementation file: ${path}`);
       if (stat.isDirectory()) await visit(target, path);
@@ -48,14 +93,14 @@ export async function sourceFiles(root) {
       }
     }
   }
-  await visit(root); return files;
+  try { await visit(root); return files; } finally { if (metadata) await rm(metadata, { recursive: true, force: true }); }
 }
 export function collectChanges(before, after, policy) {
   const changes = [];
   for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
     const old = before.get(path), current = after.get(path);
-    if (old && current && old.content.equals(current.content)) continue;
-    changes.push({ path, mode: old?.mode ?? '100644', content: current ? current.content.toString('base64') : null });
+    if (old && current && old.content.equals(current.content) && old.mode === current.mode) continue;
+    changes.push({ path, mode: current?.mode ?? old?.mode ?? '100644', content: current ? current.content.toString('base64') : null });
   }
   return validateChanges(changes, policy);
 }
@@ -73,8 +118,8 @@ export function validateChanges(changes, policy) {
 }
 export async function materializeCandidate(before, changes, destination) {
   const files = new Map(before);
-  for (const file of changes) if (file.content === null) files.delete(file.path); else files.set(file.path, { content: Buffer.from(file.content, 'base64') });
-  for (const [path, file] of files) { await mkdir(dirname(join(destination, path)), { recursive: true, mode: 0o777 }); await writeFile(join(destination, path), file.content, { mode: 0o666 }); }
+  for (const file of changes) if (file.content === null) files.delete(file.path); else files.set(file.path, { content: Buffer.from(file.content, 'base64'), mode: file.mode });
+  for (const [path, file] of files) { await mkdir(dirname(join(destination, path)), { recursive: true, mode: 0o777 }); await writeFile(join(destination, path), file.content, { mode: file.mode === '100755' ? 0o777 : 0o666 }); }
 }
 export function validateCheckReceipt(receipt, request, changes) {
   if (receipt?.runId !== request.runId || receipt.sourceRevision !== request.sourceRevision || receipt.changesDigest !== changesDigest(changes) || !Array.isArray(receipt.checks) || receipt.checks.length !== request.implementation.policy.checks.length) throw Error('Implementation check receipt identity mismatch');
