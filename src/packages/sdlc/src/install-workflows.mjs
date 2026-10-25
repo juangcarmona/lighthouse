@@ -16,7 +16,8 @@ for (const name of files) {
   console.log(`${apply ? 'Write' : 'Would write'} ${path}`);
 }
 if (apply) {
-  if (!execFileSync('gh', ['aw', '--version'], { encoding: 'utf8' }).includes('v0.93.2')) throw Error('gh-aw v0.93.2 is required');
+  const compiler = execFileSync('gh', ['aw', '--version'], { encoding: 'utf8' }).trim();
+  if (!/\bv?0\.93\.2\b/.test(compiler)) throw Error(`gh-aw v0.93.2 is required; found ${compiler}`);
   for (const { path, content } of planned) { await mkdir(dirname(path), { recursive: true }); await writeFile(path, content); }
   execFileSync('gh', ['aw', 'compile', 'lighthouse-sdlc-refine'], { cwd: root, stdio: 'inherit' });
 }

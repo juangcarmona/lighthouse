@@ -6,7 +6,9 @@ curl --fail --silent --show-error --location https://github.com/rhysd/actionlint
 printf '%s  %s\n' 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 "$validation_dir/actionlint.tar.gz" | sha256sum --check
 tar -xzf "$validation_dir/actionlint.tar.gz" -C "$validation_dir" actionlint
 git init -q "$validation_dir/consumer"
-if ! gh aw --version 2>/dev/null | grep -q "v0.93.2"; then gh extension install github/gh-aw --pin v0.93.2 --force; fi
+export XDG_DATA_HOME="$validation_dir/xdg"
+gh extension install github/gh-aw --pin v0.93.2
+gh aw --version
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
