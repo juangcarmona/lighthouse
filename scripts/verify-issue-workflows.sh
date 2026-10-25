@@ -10,6 +10,9 @@ export XDG_DATA_HOME="$validation_dir/xdg"
 gh extension install github/gh-aw --pin v0.93.2
 gh aw --version
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
+test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md"
+if rg -q '^  propose:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
+node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-propose
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 # gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
@@ -19,4 +22,5 @@ printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_d
   -ignore 'property "workflow_(repository|sha|ref|file_path)" is not defined' \
   -ignore 'property "admission-(result|max-ai-credits(-threat-detection|-evals)?)" is not defined' \
   -ignore 'property "start-mcp-gateway" is not defined' \
-  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml"
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml" \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.lock.yml"
