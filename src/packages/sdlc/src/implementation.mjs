@@ -9,7 +9,7 @@ const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product)(?:\/|$)/.tes
 const generated = new Set(['node_modules', 'dist', '.git', '.cache', '.vite', 'coverage', 'test-results', 'playwright-report']);
 export const changesDigest = changes => hash(JSON.stringify(changes));
 export function validateImplementationPolicy(policy, issue) {
-  if (!policy || Object.keys(policy).sort().join(',') !== 'checks,paths,proposal,scope' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
+  if (!policy || Object.keys(policy).sort().join(',') !== 'checks,paths,proposal,reviewRequired,scope' || typeof policy.reviewRequired !== 'boolean' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
   if (!Array.isArray(policy.paths) || !policy.paths.length || policy.paths.length > 40 || policy.paths.some(p => !safePath(p.replace(/\/$/, '')) || protectedPath(p) || p.startsWith('openspec/') && p !== `${proposalRoot(issue)}/tasks.md` || p.startsWith('.github/') && !/^\.github\/workflows\/[\w-]+\.ya?ml$/.test(p))) throw Error('Implementation policy needs explicit safe paths; only this proposal tasks file may change');
   if (!Array.isArray(policy.checks) || !policy.checks.length || policy.checks.length > 12 || policy.checks.some(c => !Array.isArray(c) || !c.length || c.length > 30 || c.some(a => typeof a !== 'string' || !a || a.length > 1000 || /[\0\r\n]/.test(a)))) throw Error('Implementation policy needs bounded command argument arrays');
   return policy;

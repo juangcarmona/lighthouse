@@ -130,6 +130,10 @@ async function main() {
       const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled });
       if (collectChanges(checkBaseline, await sourceFiles(candidate), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
+      if (request.implementation.policy.reviewRequired) {
+        envelope.result.status = 'blocked';
+        envelope.result.pendingReview.push('Repository policy requires owner acceptance of this candidate; engine assertions cannot grant it.');
+      }
       if (!changes.length && envelope.result.status === 'passed') { envelope.result.status = 'blocked'; envelope.result.missingEvidence.push('No implementation changes were returned'); }
       if (receipt.checks.some(c => c.exitCode !== 0)) {
         envelope.result.status = 'blocked';

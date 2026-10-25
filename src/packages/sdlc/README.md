@@ -76,6 +76,7 @@ Opt in with `--with-implement`, provision the implementation-capable engine imag
 {
   "18": {
     "proposal": 33,
+    "reviewRequired": true,
     "scope": "Implement the approved feature; owner visual review remains required.",
     "paths": ["src/", "tests/", "package.json", "package-lock.json", "openspec/changes/issue-18-proposal/tasks.md"],
     "checks": [["npm", "ci", "--ignore-scripts"], ["npm", "test"], ["npm", "run", "build"]]
@@ -83,7 +84,7 @@ Opt in with `--with-implement`, provision the implementation-capable engine imag
 }
 ```
 
-This is executable repository policy, reviewed with the workflow adoption. Paths ending in `/` allow a subtree; other entries allow one file. Keep the scope specific to the approved change or slice. Harness configuration, installed agents, Git metadata, credential files, workflows and approved design/specification files cannot be changed by this worker. Workflow changes need a separate maintainer-authored change; the publisher has no workflow-write permission. Only the proposal tasks file is writable under OpenSpec. Labels do not replace this policy or approve later stages.
+This is executable repository policy, reviewed with the workflow adoption. Paths ending in `/` allow a subtree; other entries allow one file. Keep the scope specific to the approved change or slice. Harness configuration, installed agents, Git metadata, credential files, workflows and approved design/specification files cannot be changed by this worker. Workflow changes need a separate maintainer-authored change; the publisher has no workflow-write permission. Only the proposal tasks file is writable under OpenSpec. Set `reviewRequired: true` when candidate acceptance needs the owner; the host then forces a blocked assessment and draft PR even if the engine claims success. An adopter may explicitly set it to false where its Definition of Done permits automated assessment. Labels do not replace this policy or approve later stages.
 
 OpenCode edits a temporary copy, with 30 minutes to return an envelope. The adapter validates at most 512 changed regular files, 4 MiB per file and 16 MiB total, excluding dependency/build directories. It reconstructs the exact candidate and reruns the configured commands in a fresh container without provider or GitHub credentials. Checks share a ten-minute limit. Only the candidate files enter the PR; logs, screenshots and the retrospective remain in the `implementation-evidence` Actions artifact for 30 days. Result receipts and redacted OpenCode events retain their existing 14-day lifetime. These artifacts are evidence delivery, not permanent archival.
 
