@@ -82,3 +82,10 @@ test('implementation shell progress identifies the command without dumping its o
   assert.match(visible, /shell npm run build/);
   assert.ok(!visible.includes('payload'));
 });
+
+test('patch progress names changed files without exposing the patch contents', async () => {
+  const { formatOpenCodeEvent } = await import('../packages/sdlc/src/opencode-progress.mjs');
+  const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'patch', state: { status: 'completed', input: { patchText: '*** Begin Patch\n*** Add File: /workspace/src/app.ts\n+private payload\n*** Update File: /workspace/tests/app.test.ts\n*** End Patch' } } } }));
+  assert.match(visible, /src\/app.ts.*tests\/app.test.ts/);
+  assert.ok(!visible.includes('payload'));
+});
