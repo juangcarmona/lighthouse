@@ -12,7 +12,7 @@ Close the delivery record and make the next improvement visible.
 1. Read the change overview, implementation evidence, integration result and review findings.
 2. Classify findings as accepted, deferred, fixed or rejected with an owner and follow-up reference.
 3. Record the evidence, outcome, useful learning and any product or architecture follow-up.
-4. Confirm the work item and pull request have the project's final labels.
+4. Check the project's final-label policy and the host's current issue/PR observations. Record the intended transition; the trusted publisher applies final labels after validating this result.
 5. Return a stage result with `stage: review`, `gate: null`, the review record as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays without opening another delivery gate.
 
 ## Completion

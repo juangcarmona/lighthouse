@@ -11,7 +11,7 @@ Prepare a completed slice for the project's forge and branch policy.
 
 1. Recheck the Done evidence and the declared dependency order.
 2. Verify the branch, commit, pull request and required CI checks against project policy.
-3. Synchronize the work item and pull request state using the project's configured labels.
+3. Verify the work-item and PR synchronization plan against the project's configured labels. The trusted publisher applies its effects after validating this assessment.
 4. Prepare the merge or stacked change action and leave protected or human decisions explicit.
 5. Return a stage result with `stage: integrate`, the integration record as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays without merging unless the selected route and repository policy authorize it.
 
