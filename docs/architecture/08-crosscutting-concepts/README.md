@@ -40,7 +40,9 @@ The SDLC package publishes a versioned capability catalog. Every catalog entry n
 
 Capability adoption is dry-run first. The CLI reads provider state to build a deterministic plan, requires an explicit plan hash for external writes, applies only allowed operations, re-reads before writing, verifies the final state and records desired, observed, target and operation evidence under `.lighthouse/reconciliation/`.
 
-The current adapter supports GitHub labels. It creates missing labels and preserves existing values; ambiguous equivalents, destructive operations, provider drift and partial failures stop or remain resumable. The provider remains the source of truth and no provider write occurs during package installation or ordinary upgrade discovery.
+The GitHub labels adapter supports label adoption. It creates missing labels and preserves existing values; ambiguous equivalents, destructive operations, provider drift and partial failures stop or remain resumable. The provider remains the source of truth and no provider write occurs during package installation or ordinary upgrade discovery.
+
+The optional GitHub repository profile adds settings and additive ruleset reconciliation through the same capability entrypoint. The adopter owns `.lighthouse/github.json`, including checks, contribution policy and reasoned exceptions. The [profile adapter](../../../src/packages/sdlc/src/github-profile.mjs) reads GitHub through the authenticated `gh` CLI, binds apply to a reviewed plan and repository identity, preserves stronger rules and records partial completion. The [CLI adapter](../../../src/packages/cli/src/github-profile.mjs) owns local plans and receipts. General verification checks configuration locally; explicit capability verification reads current provider state. GitHub settings have no atomic compare-and-swap operation, so readback detects failures but concurrent conflicting administrators remain a deployment constraint.
 
 ## Managed projections and safe mutation
 

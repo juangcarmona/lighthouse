@@ -9,6 +9,7 @@ import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
 import { composeProfiles, normalizeApplication, profileCompositionResult, readProfileCatalog } from './profiles.mjs';
 import { hasUnresolvedQuestions, manifestFromInitPlan, validateInitPlan } from './init-plan.mjs';
 import { readCommandAliases, verifyCommandAliases } from './aliases.mjs';
+import { githubProfileCommand, localGithubProfileStatus } from './github-profile.mjs';
 let sdlcCapabilities;
 let sdlcReconcile;
 let sdlcGithub;
@@ -1421,13 +1422,16 @@ async function verify(manifest, format = 'text') {
       kind: 'hard',
       verification: 'deterministic',
       status: pending.length ? 'unconfigured' : available || declined ? 'not-applicable' : 'passed',
-      adoptionStatus: pending.length ? pending[0].status : available ? 'available' : declined ? 'declined' : 'adopted',
+      adoptionStatus: pending.length ? pending[0].status : declined ? 'declined' : available ? 'available' : 'adopted',
       evidence: adoption.map((item) => ({ capability: item.id, catalogVersion: item.catalogVersion })),
       problems: pending.map((item) => `${item.id} is ${item.status}; run ${item.nextAction}`),
       nextAction: pending[0]?.nextAction ?? null,
     });
     report.summary.unconfigured = (report.summary.unconfigured ?? 0) + (pending.length ? 1 : 0);
   }
+  const githubProfileResult = await localGithubProfileStatus(root);
+  report.results.push(githubProfileResult);
+  report.summary[githubProfileResult.status] = (report.summary[githubProfileResult.status] ?? 0) + 1;
   const evidenceResult = await verifyEvidenceIndex();
   report.results.push(evidenceResult);
   report.summary[evidenceResult.status] = (report.summary[evidenceResult.status] ?? 0) + 1;
@@ -1574,6 +1578,11 @@ async function capabilities(args) {
   const inputPath = args.includes('--input') ? args[args.indexOf('--input') + 1] : args.find((arg) => arg.startsWith('--input='))?.slice(8);
   const format = formatFromArgs(args);
   const planFile = args.includes('--plan-file') ? args[args.indexOf('--plan-file') + 1] : args.find((arg) => arg.startsWith('--plan-file='))?.slice(12);
+  const isGithubPlan = action === 'apply' && planFile && JSON.parse(await readFile(resolve(root, planFile), 'utf8')).kind === 'github-profile';
+  if ((id === 'github-profile' && ['plan', 'apply', 'verify'].includes(action)) || isGithubPlan) {
+    if (provider !== 'github') throw new Error('The GitHub profile requires provider github.');
+    return githubProfileCommand(args, { root, catalog: sdlcCapabilityCatalog() });
+  }
   if (['select', 'decline'].includes(action)) {
     const catalog = sdlcCapabilityCatalog();
     if (!catalog) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before selecting capabilities.');
@@ -1669,7 +1678,7 @@ async function capabilities(args) {
     if (format === 'json') console.log(JSON.stringify(result, null, 2)); else process.stdout.write(capabilityPlanText(result));
     return;
   }
-  throw new Error('Usage: lighthouse capabilities <select|decline|plan|apply> ...');
+  throw new Error('Usage: lighthouse capabilities <select|decline|plan|apply|verify> ...');
 }
 
 function formatFromArgs(args) {
@@ -1689,7 +1698,7 @@ if (command === 'create-dotnet') {
 let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
-  if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply'].includes(arg)) continue;
+  if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply', 'verify'].includes(arg)) continue;
   if (arg === '--dry-run') continue;
   if (arg === '--apply') { if (!['init', 'authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--adopt-existing') { if (command !== 'authorities') invalidArgument = true; continue; }

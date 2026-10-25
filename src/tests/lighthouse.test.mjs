@@ -234,6 +234,10 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), '.product'), join(dir, '.product'), { recursive: true });
     await mkdir(join(dir, 'src/packages/cli'), { recursive: true });
     await mkdir(join(dir, 'src/packages/ui'), { recursive: true });
+    for (const pkg of ['cli', 'sdlc']) {
+      await mkdir(join(dir, 'src/packages', pkg, 'src'), { recursive: true });
+      await cp(join(process.cwd(), 'src/packages', pkg, 'src/github-profile.mjs'), join(dir, 'src/packages', pkg, 'src/github-profile.mjs'));
+    }
     await cp(join(process.cwd(), 'src/packages/cli/README.md'), join(dir, 'src/packages/cli/README.md'));
     await cp(join(process.cwd(), 'src/packages/ui/README.md'), join(dir, 'src/packages/ui/README.md'));
     await cp(join(process.cwd(), 'src/packages/ui/DESIGN.md'), join(dir, 'src/packages/ui/DESIGN.md'));

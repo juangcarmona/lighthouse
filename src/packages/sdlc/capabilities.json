@@ -49,6 +49,32 @@
         "allowed": ["create", "preserve"],
         "blocked": ["modify", "rename", "remove", "ambiguous"]
       }
+    },
+    {
+      "id": "github-profile",
+      "provider": "github",
+      "adapter": "github-profile",
+      "version": "1",
+      "title": "Recommended GitHub repository profile (optional)",
+      "selection": "opt-in",
+      "configuration": {
+        "profileVersion": 1,
+        "configurationPath": ".lighthouse/github.json",
+        "guide": "https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/github-profile.md"
+      },
+      "operations": {
+        "allowed": [
+          "create",
+          "preserve",
+          "modify"
+        ],
+        "blocked": [
+          "rename",
+          "remove",
+          "ambiguous",
+          "unsupported"
+        ]
+      }
     }
   ]
 }

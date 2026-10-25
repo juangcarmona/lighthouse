@@ -72,3 +72,7 @@ Only `passed` and `not-applicable` satisfy a required guardrail; `pending-review
 To add a future guardrail, the catalog owner adds a JSON entry under the packaged `assets/guardrails/` surface, validates it against `assets/schemas/guardrails.schema.json`, declares its profile applicability and repair hint, and uses an existing checker or an explicit semantic or human verification method; in this delivery the surface belongs to the CLI package, and the CLI core does not change.
 
 A new deterministic checker mechanism or a new engineering practice is outside this catalog and requires a separate Product Change.
+
+## Optional GitHub repository profile
+
+The recommended `github-profile` capability is opt-in. Adopters declare checks, contribution policy and reasoned exceptions in `.lighthouse/github.json`, then use `lighthouse capabilities plan`, `apply` and `verify --id github-profile` to reconcile live settings. No remote settings change during installation or ordinary upgrades. See the [GitHub profile guide](github-profile.md) for configuration, supported controls, authorization and limitations.
