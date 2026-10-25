@@ -4,7 +4,7 @@ import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
-import { sourceFiles, collectChanges, materializeCandidate } from './implementation.mjs';
+import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
 import { writableTree, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
@@ -61,7 +61,7 @@ async function main() {
   const implementing = request.stage === 'implement';
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, cancelled = false;
+  let child, timer, heartbeat, slot, baseline, trackedSource, cancelled = false;
   const cancel = () => { cancelled = true; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
   try {
@@ -70,7 +70,17 @@ async function main() {
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
     baseline = implementing ? await sourceFiles(source) : null;
-    if (implementing) await writableTree(source);
+    trackedSource = baseline ? new Map(baseline) : null;
+    if (implementing) {
+      if (request.seedDigest) {
+        const seed = validateChanges(JSON.parse(await readFile(join(runDir, 'seed.json'), 'utf8')), request.implementation.policy);
+        if (changesDigest(seed) !== request.seedDigest) throw Error('Seed artifact identity mismatch');
+        for (const file of seed) if (file.content !== null) trackedSource.set(file.path, {});
+        await rm(source, { recursive: true, force: true }); await mkdir(source);
+        await materializeCandidate(baseline, seed, source);
+      }
+      await writableTree(source);
+    }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
     const prompt = join(dir, 'prompt.txt');
@@ -78,7 +88,7 @@ async function main() {
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision }));
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
     const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
@@ -125,7 +135,7 @@ async function main() {
     clearTimeout(timer);
     completionOutput(envelope, request);
     if (implementing) {
-      const changes = collectChanges(baseline, await sourceFiles(source, baseline), request.implementation.policy);
+      const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
       await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
@@ -157,7 +167,7 @@ async function main() {
     if (implementing && baseline) {
       try {
         try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
-        const changes = collectChanges(baseline, await sourceFiles(source, baseline), request.implementation.policy);
+        const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
         await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
         await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
         console.error(progressText('Recovery', 'Retained bounded candidate changes and available evidence. This failed run cannot publish a PR.'));

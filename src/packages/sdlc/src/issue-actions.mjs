@@ -2,7 +2,7 @@ import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { loadImplementation, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
+import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 
@@ -71,9 +71,10 @@ async function main(command) {
       if (reports.slice(-3).length === 3 && reports.slice(-3).every(c => c.body.includes('Outcome: blocked'))) throw Error('Three unresolved rounds; owner must explicitly add refine');
     }
     const stage = route.stage;
-    let predecessor, implementation;
+    let predecessor, implementation, seed;
     if (stage === 'implement') {
       implementation = await loadImplementation(api, issueNumber, owner, revision.sha, repository.default_branch);
+      seed = await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');
       if (pulls.length >= 100 || pulls.some(pr => pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Review the existing implementation PR before requesting another');
     }
@@ -87,8 +88,9 @@ async function main(command) {
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
-    const snapshot = { runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(implementation ? { implementation } : {}) };
+    const snapshot = { runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
+    if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
@@ -99,6 +101,7 @@ async function main(command) {
     }
     if (implementation) {
       context.implementation = implementation;
+      if (seed) context.recovery = 'The owner-configured immutable seed is already applied to /workspace. Continue that candidate; inspect and validate it instead of rebuilding it from scratch. It is unapproved implementation work, not evidence of completion. Its parent and changed-file bases were checked against the current source; publication still uses a new branch.';
       context.contract.rules = context.contract.rules.replace('Source is read-only. Write only /output/envelope.json.', 'Edit the disposable /workspace only within implementation.policy.paths. Run the approved checks and retain screenshots, reports and a retrospective under /output/evidence. Write the final /output/envelope.json.');
       context.contract.rules = context.contract.rules.replace('Do not call external services or emit credentials.', 'Use public package registries for authorized dependency installation. Keep publication with the trusted host and never emit credentials.');
       context.contract.rules += ' Read the approved OpenSpec proposal and implement only implementation.policy.scope. The host independently checks the candidate in a fresh credential-free container. Return blocked with pendingReview when owner visual acceptance is required; reviewable code is still delivered as a draft PR. Preserve original content and author notes. Update only tasks actually completed; do not alter the approved design/specifications. The engine has 30 minutes: reserve the last two minutes for evidence and a valid envelope even if incomplete. Redirect long-running command output to /output/evidence/*.log so it remains readable when OpenCode backgrounds the command; its internal shell log store is outside the allowed read scope. The image includes Node 24, Git, ripgrep and Chromium at /usr/bin/chromium. Set a Playwright executablePath explicitly to that Chromium when appropriate; the independent host uses the same image. Record what went well, what failed, start doing, stop doing and evidenced recurring patterns in /output/evidence/retrospective.md. Never include secrets or provider state in source or evidence.';

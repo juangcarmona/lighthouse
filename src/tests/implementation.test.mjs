@@ -104,3 +104,24 @@ test('Git-ignored new reports are excluded while newly ignored tracked edits rem
     assert.throws(() => collectChanges(before, after, policy), /out-of-scope/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('an immutable recovery seed cannot overwrite newer source or expand its write scope', async () => {
+  const { loadImplementationSeed } = await import('../packages/sdlc/src/implementation.mjs');
+  const base = 'a'.repeat(40), head = 'b'.repeat(40), revision = 'c'.repeat(40);
+  const seeded = { ...policy, seed: { base, head } };
+  validateImplementationPolicy(seeded, 18);
+  let conflict = false, extraParent = false, path = 'src/app.js';
+  const api = async route => {
+    if (route === `git/commits/${head}`) return { parents: extraParent ? [{ sha: base }, { sha: revision }] : [{ sha: base }] };
+    if (route.startsWith('git/trees/')) {
+      const sha = route.split('/')[2].split('?')[0];
+      return { truncated: false, tree: [{ path, type: 'blob', mode: '100644', sha: sha === head ? 'new' : sha === revision && conflict ? 'someone-elses-edit' : 'old' }] };
+    }
+    assert.equal(route, 'git/blobs/new'); return { encoding: 'base64', size: 3, content: Buffer.from('new').toString('base64') };
+  };
+  assert.equal((await loadImplementationSeed(api, seeded, revision))[0].path, 'src/app.js');
+  conflict = true; await assert.rejects(loadImplementationSeed(api, seeded, revision), /conflicts/);
+  conflict = false; extraParent = true; await assert.rejects(loadImplementationSeed(api, seeded, revision), /one commit/);
+  extraParent = false; path = '.github/workflows/agent.yml'; await assert.rejects(loadImplementationSeed(api, seeded, revision), /scope/);
+  assert.throws(() => validateImplementationPolicy({ ...policy, seed: { base, head: 'main' } }, 18), /immutable/);
+});
