@@ -85,7 +85,7 @@ async function main() {
       const visible = formatOpenCodeEvent(redacted);
       if (visible) report(visible);
     };
-    report(progressText('Run', `Refining issue #${request.issue}. Public progress and tool activity appear below; structured events are retained as an artifact.`));
+    report(progressText('Run', `${request.stage} for issue #${request.issue}. Public progress and tool activity appear below; structured events are retained as an artifact.`));
     heartbeat = setInterval(() => {
       if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
     }, 10000);
