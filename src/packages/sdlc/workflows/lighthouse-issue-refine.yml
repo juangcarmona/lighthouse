@@ -12,7 +12,7 @@ permissions:
 jobs:
   refine:
     name: Refine issue ${{ inputs.issue }}
-    runs-on: [self-hosted, linux, lighthouse-host]
+    runs-on: [self-hosted, linux, lighthouse-workflow]
     timeout-minutes: 15
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
