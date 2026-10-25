@@ -2,7 +2,6 @@
 
 This document describes the legacy external-host adapter. The optional repository-owned issue adapter described in [README.md](README.md#repository-owned-issue-refinement) keeps orchestration and publication in GitHub Actions and uses an independent executor. Neither adapter requires SoFa as a product dependency.
 
-
 Schema version 1 supports one triage or refinement stage. The executable validator in `src/host-contract.mjs` is authoritative; unknown request and effect fields fail validation. Hosts install an exact package version outside the execution workspace.
 
 ## Direct entry and work reservation
