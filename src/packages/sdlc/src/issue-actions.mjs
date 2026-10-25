@@ -14,7 +14,8 @@ export function routeIssue(event, actor, owner, eventName) {
   if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
   if (eventName === 'issues' && event.action === 'labeled' && ['refine', 'propose', 'implement'].includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
   if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.includes('needs-info')) return { run: true, stage: 'refine', issue: event.issue.number, reason: 'Owner answered pending refinement' };
-  if (eventName === 'workflow_dispatch' && ['refine', 'propose', 'implement'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
+  if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
+  if (eventName === 'workflow_dispatch' && ['refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
   return { run: false, reason: 'No eligible stage event' };
 }
 export const taskDigest = (issue, comments) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: comments.map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));

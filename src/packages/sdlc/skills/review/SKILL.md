@@ -18,3 +18,9 @@ Close the delivery record and make the next improvement visible.
 ## Completion
 
 The completed change has a durable review result, classified findings and a clear follow-up owner.
+
+## Retrospective and continuity
+
+Compare the accepted work item, changed paths, integrated revision and authenticated post-merge checks. Preserve missing and pending evidence. Check instructions affected by the delivered change and report stale or conflicting guidance with file references; an intentional host-specific difference is not drift by itself.
+
+Return `output.retrospective` as Markdown covering what went well, what went wrong, start doing, stop doing and improvement candidates. State when no finding was established. Each proposed improvement identifies the observed failure, supporting evidence, affected owner, smallest useful guard and how to reproduce the failure before checking the correction. Distinguish recurrence across work items from retries of one attempt. Do not invent attention-time or cost measurements. Changes to policy or provider-owned guidance require their own review; this stage only records the finding.

@@ -91,7 +91,7 @@ export async function hostContractMain(args) {
   } else if (command === 'result') {
     errors = validateStageEnvelope(JSON.parse(await readFile(policyFile, 'utf8')), request);
   } else if (command === 'context') {
-    if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage)) throw new Error('Unsupported stage context');
+    if (!['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(request.stage)) throw new Error('Unsupported stage context');
     const skill = await readFile(new URL(`../skills/${request.stage}/SKILL.md`, import.meta.url), 'utf8');
     const issue = JSON.parse(await readFile(policyFile, 'utf8'));
     const predecessor = extraFile ? JSON.parse(await readFile(extraFile, 'utf8')) : null;
