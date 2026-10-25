@@ -12,7 +12,8 @@ export function validateInput(input) {
   const paths = new Set();
   for (const file of input.files) {
     if (typeof file.path !== 'string' || !file.path || file.path.startsWith('/') || file.path.includes('\\') || file.path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git') || file.path.includes('\0') || paths.has(file.path)) throw Error('Invalid source path');
-    if (typeof file.data !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.data)) throw Error('Invalid source bytes');
+    // A repeated-group regexp exhausts V8's stack on ordinary image assets.
+    if (typeof file.data !== 'string' || Buffer.from(file.data, 'base64').toString('base64') !== file.data) throw Error('Invalid source bytes');
     bytes += Buffer.byteLength(file.data, 'base64'); paths.add(file.path);
   }
   if (bytes > 32 * 1024 * 1024 || !input.context || JSON.stringify(input.context).length > 262144) throw Error('Execution input exceeds bounds');
