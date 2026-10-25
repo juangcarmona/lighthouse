@@ -38,3 +38,9 @@ test('repository metadata endpoint has no trailing slash while subresources reta
   assert.equal(repositoryApiUrl('owner/repo'), 'https://api.github.com/repos/owner/repo');
   assert.equal(repositoryApiUrl('owner/repo', 'issues/18'), 'https://api.github.com/repos/owner/repo/issues/18');
 });
+
+test('executor accepts large image assets and rejects noncanonical base64', () => {
+  const input = { id: 'a'.repeat(64), context: {}, files: [{ path: 'image.png', data: Buffer.alloc(4 * 1024 * 1024, 255).toString('base64') }] };
+  assert.doesNotThrow(() => validateInput(input));
+  for (const data of ['!!!', 'aGk', 'aGk=\n', 'aGl=']) assert.throws(() => validateInput({ ...input, files: [{ path: 'image.png', data }] }), /Invalid source bytes/);
+});
