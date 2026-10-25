@@ -1,5 +1,19 @@
 # @juangcarmona/lighthouse
 
+## 0.11.0
+
+### Minor Changes
+
+- 9581463: # Observable gh-aw execution
+
+  Make workflow adoption explicit and run issue refinement through gh-aw with visible OpenCode events, packaged skills and independently validated publication. Replace the persistent executor bridge with a foreground Docker engine adapter for subscription-authenticated Bastion operators.
+
+### Patch Changes
+
+- Updated dependencies [9581463]
+- Updated dependencies [bf1885a]
+  - @juangcarmona/lighthouse-sdlc@0.12.0
+
 ## 0.10.0
 
 ### Minor Changes
