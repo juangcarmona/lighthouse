@@ -16,6 +16,8 @@ Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an exi
 
 Use `lighthouse upgrade` to preview a versioned foundation update. The command is dry-run by default, accepts `--scope harness`, `--scope sdlc` or `--scope all`, preserves customized projections and stops when ownership evidence is missing. Add `--apply` only after reviewing the plan, then run `lighthouse verify`.
 
+Agent workflows are opt-in through the SDLC package installer. Initialization does not create an entire worker catalog. Upgrading an older adoption releases workflow ownership while preserving the existing files for explicit review and cleanup.
+
 The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes, `DESIGN.md` and its agent skill. Selecting `visual-theme` projects the guide and skill into the adopter and enables its deterministic guardrail. Stack profiles own their source templates, guidance and checks; the .NET creator is the packaged entry point for the selected backend profile.
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration. In an existing repository, run `lighthouse authorities --adopt-existing` to validate the current ProductShape and ArcShape surfaces without running either initializer; review the dry-run plan and add `--apply` only to record both exact versions in Lighthouse-owned configuration.

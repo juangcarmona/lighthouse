@@ -50,6 +50,21 @@
       "action": "read",
       "resource": "/workspace",
       "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/input/prompt.txt",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "*",
+      "effect": "allow"
     }
   ],
   "policies": [
@@ -117,6 +132,26 @@
       "action": "tool.use",
       "resource": "read:/workspace",
       "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/input/prompt.txt",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "skill:*",
+      "effect": "allow"
     }
-  ]
+  ],
+  "skills": [
+    "/harness/skills"
+  ],
+  "update": "disable",
+  "share": "disabled"
 }

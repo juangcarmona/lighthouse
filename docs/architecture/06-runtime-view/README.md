@@ -85,7 +85,7 @@ flowchart LR
     review -. learning .-> triage
 ```
 
-The SDLC package implements route, stage, gate, state, decomposition and provider-adapter validators. It also distributes gh-aw workflows that execute an agent in GitHub Actions. Lighthouse has no persistent execution service. The published router is manual-only, and its current `ff` job-success checks do not yet enforce the complete continuation boundary described below.
+The SDLC package implements route, stage, gate, state, decomposition and provider-adapter validators. It also distributes gh-aw workflows that execute an agent in GitHub Actions. Lighthouse has no persistent execution service. The selected router handles owner refinement labels, clarification replies and manual dispatch. Later-stage composition remains outside this implemented route.
 
 ## Verify package and site contracts
 
@@ -170,8 +170,10 @@ The external-host projection accepts an owner-added `refine` label. The host aut
 
 The host owns the persistent reservation and projects it as `agent-working`. `human-working` prevents new agent admission and requests termination of active work. Outcome publication and reservation cleanup must finish before capacity is released. Labels are cooperative signals; they cannot prevent a human or an unrelated tool from editing the issue.
 
-## Repository-owned refinement adapter
+## Repository-owned gh-aw refinement
 
-The optional issue router and reusable refinement worker execute through GitHub Actions. Actions verifies the owner event, reserves the issue, snapshots source and owner answers, invokes an independent executor, validates the Lighthouse envelope, rechecks publication authority and records the outcome. Separate steps, bounded progress metadata, a job summary and an artifact make execution inspectable. An owner reply to a pending question resumes the same stage; it never grants a later stage.
+An owner event reaches one router and one reusable gh-aw worker. A preparation job verifies identity and current source, snapshots issue intent and reserves the issue. The agent job loads the pinned harness package and starts OpenCode in a temporary Docker container. Source and skills are read-only; the candidate envelope is writable. The imported engine streams OpenCode events into the Actions step and gh-aw log artifacts.
 
-The executor receives source and stage context over a restricted local socket and returns progress and one candidate result. It has no GitHub token, queue, database or lifecycle authority. The optional Bastion example is operator-owned infrastructure outside the SDLC package. SoFa can observe and verify GitHub evidence independently; its availability is not an execution prerequisite. The earlier external-host contract remains supported for existing adopters, but this adapter does not use that supervisor path.
+A separate publication job validates the envelope and rereads source, owner answers and reservation before commenting and setting `ready` or `needs-info`. Cleanup releases `agent-working`. An owner reply resumes only the waiting refinement. The workflow never treats a ready issue as approval for implementation or merge.
+
+The Actions run owns the execution record, with source/harness/image revisions in a runtime receipt. There is no socket service or SoFa execution dependency. The earlier external-host contract remains available for compatibility. The [engine deployment example](../../../src/examples/opencode-engine/README.md) states the Docker subscription profile's isolation limits; the broader continuation contract above remains target behavior.

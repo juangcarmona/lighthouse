@@ -10,27 +10,29 @@ It also provides the `browser-e2e` evidence contract for Playwright journeys. Th
 
 It provides a neutral evidence contract for delivery, product and architecture references. `lighthouse-sdlc evidence` validates records or builds a deterministic coverage index; it does not replace ProductShape, ArcShape or a future quality evaluator.
 
-It does not run agents, store transcripts, dispatch work between repositories or replace ProductShape, ArcShape, OpenSpec or an agent host.
+It has no persistent execution service, transcript store or cross-repository dispatcher. The optional Actions adapter executes the selected engine under operator policy. ProductShape, ArcShape and OpenSpec retain their own authority.
 
 ## External host contract
 
 `src/host-contract.mjs` validates a supervised `triage` or `refine` request against a trusted host policy and validates the resulting stage/effect envelope. It is exported as `@juangcarmona/lighthouse-sdlc/host-contract`. See [the wire contract](host-contract.md) for fields and host obligations. Execution, credentials, admission, cancellation and publication remain host responsibilities.
 
-Print the opt-in GitHub adapter with `node node_modules/@juangcarmona/lighthouse-sdlc/src/host-contract.mjs workflow`. It expects a provisioned `lighthouse-host-bridge` on a repository runner labelled `lighthouse-host`. Installing the package does not enable that adapter. The existing gh-aw projection remains a separate execution path.
+The external-host adapter remains available for existing adopters. New repository automation uses the gh-aw path below; do not enable both routers for the same events.
 
-## gh-aw workflow projection
+## GitHub Actions execution
 
-The package includes the six Lighthouse SDLC worker sources, their compiled `.lock.yml` workflows and the router projection. The Lighthouse CLI projects them into `.github/workflows` during initialization, reconciliation or an explicit `lighthouse upgrade --scope sdlc --apply`; package installation alone does not write repository files.
+The optional router accepts an owner-added `refine` label, an owner reply to a pending `needs-info` question or an owner manual dispatch. It calls the compiled gh-aw refinement worker. Actions authorizes the request, reserves the issue, runs OpenCode, validates its result and publishes through a separately credentialed job. SoFa can observe these runs without participating in execution.
 
-Workers resolve instructions and validators from the installed SDLC package and reject a version mismatch with `.lighthouse/sdlc.json` before execution. Consumers need a committed npm lockfile.
+Preview installation with `node node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs <repository> <immutable-lighthouse-commit>`. Install gh-aw v0.93.2, then add `--apply` to write and compile the selected sources. Existing different files require review and `--replace-reviewed`. Commit the Markdown, router, shared engine definition, generated lock and action pins together. Set the repository variable `LIGHTHOUSE_AUTOMATION_ENABLED=true` after provisioning the runner and disabling previous routers.
 
-The host must provide the runner capability `[self-hosted, linux, lighthouse-sdlc]`, the GitHub and gh-aw credentials required by the compiled workflow, the selected route and stage input, and durable evidence handling for the uploaded stage result. Each worker executes one declared stage and writes `/tmp/gh-aw/agent/stage-result.json`; the host remains responsible for runtime, queues, budgets and model selection. The generic runner capability is a contract, not a SoFa or Bastion identity.
+Only `refine` is enabled by this installer. The other stage templates remain in the package as reference assets; they are not a working unattended delivery pipeline. Foundation initialization and upgrades do not install workflows. On upgrade from an older baseline, existing workflows remain untouched and leave the foundation's managed-file inventory. Review and remove obsolete projections explicitly.
 
-The router validates the existing Lighthouse route and `requires` declarations. A normal dispatch runs one stage. The current worker host cannot verify human gate decisions, so it rejects `ff` for every bundled route. Use individual stage dispatches under host supervision until an approval adapter exists. The `integrate` worker prepares the configured merge action without merging unless repository policy authorizes it; `review` closes the flow with `gate: null`.
+The worker requires a Linux runner labelled `lighthouse-workflow`, Node.js, Docker, `flock` and `LIGHTHOUSE_ENGINE_CONFIG` pointing to an operator-owned configuration. See the source repository's `src/examples/opencode-engine` deployment example. The imported OpenCode engine starts a foreground container with read-only product source and harness package, a writable result directory and operator-managed provider authentication. Packaged skills load from `/harness/skills`; consumers do not copy the lifecycle skills into their source tree.
 
-Workers require `stage-result --require-complete --stage <stage> --run-id <id>` before reporting success. This checks the dispatched identity, the gate in `stages.json`, `status: passed`, empty blocker arrays and resolved evidence statuses. Plain `stage-result --input <file>` still validates the structure of reports, including blocked reports. Completion validation does not verify evidence provenance or grant approval to cross a human gate; the host owns those checks.
+The subscription profile uses Docker isolation and explicitly disables gh-aw's AWF agent sandbox. It has no AWF egress filtering or credential proxy. The engine gets no GitHub token or Docker socket. Only trusted repository workflows may use the runner, whose Docker access is privileged infrastructure access. All repository runners sharing a host must use the same operator lock path to serialize model execution.
 
-Install it with the Lighthouse CLI or run `lighthouse-sdlc verify` from the package installation to check the distributed contract.
+Actions exposes the `Execute OpenCode CLI` step, streamed JSON events, standard gh-aw log artifacts, the result envelope and a runtime receipt with source, harness and image revisions. Logs redact common credential formats; this is not a guarantee that arbitrary sensitive product content is removed. Review public-repository content and artifact access accordingly. Agent artifacts use GitHub retention; they are not a permanent retrospective archive.
+
+Publication validates the Lighthouse envelope and rereads owner answers, issue state and source revision. Three unresolved reply rounds require an explicit new `refine` label. `agent-working` signals a reservation; human takeover or a changed source prevents publication. Labels are cooperative signals, not locks against arbitrary editors. A runner or artifact failure can require manual reservation reconciliation. A completed refinement never authorizes the next stage or a merge.
 
 Run `lighthouse-sdlc triage --input <file>` to validate one structured triage result and receive its proposed workflow and classification labels. The command is read-only by default; `--apply --labels-file <file>` writes only after the report is ready and the labels file still matches the input.
 
@@ -59,13 +61,3 @@ Evidence is explicit: an absent field appears in `missingEvidence`, a check that
 The package is a source of lifecycle instructions and contracts; an adopter's host adapter decides where provider-specific projections are installed.
 
 The [external host contract](host-contract.md) supports owner-authorized `refine` labels, schema-1 compatibility and the shared deterministic event router. Work reservations use `agent-working` and `human-working`; the host owns the durable lock.
-
-## Repository-owned issue refinement
-
-The optional GitHub-native adapter routes an owner-added `refine` label or an owner answer to a pending `needs-info` question into one reusable refinement worker. Actions owns authorization, concurrency, reservation, source/context preparation, result validation and publication. A replaceable executor runs the isolated agent; SoFa is an optional observer and verifier, never a prerequisite for this route.
-
-Preview installation with `node node_modules/@juangcarmona/lighthouse-sdlc/src/install-issue-workflows.mjs <repository> <immutable-lighthouse-commit>`. Review the two workflows and add `--apply` to write them. Disable any previous automatic host bridge before enabling the router. The adapter is opt-in and pins its implementation independently of the installed foundation version; it does not alter existing gh-aw routes or claim later delivery stages are enabled.
-
-The worker needs a dedicated `lighthouse-workflow` runner with Node.js 22 or newer and a local executor socket at `/run/lighthouse/engine.sock`. The source repository contains an optional operator deployment example under `src/examples/bastion-executor`. Keep engine authentication outside the repository. The workflow supplies no GitHub credentials to the executor or agent.
-
-Each run displays separate preparation, execution, validation, publication and cleanup steps, with progress metadata every fifteen seconds while the engine runs. The summary links the outcome; the artifact contains the request and validated result. Owner replies are included automatically, and three unresolved reply rounds require an explicit new label. Only the owner is admitted in this first adapter. Human takeover, source changes or changed answers prevent publication. A runner crash can leave a reservation requiring operator reconciliation; no automatic recovery or later-stage composition is claimed.
