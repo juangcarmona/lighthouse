@@ -17,7 +17,6 @@ jobs:
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
       LIGHTHOUSE_SOURCE: ${{ github.workspace }}/source
-      LIGHTHOUSE_RUN_DIR: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Load pinned Lighthouse adapter
         uses: actions/checkout@v5
@@ -56,7 +55,7 @@ jobs:
         with:
           name: lighthouse-refine-${{ inputs.issue }}-${{ github.run_attempt }}
           path: |
-            ${{ env.LIGHTHOUSE_RUN_DIR }}/request.json
-            ${{ env.LIGHTHOUSE_RUN_DIR }}/envelope.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
           if-no-files-found: ignore
           retention-days: 14
