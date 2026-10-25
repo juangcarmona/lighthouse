@@ -134,3 +134,24 @@ test('completion opt-in has a bounded workflow allowlist', () => {
   assert.deepEqual(validateGithubProfile(profile), []);
   assert.ok(validateGithubProfile({ ...profile, completion: { ...profile.completion, postMergeWorkflows: ['../run.yml'] } }).length);
 });
+
+test('an owner-observed unchanged ruleset can be checked when GitHub redacts bypass actors', async () => {
+  const source = { id: 1, source: 'owner/repo', source_type: 'Repository', target: 'branch', enforcement: 'active', updated_at: '2026-10-20T00:00:00Z', conditions: { ref_name: { include: ['refs/heads/process/retrospectives'], exclude: [] } }, rules: [{ type: 'deletion' }, { type: 'non_fast_forward' }] };
+  const revision = createHash('sha256').update(JSON.stringify(source)).digest('hex');
+  const rules = ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
+  const api = async p => p.startsWith('rules/') ? rules : source;
+  await evidenceProtection(api, 'process/retrospectives', [{ id: 1, revision }]);
+  await assert.rejects(evidenceProtection(api, 'process/retrospectives'), /protection/);
+  await assert.rejects(evidenceProtection(async p => p.startsWith('rules/') ? rules : { ...source, updated_at: '2026-10-21T00:00:00Z' }, 'process/retrospectives', [{ id: 1, revision }]), /protection/);
+  await assert.rejects(evidenceProtection(async p => p.startsWith('rules/') ? rules : { ...source, bypass_actors: [{ actor_id: 1 }] }, 'process/retrospectives', [{ id: 1, revision }]), /protection/);
+});
+
+test('protection observations require owner visibility and a stable provider timestamp', async () => {
+  const { observeProtection } = await import('../packages/sdlc/src/observe-protection.mjs');
+  const rules = ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
+  const source = { id: 1, enforcement: 'active', bypass_actors: [], updated_at: '2026-10-25T12:00:00Z' };
+  const api = async p => p.startsWith('rules/') ? rules : source;
+  assert.equal((await observeProtection(api, 'process/retrospectives', Date.parse(source.updated_at) + 3000)).length, 1);
+  await assert.rejects(observeProtection(api, 'process/retrospectives', Date.parse(source.updated_at) + 1000), /two seconds/);
+  await assert.rejects(observeProtection(async p => p.startsWith('rules/') ? rules : { ...source, bypass_actors: undefined }, 'process/retrospectives'), /protection/);
+});
