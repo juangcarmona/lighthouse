@@ -37,9 +37,11 @@ An override has a supported control ID, a typed `value` and a non-empty `reason`
 
 ```sh
 lighthouse capabilities select --id github-profile --provider github
-lighthouse capabilities plan --id github-profile --input .lighthouse/github.json --plan-file .lighthouse/reconciliation/github-profile.plan.json
-lighthouse capabilities apply --plan-file .lighthouse/reconciliation/github-profile.plan.json --authorize <plan-hash>
+profile_plan=$(mktemp)
+lighthouse capabilities plan --id github-profile --input .lighthouse/github.json --plan-file "$profile_plan"
+lighthouse capabilities apply --plan-file "$profile_plan" --authorize <plan-hash> --format json
 lighthouse capabilities verify --id github-profile --input .lighthouse/github.json --format json
+rm -- "$profile_plan"
 ```
 
 Selection records a local adoption choice when Lighthouse ownership state exists. Planning and live verification can also run against the explicit configuration before full foundation adoption. The default input path is `.lighthouse/github.json`. An optional `--repo` must match the configured repository; there is no implicit target derived from a Git remote or current login.
@@ -48,7 +50,7 @@ Planning reads GitHub and writes only the requested local plan. The plan records
 
 Apply adds missing protection before changing settings. Compatible rules with no bypass satisfy the minimum; stronger rules, additional checks and unrelated settings remain intact. Missing requirements receive a separate additive ruleset. Existing policies are never replaced, deleted or automatically adopted as Lighthouse-owned. GitHub administration permission is required when changes are planned; narrower credentials may inspect the controls their permissions expose. Missing permissions, unavailable APIs and plan restrictions produce `unavailable` or `blocked`, never a success claim. Private repositories remain private.
 
-Each apply writes a timestamped receipt under `.lighthouse/reconciliation/github-profile/`, including partial completion on failure, and successful adoption writes `.lighthouse/reconciliation/github-profile.json`. Retain these records according to adopter policy. Failed or uncertain requests require fresh verification before retry; the adapter does not roll back protections or blindly repeat a write. API operations are not a transaction, and GitHub does not provide a compare-and-swap operation for repository settings. Avoid concurrent administrators applying conflicting policies.
+Apply reports its result on standard output, including completed operations and errors on partial failure; `--format json` makes this machine-readable. It creates no result files or history in the repository. Successful adoption updates only the existing `.lighthouse/upgrade.json` entry. Keep the configuration in Git; use a temporary path for the reviewed plan and remove it when finished. If an operator or CI needs durable evidence, capture the output in its existing logs or artifact storage. Failed or uncertain requests require fresh verification before retry; the adapter does not roll back protections or blindly repeat a write. API operations are not a transaction, and GitHub does not provide a compare-and-swap operation for repository settings. Avoid concurrent administrators applying conflicting policies.
 
 Live verification exits nonzero for drift or unavailable selected controls and makes no remote writes. General `lighthouse verify` validates local configuration and points to the live command; it does not make network requests or claim that a previous receipt proves today's remote settings. A result with exceptions covers only the selected automated controls. Manual recommendations are always listed separately.
 

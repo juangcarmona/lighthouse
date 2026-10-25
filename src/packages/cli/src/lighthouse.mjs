@@ -272,7 +272,7 @@ function capabilityAdoption(previous = null) {
       ? `lighthouse capabilities select --id ${capability.id} --provider ${capability.provider}`
       : ['adopted', 'declined'].includes(status)
         ? null
-        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${capability.id}.plan.json`;
+        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file ${capability.id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${capability.id}.plan.json`}`;
     return [capability.id, {
       id: capability.id,
       status,
@@ -1409,7 +1409,7 @@ async function verify(manifest, format = 'text') {
   for (const item of adoption) {
     if (item.status !== 'adopted' || !item.recordPath || await exists(resolve(root, item.recordPath))) continue;
     item.status = 'failed';
-    item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${item.id}.plan.json`;
+    item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file ${item.id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${item.id}.plan.json`}`;
   }
   if (adoption.length) {
     const pending = adoption.filter((item) => !['adopted', 'declined', 'available'].includes(item.status));
@@ -1599,7 +1599,7 @@ async function capabilities(args) {
       provider: capability.provider,
       version: capability.version,
       catalogVersion: catalog.package.version,
-      nextAction: status === 'declined' ? null : `lighthouse capabilities plan --id ${id} --provider ${provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${id}.plan.json`,
+      nextAction: status === 'declined' ? null : `lighthouse capabilities plan --id ${id} --provider ${provider} --repo <owner/repo> --plan-file ${id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${id}.plan.json`}`,
     };
     await writeTextAtomically(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`);
     const result = { schemaVersion: 1, capability: id, provider, status, applied: true };

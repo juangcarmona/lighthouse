@@ -38,17 +38,17 @@ The CLI package records these existing guardrails as data in its packaged catalo
 
 The SDLC package publishes a versioned capability catalog. Every catalog entry names a registered adapter; package verification fails closed when a new entry has no adapter, so a future capability cannot become discoverable without an executable adoption route and its consumer fixture.
 
-Capability adoption is dry-run first. The CLI reads provider state to build a deterministic plan, requires an explicit plan hash for external writes, applies only allowed operations, re-reads before writing, verifies the final state and records desired, observed, target and operation evidence under `.lighthouse/reconciliation/`.
+Capability adoption is dry-run first. The CLI reads provider state to build a deterministic plan, requires an explicit plan hash for external writes, applies only allowed operations, re-reads before writing, and verifies the final state. Label adoption retains its comparison state under `.lighthouse/reconciliation/`.
 
 The GitHub labels adapter supports label adoption. It creates missing labels and preserves existing values; ambiguous equivalents, destructive operations, provider drift and partial failures stop or remain resumable. The provider remains the source of truth and no provider write occurs during package installation or ordinary upgrade discovery.
 
-The optional GitHub repository profile adds settings and additive ruleset reconciliation through the same capability entrypoint. The adopter owns `.lighthouse/github.json`, including checks, contribution policy and reasoned exceptions. The [profile adapter](../../../src/packages/sdlc/src/github-profile.mjs) reads GitHub through the authenticated `gh` CLI, binds apply to a reviewed plan and repository identity, preserves stronger rules and records partial completion. The [CLI adapter](../../../src/packages/cli/src/github-profile.mjs) owns local plans and receipts. General verification checks configuration locally; explicit capability verification reads current provider state. GitHub settings have no atomic compare-and-swap operation, so readback detects failures but concurrent conflicting administrators remain a deployment constraint.
+The optional GitHub repository profile adds settings and additive ruleset reconciliation through the same capability entrypoint. The adopter owns `.lighthouse/github.json`, including checks, contribution policy and reasoned exceptions. The [profile adapter](../../../src/packages/sdlc/src/github-profile.mjs) reads GitHub through the authenticated `gh` CLI, binds apply to a reviewed plan and repository identity, preserves stronger rules and reports partial completion. The [CLI adapter](../../../src/packages/cli/src/github-profile.mjs) writes the explicitly requested plan, returns results on standard output and updates the existing adoption entry after success. Profile results and execution history are not persisted in the repository. General verification checks configuration locally; explicit capability verification reads current provider state. GitHub settings have no atomic compare-and-swap operation, so readback detects failures but concurrent conflicting administrators remain a deployment constraint.
 
 ## Managed projections and safe mutation
 
 `LIGHTHOUSE.md`, `.lighthouse/sdlc.json` and selected profile files are generated from the manifest and installed package assets. `.lighthouse/upgrade.json` records hashes and scope ownership for upgrade planning.
 
-Init, reconcile and upgrade refuse to overwrite an occupied path. Capability apply rereads provider state, requires the authorized plan hash and records partial or completed operations for verification and recovery.
+Init, reconcile and upgrade refuse to overwrite an occupied path. Capability apply rereads provider state, requires the authorized plan hash and reports partial or completed operations for verification and diagnosis.
 
 ## Evidence states
 

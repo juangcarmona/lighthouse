@@ -10,10 +10,8 @@ test('plans are read-only, applications preserve unrelated work and retries do n
   const api = github(); const plan = await api.plan();
   assert.equal(plan.status, 'drift'); assert.equal(plan.canApply, true); assert.equal(api.state.writes.length, 0);
   assert.equal(plan.controls.find((c) => c.id === 'releases.immutable').status, 'excepted');
-  const receipts = [];
-  const result = await applyGithubProfile(plan, plan.authorization.planHash, { request: api.request, recordReceipt: async (r) => receipts.push(r) });
+  const result = await applyGithubProfile(plan, plan.authorization.planHash, { request: api.request });
   assert.equal(result.status, 'passed'); assert.equal(api.state.repo.has_wiki, true); assert.equal(api.state.policies.length, 2);
-  assert.ok(receipts.some((r) => r.status === 'applying')); assert.equal(receipts.at(-1).status, 'passed');
   const count = api.state.writes.length;
   await applyGithubProfile(plan, plan.authorization.planHash, { request: api.request });
   assert.equal(api.state.writes.length, count); assert.equal((await api.plan()).status, 'passed');
@@ -55,11 +53,15 @@ test('a reasoned protection exception remains visible when the provider cannot e
   assert.equal(plan.changes.includes('rules.main'), false);
 });
 
-test('partial failure leaves a receipt and can resume without undoing protection', async () => {
+test('partial failure reports completed writes and can retry without stored receipts', async () => {
   const api = github(); const plan = await api.plan(); api.state.failures['PATCH repos/example/project'] = 403;
-  const receipts = [];
-  await assert.rejects(applyGithubProfile(plan, plan.authorization.planHash, { request: api.request, recordReceipt: async (r) => receipts.push(r) }), /rejected/);
-  assert.equal(api.state.policies.length, 2); assert.equal(receipts.at(-1).status, 'failed');
+  await assert.rejects(applyGithubProfile(plan, plan.authorization.planHash, { request: api.request }), (error) => {
+    assert.match(error.message, /rejected/);
+    assert.equal(error.result.status, 'failed');
+    assert.deepEqual(error.result.completed, ['rules.main', 'rules.evidence']);
+    return true;
+  });
+  assert.equal(api.state.policies.length, 2);
   delete api.state.failures['PATCH repos/example/project'];
   await applyGithubProfile(plan, plan.authorization.planHash, { request: api.request });
   assert.equal(api.state.policies.length, 2); assert.equal((await api.plan()).status, 'passed');

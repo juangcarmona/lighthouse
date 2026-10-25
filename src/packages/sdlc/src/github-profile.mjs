@@ -270,14 +270,13 @@ function checkFresh(plan, current) {
   if (!current.canApply) throw new Error('GitHub profile is no longer applicable.');
 }
 
-export async function applyGithubProfile(plan, authorization, { request = githubRequest, recordReceipt = async () => {} } = {}) {
+export async function applyGithubProfile(plan, authorization, { request = githubRequest } = {}) {
   validatePlan(plan, authorization);
   const completed = [];
   const receipt = (status, extra = {}) => ({ schemaVersion: 1, kind: 'github-profile-receipt', profileVersion: githubProfileVersion, repository: plan.repository, planHash: authorization, configurationHash: digest(plan.configuration), checkedAt: new Date().toISOString(), completed: [...completed], status, ...extra });
   try {
     let current = buildGithubProfilePlan(plan.configuration, await readGithubProfile(plan.configuration, request));
     checkFresh(plan, current);
-    await recordReceipt(receipt('applying'));
     // Add protection first; then settings. Never PUT or delete another ruleset.
     const priority = (id) => id.startsWith('rules.') ? 0 : /^repository.allow_(squash_merge|merge_commit|rebase_merge)$/.test(id) && plan.controls.find((item) => item.id === id).expected === true ? 1 : 2;
     const ids = [...plan.changes].sort((a, b) => priority(a) - priority(b));
@@ -288,15 +287,12 @@ export async function applyGithubProfile(plan, authorization, { request = github
       if (control.status === 'passed') continue;
       await writeControl(control, current, request);
       completed.push(id);
-      await recordReceipt(receipt('applying'));
     }
     const final = buildGithubProfilePlan(plan.configuration, await readGithubProfile(plan.configuration, request));
     if (final.status !== 'passed') throw new Error('GitHub readback has not reached the declared state; verify before retrying.');
-    const result = receipt('passed', { controls: final.controls, exceptions: final.controls.filter((control) => control.exception || control.status === 'excepted') });
-    await recordReceipt(result);
-    return result;
+    return receipt('passed', { controls: final.controls, exceptions: final.controls.filter((control) => control.exception || control.status === 'excepted') });
   } catch (error) {
-    await recordReceipt(receipt('failed', { error: error.message }));
+    error.result = receipt('failed', { error: error.message });
     throw error;
   }
 }

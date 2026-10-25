@@ -22,6 +22,8 @@ export async function githubProfileCommand(args, { root, catalog }) {
     if (format === 'json') console.log(JSON.stringify(value, null, 2));
     else {
       console.log(`GitHub profile: ${value.status} (${value.repository.repo})`);
+      if (value.completed) console.log(`Completed operations: ${value.completed.join(', ') || 'none'}`);
+      if (value.error) console.log(`Error: ${value.error}`);
       for (const control of value.controls ?? []) console.log(`  ${control.status} ${control.id}${control.reason ? `: ${control.reason}` : ''}`);
       if (value.authorization) console.log(`Plan hash: ${value.authorization.planHash}\nRemote writes: none`);
       if (value.status === 'drift' && !value.canApply) console.log('Apply requires repository administration permission.');
@@ -41,20 +43,24 @@ export async function githubProfileCommand(args, { root, catalog }) {
   if (action !== 'apply' || !planPath || !option(args, '--authorize')) throw new Error('Use capabilities plan|verify --id github-profile, or capabilities apply --plan-file <path> --authorize <hash>.');
   const plan = JSON.parse(await readFile(resolve(root, planPath), 'utf8'));
   if (repo && repo.toLowerCase() !== plan.configuration?.repository?.toLowerCase()) throw new Error('--repo does not match the authorized plan.');
-  // A content hash binds the approval to one plan; separate files preserve failed attempts.
-  const receiptPath = resolve(root, '.lighthouse/reconciliation/github-profile', `${Date.now()}-${process.pid}.json`);
-  const result = await adapter.applyGithubProfile(plan, option(args, '--authorize'), { recordReceipt: (receipt) => writeJson(receiptPath, receipt) });
+  let result;
+  try { result = await adapter.applyGithubProfile(plan, option(args, '--authorize')); }
+  catch (error) {
+    if (!error.result) throw error;
+    output(error.result);
+    process.exitCode = 1;
+    return;
+  }
   const upgradePath = resolve(root, '.lighthouse/upgrade.json');
   let state;
   try { state = JSON.parse(await readFile(upgradePath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   if (state) {
     const capability = catalog.capabilities.find((item) => item.id === 'github-profile');
     state.adoption ??= {};
-    state.adoption['github-profile'] = { id: capability.id, status: 'adopted', selection: capability.selection, provider: capability.provider, version: capability.version, catalogVersion: catalog.package.version, nextAction: null, recordPath: '.lighthouse/reconciliation/github-profile.json' };
+    state.adoption['github-profile'] = { id: capability.id, status: 'adopted', selection: capability.selection, provider: capability.provider, version: capability.version, catalogVersion: catalog.package.version, nextAction: null };
     await writeJson(upgradePath, state);
   }
-  await writeJson(resolve(root, '.lighthouse/reconciliation/github-profile.json'), result);
-  output({ ...result, receiptPath, applied: true, manualRecommendations: adapter.githubProfileManualRecommendations });
+  output({ ...result, applied: true, manualRecommendations: adapter.githubProfileManualRecommendations });
 }
 
 export async function localGithubProfileStatus(root) {
