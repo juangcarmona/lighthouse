@@ -78,7 +78,7 @@ async function main() {
     await writeFile(eventsPath, '', { mode: 0o600 });
     const started = Date.now();
     let lastVisible = started;
-    const report = text => { lastVisible = Date.now(); console.log(text); };
+    const report = text => { lastVisible = Date.now(); console.log(redactLog(text)); };
     const eventLine = line => {
       const redacted = redactLog(line);
       appendFileSync(eventsPath, redacted + '\n');

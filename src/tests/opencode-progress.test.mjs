@@ -32,5 +32,7 @@ test('errors remain visible, ordinary engine diagnostics stay in the event artif
   const rendered = formatOpenCodeEvent(redactLog(line));
   assert.ok(!rendered.includes('private-token'));
   assert.ok(!rendered.includes('ghp_abcdefghijklmnop'));
+  const escaped = '{"type":"text","part":{"text":"\\u0067hp_abcdefghijklmnop"}}';
+  assert.ok(!redactLog(formatOpenCodeEvent(redactLog(escaped))).includes('ghp_'));
   assert.equal(progressText('Result', '\u001b[31mready\u001b[0m'), '[Result] ready');
 });
