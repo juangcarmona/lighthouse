@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.12.1
+
+### Patch Changes
+
+- 187a9dd: <!-- markdownlint-disable MD041 -->
+
+  Signal gh-aw completion after validating the OpenCode result, while keeping GitHub publication in its separately authorized job.
+
 ## 0.12.0
 
 ### Minor Changes
