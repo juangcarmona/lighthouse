@@ -68,8 +68,13 @@ export async function checkCommit(api, revision, required) {
     const matches = runs.filter(r => r.name === c.context && (c.app === null || r.app?.id === c.app));
     const status = latest.find(s => s.context === c.context);
     const passed = (matches.length > 0 || c.app === null && status?.state === 'success') && matches.every(r => r.head_sha === revision && r.status === 'completed' && ['success', 'neutral', 'skipped'].includes(r.conclusion)) && (!status || status.state === 'success');
-    return { ...c, revision, status: passed ? 'passed' : matches.length || status ? 'failed' : 'unavailable', checks: matches.map(r => ({ id: r.id, url: r.html_url, status: r.status, conclusion: r.conclusion, app: r.app?.id })), commitStatus: status ? { state: status.state, url: status.target_url } : null };
+    const failed = matches.some(r => r.head_sha !== revision || r.status === 'completed' && !['success', 'neutral', 'skipped'].includes(r.conclusion)) || ['error', 'failure'].includes(status?.state);
+    const pending = matches.some(r => r.status !== 'completed') || status?.state === 'pending';
+    return { ...c, revision, status: passed ? 'passed' : failed ? 'failed' : 'unavailable', state: passed ? 'passed' : failed ? 'failed' : pending ? 'pending' : 'missing', checks: matches.map(r => ({ id: r.id, url: r.html_url, status: r.status, conclusion: r.conclusion, app: r.app?.id })), commitStatus: status ? { state: status.state, url: status.target_url } : null };
   });
+}
+export function completionEffects(stage, status) {
+  return stage === 'review' && status === 'passed' ? { add: [], remove: ['waiting-review', 'ready', 'integrate', 'review'], closeIssue: true } : { add: ['waiting-review'], remove: [], closeIssue: false };
 }
 export async function inspectCompletion(api, repository, owner, input, stage) {
   const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);
@@ -96,7 +101,7 @@ export async function inspectCompletion(api, repository, owner, input, stage) {
   const files = await list(api, `pulls/${input.pr}/files`);
   if (files.length !== pr.changed_files) throw Error('Incomplete changed-file inventory');
   const binding = { repository, issue: input.issue, pr: input.pr, head: input.head, base: pr.merged ? pr.merge_commit_sha : current.sha, branch: repo.default_branch, intent: taskDigest(issue, answers), policy: fingerprint({ profile, policy }), reviews: fingerprint(reviews.map(r => ({ id: r.id, state: r.state, commit_id: r.commit_id }))), prIntent: fingerprint({ title: pr.title, body: pr.body, prAnswers }), files: fingerprint(files.map(f => ({ path: f.filename, sha: f.sha, status: f.status }))) };
-  return { binding, workItem: { title: issue.title, body: issue.body, ownerAnswers: answers }, pullRequest: { title: pr.title, body: pr.body, ownerAnswers: prAnswers, reviews: reviews.map(r => ({ author: r.user.login, body: r.body, state: r.state, commit: r.commit_id, url: r.html_url })) }, profile, policy, checks, checkedRevision, merged: pr.merged, merge: pr.merged ? pr.merge_commit_sha : null, mergeable: pr.mergeable === true && ['clean', 'unstable', 'has_hooks'].includes(pr.mergeable_state), title: issue.title, issueUrl: issue.html_url, prUrl: pr.html_url, labels: issue.labels.map(l => l.name), files: files.map(f => ({ path: f.filename, status: f.status, sha: f.sha })), currentRevision: current.sha, mergeActor: pr.merged_by?.login ?? null };
+  return { binding, finalization: { executor: 'trusted publisher after current-stage validation', observedIssue: { state: issue.state, labels: issue.labels.map(l => l.name) }, observedPullRequest: { state: pr.state, merged: pr.merged, labels: (pr.labels ?? []).map(l => l.name) }, onPassed: completionEffects(stage, 'passed'), onBlocked: completionEffects(stage, 'blocked'), pullRequestLabels: 'preserve', reservation: 'agent-working is added after this observation and released by host cleanup for every outcome' }, workItem: { title: issue.title, body: issue.body, ownerAnswers: answers }, pullRequest: { title: pr.title, body: pr.body, ownerAnswers: prAnswers, reviews: reviews.map(r => ({ author: r.user.login, body: r.body, state: r.state, commit: r.commit_id, url: r.html_url })) }, profile, policy, checks, checkedRevision, merged: pr.merged, merge: pr.merged ? pr.merge_commit_sha : null, mergeable: pr.mergeable === true && ['clean', 'unstable', 'has_hooks'].includes(pr.mergeable_state), title: issue.title, issueUrl: issue.html_url, prUrl: pr.html_url, labels: issue.labels.map(l => l.name), files: files.map(f => ({ path: f.filename, status: f.status, sha: f.sha })), currentRevision: current.sha, mergeActor: pr.merged_by?.login ?? null };
 }
 export function assertFresh(before, after) {
   if (fingerprint(before.binding) !== fingerprint(after.binding) || before.merged !== after.merged) throw Error('Completion evidence is stale: head, base, intent, policy, review or scope changed');
@@ -129,7 +134,7 @@ export async function postMergeRuns(api, snapshot, revision, dispatch = false) {
       if ((await api(`commits/${encodeURIComponent(snapshot.binding.branch)}`)).sha !== revision) throw Error('Default branch advanced before post-merge dispatch');
       await api(`actions/workflows/${encodeURIComponent(workflow)}/dispatches`, 'POST', { ref: snapshot.binding.branch });
     }
-    results.push({ workflow, revision, status: matching?.status === 'completed' ? matching.conclusion === 'success' ? 'passed' : 'failed' : 'unavailable', runId: matching?.id ?? null, url: matching?.html_url ?? null });
+    results.push({ workflow, revision, state: matching?.status === 'completed' ? matching.conclusion === 'success' ? 'passed' : 'failed' : matching ? 'pending' : 'missing', status: matching?.status === 'completed' ? matching.conclusion === 'success' ? 'passed' : 'failed' : 'unavailable', runId: matching?.id ?? null, url: matching?.html_url ?? null });
   }
   return results;
 }

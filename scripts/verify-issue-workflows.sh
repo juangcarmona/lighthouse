@@ -13,6 +13,9 @@ node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(g
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md"
 if rg -q '^  propose:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
+test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
+if rg -q '^  integrate:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
+node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-completion
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 # gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
@@ -24,4 +27,6 @@ printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_d
   -ignore 'property "start-mcp-gateway" is not defined' \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.lock.yml" \
-  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-implement.lock.yml"
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-implement.lock.yml" \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.lock.yml" \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-review.lock.yml"

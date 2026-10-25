@@ -155,3 +155,18 @@ test('protection observations require owner visibility and a stable provider tim
   await assert.rejects(observeProtection(api, 'process/retrospectives', Date.parse(source.updated_at) + 1000), /two seconds/);
   await assert.rejects(observeProtection(async p => p.startsWith('rules/') ? rules : { ...source, bypass_actors: undefined }, 'process/retrospectives'), /protection/);
 });
+
+test('finalization declares future host effects instead of requiring final labels before review', async () => {
+  const { completionEffects } = await import('../packages/sdlc/src/completion.mjs');
+  assert.deepEqual(completionEffects('review', 'passed'), { add: [], remove: ['waiting-review', 'ready', 'integrate', 'review'], closeIssue: true });
+  assert.deepEqual(completionEffects('review', 'blocked'), { add: ['waiting-review'], remove: [], closeIssue: false });
+  assert.equal(completionEffects('integrate', 'passed').closeIssue, false);
+});
+test('pending checks remain unavailable with an explicit pending state, not failed', async () => {
+  const required = [{ context: 'test', app: 7 }];
+  const api = async p => p.includes('check-runs') ? { check_runs: [{ name: 'test', app: { id: 7 }, head_sha: head, status: 'in_progress', conclusion: null }] } : [];
+  const result = (await checkCommit(api, head, required))[0];
+  assert.equal(result.status, 'unavailable'); assert.equal(result.state, 'pending');
+  const runs = await postMergeRuns(async () => ({ workflow_runs: [{ id: 1, head_sha: merged, head_branch: 'main', event: 'workflow_dispatch', status: 'in_progress', conclusion: null }] }), observation, merged);
+  assert.equal(runs[0].status, 'unavailable'); assert.equal(runs[0].state, 'pending');
+});

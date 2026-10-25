@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, postMergeRuns, fingerprint, list } from './completion.mjs';
+import { authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, postMergeRuns, fingerprint, list, completionEffects } from './completion.mjs';
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 
@@ -35,7 +35,7 @@ async function main(command) {
     await save('issue.json', { number: request.issue, ...completion.workItem, url: completion.issueUrl });
     const context = JSON.parse(execFileSync(process.execPath, [fileURLToPath(new URL('./host-contract.mjs', import.meta.url)), 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
     context.completion = completion; context.postMerge = postMerge;
-    context.contract.rules += ' Inspect only the requested completion stage. completion contains host-authenticated GitHub observations. An independent GitHub receipt is not an agent assertion. Report missing, pending or failed checks as blockers. Compare the changed-file list with affected repository instructions; report drift with file references, without rewriting guidance. For review, return output.retrospective as Markdown with what went well, what went wrong, start doing, stop doing, and evidence-supported improvement candidates. Mark unknowns explicitly, distinguish repeated failures across issues from retries, and give follow-up owners. Never invent timings, tests, screenshots or human acceptance. Do not open follow-up issues or change policy. The host publishes bounded reports on the explicitly adopted evidence branch. Raw events and credentials are excluded. A successful integration assessment prepares the merge; it does not prove that merge or post-merge tests happened.';
+    context.contract.rules += ' Inspect only the requested completion stage. completion contains host-authenticated GitHub observations. An independent GitHub receipt is not an agent assertion. Report missing, pending or failed checks as blockers. Compare the changed-file list with affected repository instructions; report drift with file references, without rewriting guidance. For review, return output.retrospective as Markdown with what went well, what went wrong, start doing, stop doing, and evidence-supported improvement candidates. Mark unknowns explicitly, distinguish repeated failures across issues from retries, and give follow-up owners. Never invent timings, tests, screenshots or human acceptance. Do not open follow-up issues or change policy. The host publishes bounded reports on the explicitly adopted evidence branch. Raw events and credentials are excluded. completion.finalization declares the adopted host effect policy, separately scoped observed issue/PR labels, and reservation cleanup. These are actions after a validated result: verify the plan and current observations; do not require the host to have already applied final labels before the agent returns. Missing historical manual evidence remains explicit; distinguish owner-accepted or deferred findings from unresolved current-stage gates. A successful integration assessment prepares the merge; it does not prove that merge or post-merge tests happened.';
     await save('context.json', context);
     await api(`issues/${request.issue}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
@@ -95,10 +95,10 @@ async function main(command) {
     const comments = await list(api, `issues/${target}/comments`);
     if (!comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) await api(`issues/${target}/comments`, 'POST', { body });
   }
-  if (request.stage === 'review' && envelope.result.status === 'passed') {
-    for (const label of ['waiting-review', 'ready', 'integrate', 'review']) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);
-    await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
-  } else await api(`issues/${request.issue}/labels`, 'POST', { labels: ['waiting-review'] });
+  const effects = completionEffects(request.stage, envelope.result.status);
+  for (const label of effects.remove) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);
+  if (effects.add.length) await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add });
+  if (effects.closeIssue) await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
   await summary(`### Retained delivery result\n${receipt.state}\n\n[Permanent report](${publication.url})\n\n${receipt.dispatchError ?? 'Publication confirmed; source and evidence commits are recorded separately.'}`);
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(error => { console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1; });
