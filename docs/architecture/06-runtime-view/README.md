@@ -85,7 +85,7 @@ flowchart LR
     review -. learning .-> triage
 ```
 
-The SDLC package implements route, stage, gate, state, decomposition and provider-adapter validators. It also distributes gh-aw workflows that execute an agent in GitHub Actions. Lighthouse has no persistent execution service. The published router is manual-only, and its current `ff` job-success checks do not yet enforce the complete continuation boundary described below.
+The SDLC package implements route, stage, gate, state, decomposition and provider-adapter validators. It also distributes gh-aw workflows that execute an agent in GitHub Actions. Lighthouse has no persistent execution service. The selected router handles owner refinement labels, clarification replies and manual dispatch. Later-stage composition remains outside this implemented route.
 
 ## Verify package and site contracts
 
@@ -169,3 +169,11 @@ GitHub label writes made with `GITHUB_TOKEN` do not trigger another issue-label 
 The external-host projection accepts an owner-added `refine` label. The host authenticates event facts and invokes the package's deterministic event router; schema-2 admission carries the verified label-event identity without a triage predecessor. Schema 1 preserves the prior supervised contract. Source remains read-only and the stage publishes a validated refinement comment plus its readiness labels. See the [packaged host contract](../../../src/packages/sdlc/host-contract.md).
 
 The host owns the persistent reservation and projects it as `agent-working`. `human-working` prevents new agent admission and requests termination of active work. Outcome publication and reservation cleanup must finish before capacity is released. Labels are cooperative signals; they cannot prevent a human or an unrelated tool from editing the issue.
+
+## Repository-owned gh-aw refinement
+
+An owner event reaches one router and one reusable gh-aw worker. A preparation job verifies identity and current source, snapshots issue intent and reserves the issue. The agent job loads the pinned harness package and starts OpenCode in a temporary Docker container. Source and skills are read-only; the candidate envelope is writable. The imported engine streams OpenCode events into the Actions step and gh-aw log artifacts.
+
+A separate publication job validates the envelope and rereads source, owner answers and reservation before commenting and setting `ready` or `needs-info`. Cleanup releases `agent-working`. An owner reply resumes only the waiting refinement. The workflow never treats a ready issue as approval for implementation or merge.
+
+The Actions run owns the execution record, with source/harness/image revisions in a runtime receipt. There is no socket service or SoFa execution dependency. The earlier external-host contract remains available for compatibility. The [engine deployment example](../../../src/examples/opencode-engine/README.md) states the Docker subscription profile's isolation limits; the broader continuation contract above remains target behavior.

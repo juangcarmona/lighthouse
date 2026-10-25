@@ -1,5 +1,39 @@
 # @juangcarmona/lighthouse
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [187a9dd]
+  - @juangcarmona/lighthouse-sdlc@0.12.1
+
+## 0.11.0
+
+### Minor Changes
+
+- 9581463: # Observable gh-aw execution
+
+  Make workflow adoption explicit and run issue refinement through gh-aw with visible OpenCode events, packaged skills and independently validated publication. Replace the persistent executor bridge with a foreground Docker engine adapter for subscription-authenticated Bastion operators.
+
+### Patch Changes
+
+- Updated dependencies [9581463]
+- Updated dependencies [bf1885a]
+  - @juangcarmona/lighthouse-sdlc@0.12.0
+
+## 0.10.0
+
+### Minor Changes
+
+- 7c90031: # Optional GitHub repository profile
+
+  Add the optional recommended GitHub repository profile. Adopters can declare checks, contribution policy and reasoned exceptions, preview remote changes, apply a reviewed plan by hash and verify live settings while preserving stronger protections and unrelated work.
+
+### Patch Changes
+
+- Updated dependencies [7c90031]
+  - @juangcarmona/lighthouse-sdlc@0.11.0
+
 ## 0.9.2
 
 ### Patch Changes

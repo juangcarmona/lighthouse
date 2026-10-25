@@ -1,0 +1,237 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    {
+      "action": "*",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/input/context.json",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/output/envelope.json",
+      "effect": "allow"
+    },
+    {
+      "action": "edit",
+      "resource": "/output/envelope.json",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/input/*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "execute",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/workspace",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/input/prompt.txt",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "edit",
+      "resource": "/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "edit",
+      "resource": "/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "read",
+      "resource": "/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "glob",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "grep",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "list",
+      "resource": "*",
+      "effect": "allow"
+    }
+  ],
+  "policies": [
+    {
+      "action": "tool.use",
+      "resource": "*:*",
+      "effect": "deny"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/input/context.json",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/output/envelope.json",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "edit:/output/envelope.json",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "external_directory:/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "external_directory:/input/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "external_directory:/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "execute:*",
+      "effect": "allow"
+    },
+    {
+      "action": "provider.use",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "provider.use",
+      "resource": "openai",
+      "effect": "allow"
+    },
+    {
+      "action": "integration.use",
+      "resource": "*",
+      "effect": "deny"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/workspace",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/input/prompt.txt",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "skill:*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "external_directory:/harness/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "edit:/workspace/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "edit:/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "read:/output/*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "shell:*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "glob:*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "grep:*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "list:*",
+      "effect": "allow"
+    }
+  ],
+  "skills": [
+    "/harness/skills"
+  ],
+  "update": "disable",
+  "share": "disabled"
+}

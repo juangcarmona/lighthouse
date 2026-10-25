@@ -67,6 +67,7 @@ test('engine context includes the exact stage-result schema and preserves the re
     const command = spawnSync(process.execPath, ['src/packages/sdlc/src/host-contract.mjs', 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' });
     assert.equal(command.status, 0, command.stderr);
     const context = JSON.parse(command.stdout);
+    assert.deepEqual(validateStageEnvelope(context.contract.envelope, request), [], 'the supplied example must satisfy the actual host contract');
     assert.equal(context.contract.envelope.result.runId, request.runId);
     assert.deepEqual(context.contract.resultSchema.properties.evidence.items.properties.status.enum, ['passed', 'failed', 'unavailable', 'unconfigured', 'pending-review', 'not-applicable']);
     assert.equal(context.contract.resultSchema.properties.unavailableChecks.items.type, 'string');

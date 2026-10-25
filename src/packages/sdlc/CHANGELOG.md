@@ -1,5 +1,33 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.12.1
+
+### Patch Changes
+
+- 187a9dd: <!-- markdownlint-disable MD041 -->
+
+  Signal gh-aw completion after validating the OpenCode result, while keeping GitHub publication in its separately authorized job.
+
+## 0.12.0
+
+### Minor Changes
+
+- 9581463: # Observable gh-aw execution
+
+  Make workflow adoption explicit and run issue refinement through gh-aw with visible OpenCode events, packaged skills and independently validated publication. Replace the persistent executor bridge with a foreground Docker engine adapter for subscription-authenticated Bastion operators.
+
+- bf1885a: # Repository-owned refinement
+
+  Add optional repository-owned refinement workflows with owner-answer continuation, visible execution progress, validated publication and an independent executor contract.
+
+## 0.11.0
+
+### Minor Changes
+
+- 7c90031: # Optional GitHub repository profile
+
+  Add the optional recommended GitHub repository profile. Adopters can declare checks, contribution policy and reasoned exceptions, preview remote changes, apply a reviewed plan by hash and verify live settings while preserving stronger protections and unrelated work.
+
 ## 0.10.0
 
 ### Minor Changes

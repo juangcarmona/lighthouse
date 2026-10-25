@@ -9,6 +9,7 @@ import { evaluateGuardrails, readGuardrailCatalog } from './guardrails.mjs';
 import { composeProfiles, normalizeApplication, profileCompositionResult, readProfileCatalog } from './profiles.mjs';
 import { hasUnresolvedQuestions, manifestFromInitPlan, validateInitPlan } from './init-plan.mjs';
 import { readCommandAliases, verifyCommandAliases } from './aliases.mjs';
+import { githubProfileCommand, localGithubProfileStatus } from './github-profile.mjs';
 let sdlcCapabilities;
 let sdlcReconcile;
 let sdlcGithub;
@@ -40,22 +41,6 @@ const upgradeStatePath = resolve(root, upgradeStateRelative);
 const layout = ['src', 'docs', 'infra', 'scripts'];
 const sdlcPackage = { name: '@juangcarmona/lighthouse-sdlc', version: installedPackageVersion('@juangcarmona/lighthouse-sdlc', 'contract.json') ?? '0.1.0' };
 const uiPackage = { name: '@juangcarmona/lighthouse-ui', version: installedPackageVersion('@juangcarmona/lighthouse-ui', 'DESIGN.md') ?? '0.1.0' };
-const sdlcWorkflowPaths = Object.freeze([
-  '.github/workflows/lighthouse-sdlc-router.yml',
-  '.github/workflows/lighthouse-sdlc-triage.md',
-  '.github/workflows/lighthouse-sdlc-triage.lock.yml',
-  '.github/workflows/lighthouse-sdlc-refine.md',
-  '.github/workflows/lighthouse-sdlc-refine.lock.yml',
-  '.github/workflows/lighthouse-sdlc-propose.md',
-  '.github/workflows/lighthouse-sdlc-propose.lock.yml',
-  '.github/workflows/lighthouse-sdlc-implement.md',
-  '.github/workflows/lighthouse-sdlc-implement.lock.yml',
-  '.github/workflows/lighthouse-sdlc-integrate.md',
-  '.github/workflows/lighthouse-sdlc-integrate.lock.yml',
-  '.github/workflows/lighthouse-sdlc-review.md',
-  '.github/workflows/lighthouse-sdlc-review.lock.yml',
-  '.github/workflows/shared/lighthouse-sdlc-stage.md',
-]);
 const managedPaths = [
   projection,
   'scripts/lighthouse-guard.mjs',
@@ -63,7 +48,6 @@ const managedPaths = [
   '.husky/pre-push',
   '.github/workflows/lighthouse.yml',
   '.lighthouse/sdlc.json',
-  ...sdlcWorkflowPaths,
   '.agents/skills/lighthouse-init/SKILL.md',
   upgradeStateRelative,
   '.lighthouse/commands.json',
@@ -101,25 +85,13 @@ function managedPathsFor(manifest) {
 function upgradeScopesFor(manifest) {
   return {
     harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.agents/skills/lighthouse-init/SKILL.md', ...((manifest?.profiles ?? []).flatMap((profile) => profileManagedPaths[profile] ?? []))],
-    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json', ...sdlcWorkflowPaths],
+    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json'],
   };
 }
 
 function packageAsset(packageName, entry) {
   const path = packageRequire.resolve(`${packageName}/${entry}`);
   return readFileSync(path, 'utf8');
-}
-
-function sdlcWorkflowFiles() {
-  const files = {};
-  for (const target of sdlcWorkflowPaths) {
-    try {
-      files[target] = packageAsset('@juangcarmona/lighthouse-sdlc', `workflows/${target.slice('.github/workflows/'.length)}`);
-    } catch {
-      return {};
-    }
-  }
-  return files;
 }
 
 function profileAssets(manifest) {
@@ -271,7 +243,7 @@ function capabilityAdoption(previous = null) {
       ? `lighthouse capabilities select --id ${capability.id} --provider ${capability.provider}`
       : ['adopted', 'declined'].includes(status)
         ? null
-        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${capability.id}.plan.json`;
+        : `lighthouse capabilities plan --id ${capability.id} --provider ${capability.provider} --repo <owner/repo> --plan-file ${capability.id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${capability.id}.plan.json`}`;
     return [capability.id, {
       id: capability.id,
       status,
@@ -456,7 +428,6 @@ function managedFiles(manifest) {
     '.agents/skills/lighthouse-init/SKILL.md': readFileSync(new URL('../assets/skills/init/SKILL.md', import.meta.url), 'utf8'),
   };
   Object.assign(files, profileAssets(manifest));
-  Object.assign(files, sdlcWorkflowFiles());
   const controlPlane = sdlcControlPlane(manifest);
   if (controlPlane) files['.lighthouse/sdlc.json'] = controlPlane;
   files['.lighthouse/commands.json'] = commandAliasProjectionText(commandAliasesProjection());
@@ -541,6 +512,10 @@ function classifyUpgradeFile(path, current, expected, recordedHash) {
   return { classification: 'conflicting', action: 'review', reason: 'ownership is not recorded for this path' };
 }
 
+function isOptionalWorkflow(path) {
+  return /^\.github\/workflows\/lighthouse-sdlc-(router\.yml|(?:triage|refine|propose|implement|integrate|review)\.(?:md|lock\.yml))$/.test(path) || path === '.github/workflows/shared/lighthouse-sdlc-stage.md';
+}
+
 async function planUpgrade(manifest, scopes) {
   const state = await readUpgradeState();
   const problems = stateProblems(state);
@@ -555,6 +530,9 @@ async function planUpgrade(manifest, scopes) {
     const recordedHash = state?.files?.[path]?.hash;
     const result = classifyUpgradeFile(path, current, expected, recordedHash);
     changes.push({ path, scope: Object.entries(upgradeScopes).find(([, values]) => values.includes(path))?.[0], ...result });
+  }
+  if (scopes.has('sdlc') && manifest.managed.some(isOptionalWorkflow)) {
+    changes.push({ path: 'lighthouse.json', scope: 'sdlc', classification: 'adoptable', action: 'update', reason: 'release optional workflow ownership; preserve all workflow files' });
   }
   if (state?.baseline && state.baseline !== manifest.baseline) {
     changes.unshift({ path: 'baseline', scope: 'harness', classification: 'breaking', action: 'review', reason: `baseline ${state.baseline} is not compatible with ${manifest.baseline}` });
@@ -687,7 +665,11 @@ function validate(manifest) {
   const preSemanticWithoutUpgrade = Array.isArray(manifest.managed)
     && manifest.managed.length === preSemanticWithoutUpgradePaths.length
     && manifest.managed.every((entry, index) => entry === preSemanticWithoutUpgradePaths[index]);
-  if (!legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
+  // Earlier foundations installed every workflow. Accept that ownership inventory during upgrade;
+  // the foundation now leaves those files to explicit workflow adoption and never deletes them.
+  const withoutOldWorkflows = Array.isArray(manifest.managed) ? manifest.managed.filter(path => !isOptionalWorkflow(path)) : [];
+  const previousWorkflowManaged = withoutOldWorkflows.length === expectedManagedPaths.length && withoutOldWorkflows.every((path, index) => path === expectedManagedPaths[index]);
+  if (!previousWorkflowManaged && !legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
     problems.push(`managed must be ${legacyManagedPaths.join(', ')}, the previous Lighthouse guardrail set or the selected profile set`);
   }
   if ('repository' in manifest) {
@@ -989,7 +971,10 @@ async function applyUpgrade(manifest, plan) {
     for (const change of updates) {
       const target = resolve(root, change.path);
       await mkdir(dirname(target), { recursive: true });
-      await writeTextAtomically(target, files[change.path]);
+      const content = change.path === 'lighthouse.json'
+        ? `${JSON.stringify({ ...manifest, managed: manifest.managed.filter(path => !isOptionalWorkflow(path)) }, null, 2)}\n`
+        : files[change.path];
+      await writeTextAtomically(target, content);
     }
     const next = upgradeState(manifest, files, { ...previous, lastAppliedMigration: `upgrade-${cliPackage.version}` });
     for (const path of Object.keys(next.files)) {
@@ -1408,7 +1393,7 @@ async function verify(manifest, format = 'text') {
   for (const item of adoption) {
     if (item.status !== 'adopted' || !item.recordPath || await exists(resolve(root, item.recordPath))) continue;
     item.status = 'failed';
-    item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${item.id}.plan.json`;
+    item.nextAction = `lighthouse capabilities plan --id ${item.id} --provider ${item.provider} --repo <owner/repo> --plan-file ${item.id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${item.id}.plan.json`}`;
   }
   if (adoption.length) {
     const pending = adoption.filter((item) => !['adopted', 'declined', 'available'].includes(item.status));
@@ -1421,13 +1406,16 @@ async function verify(manifest, format = 'text') {
       kind: 'hard',
       verification: 'deterministic',
       status: pending.length ? 'unconfigured' : available || declined ? 'not-applicable' : 'passed',
-      adoptionStatus: pending.length ? pending[0].status : available ? 'available' : declined ? 'declined' : 'adopted',
+      adoptionStatus: pending.length ? pending[0].status : declined ? 'declined' : available ? 'available' : 'adopted',
       evidence: adoption.map((item) => ({ capability: item.id, catalogVersion: item.catalogVersion })),
       problems: pending.map((item) => `${item.id} is ${item.status}; run ${item.nextAction}`),
       nextAction: pending[0]?.nextAction ?? null,
     });
     report.summary.unconfigured = (report.summary.unconfigured ?? 0) + (pending.length ? 1 : 0);
   }
+  const githubProfileResult = await localGithubProfileStatus(root);
+  report.results.push(githubProfileResult);
+  report.summary[githubProfileResult.status] = (report.summary[githubProfileResult.status] ?? 0) + 1;
   const evidenceResult = await verifyEvidenceIndex();
   report.results.push(evidenceResult);
   report.summary[evidenceResult.status] = (report.summary[evidenceResult.status] ?? 0) + 1;
@@ -1574,6 +1562,11 @@ async function capabilities(args) {
   const inputPath = args.includes('--input') ? args[args.indexOf('--input') + 1] : args.find((arg) => arg.startsWith('--input='))?.slice(8);
   const format = formatFromArgs(args);
   const planFile = args.includes('--plan-file') ? args[args.indexOf('--plan-file') + 1] : args.find((arg) => arg.startsWith('--plan-file='))?.slice(12);
+  const isGithubPlan = action === 'apply' && planFile && JSON.parse(await readFile(resolve(root, planFile), 'utf8')).kind === 'github-profile';
+  if ((id === 'github-profile' && ['plan', 'apply', 'verify'].includes(action)) || isGithubPlan) {
+    if (provider !== 'github') throw new Error('The GitHub profile requires provider github.');
+    return githubProfileCommand(args, { root, catalog: sdlcCapabilityCatalog() });
+  }
   if (['select', 'decline'].includes(action)) {
     const catalog = sdlcCapabilityCatalog();
     if (!catalog) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before selecting capabilities.');
@@ -1590,7 +1583,7 @@ async function capabilities(args) {
       provider: capability.provider,
       version: capability.version,
       catalogVersion: catalog.package.version,
-      nextAction: status === 'declined' ? null : `lighthouse capabilities plan --id ${id} --provider ${provider} --repo <owner/repo> --plan-file .lighthouse/reconciliation/${id}.plan.json`,
+      nextAction: status === 'declined' ? null : `lighthouse capabilities plan --id ${id} --provider ${provider} --repo <owner/repo> --plan-file ${id === 'github-profile' ? '<temporary-plan-path>' : `.lighthouse/reconciliation/${id}.plan.json`}`,
     };
     await writeTextAtomically(upgradeStatePath, `${JSON.stringify(state, null, 2)}\n`);
     const result = { schemaVersion: 1, capability: id, provider, status, applied: true };
@@ -1669,7 +1662,7 @@ async function capabilities(args) {
     if (format === 'json') console.log(JSON.stringify(result, null, 2)); else process.stdout.write(capabilityPlanText(result));
     return;
   }
-  throw new Error('Usage: lighthouse capabilities <select|decline|plan|apply> ...');
+  throw new Error('Usage: lighthouse capabilities <select|decline|plan|apply|verify> ...');
 }
 
 function formatFromArgs(args) {
@@ -1689,7 +1682,7 @@ if (command === 'create-dotnet') {
 let invalidArgument = false;
 for (let index = 0; index < commandArgs.length; index += 1) {
   const arg = commandArgs[index];
-  if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply'].includes(arg)) continue;
+  if (command === 'capabilities' && index === 0 && ['select', 'decline', 'plan', 'apply', 'verify'].includes(arg)) continue;
   if (arg === '--dry-run') continue;
   if (arg === '--apply') { if (!['init', 'authorities', 'reconcile', 'upgrade'].includes(command)) invalidArgument = true; continue; }
   if (arg === '--adopt-existing') { if (command !== 'authorities') invalidArgument = true; continue; }

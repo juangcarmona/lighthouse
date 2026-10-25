@@ -17,4 +17,4 @@ Turn the admitted work item into a problem that can be designed. Direct engineer
 
 ## Completion
 
-The work item has a bounded problem statement, testable acceptance criteria, resolved owners for open dependencies and a `ready` stage result that names the next decision.
+When the work item has a bounded problem statement, testable acceptance criteria and resolved owners for open dependencies, return `status: passed` with `gate: ready` and name the next owner decision. Keep `missingEvidence`, `unavailableChecks` and `pendingReview` empty only when the current refinement checks are satisfied; otherwise return `status: blocked` with the unresolved checks. Completing refinement does not approve the next stage.

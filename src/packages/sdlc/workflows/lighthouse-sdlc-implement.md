@@ -1,41 +1,177 @@
 ---
-# Owned by @juangcarmona/lighthouse-sdlc. Compile with `gh aw compile`; do not edit the lock file.
+# Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC implement
-description: Execute only the Lighthouse implementation stage and return its declared stage result.
-private: true
-runs-on: [self-hosted, linux, lighthouse-sdlc]
-runs-on-slim: ubuntu-24.04
-strict: true
-env:
-  LIGHTHOUSE_STAGE: implement
-  LIGHTHOUSE_SKILL: node_modules/@juangcarmona/lighthouse-sdlc/skills/implement/SKILL.md
+description: Implement an owner-approved proposal in an isolated workspace and deliver a reviewable PR.
 on:
   workflow_call:
     inputs:
-      route:
-        description: Lighthouse route selected by the host.
+      issue:
         required: true
         type: string
-      run-id:
-        description: Stable Lighthouse run identifier.
-        required: true
-        type: string
-      input:
-        description: Compact JSON input for this stage.
-        required: false
-        type: string
-        default: '{}'
-      previous-stage:
-        description: Previous stage artifact name.
-        required: false
-        type: string
-        default: propose
+  needs: [prepare]
+runs-on: [self-hosted, linux, lighthouse-workflow]
+runs-on-slim: ubuntu-24.04
+timeout-minutes: 55
+permissions:
+  contents: read
+engine:
+  id: opencode
+  command: node
 imports:
-  - shared/lighthouse-sdlc-stage.md
+  - shared/lighthouse-opencode.md
+# Subscription authentication runs inside the operator's Docker engine sandbox.
+# This profile does not claim AWF network isolation or API-proxy credential isolation.
+strict: false
+features:
+  dangerously-disable-sandbox-agent: true
+sandbox:
+  agent: false
+tools:
+  github: false
+safe-outputs:
+  create-issue: false
+  report-incomplete: false
+  threat-detection: false
+  report-failure-as-issue: false
+  report-missing-tool: false
+  report-missing-data: false
+  noop:
+    report-as-issue: false
+network:
+  allowed: []
+steps:
+  - name: Check out the authorized product revision
+    uses: actions/checkout@v5
+    with:
+      persist-credentials: false
+  - name: Load the pinned harness package
+    uses: actions/checkout@v5
+    with:
+      repository: juangcarmona/lighthouse
+      ref: __LIGHTHOUSE_REF__
+      path: tools
+      persist-credentials: false
+  - name: Load the authorized issue context
+    uses: actions/download-artifact@v8
+    with:
+      name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+post-steps:
+  - name: Validate the Lighthouse result
+    run: node tools/src/packages/sdlc/src/issue-actions.mjs validate
+  - name: Preserve the result and runtime receipt
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: |
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/changes.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/checks.json
+      if-no-files-found: error
+      retention-days: 14
+  - name: Preserve implementation evidence
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: implementation-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/
+      if-no-files-found: ignore
+      retention-days: 30
+  - name: Preserve OpenCode diagnostic events
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: opencode-events-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/gh-aw/opencode-events-${{ github.run_id }}-${{ github.run_attempt }}.jsonl
+      if-no-files-found: ignore
+      retention-days: 14
+jobs:
+  prepare:
+    name: Authorize and reserve issue
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    env:
+      LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Collect verified owner intent and reserve the issue
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs prepare
+      - name: Preserve the execution request
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Release reservation if preparation failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+  publish:
+    name: Validate, publish and release
+    needs: [prepare, agent]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Load the execution request
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Load the candidate result
+        if: needs.agent.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Recheck authority and publish the validated result
+        if: needs.agent.result == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Release the issue reservation
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs cleanup
 ---
 
-# Lighthouse SDLC implement worker
+# Implement the approved change
 
-Execute only `implement` by following `${{ env.LIGHTHOUSE_SKILL }}` and reading the proposal result from `/tmp/gh-aw/agent/previous/stage-result.json` when present; for a supervised run, use the predecessor context in `/tmp/gh-aw/agent/input.json`. Change only the approved slice and paths. ProductShape and ArcShape remain external authorities; retain their citations in evidence.
+Execute `implement` using `/input/context.json` and `/harness/skills/implement/SKILL.md`. Read the merged proposal at `context.implementation.proposal.root`, the repository policy and the authorized scope. Work inside `/workspace`, a disposable writable copy; only `implementation.policy.paths` may change. The packaged harness and context remain read-only.
 
-Run the required checks, record changed paths and results, and write one valid result to `/tmp/gh-aw/agent/stage-result.json` with `stage: implement`, `gate: done`, implementation evidence in `output`, and separate evidence arrays. Do not invoke `integrate` or `review`. Stop at done, then call `noop` exactly once. A failed check stops the stage and preserves its evidence.
+Report public progress before inspection and whenever a decision, test result or blocker changes the plan. Explain the evidence briefly; avoid dumping tool payloads. Use the shell to install public dependencies, edit source and run checks. Preserve content and author-owned work. Record completed tasks accurately. Store screenshots, test reports and a concise retrospective in `/output/evidence/`; the host retains them as Actions artifacts.
+
+Run the commands in `implementation.policy.checks` and relevant repository checks. The host reruns those commands independently on a clean candidate without provider or GitHub credentials. Return `/output/envelope.json` with the supplied identity. A required human visual/content decision is a real blocker: use `blocked`, record it in `pendingReview`, and still deliver the reviewable code. A passed `done` assessment requires all required evidence and reviews. Reserve time to write the envelope within the 30-minute engine limit.
+
+The separate publisher rechecks owner authority, source revision, write scope and check receipts before opening a fresh PR. It never updates an existing branch, merges, closes the issue or starts another stage. End after writing the envelope; the adapter records gh-aw completion.

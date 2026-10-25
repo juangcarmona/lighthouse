@@ -3,22 +3,6 @@ import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const sdlcWorkflowPaths = [
-  '.github/workflows/lighthouse-sdlc-router.yml',
-  '.github/workflows/lighthouse-sdlc-triage.md',
-  '.github/workflows/lighthouse-sdlc-triage.lock.yml',
-  '.github/workflows/lighthouse-sdlc-refine.md',
-  '.github/workflows/lighthouse-sdlc-refine.lock.yml',
-  '.github/workflows/lighthouse-sdlc-propose.md',
-  '.github/workflows/lighthouse-sdlc-propose.lock.yml',
-  '.github/workflows/lighthouse-sdlc-implement.md',
-  '.github/workflows/lighthouse-sdlc-implement.lock.yml',
-  '.github/workflows/lighthouse-sdlc-integrate.md',
-  '.github/workflows/lighthouse-sdlc-integrate.lock.yml',
-  '.github/workflows/lighthouse-sdlc-review.md',
-  '.github/workflows/lighthouse-sdlc-review.lock.yml',
-  '.github/workflows/shared/lighthouse-sdlc-stage.md',
-];
 
 const source = fileURLToPath(new URL('../../../../', import.meta.url));
 const args = process.argv.slice(2);
@@ -66,6 +50,7 @@ try {
     ['src/packages/cli/internal/verify-dotnet.mjs', 'scripts/verify-dotnet.mjs'],
     ['src/packages/cli/src/lighthouse.mjs', 'scripts/lighthouse.mjs'],
     ['src/packages/cli/src/aliases.mjs', 'scripts/aliases.mjs'],
+    ['src/packages/cli/src/github-profile.mjs', 'scripts/github-profile.mjs'],
     ['src/packages/cli/src/init-plan.mjs', 'scripts/init-plan.mjs'],
     ['src/packages/cli/src/guardrails.mjs', 'scripts/guardrails.mjs'],
     ['src/packages/cli/src/profiles.mjs', 'scripts/profiles.mjs'],
@@ -88,7 +73,7 @@ try {
     product: name, application: { shape: 'backend', stacks: ['dotnet'] }, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
     packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: '0.1.0' } },
-    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', ...sdlcWorkflowPaths, '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json'],
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json'],
     repository: {
       layout: ['src', 'docs', 'infra', 'scripts'],
       publicSite: { enabled: true },
@@ -108,7 +93,6 @@ try {
   await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm run verify\n`);
   const initialized = spawnSync(process.execPath, [resolve(stage, 'scripts/lighthouse.mjs'), 'init'], { cwd: stage, encoding: 'utf8' });
   if (initialized.status !== 0) throw new Error(initialized.stderr || 'Projection generation failed.');
-  await copy(resolve(source, 'src/packages/sdlc/workflows'), resolve(stage, '.github/workflows'));
   if (existing) await rmdir(target);
   await rename(stage, target);
   process.stdout.write(`Created ${name} in ${target}. Run dotnet restore ${name}.slnx, then npm run verify.\n`);

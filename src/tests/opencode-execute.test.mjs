@@ -1,0 +1,134 @@
+import { closeSync } from 'node:fs';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, writeFile, readFile, symlink, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
+import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
+
+test('engine snapshot contains tracked regular files but no checkout credentials or symlink targets', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lh-source-')), out = await mkdtemp(join(tmpdir(), 'lh-snapshot-'));
+  try {
+    execFileSync('git', ['init', '-q', root]);
+    await writeFile(join(root, 'asset.png'), Buffer.alloc(4 * 1024 * 1024, 255));
+    await writeFile(join(root, 'untracked-secret'), 'private');
+    await symlink('untracked-secret', join(root, 'link'));
+    execFileSync('git', ['-C', root, 'add', 'asset.png', 'link']);
+    await snapshotSource(root, out);
+    assert.equal((await readFile(join(out, 'asset.png'))).length, 4 * 1024 * 1024);
+    for (const path of ['.git/config', 'link', 'untracked-secret']) await assert.rejects(readFile(join(out, path)));
+  } finally { await rm(root, { recursive: true, force: true }); await rm(out, { recursive: true, force: true }); }
+});
+test('engine logs retain execution events while removing common credential formats', () => {
+  const raw = 'tool read /workspace/src/main.ts Bearer private-token sk-abcdefghijklmnop ghp_abcdefghijklmnop eyJhbGci.eyJzdWI.signature';
+  const clean = redactLog(raw);
+  assert.match(clean, /tool read \/workspace\/src\/main.ts/);
+  for (const secret of ['private-token', 'sk-abcdefghijklmnop', 'ghp_abcdefghijklmnop', 'eyJhbGci']) assert.ok(!clean.includes(secret));
+});
+
+test('host engine lock excludes another execution and releases with its descriptor', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-slot-'));
+  try {
+    const lock = join(root, 'engine.lock');
+    const fd = acquireEngineSlot(lock, 0);
+    try { assert.throws(() => acquireEngineSlot(lock, 0), /capacity unavailable/); }
+    finally { closeSync(fd); }
+    closeSync(acquireEngineSlot(lock, 0));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('gh-aw completion requires a valid completed envelope and does not imply publication', () => {
+  const request = { runId: 'b'.repeat(64), stage: 'refine' };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, ...request, gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Refined scope' } };
+  assert.equal(completionOutput(envelope, request).type, 'noop');
+  assert.match(completionOutput(envelope, request).message, /separate publisher job/);
+  const blocked = { ...envelope, result: { ...envelope.result, status: 'blocked', missingEvidence: ['audience'] } };
+  assert.match(completionOutput(blocked, request).message, /blocked/);
+  for (const change of [{ runId: 'c'.repeat(64) }, { gate: null }, { status: 'running' }, { pendingReview: ['owner'] }]) {
+    assert.throws(() => completionOutput({ ...envelope, result: { ...envelope.result, ...change } }, request));
+  }
+});
+
+test('engine adapter preserves structured evidence while streaming readable output', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-progress-'));
+  try {
+    const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+    for (const dir of [work, bin, runDir]) await mkdir(dir);
+    execFileSync('git', ['init', '-q', work]);
+    await writeFile(join(work, 'README.md'), 'Product source');
+    execFileSync('git', ['-C', work, 'add', 'README.md']);
+    const request = { runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) };
+    const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Scope is ready.' } };
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
+    await writeFile(join(runDir, 'context.json'), '{}');
+    await writeFile(join(root, 'prompt.txt'), 'Refine the issue.');
+    await writeFile(join(root, 'config.json'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture', lock: join(root, 'engine.lock') }));
+    const events = [
+      { type: 'text', part: { text: 'Checking scope.\n::error::untrusted text' } },
+      { type: 'tool_use', part: { tool: 'read', state: { status: 'completed', input: { path: '/workspace/README.md' }, output: 'Full file content retained only in evidence.' } } },
+      { type: 'step_finish', part: { tokens: { input: 10, output: 5 } } },
+    ];
+    const shim = join(bin, 'docker');
+    await writeFile(shim, `#!${process.execPath}
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+if (args[0] === 'run' && !args.includes('cleanup-session')) {
+  const output = args.find(x => x.startsWith('type=bind,src=') && x.endsWith(',dst=/output')).slice(14, -12);
+  fs.writeFileSync(output + '/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
+  for (const event of ${JSON.stringify(events)}) process.stdout.write(JSON.stringify(event) + '\\n');
+}
+`);
+    await chmod(shim, 0o755);
+    const execution = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+    assert.equal(execution.status, 0, execution.stdout + execution.stderr);
+    assert.match(execution.stdout, /\[OpenCode\] Checking scope/);
+    assert.match(execution.stdout, /\[Result\] Scope is ready/);
+    assert.ok(!execution.stdout.includes('Full file content'));
+    assert.ok(!execution.stdout.includes('"tokens"'));
+    assert.ok(!execution.stdout.split('\n').some(line => line.startsWith('::')));
+    const recorded = (await readFile(join(root, 'gh-aw', 'opencode-events-1-1.jsonl'), 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+    assert.deepEqual(recorded, events);
+    assert.equal(JSON.parse(await readFile(join(root, 'safeoutputs', 'outputs.jsonl'))).type, 'noop');
+    assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers', async () => {
+  const { boundedEventLines } = await import('../packages/sdlc/src/opencode-progress.mjs');
+  const lines = []; let omitted = 0;
+  const reader = boundedEventLines(line => lines.push(redactLog(line)), () => omitted++, 64);
+  reader.write('first\nBearer '); reader.write('secret-token\n');
+  reader.write('Bearer ' + 'x'.repeat(100)); reader.write('still-sensitive\nnext\nlast'); reader.end();
+  assert.deepEqual(lines, ['first', 'Bearer [REDACTED]', 'next', 'last']);
+  assert.equal(omitted, 1);
+  const large = boundedEventLines(line => lines.push(line.length), () => omitted++);
+  large.write('x'.repeat(2 * 1024 * 1024)); large.write('\n'); large.end();
+  assert.equal(lines.at(-1), 2 * 1024 * 1024); assert.equal(omitted, 1);
+});
+
+test('a failed implementation retains its bounded candidate but cannot emit successful completion', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-recovery-'));
+  try {
+    const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+    for (const dir of [work, bin, runDir]) await mkdir(dir);
+    execFileSync('git', ['init', '-q', work]);
+    await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
+    const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'] } } };
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
+    await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
+    const shim = join(bin, 'docker');
+    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); process.exitCode=1; }\n`);
+    await chmod(shim, 0o755);
+    const result = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
+    assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'partial implementation');
+    await assert.rejects(readFile(join(root, 'completion')));
+    await assert.rejects(readFile(join(runDir, 'envelope.json')));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

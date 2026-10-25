@@ -14,6 +14,7 @@ function issue(code, message, field) {
 
 const capabilityAdapters = Object.freeze({
   'labels/github': 'github-labels',
+  'github-profile/github': 'github-profile',
 });
 
 export function capabilityAdapter(capability) {

@@ -16,6 +16,8 @@ Use `lighthouse reconcile` to preview missing Lighthouse-managed paths in an exi
 
 Use `lighthouse upgrade` to preview a versioned foundation update. The command is dry-run by default, accepts `--scope harness`, `--scope sdlc` or `--scope all`, preserves customized projections and stops when ownership evidence is missing. Add `--apply` only after reviewing the plan, then run `lighthouse verify`.
 
+Agent workflows are opt-in through the SDLC package installer. Initialization does not create an entire worker catalog. Upgrading an older adoption releases workflow ownership while preserving the existing files for explicit review and cleanup.
+
 The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes, `DESIGN.md` and its agent skill. Selecting `visual-theme` projects the guide and skill into the adopter and enables its deterministic guardrail. Stack profiles own their source templates, guidance and checks; the .NET creator is the packaged entry point for the selected backend profile.
 
 ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration. In an existing repository, run `lighthouse authorities --adopt-existing` to validate the current ProductShape and ArcShape surfaces without running either initializer; review the dry-run plan and add `--apply` only to record both exact versions in Lighthouse-owned configuration.
@@ -72,3 +74,7 @@ Only `passed` and `not-applicable` satisfy a required guardrail; `pending-review
 To add a future guardrail, the catalog owner adds a JSON entry under the packaged `assets/guardrails/` surface, validates it against `assets/schemas/guardrails.schema.json`, declares its profile applicability and repair hint, and uses an existing checker or an explicit semantic or human verification method; in this delivery the surface belongs to the CLI package, and the CLI core does not change.
 
 A new deterministic checker mechanism or a new engineering practice is outside this catalog and requires a separate Product Change.
+
+## Optional GitHub repository profile
+
+The recommended `github-profile` capability is opt-in. Adopters declare checks, contribution policy and reasoned exceptions in `.lighthouse/github.json`, then use `lighthouse capabilities plan`, `apply` and `verify --id github-profile` to reconcile live settings. No remote settings change during installation or ordinary upgrades. See the [GitHub profile guide](github-profile.md) for configuration, supported controls, authorization and limitations.

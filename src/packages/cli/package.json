@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse",
-  "version": "0.9.2",
+  "version": "0.11.1",
   "type": "module",
   "description": "Lighthouse adoption and verification CLI",
   "repository": {
@@ -23,7 +23,7 @@
     "@arcshape/cli": "0.1.6",
     "@juangcarmona/lighthouse-ui": "0.2.0",
     "@prodshape/cli": "0.23.0",
-    "@juangcarmona/lighthouse-sdlc": "0.10.0"
+    "@juangcarmona/lighthouse-sdlc": "0.12.1"
   },
   "files": [
     "src/lighthouse.mjs",
@@ -35,7 +35,9 @@
     "src/profiles.mjs",
     "src/create-dotnet.mjs",
     "src/verify-dotnet.mjs",
-    "upgrades"
+    "upgrades",
+    "src/github-profile.mjs",
+    "github-profile.md"
   ],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"
