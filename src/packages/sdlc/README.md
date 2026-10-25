@@ -59,3 +59,13 @@ Evidence is explicit: an absent field appears in `missingEvidence`, a check that
 The package is a source of lifecycle instructions and contracts; an adopter's host adapter decides where provider-specific projections are installed.
 
 The [external host contract](host-contract.md) supports owner-authorized `refine` labels, schema-1 compatibility and the shared deterministic event router. Work reservations use `agent-working` and `human-working`; the host owns the durable lock.
+
+## Repository-owned issue refinement
+
+The optional GitHub-native adapter routes an owner-added `refine` label or an owner answer to a pending `needs-info` question into one reusable refinement worker. Actions owns authorization, concurrency, reservation, source/context preparation, result validation and publication. A replaceable executor runs the isolated agent; SoFa is an optional observer and verifier, never a prerequisite for this route.
+
+Preview installation with `node node_modules/@juangcarmona/lighthouse-sdlc/src/install-issue-workflows.mjs <repository> <immutable-lighthouse-commit>`. Review the two workflows and add `--apply` to write them. Disable any previous automatic host bridge before enabling the router. The adapter is opt-in and pins its implementation independently of the installed foundation version; it does not alter existing gh-aw routes or claim later delivery stages are enabled.
+
+The worker needs a dedicated `lighthouse-workflow` runner with Node.js 22 or newer and a local executor socket at `/run/lighthouse/engine.sock`. The source repository contains an optional operator deployment example under `src/examples/bastion-executor`. Keep engine authentication outside the repository. The workflow supplies no GitHub credentials to the executor or agent.
+
+Each run displays separate preparation, execution, validation, publication and cleanup steps, with progress metadata every fifteen seconds while the engine runs. The summary links the outcome; the artifact contains the request and validated result. Owner replies are included automatically, and three unresolved reply rounds require an explicit new label. Only the owner is admitted in this first adapter. Human takeover, source changes or changed answers prevent publication. A runner crash can leave a reservation requiring operator reconciliation; no automatic recovery or later-stage composition is claimed.
