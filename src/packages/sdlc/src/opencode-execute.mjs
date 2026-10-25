@@ -4,7 +4,14 @@ import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
+import { validateStageEnvelope } from './host-contract.mjs';
 
+export function completionOutput(envelope, request) {
+  const errors = validateStageEnvelope(envelope, request);
+  if (errors.length) throw Error(errors.join('\n'));
+  if (!['passed', 'blocked'].includes(envelope.result.status)) throw Error('Stage did not complete');
+  return { type: 'noop', message: `Lighthouse ${request.stage} result validated: ${envelope.result.status}. GitHub publication belongs to the separate publisher job.` };
+}
 export function redactLog(text) {
   return text.replace(/Bearer\s+[^\s"']+/gi, 'Bearer [REDACTED]')
     .replace(/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]{15,}/g, '[REDACTED]')
@@ -78,7 +85,12 @@ async function main() {
     });
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
-    await writeFile(join(runDir, 'envelope.json'), JSON.stringify(JSON.parse(await readFile(result, 'utf8'))));
+    const envelope = JSON.parse(await readFile(result, 'utf8'));
+    const completion = completionOutput(envelope, request);
+    await writeFile(join(runDir, 'envelope.json'), JSON.stringify(envelope));
+    // gh-aw requires a terminal safe output even when a separate job owns publication.
+    await mkdir(dirname(env.GH_AW_SAFE_OUTPUTS), { recursive: true });
+    await writeFile(env.GH_AW_SAFE_OUTPUTS, JSON.stringify(completion) + '\n');
   } finally {
     clearTimeout(timer); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
     try { docker(['rm', '-f', name]); } catch {}

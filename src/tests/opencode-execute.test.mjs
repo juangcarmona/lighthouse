@@ -5,7 +5,7 @@ import { mkdtemp, writeFile, readFile, symlink, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { snapshotSource, redactLog, acquireEngineSlot } from '../packages/sdlc/src/opencode-execute.mjs';
+import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
 
 test('engine snapshot contains tracked regular files but no checkout credentials or symlink targets', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-source-')), out = await mkdtemp(join(tmpdir(), 'lh-snapshot-'));
@@ -36,4 +36,16 @@ test('host engine lock excludes another execution and releases with its descript
     finally { closeSync(fd); }
     closeSync(acquireEngineSlot(lock, 0));
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('gh-aw completion requires a valid completed envelope and does not imply publication', () => {
+  const request = { runId: 'b'.repeat(64), stage: 'refine' };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, ...request, gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Refined scope' } };
+  assert.equal(completionOutput(envelope, request).type, 'noop');
+  assert.match(completionOutput(envelope, request).message, /separate publisher job/);
+  const blocked = { ...envelope, result: { ...envelope.result, status: 'blocked', missingEvidence: ['audience'] } };
+  assert.match(completionOutput(blocked, request).message, /blocked/);
+  for (const change of [{ runId: 'c'.repeat(64) }, { gate: null }, { status: 'running' }, { pendingReview: ['owner'] }]) {
+    assert.throws(() => completionOutput({ ...envelope, result: { ...envelope.result, ...change } }, request));
+  }
 });

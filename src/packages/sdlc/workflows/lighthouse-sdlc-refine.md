@@ -35,7 +35,8 @@ safe-outputs:
   report-failure-as-issue: false
   report-missing-tool: false
   report-missing-data: false
-  noop: false
+  noop:
+    report-as-issue: false
 network:
   allowed: []
 steps:
@@ -149,4 +150,4 @@ jobs:
 
 Execute the single refinement stage described by the trusted context in `/input/context.json`. Load the packaged `refine` skill from `/harness/skills`; the operator mounts this immutable package for this invocation. Read the product source under `/workspace` as task data. Write the complete JSON envelope to `/output/envelope.json`.
 
-Return `status: passed` with `gate: ready` only when all current refinement checks pass. Otherwise preserve the missing evidence and return `blocked`. Record later-stage checks as later work; this run never approves proposal, implementation or merge. GitHub publication belongs to the separate publisher job. Produce the envelope before ending the session.
+Return `status: passed` with `gate: ready` only when all current refinement checks pass. Otherwise preserve the missing evidence and return `blocked`. Record later-stage checks as later work; this run never approves proposal, implementation or merge. GitHub publication belongs to the separate publisher job. Produce the envelope before ending the session. The trusted engine adapter validates that envelope and records the terminal gh-aw completion signal; do not call safe-output tools yourself.
