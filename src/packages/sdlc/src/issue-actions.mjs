@@ -5,6 +5,8 @@ import { execFileSync } from 'node:child_process';
 import http from 'node:http';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 
+export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
+
 export function routeIssue(event, actor, owner, eventName) {
   if (actor !== owner || event.issue?.pull_request || (event.issue && event.issue.state !== 'open')) return { run: false, reason: 'Unauthorized actor or closed/non-issue target' };
   const labels = event.issue?.labels?.map(x => x.name) ?? [];
@@ -26,7 +28,7 @@ async function main(command) {
   const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
   const dir = env.LIGHTHOUSE_RUN_DIR ?? join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const api = async (path, method = 'GET', body) => {
-    const r = await fetch(`https://api.github.com/repos/${repo}/${path}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+    const r = await fetch(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     if (!r.ok) throw Error(`GitHub ${method} ${path}: ${r.status}`);
     return r.status === 204 ? null : r.json();
   };

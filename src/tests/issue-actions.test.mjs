@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { routeIssue, taskDigest, checkPublication } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl } from '../packages/sdlc/src/issue-actions.mjs';
 import { validateInput } from '../examples/bastion-executor/server.mjs';
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('only the owner can start refinement; reservations and PRs are excluded', () => {
@@ -32,4 +32,9 @@ test('executor rejects path traversal, git credentials, duplicate paths and over
   for (const path of ['../secret', '/secret', 'a/../../secret', '.git/config', 'a\\secret', 'a//b']) assert.throws(() => validateInput({ ...input, files: [{ path, data: '' }] }));
   assert.throws(() => validateInput({ ...input, files: [...input.files, ...input.files] }));
   assert.throws(() => validateInput({ ...input, context: { text: 'x'.repeat(262144) } }));
+});
+
+test('repository metadata endpoint has no trailing slash while subresources retain their separator', () => {
+  assert.equal(repositoryApiUrl('owner/repo'), 'https://api.github.com/repos/owner/repo');
+  assert.equal(repositoryApiUrl('owner/repo', 'issues/18'), 'https://api.github.com/repos/owner/repo/issues/18');
 });
