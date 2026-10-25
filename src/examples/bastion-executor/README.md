@@ -1,0 +1,11 @@
+# Bastion executor example
+
+This optional, operator-owned process executes one bounded OpenCode invocation in Docker. It accepts a read-only source snapshot and a Lighthouse context over a local Unix socket and streams progress metadata and the result. It has no GitHub token, database, repository lifecycle, queue or publication responsibility. GitHub Actions owns those decisions; SoFa can observe their evidence independently.
+
+Build the engine with `bash src/examples/bastion-executor/build.sh /absolute/path/to/opencode` using OpenCode 2.1.0. Configure the server with a private JSON file containing `socket`, `work`, `image` (an immutable local image SHA-256), `uid`, `authVolume` and `model`. Run `node server.mjs /operator/config.json`. Authorize OpenCode separately in the named volume. Never put credentials in this configuration or in Git.
+
+The socket directory must be accessible only to the operator and the dedicated runner. Mount it into that runner at `/run/lighthouse`; do not mount Docker or the authentication volume into the runner. The server creates an ephemeral container and workspace per invocation, permits one execution at a time, enforces a ten-minute limit, and cancels on client disconnect. A busy executor refuses additional work; repository concurrency belongs to Actions. Stale socket recovery and service startup belong to the operator.
+
+The agent receives no GitHub token, Docker socket or writable repository. The authenticated provider volume remains a privileged engine resource. Public workflow logs contain elapsed time and tool-event counts, not provider transcripts. This example does not claim microVM isolation or network egress filtering. The operator must use a trusted engine image and restrict runner admission to trusted workflows.
+
+An execution result is untrusted until the workflow validates its Lighthouse envelope and rechecks the issue, owner answers, revision and reservation before publication. A cancelled workflow must release its reservation through its final cleanup step; after a runner crash, the owner must inspect the interrupted run before clearing a stale `agent-working` label. No observer service repairs or advances work implicitly.

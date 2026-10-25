@@ -1,0 +1,62 @@
+# Optional GitHub-native refinement adapter; no SoFa service dependency.
+name: Lighthouse issue refine
+on:
+  workflow_call:
+    inputs:
+      issue:
+        required: true
+        type: string
+permissions:
+  contents: read
+  issues: write
+jobs:
+  refine:
+    name: Refine issue ${{ inputs.issue }}
+    runs-on: [self-hosted, linux, lighthouse-host]
+    timeout-minutes: 15
+    env:
+      LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+      LIGHTHOUSE_SOURCE: ${{ github.workspace }}/source
+      LIGHTHOUSE_RUN_DIR: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Load pinned Lighthouse adapter
+        uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          path: tools
+          persist-credentials: false
+      - name: Read the repository revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+      - name: Authorize, reserve and collect issue answers
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/src/packages/sdlc/src/issue-actions.mjs prepare
+      - name: Execute refinement in the isolated runtime
+        run: node tools/src/packages/sdlc/src/issue-actions.mjs execute
+      - name: Validate the Lighthouse result
+        run: node tools/src/packages/sdlc/src/issue-actions.mjs validate
+      - name: Recheck authority and publish the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Release the issue reservation
+        if: always() && steps.prepare.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Preserve the result and request receipt
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-refine-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.LIGHTHOUSE_RUN_DIR }}/request.json
+            ${{ env.LIGHTHOUSE_RUN_DIR }}/envelope.json
+          if-no-files-found: ignore
+          retention-days: 14

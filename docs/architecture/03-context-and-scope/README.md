@@ -50,7 +50,7 @@ The product-defined CodeGraph MCP and Aspire application boundary are planned ad
 | Baseline, profiles and managed adoption | Lighthouse CLI and owning profile packages | Installed repository files retain version and ownership evidence. |
 | Stage semantics, routes, gates and result schemas | Lighthouse SDLC package | GitHub workflows and host adapters consume the exact installed contract. |
 | Issues, source commits, PRs and check observations | GitHub | Local state stores source identity, revision and observation time. |
-| Runtime admission, leases, recovery and fleet capacity | Adopter's factory, such as SoFa | Repository jobs submit scoped requests and receive operational results. |
+| Runtime admission, leases, recovery and fleet capacity | Adopter's independently operated runtime | Repository jobs submit scoped requests and receive operational results. |
 | Agent execution and inference | Selected engine and model provider | The factory supervises execution; stage names grant no provider credentials. |
 | Approval and autonomy policy | Named adopter authority | Machines evaluate the recorded policy and retain attributable decisions. |
 
