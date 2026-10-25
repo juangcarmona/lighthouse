@@ -10,7 +10,7 @@ It also provides the `browser-e2e` evidence contract for Playwright journeys. Th
 
 It provides a neutral evidence contract for delivery, product and architecture references. `lighthouse-sdlc evidence` validates records or builds a deterministic coverage index; it does not replace ProductShape, ArcShape or a future quality evaluator.
 
-It does not run agents, store transcripts, dispatch work between repositories or replace ProductShape, ArcShape, OpenSpec or an agent host.
+It has no persistent execution service, transcript store or cross-repository dispatcher. The optional Actions adapter executes the selected engine under operator policy. ProductShape, ArcShape and OpenSpec retain their own authority.
 
 ## External host contract
 
