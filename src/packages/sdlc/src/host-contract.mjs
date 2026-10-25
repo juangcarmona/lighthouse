@@ -69,7 +69,7 @@ export function validateStageEnvelope(value, request) {
   if (exact(value.effect, ['type', 'body'], 'effect', errors)) {
     if (value.effect.type !== 'issue-comment') errors.push('only an issue-comment effect is supported');
     if (typeof value.effect.body !== 'string' || !value.effect.body.trim() || value.effect.body.length > 16000) errors.push('effect body must contain 1-16000 characters');
-    if (typeof value.effect.body === 'string' && /<!-- lighthouse-(?:run|actions|proposal):/.test(value.effect.body)) errors.push('effect body contains a reserved publication marker');
+    if (typeof value.effect.body === 'string' && /<!-- lighthouse-(?:run|actions|proposal|implementation):/.test(value.effect.body)) errors.push('effect body contains a reserved publication marker');
   }
   return errors;
 }
@@ -91,7 +91,7 @@ export async function hostContractMain(args) {
   } else if (command === 'result') {
     errors = validateStageEnvelope(JSON.parse(await readFile(policyFile, 'utf8')), request);
   } else if (command === 'context') {
-    if (!['triage', 'refine', 'propose'].includes(request.stage)) throw new Error('Unsupported stage context');
+    if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage)) throw new Error('Unsupported stage context');
     const skill = await readFile(new URL(`../skills/${request.stage}/SKILL.md`, import.meta.url), 'utf8');
     const issue = JSON.parse(await readFile(policyFile, 'utf8'));
     const predecessor = extraFile ? JSON.parse(await readFile(extraFile, 'utf8')) : null;
