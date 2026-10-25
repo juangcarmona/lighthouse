@@ -65,6 +65,11 @@
       "action": "skill",
       "resource": "*",
       "effect": "allow"
+    },
+    {
+      "action": "external_directory",
+      "resource": "/harness/*",
+      "effect": "allow"
     }
   ],
   "policies": [
@@ -146,6 +151,11 @@
     {
       "action": "tool.use",
       "resource": "skill:*",
+      "effect": "allow"
+    },
+    {
+      "action": "tool.use",
+      "resource": "external_directory:/harness/*",
       "effect": "allow"
     }
   ],
