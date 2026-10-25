@@ -27,7 +27,7 @@ export async function serve(config) {
   await mkdir(dirname(config.socket), { recursive: true, mode: 0o750 });
   await mkdir(config.work, { recursive: true, mode: 0o700 });
   // Do not remove a live or stale socket implicitly: operator resolves ownership.
-  let active = false;
+  let active = false, cancelActive = () => {};
   const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') { res.end(JSON.stringify({ ready: true, busy: active })); return; }
     if (req.method !== 'POST' || req.url !== '/execute') { res.writeHead(404).end(); return; }
@@ -36,6 +36,7 @@ export async function serve(config) {
     let dir, timer, heartbeat, child, name, finished = false, cancelled = false;
     const emit = (event) => { if (!res.destroyed) res.write(JSON.stringify(event) + '\n'); };
     const cancel = () => { if (!finished) { cancelled = true; child?.kill('SIGTERM'); if (name) void run(['rm', '-f', name]).catch(() => {}); } };
+    cancelActive = cancel;
     res.on('close', cancel);
     try {
       let size = 0, chunks = [];
@@ -77,15 +78,21 @@ export async function serve(config) {
         await run(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${name.slice('lighthouse-engine-'.length)}`]).catch(() => {});
       }
       if (dir) await rm(dir, { recursive: true, force: true });
-      finished = true; active = false; res.end();
+      finished = true; active = false; cancelActive = () => {}; res.end();
     }
   });
   server.requestTimeout = 30000;
   await new Promise((ok, no) => { server.once('error', no); server.listen(config.socket, ok); });
   await chmod(config.socket, 0o660);
+  server.cancelActive = () => cancelActive();
   return server;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const config = JSON.parse(await readFile(process.argv[2], 'utf8'));
-  await serve(config); console.log('Executor ready');
+  const server = await serve(config); console.log('Executor ready');
+  for (const signal of ['SIGTERM', 'SIGINT']) process.once(signal, () => {
+    server.cancelActive();
+    server.close(async () => { await rm(config.socket, { force: true }); process.exit(0); });
+    setTimeout(() => process.exit(1), 35000).unref();
+  });
 }
