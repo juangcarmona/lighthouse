@@ -6,6 +6,7 @@ on:
       - "src/packages/**"
       - "src/tests/**"
       - "scripts/verify-package-consumer.mjs"
+      - "scripts/verify-issue-workflows.sh"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/packages.yml"
@@ -15,6 +16,7 @@ on:
       - "src/packages/**"
       - "src/tests/**"
       - "scripts/verify-package-consumer.mjs"
+      - "scripts/verify-issue-workflows.sh"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/packages.yml"
@@ -49,6 +51,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm test
+      - name: Validate installed issue workflows
+        run: bash scripts/verify-issue-workflows.sh
 
   clean-consumer:
     name: Exercise a clean consumer
