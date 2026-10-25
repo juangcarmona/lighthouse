@@ -7,7 +7,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, materializeCandidate } from './implementation.mjs';
 import { writableTree, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
-import { formatOpenCodeEvent, progressText } from './opencode-progress.mjs';
+import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -61,7 +61,7 @@ async function main() {
   const implementing = request.stage === 'implement';
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, cancelled = false;
+  let child, timer, heartbeat, slot, baseline, cancelled = false;
   const cancel = () => { cancelled = true; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
   try {
@@ -69,19 +69,20 @@ async function main() {
     slot = acquireEngineSlot(config.lock);
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
-    const baseline = implementing ? await sourceFiles(source) : null;
+    baseline = implementing ? await sourceFiles(source) : null;
     if (implementing) await writableTree(source);
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
     const prompt = join(dir, 'prompt.txt');
-    await writeFile(prompt, await readFile(env.GH_AW_PROMPT), { mode: 0o444 });
+    const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Write the envelope and stop; do not install or invoke safeoutputs.\n';
+    await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
     await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision }));
     const args = ['run', '--rm', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', config.image];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', config.image];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -102,15 +103,18 @@ async function main() {
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const consume = line => {
         try {
-          if (line.length > 1024 * 1024) throw Error('Engine log line exceeds bound');
           eventLine(line);
         } catch (error) { no(error); cancel(); }
       };
       // Keep line boundaries across chunks so credential shapes cannot bypass redaction.
       for (const stream of [child.stdout, child.stderr]) {
-        let pending = ''; stream.setEncoding('utf8');
-        stream.on('data', chunk => { if (cancelled) return; pending += chunk; let end; while ((end = pending.indexOf('\n')) >= 0) { consume(pending.slice(0, end)); if (cancelled) return; pending = pending.slice(end + 1); } if (pending.length > 1024 * 1024) { no(Error('Engine log line exceeds bound')); cancel(); } });
-        stream.on('end', () => { if (pending && !cancelled) consume(pending); });
+        const lines = boundedEventLines(consume, () => {
+          eventLine(JSON.stringify({ type: 'diagnostic_omitted', reason: 'Event exceeded the 8 MiB character limit' }));
+          report(progressText('Run', 'One oversized diagnostic event was omitted. Execution continues; candidate files are collected separately.'));
+        });
+        stream.setEncoding('utf8');
+        stream.on('data', chunk => { if (!cancelled) lines.write(chunk); });
+        stream.on('end', () => { if (!cancelled) lines.end(); });
       }
       child.on('error', no); child.on('close', code => code === 0 && !cancelled ? ok() : no(Error('OpenCode failed or was cancelled')));
       timer = setTimeout(cancel, implementing ? 1800000 : 600000);
@@ -149,6 +153,17 @@ async function main() {
     // gh-aw requires a terminal safe output even when a separate job owns publication.
     await mkdir(dirname(env.GH_AW_SAFE_OUTPUTS), { recursive: true });
     await writeFile(env.GH_AW_SAFE_OUTPUTS, JSON.stringify(completion) + '\n');
+  } catch (error) {
+    if (implementing && baseline) {
+      try {
+        try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
+        const changes = collectChanges(baseline, await sourceFiles(source), request.implementation.policy);
+        await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
+        await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
+        console.error(progressText('Recovery', 'Retained bounded candidate changes and available evidence. This failed run cannot publish a PR.'));
+      } catch (recoveryError) { console.error(progressText('Recovery', redactLog(`Candidate could not be retained: ${recoveryError.message}`))); }
+    }
+    throw error;
   } finally {
     clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
     try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}

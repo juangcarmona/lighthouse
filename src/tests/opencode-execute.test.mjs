@@ -95,3 +95,40 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
     assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers', async () => {
+  const { boundedEventLines } = await import('../packages/sdlc/src/opencode-progress.mjs');
+  const lines = []; let omitted = 0;
+  const reader = boundedEventLines(line => lines.push(redactLog(line)), () => omitted++, 64);
+  reader.write('first\nBearer '); reader.write('secret-token\n');
+  reader.write('Bearer ' + 'x'.repeat(100)); reader.write('still-sensitive\nnext\nlast'); reader.end();
+  assert.deepEqual(lines, ['first', 'Bearer [REDACTED]', 'next', 'last']);
+  assert.equal(omitted, 1);
+  const large = boundedEventLines(line => lines.push(line.length), () => omitted++);
+  large.write('x'.repeat(2 * 1024 * 1024)); large.write('\n'); large.end();
+  assert.equal(lines.at(-1), 2 * 1024 * 1024); assert.equal(omitted, 1);
+});
+
+test('a failed implementation retains its bounded candidate but cannot emit successful completion', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-recovery-'));
+  try {
+    const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+    for (const dir of [work, bin, runDir]) await mkdir(dir);
+    execFileSync('git', ['init', '-q', work]);
+    await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
+    const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'] } } };
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
+    await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
+    const shim = join(bin, 'docker');
+    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); process.exitCode=1; }\n`);
+    await chmod(shim, 0o755);
+    const result = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
+    assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'partial implementation');
+    await assert.rejects(readFile(join(root, 'completion')));
+    await assert.rejects(readFile(join(runDir, 'envelope.json')));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
