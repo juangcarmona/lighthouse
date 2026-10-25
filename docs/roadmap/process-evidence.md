@@ -1,6 +1,6 @@
 # Process evidence delivered with the pull request
 
-Status: proposed harness convention for the next external-host delivery slice. The current host only executes triage/refine; it does not publish this branch or these reports. Lighthouse owns the convention; a host collects, retains and publishes the evidence. This adds no lifecycle stage or publication grant.
+Status: accepted convention; automated protected-branch publication remains pending. Repository-owned workflows now deliver implementation PRs with execution reports and retrospectives as expiring Actions artifacts. The permanent branch and post-integration record below still require publisher support and adopter verification. Lighthouse owns the convention; an independent host collects, retains and publishes the evidence. This adds no lifecycle stage or publication grant.
 
 ## Delivery and ownership
 
