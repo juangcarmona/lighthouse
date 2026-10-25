@@ -11,10 +11,12 @@ engine:
     execution:
       command-name: node
       args: [tools/src/packages/sdlc/src/opencode-execute.mjs]
-      step-name: Execute OpenCode CLI
+      step-name: OpenCode progress and result
       write-timestamp: true
     log-parser: |
       function parseLog(logContent) {
-        return require("./parse_opencode_log.cjs").parseOpenCodeLog(logContent);
+        const fs = require("fs");
+        const events = require("path").join(process.env.RUNNER_TEMP, "gh-aw", "opencode-events.jsonl");
+        return require("./parse_opencode_log.cjs").parseOpenCodeLog(fs.existsSync(events) ? fs.readFileSync(events, "utf8") : logContent);
       }
 ---

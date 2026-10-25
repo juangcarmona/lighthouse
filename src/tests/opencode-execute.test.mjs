@@ -49,3 +49,49 @@ test('gh-aw completion requires a valid completed envelope and does not imply pu
     assert.throws(() => completionOutput({ ...envelope, result: { ...envelope.result, ...change } }, request));
   }
 });
+
+test('engine adapter preserves structured evidence while streaming readable output', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-progress-'));
+  try {
+    const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+    for (const dir of [work, bin, runDir]) await mkdir(dir);
+    execFileSync('git', ['init', '-q', work]);
+    await writeFile(join(work, 'README.md'), 'Product source');
+    execFileSync('git', ['-C', work, 'add', 'README.md']);
+    const request = { runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) };
+    const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Scope is ready.' } };
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
+    await writeFile(join(runDir, 'context.json'), '{}');
+    await writeFile(join(root, 'prompt.txt'), 'Refine the issue.');
+    await writeFile(join(root, 'config.json'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture', lock: join(root, 'engine.lock') }));
+    const events = [
+      { type: 'text', part: { text: 'Checking scope.\n::error::untrusted text' } },
+      { type: 'tool_use', part: { tool: 'read', state: { status: 'completed', input: { path: '/workspace/README.md' }, output: 'Full file content retained only in evidence.' } } },
+      { type: 'step_finish', part: { tokens: { input: 10, output: 5 } } },
+    ];
+    const shim = join(bin, 'docker');
+    await writeFile(shim, `#!${process.execPath}
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+if (args[0] === 'run' && !args.includes('cleanup-session')) {
+  const output = args.find(x => x.startsWith('type=bind,src=') && x.endsWith(',dst=/output')).slice(14, -12);
+  fs.writeFileSync(output + '/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
+  for (const event of ${JSON.stringify(events)}) process.stdout.write(JSON.stringify(event) + '\\n');
+}
+`);
+    await chmod(shim, 0o755);
+    const execution = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+    assert.equal(execution.status, 0, execution.stdout + execution.stderr);
+    assert.match(execution.stdout, /\[OpenCode\] Checking scope/);
+    assert.match(execution.stdout, /\[Result\] Scope is ready/);
+    assert.ok(!execution.stdout.includes('Full file content'));
+    assert.ok(!execution.stdout.includes('"tokens"'));
+    assert.ok(!execution.stdout.split('\n').some(line => line.startsWith('::')));
+    const recorded = (await readFile(join(root, 'gh-aw', 'opencode-events.jsonl'), 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+    assert.deepEqual(recorded, events);
+    assert.equal(JSON.parse(await readFile(join(root, 'safeoutputs', 'outputs.jsonl'))).type, 'noop');
+    assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

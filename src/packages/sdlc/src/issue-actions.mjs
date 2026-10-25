@@ -90,7 +90,7 @@ async function main(command) {
     const errors = validateStageEnvelope(value, snapshot);
     if (errors.length) throw Error(errors.join('\n'));
     if (!['passed', 'blocked'].includes(value.result.status)) throw Error(`Stage did not complete: ${value.result.status}`);
-    console.log(`Validated refine result: ${value.result.status}`); await summary(`### Result\nOutcome: **${value.result.status}**`); return;
+    console.log(`Validated refine result: ${value.result.status}`); await summary(`### Refinement result\nOutcome: **${value.result.status}**\n\n${value.effect.body}`); return;
   }
   if (command === 'publish') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
