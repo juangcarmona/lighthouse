@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.12.0
+
+### Minor Changes
+
+- 9581463: # Observable gh-aw execution
+
+  Make workflow adoption explicit and run issue refinement through gh-aw with visible OpenCode events, packaged skills and independently validated publication. Replace the persistent executor bridge with a foreground Docker engine adapter for subscription-authenticated Bastion operators.
+
+- bf1885a: # Repository-owned refinement
+
+  Add optional repository-owned refinement workflows with owner-answer continuation, visible execution progress, validated publication and an independent executor contract.
+
 ## 0.11.0
 
 ### Minor Changes
