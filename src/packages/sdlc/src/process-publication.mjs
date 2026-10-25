@@ -43,7 +43,7 @@ export async function publishProcessBundle(api, request, files, beforeWrite = as
   const phase = request.stage === 'review' || request.completion.merged ? 'post-integration' : 'pr-ready';
   const relative = `runs/${request.workflowRunId}/attempt-${request.attempt.padStart(4, '0')}/${phase}`;
   for (let attempt = 0; attempt < 3; attempt++) {
-    await evidenceProtection(api, branch);
+    await evidenceProtection(api, branch, request.completion.profile.completion.protectionObservations);
     const ref = await api(`git/ref/heads/${branch}`), tip = ref.object.sha;
     const tree = await api(`git/trees/${tip}?recursive=1`);
     if (tree.truncated || tree.tree.length > 10000) throw Error('Evidence tree exceeds bounds');
@@ -76,7 +76,7 @@ export async function publishProcessBundle(api, request, files, beforeWrite = as
     for (const [path, content] of Object.entries(desired)) entries.push({ path, mode: '100644', type: 'blob', sha: (await api('git/blobs', 'POST', { content, encoding: 'utf-8' })).sha });
     const nextTree = await api('git/trees', 'POST', { base_tree: tree.sha, tree: entries });
     const commit = await api('git/commits', 'POST', { message: `docs: retain ${request.stage} evidence for #${issue}`, tree: nextTree.sha, parents: [tip] });
-    await beforeWrite(); await evidenceProtection(api, branch);
+    await beforeWrite(); await evidenceProtection(api, branch, request.completion.profile.completion.protectionObservations);
     try {
       await api(`git/refs/heads/${branch}`, 'PATCH', { sha: commit.sha, force: false });
       return { commit: commit.sha, url: url(commit.sha), duplicate: false };

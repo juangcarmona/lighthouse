@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       issue:
-        description: Open issue to process
+        description: Work item to process
         required: true
         type: string
       stage:

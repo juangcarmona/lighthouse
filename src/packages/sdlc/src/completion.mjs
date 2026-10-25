@@ -32,21 +32,27 @@ export async function loadProfile(api, repository, revision) {
   if (profile.repository !== repository || !profile.evidenceBranch || profile.completion?.publishEvidence !== true) throw Error('Completion needs the adopted GitHub profile and explicit evidence publication');
   return profile;
 }
-export async function evidenceProtection(api, branch) {
+export function ruleRevision(source) {
+  if (!Number.isFinite(Date.parse(source.updated_at))) throw Error('Ruleset revision timestamp is unavailable');
+  return fingerprint(Object.fromEntries(['id', 'source', 'source_type', 'target', 'enforcement', 'updated_at', 'conditions', 'rules'].map(key => [key, source[key]])));
+}
+export async function evidenceProtection(api, branch, observations = []) {
   const rules = await list(api, `rules/branches/${encodeURIComponent(branch)}`);
   for (const type of ['deletion', 'non_fast_forward']) {
     const matches = rules.filter(r => r.type === type && r.ruleset_source_type === 'Repository');
     let protectedRule = false;
     for (const rule of matches) {
       const source = await api(`rulesets/${rule.ruleset_id}`);
-      if (source.enforcement === 'active' && Array.isArray(source.bypass_actors) && source.bypass_actors.length === 0) protectedRule = true;
+      const bypassVerified = Array.isArray(source.bypass_actors) ? source.bypass_actors.length === 0 : observations.some(o => o.id === source.id && o.revision === ruleRevision(source));
+      if (source.enforcement === 'active' && bypassVerified) protectedRule = true;
     }
     if (!protectedRule) throw Error(`Evidence branch lacks enforced ${type} protection without bypass`);
   }
 }
 export async function requiredPolicy(api, branch, profile) {
   const rules = await list(api, `rules/branches/${encodeURIComponent(branch)}`);
-  const classic = await api(`branches/${encodeURIComponent(branch)}/protection`, 'GET', undefined, true);
+  const metadata = await api(`branches/${encodeURIComponent(branch)}`);
+  const classic = metadata?.protection?.enabled === false ? null : await api(`branches/${encodeURIComponent(branch)}/protection`, 'GET', undefined, true);
   if (rules.some(r => r.type === 'merge_queue')) throw Error('Merge queues require a queue-aware adapter');
   const checks = rules.filter(r => r.type === 'required_status_checks').flatMap(r => r.parameters.required_status_checks.map(c => ({ context: c.context, app: c.integration_id ?? null })));
   for (const c of classic?.required_status_checks?.checks ?? []) checks.push({ context: c.context, app: c.app_id ?? null });
@@ -69,7 +75,7 @@ export async function inspectCompletion(api, repository, owner, input, stage) {
   const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);
   const profile = await loadProfile(api, repository, current.sha);
   if (profile.evidenceBranch === repo.default_branch) throw Error('Evidence branch must be separate');
-  await evidenceProtection(api, profile.evidenceBranch);
+  await evidenceProtection(api, profile.evidenceBranch, profile.completion.protectionObservations);
   const pr = await api(`pulls/${input.pr}`), issue = await api(`issues/${input.issue}`);
   if (pr.head.sha !== input.head || pr.head.repo?.full_name !== repository || pr.base.repo.full_name !== repository || pr.base.ref !== repo.default_branch || issue.pull_request || issue.user.login !== owner) throw Error('Accepted PR identity or work-item authority changed');
   if (stage === 'review' && !pr.merged || stage === 'integrate' && !pr.merged && (pr.state !== 'open' || pr.draft || issue.state !== 'open')) throw Error('PR is not eligible for this stage');
