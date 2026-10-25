@@ -89,7 +89,7 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
     assert.ok(!execution.stdout.includes('Full file content'));
     assert.ok(!execution.stdout.includes('"tokens"'));
     assert.ok(!execution.stdout.split('\n').some(line => line.startsWith('::')));
-    const recorded = (await readFile(join(root, 'gh-aw', 'opencode-events.jsonl'), 'utf8')).trim().split('\n').map(line => JSON.parse(line));
+    const recorded = (await readFile(join(root, 'gh-aw', 'opencode-events-1-1.jsonl'), 'utf8')).trim().split('\n').map(line => JSON.parse(line));
     assert.deepEqual(recorded, events);
     assert.equal(JSON.parse(await readFile(join(root, 'safeoutputs', 'outputs.jsonl'))).type, 'noop');
     assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);

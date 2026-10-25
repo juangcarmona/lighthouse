@@ -74,7 +74,7 @@ post-steps:
     uses: actions/upload-artifact@v7
     with:
       name: opencode-events-${{ inputs.issue }}-${{ github.run_attempt }}
-      path: ${{ runner.temp }}/gh-aw/opencode-events.jsonl
+      path: ${{ runner.temp }}/gh-aw/opencode-events-${{ github.run_id }}-${{ github.run_attempt }}.jsonl
       if-no-files-found: ignore
       retention-days: 14
 jobs:

@@ -73,7 +73,7 @@ async function main() {
       '--tmpfs', '/tmp:rw,size=256m,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=256m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace,readonly`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, config.image];
-    const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', 'opencode-events.jsonl');
+    const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
     const started = Date.now();

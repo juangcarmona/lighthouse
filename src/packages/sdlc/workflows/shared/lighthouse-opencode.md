@@ -16,7 +16,7 @@ engine:
     log-parser: |
       function parseLog(logContent) {
         const fs = require("fs");
-        const events = require("path").join(process.env.RUNNER_TEMP, "gh-aw", "opencode-events.jsonl");
+        const events = require("path").join(process.env.RUNNER_TEMP, "gh-aw", `opencode-events-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}.jsonl`);
         return require("./parse_opencode_log.cjs").parseOpenCodeLog(fs.existsSync(events) ? fs.readFileSync(events, "utf8") : logContent);
       }
 ---
