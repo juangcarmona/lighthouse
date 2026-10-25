@@ -70,6 +70,7 @@
     "./command-aliases.json": "./command-aliases.json",
     "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json",
     "./workflows/*": "./workflows/*",
-    "./host-contract": "./src/host-contract.mjs"
+    "./host-contract": "./src/host-contract.mjs",
+    "./github-profile": "./src/github-profile.mjs"
   }
 }

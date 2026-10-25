@@ -35,7 +35,9 @@
     "src/profiles.mjs",
     "src/create-dotnet.mjs",
     "src/verify-dotnet.mjs",
-    "upgrades"
+    "upgrades",
+    "src/github-profile.mjs",
+    "github-profile.md"
   ],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"

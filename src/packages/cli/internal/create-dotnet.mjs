@@ -66,6 +66,7 @@ try {
     ['src/packages/cli/internal/verify-dotnet.mjs', 'scripts/verify-dotnet.mjs'],
     ['src/packages/cli/src/lighthouse.mjs', 'scripts/lighthouse.mjs'],
     ['src/packages/cli/src/aliases.mjs', 'scripts/aliases.mjs'],
+    ['src/packages/cli/src/github-profile.mjs', 'scripts/github-profile.mjs'],
     ['src/packages/cli/src/init-plan.mjs', 'scripts/init-plan.mjs'],
     ['src/packages/cli/src/guardrails.mjs', 'scripts/guardrails.mjs'],
     ['src/packages/cli/src/profiles.mjs', 'scripts/profiles.mjs'],

@@ -93,6 +93,7 @@ try {
 
   await copy(resolve(packageRoot, 'src/lighthouse.mjs'), resolve(stage, 'scripts/lighthouse.mjs'));
   await copy(resolve(packageRoot, 'src/aliases.mjs'), resolve(stage, 'scripts/aliases.mjs'));
+  await copy(resolve(packageRoot, 'src/github-profile.mjs'), resolve(stage, 'scripts/github-profile.mjs'));
   await copy(resolve(packageRoot, 'src/init-plan.mjs'), resolve(stage, 'scripts/init-plan.mjs'));
   await copy(resolve(packageRoot, 'src/guardrails.mjs'), resolve(stage, 'scripts/guardrails.mjs'));
   await copy(resolve(packageRoot, 'src/profiles.mjs'), resolve(stage, 'scripts/profiles.mjs'));
