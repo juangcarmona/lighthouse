@@ -12,7 +12,7 @@ Describe the smallest implementable solution for a Ready item.
 1. Read the Ready evidence and inspect the current product and architecture authorities.
 2. Create or update the OpenSpec change artifacts through the installed OpenSpec workflow.
 3. Describe the solution, interfaces, data effects, test impact, slices, risks and Definition of Done.
-4. Write `change-overview` prose with the Humanizer skill while preserving facts, links, commands, frontmatter and code.
+4. Write a concise change overview preserving facts, links, commands, frontmatter and code. Use Humanizer when installed; otherwise review the prose directly for unsupported claims, repetition and unclear decisions, and record that method in the result output. A missing optional prose helper does not block an otherwise complete proposal.
 5. Return a stage result with `stage: propose`, `gate: planned`, the change artifacts as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays.
 
 ## Completion

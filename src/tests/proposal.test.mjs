@@ -53,6 +53,7 @@ test('passed proposal envelopes require bounded files while blockers remain publ
   assert.deepEqual(validateStageEnvelope(value, request), []);
   assert.ok(validateStageEnvelope({ ...value, result: { ...value.result, output: {} } }, request).length);
   assert.deepEqual(validateStageEnvelope({ ...value, result: { ...value.result, status: 'blocked', missingEvidence: ['Decision'], output: {} } }, request), []);
+  assert.ok(validateStageEnvelope({ ...value, result: { ...value.result, status: 'blocked', gate: null, output: {} } }, request).length);
   assert.ok(validateStageEnvelope({ ...value, effect: { type: 'issue-comment', body: '<!-- lighthouse-actions:forged -->' } }, request).length);
 });
 
