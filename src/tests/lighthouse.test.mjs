@@ -38,14 +38,6 @@ test('init creates a projection and refuses to overwrite product work', async ()
     assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /# fixture repository baseline/);
     for (const file of [
       'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml',
-      '.github/workflows/lighthouse-sdlc-router.yml',
-      '.github/workflows/lighthouse-sdlc-triage.md', '.github/workflows/lighthouse-sdlc-triage.lock.yml',
-      '.github/workflows/lighthouse-sdlc-refine.md', '.github/workflows/lighthouse-sdlc-refine.lock.yml',
-      '.github/workflows/lighthouse-sdlc-propose.md', '.github/workflows/lighthouse-sdlc-propose.lock.yml',
-      '.github/workflows/lighthouse-sdlc-implement.md', '.github/workflows/lighthouse-sdlc-implement.lock.yml',
-      '.github/workflows/lighthouse-sdlc-integrate.md', '.github/workflows/lighthouse-sdlc-integrate.lock.yml',
-      '.github/workflows/lighthouse-sdlc-review.md', '.github/workflows/lighthouse-sdlc-review.lock.yml',
-      '.github/workflows/shared/lighthouse-sdlc-stage.md',
     ]) {
       await access(join(dir, file));
     }
@@ -227,6 +219,8 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'docs/product'), join(dir, 'docs/product'), { recursive: true });
     await cp(join(process.cwd(), 'docs/architecture'), join(dir, 'docs/architecture'), { recursive: true });
     await cp(join(process.cwd(), 'docs/roadmap'), join(dir, 'docs/roadmap'), { recursive: true });
+    await mkdir(join(dir, 'src/examples/opencode-engine'), { recursive: true });
+    await cp(join(process.cwd(), 'src/examples/opencode-engine/README.md'), join(dir, 'src/examples/opencode-engine/README.md'));
     await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/workflows'), join(dir, 'src/packages/sdlc/workflows'), { recursive: true });
@@ -534,21 +528,22 @@ test('upgrade previews and applies a missing owned projection', async () => {
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
-test('SDLC upgrade previews and applies the packaged gh-aw projection', async () => {
-  const dir = await fixture();
+test('foundation initialization and upgrade preserve optional workflow ownership', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-optional-workflows-'));
   try {
     assert.equal(run(dir, 'init').status, 0);
-    const missing = join(dir, '.github/workflows/lighthouse-sdlc-triage.md');
-    await rm(missing);
-    const preview = run(dir, 'upgrade', ['--scope', 'sdlc', '--format', 'json']);
-    assert.equal(preview.status, 0, preview.stderr);
-    const plan = JSON.parse(preview.stdout);
-    assert.equal(plan.changes.find((change) => change.path === '.github/workflows/lighthouse-sdlc-triage.md').classification, 'additive');
-    assert.equal(plan.changes.find((change) => change.path === '.github/workflows/lighthouse-sdlc-triage.lock.yml').classification, 'unchanged');
-    assert.equal(run(dir, 'upgrade', ['--scope', 'sdlc', '--apply']).status, 0);
-    assert.equal(await access(missing).then(() => true).catch(() => false), true);
-    const state = JSON.parse(await readFile(join(dir, '.lighthouse/upgrade.json'), 'utf8'));
-    assert.equal(state.files['.github/workflows/lighthouse-sdlc-triage.md'].scope, 'sdlc');
+    const path = join(dir, '.github/workflows/lighthouse-sdlc-refine.md');
+    await assert.rejects(access(path));
+    await writeFile(path, 'product-owned workflow');
+    const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    manifest.managed.splice(manifest.managed.indexOf('.lighthouse/sdlc.json') + 1, 0, '.github/workflows/lighthouse-sdlc-router.yml', '.github/workflows/lighthouse-sdlc-refine.md', '.github/workflows/lighthouse-sdlc-refine.lock.yml', '.github/workflows/shared/lighthouse-sdlc-stage.md');
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest));
+    const result = run(dir, 'upgrade', ['--scope', 'sdlc', '--apply']);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(await readFile(path, 'utf8'), 'product-owned workflow');
+    const upgraded = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    assert.equal(upgraded.managed.includes('.github/workflows/lighthouse-sdlc-refine.md'), false);
+    await assert.rejects(access(join(dir, '.github/workflows/lighthouse-sdlc-implement.lock.yml')));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 

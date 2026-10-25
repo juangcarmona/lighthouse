@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -10,23 +9,6 @@ const templateRoot = resolve(packageRoot, 'assets/dotnet-template');
 const cliPackage = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
 const require = createRequire(import.meta.url);
 const sdlcContract = JSON.parse(await readFile(require.resolve('@juangcarmona/lighthouse-sdlc/contract.json'), 'utf8'));
-const sdlcPackageRoot = dirname(require.resolve('@juangcarmona/lighthouse-sdlc/contract.json'));
-const sdlcWorkflowPaths = [
-  '.github/workflows/lighthouse-sdlc-router.yml',
-  '.github/workflows/lighthouse-sdlc-triage.md',
-  '.github/workflows/lighthouse-sdlc-triage.lock.yml',
-  '.github/workflows/lighthouse-sdlc-refine.md',
-  '.github/workflows/lighthouse-sdlc-refine.lock.yml',
-  '.github/workflows/lighthouse-sdlc-propose.md',
-  '.github/workflows/lighthouse-sdlc-propose.lock.yml',
-  '.github/workflows/lighthouse-sdlc-implement.md',
-  '.github/workflows/lighthouse-sdlc-implement.lock.yml',
-  '.github/workflows/lighthouse-sdlc-integrate.md',
-  '.github/workflows/lighthouse-sdlc-integrate.lock.yml',
-  '.github/workflows/lighthouse-sdlc-review.md',
-  '.github/workflows/lighthouse-sdlc-review.lock.yml',
-  '.github/workflows/shared/lighthouse-sdlc-stage.md',
-];
 const args = process.argv.slice(2);
 const target = args[0] ? resolve(args[0]) : null;
 const name = args.includes('--name') ? args[args.indexOf('--name') + 1] : null;
@@ -109,7 +91,7 @@ try {
     product: name, application: { shape: 'backend', stacks: ['dotnet'] }, profiles: ['dotnet-backend'],
     integrations: { productShape: null, arcShape: null },
     packages: { sdlc: { name: '@juangcarmona/lighthouse-sdlc', version: sdlcContract.version } },
-    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', ...sdlcWorkflowPaths, '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json', 'docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
+    managed: ['LIGHTHOUSE.md', 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.lighthouse/sdlc.json', '.agents/skills/lighthouse-init/SKILL.md', '.lighthouse/upgrade.json', '.lighthouse/commands.json', 'docs/profiles/dotnet/README.md', 'docs/profiles/dotnet/adoption.md', 'docs/profiles/dotnet/architecture.md', 'docs/profiles/dotnet/guardrails.md', 'docs/profiles/dotnet/practices.md', 'docs/profiles/dotnet/testing-and-development.md', 'docs/profiles/dotnet/use-cases.md', '.agents/skills/lighthouse-dotnet/SKILL.md'],
     repository: {
       layout: ['src', 'docs', 'infra', 'scripts'], publicSite: { enabled: true },
       conventions: { commits: 'conventional', branchPattern: '^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)/[1-9]\\d*-[a-z0-9]+(?:-[a-z0-9]+)*$' },
@@ -126,14 +108,6 @@ try {
 
   const initialized = (await import('node:child_process')).spawnSync(process.execPath, [resolve(stage, 'scripts/lighthouse.mjs'), 'init'], { cwd: stage, encoding: 'utf8' });
   if (initialized.status !== 0) throw new Error(initialized.stderr || 'Projection generation failed.');
-  await copy(resolve(sdlcPackageRoot, 'workflows'), resolve(stage, '.github/workflows'));
-  const upgradePath = resolve(stage, '.lighthouse/upgrade.json');
-  const upgrade = JSON.parse(await readFile(upgradePath, 'utf8'));
-  for (const path of sdlcWorkflowPaths) {
-    const content = await readFile(resolve(stage, path), 'utf8');
-    upgrade.files[path] = { hash: createHash('sha256').update(content).digest('hex'), scope: 'sdlc' };
-  }
-  await writeFile(upgradePath, `${JSON.stringify(upgrade, null, 2)}\n`);
   if (existing) await rmdir(target);
   await rename(stage, target);
   process.stdout.write(`Created ${name} in ${target}. Run dotnet restore ${name}.slnx, then npm run verify.\n`);

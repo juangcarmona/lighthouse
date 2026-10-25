@@ -5,7 +5,16 @@ trap 'rm -rf "$validation_dir"' EXIT
 curl --fail --silent --show-error --location https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz -o "$validation_dir/actionlint.tar.gz"
 printf '%s  %s\n' 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 "$validation_dir/actionlint.tar.gz" | sha256sum --check
 tar -xzf "$validation_dir/actionlint.tar.gz" -C "$validation_dir" actionlint
-mkdir -p "$validation_dir/consumer/.git"
-node src/packages/sdlc/src/install-issue-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
+git init -q "$validation_dir/consumer"
+if ! gh aw --version >/dev/null 2>&1; then gh extension install github/gh-aw --pin v0.93.2; fi
+node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
-"$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-issue-router.yml" "$validation_dir/consumer/.github/workflows/lighthouse-issue-refine.yml"
+"$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+# gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
+# actionlint 1.7.12 cannot resolve. Scope these exceptions to compiler output only.
+"$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" \
+  -ignore 'unexpected key "queue" for "concurrency" section' \
+  -ignore 'property "workflow_(repository|sha|ref|file_path)" is not defined' \
+  -ignore 'property "admission-(result|max-ai-credits(-threat-detection|-evals)?)" is not defined' \
+  -ignore 'property "start-mcp-gateway" is not defined' \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml"

@@ -18,4 +18,6 @@ The decisions live beside this index in this section directory. This section is 
 | Publish validated Lighthouse packages through protected release automation | [ADR-0006](0006-public-package-release.md) | Public package distribution and release control |
 | Separate workflow entry, autonomy and integration authority | [ADR-0008](0008-separate-entry-and-autonomy.md) | Routing, authorization and host continuation |
 
+| Run repository workers through gh-aw | [ADR-0009](0009-gh-aw-repository-execution.md) | Opt-in workflows, OpenCode execution and host isolation |
+
 The product model and completed Product Changes define product intent for application profiles, semantic initialization, authority adoption and SDLC behavior. Those artifacts are not ADRs. The arc42 sections describe the current realized structure and name remaining target behavior without treating it as implemented.

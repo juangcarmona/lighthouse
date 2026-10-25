@@ -52,6 +52,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - name: Validate installed issue workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/verify-issue-workflows.sh
 
   clean-consumer:

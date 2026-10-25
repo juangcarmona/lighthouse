@@ -1,8 +1,7 @@
-import { readFile, writeFile, appendFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import http from 'node:http';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
@@ -86,47 +85,6 @@ async function main(command) {
   }
   if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { return; } }
   const snapshot = JSON.parse(await readFile(join(dir, 'request.json'), 'utf8'));
-  if (command === 'execute') {
-    const root = resolve(env.LIGHTHOUSE_SOURCE), files = [];
-    async function walk(folder, relative = '') {
-      for (const entry of await readdir(folder, { withFileTypes: true })) {
-        if (['.git', 'node_modules', '.lighthouse-tools'].includes(entry.name)) continue;
-        const path = relative ? `${relative}/${entry.name}` : entry.name;
-        if (entry.isDirectory()) await walk(join(folder, entry.name), path);
-        else if (entry.isFile()) files.push({ path, data: (await readFile(join(folder, entry.name))).toString('base64') });
-        // Symlinks are never followed into host credentials or other checkouts.
-      }
-    }
-    await walk(root);
-    const input = JSON.stringify({ id: snapshot.runId, files, context: JSON.parse(await readFile(join(dir, 'context.json'), 'utf8')) });
-    if (Buffer.byteLength(input) > 48 * 1024 * 1024) throw Error('Source snapshot exceeds executor bound');
-    let gotResult = false;
-    await new Promise((ok, no) => {
-      const request = http.request({ socketPath: env.LIGHTHOUSE_EXECUTOR_SOCKET ?? '/run/lighthouse/engine.sock', path: '/execute', method: 'POST', headers: { 'content-type': 'application/json' }, timeout: 650000 }, response => {
-        let pending = '';
-        response.setEncoding('utf8'); response.on('data', chunk => {
-          pending += chunk;
-          if (pending.length > 262144) { request.destroy(Error('Executor output exceeds bound')); return; }
-          let newline;
-          while ((newline = pending.indexOf('\n')) >= 0) {
-            const line = pending.slice(0, newline); pending = pending.slice(newline + 1);
-            try {
-              const value = JSON.parse(line);
-              if (value.type === 'progress') console.log(`Engine: ${value.phase}; elapsed=${value.elapsedSeconds ?? 0}s; tool events=${value.toolEvents ?? 0}`);
-              if (value.type === 'error') request.destroy(Error(value.message));
-              if (value.type === 'result') { gotResult = true; pendingWrites.push(writeFile(join(dir, 'envelope.json'), JSON.stringify(value.envelope))); }
-            } catch (error) { request.destroy(error); }
-          }
-        });
-        response.on('end', () => gotResult && response.statusCode === 200 ? ok() : no(Error(`Executor returned no result (${response.statusCode})`)));
-        response.on('error', no);
-      });
-      const cancel = () => request.destroy(Error('Workflow cancelled'));
-      process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
-      request.on('timeout', () => request.destroy(Error('Engine exceeded deadline'))); request.on('error', no); request.end(input);
-    });
-    await Promise.all(pendingWrites); return;
-  }
   if (command === 'validate') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
     const errors = validateStageEnvelope(value, snapshot);
@@ -163,5 +121,4 @@ async function main(command) {
   }
   throw Error('Unknown issue workflow command');
 }
-const pendingWrites = [];
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(error => { console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1; });

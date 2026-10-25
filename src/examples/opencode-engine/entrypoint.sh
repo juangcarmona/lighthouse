@@ -10,4 +10,4 @@ if [ "${1:-}" = cleanup-session ]; then
 fi
 if [ "$#" -gt 0 ]; then exec opencode "$@"; fi
 : "${ENGINE_SESSION:?}" "${ENGINE_MODEL:?}"
-opencode run --standalone --auto --session "$ENGINE_SESSION" --model "$ENGINE_MODEL" --file /input/context.json 'Execute the single Lighthouse stage described in the attached trusted context. Read source only under /workspace. Write the complete JSON envelope to /output/envelope.json. Report missing context honestly and stop at the declared gate.' >/dev/null
+exec opencode run --standalone --auto --session "$ENGINE_SESSION" --model "$ENGINE_MODEL" --format json --print-logs --log-level info --file /input/context.json "$(cat /input/prompt.txt)"
