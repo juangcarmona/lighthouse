@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.11.0
+
+### Minor Changes
+
+- 7c90031: # Optional GitHub repository profile
+
+  Add the optional recommended GitHub repository profile. Adopters can declare checks, contribution policy and reasoned exceptions, preview remote changes, apply a reviewed plan by hash and verify live settings while preserving stronger protections and unrelated work.
+
 ## 0.10.0
 
 ### Minor Changes

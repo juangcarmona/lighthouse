@@ -1,5 +1,18 @@
 # @juangcarmona/lighthouse
 
+## 0.10.0
+
+### Minor Changes
+
+- 7c90031: # Optional GitHub repository profile
+
+  Add the optional recommended GitHub repository profile. Adopters can declare checks, contribution policy and reasoned exceptions, preview remote changes, apply a reviewed plan by hash and verify live settings while preserving stronger protections and unrelated work.
+
+### Patch Changes
+
+- Updated dependencies [7c90031]
+  - @juangcarmona/lighthouse-sdlc@0.11.0
+
 ## 0.9.2
 
 ### Patch Changes
