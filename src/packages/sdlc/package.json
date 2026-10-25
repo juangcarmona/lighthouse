@@ -28,6 +28,7 @@
     "meta-commands",
     "README.md",
     "host-contract.md",
+    "completion.md",
     "routes.json",
     "stages.json",
     "schemas",

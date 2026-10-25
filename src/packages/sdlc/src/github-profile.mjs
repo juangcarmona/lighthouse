@@ -41,7 +41,7 @@ const defaults = {
 export function validateGithubProfile(config) {
   const errors = [];
   if (!record(config)) return ['GitHub profile must be an object.'];
-  const keys = ['schemaVersion', 'profileVersion', 'repository', 'intake', 'requiredChecks', 'requiredApprovals', 'evidenceBranch', 'releaseWorkflowReady', 'overrides'];
+  const keys = ['schemaVersion', 'profileVersion', 'repository', 'intake', 'requiredChecks', 'requiredApprovals', 'evidenceBranch', 'releaseWorkflowReady', 'overrides', 'completion'];
   for (const key of Object.keys(config)) if (!keys.includes(key)) errors.push(`Unknown profile field: ${key}.`);
   if (config.schemaVersion !== 1 || config.profileVersion !== githubProfileVersion) errors.push('Unsupported GitHub profile version.');
   if (!safeRepo(config.repository)) errors.push('repository must be owner/name on github.com.');
@@ -58,6 +58,10 @@ export function validateGithubProfile(config) {
   }
   if (config.evidenceBranch != null && (typeof config.evidenceBranch !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_/-]*$/.test(config.evidenceBranch) || config.evidenceBranch.includes('//') || config.evidenceBranch.endsWith('/'))) errors.push('evidenceBranch must be a literal branch name, not a pattern.');
   if (config.releaseWorkflowReady !== undefined && typeof config.releaseWorkflowReady !== 'boolean') errors.push('releaseWorkflowReady must be boolean.');
+  if (config.completion !== undefined) {
+    const c = config.completion;
+    if (!record(c) || Object.keys(c).sort().join(',') !== 'postMergeWorkflows,publishEvidence' || typeof c.publishEvidence !== 'boolean' || !Array.isArray(c.postMergeWorkflows) || !c.postMergeWorkflows.length || c.postMergeWorkflows.length > 8 || new Set(c.postMergeWorkflows).size !== c.postMergeWorkflows.length || c.postMergeWorkflows.some(w => !/^[a-zA-Z0-9][a-zA-Z0-9_-]*\.ya?ml$/.test(w))) errors.push('completion requires publishEvidence and 1-8 unique postMergeWorkflows filenames.');
+  }
   if (config.overrides !== undefined && !record(config.overrides)) errors.push('overrides must be an object.');
   for (const [id, override] of Object.entries(record(config.overrides) ? config.overrides : {})) {
     if (!Object.hasOwn(defaults, id) && !['rules.main', 'rules.evidence'].includes(id)) { errors.push(`Unknown override: ${id}.`); continue; }

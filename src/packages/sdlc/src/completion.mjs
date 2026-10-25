@@ -1,0 +1,129 @@
+import { createHash } from 'node:crypto';
+import { taskDigest } from './issue-actions.mjs';
+import { validateGithubProfile } from './github-profile.mjs';
+
+export const fingerprint = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+export const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
+export function authorizeCompletion(event, env, stage) {
+  const input = event.inputs ?? {};
+  if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER || env.GITHUB_TRIGGERING_ACTOR !== env.GITHUB_REPOSITORY_OWNER || input.stage !== stage || !['integrate', 'review'].includes(stage)) throw Error('Completion requires a fresh owner dispatch');
+  if (!/^[1-9][0-9]*$/.test(input.issue ?? '') || !/^[1-9][0-9]*$/.test(input.pull_request ?? '') || !sha(input.head)) throw Error('Issue, pull request and full accepted head SHA are required');
+  if (!['false', 'true', false, true, undefined].includes(input.merge)) throw Error('Invalid merge authorization');
+  const merge = input.merge === true || input.merge === 'true';
+  if (stage === 'review' && merge) throw Error('Review cannot authorize a merge');
+  return { issue: Number(input.issue), pr: Number(input.pull_request), head: input.head, merge };
+}
+export async function list(api, path, field) {
+  const all = [];
+  for (let page = 1; page <= 10; page++) {
+    const response = await api(`${path}${path.includes('?') ? '&' : '?'}per_page=100&page=${page}`);
+    const batch = field ? response[field] : response;
+    if (!Array.isArray(batch)) throw Error('Invalid GitHub collection');
+    all.push(...batch);
+    if (batch.length < 100) return all;
+  }
+  throw Error('GitHub collection exceeds completion bounds');
+}
+export async function loadProfile(api, repository, revision) {
+  const file = await api(`contents/.lighthouse/github.json?ref=${revision}`);
+  const profile = JSON.parse(Buffer.from(file.content, 'base64').toString());
+  const errors = validateGithubProfile(profile);
+  if (errors.length) throw Error(errors.join('\n'));
+  if (profile.repository !== repository || !profile.evidenceBranch || profile.completion?.publishEvidence !== true) throw Error('Completion needs the adopted GitHub profile and explicit evidence publication');
+  return profile;
+}
+export async function evidenceProtection(api, branch) {
+  const rules = await list(api, `rules/branches/${encodeURIComponent(branch)}`);
+  for (const type of ['deletion', 'non_fast_forward']) {
+    const matches = rules.filter(r => r.type === type && r.ruleset_source_type === 'Repository');
+    let protectedRule = false;
+    for (const rule of matches) {
+      const source = await api(`rulesets/${rule.ruleset_id}`);
+      if (source.enforcement === 'active' && Array.isArray(source.bypass_actors) && source.bypass_actors.length === 0) protectedRule = true;
+    }
+    if (!protectedRule) throw Error(`Evidence branch lacks enforced ${type} protection without bypass`);
+  }
+}
+export async function requiredPolicy(api, branch, profile) {
+  const rules = await list(api, `rules/branches/${encodeURIComponent(branch)}`);
+  const classic = await api(`branches/${encodeURIComponent(branch)}/protection`, 'GET', undefined, true);
+  if (rules.some(r => r.type === 'merge_queue')) throw Error('Merge queues require a queue-aware adapter');
+  const checks = rules.filter(r => r.type === 'required_status_checks').flatMap(r => r.parameters.required_status_checks.map(c => ({ context: c.context, app: c.integration_id ?? null })));
+  for (const c of classic?.required_status_checks?.checks ?? []) checks.push({ context: c.context, app: c.app_id ?? null });
+  for (const context of classic?.required_status_checks?.contexts ?? []) if (!checks.some(c => c.context === context)) checks.push({ context, app: null });
+  for (const configured of profile.requiredChecks) if (!checks.some(c => c.context === configured.context && c.app === configured.integrationId)) throw Error(`Configured required check is not enforced: ${configured.context}`);
+  return { rules, classic, checks: [...new Map(checks.map(c => [JSON.stringify(c), c])).values()] };
+}
+export async function checkCommit(api, revision, required) {
+  const runs = await list(api, `commits/${revision}/check-runs?filter=latest`, 'check_runs');
+  const statuses = await list(api, `commits/${revision}/statuses`);
+  const latest = [...new Map(statuses.map(s => [s.context, s]).reverse()).values()];
+  return required.map(c => {
+    const matches = runs.filter(r => r.name === c.context && (c.app === null || r.app?.id === c.app));
+    const status = latest.find(s => s.context === c.context);
+    const passed = (matches.length > 0 || c.app === null && status?.state === 'success') && matches.every(r => r.head_sha === revision && r.status === 'completed' && ['success', 'neutral', 'skipped'].includes(r.conclusion)) && (!status || status.state === 'success');
+    return { ...c, revision, status: passed ? 'passed' : matches.length || status ? 'failed' : 'unavailable', checks: matches.map(r => ({ id: r.id, url: r.html_url, status: r.status, conclusion: r.conclusion, app: r.app?.id })), commitStatus: status ? { state: status.state, url: status.target_url } : null };
+  });
+}
+export async function inspectCompletion(api, repository, owner, input, stage) {
+  const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);
+  const profile = await loadProfile(api, repository, current.sha);
+  if (profile.evidenceBranch === repo.default_branch) throw Error('Evidence branch must be separate');
+  await evidenceProtection(api, profile.evidenceBranch);
+  const pr = await api(`pulls/${input.pr}`), issue = await api(`issues/${input.issue}`);
+  if (pr.head.sha !== input.head || pr.head.repo?.full_name !== repository || pr.base.repo.full_name !== repository || pr.base.ref !== repo.default_branch || issue.pull_request || issue.user.login !== owner) throw Error('Accepted PR identity or work-item authority changed');
+  if (stage === 'review' && !pr.merged || stage === 'integrate' && !pr.merged && (pr.state !== 'open' || pr.draft || issue.state !== 'open')) throw Error('PR is not eligible for this stage');
+  const comments = await list(api, `issues/${input.issue}/comments`);
+  const answers = comments.filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at }));
+  const policy = await requiredPolicy(api, repo.default_branch, profile);
+  let checkedRevision = pr.merged ? pr.merge_commit_sha : pr.head.sha;
+  if (!pr.merged && sha(pr.merge_commit_sha)) {
+    const test = await api(`git/commits/${pr.merge_commit_sha}`, 'GET', undefined, true);
+    if (test?.parents?.some(p => p.sha === input.head) && test.parents.some(p => p.sha === current.sha)) {
+      const mergeChecks = await checkCommit(api, pr.merge_commit_sha, policy.checks);
+      if (mergeChecks.some(c => c.checks.length || c.commitStatus)) checkedRevision = pr.merge_commit_sha;
+    }
+  }
+  const checks = await checkCommit(api, checkedRevision, policy.checks);
+  const reviews = await list(api, `pulls/${input.pr}/reviews`);
+  const prAnswers = (await list(api, `issues/${input.pr}/comments`)).filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at, url: c.html_url }));
+  const files = await list(api, `pulls/${input.pr}/files`);
+  if (files.length !== pr.changed_files) throw Error('Incomplete changed-file inventory');
+  const binding = { repository, issue: input.issue, pr: input.pr, head: input.head, base: pr.merged ? pr.merge_commit_sha : current.sha, branch: repo.default_branch, intent: taskDigest(issue, answers), policy: fingerprint({ profile, policy }), reviews: fingerprint(reviews.map(r => ({ id: r.id, state: r.state, commit_id: r.commit_id }))), prIntent: fingerprint({ title: pr.title, body: pr.body, prAnswers }), files: fingerprint(files.map(f => ({ path: f.filename, sha: f.sha, status: f.status }))) };
+  return { binding, workItem: { title: issue.title, body: issue.body, ownerAnswers: answers }, pullRequest: { title: pr.title, body: pr.body, ownerAnswers: prAnswers, reviews: reviews.map(r => ({ author: r.user.login, body: r.body, state: r.state, commit: r.commit_id, url: r.html_url })) }, profile, policy, checks, checkedRevision, merged: pr.merged, merge: pr.merged ? pr.merge_commit_sha : null, mergeable: pr.mergeable === true && ['clean', 'unstable', 'has_hooks'].includes(pr.mergeable_state), title: issue.title, issueUrl: issue.html_url, prUrl: pr.html_url, labels: issue.labels.map(l => l.name), files: files.map(f => ({ path: f.filename, status: f.status, sha: f.sha })), currentRevision: current.sha, mergeActor: pr.merged_by?.login ?? null };
+}
+export function assertFresh(before, after) {
+  if (fingerprint(before.binding) !== fingerprint(after.binding) || before.merged !== after.merged) throw Error('Completion evidence is stale: head, base, intent, policy, review or scope changed');
+}
+export function assertChecks(observation) {
+  if (!observation.checks.length || observation.checks.some(c => c.status !== 'passed')) throw Error('Required checks are missing, pending or failed');
+}
+export async function mergeAccepted(api, snapshot, recheck) {
+  const fresh = await recheck();
+  if (fresh.merged && fresh.binding.head === snapshot.binding.head) return { state: 'merged', sha: fresh.merge, recovered: true };
+  assertFresh(snapshot, fresh); assertChecks(fresh);
+  if (!fresh.mergeable) throw Error('GitHub has not declared the PR mergeable under its rules');
+  try {
+    const result = await api(`pulls/${snapshot.binding.pr}/merge`, 'PUT', { sha: snapshot.binding.head, merge_method: 'squash' });
+    if (!result.merged || !sha(result.sha)) throw Error('GitHub did not confirm merge');
+    return { state: 'merged', sha: result.sha, recovered: false };
+  } catch (error) {
+    // Reconcile once; a lost response is not permission to repeat the merge.
+    const pr = await api(`pulls/${snapshot.binding.pr}`);
+    if (pr.merged && pr.head.sha === snapshot.binding.head && sha(pr.merge_commit_sha)) return { state: 'merged', sha: pr.merge_commit_sha, recovered: true };
+    throw error;
+  }
+}
+export async function postMergeRuns(api, snapshot, revision, dispatch = false) {
+  const results = [];
+  for (const workflow of snapshot.profile.completion.postMergeWorkflows) {
+    const runs = await list(api, `actions/workflows/${encodeURIComponent(workflow)}/runs?head_sha=${revision}`, 'workflow_runs');
+    const matching = runs.filter(r => r.head_sha === revision && r.head_branch === snapshot.binding.branch && ['push', 'workflow_dispatch'].includes(r.event)).sort((a, b) => b.id - a.id)[0];
+    if (!matching && dispatch) {
+      if ((await api(`commits/${encodeURIComponent(snapshot.binding.branch)}`)).sha !== revision) throw Error('Default branch advanced before post-merge dispatch');
+      await api(`actions/workflows/${encodeURIComponent(workflow)}/dispatches`, 'POST', { ref: snapshot.binding.branch });
+    }
+    results.push({ workflow, revision, status: matching?.status === 'completed' ? matching.conclusion === 'success' ? 'passed' : 'failed' : 'unavailable', runId: matching?.id ?? null, url: matching?.html_url ?? null });
+  }
+  return results;
+}

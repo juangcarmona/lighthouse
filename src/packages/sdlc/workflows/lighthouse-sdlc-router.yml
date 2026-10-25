@@ -17,7 +17,20 @@ on:
         required: true
         default: refine
         type: choice
-        options: [refine, propose, implement]
+        options: [refine, propose, implement, integrate, review]
+      pull_request:
+        description: PR number for integrate or review
+        required: false
+        type: string
+      head:
+        description: Full accepted PR head SHA for integrate or review
+        required: false
+        type: string
+      merge:
+        description: Explicitly authorize integrating this accepted PR head
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 concurrency:
@@ -79,5 +92,29 @@ jobs:
       issues: write
       pull-requests: write
     uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+  integrate:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'integrate'
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-integrate.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+  review:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'review'
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-review.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}

@@ -1,6 +1,6 @@
 # Process evidence delivered with the pull request
 
-Status: accepted convention; automated protected-branch publication remains pending. Repository-owned workflows now deliver implementation PRs with execution reports and retrospectives as expiring Actions artifacts. The permanent branch and post-integration record below still require publisher support and adopter verification. Lighthouse owns the convention; an independent host collects, retains and publishes the evidence. This adds no lifecycle stage or publication grant.
+Status: accepted convention. Repository-owned workflows deliver implementation PRs with execution reports and retrospectives as expiring Actions artifacts. The optional [completion adapter](../../src/packages/sdlc/completion.md) publishes bounded integration and review reports to the protected branch after explicit adoption. Automatic migration of earlier binary evidence and permanent pre-review implementation publication remain pending. Lighthouse owns the convention; an independent host collects, retains and publishes the evidence. This adds no lifecycle stage or publication grant.
 
 ## Delivery and ownership
 
