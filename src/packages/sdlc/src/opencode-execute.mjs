@@ -125,14 +125,14 @@ async function main() {
     clearTimeout(timer);
     completionOutput(envelope, request);
     if (implementing) {
-      const changes = collectChanges(baseline, await sourceFiles(source), request.implementation.policy);
+      const changes = collectChanges(baseline, await sourceFiles(source, baseline), request.implementation.policy);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
       await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       const checkBaseline = await sourceFiles(candidate);
       const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled });
-      if (collectChanges(checkBaseline, await sourceFiles(candidate), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
+      if (collectChanges(checkBaseline, await sourceFiles(candidate, checkBaseline), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       if (request.implementation.policy.reviewRequired) {
         envelope.result.status = 'blocked';
@@ -157,7 +157,7 @@ async function main() {
     if (implementing && baseline) {
       try {
         try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
-        const changes = collectChanges(baseline, await sourceFiles(source), request.implementation.policy);
+        const changes = collectChanges(baseline, await sourceFiles(source, baseline), request.implementation.policy);
         await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
         await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
         console.error(progressText('Recovery', 'Retained bounded candidate changes and available evidence. This failed run cannot publish a PR.'));

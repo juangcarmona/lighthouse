@@ -31,11 +31,11 @@ test('policy and change boundaries reject traversal, control files, changed plan
 test('snapshot captures additions and deletions, excludes build output and rejects symlinks', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-implement-'));
   try {
-    await mkdir(join(root, 'src')); await writeFile(join(root, 'src/old.js'), 'old');
+    await mkdir(join(root, 'src')); await writeFile(join(root, 'src/old.js'), 'old'); await writeFile(join(root, '.gitignore'), 'node_modules/\n');
     const before = await sourceFiles(root);
     await rm(join(root, 'src/old.js')); await writeFile(join(root, 'src/app.js'), 'new');
     await mkdir(join(root, 'node_modules')); await writeFile(join(root, 'node_modules/ignored'), 'dependency');
-    const changes = collectChanges(before, await sourceFiles(root), policy);
+    const changes = collectChanges(before, await sourceFiles(root, before), policy);
     assert.equal(changes.length, 2); assert.equal(changes.find(c => c.path.endsWith('old.js')).content, null);
     const candidate = join(root, 'candidate'); await mkdir(candidate);
     await materializeCandidate(before, changes, candidate);
@@ -88,4 +88,19 @@ test('patch progress names changed files without exposing the patch contents', a
   const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'patch', state: { status: 'completed', input: { patchText: '*** Begin Patch\n*** Add File: /workspace/src/app.ts\n+private payload\n*** Update File: /workspace/tests/app.test.ts\n*** End Patch' } } } }));
   assert.match(visible, /src\/app.ts.*tests\/app.test.ts/);
   assert.ok(!visible.includes('payload'));
+});
+
+test('Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lh-ignore-'));
+  try {
+    await writeFile(join(root, '.gitignore'), 'test-reports/\n');
+    await writeFile(join(root, 'protected.md'), 'original');
+    const before = await sourceFiles(root);
+    await mkdir(join(root, 'test-reports')); await writeFile(join(root, 'test-reports/output.json'), 'generated');
+    assert.equal(collectChanges(before, await sourceFiles(root, before), policy).length, 0);
+    await writeFile(join(root, '.gitignore'), 'test-reports/\nprotected.md\n'); await writeFile(join(root, 'protected.md'), 'changed');
+    const after = await sourceFiles(root, before);
+    assert.equal(after.get('protected.md').content.toString(), 'changed');
+    assert.throws(() => collectChanges(before, after, policy), /out-of-scope/);
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
