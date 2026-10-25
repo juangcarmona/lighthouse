@@ -1,10 +1,11 @@
 // gh-aw engine adapter: one foreground container, no service or orchestration state.
 import { readFile, writeFile, mkdir, mkdtemp, readdir, copyFile, chmod, rm, lstat } from 'node:fs/promises';
 import { dirname, join, resolve, isAbsolute } from 'node:path';
-import { openSync, closeSync } from 'node:fs';
+import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { validateStageEnvelope } from './host-contract.mjs';
+import { formatOpenCodeEvent, progressText } from './opencode-progress.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -53,7 +54,7 @@ async function main() {
   await mkdir(source); await mkdir(output); await chmod(output, 0o777);
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, slot, cancelled = false;
+  let child, timer, heartbeat, slot, cancelled = false;
   const cancel = () => { cancelled = true; child?.kill('SIGTERM'); try { docker(['rm', '-f', name]); } catch {} };
   process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
   try {
@@ -72,31 +73,55 @@ async function main() {
       '--tmpfs', '/tmp:rw,size=256m,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=256m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace,readonly`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, config.image];
+    const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
+    await mkdir(dirname(eventsPath), { recursive: true });
+    await writeFile(eventsPath, '', { mode: 0o600 });
+    const started = Date.now();
+    let lastVisible = started;
+    const report = text => { lastVisible = Date.now(); console.log(redactLog(text)); };
+    const eventLine = line => {
+      const redacted = redactLog(line);
+      appendFileSync(eventsPath, redacted + '\n');
+      const visible = formatOpenCodeEvent(redacted);
+      if (visible) report(visible);
+    };
+    report(progressText('Run', `Refining issue #${request.issue}. Public progress and tool activity appear below; structured events are retained as an artifact.`));
+    heartbeat = setInterval(() => {
+      if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
+    }, 10000);
     await new Promise((ok, no) => {
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+      const consume = line => {
+        try {
+          if (line.length > 1024 * 1024) throw Error('Engine log line exceeds bound');
+          eventLine(line);
+        } catch (error) { no(error); cancel(); }
+      };
       // Keep line boundaries across chunks so credential shapes cannot bypass redaction.
       for (const stream of [child.stdout, child.stderr]) {
         let pending = ''; stream.setEncoding('utf8');
-        stream.on('data', chunk => { pending += chunk; let end; while ((end = pending.indexOf('\n')) >= 0) { process.stdout.write(redactLog(pending.slice(0, end + 1))); pending = pending.slice(end + 1); } if (pending.length > 1024 * 1024) { no(Error('Engine log line exceeds bound')); cancel(); } });
-        stream.on('end', () => { if (pending) process.stdout.write(redactLog(pending) + '\n'); });
+        stream.on('data', chunk => { if (cancelled) return; pending += chunk; let end; while ((end = pending.indexOf('\n')) >= 0) { consume(pending.slice(0, end)); if (cancelled) return; pending = pending.slice(end + 1); } if (pending.length > 1024 * 1024) { no(Error('Engine log line exceeds bound')); cancel(); } });
+        stream.on('end', () => { if (pending && !cancelled) consume(pending); });
       }
-      child.on('error', no); child.on('exit', code => code === 0 && !cancelled ? ok() : no(Error('OpenCode failed or was cancelled')));
+      child.on('error', no); child.on('close', code => code === 0 && !cancelled ? ok() : no(Error('OpenCode failed or was cancelled')));
       timer = setTimeout(cancel, 600000);
     });
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
     const envelope = JSON.parse(await readFile(result, 'utf8'));
     const completion = completionOutput(envelope, request);
+    report(progressText('Result', redactLog(envelope.effect.body)));
+    report(progressText('Run', `Validated outcome: ${envelope.result.status}. The publisher will recheck authority before updating the issue.`));
     await writeFile(join(runDir, 'envelope.json'), JSON.stringify(envelope));
     // gh-aw requires a terminal safe output even when a separate job owns publication.
     await mkdir(dirname(env.GH_AW_SAFE_OUTPUTS), { recursive: true });
     await writeFile(env.GH_AW_SAFE_OUTPUTS, JSON.stringify(completion) + '\n');
   } finally {
-    clearTimeout(timer); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
+    clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
     try { docker(['rm', '-f', name]); } catch {}
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     if (slot !== undefined) closeSync(slot);
     await rm(dir, { recursive: true, force: true });
   }
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { console.error(redactLog(error.message)); process.exitCode = 1; });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { console.error(progressText('Engine error', redactLog(error.message))); process.exitCode = 1; });

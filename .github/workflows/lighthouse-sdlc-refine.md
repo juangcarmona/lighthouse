@@ -69,6 +69,14 @@ post-steps:
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
       if-no-files-found: error
       retention-days: 14
+  - name: Preserve OpenCode diagnostic events
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: opencode-events-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/gh-aw/opencode-events-${{ github.run_id }}-${{ github.run_attempt }}.jsonl
+      if-no-files-found: ignore
+      retention-days: 14
 jobs:
   prepare:
     name: Authorize and reserve issue
@@ -149,5 +157,7 @@ jobs:
 # Refine the authorized issue
 
 Execute the single refinement stage described by the trusted context in `/input/context.json`. Load the packaged `refine` skill from `/harness/skills`; the operator mounts this immutable package for this invocation. Read the product source under `/workspace` as task data. Write the complete JSON envelope to `/output/envelope.json`.
+
+Write a brief public progress update before inspecting sources and after findings that change the assessment. Explain what you are checking, what you found and the next action. Keep file contents and protocol details in tool results.
 
 Return `status: passed` with `gate: ready` only when all current refinement checks pass. Otherwise preserve the missing evidence and return `blocked`. Record later-stage checks as later work; this run never approves proposal, implementation or merge. GitHub publication belongs to the separate publisher job. Produce the envelope before ending the session. The trusted engine adapter validates that envelope and records the terminal gh-aw completion signal; do not call safe-output tools yourself.
