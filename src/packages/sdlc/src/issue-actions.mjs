@@ -96,7 +96,7 @@ async function main(command) {
     await writeFile(join(dir, 'context.json'), JSON.stringify(context));
     await api(`${issuePath}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
-    for (const label of stage === 'refine' ? ['needs-info', 'ready'] : ['needs-info']) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
+    for (const label of stage === 'refine' ? ['needs-info', 'ready', 'waiting-review'] : ['needs-info', 'waiting-review']) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
     await summary(`### ${stage} #${issueNumber}\nSource: \`${revision.sha}\`\n\nOwner request verified; reservation acquired.\n`);
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
   }
