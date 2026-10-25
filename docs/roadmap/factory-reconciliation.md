@@ -2,6 +2,8 @@
 
 The implementation sequence below closes the gap between installing Lighthouse and delivering a real change through an external execution host. The ownership map is in [architecture section 03](../architecture/03-context-and-scope/README.md#delivery-authorities); the accepted host boundary is [ADR-0007](../architecture/09-architecture-decisions/0007-host-execution-boundary.md). This plan does not replace product intent or claim runtime completion.
 
+The accepted [process-evidence convention](process-evidence.md) delivers a report and retrospective with each implementation PR, keeps publishable artifacts on a protected evidence branch, and completes the record after integration. Host support and adopter protection must be verified before activation.
+
 ## Evidence at reconciliation
 
 Inspected baseline: commit `434dfab`, Lighthouse `0.9.0`, SDLC `0.8.0`, 2026-10-24. Local work on other branches is not part of this baseline. The package is implemented; execution of its complete workflow in a clean consumer remains unproved here.
