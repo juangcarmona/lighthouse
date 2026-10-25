@@ -40,7 +40,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
     if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
     console.log(`Host check ${i + 1}: ${command.join(' ')}`);
     let log = '', pending = '';
-    const args = ['run', '--rm', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', '4g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', '--mount', `type=bind,src=${workspace},dst=/workspace`, '--workdir', '/workspace', '--entrypoint', command[0], config.image, ...command.slice(1)];
+    const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', '4g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', '--mount', `type=bind,src=${workspace},dst=/workspace`, '--workdir', '/workspace', '--entrypoint', command[0], config.image, ...command.slice(1)];
     const exitCode = await new Promise(resolve => {
       const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const timer = setTimeout(() => { child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); }, remaining);
