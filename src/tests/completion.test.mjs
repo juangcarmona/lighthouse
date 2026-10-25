@@ -170,3 +170,15 @@ test('pending checks remain unavailable with an explicit pending state, not fail
   const runs = await postMergeRuns(async () => ({ workflow_runs: [{ id: 1, head_sha: merged, head_branch: 'main', event: 'workflow_dispatch', status: 'in_progress', conclusion: null }] }), observation, merged);
   assert.equal(runs[0].status, 'unavailable'); assert.equal(runs[0].state, 'pending');
 });
+
+test('additional check observations can support review without silently changing required policy', async () => {
+  const { observeChecks, assertCitedChecks } = await import('../packages/sdlc/src/completion.mjs');
+  const api = async p => p.includes('check-runs') ? { check_runs: [{ id: 10, name: 'foundation', app: { id: 7 }, head_sha: head, status: 'completed', conclusion: 'success', html_url: 'https://github.com/owner/repo/actions/runs/1/job/10' }] } : [];
+  const observedChecks = await observeChecks(api, head);
+  assert.equal(observedChecks[0].status, 'passed');
+  const e = { result: { evidence: [{ id: observedChecks[0].evidenceId, source: observedChecks[0].url, status: 'passed' }] } };
+  assert.doesNotThrow(() => assertCitedChecks(e, { observedChecks }, { observedChecks }));
+  assert.throws(() => assertCitedChecks(e, { observedChecks }, { observedChecks: [] }), /Cited CI/);
+  assert.throws(() => assertCitedChecks(e, { observedChecks }, { observedChecks: [{ ...observedChecks[0], status: 'failed' }] }), /Cited CI/);
+  assert.doesNotThrow(() => assertCitedChecks({ result: { evidence: [] } }, { observedChecks }, { observedChecks: [{ ...observedChecks[0], status: 'failed' }] }));
+});

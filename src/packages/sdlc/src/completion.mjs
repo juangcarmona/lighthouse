@@ -60,6 +60,25 @@ export async function requiredPolicy(api, branch, profile) {
   for (const configured of profile.requiredChecks) if (!checks.some(c => c.context === configured.context && c.app === configured.integrationId)) throw Error(`Configured required check is not enforced: ${configured.context}`);
   return { rules, classic, checks: [...new Map(checks.map(c => [JSON.stringify(c), c])).values()] };
 }
+export async function observeChecks(api, revision) {
+  const runs = await list(api, `commits/${revision}/check-runs?filter=latest`, 'check_runs');
+  const statuses = await list(api, `commits/${revision}/statuses`);
+  const latest = [...new Map(statuses.map(s => [s.context, s]).reverse()).values()];
+  return [
+    ...runs.map(r => ({ evidenceId: `github-check:${r.id}`, name: r.name, revision, app: r.app?.id, status: r.head_sha !== revision ? 'failed' : r.status !== 'completed' ? 'unavailable' : ['success', 'neutral', 'skipped'].includes(r.conclusion) ? 'passed' : 'failed', state: r.status === 'completed' ? r.conclusion : 'pending', url: r.html_url })),
+    ...latest.map(s => ({ evidenceId: `github-status:${s.id}`, name: s.context, revision, status: s.state === 'success' ? 'passed' : s.state === 'pending' ? 'unavailable' : 'failed', state: s.state, url: s.target_url })),
+  ];
+}
+export function assertCitedChecks(envelope, before, after) {
+  for (const evidence of envelope.result.evidence) {
+    if (evidence.status !== 'passed') continue;
+    const cited = (before.observedChecks ?? []).filter(c => evidence.id === c.evidenceId || c.url && evidence.source === c.url);
+    for (const check of cited) {
+      const current = (after.observedChecks ?? []).find(c => c.evidenceId === check.evidenceId && c.revision === check.revision);
+      if (check.status !== 'passed' || current?.status !== 'passed') throw Error(`Cited CI evidence changed or is unavailable: ${check.name}`);
+    }
+  }
+}
 export async function checkCommit(api, revision, required) {
   const runs = await list(api, `commits/${revision}/check-runs?filter=latest`, 'check_runs');
   const statuses = await list(api, `commits/${revision}/statuses`);
@@ -96,12 +115,13 @@ export async function inspectCompletion(api, repository, owner, input, stage) {
     }
   }
   const checks = await checkCommit(api, checkedRevision, policy.checks);
+  const observedChecks = (await Promise.all([...new Set([pr.head.sha, checkedRevision])].map(revision => observeChecks(api, revision)))).flat();
   const reviews = await list(api, `pulls/${input.pr}/reviews`);
   const prAnswers = (await list(api, `issues/${input.pr}/comments`)).filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at, url: c.html_url }));
   const files = await list(api, `pulls/${input.pr}/files`);
   if (files.length !== pr.changed_files) throw Error('Incomplete changed-file inventory');
   const binding = { repository, issue: input.issue, pr: input.pr, head: input.head, base: pr.merged ? pr.merge_commit_sha : current.sha, branch: repo.default_branch, intent: taskDigest(issue, answers), policy: fingerprint({ profile, policy }), reviews: fingerprint(reviews.map(r => ({ id: r.id, state: r.state, commit_id: r.commit_id }))), prIntent: fingerprint({ title: pr.title, body: pr.body, prAnswers }), files: fingerprint(files.map(f => ({ path: f.filename, sha: f.sha, status: f.status }))) };
-  return { binding, finalization: { executor: 'trusted publisher after current-stage validation', observedIssue: { state: issue.state, labels: issue.labels.map(l => l.name) }, observedPullRequest: { state: pr.state, merged: pr.merged, labels: (pr.labels ?? []).map(l => l.name) }, onPassed: completionEffects(stage, 'passed'), onBlocked: completionEffects(stage, 'blocked'), pullRequestLabels: 'preserve', reservation: 'agent-working is added after this observation and released by host cleanup for every outcome' }, workItem: { title: issue.title, body: issue.body, ownerAnswers: answers }, pullRequest: { title: pr.title, body: pr.body, ownerAnswers: prAnswers, reviews: reviews.map(r => ({ author: r.user.login, body: r.body, state: r.state, commit: r.commit_id, url: r.html_url })) }, profile, policy, checks, checkedRevision, merged: pr.merged, merge: pr.merged ? pr.merge_commit_sha : null, mergeable: pr.mergeable === true && ['clean', 'unstable', 'has_hooks'].includes(pr.mergeable_state), title: issue.title, issueUrl: issue.html_url, prUrl: pr.html_url, labels: issue.labels.map(l => l.name), files: files.map(f => ({ path: f.filename, status: f.status, sha: f.sha })), currentRevision: current.sha, mergeActor: pr.merged_by?.login ?? null };
+  return { binding, observedChecks, finalization: { executor: 'trusted publisher after current-stage validation', observedIssue: { state: issue.state, labels: issue.labels.map(l => l.name) }, observedPullRequest: { state: pr.state, merged: pr.merged, labels: (pr.labels ?? []).map(l => l.name) }, onPassed: completionEffects(stage, 'passed'), onBlocked: completionEffects(stage, 'blocked'), pullRequestLabels: 'preserve', reservation: 'agent-working is added after this observation and released by host cleanup for every outcome' }, workItem: { title: issue.title, body: issue.body, ownerAnswers: answers }, pullRequest: { title: pr.title, body: pr.body, ownerAnswers: prAnswers, reviews: reviews.map(r => ({ author: r.user.login, body: r.body, state: r.state, commit: r.commit_id, url: r.html_url })) }, profile, policy, checks, checkedRevision, merged: pr.merged, merge: pr.merged ? pr.merge_commit_sha : null, mergeable: pr.mergeable === true && ['clean', 'unstable', 'has_hooks'].includes(pr.mergeable_state), title: issue.title, issueUrl: issue.html_url, prUrl: pr.html_url, labels: issue.labels.map(l => l.name), files: files.map(f => ({ path: f.filename, status: f.status, sha: f.sha })), currentRevision: current.sha, mergeActor: pr.merged_by?.login ?? null };
 }
 export function assertFresh(before, after) {
   if (fingerprint(before.binding) !== fingerprint(after.binding) || before.merged !== after.merged) throw Error('Completion evidence is stale: head, base, intent, policy, review or scope changed');
