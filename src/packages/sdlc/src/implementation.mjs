@@ -1,0 +1,98 @@
+import { readFile, writeFile, mkdir, readdir, lstat } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
+import { proposalRoot } from './proposal.mjs';
+
+const hash = value => createHash('sha256').update(value).digest('hex');
+const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
+const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/');
+const generated = new Set(['node_modules', 'dist', '.git', '.cache', '.vite', 'coverage', 'test-results', 'playwright-report']);
+export const changesDigest = changes => hash(JSON.stringify(changes));
+export function validateImplementationPolicy(policy, issue) {
+  if (!policy || Object.keys(policy).sort().join(',') !== 'checks,paths,proposal,scope' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
+  if (!Array.isArray(policy.paths) || !policy.paths.length || policy.paths.length > 40 || policy.paths.some(p => !safePath(p.replace(/\/$/, '')) || protectedPath(p) || p.startsWith('openspec/') && p !== `${proposalRoot(issue)}/tasks.md` || p.startsWith('.github/') && !/^\.github\/workflows\/[\w-]+\.ya?ml$/.test(p))) throw Error('Implementation policy needs explicit safe paths; only this proposal tasks file may change');
+  if (!Array.isArray(policy.checks) || !policy.checks.length || policy.checks.length > 12 || policy.checks.some(c => !Array.isArray(c) || !c.length || c.length > 30 || c.some(a => typeof a !== 'string' || !a || a.length > 1000 || /[\0\r\n]/.test(a)))) throw Error('Implementation policy needs bounded command argument arrays');
+  return policy;
+}
+export const withinScope = (path, policy) => safePath(path) && !protectedPath(path) && policy.paths.some(p => p.endsWith('/') ? path.startsWith(p) : path === p);
+
+export async function loadImplementation(api, issue, owner, revision, defaultBranch) {
+  const config = await api(`contents/.lighthouse/implement.json?ref=${revision}`);
+  const policy = validateImplementationPolicy(JSON.parse(Buffer.from(config.content, 'base64').toString())[issue], issue);
+  const pr = await api(`pulls/${policy.proposal}`);
+  if (!pr.merged || pr.merged_by?.login !== owner || pr.base.ref !== defaultBranch || pr.base.repo.full_name !== pr.head.repo?.full_name) throw Error('Implementation requires a proposal merged by the repository owner');
+  const files = await api(`pulls/${policy.proposal}/files?per_page=100`);
+  if (files.length !== pr.changed_files || files.length < 4 || files.length > 24 || files.some(f => !f.filename.startsWith(`${proposalRoot(issue)}/`) || f.status !== 'added')) throw Error('Proposal must contain only the added OpenSpec change');
+  for (const required of ['proposal.md', 'design.md', 'tasks.md']) if (!files.some(f => f.filename === `${proposalRoot(issue)}/${required}`)) throw Error('Incomplete approved proposal');
+  for (const file of files) {
+    const current = await api(`contents/${file.filename}?ref=${revision}`);
+    if (current.sha !== file.sha) throw Error('Approved proposal changed; review a new proposal before implementation');
+  }
+  return { policy, proposal: { number: pr.number, url: pr.html_url, head: pr.head.sha, merge: pr.merge_commit_sha, root: proposalRoot(issue) } };
+}
+
+// Enumerate regular source only; never follow engine-created links or publish dependency/build output.
+export async function sourceFiles(root) {
+  const files = new Map(); let bytes = 0;
+  async function visit(dir, relative = '') {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      if (generated.has(entry.name)) continue;
+      const path = relative ? `${relative}/${entry.name}` : entry.name, target = join(dir, entry.name);
+      const stat = await lstat(target);
+      if (!safePath(path) || stat.isSymbolicLink() || !stat.isDirectory() && !stat.isFile()) throw Error(`Unsafe implementation file: ${path}`);
+      if (stat.isDirectory()) await visit(target, path);
+      else {
+        bytes += stat.size;
+        if (bytes > 64 * 1024 * 1024 || files.size >= 5000) throw Error('Implementation source exceeds bounds');
+        files.set(path, { content: await readFile(target), mode: stat.mode & 0o111 ? '100755' : '100644' });
+      }
+    }
+  }
+  await visit(root); return files;
+}
+export function collectChanges(before, after, policy) {
+  const changes = [];
+  for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
+    const old = before.get(path), current = after.get(path);
+    if (old && current && old.content.equals(current.content)) continue;
+    changes.push({ path, mode: old?.mode ?? '100644', content: current ? current.content.toString('base64') : null });
+  }
+  return validateChanges(changes, policy);
+}
+export function validateChanges(changes, policy) {
+  if (!Array.isArray(changes) || changes.length > 512) throw Error('Implementation exceeds 512 changed files');
+  const seen = new Set(); let bytes = 0;
+  for (const file of changes) {
+    if (!file || Object.keys(file).sort().join(',') !== 'content,mode,path' || !withinScope(file.path, policy) || seen.has(file.path) || !['100644', '100755'].includes(file.mode) || file.content !== null && (typeof file.content !== 'string' || Buffer.from(file.content, 'base64').toString('base64') !== file.content)) throw Error('Invalid or out-of-scope implementation change');
+    seen.add(file.path);
+    const buffer = Buffer.from(file.content ?? '', 'base64'); bytes += buffer.length;
+    if (buffer.length > 4 * 1024 * 1024 || bytes > 16 * 1024 * 1024) throw Error('Implementation exceeds byte bounds');
+    if (/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]{15,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----/.test(buffer.toString())) throw Error('Credential-shaped content rejected');
+  }
+  return changes;
+}
+export async function materializeCandidate(before, changes, destination) {
+  const files = new Map(before);
+  for (const file of changes) if (file.content === null) files.delete(file.path); else files.set(file.path, { content: Buffer.from(file.content, 'base64') });
+  for (const [path, file] of files) { await mkdir(dirname(join(destination, path)), { recursive: true, mode: 0o777 }); await writeFile(join(destination, path), file.content, { mode: 0o666 }); }
+}
+export function validateCheckReceipt(receipt, request, changes) {
+  if (receipt?.runId !== request.runId || receipt.sourceRevision !== request.sourceRevision || receipt.changesDigest !== changesDigest(changes) || !Array.isArray(receipt.checks) || receipt.checks.length !== request.implementation.policy.checks.length) throw Error('Implementation check receipt identity mismatch');
+  for (let i = 0; i < receipt.checks.length; i++) if (JSON.stringify(receipt.checks[i].command) !== JSON.stringify(request.implementation.policy.checks[i]) || !Number.isInteger(receipt.checks[i].exitCode)) throw Error('Implementation check receipt command mismatch');
+  return receipt.checks.every(c => c.exitCode === 0);
+}
+export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite) {
+  validateChanges(changes, snapshot.implementation.policy);
+  if (!changes.length) throw Error('No implementation changes to publish');
+  const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
+  for (const file of changes) {
+    const sha = file.content === null ? null : (await api('git/blobs', 'POST', { content: file.content, encoding: 'base64' })).sha;
+    entries.push({ path: file.path, mode: file.mode, type: 'blob', sha });
+  }
+  const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
+  const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
+  await beforeWrite();
+  const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
+  await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
+  return api('pulls', 'POST', { title: `Implementation for #${snapshot.issue}: ${snapshot.title.slice(0, 140)}`, head: branch, base: snapshot.defaultBranch, draft, body: `${body}\n\nRelated to #${snapshot.issue}. [Approved proposal](${snapshot.implementation.proposal.url}).\n\n[Execution, checks and process evidence](${runUrl}). Download the implementation evidence and OpenCode events artifacts. Review remains required; this workflow never merges or closes the issue.\n\n<!-- lighthouse-implementation:${snapshot.runId} -->` });
+}

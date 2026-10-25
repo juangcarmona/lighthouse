@@ -31,7 +31,7 @@ test('a proposal needs an explicit owner request; an answer never starts proposa
   assert.equal(routeIssue(event, 'stranger', 'owner', 'issues').run, false);
   assert.equal(routeIssue({ ...event, label: { name: 'ready' } }, 'owner', 'owner', 'issues').run, false);
   assert.equal(routeIssue({ action: 'created', issue, comment: { user: { login: 'owner', type: 'User' } } }, 'owner', 'owner', 'issue_comment').run, false);
-  assert.equal(routeIssue({ inputs: { issue: '18', stage: 'implement' } }, 'owner', 'owner', 'workflow_dispatch').run, false);
+  assert.equal(routeIssue({ inputs: { issue: '18', stage: 'integrate' } }, 'owner', 'owner', 'workflow_dispatch').run, false);
 });
 
 test('refinement admission binds successful workflow, issue, source, intent, result and publication marker', () => {

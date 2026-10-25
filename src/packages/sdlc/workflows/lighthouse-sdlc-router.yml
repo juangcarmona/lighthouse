@@ -17,7 +17,7 @@ on:
         required: true
         default: refine
         type: choice
-        options: [refine, propose]
+        options: [refine, propose, implement]
 permissions:
   contents: read
 concurrency:
@@ -30,7 +30,7 @@ jobs:
       github.actor == github.repository_owner &&
       !github.event.issue.pull_request &&
       (github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose')) ||
+       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement')) ||
        (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'needs-info')))
     runs-on: ubuntu-24.04
     outputs:
@@ -68,5 +68,16 @@ jobs:
       issues: write
       pull-requests: write
     uses: ./.github/workflows/lighthouse-sdlc-propose.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+  implement:
+    needs: route
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'implement'
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}

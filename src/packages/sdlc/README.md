@@ -24,7 +24,7 @@ The optional router accepts an owner-added `refine` label, an owner reply to a p
 
 Preview installation with `node node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs <repository> <immutable-lighthouse-commit>`. Install gh-aw v0.93.2, then add `--apply` to write and compile the selected sources. Existing different files require review and `--replace-reviewed`. Commit the Markdown, router, shared engine definition, generated lock and action pins together. Set the repository variable `LIGHTHOUSE_AUTOMATION_ENABLED=true` after provisioning the runner and disabling previous routers.
 
-The installer enables `refine` by default. Add `--with-propose` to install the proposal worker as well. Other stage templates remain reference assets; implementation and subsequent delivery stages are not operational. Foundation initialization and upgrades do not install workflows. On upgrade from an older baseline, existing workflows remain untouched and leave the foundation's managed-file inventory. Review and remove obsolete projections explicitly.
+The installer enables `refine` by default. Add `--with-propose` to install the proposal worker as well. Add `--with-implement` for implementation (including proposal support). Integration and review templates remain reference assets. Foundation initialization and upgrades do not install workflows. On upgrade from an older baseline, existing workflows remain untouched and leave the foundation's managed-file inventory. Review and remove obsolete projections explicitly.
 
 Create the `propose` request label and the amber `waiting-review` attention label when opting in. The proposal worker requires `ready` and a successful refinement from the same source revision and owner intent. Preparation authenticates its Actions request and result artifacts; a label or copied comment is insufficient. If evidence expired or the source changed, run `refine` again first. The explicit owner request authorizes proposal work. It does not approve the resulting design or implementation.
 
@@ -67,3 +67,24 @@ Evidence is explicit: an absent field appears in `missingEvidence`, a check that
 The package is a source of lifecycle instructions and contracts; an adopter's host adapter decides where provider-specific projections are installed.
 
 The [external host contract](host-contract.md) supports owner-authorized `refine` labels, schema-1 compatibility and the shared deterministic event router. Work reservations use `agent-working` and `human-working`; the host owns the durable lock.
+
+## Implementation delivery
+
+Opt in with `--with-implement`, provision the implementation-capable engine image, and create an `implement` request label. An owner label or manual dispatch authorizes one execution. Admission requires an OpenSpec proposal PR merged by the repository owner, its unchanged artifacts on the default branch, and an entry keyed by issue number in `.lighthouse/implement.json`:
+
+```json
+{
+  "18": {
+    "proposal": 33,
+    "scope": "Implement the approved feature; owner visual review remains required.",
+    "paths": ["src/", "tests/", "package.json", "package-lock.json", "openspec/changes/issue-18-proposal/tasks.md"],
+    "checks": [["npm", "ci", "--ignore-scripts"], ["npm", "test"], ["npm", "run", "build"]]
+  }
+}
+```
+
+This is executable repository policy, reviewed with the workflow adoption. Paths ending in `/` allow a subtree; other entries allow one file. Keep the scope specific to the approved change or slice. Harness configuration, installed agents, Git metadata, credential files, workflows and approved design/specification files cannot be changed by this worker. Workflow changes need a separate maintainer-authored change; the publisher has no workflow-write permission. Only the proposal tasks file is writable under OpenSpec. Labels do not replace this policy or approve later stages.
+
+OpenCode edits a temporary copy, with 30 minutes to return an envelope. The adapter validates at most 512 changed regular files, 4 MiB per file and 16 MiB total, excluding dependency/build directories. It reconstructs the exact candidate and reruns the configured commands in a fresh container without provider or GitHub credentials. Checks share a ten-minute limit. Only the candidate files enter the PR; logs, screenshots and the retrospective remain in the `implementation-evidence` Actions artifact for 30 days. Result receipts and redacted OpenCode events retain their existing 14-day lifetime. These artifacts are evidence delivery, not permanent archival.
+
+The publisher rechecks source, owner answers, reservation, proposal and policy before creating a new branch. Required human review or failed host checks produces a draft PR with blockers and `waiting-review`; it does not mark `done`, close the issue or start integration. An open implementation PR stops a second implementation run. Review and finish that PR before requesting another slice. The worker does not overwrite or resume an existing branch. The subscription engine still has outbound networking and provider authentication inside its container; shell permissions are not credential isolation. Use only owner-authorized work on the dedicated host.
