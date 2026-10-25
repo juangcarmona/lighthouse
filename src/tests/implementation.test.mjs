@@ -75,3 +75,10 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   assert.ok(!calls.some(c => ['git/refs', 'pulls'].includes(c.path)));
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
 });
+
+test('implementation shell progress identifies the command without dumping its output', async () => {
+  const { formatOpenCodeEvent } = await import('../packages/sdlc/src/opencode-progress.mjs');
+  const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'shell', state: { status: 'completed', input: { command: 'npm run build' }, output: 'raw protocol and payload' } } }));
+  assert.match(visible, /shell npm run build/);
+  assert.ok(!visible.includes('payload'));
+});

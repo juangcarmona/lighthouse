@@ -15,7 +15,7 @@ export function formatOpenCodeEvent(line) {
   if (event.type === 'text' && typeof part.text === 'string') return progressText('OpenCode', part.text);
   if (event.type === 'tool_use') {
     const state = part.state ?? {}, input = state.input ?? {};
-    const target = input.path ?? input.filePath ?? input.file_path;
+    const target = input.path ?? input.filePath ?? input.file_path ?? (part.tool === 'shell' ? input.command?.split('\n')[0] : undefined);
     const description = `${part.tool ?? 'tool'}${typeof target === 'string' ? ` ${target}` : ''}`.slice(0, 240);
     if (state.status === 'completed') return progressText('Tool', `${description} — completed`);
     if (state.status === 'error') return progressText('Tool error', `${description}: ${String(state.error ?? 'see diagnostic events').slice(0, 500)}`);
