@@ -60,8 +60,7 @@ export function checkRefinement(predecessor, envelope, run, current, marker) {
   if (predecessor.sourceRevision !== current.sourceRevision || predecessor.taskDigest !== current.taskDigest) throw Error('Refinement is stale; run refine against the current source and owner intent first');
 }
 
-export async function loadRefinement(api, repo, reports, current) {
-  const report = [...reports].reverse().find(c => c.user.login === 'github-actions[bot]' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
+export async function loadStageReport(api, repo, report, current) {
   const marker = report?.body.match(/<!-- lighthouse-actions:([a-f0-9]{64}) -->/)?.[1];
   const runId = report?.body.match(/\[Workflow run\]\(https:\/\/github\.com\/[^/]+\/[^/]+\/actions\/runs\/(\d+)\)/)?.[1];
   if (!marker || !runId) throw Error('No authenticated refinement report; run refine first');
@@ -78,9 +77,16 @@ export async function loadRefinement(api, repo, reports, current) {
       await writeFile(archive, bytes);
       values[kind] = JSON.parse(execFileSync('python3', ['-c', 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); matches=[i for i in z.infolist() if i.filename==sys.argv[2]]; assert len(matches)==1 and matches[0].file_size<=128000, "Invalid artifact member"; data=z.open(matches[0]).read(128001); assert len(data)<=128000; sys.stdout.buffer.write(data)', archive, file], { encoding: 'utf8', maxBuffer: 128000, timeout: 10000 }));
     }
-    checkRefinement(values.input, values.result, run, current, marker);
-    return { request: values.input, envelope: values.result, report: report.html_url };
+    if (run.status !== 'completed' || run.conclusion !== 'success' || !['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || String(run.id) !== String(values.input.workflowRunId) || run.head_sha !== values.input.sourceRevision || values.input.issue !== current.issue || marker !== values.input.runId) throw Error('Stage report identity mismatch');
+    return { request: values.input, envelope: values.result, report: report.html_url, run, marker };
   } finally { await rm(dir, { recursive: true, force: true }); }
+}
+
+export async function loadRefinement(api, repo, reports, current) {
+  const report = [...reports].reverse().find(c => c.user.login === 'github-actions[bot]' && (/<!-- lighthouse-stage:refine:passed -->/.test(c.body) || /^## Refinement:/m.test(c.body)) && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
+  const evidence = await loadStageReport(api, repo, report, current);
+  checkRefinement(evidence.request, evidence.envelope, evidence.run, current, evidence.marker);
+  return { request: evidence.request, envelope: evidence.envelope, report: evidence.report };
 }
 
 export async function createProposalPullRequest(api, snapshot, files, body, runUrl, beforeWrite) {

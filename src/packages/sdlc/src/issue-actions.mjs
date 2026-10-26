@@ -4,21 +4,36 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
-import { loadRefinement, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
+import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
-export function routeIssue(event, actor, owner, eventName) {
+export function pendingReply(event, comments) {
+  const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
+  if (!report || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
+  const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
+  const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
+  return ['refine', 'propose'].includes(stage) ? { stage, report } : null;
+}
+
+export function routeIssue(event, actor, owner, eventName, comments = []) {
   if (actor !== owner || event.issue?.pull_request || (event.issue && event.issue.state !== 'open')) return { run: false, reason: 'Unauthorized actor or closed/non-issue target' };
   const labels = event.issue?.labels?.map(x => x.name) ?? [];
   if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
   if (eventName === 'issues' && event.action === 'labeled' && ['refine', 'propose', 'implement'].includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
-  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.includes('needs-info')) return { run: true, stage: 'refine', issue: event.issue.number, reason: 'Owner answered pending refinement' };
+  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
+    const pending = pendingReply(event, comments);
+    if (pending) return { run: true, stage: pending.stage, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
+  }
   if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
   if (eventName === 'workflow_dispatch' && ['refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
   return { run: false, reason: 'No eligible stage event' };
 }
 export const taskDigest = (issue, comments) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: comments.map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
+export function checkReplyInputs(request, issue, answers, report, revision) {
+  const priorAnswers = answers.filter(c => c.created_at < report.created_at);
+  if (request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, priorAnswers)) throw Error('Pending stage inputs changed; refresh refinement before continuing');
+}
 export function checkPublication(snapshot, issue, comments, revision) {
   if (issue.state !== 'open' || issue.pull_request || revision !== snapshot.sourceRevision) throw Error('Issue closed or source revision changed');
   if (issue.labels.some(x => x.name === 'human-working') || !issue.labels.some(x => x.name === 'agent-working')) throw Error('Execution reservation revoked');
@@ -37,8 +52,8 @@ async function main(command) {
   };
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
-  const route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
-  const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? route.issue);
+  let route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
+  const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? event.issue?.number ?? route.issue);
   const issuePath = `issues/${issueNumber}`;
   const comments = async () => {
     const all = [];
@@ -49,6 +64,13 @@ async function main(command) {
     throw Error('Comment history exceeds bounded intake');
   };
   const ownerAnswers = all => all.filter(c => c.user.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
+  if (['route', 'prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment') {
+    const fresh = await api(issuePath);
+    route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
+    if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
+      await api(`issues/comments/${event.comment.id}/reactions`, 'POST', { content: 'eyes' });
+    }
+  }
   if (command === 'route') {
     await output('stage', route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? '');
     console.log(route.reason); await summary(`### Routing\n${route.reason}`); return;
@@ -61,15 +83,15 @@ async function main(command) {
     const revision = await api(`commits/${repository.default_branch}`);
     if (revision.sha !== env.GITHUB_SHA) throw Error('Workflow must run against the current default branch');
     const all = await comments(), answers = ownerAnswers(all);
+    let continuation;
     if (env.GITHUB_EVENT_NAME === 'issue_comment') {
       const reply = answers.find(c => c.id === event.comment.id);
-      const previous = [...all].reverse().find(c => c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-actions:'));
-      // Older host reports can also ask for a reply during migration.
-      const legacy = [...all].reverse().find(c => c.user.login === owner && c.body.includes('<!-- lighthouse-run:'));
-      const question = previous ?? legacy;
-      if (!issue.labels.some(x => x.name === 'needs-info') || !reply || !question || reply.created_at <= question.created_at) throw Error('Reply does not answer a pending refinement');
-      const reports = all.filter(c => c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-actions:'));
-      if (reports.slice(-3).length === 3 && reports.slice(-3).every(c => c.body.includes('Outcome: blocked'))) throw Error('Three unresolved rounds; owner must explicitly add refine');
+      const pending = pendingReply({ ...event, comment: reply }, all);
+      if (!pending || pending.stage !== route.stage) throw Error('Reply no longer answers the pending stage');
+      continuation = await loadStageReport(api, repo, pending.report, { owner, issue: issueNumber });
+      const errors = validateStageEnvelope(continuation.envelope, continuation.request);
+      if (errors.length || continuation.request.stage !== route.stage || continuation.envelope.result.status !== 'blocked') throw Error('Invalid blocked-stage evidence');
+      checkReplyInputs(continuation.request, issue, answers, pending.report, revision.sha);
     }
     const stage = route.stage;
     let predecessor, implementation, seed;
@@ -81,7 +103,8 @@ async function main(command) {
     }
     if (stage === 'propose') {
       if (!issue.labels.some(x => x.name === 'ready')) throw Error('Proposal requires a ready issue');
-      predecessor = await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers) });
+      predecessor = continuation?.request.refinement ?? await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers) });
+      if (predecessor.request.stage !== 'refine' || predecessor.request.issue !== issueNumber || predecessor.request.sourceRevision !== revision.sha || predecessor.envelope.result.status !== 'passed') throw Error('Continuation refinement is invalid');
       const errors = validateStageEnvelope(predecessor.envelope, predecessor.request); if (errors.length) throw Error(errors.join('\n'));
       if (await api(`contents/${proposalRoot(issueNumber)}?ref=${revision.sha}`, 'GET', undefined, true)) throw Error('Proposal directory already exists; review the existing proposal');
       const pulls = await api('pulls?state=open&per_page=100');
@@ -89,7 +112,7 @@ async function main(command) {
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
-    const snapshot = { runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
@@ -114,6 +137,10 @@ async function main(command) {
     await writeFile(join(dir, 'reserved'), id);
     for (const label of stage === 'refine' ? ['needs-info', 'ready', 'waiting-review'] : ['needs-info', 'waiting-review']) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
     await summary(`### ${stage} #${issueNumber}\nSource: \`${revision.sha}\`\n\nOwner request verified; reservation acquired.\n`);
+    if (continuation) {
+      const marker = `<!-- lighthouse-reply:${event.comment.id} -->`;
+      if (!all.some(c => c.user.login === 'github-actions[bot]' && c.body.includes(marker))) await api(`${issuePath}/comments`, 'POST', { body: `Your [reply](${event.comment.html_url}) has been received. Resuming **${stage}** with your decision; this does not approve a later stage. [Follow execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).\n\n${marker}` });
+    }
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
   }
   if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { return; } }
@@ -166,7 +193,8 @@ async function main(command) {
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }
     }
-    const body = `${value.effect.body}${proposalLink}\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}`;
+    const continuationHint = value.result.status === 'blocked' && ['refine', 'propose'].includes(snapshot.stage) ? `\n\nReply here with the requested information or decision; your owner reply resumes **${snapshot.stage}** without authorizing a later stage.` : '';
+    const body = `${value.effect.body}${proposalLink}${continuationHint}\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const label = ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? 'ready' : 'needs-info';
     await api(`${issuePath}/labels`, 'POST', { labels: [label] });
@@ -181,9 +209,25 @@ async function main(command) {
     const issue = await api(issuePath);
     if (issue.labels.some(x => x.name === 'agent-working')) await api(`${issuePath}/labels/agent-working`, 'DELETE');
     try { await readFile(join(dir, 'published')); }
-    catch { await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; request the stage explicitly to retry.'); }
+    catch {
+      if (snapshot.replyTo) await api(`${issuePath}/labels`, 'POST', { labels: [snapshot.stage === 'refine' ? 'needs-info' : 'waiting-review'] });
+      await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; the pending decision remains unfulfilled.');
+    }
     console.log('Execution reservation released'); return;
   }
   throw Error('Unknown issue workflow command');
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(error => { console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1; });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(async error => {
+  console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1;
+  const env = process.env;
+  if (process.argv[2] !== 'prepare' || env.GITHUB_EVENT_NAME !== 'issue_comment' || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER) return;
+  try {
+    const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+    if (event.comment?.user?.login !== env.GITHUB_REPOSITORY_OWNER || event.comment.user.type === 'Bot' || event.issue?.pull_request) return;
+    const response = await fetch(repositoryApiUrl(env.GITHUB_REPOSITORY, `issues/${event.issue.number}/comments`), {
+      method: 'POST', headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
+      body: JSON.stringify({ body: `Your reply was received, but continuation could not be admitted. Your decision is still recorded; no agent started. [See the admission failure](https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}).` }), signal: AbortSignal.timeout(30000),
+    });
+    if (!response.ok) console.error(`::warning::Could not acknowledge admission failure: ${response.status}`);
+  } catch { console.error('::warning::Could not acknowledge admission failure'); }
+});

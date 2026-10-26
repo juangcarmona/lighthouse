@@ -24,7 +24,7 @@ test('proposal boundaries reject traversal, executable/config files, duplicates,
   assert.throws(() => validateProposalFiles(files, 19));
 });
 
-test('a proposal needs an explicit owner request; an answer never starts proposal execution', () => {
+test('a proposal needs an explicit owner request; an unrelated answer never starts proposal execution', () => {
   const issue = { number: 18, state: 'open', labels: [{ name: 'ready' }] };
   const event = { action: 'labeled', issue, label: { name: 'propose' } };
   assert.equal(routeIssue(event, 'owner', 'owner', 'issues').stage, 'propose');

@@ -95,3 +95,9 @@ To recover a failed candidate, an owner may add `"seed": {"base": "<40-character
 ## Integration and review
 
 The optional [GitHub completion adapter](completion.md) adds accepted-head integration and permanent post-integration review to the existing router. Install with `--with-completion` and explicitly adopt evidence publication in the GitHub profile. Merge authorization remains separate from a passed agent assessment.
+
+## Replies to blocked stages
+
+An owner reply to a blocked refinement or proposal resumes that same stage. The router reads current issue state, acknowledges receipt with a reaction and verifies the latest trusted blocked report before admitting work. Preparation validates its run and artifacts, binds the reply to the previous input and adds a source-linked acknowledgement. Proposal replies retain the passed refinement evidence and include all owner answers; they do not approve implementation or merge. Published reports name the stage explicitly.
+
+Passed proposal reports, implementation PR reviews and unrelated comments do not grant continuation. Reservations and existing proposal PRs prevent duplicate work. Changed source, edited earlier intent, unavailable artifacts or withdrawn readiness fail admission rather than reusing stale approval. The owner can request fresh refinement when those inputs change. Direct GitHub replies remain supported independently of any future external-client comment or receipt contract.

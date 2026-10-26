@@ -1,6 +1,6 @@
 # Optional GitHub-native stage adapter; source owned by lighthouse-sdlc.
 name: Lighthouse SDLC router
-run-name: "${{ inputs.stage || github.event.label.name || 'refine' }} #${{ github.event.issue.number || inputs.issue }} · ${{ github.actor }}"
+run-name: "${{ inputs.stage || github.event.label.name || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || inputs.issue }} · ${{ github.actor }}"
 on:
   issues:
     types: [labeled]
@@ -44,8 +44,11 @@ jobs:
       !github.event.issue.pull_request &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement')) ||
-       (github.event_name == 'issue_comment' && contains(github.event.issue.labels.*.name, 'needs-info')))
+       github.event_name == 'issue_comment')
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
     outputs:
       run: ${{ steps.route.outputs.run }}
       issue: ${{ steps.route.outputs.issue }}
@@ -61,6 +64,8 @@ jobs:
           node-version: 24
       - name: Route the authorized event
         id: route
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs route
   refine:
     needs: route
