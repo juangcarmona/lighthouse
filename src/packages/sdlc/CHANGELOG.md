@@ -1,5 +1,32 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.13.0
+
+### Minor Changes
+
+- 35f4d14: # Complete accepted deliveries
+
+  Add optional GitHub completion workflows for accepted-head integration, post-merge verification and permanent review reports, with explicit owner authorization and freshness checks.
+
+- f4eadb3: # Implementation delivery
+
+  Deliver opt-in implementation from owner-approved OpenSpec proposals through repository-owned gh-aw workflows, with isolated edits, independently checked candidates and reviewable PRs.
+
+- 41f2828: <!-- markdownlint-disable MD041 --> Add an opt-in proposal worker that authenticates refinement evidence, produces OpenSpec artifacts and opens a proposal PR through a separate publisher. Keep product source read-only and preserve explicit owner review before implementation.
+
+### Patch Changes
+
+- f9dee28: # Implementation output selection
+
+  Honor repository Git ignore rules for generated implementation reports while preserving tracked-file scope checks and validating the reconstructed candidate. Recover interrupted work from an explicitly selected immutable seed without overwriting an existing branch.
+
+- 12bd27b: # Implementation runtime recovery
+
+  Keep large OpenCode events from aborting valid implementations, configure a writable npm cache and retain bounded candidate changes when execution fails.
+
+- 06ea522: <!-- markdownlint-disable MD041 --> Allow direct prose review when the optional Humanizer skill is unavailable, preserve the declared gate on blocked outcomes, and clear stale proposal attention labels when an owner starts another stage.
+- db60045: <!-- markdownlint-disable MD041 --> Show readable OpenCode progress and validated results in Actions, while retaining redacted structured events for diagnostics and gh-aw telemetry.
+
 ## 0.12.1
 
 ### Patch Changes

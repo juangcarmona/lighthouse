@@ -1,5 +1,19 @@
 # @juangcarmona/lighthouse
 
+## 0.11.2
+
+### Patch Changes
+
+- 365d6eb: <!-- markdownlint-disable MD041 --> Generate authority instructions from the adopter's recorded ProductShape and ArcShape integrations. Scope the documentation-site validation gate to Lighthouse's documentation publication route and preserve the application's own delivery policy.
+- Updated dependencies [35f4d14]
+- Updated dependencies [f4eadb3]
+- Updated dependencies [f9dee28]
+- Updated dependencies [12bd27b]
+- Updated dependencies [06ea522]
+- Updated dependencies [41f2828]
+- Updated dependencies [db60045]
+  - @juangcarmona/lighthouse-sdlc@0.13.0
+
 ## 0.11.1
 
 ### Patch Changes
