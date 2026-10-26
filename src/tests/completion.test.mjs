@@ -182,3 +182,19 @@ test('additional check observations can support review without silently changing
   assert.throws(() => assertCitedChecks(e, { observedChecks }, { observedChecks: [{ ...observedChecks[0], status: 'failed' }] }), /Cited CI/);
   assert.doesNotThrow(() => assertCitedChecks({ result: { evidence: [] } }, { observedChecks }, { observedChecks: [{ ...observedChecks[0], status: 'failed' }] }));
 });
+
+test('current completion jobs cannot become external acceptance evidence or erase required gates', async () => {
+  const { observeChecks } = await import('../packages/sdlc/src/completion.mjs');
+  const checks = [
+    { id: 10, name: 'review / prepare', status: 'in_progress', conclusion: null },
+    { id: 11, name: 'independent verification', status: 'in_progress', conclusion: null },
+    { id: 12, name: 'catalog', status: 'completed', conclusion: 'success' },
+  ].map(c => ({ ...c, app: { id: 7 }, head_sha: head }));
+  const api = async p => p.startsWith('actions/runs/99/jobs?') ? { jobs: [{ check_run_url: 'https://api.github.com/repos/owner/repo/check-runs/10' }] } : p.includes('check-runs') ? { check_runs: checks } : [];
+  const observed = await observeChecks(api, head, '99');
+  assert.deepEqual(observed.map(c => c.evidenceId), ['github-check:11', 'github-check:12']);
+  assert.equal(observed[0].state, 'pending');
+  assert.equal((await checkCommit(api, head, [{ context: 'review / prepare', app: 7 }]))[0].state, 'pending');
+  await assert.rejects(observeChecks(api, head, '../other'), /workflow run/);
+  await assert.rejects(observeChecks(async p => p.startsWith('actions/') ? { jobs: [{}] } : api(p), head, '99'), /check identity/);
+});
