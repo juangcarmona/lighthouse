@@ -37,9 +37,6 @@ on:
         type: boolean
 permissions:
   contents: read
-concurrency:
-  group: lighthouse-sdlc-${{ github.repository }}
-  cancel-in-progress: false
 jobs:
   route:
     if: >-
@@ -73,6 +70,9 @@ jobs:
         run: node src/packages/sdlc/src/issue-actions.mjs route
   refine:
     needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
     if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'refine'
     permissions:
       actions: read
@@ -83,6 +83,9 @@ jobs:
       issue: ${{ needs.route.outputs.issue }}
   propose:
     needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
     if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'propose'
     permissions:
       actions: read
@@ -94,6 +97,9 @@ jobs:
       issue: ${{ needs.route.outputs.issue }}
   implement:
     needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
     if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'implement'
     permissions:
       actions: read
@@ -105,6 +111,9 @@ jobs:
       issue: ${{ needs.route.outputs.issue }}
   integrate:
     needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
     if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'integrate'
     permissions:
       actions: write
@@ -117,6 +126,9 @@ jobs:
       issue: ${{ needs.route.outputs.issue }}
   review:
     needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
     if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'review'
     permissions:
       actions: write
