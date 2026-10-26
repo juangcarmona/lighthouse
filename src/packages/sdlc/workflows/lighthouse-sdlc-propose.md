@@ -44,6 +44,7 @@ steps:
     uses: actions/checkout@v5
     with:
       persist-credentials: false
+      ref: ${{ needs.prepare.outputs.source_revision }}
   - name: Load the pinned harness package
     uses: actions/checkout@v5
     with:
@@ -85,6 +86,9 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
+    outputs:
+      source_revision: ${{ steps.prepare.outputs.source_revision }}
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:
@@ -158,10 +162,10 @@ jobs:
 
 # Propose the authorized change
 
-Execute only `propose` using the trusted context in `/input/context.json` and the packaged `/harness/skills/propose/SKILL.md`. The host has authenticated the passed refinement and the owner's explicit request. Inspect the current read-only source under `/workspace`, including product and architecture policy, relevant existing specifications and active changes.
+Execute only `propose` using the trusted context in `/input/context.json` and the packaged `/harness/skills/propose/SKILL.md`. For an initial proposal, the host supplies the authenticated passed refinement. When `context.proposalReview` is present, revise its existing files using the verified owner feedback and discussion; the request authorizes revision of that candidate, not acceptance or implementation. Inspect the current read-only source under `/workspace`, including product and architecture policy, relevant existing specifications and active changes.
 
 Write brief public progress before source inspection and when you choose an approach or find a blocker. Explain the decision and supporting evidence. Keep tool payloads out of progress messages.
 
 Follow `context.proposal.instructions` from the pinned OpenSpec provider, in order: proposal, specifications and design, then tasks. Return the actual Markdown files in `result.output.files`, each with `path` and `content`, under the authorized `context.proposal.root`. Include a concise proposal, design alternatives and trade-offs, testable specification scenarios, dependency-ordered unchecked tasks, validation and visual evidence plans where applicable. Every refined acceptance criterion needs a corresponding task or specification. Preserve existing product authority. Keep unresolved product decisions explicit rather than inventing approval.
 
-Write `/output/envelope.json` using the supplied schema and identity. A complete proposal returns `passed` with gate `planned`; it is a candidate for owner review, not approved implementation. Return `blocked` with the precise missing decision when the proposal cannot be completed. The separate publisher checks the file boundary, runs OpenSpec strict validation and opens a proposal PR. The engine writes no repository files and has no GitHub credentials. End after the envelope; the trusted adapter records gh-aw completion.
+Write `/output/envelope.json` using the supplied schema and identity. A complete proposal returns `passed` with gate `planned`; it is a candidate for owner review, not approved implementation. Return `blocked` with the precise missing decision when the proposal cannot be completed. The separate publisher checks the file boundary, runs OpenSpec strict validation and opens a proposal PR or updates the existing PR identified by `context.proposalReview`. The engine writes no repository files and has no GitHub credentials. End after the envelope; the trusted adapter records gh-aw completion.
