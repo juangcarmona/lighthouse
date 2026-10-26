@@ -11,7 +11,7 @@ gh extension install github/gh-aw --pin v0.93.2
 gh aw --version
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md"
-if rg -q '^  propose:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
+if rg -q '^  (propose|pull_request_review|pull_request_review_comment):' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
 if rg -q '^  integrate:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi

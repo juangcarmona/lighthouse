@@ -14,7 +14,7 @@ for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
   if (name === 'lighthouse-sdlc-router.yml' && !completion) content = content.split('  integrate:\n')[0].replace(', integrate, review]', ']').replace(/      pull_request:\n[\s\S]*?(?=permissions:)/, '');
   if (name === 'lighthouse-sdlc-router.yml' && !implement) content = content.split('  implement:\n')[0].replace(', implement]', ']').replace(" || github.event.label.name == 'implement'", '');
-  if (name === 'lighthouse-sdlc-router.yml' && !propose) content = content.split('  propose:\n')[0].replace('options: [refine, propose]', 'options: [refine]').replace(" || github.event.label.name == 'propose'", '');
+  if (name === 'lighthouse-sdlc-router.yml' && !propose) content = content.split('  propose:\n')[0].replace('options: [refine, propose]', 'options: [refine]').replace(" || github.event.label.name == 'propose'", '').replace(/  pull_request_review:\n    types: \[submitted\]\n  pull_request_review_comment:\n    types: \[created\]\n/, '').replace(" || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment'", '').replace("      github.actor == github.repository_owner &&\n", "      github.actor == github.repository_owner &&\n      !github.event.issue.pull_request &&\n");
   const path = join(root, '.github/workflows', name);
   const exists = await access(path).then(() => true, () => false);
   if (exists && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing workflow differs: ${path}; review the diff before --replace-reviewed`);
