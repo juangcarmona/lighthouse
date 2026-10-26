@@ -12,3 +12,5 @@ Keep platform capabilities behind explicit adapters and preserve the boundary be
 Use secure storage, OIDC Authorization Code with PKCE, declared permissions and tested deep links. Keep browser cookies and web routing outside the native client.
 
 Run locked restore, analyzers, unit tests and the selected emulator or device journey after a focused change.
+
+Before implementing user authentication, read `assets/profiles/identity.md` in the installed Lighthouse package. Consume an external OIDC provider through maintained middleware. Keep application permissions in the product and record any custom identity-server exception explicitly.

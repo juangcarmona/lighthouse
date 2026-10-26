@@ -78,3 +78,7 @@ A new deterministic checker mechanism or a new engineering practice is outside t
 ## Optional GitHub repository profile
 
 The recommended `github-profile` capability is opt-in. Adopters declare checks, contribution policy and reasoned exceptions in `.lighthouse/github.json`, then use `lighthouse capabilities plan`, `apply` and `verify --id github-profile` to reconcile live settings. No remote settings change during installation or ordinary upgrades. See the [GitHub profile guide](github-profile.md) for configuration, supported controls, authorization and limitations.
+
+## External user identity
+
+Applications that need sign-in follow the [external identity contract](assets/profiles/identity.md). Reuse a shared OIDC provider; Keycloak is the self-hosted reference. The package ships guidance for application integration and acceptance evidence, while the operator owns provider deployment. Existing adopters receive the guidance through a reviewed harness upgrade.

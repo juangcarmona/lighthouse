@@ -84,3 +84,7 @@ Three independent checks govern proposed host execution: the host validates oper
 The initial adapter should grant the engine local workspace capabilities and model access only. Branch publication, issue edits and integration use narrowly scoped publisher credentials. Enforcement loads validators and policy from a pinned trusted installation outside the agent-writable checkout; edits to repository dependencies or workflow files cannot replace the validator for the active run. The adapter must demonstrate its own isolation, cancellation and egress controls; naming gh-aw in a workflow does not preserve gh-aw's controls after replacing its engine path.
 
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
+
+## Application identity
+
+The harness distributes the [external identity contract](../../../src/packages/cli/assets/profiles/identity.md) and exposes it in generated baseline instructions and authenticated application skills. [ADR-0010](../09-architecture-decisions/0010-external-user-identity.md) establishes OIDC consumption, Keycloak as the self-hosted reference and operator ownership of shared identity infrastructure. Product-specific authorization and runtime acceptance tests remain adopter-owned. Foundation verification does not test an identity provider.

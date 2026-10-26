@@ -12,3 +12,5 @@ Keep features aligned with product capabilities and use TanStack Query for serve
 Treat Android and iOS behavior as native evidence. Add web export only when the product selects it and keep that evidence separate.
 
 Run Expo doctor, typecheck, tests and the selected emulator or device journey after a focused change.
+
+Before implementing user authentication, read `assets/profiles/identity.md` in the installed Lighthouse package. Consume an external OIDC provider through maintained middleware. Keep application permissions in the product and record any custom identity-server exception explicitly.

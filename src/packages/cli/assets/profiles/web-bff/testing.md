@@ -12,3 +12,5 @@ Test the session boundary before the browser journey: callback, cookie flags, CS
 The first vertical slice must fail closed when the session is absent, expired or assigned to another user.
 
 Keep provider credentials out of fixtures. Use a deterministic identity or approved test provider that exercises the same cookie and callback boundaries.
+
+Prove callback state and nonce rejection, resource authorization across two users, and the documented behavior during provider outages. Test fixtures alone do not prove integration with the configured OIDC provider; retain a real test-provider sign-in and logout journey before acceptance.
