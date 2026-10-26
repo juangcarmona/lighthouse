@@ -50,6 +50,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'assets/profiles/dotnet/practices.md',
       'assets/profiles/dotnet/testing-and-development.md',
       'assets/profiles/dotnet/use-cases.md',
+      'assets/profiles/identity.md',
       'assets/profiles/mobile-expo/README.md',
       'assets/profiles/mobile-expo/SKILL.md',
       'assets/profiles/mobile-expo/adoption.md',

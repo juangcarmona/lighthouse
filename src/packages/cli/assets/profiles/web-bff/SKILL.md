@@ -14,3 +14,5 @@ Validate origin and CSRF state, allow only declared destinations and routes, and
 Implement logout, revocation, expiry and user switching as tested behavior. Keep rate limiting and observability at the BFF boundary.
 
 Run the session, API, browser and security checks after a focused change. Treat a missing security check as a repair action.
+
+Before implementing user authentication, read `assets/profiles/identity.md` in the installed Lighthouse package. Consume an external OIDC provider through maintained middleware. Keep application permissions in the product and record any custom identity-server exception explicitly.

@@ -35,7 +35,9 @@ test('init creates a projection and refuses to overwrite product work', async ()
   try {
     assert.equal(run(dir, 'init').status, 0);
     assert.equal(run(dir, 'verify').status, 0);
-    assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /# fixture repository baseline/);
+    const baseline = await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8');
+    assert.match(baseline, /# fixture repository baseline/);
+    assert.match(baseline, /assets\/profiles\/identity\.md/);
     for (const file of [
       'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml',
     ]) {
@@ -233,6 +235,8 @@ test('existing-authority adoption validates providers, records only Lighthouse f
       await cp(join(process.cwd(), 'src/packages', pkg, 'src/github-profile.mjs'), join(dir, 'src/packages', pkg, 'src/github-profile.mjs'));
     }
     await cp(join(process.cwd(), 'src/packages/cli/README.md'), join(dir, 'src/packages/cli/README.md'));
+    await mkdir(join(dir, 'src/packages/cli/assets/profiles'), { recursive: true });
+    await cp(join(process.cwd(), 'src/packages/cli/assets/profiles/identity.md'), join(dir, 'src/packages/cli/assets/profiles/identity.md'));
     await cp(join(process.cwd(), 'src/packages/ui/README.md'), join(dir, 'src/packages/ui/README.md'));
     await cp(join(process.cwd(), 'src/packages/ui/DESIGN.md'), join(dir, 'src/packages/ui/DESIGN.md'));
     await symlink(join(process.cwd(), 'node_modules'), join(dir, 'node_modules'), 'dir');
