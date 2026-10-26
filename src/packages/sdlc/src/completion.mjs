@@ -60,12 +60,21 @@ export async function requiredPolicy(api, branch, profile) {
   for (const configured of profile.requiredChecks) if (!checks.some(c => c.context === configured.context && c.app === configured.integrationId)) throw Error(`Configured required check is not enforced: ${configured.context}`);
   return { rules, classic, checks: [...new Map(checks.map(c => [JSON.stringify(c), c])).values()] };
 }
-export async function observeChecks(api, revision) {
+export async function observeChecks(api, revision, workflowRunId = null) {
+  const excluded = new Set();
+  if (workflowRunId !== null) {
+    if (!/^[1-9][0-9]*$/.test(String(workflowRunId))) throw Error('Invalid current workflow run');
+    for (const job of await list(api, `actions/runs/${workflowRunId}/jobs?filter=all`, 'jobs')) {
+      const id = job.check_run_url?.match(/\/check-runs\/([1-9][0-9]*)$/)?.[1];
+      if (!id) throw Error('Current workflow job check identity is unavailable');
+      excluded.add(id);
+    }
+  }
   const runs = await list(api, `commits/${revision}/check-runs?filter=latest`, 'check_runs');
   const statuses = await list(api, `commits/${revision}/statuses`);
   const latest = [...new Map(statuses.map(s => [s.context, s]).reverse()).values()];
   return [
-    ...runs.map(r => ({ evidenceId: `github-check:${r.id}`, name: r.name, revision, app: r.app?.id, status: r.head_sha !== revision ? 'failed' : r.status !== 'completed' ? 'unavailable' : ['success', 'neutral', 'skipped'].includes(r.conclusion) ? 'passed' : 'failed', state: r.status === 'completed' ? r.conclusion : 'pending', url: r.html_url })),
+    ...runs.filter(r => !excluded.has(String(r.id))).map(r => ({ evidenceId: `github-check:${r.id}`, name: r.name, revision, app: r.app?.id, status: r.head_sha !== revision ? 'failed' : r.status !== 'completed' ? 'unavailable' : ['success', 'neutral', 'skipped'].includes(r.conclusion) ? 'passed' : 'failed', state: r.status === 'completed' ? r.conclusion : 'pending', url: r.html_url })),
     ...latest.map(s => ({ evidenceId: `github-status:${s.id}`, name: s.context, revision, status: s.state === 'success' ? 'passed' : s.state === 'pending' ? 'unavailable' : 'failed', state: s.state, url: s.target_url })),
   ];
 }
@@ -95,7 +104,7 @@ export async function checkCommit(api, revision, required) {
 export function completionEffects(stage, status) {
   return stage === 'review' && status === 'passed' ? { add: [], remove: ['waiting-review', 'ready', 'integrate', 'review'], closeIssue: true } : { add: ['waiting-review'], remove: [], closeIssue: false };
 }
-export async function inspectCompletion(api, repository, owner, input, stage) {
+export async function inspectCompletion(api, repository, owner, input, stage, workflowRunId = null) {
   const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);
   const profile = await loadProfile(api, repository, current.sha);
   if (profile.evidenceBranch === repo.default_branch) throw Error('Evidence branch must be separate');
@@ -115,7 +124,7 @@ export async function inspectCompletion(api, repository, owner, input, stage) {
     }
   }
   const checks = await checkCommit(api, checkedRevision, policy.checks);
-  const observedChecks = (await Promise.all([...new Set([pr.head.sha, checkedRevision])].map(revision => observeChecks(api, revision)))).flat();
+  const observedChecks = (await Promise.all([...new Set([pr.head.sha, checkedRevision])].map(revision => observeChecks(api, revision, workflowRunId)))).flat();
   const reviews = await list(api, `pulls/${input.pr}/reviews`);
   const prAnswers = (await list(api, `issues/${input.pr}/comments`)).filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at, url: c.html_url }));
   const files = await list(api, `pulls/${input.pr}/files`);
