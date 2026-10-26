@@ -762,3 +762,30 @@ test('catalog keeps level and kind independent and records pending human review'
   assert.equal(initialReviewStatus({ level: 'required', kind: 'hard', verification: 'semantic' }), 'pending-review');
   assert.equal(initialReviewStatus({ level: 'recommended', kind: 'soft', verification: 'deterministic' }), 'unavailable');
 });
+
+test('generated guidance follows adopted authorities and scopes the documentation-site gate', async () => {
+  for (const integrations of [{ productShape: null, arcShape: null }, { productShape: '0.23.0', arcShape: null }, { productShape: '0.23.0', arcShape: '0.1.6' }]) {
+    for (const enabled of [false, true]) {
+      const dir = await fixture();
+      try {
+        const configured = { ...manifest, integrations, repository: { ...manifest.repository, publicSite: { enabled } } };
+        await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(configured));
+        const result = run(dir, 'init');
+        assert.equal(result.status, 0, result.stderr);
+        const guide = await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8');
+        for (const [key, name] of [['productShape', 'ProductShape'], ['arcShape', 'ArcShape']]) {
+          assert.match(guide, new RegExp(integrations[key] ? `${name} is the adopted authority` : `${name} is not adopted`));
+        }
+        assert.match(guide, /Lighthouse documentation site/);
+        assert.match(guide, /Application deployment follows the repository.s own delivery policy/);
+        if (!enabled) assert.match(guide, /documentation site is disabled/);
+        else if (Object.values(integrations).some(v => v === null)) assert.match(guide, /unavailable until both authorities are adopted and validate successfully/);
+        else assert.match(guide, /publication requires successful ProductShape and ArcShape validation/);
+        const after = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+        assert.deepEqual(after.integrations, integrations);
+        assert.equal(after.repository.publicSite.enabled, enabled);
+        await assert.rejects(access(join(dir, '.product')));
+      } finally { await rm(dir, { recursive: true, force: true }); }
+    }
+  }
+});
