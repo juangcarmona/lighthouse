@@ -198,3 +198,50 @@ test('current completion jobs cannot become external acceptance evidence or eras
   await assert.rejects(observeChecks(api, head, '../other'), /workflow run/);
   await assert.rejects(observeChecks(async p => p.startsWith('actions/') ? { jobs: [{}] } : api(p), head, '99'), /check identity/);
 });
+
+function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, symlink = false } = {}) {
+  const receipt = { state: 'merged', sha: merged, acceptedHead: head, authorization: { merge: true, issue: 42, pr: 50, head }, ...receiptOverrides };
+  const files = completionBundle({ ...request, stage: 'integrate' }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
+  if (mutateFile) mutateFile(files);
+  const prefix = 'docs/process/20261025-42-a-change/runs/123/attempt-0001/post-integration/';
+  const blobs = new Map(), paths = new Map();
+  for (const [name, content] of Object.entries(files)) {
+    const path = prefix + name, sha = createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex');
+    paths.set(path, { path, sha, type: 'blob', mode: symlink && name === 'receipt.json' ? '120000' : '100644' });
+    blobs.set(sha, content);
+    const parts = path.split('/');
+    for (let i = 1; i < parts.length; i++) { const ancestor = parts.slice(0, i).join('/'); paths.set(ancestor, { path: ancestor, type: 'tree', mode: '040000' }); }
+  }
+  const run = { repository: { full_name: 'owner/repo' }, path: '.github/workflows/lighthouse-sdlc-router.yml', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: base, run_attempt: 1, status: 'completed', conclusion: 'success', event: 'workflow_dispatch', ...runOverrides };
+  return async path => {
+    if (path.startsWith('git/ref/')) return { object: { sha: 'd'.repeat(40) } };
+    if (path.startsWith('git/trees/')) return { tree: [...paths.values()], truncated: false };
+    if (path.startsWith('git/blobs/')) { const content = blobs.get(path.slice(10)); return { content: Buffer.from(content).toString('base64'), size: Buffer.byteLength(content), encoding: 'base64' }; }
+    if (path === 'actions/runs/123') return run;
+    throw Error(`Unexpected retained evidence request: ${path}`);
+  };
+}
+
+test('review receives hashed retained integration authorization and a permanent report', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const completion = { ...observation, merged: true, merge: merged };
+  const result = await readIntegrationEvidence(retainedIntegration(), completion);
+  assert.equal(result.receipt.authorization.merge, true); assert.equal(result.receipt.sha, merged);
+  assert.match(result.url, /blob\/dddddddddddddddddddddddddddddddddddddddd/);
+  assert.match(result.report, /Reviewed the delivery/);
+  assert.deepEqual(await readIntegrationEvidence(retainedIntegration(), completion, result), result);
+  const unrelated = { ...completion, binding: { ...completion.binding, head: 'e'.repeat(40) } };
+  assert.equal(await readIntegrationEvidence(retainedIntegration(), unrelated), null);
+  await assert.rejects(readIntegrationEvidence(retainedIntegration(), unrelated, result), /unavailable or stale/);
+});
+
+test('review rejects tampered artifacts, links, uncertain source runs and wrong authorization', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const completion = { ...observation, merged: true, merge: merged };
+  await assert.rejects(readIntegrationEvidence(retainedIntegration({ mutateFile: f => { f['report.md'] += 'tampered'; } }), completion), /hash mismatch/);
+  await assert.rejects(readIntegrationEvidence(retainedIntegration({ symlink: true }), completion), /regular file/);
+  await assert.rejects(readIntegrationEvidence(retainedIntegration({ receiptOverrides: { authorization: { merge: false, issue: 42, pr: 50, head } } }), completion), /receipt does not match/);
+  await assert.rejects(readIntegrationEvidence(retainedIntegration({ mutateFile: f => { const index = JSON.parse(f['evidence-index.json']); index.records[0].sha256 = '0'.repeat(64); f['evidence-index.json'] = JSON.stringify(index); } }), completion), /index does not bind/);
+  for (const runOverrides of [{ conclusion: 'failure' }, { run_attempt: 2 }, { actor: { login: 'outsider' } }, { head_sha: merged }, { event: 'pull_request' }]) await assert.rejects(readIntegrationEvidence(retainedIntegration({ runOverrides }), completion), /not authenticated/);
+  await assert.rejects(readIntegrationEvidence(retainedIntegration(), { ...completion, merge: base }), /index/);
+});

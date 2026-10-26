@@ -31,7 +31,7 @@ Integration binds the current work-item title/body and owner answers, PR content
 
 The merge request includes the accepted head SHA. GitHub's REST merge operation has no expected-base argument: the adapter rechecks base immediately beforehand, while GitHub enforces current branch rules at merge time. The receipt records the actual merged revision, and post-merge verification checks that revision. It never claims the earlier test-merge revision is the final commit.
 
-After integration, explicitly run `review` when post-merge checks finish. Review records the retrospective, affected-instruction findings and proposed improvements. A passed review closes the work item and removes the delivery labels; a blocker keeps it awaiting review. Neither stage silently starts the next stage or modifies policy.
+After integration, explicitly run `review` when post-merge checks finish. The host supplies matching integration evidence from the protected process branch: a commit-pinned report, hash-verified artifacts and receipt, accepted delivery identity, owner merge authorization and the successful originating workflow. Review rechecks that pinned evidence before publication; missing or stale history is explicit. The current review report remains a subsequent host effect. Review records the retrospective, affected-instruction findings and proposed improvements. A passed review closes the work item and removes the delivery labels; a blocker keeps it awaiting review. Neither stage silently starts the next stage or modifies policy.
 
 ## Evidence and recovery
 
