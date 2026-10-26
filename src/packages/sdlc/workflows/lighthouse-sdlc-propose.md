@@ -44,6 +44,7 @@ steps:
     uses: actions/checkout@v5
     with:
       persist-credentials: false
+      ref: ${{ needs.prepare.outputs.source_revision }}
   - name: Load the pinned harness package
     uses: actions/checkout@v5
     with:
@@ -85,6 +86,9 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
+    outputs:
+      source_revision: ${{ steps.prepare.outputs.source_revision }}
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:
