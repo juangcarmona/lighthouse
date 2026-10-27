@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { implementationPrProof, reconcileImplementationPr } from '../packages/sdlc/src/pr-state.mjs';
+import { implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
 const pr = draft => ({
@@ -66,4 +66,16 @@ test('a running correction keeps the PR draft until its reservation is released'
   state.issue.labels = state.issue.labels.filter(label => label.name !== 'agent-working');
   await reconcileImplementationPr(state.api, repo, state.candidate, state.issue, [comment(true)], [{ context: 'repository', app: 15368 }], state.setDraft, { auto: true });
   assert.deepEqual(state.changed, [false]);
+});
+
+test('scheduled reconciliation selects only bot implementation PRs', async () => {
+  const api = async path => {
+    assert.equal(path, 'pulls?state=open&per_page=100&page=1');
+    return [
+      { number: 172, head: { ref: 'lighthouse/implement-171-b467e429e869' }, user: { login: 'github-actions[bot]' } },
+      { number: 173, head: { ref: 'lighthouse/implement-171-b467e429e869' }, user: { login: 'other' } },
+      { number: 174, head: { ref: 'feature/docs' }, user: { login: 'github-actions[bot]' } },
+    ];
+  };
+  assert.deepEqual(await scheduledImplementationPulls(api), [172]);
 });

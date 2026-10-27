@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
+import { projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 
 const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
   const response = await fetch(`https://api.github.com/repos/${repo}${path ? `/${path}` : ''}`, {
@@ -47,6 +47,8 @@ async function main() {
     const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
     if (pulls.length >= 100) throw Error('PR lookup exceeds bound');
     candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
+  } else if (env.GITHUB_EVENT_NAME === 'schedule') {
+    candidates = await scheduledImplementationPulls(api);
   } else return;
   for (const number of candidates) {
     if (!Number.isSafeInteger(number)) continue;
@@ -86,7 +88,7 @@ async function main() {
       continue;
     }
     const hold = comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`));
-    const auto = env.GITHUB_EVENT_NAME === 'workflow_run' && !hold;
+    const auto = ['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) && !hold;
     const result = await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto });
     if (event.action === 'ready_for_review' && result.status === 'draft') await api(`issues/${target.issue}/comments`, 'POST', { body: `PR #${pr.number} remains a draft: ${result.reason}. [Open PR](${pr.html_url}).` });
   }

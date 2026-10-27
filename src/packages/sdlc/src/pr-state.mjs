@@ -3,6 +3,16 @@ import { checkCommit } from './completion.mjs';
 
 const marker = /<!-- lighthouse-pr-state:(\{[^\n]*\}) -->/;
 
+export async function scheduledImplementationPulls(api) {
+  const numbers = [];
+  for (let page = 1; page <= 10; page++) {
+    const pulls = await api(`pulls?state=open&per_page=100&page=${page}`);
+    numbers.push(...pulls.filter(pr => /^lighthouse\/implement-[1-9][0-9]*-[a-f0-9]{12}$/.test(pr.head?.ref ?? '') && pr.user?.login === 'github-actions[bot]').map(pr => pr.number));
+    if (pulls.length < 100) return numbers;
+  }
+  throw Error('Open PR history exceeds reconciliation bound');
+}
+
 export async function setPullRequestDraft(token, pr, draft) {
   if (!pr.node_id) throw Error('PR lacks GraphQL identity');
   const field = draft ? 'convertPullRequestToDraft' : 'markPullRequestReadyForReview';
