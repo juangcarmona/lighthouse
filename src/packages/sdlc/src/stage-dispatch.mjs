@@ -49,7 +49,7 @@ export async function recordDispatch(api, repository, request) {
     if (receipt.id === request.id) return { send: false, comment, receipt };
     if (!receipt.workerRunId) throw Error('An earlier stage dispatch is unconfirmed; reconcile it before requesting another');
     const run = await api(`actions/runs/${receipt.workerRunId}`);
-    if (run.path !== stagePath(receipt.stage ?? 'implement') || run.status !== 'completed') throw Error('A stage execution is still pending or running');
+    if (run.path !== stagePath(receipt.stage ?? 'implement') || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
   const receipt = { schemaVersion: 1, stage: request.stage, status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });

@@ -169,3 +169,14 @@ test('duplicate completion events retain the same request ID across router execu
   const edited = { ...request, event: { action: 'completed', workflow_run: { id: 51 } } };
   assert.throws(() => verifyDispatchOrigin(edited, { ...receipt, digest: digest(JSON.stringify(edited)) }, parent, f.worker, repo, owner, issue), /event identity/);
 });
+
+
+test('owner PR feedback may queue behind a confirmed worker while uncertain dispatch remains blocked', async () => {
+  const f = fixture();
+  await recordDispatch(f.api, repo, f.request);
+  await claimDispatch(f.api, repo, { request: f.request, receipt: f.receipt, commentId: 30 }, '200');
+  f.worker.status = 'in_progress';
+  const next = { ...f.request, id: dispatchId(repo, '101'), routerRunId: '101', queue: true };
+  assert.equal((await recordDispatch(f.api, repo, next)).send, true);
+  await assert.rejects(recordDispatch(f.api, repo, { ...next, id: dispatchId(repo, '102'), routerRunId: '102' }), /unconfirmed/);
+});
