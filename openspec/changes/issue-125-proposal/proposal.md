@@ -1,8 +1,12 @@
 # Proposal
 
+<!-- pdac-scope: cited -->
+
 ## Why
 
 Implementation runs currently discover missing SDKs and services after the agent starts. Repository-selected environments let adopters provision those prerequisites once and fail early when the host cannot supply them.
+
+<!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->
 
 ## What Changes
 

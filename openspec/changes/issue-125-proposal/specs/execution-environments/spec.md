@@ -1,5 +1,7 @@
 # Execution environments
 
+<!-- pdac-scope: cited -->
+
 ## Purpose
 
 Provide repository-selected build environments whose prerequisites and temporary test services are supplied by an adopter's execution host.
@@ -42,6 +44,8 @@ Selected images SHALL use immutable digest identities. Lighthouse SHALL supply p
 ### Requirement: Prerequisite validation
 
 The host SHALL verify the selected profile's SDKs, tools and requested service readiness before starting the agent. Failed prerequisites SHALL identify the missing requirement and stop execution.
+
+<!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->
 
 #### Scenario: Missing SDK
 
