@@ -229,6 +229,8 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'src/packages/sdlc/execution-environments.md'), join(dir, 'src/packages/sdlc/execution-environments.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/README.md'), join(dir, 'src/packages/sdlc/README.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/workflows'), join(dir, 'src/packages/sdlc/workflows'), { recursive: true });
+    await cp(join(process.cwd(), 'src/packages/sdlc/skills'), join(dir, 'src/packages/sdlc/skills'), { recursive: true });
+    await cp(join(process.cwd(), 'src/packages/sdlc/src'), join(dir, 'src/packages/sdlc/src'), { recursive: true });
     await cp(join(process.cwd(), 'docs/releasing.md'), join(dir, 'docs/releasing.md'));
     await cp(join(process.cwd(), '.product'), join(dir, '.product'), { recursive: true });
     await mkdir(join(dir, 'src/packages/cli'), { recursive: true });
