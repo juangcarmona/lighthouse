@@ -139,7 +139,7 @@ async function main(command) {
     if (handoff) {
       const prior = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-input-${issueNumber}-${route.predecessor.attempt}`, 'request.json');
       const result = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-result-${issueNumber}-${route.predecessor.attempt}`, 'envelope.json');
-      if (issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) { await output('send', 'false'); return; }
+      if (issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) { await output('send', 'false'); await summary('⏸️ Implementation paused by the current issue decision. No worker dispatched.'); return; }
       checkHandoff(prior, result, issue, answers, revision, route.predecessor.runId);
     }
     if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
@@ -295,7 +295,8 @@ async function main(command) {
     const errors = validateStageEnvelope(value, snapshot); if (errors.length) throw Error(errors.join('\n'));
     if (!['passed', 'blocked'].includes(value.result.status)) throw Error('Stage did not complete');
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
-    checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), revision.sha);
+    const publicationIssue = await api(issuePath);
+    checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
     const checkFeedback = async () => {
       if (!snapshot.proposalReview) return;
       await checkReviewCurrent(api, repo, snapshot.proposalReview);
@@ -354,7 +355,7 @@ async function main(command) {
     }
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nReply here to continue.` : '';
-    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
+    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
     const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
