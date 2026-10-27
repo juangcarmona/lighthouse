@@ -40,6 +40,8 @@ The worker requires a Linux runner labelled `lighthouse-workflow`, Node.js, Dock
 
 Implementation can opt into [repository execution environments](execution-environments.md) for preflighted Node or .NET images and temporary host-managed PostgreSQL. Existing undeclared consumers keep their current image configuration.
 
+Workers can opt into [OpenAI model profiles and bounded delegation](model-profiles.md). Project settings cannot replace the legacy operator model without explicit operator opt-in; configuration receipts do not prove live provider access.
+
 The subscription profile uses Docker isolation and explicitly disables gh-aw's AWF agent sandbox. It has no AWF egress filtering or credential proxy. The engine gets no GitHub token or Docker socket. Only trusted repository workflows may use the runner, whose Docker access is privileged infrastructure access. All repository runners sharing a host must use the same operator lock path to serialize model execution.
 
 Actions exposes the `OpenCode progress and result` step with public progress messages, concise tool activity, quiet-period notices and the validated result. Redacted structured events remain in a separate `opencode-events` artifact and feed the standard gh-aw session and usage parser. The result envelope and runtime receipt identify source, harness and image revisions. Logs redact common credential formats; this is not a guarantee that arbitrary sensitive product content is removed. Review public-repository content and artifact access accordingly. Agent artifacts use GitHub retention; they are not a permanent retrospective archive.

@@ -9,6 +9,7 @@ import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks }
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
+import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -52,6 +53,16 @@ async function main() {
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await rm(join(runDir, file), { force: true });
+  let projectModels = null;
+  try {
+    const directory = join(env.GITHUB_WORKSPACE, '.lighthouse'), directoryStat = await lstat(directory);
+    if (!directoryStat.isDirectory() || directoryStat.isSymbolicLink()) throw Error('Invalid project model configuration directory');
+    const path = join(directory, 'models.json'), stat = await lstat(path);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 65536) throw Error('Invalid project model configuration file');
+    projectModels = JSON.parse(await readFile(path, 'utf8'));
+  }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage });
   const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
   if (request.stage === 'implement') {
     if (selected) config.implementationImage = selected.image;
@@ -95,20 +106,21 @@ async function main() {
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, environment: environmentReceipt(selected), model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
     const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), config.image];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), config.image];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
     const started = Date.now();
-    let lastVisible = started;
+    let lastVisible = started, engineError = false;
     const redact = text => redactLog(redactEnvironmentLog(runtime, text));
     const report = text => { lastVisible = Date.now(); console.log(redact(text)); };
     const eventLine = line => {
       const redacted = redact(line);
+      try { if (JSON.parse(redacted).type === 'error') engineError = true; } catch {}
       appendFileSync(eventsPath, redacted + '\n');
       const visible = formatOpenCodeEvent(redacted);
       if (visible) report(visible);
@@ -137,6 +149,7 @@ async function main() {
       child.on('error', no); child.on('close', code => code === 0 && !cancelled ? ok() : no(Error('OpenCode failed or was cancelled')));
       timer = setTimeout(cancel, implementing ? 1800000 : 600000);
     });
+    if (engineError) throw Error('OpenCode reported an execution error; no model fallback attempted');
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
     const envelope = JSON.parse(await readFile(result, 'utf8'));
