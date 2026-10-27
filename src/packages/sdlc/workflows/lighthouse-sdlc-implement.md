@@ -2,21 +2,33 @@
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC implement
 description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
+run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
+concurrency:
+  group: lighthouse-issue-${{ inputs.issue }}
+  cancel-in-progress: false
+  queue: max
+  job-discriminator: ${{ github.run_id }}
 on:
-  workflow_call:
+  # The required preparation job authenticates the originating owner request.
+  roles: all
+  workflow_dispatch:
     inputs:
       issue:
+        description: Source issue
         required: true
         type: string
-      handoff:
-        required: false
-        type: boolean
-        default: false
+      dispatch-request:
+        description: Authenticated router receipt comment ID
+        required: true
+        type: string
   needs: [prepare]
 if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
+env:
+  LIGHTHOUSE_STAGE: implement
+  LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
   contents: read
 engine:
@@ -106,7 +118,6 @@ jobs:
       issues: write
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
-      LIGHTHOUSE_IMPLEMENT_HANDOFF: ${{ inputs.handoff }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -116,18 +127,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - name: Load refinement request
-        if: inputs.handoff
-        uses: actions/download-artifact@v8
-        with:
-          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/refinement-handoff
-      - name: Load refinement result
-        if: inputs.handoff
-        uses: actions/download-artifact@v8
-        with:
-          name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/refinement-handoff
       - name: Collect verified owner intent and reserve the issue
         id: prepare
         env:
@@ -178,6 +177,11 @@ jobs:
         with:
           name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
         env:

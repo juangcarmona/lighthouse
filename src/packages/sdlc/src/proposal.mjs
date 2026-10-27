@@ -1,3 +1,4 @@
+import { loadDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -54,9 +55,9 @@ export async function prepareProposal(issue, files, provider = openspec) {
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
 
-export function checkRefinement(predecessor, envelope, run, current, marker) {
-  if (run.status !== 'completed' || run.conclusion !== 'success' || run.event !== 'issues' && run.event !== 'issue_comment' && run.event !== 'workflow_dispatch' || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner) throw Error('Predecessor is not a successful owner workflow');
-  if (String(run.id) !== String(predecessor.workflowRunId) || run.head_sha !== predecessor.sourceRevision || predecessor.stage !== 'refine' || predecessor.issue !== current.issue || envelope.result?.stage !== 'refine' || envelope.result?.status !== 'passed' || envelope.result?.gate !== 'ready' || envelope.result?.runId !== predecessor.runId || marker !== predecessor.runId) throw Error('Refinement evidence identity mismatch');
+export function checkRefinement(predecessor, envelope, run, current, marker, dispatched = false) {
+  if (run.status !== 'completed' || run.conclusion !== 'success' || (dispatched ? run.path !== '.github/workflows/lighthouse-sdlc-refine.lock.yml' : run.event !== 'issues' && run.event !== 'issue_comment' && run.event !== 'workflow_dispatch' || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner)) throw Error('Predecessor is not a successful owner workflow');
+  if (String(run.id) !== String(predecessor.workflowRunId) || run.head_sha !== (dispatched ? predecessor.workflowRevision : predecessor.sourceRevision) || predecessor.stage !== 'refine' || predecessor.issue !== current.issue || envelope.result?.stage !== 'refine' || envelope.result?.status !== 'passed' || envelope.result?.gate !== 'ready' || envelope.result?.runId !== predecessor.runId || marker !== predecessor.runId) throw Error('Refinement evidence identity mismatch');
   if (predecessor.sourceRevision !== current.sourceRevision || predecessor.taskDigest !== current.taskDigest) throw Error('Refinement is stale; run refine against the current source and owner intent first');
 }
 
@@ -77,7 +78,14 @@ export async function loadStageReport(api, repo, report, current) {
       await writeFile(archive, bytes);
       values[kind] = JSON.parse(execFileSync('python3', ['-c', 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); matches=[i for i in z.infolist() if i.filename==sys.argv[2]]; assert len(matches)==1 and matches[0].file_size<=128000, "Invalid artifact member"; data=z.open(matches[0]).read(128001); assert len(data)<=128000; sys.stdout.buffer.write(data)', archive, file], { encoding: 'utf8', maxBuffer: 128000, timeout: 10000 }));
     }
-    if (run.status !== 'completed' || run.conclusion !== 'success' || !['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || String(run.id) !== String(values.input.workflowRunId) || run.head_sha !== values.input.sourceRevision || values.input.issue !== current.issue || marker !== values.input.runId) throw Error('Stage report identity mismatch');
+    const request = values.input;
+    if (request.dispatch) {
+      if (!['refine', 'propose', 'implement'].includes(request.stage) || !report.body.includes(`<!-- lighthouse-stage:${request.stage}:`)) throw Error('Unexpected dispatched stage');
+      const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run);
+      if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== request.sourceRevision || dispatch.request.workflowRevision !== request.workflowRevision) throw Error('Dispatched report identity mismatch');
+      await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);
+    } else if (!['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || run.head_sha !== request.sourceRevision) throw Error('Stage report identity mismatch');
+    if (run.status !== 'completed' || run.conclusion !== 'success' || String(run.id) !== String(request.workflowRunId) || request.issue !== current.issue || marker !== request.runId) throw Error('Stage report identity mismatch');
     return { request: values.input, envelope: values.result, report: report.html_url, run, marker };
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
@@ -85,7 +93,7 @@ export async function loadStageReport(api, repo, report, current) {
 export async function loadRefinement(api, repo, reports, current) {
   const report = [...reports].reverse().find(c => c.user.login === 'github-actions[bot]' && (/<!-- lighthouse-stage:refine:passed -->/.test(c.body) || /^## Refinement:/m.test(c.body)) && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
   const evidence = await loadStageReport(api, repo, report, current);
-  checkRefinement(evidence.request, evidence.envelope, evidence.run, current, evidence.marker);
+  checkRefinement(evidence.request, evidence.envelope, evidence.run, current, evidence.marker, !!evidence.request.dispatch);
   return { request: evidence.request, envelope: evidence.envelope, report: evidence.report };
 }
 

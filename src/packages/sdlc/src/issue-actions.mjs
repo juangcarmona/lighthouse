@@ -1,3 +1,6 @@
+import { refinementAfterRun } from './stage-transition.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, statusText, stages } from './stage-dispatch.mjs';
+import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
@@ -48,9 +51,9 @@ export function checkPublication(snapshot, issue, comments, revision) {
   if (taskDigest(issue, comments) !== snapshot.taskDigest) throw Error('Issue or owner answers changed; request refinement again');
 }
 async function main(command) {
-  const env = process.env, repo = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
+  const env = { ...process.env }, repo = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo ?? '')) throw Error('Invalid repository');
-  const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+  let event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
   const dir = env.LIGHTHOUSE_RUN_DIR ?? join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const api = async (path, method = 'GET', body, optional = false) => {
     const r = await fetch(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
@@ -60,13 +63,43 @@ async function main(command) {
   };
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  if (command === 'dispatch-send') {
+    const request = JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8'));
+    await sendDispatch(api, repo, request, env.LIGHTHOUSE_DISPATCH_COMMENT);
+    await summary('Stage dispatch sent. Follow the linked receipt on the issue; dispatch is not stage completion.');
+    return;
+  }
+  let dispatch;
+  if (command === 'prepare' && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && (event.inputs?.['dispatch-request'] || env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true')) {
+    dispatch = await admitDispatch(api, repo, owner, env, event);
+    if (!dispatch.admitted) {
+      await output('eligible', 'false'); await summary('This request already has an execution. No duplicate agent started.'); return;
+    }
+    // Only the authenticated router artifact supplies the original event/actor.
+    // Execution IDs and GITHUB_SHA still identify this independent worker.
+    event = dispatch.request.event;
+    env.GITHUB_EVENT_NAME = dispatch.request.eventName;
+    env.GITHUB_ACTOR = owner; env.GITHUB_TRIGGERING_ACTOR = owner;
+    env.LIGHTHOUSE_IMPLEMENT_HANDOFF = String(dispatch.request.handoff);
+    env.LIGHTHOUSE_AUTO_IMPLEMENT = String(dispatch.request.autoImplement === true);
+    if (dispatch.request.handoff) {
+      const handoffDir = join(env.RUNNER_TEMP, 'refinement-handoff');
+      await mkdir(handoffDir, { recursive: true });
+      for (const [kind, file] of [['input', 'request.json'], ['result', 'envelope.json']]) {
+        const value = await readActionsJson(api, repo, dispatch.request.predecessor?.runId ?? dispatch.request.routerRunId, `lighthouse-${kind}-${dispatch.request.issue}-${dispatch.request.predecessor?.attempt ?? dispatch.request.routerAttempt}`, file);
+        await writeFile(join(handoffDir, file), JSON.stringify(value));
+      }
+    }
+  }
   let route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
-  if (command === 'route' && env.GITHUB_EVENT_NAME === 'workflow_run') {
-    const next = await deliveryAfterChecks(api, repo, owner, event);
-    route = next ? { ...next, run: true, reason: 'Checks passed; continuing delivery.' } : { run: false, reason: 'No delivery action needed.' };
+  const after = ['route', 'dispatch-prepare', 'prepare'].includes(command) ? await completedEvent(api, event, env) : null;
+  if (after) {
+    const next = await refinementAfterRun(api, repo, owner, after) ?? (env.LIGHTHOUSE_COMPLETION_ENABLED === 'true' ? await deliveryAfterChecks(api, repo, owner, after) : null);
+    route = next ? { ...next, run: true, reason: next.reason ?? 'Checks passed; continuing delivery.' } : { run: false, reason: 'No delivery action needed.' };
+    if (event.inputs?.after_run && route.run && (Number(event.inputs.issue) !== route.issue || event.inputs.stage !== route.stage)) throw Error('Completion replay target differs from the verified continuation');
   }
   let proposalReview, implementationReview;
-  if (['route', 'prepare'].includes(command) && reviewTarget(event, env.GITHUB_EVENT_NAME)) {
+  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && reviewTarget(event, env.GITHUB_EVENT_NAME)) {
     if (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Review actor is not authorized');
     const pr = await api(`pulls/${reviewTarget(event, env.GITHUB_EVENT_NAME)}`);
     const implementation = pr.head?.ref?.startsWith('lighthouse/implement-');
@@ -89,14 +122,43 @@ async function main(command) {
     throw Error('Comment history exceeds bounded intake');
   };
   const ownerAnswers = all => all.filter(c => c.user.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
-  if (['route', 'prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview) {
+  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview) {
     const fresh = await api(issuePath);
     route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
     if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
       await api(`issues/comments/${event.comment.id}/reactions`, 'POST', { content: 'eyes' });
     }
   }
+  if (command === 'dispatch-prepare') {
+    if (!after && (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner)) throw Error('Dispatch actor is not authorized');
+    const stage = route.stage, handoff = !!route.predecessor, queue = !!(proposalReview || implementationReview);
+    if (!route.run || route.issue !== issueNumber || !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage) || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
+    const issue = await api(issuePath), answers = ownerAnswers(await comments());
+    const metadata = await api(''), revision = (await api(`commits/${metadata.default_branch}`)).sha;
+    if (issue.user.login !== owner || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
+    if (handoff) {
+      const prior = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-input-${issueNumber}-${route.predecessor.attempt}`, 'request.json');
+      const result = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-result-${issueNumber}-${route.predecessor.attempt}`, 'envelope.json');
+      if (issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) { await output('send', 'false'); await summary('⏸️ Implementation paused by the current issue decision. No worker dispatched.'); return; }
+      checkHandoff(prior, result, issue, answers, revision, route.predecessor.runId);
+    }
+    if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
+    const eventRunId = after ? String(after.workflow_run.id) : undefined;
+    const router = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+    // Review events can run on a PR merge ref, which is not a dispatchable branch.
+    // Only an explicit owner dispatch selects a workflow branch; native events use main.
+    const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
+    const request = { schemaVersion: 1, id: dispatchId(repo, eventRunId ?? env.GITHUB_RUN_ID, stage), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
+    const recorded = await recordDispatch(api, repo, request);
+    await output('send', String(recorded.send));
+    await output('artifact', dispatchArtifact(request));
+    await output('comment', String(recorded.comment.id));
+    await summary(`[Stage request](${recorded.comment.html_url}). ${recorded.send ? 'Recording before dispatch.' : 'Already recorded; no automatic resend.'}`);
+    if (recorded.send) { await mkdir(dir, { recursive: true }); await writeFile(join(dir, 'dispatch.json'), JSON.stringify(request)); }
+    return;
+  }
   if (command === 'route') {
+    if (route.run && !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage)) route = { run: false, reason: 'Stage is not installed.' };
     await output('stage', route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? '');
     if (implementationReview) await api(`issues/${implementationReview.number}/comments`, 'POST', { body: implementationReview.handled ? 'This feedback has already been applied.' : `${route.reason} [Follow progress](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
     else if (proposalReview) await api(`issues/${proposalReview.number}/comments`, 'POST', { body: proposalReview.handled ? 'This feedback has already been applied. Review the latest proposal diff.' : proposalReview.approved ? `Approval received for commit \`${proposalReview.head}\`. Implementation has not started.` : `Updating the proposal with your feedback. [Follow progress](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
@@ -105,15 +167,18 @@ async function main(command) {
   }
   if (command === 'prepare') {
     const handoff = env.LIGHTHOUSE_IMPLEMENT_HANDOFF === 'true';
-    if (handoff) route = { run: env.GITHUB_ACTOR === owner && !reviewTarget(event, env.GITHUB_EVENT_NAME) && ['issues', 'issue_comment', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), stage: 'implement', issue: issueNumber };
+    if (handoff && !after) route = { run: env.GITHUB_ACTOR === owner && !reviewTarget(event, env.GITHUB_EVENT_NAME) && ['issues', 'issue_comment', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), stage: 'implement', issue: issueNumber };
     if (!route.run || issueNumber !== route.issue || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Stage not authorized');
     const issue = await api(issuePath);
     if (issue.user.login !== owner || issue.state !== 'open' || issue.pull_request || issue.labels.some(x => ['agent-working', 'human-working'].includes(x.name))) throw Error('Issue not eligible');
     const repository = await api('');
     const baseRevision = (await api(`commits/${repository.default_branch}`)).sha;
     const revision = { sha: implementationReview ? implementationReview.head : baseRevision };
-    if (!proposalReview && !implementationReview && revision.sha !== env.GITHUB_SHA) throw Error('Workflow must run against the current default branch');
+    if (!proposalReview && !implementationReview && revision.sha !== (dispatch?.request.sourceRevision ?? env.GITHUB_SHA)) throw Error('Workflow must run against the current default branch');
     const all = await comments(), answers = ownerAnswers(all);
+    if (dispatch && (dispatch.request.sourceRevision !== baseRevision || dispatch.request.taskDigest !== taskDigest(issue, answers))) throw Error('Dispatched source or owner intent changed');
+    if (dispatch && route.stage !== dispatch.request.stage) throw Error('Dispatched request no longer selects its stage');
+    if (dispatch?.request.handoff && JSON.stringify(route.predecessor) !== JSON.stringify(dispatch.request.predecessor)) throw Error('Refinement predecessor changed');
     let continuation;
     if (env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !handoff) {
       const reply = answers.find(c => c.id === event.comment.id);
@@ -140,7 +205,7 @@ async function main(command) {
         const prior = JSON.parse(await readFile(join(env.RUNNER_TEMP, 'refinement-handoff', 'request.json'), 'utf8'));
         const result = JSON.parse(await readFile(join(env.RUNNER_TEMP, 'refinement-handoff', 'envelope.json'), 'utf8'));
         if (result.result?.status === 'blocked' || issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) { await output('eligible', 'false'); await summary('Implementation paused. Resolve the issue decision or remove future when ready.'); return; }
-        checkHandoff(prior, result, issue, answers, revision.sha, env.GITHUB_RUN_ID);
+        checkHandoff(prior, result, issue, answers, revision.sha, dispatch?.request.predecessor?.runId ?? dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID);
       }
       if (issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
       implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch);
@@ -166,7 +231,7 @@ async function main(command) {
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
-    const snapshot = { ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     await output('source_revision', revision.sha);
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
@@ -212,8 +277,15 @@ async function main(command) {
     await output('eligible', 'true');
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
   }
+  if (command === 'cleanup' && event.inputs?.['dispatch-request']) {
+    let outcome;
+    try { await readFile(join(dir, 'published')); outcome = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8')).result.status; } catch {}
+    try { await finishDispatch(api, repo, issueNumber, event.inputs['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
+    catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
+  }
   if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { return; } }
   const snapshot = JSON.parse(await readFile(join(dir, 'request.json'), 'utf8'));
+  if (snapshot.dispatch) env.LIGHTHOUSE_AUTO_IMPLEMENT = String(snapshot.autoImplement === true);
   if (command === 'validate') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
     const errors = validateStageEnvelope(value, snapshot);
@@ -222,11 +294,13 @@ async function main(command) {
     console.log(`Validated ${snapshot.stage} result: ${value.result.status}`); await summary(`### ${snapshot.stage} result\nOutcome: **${value.result.status}**\n\n${value.effect.body}`); return;
   }
   if (command === 'publish') {
+    if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
     const errors = validateStageEnvelope(value, snapshot); if (errors.length) throw Error(errors.join('\n'));
     if (!['passed', 'blocked'].includes(value.result.status)) throw Error('Stage did not complete');
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
-    checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), revision.sha);
+    const publicationIssue = await api(issuePath);
+    checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
     const checkFeedback = async () => {
       if (!snapshot.proposalReview) return;
       await checkReviewCurrent(api, repo, snapshot.proposalReview);
@@ -258,6 +332,7 @@ async function main(command) {
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
       if (changes.length) {
         const recheck = async () => {
+          if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
           if (snapshot.planningReference) {
             checkProposal(await api(`pulls/${snapshot.planningReference.number}`), repo, snapshot.planningReference);
@@ -284,8 +359,8 @@ async function main(command) {
     }
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nReply here to continue.` : '';
-    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
-    const body = `${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
+    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
+    const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
     const label = ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? 'ready' : 'needs-info';

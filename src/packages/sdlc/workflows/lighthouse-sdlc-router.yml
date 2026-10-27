@@ -25,6 +25,10 @@ on:
         default: refine
         type: choice
         options: [refine, propose, implement, integrate, review]
+      after_run:
+        description: Recheck a completed execution through the same continuation rules
+        required: false
+        type: string
       pull_request:
         description: PR number for integrate or review
         required: false
@@ -40,6 +44,10 @@ on:
         type: boolean
 permissions:
   contents: read
+env:
+  LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement,integrate,review
+  LIGHTHOUSE_AUTO_IMPLEMENT: true
+  LIGHTHOUSE_COMPLETION_ENABLED: true
 jobs:
   route:
     if: >-
@@ -73,76 +81,48 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_COMPLETION_ENABLED: true
         run: node src/packages/sdlc/src/issue-actions.mjs route
-  refine:
+  dispatch:
+    name: 📥 Dispatch selected stage
     needs: route
+    if: needs.route.outputs.run == 'true'
     concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      group: lighthouse-dispatch-${{ needs.route.outputs.issue }}
       cancel-in-progress: false
-    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'refine'
+      queue: max
+    runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: read
       issues: write
-    uses: ./.github/workflows/lighthouse-sdlc-refine.lock.yml
-    with:
-      issue: ${{ needs.route.outputs.issue }}
-      auto-implement: true
-  propose:
-    needs: route
-    concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
-      cancel-in-progress: false
-    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'propose'
-    permissions:
-      actions: read
-      contents: write
-      issues: write
-      pull-requests: write
-    uses: ./.github/workflows/lighthouse-sdlc-propose.lock.yml
-    with:
-      issue: ${{ needs.route.outputs.issue }}
-  implement:
-    needs: [route, refine]
-    concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
-      cancel-in-progress: false
-    if: always() && needs.route.result == 'success' && needs.route.outputs.run == 'true' && (needs.route.outputs.stage == 'implement' || needs.refine.result == 'success')
-    permissions:
-      actions: write
-      contents: write
-      issues: write
-      pull-requests: write
-    uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
-    with:
-      issue: ${{ needs.route.outputs.issue }}
-      handoff: ${{ needs.route.outputs.stage == 'refine' }}
-  integrate:
-    needs: route
-    concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
-      cancel-in-progress: false
-    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'integrate'
-    permissions:
-      actions: write
-      checks: read
-      contents: write
-      issues: write
-      pull-requests: write
-    uses: ./.github/workflows/lighthouse-sdlc-integrate.lock.yml
-    with:
-      issue: ${{ needs.route.outputs.issue }}
-  review:
-    needs: route
-    concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
-      cancel-in-progress: false
-    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'review'
-    permissions:
-      actions: write
-      checks: read
-      contents: write
-      issues: write
-      pull-requests: write
-    uses: ./.github/workflows/lighthouse-sdlc-review.lock.yml
-    with:
-      issue: ${{ needs.route.outputs.issue }}
+      pull-requests: read
+    env:
+      LIGHTHOUSE_ISSUE: ${{ needs.route.outputs.issue }}
+      LIGHTHOUSE_STAGE: ${{ needs.route.outputs.stage }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Record the authorized request
+        id: request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs dispatch-prepare
+      - name: Preserve the request before dispatch
+        if: steps.request.outputs.send == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.request.outputs.artifact }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/dispatch.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Dispatch the independent stage
+        if: steps.request.outputs.send == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
+        run: node src/packages/sdlc/src/issue-actions.mjs dispatch-send
