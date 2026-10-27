@@ -1,15 +1,16 @@
+import { refinementAfterRun } from '../packages/sdlc/src/stage-transition.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
-import { dispatchId, dispatchArtifact, dispatchReceiptBody, readDispatchReceipt, recordDispatch, sendDispatch, loadDispatch, verifyDispatchOrigin, claimDispatch, checkDispatchClaim, implementPath } from '../packages/sdlc/src/implement-dispatch.mjs';
+import { dispatchId, dispatchArtifact, dispatchReceiptBody, readDispatchReceipt, recordDispatch, sendDispatch, loadDispatch, verifyDispatchOrigin, claimDispatch, checkDispatchClaim, implementPath, stagePath, stages, finishDispatch, completedEvent } from '../packages/sdlc/src/stage-dispatch.mjs';
 
 const repo = 'owner/repo', owner = 'owner', issue = 18;
-function fixture() {
-  const request = { schemaVersion: 1, id: dispatchId(repo, '100'), repository: repo, issue, stage: 'implement', routerRunId: '100', routerAttempt: 1, workflowRevision: 'a'.repeat(40), sourceRevision: 'b'.repeat(40), taskDigest: 'c'.repeat(64), ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'implement' } }, handoff: false };
-  const receipt = { schemaVersion: 1, id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '100', routerAttempt: 1, workerRunId: null };
+function fixture(stage = 'implement') {
+  const request = { schemaVersion: 1, id: dispatchId(repo, '100', stage), repository: repo, issue, stage, autoImplement: stage === 'refine', routerRunId: '100', routerAttempt: 1, workflowRevision: 'a'.repeat(40), sourceRevision: 'b'.repeat(40), taskDigest: 'c'.repeat(64), ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage } }, handoff: false };
+  const receipt = { schemaVersion: 1, stage, id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '100', routerAttempt: 1, workerRunId: null };
   const comment = { id: 30, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repo}/issues/${issue}`, html_url: `https://github.com/${repo}/issues/${issue}#issuecomment-30`, body: dispatchReceiptBody(repo, receipt) };
   const parent = { id: 100, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: request.eventName, actor: { login: owner }, triggering_actor: { login: owner }, head_sha: request.workflowRevision, head_branch: request.ref, repository: { full_name: repo } };
-  const worker = { id: 200, run_attempt: 1, path: implementPath, event: 'workflow_dispatch', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' }, head_sha: request.workflowRevision, head_branch: request.ref, repository: { full_name: repo } };
+  const worker = { id: 200, run_attempt: 1, path: stagePath(stage), event: 'workflow_dispatch', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' }, head_sha: request.workflowRevision, head_branch: request.ref, repository: { full_name: repo } };
   const calls = [], comments = [];
   const api = async (path, method = 'GET', body) => {
     calls.push({ path, method, body });
@@ -106,4 +107,65 @@ test('a different request cannot overlap an active implementation, but a finishe
   await assert.rejects(recordDispatch(f.api, repo, next), /pending or running/);
   f.worker.status = 'completed'; f.worker.conclusion = 'failure';
   assert.equal((await recordDispatch(f.api, repo, next)).send, true);
+});
+
+
+test('all installed stages dispatch independently and cannot impersonate a different stage', async () => {
+  for (const stage of stages) {
+    const f = fixture(stage);
+    await recordDispatch(f.api, repo, f.request);
+    await sendDispatch(f.api, repo, f.request, 30);
+    assert.equal(f.calls.find(c => c.path.endsWith('/dispatches')).path, `actions/workflows/lighthouse-sdlc-${stage}.lock.yml/dispatches`);
+    const dispatch = await loadDispatch(f.api, repo, owner, issue, 30, f.worker, f.readArtifact);
+    assert.equal(await claimDispatch(f.api, repo, dispatch, '200'), true);
+    for (const outcome of ['blocked', 'passed', undefined]) {
+      await finishDispatch(f.api, repo, issue, 30, '201', outcome);
+      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, 'running');
+      await finishDispatch(f.api, repo, issue, 30, '200', outcome);
+      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : 'failed');
+      f.comment.body = dispatchReceiptBody(repo, { ...readDispatchReceipt(f.comment, repo, issue), status: 'running' });
+    }
+    await assert.rejects(loadDispatch(f.api, repo, owner, issue, 30, { ...f.worker, path: stagePath(stage === 'refine' ? 'propose' : 'refine') }, f.readArtifact), /worker identity/);
+  }
+});
+
+test('completed-run replay uses fresh observations and requires the owner', async () => {
+  const api = async path => { assert.equal(path, 'actions/runs/200'); return { id: 200, head_sha: 'a'.repeat(40) }; };
+  const event = { inputs: { after_run: '200' } }, env = { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_ACTOR: owner, GITHUB_TRIGGERING_ACTOR: owner, GITHUB_REPOSITORY_OWNER: owner };
+  assert.deepEqual(await completedEvent(api, event, env), { action: 'completed', workflow_run: { id: 200, head_sha: 'a'.repeat(40) } });
+  await assert.rejects(completedEvent(api, event, { ...env, GITHUB_ACTOR: 'outsider' }), /requires an owner/);
+});
+
+test('refinement handoff requires an authenticated successful publication and the installed policy', async () => {
+  const f = fixture('refine');
+  await recordDispatch(f.api, repo, f.request);
+  await claimDispatch(f.api, repo, { request: f.request, receipt: f.receipt, commentId: 30 }, '200');
+  Object.assign(f.worker, { status: 'completed', conclusion: 'success' });
+  const snapshot = { issue, stage: 'refine', runId: 'e'.repeat(64), workflowRunId: '200', workflowRevision: f.request.workflowRevision, sourceRevision: f.request.sourceRevision, autoImplement: true, dispatch: { commentId: 30, requestId: f.request.id, digest: f.receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', status: 'passed', gate: 'ready', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'implement' }, effect: { type: 'issue-comment', body: 'Ready' } };
+  const report = { user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-actions:${snapshot.runId} -->\n<!-- lighthouse-stage:refine:passed -->` };
+  f.comments.push(report);
+  const api = async (...args) => args[0] === 'actions/runs/200/artifacts?per_page=100' ? { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] } : f.api(...args);
+  const readArtifact = async (a, r, run, name, file) => String(run) === '100' ? f.readArtifact(a, r, run, name, file) : file === 'request.json' ? snapshot : envelope;
+  const event = { action: 'completed', workflow_run: { id: 200, head_sha: f.worker.head_sha } };
+  assert.deepEqual((await refinementAfterRun(api, repo, owner, event, readArtifact)).predecessor, { runId: '200', attempt: 1 });
+  for (const conclusion of ['failure', 'cancelled', 'skipped']) { f.worker.conclusion = conclusion; assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); }
+  f.worker.conclusion = 'success';
+  snapshot.autoImplement = false; assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); snapshot.autoImplement = true;
+  envelope.result.status = 'blocked'; envelope.result.missingEvidence = ['scope']; assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); envelope.result.status = 'passed'; envelope.result.missingEvidence = [];
+  f.comments.pop(); assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); f.comments.push(report);
+  snapshot.dispatch.digest = 'f'.repeat(64); await assert.rejects(refinementAfterRun(api, repo, owner, event, readArtifact), /revoked or changed/);
+});
+
+test('duplicate completion events retain the same request ID across router executions', async () => {
+  const f = fixture('implement');
+  const eventRunId = '50';
+  const request = { ...f.request, eventName: 'workflow_run', event: { action: 'completed', workflow_run: { id: 50 } }, eventRunId, id: dispatchId(repo, eventRunId, 'implement') };
+  await recordDispatch(f.api, repo, request);
+  assert.equal((await recordDispatch(f.api, repo, { ...request, routerRunId: '101' })).send, false);
+  const receipt = readDispatchReceipt(f.comment, repo, issue);
+  const parent = { ...f.parent, event: 'workflow_run', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } };
+  assert.doesNotThrow(() => verifyDispatchOrigin(request, receipt, parent, f.worker, repo, owner, issue));
+  const edited = { ...request, event: { action: 'completed', workflow_run: { id: 51 } } };
+  assert.throws(() => verifyDispatchOrigin(edited, { ...receipt, digest: digest(JSON.stringify(edited)) }, parent, f.worker, repo, owner, issue), /event identity/);
 });

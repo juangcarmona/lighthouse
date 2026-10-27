@@ -199,9 +199,9 @@ test('current completion jobs cannot become external acceptance evidence or eras
   await assert.rejects(observeChecks(async p => p.startsWith('actions/') ? { jobs: [{}] } : api(p), head, '99'), /check identity/);
 });
 
-function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, symlink = false } = {}) {
+function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, dispatchOrigin, symlink = false } = {}) {
   const receipt = { state: 'merged', sha: merged, acceptedHead: head, authorization: { merge: true, issue: 42, pr: 50, head }, ...receiptOverrides };
-  const files = completionBundle({ ...request, stage: 'integrate' }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
+  const files = completionBundle({ ...request, stage: 'integrate', ...(dispatchOrigin ? { dispatchOrigin } : {}) }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
   if (mutateFile) mutateFile(files);
   const prefix = 'docs/process/20261025-42-a-change/runs/123/attempt-0001/post-integration/';
   const blobs = new Map(), paths = new Map();
@@ -270,4 +270,23 @@ test('retained native approval is verified against the original owner review', a
   assert.ok(await readIntegrationEvidence(api, completion));
   state = 'DISMISSED';
   await assert.rejects(readIntegrationEvidence(api, completion), /not authenticated/);
+});
+
+
+test('retained independent integration binds the original owner merge decision without expiring artifacts', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const { dispatchId, stagePath } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  const origin = { schemaVersion: 1, id: dispatchId('owner/repo', '100', 'integrate'), repository: 'owner/repo', issue: 42, stage: 'integrate', routerRunId: '100', routerAttempt: 1, sourceRevision: base, workflowRevision: base, taskDigest: 'e'.repeat(64), ref: 'main', handoff: false, eventName: 'workflow_dispatch', event: { inputs: { ...event.inputs, merge: 'true' } } };
+  const receipt = { schemaVersion: 1, stage: 'integrate', id: origin.id, routerRunId: '100', routerAttempt: 1, workerRunId: '123', digest: hash(origin) };
+  const parent = { id: 100, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: base, head_branch: 'main', repository: { full_name: 'owner/repo' } };
+  const read = async (requestOverride = {}, parentOverride = {}) => {
+    const r = { ...origin, ...requestOverride };
+    const original = retainedIntegration({ dispatchOrigin: { request: r, receipt: { ...receipt, digest: hash(r) } }, runOverrides: { id: 123, path: stagePath('integrate'), head_branch: 'main', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } } });
+    return readIntegrationEvidence(path => path === 'actions/runs/100/attempts/1' ? { ...parent, ...parentOverride } : original(path), { ...observation, merged: true, merge: merged });
+  };
+  assert.equal((await read()).receipt.authorization.merge, true);
+  await assert.rejects(read({ event: { inputs: { ...event.inputs, merge: 'false' } } }), /not authenticated/);
+  await assert.rejects(read({}, { actor: { login: 'outsider' } }), /authorized router/);
+  await assert.rejects(read({ sourceRevision: head }), /dispatch mismatch/);
 });

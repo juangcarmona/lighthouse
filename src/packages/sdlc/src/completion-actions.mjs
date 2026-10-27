@@ -1,3 +1,4 @@
+import { admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, statusText } from './stage-dispatch.mjs';
 import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +9,7 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 
 async function main(command) {
-  const env = process.env, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
+  const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '')) throw Error('Invalid repository');
   const dir = join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const api = async (path, method = 'GET', body, optional = false) => {
@@ -21,17 +22,27 @@ async function main(command) {
   const load = async file => JSON.parse(await readFile(join(dir, file), 'utf8'));
   const summary = async text => { console.log(text); if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   if (command === 'prepare') {
-    const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+    let event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+    let dispatch;
+    if (env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true' || event.inputs?.['dispatch-request']) {
+      dispatch = await admitDispatch(api, repository, owner, env, event);
+      if (!dispatch.admitted) { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, 'eligible=false\n'); await summary('Request already has an execution. No duplicate agent started.'); return; }
+      event = dispatch.request.event; env.GITHUB_EVENT_NAME = dispatch.request.eventName;
+      env.GITHUB_ACTOR = owner; env.GITHUB_TRIGGERING_ACTOR = owner;
+    }
+    const after = await completedEvent(api, event, env);
+    if (after) { event = after; env.GITHUB_EVENT_NAME = 'workflow_run'; }
     const stage = env.LIGHTHOUSE_STAGE, authorization = await authorizeCompletionEvent(api, repository, event, env, stage);
     if (Number(env.LIGHTHOUSE_ISSUE) !== authorization.issue) throw Error('Routed issue mismatch');
     const completion = await inspectCompletion(api, repository, owner, authorization, stage, env.GITHUB_RUN_ID);
     const priorIntegration = stage === 'review' ? await readIntegrationEvidence(api, completion) : null;
-    if (completion.currentRevision !== env.GITHUB_SHA) throw Error('Run completion from the current default branch');
+    if (completion.currentRevision !== (dispatch?.request.sourceRevision ?? env.GITHUB_SHA)) throw Error('Run completion from the current default branch');
+    if (dispatch && completion.binding.intent !== dispatch.request.taskDigest) throw Error('Dispatched owner intent changed');
     if (completion.labels.some(l => ['agent-working', 'human-working'].includes(l))) throw Error('Issue is reserved');
     if (!completion.merged) assertChecks(completion);
     const postMerge = completion.merged ? await postMergeRuns(api, completion, completion.merge) : [];
     const id = fingerprint({ repository, stage, issue: authorization.issue, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT });
-    const request = { runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), harnessRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge };
+    const request = { ...(dispatch ? { dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, dispatchOrigin: { request: dispatch.request, receipt: dispatch.receipt } } : {}), runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), harnessRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge };
     request.priorIntegration = priorIntegration;
     if (Buffer.byteLength(JSON.stringify(request)) > 2 * 1024 * 1024) throw Error('Completion context exceeds bounds');
     await mkdir(dir, { recursive: true }); await save('request.json', request);
@@ -43,11 +54,16 @@ async function main(command) {
     await save('context.json', context);
     await api(`issues/${request.issue}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
-    if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `revision=${request.sourceRevision}\n`);
+    if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `eligible=true\nrevision=${request.sourceRevision}\n`);
     await summary(`### ${stage} #${request.issue}\nPR #${authorization.pr}, accepted head \`${authorization.head}\`.\n\n${authorization.merge ? 'Owner explicitly authorized merge of this revision, subject to checks.' : 'No merge authorized.'}\n\nRequired checks and evidence protection verified. OpenCode will assess the retained context.`);
     return;
   }
   if (command === 'cleanup') {
+    const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+    let outcome;
+    try { await load('published.json'); outcome = (await load('envelope.json')).result.status; } catch {}
+    try { await finishDispatch(api, repository, Number(env.LIGHTHOUSE_ISSUE), event.inputs?.['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
+    catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
     if (!await access(join(dir, 'reserved')).then(() => true, () => false)) return;
     const request = await load('request.json');
     await api(`issues/${request.issue}/labels/agent-working`, 'DELETE', undefined, true);
@@ -65,7 +81,10 @@ async function main(command) {
     await summary(`### OpenCode assessment\n${envelope.effect.body}\n\nOutcome: ${envelope.result.status}`); return;
   }
   if (command !== 'publish') throw Error('Unknown completion command');
-  const refresh = () => inspectCompletion(api, repository, owner, request.authorization, request.stage, env.GITHUB_RUN_ID);
+  const refresh = async () => {
+    if (request.dispatch) await checkDispatchClaim(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID);
+    return inspectCompletion(api, repository, owner, request.authorization, request.stage, env.GITHUB_RUN_ID);
+  };
   const verifyEvidence = async current => {
     if (envelope.result.status !== 'passed' || current.merged && request.stage === 'integrate') return;
     assertChecks(current); assertCitedChecks(envelope, request.completion, current);
@@ -100,7 +119,7 @@ async function main(command) {
   const publication = await publishProcessBundle(api, publicationRequest, files, recheck);
   await save('publication-receipt.json', publication);
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
-  const body = `${envelope.effect.body}\n\n[Report and retrospective](${publication.url}) · [Run](${request.runUrl})\n\n${request.stage === 'integrate' && receipt.state === 'merged' ? 'Merged. The final review will follow after CI passes.' : receipt.state === 'blocked' ? 'Please resolve the blocker above.' : 'Review recorded.'}\n\n${marker}`;
+  const body = `## ${statusText(request.stage, envelope.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${envelope.effect.body}\n\n[Report and retrospective](${publication.url}) · [Run](${request.runUrl})\n\n${request.stage === 'integrate' && receipt.state === 'merged' ? 'Merged. The final review will follow after CI passes.' : receipt.state === 'blocked' ? 'Please resolve the blocker above.' : 'Review recorded.'}\n\n${marker}`;
   for (const target of new Set([request.issue, request.authorization.pr])) {
     const comments = await list(api, `issues/${target}/comments`);
     if (!comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) await api(`issues/${target}/comments`, 'POST', { body });
@@ -109,6 +128,7 @@ async function main(command) {
   for (const label of effects.remove) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);
   if (effects.add.length) await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add });
   if (effects.closeIssue) await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
+  await save('published.json', { url: publication.url });
   await summary(`### Retained delivery result\n${receipt.state}\n\n[Permanent report](${publication.url})\n\n${receipt.dispatchError ?? 'Publication confirmed; source and evidence commits are recorded separately.'}`);
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(error => { console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1; });

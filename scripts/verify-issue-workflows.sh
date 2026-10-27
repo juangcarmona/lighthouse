@@ -11,10 +11,10 @@ gh extension install github/gh-aw --pin v0.93.2
 gh aw --version
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md"
-if grep -Eq '^  (propose|pull_request_review|pull_request_review_comment):' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
+grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
-if grep -Eq '^  integrate:' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"; then exit 1; fi
+grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-completion
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
