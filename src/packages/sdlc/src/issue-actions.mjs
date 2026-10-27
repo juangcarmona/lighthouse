@@ -70,8 +70,11 @@ async function main(command) {
   }
   let dispatch;
   if (command === 'prepare' && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && event.inputs?.['dispatch-request']) {
+    // Match the literal concurrency key: aliases such as 0130 must not claim issue 130.
+    const dispatchIssue = Number(env.LIGHTHOUSE_ISSUE);
+    if (!Number.isSafeInteger(dispatchIssue) || dispatchIssue < 1 || String(dispatchIssue) !== env.LIGHTHOUSE_ISSUE) throw Error('Dispatch issue must be a canonical positive integer');
     const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
-    dispatch = await loadDispatch(api, repo, owner, Number(env.LIGHTHOUSE_ISSUE), event.inputs['dispatch-request'], worker);
+    dispatch = await loadDispatch(api, repo, owner, dispatchIssue, event.inputs['dispatch-request'], worker);
     if (!await claimDispatch(api, repo, dispatch, env.GITHUB_RUN_ID)) {
       await output('eligible', 'false'); await summary('This request already has an implementation execution. No duplicate agent started.'); return;
     }
