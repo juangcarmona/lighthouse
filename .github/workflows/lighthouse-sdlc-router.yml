@@ -52,7 +52,8 @@ jobs:
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
-      (github.actor == github.repository_owner || github.event_name == 'workflow_run') &&
+      (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
+       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && inputs.stage == 'implement' && inputs.after_run != '')) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
        (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
@@ -70,7 +71,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 57d4e23da2831be5fad0331f1ba82326782943cc
+          ref: ddde32d5144bbd3f536eed9b7a7144867cb5d998
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -102,7 +103,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 57d4e23da2831be5fad0331f1ba82326782943cc
+          ref: ddde32d5144bbd3f536eed9b7a7144867cb5d998
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

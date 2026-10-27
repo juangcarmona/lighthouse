@@ -67,7 +67,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 57d4e23da2831be5fad0331f1ba82326782943cc
+      ref: ddde32d5144bbd3f536eed9b7a7144867cb5d998
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 57d4e23da2831be5fad0331f1ba82326782943cc
+          ref: ddde32d5144bbd3f536eed9b7a7144867cb5d998
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -142,6 +142,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: write
       contents: read
       issues: write
     env:
@@ -150,7 +151,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 57d4e23da2831be5fad0331f1ba82326782943cc
+          ref: ddde32d5144bbd3f536eed9b7a7144867cb5d998
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -182,6 +183,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Request the verified implementation continuation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-refinement
 ---
 
 # Refine the authorized issue
