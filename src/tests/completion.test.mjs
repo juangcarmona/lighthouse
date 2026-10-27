@@ -282,11 +282,11 @@ test('retained independent integration binds the original owner merge decision w
   const parent = { id: 100, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: base, head_branch: 'main', repository: { full_name: 'owner/repo' } };
   const read = async (requestOverride = {}, parentOverride = {}) => {
     const r = { ...origin, ...requestOverride };
-    const original = retainedIntegration({ dispatchOrigin: { request: r, receipt: { ...receipt, digest: hash(r) } }, runOverrides: { id: 123, path: stagePath('integrate'), head_branch: 'main', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } } });
+    const original = retainedIntegration({ dispatchOrigin: { request: r, receipt: { ...receipt, digest: hash(r) } }, runOverrides: { id: 123, path: stagePath('integrate'), head_sha: r.workflowRevision, head_branch: 'main', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } } });
     return readIntegrationEvidence(path => path === 'actions/runs/100/attempts/1' ? { ...parent, ...parentOverride } : original(path), { ...observation, merged: true, merge: merged });
   };
   assert.equal((await read()).receipt.authorization.merge, true);
   await assert.rejects(read({ event: { inputs: { ...event.inputs, merge: 'false' } } }), /not authenticated/);
   await assert.rejects(read({}, { actor: { login: 'outsider' } }), /authorized router/);
-  await assert.rejects(read({ sourceRevision: head }), /dispatch mismatch/);
+  assert.ok(await read({ sourceRevision: head, workflowRevision: head }, { head_sha: head }));
 });

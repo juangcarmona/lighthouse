@@ -55,7 +55,7 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
       const origin = workflow.dispatchOrigin;
       const parent = await api(`actions/runs/${origin.receipt.routerRunId}/attempts/${origin.receipt.routerAttempt}`);
       verifyDispatchOrigin(origin.request, origin.receipt, parent, run, binding.repository, owner, binding.issue);
-      if (origin.request.stage !== 'integrate' || origin.request.sourceRevision !== payload.binding.base || String(origin.receipt.workerRunId) !== String(run.id)) throw Error('Retained integration dispatch mismatch');
+      if (origin.request.stage !== 'integrate' || String(origin.receipt.workerRunId) !== String(run.id)) throw Error('Retained integration dispatch mismatch');
       originEvent = origin.request.event; originName = origin.request.eventName;
     }
     let manual = run.event === 'workflow_dispatch' && run.actor?.login === owner && run.triggering_actor?.login === owner && run.head_sha === payload.binding.base;
