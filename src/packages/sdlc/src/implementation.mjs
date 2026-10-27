@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { proposalRoot, changeName } from './proposal.mjs';
+import { validateEnvironment } from './execution-environment.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
@@ -31,7 +32,9 @@ export async function loadImplementation(api, issue, owner, revision, defaultBra
   const planCheck = ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', changeName(issue), '--strict', '--no-interactive'];
   policy = validateImplementationPolicy(policy, issue);
   policy = { ...policy, checks: [...policy.checks, planCheck] };
-  return { policy, proposal: { root: proposalRoot(issue) } };
+  const environmentFile = await api(`contents/.lighthouse/environment.json?ref=${revision}`, 'GET', undefined, true);
+  const environment = environmentFile ? validateEnvironment(JSON.parse(Buffer.from(environmentFile.content, 'base64').toString())) : null;
+  return { policy, proposal: { root: proposalRoot(issue) }, ...(environment ? { environment } : {}) };
 }
 
 // A reviewed immutable seed recovers a failed attempt without updating its branch.
@@ -125,7 +128,11 @@ export async function materializeCandidate(before, changes, destination) {
 export function validateCheckReceipt(receipt, request, changes) {
   if (receipt?.runId !== request.runId || receipt.sourceRevision !== request.sourceRevision || receipt.changesDigest !== changesDigest(changes) || !Array.isArray(receipt.checks) || receipt.checks.length !== request.implementation.policy.checks.length) throw Error('Implementation check receipt identity mismatch');
   for (let i = 0; i < receipt.checks.length; i++) if (JSON.stringify(receipt.checks[i].command) !== JSON.stringify(request.implementation.policy.checks[i]) || !Number.isInteger(receipt.checks[i].exitCode)) throw Error('Implementation check receipt command mismatch');
-  return receipt.checks.every(c => c.exitCode === 0);
+  if (request.implementation.environment) {
+    const declaration = validateEnvironment(request.implementation.environment);
+    if (!/^sha256:[a-f0-9]{64}$/.test(receipt.image ?? '') || receipt.environment?.image !== receipt.image || receipt.environment?.profile !== declaration.profile || !Array.isArray(receipt.environment.services) || receipt.environment.services.length !== declaration.services.length || receipt.environment.services.some(s => s.type !== 'postgresql' || !/^sha256:[a-f0-9]{64}$/.test(s.image ?? ''))) throw Error('Implementation environment receipt mismatch');
+  }
+  return receipt.serviceCleanup !== false && receipt.checks.every(c => c.exitCode === 0);
 }
 export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite) {
   validateChanges(changes, snapshot.implementation.policy);

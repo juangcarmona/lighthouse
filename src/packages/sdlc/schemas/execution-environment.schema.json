@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repository execution environment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profile", "services"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "profile": { "enum": ["base", "dotnet"] },
+    "services": { "type": "array", "maxItems": 1, "uniqueItems": true, "items": { "const": "postgresql" } }
+  }
+}
