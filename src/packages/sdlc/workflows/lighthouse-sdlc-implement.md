@@ -9,6 +9,8 @@ concurrency:
   queue: max
   job-discriminator: ${{ github.run_id }}
 on:
+  # prepare authenticates the originating owner request; bot dispatch has no collaborator role.
+  roles: all
   workflow_dispatch:
     inputs:
       issue:
@@ -194,6 +196,11 @@ jobs:
         with:
           name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
         env:
