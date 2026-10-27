@@ -1,0 +1,21 @@
+## What went well
+- The required repository check and configured post-merge ci.yml passed at the merged revision (github-check:122492952845). The host independently confirms the merge.
+- The two deliveries remain identifiable in tasks.md. Profile receipts distinguish requested settings from unverified provider settings; the candidate stays opt-in. Deterministic tests cover precedence and bounded scheduling. evaluation.md records preliminary comparisons and a real host-callback dogfood without inventing account costs.
+
+## What went wrong
+- Task 2.3 and PR text leave native two-worker acceptance unfinished. The prompt-only evaluation does not demonstrate the repository edits/checks promised by model-profiles.md:88-99. Account route, usage and cost selection remain unknown.
+- priorIntegration is null, so retained integration history is missing despite independently observed merge and green CI. Task 4.1 reports unresolved historical citation failures; their disposition is not supplied.
+- worker-catalogue.md:18 conflicts with its triage section and the installed triage workflow. No runtime source defect was established by this inspection.
+
+## Start doing
+- Runner operator and maintainer: attach a compact acceptance matrix to #148 separating deterministic checks, native worker receipts, repository-task acceptance, provider unknowns and account evidence. Preserve exact revisions and reviewer outcomes.
+- Completion host operator: retain or explicitly account for the integration history when review follows a manual merge; do not reconstruct an authorization receipt from a successful check.
+
+## Stop doing
+- Do not use process exit success or a tiny prompt comparator as repository-task acceptance or a cost ranking. Do not treat applied product intent, merge state or green CI as proof of missing historical/manual evidence. No repeated cross-issue behavior is established here; retries of one attempt would not establish recurrence.
+
+## Improvement candidates
+1. **Acceptance evidence checklist** — Owner: runner operator / SDLC maintainer. Observed gap: tasks.md:14 and PR body leave distinct native worker receipts open, while evaluate-model-profiles.mjs only sends prompts. Smallest guard: a separately reviewed checklist requiring two worker receipts and fixed repository-task checks before declaring task 2.3 complete. Reproduce with the present report: it lacks native receipts and repository diffs/check outcomes; after correction, prove those same omissions are detected and valid receipts accepted, while explicit provider unknowns remain allowed.
+2. **Continuity-gap reporting** — Owner: completion host maintainer. Evidence: priorIntegration=null alongside merged=true. Smallest guard: a separately reviewed explicit manual-merge continuity disposition, never synthesized authority. Regression proof: a merged fixture without retained history stays blocked; an exact matching authenticated record resolves the missing-history finding, while stale/mismatched records do not. Existing blocked behavior is appropriate; no host defect is established.
+3. **Catalogue consistency** — Owner: SDLC documentation maintainer. Evidence: worker-catalogue.md:18 versus :32-34 and .github/workflows/lighthouse-sdlc-triage.md. Smallest guard: review the contradictory sentence against the installed worker inventory. Reproduce by comparing those references before correction; verify agreement afterward, including a consumer fixture without triage so opt-in installations are not universalized. Any automated guard or provider-owned guidance change needs separate review and regression proof.
+4. **Explicit historical verification disposition** — Owner: product documentation maintainer / juangcarmona. Evidence: unchecked task 4.1 reports four pre-existing citation failures. Smallest guard: attach the exact verification outcome and owner disposition to the delivery record. First reproduce the cited failures in an authorized verification environment; after a separately reviewed correction, rerun the same verifier, or retain an explicit bounded deferral. This review did not reproduce the failures, change those documents or infer a new source defect.

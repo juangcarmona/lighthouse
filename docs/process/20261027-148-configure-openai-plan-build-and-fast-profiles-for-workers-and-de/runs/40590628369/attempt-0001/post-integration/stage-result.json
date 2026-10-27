@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "runId": "8ee5286b5a6bf1a1fcd362a1f14798c924a9633728c985515fbc0d9daa24a98d",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "github-check:122492952845",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40590433459/job/122492952845",
+      "reason": "Host-authenticated required repository check succeeded at the actual merged revision; ci.yml post-merge run 40590433459 also passed. This proves check completion, not all intended behavior."
+    },
+    {
+      "id": "review:merged-delivery",
+      "status": "passed",
+      "source": "/input/context.json#/completion",
+      "reason": "Host observes PR 153 closed and merged by juangcarmona at 6342022c0026e1b0bca6d836d4738da3b7d327f4, from accepted head a5a249e18f5343e760dbee80221578ad596dc8f7. This is independent merge evidence, not an agent assessment or new authorization."
+    },
+    {
+      "id": "review:integration-continuity",
+      "status": "unavailable",
+      "source": "/input/context.json#/priorIntegration",
+      "reason": "priorIntegration is null: no matching retained authorized integration report, receipt or artifact hashes were supplied. Current observed merge and CI do not reconstruct that history."
+    },
+    {
+      "id": "review:worker-acceptance",
+      "status": "unavailable",
+      "source": "openspec/changes/issue-148-proposal/tasks.md:14",
+      "reason": "Task 2.3 remains unchecked, and PR body explicitly leaves native receipts from two distinct stage workers to post-merge acceptance. No such receipts were supplied. Provider settings may honestly remain unverified, but configuration tests and this session's model identity do not replace two worker executions."
+    },
+    {
+      "id": "review:evaluation-acceptance",
+      "status": "unavailable",
+      "source": "openspec/changes/issue-148-proposal/evaluation.md:3-17",
+      "reason": "Seven fixed-prompt comparisons are reported at an earlier source revision, with no retries or corrections and unknown usage/account charges. scripts/evaluate-model-profiles.mjs does not exercise repository edits and regression checks required by model-profiles.md:88-99. No accepted cost winner or preset is established."
+    },
+    {
+      "id": "review:citation-disposition",
+      "status": "pending-review",
+      "source": "openspec/changes/issue-148-proposal/tasks.md:29-31",
+      "reason": "Task 4.1 remains unchecked and reports repository-wide citation verification failing on four pre-existing issue-125 documents. No correction receipt or explicit owner disposition was supplied. This is a reported historical verification failure, not a failed authenticated GitHub check."
+    },
+    {
+      "id": "review:guidance-inspection",
+      "status": "passed",
+      "source": "docs/architecture/06-runtime-view/worker-catalogue.md:18-34",
+      "reason": "Inspected root guidance, package README, completion/profile guides, workflow guidance and worker catalogue against affected paths. Established stale triage statement; recorded separately for follow-up without rewriting guidance. Host-owned completion signaling is an intentional adapter boundary, not drift."
+    },
+    {
+      "id": "review:finalization-plan",
+      "status": "passed",
+      "source": "/input/context.json#/completion/finalization",
+      "reason": "Blocked outcome keeps issue open, adds/preserves waiting-review, removes no delivery labels and preserves PR labels. Reservation release belongs to host cleanup. Final labels are subsequent publisher actions, not missing prior evidence."
+    }
+  ],
+  "missingEvidence": [
+    "Matching retained integration report and receipt, accepted delivery binding, artifact hashes and historical owner merge authority; priorIntegration is null.",
+    "Native runtime receipts for two stage workers using distinct configured profiles, with requested/resolved settings and provider confirmation or explicit unverified status.",
+    "Acceptance-grade repository-task comparison on identical starting revisions and checks, including Sol Medium versus Terra and Luna lightweight acceptance, reviewer outcomes and operator-confirmed account route or explicit unknowns. Existing prompt comparisons are preliminary, not repository acceptance proof."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [
+    "Maintainer disposition of unchecked task 4.1 and its reported pre-existing citation failures: supply passing verification or explicitly accept/defer the specific historical gap with an owner and reference. No such disposition is supplied."
+  ],
+  "nextAction": "Maintainer and runner operator: attach the missing integration history and two-worker/repository-evaluation receipts to #148, and resolve or explicitly disposition task 4.1 before requesting review again. Keep candidate profiles inactive pending deliberate operator adoption.",
+  "output": {
+    "summary": "Implementation is merged and required post-merge CI passed; delivery review is blocked by incomplete acceptance and continuity evidence, not by a failed required GitHub check.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 148,
+      "pr": 153,
+      "head": "a5a249e18f5343e760dbee80221578ad596dc8f7",
+      "integratedRevision": "6342022c0026e1b0bca6d836d4738da3b7d327f4",
+      "intent": "39e9304a4c62528dc2979aae36e11543d07218f9cf1196f0fb5885e357a4d059",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "files": "b8b925f7d067140c4cd9dd4b730c3c33375d1650eb91a95ffd131e77ac8ebad9",
+      "provenance": "Host-supplied delivery identity and GitHub observations; no independent API or git identity verification performed.",
+      "currentAuthorizationMerge": false,
+      "priorIntegration": null
+    },
+    "implementationAssessment": {
+      "delivery1": "Resolver and adapter source plus deterministic tests cover operator opt-in, field precedence, legacy forwarding, effort variants, invalid/unavailable declarations, provider errors and no premium processing switches. Receipt implementation explicitly distinguishes configuration from provider confirmation. Live two-worker acceptance remains open.",
+      "delivery2": "Scheduler shares the resolver and preflights launch contracts, dependencies and scopes; tests cover disjoint waves, conflicts, limits, cancellation and failure propagation. evaluation.md reports four real callback launches in two bounded waves and a separate injected failure. This is documented host-callback evidence, not automatic worker-tool integration or authenticated provider-settings evidence.",
+      "traceability": "Applied CHG-LH-MODEL-PROFILES-001 and both functional requirements are present, with separately identifiable delivery sections in the OpenSpec plan. Product Change application does not prove acceptance.",
+      "limitations": "Read-only inspection only; no tests or model evaluations were executed in this review. The PR reports 241 tests passed and 3 optional skips; this review does not independently assert those counts. No runtime source defect was established in the inspected paths."
+    },
+    "findings": [
+      {
+        "id": "R148-1",
+        "classification": "accepted",
+        "kind": "acceptance-evidence-gap",
+        "owner": "Runner operator and maintainer juangcarmona",
+        "followUp": "#148; openspec/changes/issue-148-proposal/tasks.md task 2.3",
+        "finding": "Distinct native worker receipts and acceptance-grade repository comparisons remain absent. Accepted means the review establishes the gap, not that the owner waived it.",
+        "blocking": true
+      },
+      {
+        "id": "R148-2",
+        "classification": "accepted",
+        "kind": "historical-process-evidence-gap",
+        "owner": "Maintainer juangcarmona / completion host operator",
+        "followUp": "#148; priorIntegration continuity evidence",
+        "finding": "No matching retained authorized integration record was supplied. The observed manual merge is real, but does not prove a prior integration assessment or its publication. No unauthorized merge allegation is established.",
+        "blocking": true
+      },
+      {
+        "id": "R148-3",
+        "classification": "accepted",
+        "kind": "verification-disposition-gap",
+        "owner": "Maintainer juangcarmona / product documentation owner",
+        "followUp": "#148; tasks.md task 4.1 and referenced issue-125 documents",
+        "finding": "Historical citation failure is reported without passing replacement evidence or explicit disposition. Its pre-existing attribution is a source report, not independently reproduced evidence or a new defect attributed to this PR.",
+        "blocking": true
+      },
+      {
+        "id": "R148-4",
+        "classification": "deferred",
+        "kind": "guidance-drift",
+        "owner": "Lighthouse SDLC documentation maintainer",
+        "followUp": "#148 review record R148-4; docs/architecture/06-runtime-view/worker-catalogue.md:18",
+        "finding": "The catalogue says triage is not installed here, while its own triage section describes the worker and the changed .github/workflows/lighthouse-sdlc-triage.md declares it. This established documentation inconsistency is separate from runtime correctness. Recommend a separately reviewed correction; this review neither changes policy nor opens follow-up work.",
+        "blocking": false
+      }
+    ],
+    "optionalObservations": [
+      "The agent and public-site publication jobs were pending in the host snapshot. Neither is an adopted required check nor supplied proof of the missing worker acceptance receipts; their pending state is not a failed check or an additional merge gate.",
+      "Skipped adopter-install, stable-publication and other optional checks do not establish executed behavior and do not independently block this review.",
+      "Candidate preset adoption and cost selection remain unresolved. Owner comment 6449899598 authorizes configurable implementation with honest unknowns, not fabricated evaluation results, blanket acceptance waivers, profile activation or merge authority."
+    ],
+    "finalization": {
+      "policySources": [
+        "src/packages/sdlc/completion.md:36",
+        ".lighthouse/github.json",
+        "/input/context.json#/completion/finalization"
+      ],
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "ready",
+          "waiting-review"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [
+          "waiting-review"
+        ],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "executor": "Trusted publisher after validation; host cleanup releases its reservation on every outcome.",
+      "permissions": "No integration authorization, policy change, issue creation, source edit or next-stage dispatch requested."
+    },
+    "retrospective": "## What went well\n- The required repository check and configured post-merge ci.yml passed at the merged revision (github-check:122492952845). The host independently confirms the merge.\n- The two deliveries remain identifiable in tasks.md. Profile receipts distinguish requested settings from unverified provider settings; the candidate stays opt-in. Deterministic tests cover precedence and bounded scheduling. evaluation.md records preliminary comparisons and a real host-callback dogfood without inventing account costs.\n\n## What went wrong\n- Task 2.3 and PR text leave native two-worker acceptance unfinished. The prompt-only evaluation does not demonstrate the repository edits/checks promised by model-profiles.md:88-99. Account route, usage and cost selection remain unknown.\n- priorIntegration is null, so retained integration history is missing despite independently observed merge and green CI. Task 4.1 reports unresolved historical citation failures; their disposition is not supplied.\n- worker-catalogue.md:18 conflicts with its triage section and the installed triage workflow. No runtime source defect was established by this inspection.\n\n## Start doing\n- Runner operator and maintainer: attach a compact acceptance matrix to #148 separating deterministic checks, native worker receipts, repository-task acceptance, provider unknowns and account evidence. Preserve exact revisions and reviewer outcomes.\n- Completion host operator: retain or explicitly account for the integration history when review follows a manual merge; do not reconstruct an authorization receipt from a successful check.\n\n## Stop doing\n- Do not use process exit success or a tiny prompt comparator as repository-task acceptance or a cost ranking. Do not treat applied product intent, merge state or green CI as proof of missing historical/manual evidence. No repeated cross-issue behavior is established here; retries of one attempt would not establish recurrence.\n\n## Improvement candidates\n1. **Acceptance evidence checklist** — Owner: runner operator / SDLC maintainer. Observed gap: tasks.md:14 and PR body leave distinct native worker receipts open, while evaluate-model-profiles.mjs only sends prompts. Smallest guard: a separately reviewed checklist requiring two worker receipts and fixed repository-task checks before declaring task 2.3 complete. Reproduce with the present report: it lacks native receipts and repository diffs/check outcomes; after correction, prove those same omissions are detected and valid receipts accepted, while explicit provider unknowns remain allowed.\n2. **Continuity-gap reporting** — Owner: completion host maintainer. Evidence: priorIntegration=null alongside merged=true. Smallest guard: a separately reviewed explicit manual-merge continuity disposition, never synthesized authority. Regression proof: a merged fixture without retained history stays blocked; an exact matching authenticated record resolves the missing-history finding, while stale/mismatched records do not. Existing blocked behavior is appropriate; no host defect is established.\n3. **Catalogue consistency** — Owner: SDLC documentation maintainer. Evidence: worker-catalogue.md:18 versus :32-34 and .github/workflows/lighthouse-sdlc-triage.md. Smallest guard: review the contradictory sentence against the installed worker inventory. Reproduce by comparing those references before correction; verify agreement afterward, including a consumer fixture without triage so opt-in installations are not universalized. Any automated guard or provider-owned guidance change needs separate review and regression proof.\n4. **Explicit historical verification disposition** — Owner: product documentation maintainer / juangcarmona. Evidence: unchecked task 4.1 reports four pre-existing citation failures. Smallest guard: attach the exact verification outcome and owner disposition to the delivery record. First reproduce the cited failures in an authorized verification environment; after a separately reviewed correction, rerun the same verifier, or retain an explicit bounded deferral. This review did not reproduce the failures, change those documents or infer a new source defect."
+  }
+}
