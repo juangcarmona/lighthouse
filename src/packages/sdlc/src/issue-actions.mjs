@@ -206,8 +206,9 @@ async function main(command) {
     const stage = route.stage;
     await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
     let predecessor, implementation, seed, planningReference, triage;
-    if (stage === 'refine') {
+    if (stage === 'refine' || issue.user.login !== owner && !proposalReview && !implementationReview && ['propose', 'implement'].includes(stage)) {
       const report = [...all].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-stage:triage:passed -->'));
+      if (!report && issue.user.login !== owner) throw Error('External request requires authenticated passed triage before later work');
       if (report) {
         triage = await loadStageReport(api, repo, report, { owner, issue: issueNumber });
         const errors = validateStageEnvelope(triage.envelope, triage.request);
@@ -222,6 +223,7 @@ async function main(command) {
         checkHandoff(prior, result, issue, answers, revision.sha, dispatch?.request.predecessor?.runId ?? dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID);
       }
       if (issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
+      if (issue.user.login !== owner && !handoff && !implementationReview) await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers) });
       implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch);
       seed = implementationReview ? null : await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');

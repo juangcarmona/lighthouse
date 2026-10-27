@@ -38,5 +38,5 @@ export function validateEstimateRevision(output, prior) {
   return errors;
 }
 
-// External authorship is admitted only for triage, never for later direct stages.
-export const eligibleIssueAuthor = (issue, owner, stage) => issue?.user?.login === owner || stage === 'triage';
+// Later owner requests on external issues need the triage receipt checked in preparation.
+export const eligibleIssueAuthor = (issue, owner, stage) => issue?.user?.login === owner || stage === 'triage' || issue?.labels?.some(label => label.name === 'triaged');

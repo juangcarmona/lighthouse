@@ -31,6 +31,12 @@ The native adapter SHALL allow the verified owner to admit an open issue, includ
 - **WHEN** an external author opens an issue, applies a label or comments
 - **THEN** no agent starts
 
+#### Scenario: Owner continues an external request
+
+- **WHEN** the owner requests refinement after an external request passed triage
+- **THEN** the host verifies that triage receipt before starting refinement
+- **AND** a triaged label without authenticated evidence cannot authorize later work
+
 #### Scenario: Owner answers a pending question
 
 - **WHEN** the owner answers the latest blocked triage report and the bound inputs remain current

@@ -48,7 +48,7 @@ test('refinement rechecks and retains a supplied initial estimate, even when unc
   assert.ok(validateStageEnvelope({ ...refine, result: { ...refine.result, output: {} } }, refineRequest).length);
 });
 
-test('external requests require owner admission and cannot authorize a later stage', () => {
+test('external requests need owner admission and a triaged issue before later stages', () => {
   const issue = { number: 18, user: { login: 'external' }, state: 'open', labels: [] };
   const event = { action: 'labeled', issue, label: { name: 'triage' } };
   assert.equal(routeIssue(event, 'owner', 'owner', 'issues').stage, 'triage');
@@ -59,6 +59,10 @@ test('external requests require owner admission and cannot authorize a later sta
   for (const name of ['human-working', 'agent-working']) assert.equal(routeIssue({ ...event, issue: { ...issue, labels: [{ name }] } }, 'owner', 'owner', 'issues').run, false);
   assert.equal(eligibleIssueAuthor(issue, 'owner', 'triage'), true);
   for (const stage of ['refine', 'propose', 'implement', 'integrate', 'review']) assert.equal(eligibleIssueAuthor(issue, 'owner', stage), false);
+  const triaged = { ...issue, labels: [{ name: 'triaged' }] };
+  for (const stage of ['refine', 'propose', 'implement', 'integrate', 'review']) assert.equal(eligibleIssueAuthor(triaged, 'owner', stage), true);
+  assert.equal(routeIssue({ action: 'labeled', issue: triaged, label: { name: 'refine' } }, 'owner', 'owner', 'issues').stage, 'refine');
+  assert.equal(routeIssue({ action: 'labeled', issue: triaged, label: { name: 'refine' } }, 'external', 'owner', 'issues').run, false);
   assert.equal(routeIssue({ inputs: { issue: '18', stage: 'triage' } }, 'owner', 'owner', 'workflow_dispatch').stage, 'triage');
   assert.equal(stagePath('triage'), '.github/workflows/lighthouse-sdlc-triage.lock.yml');
 });
@@ -70,6 +74,18 @@ test('only matching owner replies resume blocked triage and never start refineme
   assert.equal(routeIssue(event, 'owner', 'owner', 'issue_comment', [report]).stage, 'triage');
   assert.equal(routeIssue(event, 'external', 'owner', 'issue_comment', [report]).run, false);
   assert.equal(pendingReply(event, [{ ...report, body: report.body.replaceAll('blocked', 'passed') }]), null);
+});
+
+test('a triaged label alone cannot start refinement of an external request', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-external-refine-'));
+  try {
+    const issue = { number: 18, title: 'External request', body: originalRequest, user: { login: 'external' }, state: 'open', labels: [{ name: 'triaged' }, { name: 'refine' }] };
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'labeled', issue, label: { name: 'refine' } }));
+    await writeFile(join(dir, 'mock.mjs'), `globalThis.fetch = async url => ({ ok: true, status: 200, json: async () => url.endsWith('/repos/owner/repo') ? { default_branch: 'main' } : url.includes('/commits/') ? { sha: '${'b'.repeat(40)}' } : url.includes('/comments?') ? [] : ${JSON.stringify(issue)} });`);
+    const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'prepare'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_EVENT_NAME: 'issues', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_SHA: 'b'.repeat(40), GITHUB_RUN_ID: '123', RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /authenticated passed triage/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test('packaged public form asks only for problem and desired result', async () => {

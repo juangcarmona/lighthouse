@@ -4,7 +4,7 @@ The public form requires the problem and desired result. Examples or context are
 
 ## Admission and continuation
 
-With the native workflows installed and automation enabled, the owner applies `triage` or manually selects the triage stage to admit an open issue, including an external request. Opening an issue alone starts no agent. Only an owner reply can resume a pending clarification. Admission permits triage only; the result stops for the owner to decide whether to request refinement. It never grants implementation or merge permission.
+With the native workflows installed and automation enabled, the owner applies `triage` or manually selects the triage stage to admit an open issue, including an external request. Opening an issue alone starts no agent. Only an owner reply can resume a pending clarification. Admission permits triage only; the result stops for the owner to decide whether to request refinement. An external request can continue when the owner requests the next stage and the host verifies its triage and refinement evidence. Admission never grants implementation or merge permission.
 
 Triage preserves the exact issue body in `output.requestAnalysis.originalRequest`, adds `problem` and `desiredResult`, records `inferences` as `{inference, source}`, lists `unknowns` separately and records `questions` as `{question, blocks}`. An empty questions array means no blocking question. Do not turn nonblocking details into mandatory questions. Cite repository evidence rather than presenting an inference as the requester's words.
 
