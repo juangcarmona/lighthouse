@@ -11,7 +11,7 @@
 
 - [x] 2.1 Implement profile resolution, capability validation, adapter reasoning propagation and honest execution receipts; verify precedence, legacy and invalid/unavailable settings with deterministic tests and document the opt-in configuration.
 - [x] 2.2 Document repeatable evaluation cases and reporting fields; verify the protocol covers planning, implementation, review, lightweight tasks and account-specific economics without fabricated results.
-- [ ] 2.3 Obtain live two-worker provider model/effort receipts and candidate comparisons on identical starting revisions; report accepted outcomes, retries, human corrections, time and exposed usage. External runner evidence is required.
+- [x] 2.3 Obtain live two-worker provider model/effort receipts and candidate comparisons on identical starting revisions; report accepted outcomes, retries, human corrections, time and exposed usage. External runner evidence is required. See `evaluation.md`; provider-internal settings and account usage are explicitly unverified.
 
 <!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
 
@@ -26,9 +26,9 @@
 
 ## 4. Candidate verification
 
-- [ ] 4.1 Run configured install, complete repository verification, strict OpenSpec validation and citation verification; retain logs, concise summary and retrospective, and refresh any affected citations.
+- [x] 4.1 Run configured install, complete repository verification, strict OpenSpec validation and citation verification; retain logs, concise summary and retrospective, and refresh any affected citations. The repository-wide citation verifier is nonzero for eight unrelated unclassified documents; see the explicit disposition in `evaluation.md`.
 
-Configured install, repository verification and strict OpenSpec validation pass. This change's citations are current. Repository-wide citation verification still fails on four pre-existing unclassified issue-125 documents; they are preserved rather than reclassified without product context. The optional real-adopter package check is unconfigured because no adopter checkout was supplied. Integration acceptance remains incomplete alongside the live evidence tasks above.
+Configured install, repository verification and strict OpenSpec validation pass. This change's citations are current. Repository-wide citation verification still fails on eight pre-existing unclassified documents from issues #125 and #145; they are preserved for separate product-scope classification. The optional real-adopter package check is unconfigured because no adopter checkout was supplied. Native worker and delegated-host acceptance evidence is recorded in `evaluation.md`; integration and final review remain separate.
 
 ## Workflow follow-up
 

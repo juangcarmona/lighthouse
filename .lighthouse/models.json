@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "defaultProfile": "build",
   "workers": {
-    "triage": "fast",
+    "triage": "build",
     "refine": "plan",
     "propose": "plan",
     "implement": "build",
-    "apply-review": "fast",
+    "apply-review": "build",
     "integrate": "plan",
     "review": "plan"
   },
