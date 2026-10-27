@@ -1,4 +1,4 @@
-import { refinementAfterRun } from './stage-transition.mjs';
+import { refinementAfterRun, signalRefinementContinuation } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, statusText, stages } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
@@ -290,6 +290,13 @@ async function main(command) {
   }
   if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { return; } }
   const snapshot = JSON.parse(await readFile(join(dir, 'request.json'), 'utf8'));
+  if (command === 'continue-refinement') {
+    await readFile(join(dir, 'published'));
+    const envelope = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
+    const sent = await signalRefinementContinuation(api, snapshot, envelope);
+    await summary(sent ? 'Implementation continuation requested; the router will verify the completed refinement.' : 'No implementation continuation requested.');
+    return;
+  }
   if (snapshot.dispatch) env.LIGHTHOUSE_AUTO_IMPLEMENT = String(snapshot.autoImplement === true);
   if (command === 'validate') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
