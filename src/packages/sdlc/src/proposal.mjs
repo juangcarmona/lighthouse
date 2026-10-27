@@ -1,3 +1,4 @@
+import { loadDispatch, checkDispatchClaim } from './implement-dispatch.mjs';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -77,7 +78,14 @@ export async function loadStageReport(api, repo, report, current) {
       await writeFile(archive, bytes);
       values[kind] = JSON.parse(execFileSync('python3', ['-c', 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); matches=[i for i in z.infolist() if i.filename==sys.argv[2]]; assert len(matches)==1 and matches[0].file_size<=128000, "Invalid artifact member"; data=z.open(matches[0]).read(128001); assert len(data)<=128000; sys.stdout.buffer.write(data)', archive, file], { encoding: 'utf8', maxBuffer: 128000, timeout: 10000 }));
     }
-    if (run.status !== 'completed' || run.conclusion !== 'success' || !['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || String(run.id) !== String(values.input.workflowRunId) || run.head_sha !== values.input.sourceRevision || values.input.issue !== current.issue || marker !== values.input.runId) throw Error('Stage report identity mismatch');
+    const request = values.input;
+    if (request.dispatch) {
+      if (request.stage !== 'implement' || !/<!-- lighthouse-stage:implement:/.test(report.body)) throw Error('Unexpected dispatched stage');
+      const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run);
+      if (dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== request.sourceRevision || dispatch.request.workflowRevision !== request.workflowRevision) throw Error('Dispatched report identity mismatch');
+      await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);
+    } else if (!['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || run.head_sha !== request.sourceRevision) throw Error('Stage report identity mismatch');
+    if (run.status !== 'completed' || run.conclusion !== 'success' || String(run.id) !== String(request.workflowRunId) || request.issue !== current.issue || marker !== request.runId) throw Error('Stage report identity mismatch');
     return { request: values.input, envelope: values.result, report: report.html_url, run, marker };
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
