@@ -1,19 +1,10 @@
 name: Lighthouse verification
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - "src/dotnet/**"
-      - "src/gallery/**"
-      - "src/packages/**"
-      - "src/tests/**"
   pull_request:
-    paths-ignore:
-      - "src/dotnet/**"
-      - "src/gallery/**"
-      - "src/packages/**"
-      - "src/tests/**"
 
 permissions:
   contents: read

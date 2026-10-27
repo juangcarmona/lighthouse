@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { writableTree, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
+import { prepareWorkspace, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 
@@ -81,7 +81,7 @@ async function main() {
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
       }
-      await writableTree(source);
+      await prepareWorkspace(source, config);
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
@@ -92,7 +92,7 @@ async function main() {
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
     await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
     const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
-      '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
+      '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', config.image];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);

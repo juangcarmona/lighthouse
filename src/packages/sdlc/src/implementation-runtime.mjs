@@ -1,6 +1,6 @@
 import { chmod, mkdir, writeFile, readdir, lstat, copyFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { changesDigest } from './implementation.mjs';
 
 export async function writableTree(root) {
@@ -11,6 +11,11 @@ export async function writableTree(root) {
     else if (item.isFile()) await chmod(path, (await lstat(path)).mode & 0o111 ? 0o777 : 0o666);
     else throw Error('Workspace must contain regular files only');
   }
+}
+export async function prepareWorkspace(root, config) {
+  await writableTree(root);
+  // npm workspaces chmod linked executables; write permission alone is insufficient.
+  execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/workspace`, '--entrypoint', 'chown', config.image, '-R', `${config.uid}:${config.uid}`, '/workspace'], { stdio: 'inherit', timeout: 30000 });
 }
 export async function copyEvidence(source, destination) {
   let bytes = 0, count = 0;
@@ -30,7 +35,7 @@ export async function copyEvidence(source, destination) {
   await visit(source);
 }
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled }) {
-  await writableTree(workspace);
+  await prepareWorkspace(workspace, config);
   const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), checks: [] };
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
@@ -40,7 +45,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
     if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
     console.log(`Host check ${i + 1}: ${command.join(' ')}`);
     let log = '', pending = '';
-    const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', '4g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', '--mount', `type=bind,src=${workspace},dst=/workspace`, '--workdir', '/workspace', '--entrypoint', command[0], config.image, ...command.slice(1)];
+    const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', '4g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', '--mount', `type=bind,src=${workspace},dst=/workspace`, '--workdir', '/workspace', '--entrypoint', command[0], config.image, ...command.slice(1)];
     const exitCode = await new Promise(resolve => {
       const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const timer = setTimeout(() => { child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); }, remaining);

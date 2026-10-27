@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "profileVersion": 1,
+  "repository": "juangcarmona/lighthouse",
+  "intake": "collaborators",
+  "requiredChecks": [
+    {
+      "context": "repository",
+      "integrationId": 15368
+    }
+  ],
+  "requiredApprovals": 0,
+  "evidenceBranch": "process/retrospectives",
+  "releaseWorkflowReady": true,
+  "completion": {
+    "publishEvidence": true,
+    "postMergeWorkflows": [
+      "ci.yml"
+    ],
+    "protectionObservations": [
+      {
+        "id": 25937351,
+        "revision": "e7e042bf36ebd5e0644a5775e38ee94b5f75e1888e12d9c1b6fdab0112f6afad"
+      }
+    ]
+  }
+}

@@ -102,7 +102,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
   const router = await readFile(join(root, '.github/workflows/lighthouse-sdlc-router.yml'), 'utf8');
   const revision = router.match(/ref: ([a-f0-9]{40})/)?.[1];
   assert.ok(revision, 'Self-adoption requires an immutable source pin');
-  const adoption = spawnSync(process.execPath, ['src/packages/sdlc/src/install-workflows.mjs', '.', revision, '--with-propose'], { cwd: root, encoding: 'utf8' });
+  const adoption = spawnSync(process.execPath, ['src/packages/sdlc/src/install-workflows.mjs', '.', revision, '--with-completion'], { cwd: root, encoding: 'utf8' });
   assert.equal(adoption.status, 0, adoption.stderr);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
