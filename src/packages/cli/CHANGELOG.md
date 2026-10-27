@@ -1,5 +1,24 @@
 # @juangcarmona/lighthouse
 
+## 0.11.3
+
+### Patch Changes
+
+- 1226f22: # External user identity
+
+  Ship external OIDC identity guidance with shared-provider ownership and Keycloak as the self-hosted reference. Surface it in generated adopter instructions and authenticated application skills, with explicit runtime evidence requirements.
+
+- Updated dependencies [a33305e]
+- Updated dependencies [9e97a01]
+- Updated dependencies [83960d5]
+- Updated dependencies [109ea37]
+- Updated dependencies [8429e7d]
+- Updated dependencies [496562b]
+- Updated dependencies [df0c6fe]
+- Updated dependencies [8361f0b]
+- Updated dependencies [160bece]
+  - @juangcarmona/lighthouse-sdlc@0.14.0
+
 ## 0.11.2
 
 ### Patch Changes

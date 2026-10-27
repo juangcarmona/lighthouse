@@ -1,5 +1,43 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.14.0
+
+### Minor Changes
+
+- 83960d5: # Issue delivery
+
+  Plan and implement an issue in one branch, without merging a proposal first. Successful refinement hands work to implementation; blocked decisions and paused issues wait. Repository checks replace mandatory per-issue configuration.
+
+  Owner PR feedback updates the same branch. Approval and CI completion drive integration and the final review. Human-facing comments link to the evidence and state the next action.
+
+- 496562b: # Repository execution environments
+
+  Add opt-in repository execution profiles with pinned local images, host prerequisite checks and isolated temporary PostgreSQL for implementation and independent validation. Preserve legacy image configuration for undeclared consumers.
+
+- 8361f0b: # Worker operations
+
+  Add a dedicated apply-review worker for authorized proposal and implementation feedback, plus optional deterministic maintenance for bounded retries and aggregated issue reports. Document worker routes, operator setup and recovery limits.
+
+### Patch Changes
+
+- a33305e: <!-- markdownlint-disable MD041 --> Dispatch implementation as an independent GitHub workflow with an issue receipt, authenticated origin evidence and duplicate admission checks. Keep the remaining stage routes unchanged.
+- 9e97a01: <!-- markdownlint-disable MD041 --> Dispatch each installed lifecycle stage independently, retain authenticated continuation and merge decisions, and show phase and status icons on issue receipts.
+- 109ea37: # Proposal feedback
+
+  Apply owner feedback to the existing proposal PR, reject stale revisions, and report the next review action explicitly.
+
+- 8429e7d: # Identify rejected candidate files
+
+  Include the affected path when credential screening blocks publication. Build synthetic test tokens at runtime so edits to the redaction tests can pass the same screening as other source files.
+
+- df0c6fe: # Resume blocked proposals from owner replies
+
+  Route owner replies to their blocked refinement or proposal, acknowledge receipt, retain verified refinement evidence across decision rounds and keep later-stage approvals separate.
+
+- 160bece: # Fix container workspace installation
+
+  Give disposable implementation and verification workspaces to the container user so npm can install linked workspace executables. Allow execution from the temporary npm cache used by npx.
+
 ## 0.13.0
 
 ### Minor Changes
