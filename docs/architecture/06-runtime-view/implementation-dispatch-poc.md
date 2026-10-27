@@ -1,6 +1,6 @@
 # Independent implementation dispatch proof
 
-This proof separates `implement` from the router graph. Other stages retain their current routing. The source issue stores the request receipt and execution link; GitHub Actions stores execution status and bounded request/result artifacts. No database, persistent dispatcher or SoFa process is required.
+This historical record covers the first proof, which separated `implement` from the router graph. At that point, other stages retained their reusable-workflow routing. The source issue stores the request receipt and execution link; GitHub Actions stores execution status and bounded request/result artifacts. No database, persistent dispatcher or SoFa process is required.
 
 The operator requests implementation through the existing router. The router records a receipt, preserves the original request and dispatches the worker. The worker authenticates that origin, claims the receipt under issue concurrency, rechecks current owner intent and runs the existing implementation pipeline. An HTML marker alone cannot authorize execution.
 
@@ -22,6 +22,6 @@ Local `npm run verify` passed: 175 tests passed, one existing test skipped, no f
 
 ## Limits of this proof
 
-The live acceptance covers a manual implementation request. Automatic refinement handoff and review-driven continuation still need live acceptance before wider rollout. The queue uses GitHub Actions issue concurrency and the existing worker; this does not establish a general scheduler for every lifecycle path.
+That initial live acceptance covered a manual implementation request. Refinement handoff and review-driven continuation were reserved for the subsequent rollout. The queue uses GitHub Actions issue concurrency and the existing worker; this does not establish a general scheduler for every lifecycle path.
 
 Request artifacts expire after 14 days. Missing evidence or an unconfirmed dispatch prevents automatic continuation. Recovery requires inspecting and reconciling the issue receipt and Actions runs; rerunning an uncertain router does not resend, and rerunning a claimed worker does not start another agent. Broader recovery and longer-lived evidence remain outside this proof.

@@ -172,16 +172,29 @@ The host owns the persistent reservation and projects it as `agent-working`. `hu
 
 ## Repository-owned gh-aw refinement
 
-An owner event reaches one router and one reusable gh-aw worker. A preparation job verifies identity and current source, snapshots issue intent and reserves the issue. The agent job loads the pinned harness package and starts OpenCode in a temporary Docker container. Source and skills are read-only; the candidate envelope is writable. The imported engine streams OpenCode events into the Actions step and gh-aw log artifacts.
+An owner event reaches one router and one independently dispatched gh-aw worker. A preparation job verifies identity and current source, snapshots issue intent and reserves the issue. The agent job loads the pinned harness package and starts OpenCode in a temporary Docker container. Source and skills are read-only; the candidate envelope is writable. The imported engine streams OpenCode events into the Actions step and gh-aw log artifacts.
 
-A separate publication job validates the envelope and rereads source, owner answers and reservation before commenting and setting `ready` or `needs-info`. Cleanup releases `agent-working`. An owner reply resumes only the waiting refinement. The workflow never treats a ready issue as approval for implementation or merge.
+A separate publication job validates the envelope and rereads source, owner answers and reservation before commenting and setting `ready` or `needs-info`. Cleanup releases `agent-working`. An owner reply resumes the waiting stage. The installed implementation policy may continue a passed refinement; merge still needs its existing owner decision.
 
 The Actions run owns the execution record, with source/harness/image revisions in a runtime receipt. There is no socket service or SoFa execution dependency. The earlier external-host contract remains available for compatibility. The [engine deployment example](../../../src/examples/opencode-engine/README.md) states the Docker subscription profile's isolation limits; the broader continuation contract above remains target behavior.
 
-## Independent implementation dispatch proof of concept
+## Independent stage dispatch
 
-The implementation route records a correlated receipt on the issue and uploads its original event as an Actions artifact before dispatching the implementation workflow. The worker authenticates the source router run and attempt, receipt, artifact and workflow revision, then rereads product source and owner intent before using the existing implementation preparation, isolated execution and publication steps. The router run ID identifies one request across router reruns; the receipt records the worker that claimed it. Queueing and execution remain in GitHub Actions, with separate concurrency groups for short dispatch jobs and issue execution. Other stages keep their existing reusable-workflow calls.
+The router decides and dispatches; each installed stage executes independently. A receipt on the issue links the originating router to the claimed worker. The original event is retained in an immutable Actions artifact. Admission authenticates that chain and rechecks current source, issue intent and stage-specific approvals before starting the agent. Short dispatch jobs and worker executions use separate concurrency groups; workers share the issue group across stages.
 
-A lost response leaves the request unconfirmed and prevents automatic resend. An existing claim prevents a second agent execution, including a worker rerun. Current Actions status and validated stage evidence remain distinct. Retained artifacts are required for authentication; an expired or unavailable artifact blocks continuation. This proof of concept introduces no persistent service or SoFa dependency. See [implementation delivery](../../../src/packages/sdlc/README.md#implementation-delivery) for the operator recovery boundary.
+```mermaid
+flowchart LR
+    accTitle: Independent lifecycle dispatch
+    accDescr: The router decides and dispatches one stage. A validated result or owner response can return through the router under the existing gates.
+    Event[GitHub event or owner command] --> Route[Decide stage]
+    Route --> Dispatch[Record request and dispatch]
+    Dispatch --> Worker[Selected stage workflow]
+    Worker --> Result[Validated result on issue or PR]
+    Result -->|Verified completion event or owner response| Route
+```
 
-The [acceptance record](implementation-dispatch-poc.md) links the live executions and states the remaining rollout limits.
+Successful refinement can hand off to implementation under the installed policy. `future`, missing evidence and human decisions still stop continuation. CI completion and owner PR reviews retain the existing completion authorization. Automatic continuation identifies the completed source run so repeated notifications do not create another stage execution. The operator can replay a completion through the same checks for acceptance; replay does not bypass a gate.
+
+A lost response remains unconfirmed and prevents automatic resend. A claimed request cannot start a second agent. The receipt's icon and phase describe the last host observation; Actions remains authoritative for current execution status, including interrupted cleanup. Temporary request artifacts are needed for new admission. Published integration evidence retains its authenticated dispatch origin in the protected process record for later review. No database or SoFa process participates in execution.
+
+See the [operator recovery boundary](../../../src/packages/sdlc/README.md#implementation-delivery) and the [original implementation acceptance record](implementation-dispatch-poc.md).

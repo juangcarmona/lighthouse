@@ -12,9 +12,12 @@ const files = ['lighthouse-sdlc-router.yml', 'lighthouse-sdlc-refine.md', 'share
 const root = resolve(target), planned = [];
 for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
-  if (name === 'lighthouse-sdlc-router.yml' && !completion) content = content.split('  integrate:\n')[0].replace(', integrate, review]', ']').replace('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false').replace(/  workflow_run:\n    workflows: \["\*"\]\n    types: \[completed\]\n/, '').replace(/      pull_request:\n[\s\S]*?(?=permissions:)/, '');
-  if (name === 'lighthouse-sdlc-router.yml' && !implement) content = content.split('  implement:\n')[0].replace(', implement]', ']').replace('      auto-implement: true\n', '').replace(" || github.event.label.name == 'implement'", '');
-  if (name === 'lighthouse-sdlc-router.yml' && !propose) content = content.split('  propose:\n')[0].replace('options: [refine, propose]', 'options: [refine]').replace(" || github.event.label.name == 'propose'", '').replace(/  pull_request_review:\n    types: \[submitted\]\n  pull_request_review_comment:\n    types: \[created\]\n/, '').replace(" || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment'", '').replace("      (github.actor == github.repository_owner || github.event_name == 'workflow_run') &&\n", "      github.actor == github.repository_owner &&\n      !github.event.issue.pull_request &&\n");
+  if (name === 'lighthouse-sdlc-router.yml') {
+    const enabled = ['refine', ...(propose ? ['propose'] : []), ...(implement ? ['implement'] : []), ...(completion ? ['integrate', 'review'] : [])];
+    content = content.replace('LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement,integrate,review', `LIGHTHOUSE_ENABLED_STAGES: ${enabled.join(',')}`).replace('options: [refine, propose, implement, integrate, review]', `options: [${enabled.join(', ')}]`);
+    if (!implement) content = content.replace('LIGHTHOUSE_AUTO_IMPLEMENT: true', 'LIGHTHOUSE_AUTO_IMPLEMENT: false');
+    if (!completion) content = content.replaceAll('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false');
+  }
   const path = join(root, '.github/workflows', name);
   const exists = await access(path).then(() => true, () => false);
   if (exists && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing workflow differs: ${path}; review the diff before --replace-reviewed`);

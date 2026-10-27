@@ -2,18 +2,33 @@
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC review
 description: Assess review with OpenCode and retain a verified delivery record.
+run-name: "review #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
+concurrency:
+  group: lighthouse-issue-${{ inputs.issue }}
+  cancel-in-progress: false
+  queue: max
+  job-discriminator: ${{ github.run_id }}
 on:
-  workflow_call:
+  # The required preparation job authenticates the originating owner request.
+  roles: all
+  workflow_dispatch:
     inputs:
       issue:
+        description: Source issue
+        required: true
+        type: string
+      dispatch-request:
+        description: Authenticated router receipt comment ID
         required: true
         type: string
   needs: [prepare]
+if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
 env:
   LIGHTHOUSE_STAGE: review
+  LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
   contents: read
 engine:
@@ -51,7 +66,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+      ref: b2cb712be4cf57ab089959678311cbcd304eac8e
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -83,6 +98,7 @@ post-steps:
 jobs:
   prepare:
     outputs:
+      eligible: ${{ steps.prepare.outputs.eligible }}
       revision: ${{ steps.prepare.outputs.revision }}
     name: Verify accepted commit, checks and evidence protection
     runs-on: ubuntu-24.04
@@ -98,7 +114,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -109,6 +125,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/completion-actions.mjs prepare
       - name: Preserve the execution request
+        if: steps.prepare.outputs.eligible == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
@@ -126,7 +143,7 @@ jobs:
       cancel-in-progress: false
     name: Validate, publish and release
     needs: [prepare, agent]
-    if: always() && needs.prepare.result == 'success'
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -140,7 +157,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -156,6 +173,11 @@ jobs:
         with:
           name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
         env:

@@ -2,14 +2,14 @@
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC implement
 description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
-run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request || 'legacy' }}"
+run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
-  group: ${{ inputs.dispatch-request && format('lighthouse-issue-{0}', inputs.issue) || format('lighthouse-legacy-{0}', github.run_id) }}
+  group: lighthouse-issue-${{ inputs.issue }}
   cancel-in-progress: false
   queue: max
   job-discriminator: ${{ github.run_id }}
 on:
-  # prepare authenticates the originating owner request; bot dispatch has no collaborator role.
+  # The required preparation job authenticates the originating owner request.
   roles: all
   workflow_dispatch:
     inputs:
@@ -21,20 +21,14 @@ on:
         description: Authenticated router receipt comment ID
         required: true
         type: string
-  workflow_call:
-    inputs:
-      issue:
-        required: true
-        type: string
-      handoff:
-        required: false
-        type: boolean
-        default: false
   needs: [prepare]
 if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
+env:
+  LIGHTHOUSE_STAGE: implement
+  LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
   contents: read
 engine:
@@ -72,7 +66,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+      ref: b2cb712be4cf57ab089959678311cbcd304eac8e
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -124,28 +118,15 @@ jobs:
       issues: write
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
-      LIGHTHOUSE_IMPLEMENT_HANDOFF: ${{ inputs.handoff }}
     steps:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - name: Load refinement request
-        if: inputs.handoff && !inputs.dispatch-request
-        uses: actions/download-artifact@v8
-        with:
-          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/refinement-handoff
-      - name: Load refinement result
-        if: inputs.handoff && !inputs.dispatch-request
-        uses: actions/download-artifact@v8
-        with:
-          name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/refinement-handoff
       - name: Collect verified owner intent and reserve the issue
         id: prepare
         env:
@@ -180,7 +161,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

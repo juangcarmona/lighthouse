@@ -1,3 +1,5 @@
+import { verifyDispatchOrigin, stagePath } from './stage-dispatch.mjs';
+import { authorizeCompletion } from './completion.mjs';
 import { createHash } from 'node:crypto';
 import { fingerprint, sha } from './completion.mjs';
 import { validateEvidenceRecord, validateEvidenceIndex } from './evidence.mjs';
@@ -48,14 +50,29 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
     if (!/^[1-9][0-9]*$/.test(workflow?.runId ?? '') || !/^[1-9][0-9]*$/.test(workflow?.attempt ?? '')) throw Error('Invalid retained workflow identity');
     if (!path.includes(`/runs/${workflow.runId}/attempt-${String(workflow.attempt).padStart(4, '0')}/`)) throw Error('Retained workflow identity differs from its path');
     const run = await api(`actions/runs/${workflow.runId}`);
-    const manual = run.event === 'workflow_dispatch' && run.actor?.login === owner && run.triggering_actor?.login === owner && run.head_sha === payload.binding.base;
+    let originEvent, originName;
+    if (workflow.dispatchOrigin) {
+      const origin = workflow.dispatchOrigin;
+      const parent = await api(`actions/runs/${origin.receipt.routerRunId}/attempts/${origin.receipt.routerAttempt}`);
+      verifyDispatchOrigin(origin.request, origin.receipt, parent, run, binding.repository, owner, binding.issue);
+      if (origin.request.stage !== 'integrate' || origin.request.sourceRevision !== payload.binding.base || String(origin.receipt.workerRunId) !== String(run.id)) throw Error('Retained integration dispatch mismatch');
+      originEvent = origin.request.event; originName = origin.request.eventName;
+    }
+    let manual = run.event === 'workflow_dispatch' && run.actor?.login === owner && run.triggering_actor?.login === owner && run.head_sha === payload.binding.base;
+    if (originEvent) {
+      manual = false;
+      if (originName === 'workflow_dispatch' && !originEvent.inputs?.after_run) {
+        const authorization = authorizeCompletion(originEvent, { GITHUB_EVENT_NAME: originName, GITHUB_ACTOR: owner, GITHUB_TRIGGERING_ACTOR: owner, GITHUB_REPOSITORY_OWNER: owner }, 'integrate');
+        manual = authorization.merge && authorization.issue === binding.issue && authorization.pr === binding.pr && authorization.head === binding.head;
+      }
+    }
     let approved = false;
     const approval = receipt.authorization.approval;
-    if (['pull_request_review', 'workflow_run'].includes(run.event) && approval?.owner === owner && approval.head === binding.head && Number.isSafeInteger(approval.id)) {
+    if ((['pull_request_review', 'workflow_run'].includes(originName ?? run.event) || originEvent?.inputs?.after_run) && approval?.owner === owner && approval.head === binding.head && Number.isSafeInteger(approval.id)) {
       const review = await api(`pulls/${binding.pr}/reviews/${approval.id}`);
       approved = review.user?.login === owner && review.state === 'APPROVED' && review.commit_id === binding.head;
     }
-    if (run.repository?.full_name !== binding.repository || !(manual || approved) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
+    if (run.repository?.full_name !== binding.repository || !(manual || approved) || run.path !== (workflow.dispatchOrigin ? stagePath('integrate') : '.github/workflows/lighthouse-sdlc-router.yml') || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
     return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'] };
   }
   if (pinned) throw Error('Previously supplied integration evidence is unavailable or stale');
