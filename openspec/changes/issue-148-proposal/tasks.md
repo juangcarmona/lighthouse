@@ -18,7 +18,7 @@
 ## 3. Delivery 2 — delegated tasks
 
 - [x] 3.1 Implement the host-callable executor with explicit specialists, shared profile resolution, bounded waves, dependencies, path conflicts and verification; test failures and limits and document host scope-enforcement obligations.
-- [ ] 3.2 Obtain a real host integration receipt proving delegated profile propagation, enforced child scopes, dependency blocking and bounded waves through the operator's execution callbacks. Fixture callbacks are not live runner evidence.
+- [x] 3.2 Obtain a real host integration receipt proving delegated profile propagation, enforced child scopes, dependency blocking and bounded waves through the operator's execution callbacks. Fixture callbacks are not live runner evidence. See `evaluation.md` and the repeatable host dogfood script.
 
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
