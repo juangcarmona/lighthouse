@@ -94,6 +94,12 @@ test('packaged public form asks only for problem and desired result', async () =
   assert.deepEqual(form.body.filter(item => !item.validations?.required).map(item => item.id), ['context']);
 });
 
+test('the published triage result label is declared for adopters', async () => {
+  const catalog = JSON.parse(await readFile('src/packages/sdlc/capabilities.json', 'utf8'));
+  const labels = catalog.capabilities.find(capability => capability.id === 'labels').configuration.labels;
+  assert.ok(labels.some(label => label.name === 'triaged' && label.role === 'state'));
+});
+
 test('installer preview includes triage, preserves existing form and writes nothing', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-request-form-'));
   try {
