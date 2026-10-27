@@ -21,13 +21,14 @@ export function prepareDelegatedTasks({ tasks, parent, controlPlane, project = n
     if (!Array.isArray(task.dependencies) || task.dependencies.some(id => !name(id)) || new Set(task.dependencies).size !== task.dependencies.length) throw Error('Task dependencies must be unique task IDs');
     if (!Array.isArray(task.affectedFiles) || !task.affectedFiles.length || task.affectedFiles.length > 100 || new Set(task.affectedFiles).size !== task.affectedFiles.length || task.affectedFiles.some(file => !validScope(file) || !parent.writeScope.some(scope => contains(scope, file)))) throw Error('Task affected files exceed parent scope or use unsupported paths');
     if (task.tools !== undefined && !Array.isArray(task.tools) || task.stopConditions !== undefined && !Array.isArray(task.stopConditions)) throw Error('Task tools and stop conditions must be arrays');
+    if (task.limits !== undefined && (!record(task.limits) || Object.keys(task.limits).some(key => !['timeoutSeconds', 'maxAttempts'].includes(key)))) throw Error('Task limits may only narrow timeout and attempts');
     if (!record(controlPlane.roles[task.specialist])) throw Error('Task specialist needs a declared launch contract');
     const input = JSON.stringify(task.input ?? {});
     if (Buffer.byteLength(input) > 65536) throw Error('Task context exceeds 64 KiB');
     const child = {
       runId: `${parent.runId}-${task.id}-${randomUUID()}`, parentRun: parent.runId, role: task.specialist,
       input: JSON.parse(input), outputSchema: task.outputSchema ?? controlPlane.roles[task.specialist].outputSchema,
-      tools: task.tools ?? [...parent.tools], writeScope: [...task.affectedFiles], limits: task.limits ?? { ...parent.limits },
+      tools: task.tools ?? [...parent.tools], writeScope: [...task.affectedFiles], limits: { ...parent.limits, ...task.limits },
       stopConditions: [...parent.stopConditions, ...(task.stopConditions ?? [])],
     };
     if (!boundedLimits(child.limits) || child.limits.timeoutSeconds > parent.limits.timeoutSeconds || child.tools.some(tool => !parent.tools.includes(tool)) || validateLaunchRequest(child, controlPlane).length) throw Error('Task launch exceeds specialist or parent contract');

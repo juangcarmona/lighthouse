@@ -10,6 +10,16 @@ const task = (id, file, dependencies = []) => ({ id, specialist: 'builder', prof
 const options = tasks => ({ tasks, parent, controlPlane: { roles: { builder: role } }, project, operator, maxParallel: 2 });
 const passed = () => ({ status: 'passed', evidence: ['host-checked'] });
 
+test('a child retains host budgets while narrowing its deadline and cannot replace other limits', () => {
+  const config = options([{ ...task('a', 'src/a.mjs'), limits: { timeoutSeconds: 2 } }]);
+  config.parent = { ...parent, limits: { ...parent.limits, maxTokens: 512, maxCost: 1 } };
+  const [prepared] = prepareDelegatedTasks(config);
+  assert.deepEqual(prepared.child.limits, { timeoutSeconds: 2, maxAttempts: 1, maxTokens: 512, maxCost: 1 });
+  for (const limits of [{ maxTokens: 1024 }, { maxCost: 2 }, null]) {
+    assert.throws(() => prepareDelegatedTasks({ ...config, tasks: [{ ...task('a', 'src/a.mjs'), limits }] }), /only narrow/);
+  }
+});
+
 test('disjoint tasks run in bounded waves and dependants wait for wave verification', async () => {
   let active = 0, peak = 0, verified = false;
   const seen = [], ids = new Set();

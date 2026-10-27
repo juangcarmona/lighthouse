@@ -62,7 +62,7 @@ async function main() {
     projectModels = JSON.parse(await readFile(path, 'utf8'));
   }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: request.stage });
+  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage });
   const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
   if (request.stage === 'implement') {
     if (selected) config.implementationImage = selected.image;
