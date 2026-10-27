@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "state": "blocked",
+  "sha": null,
+  "acceptedHead": "be8b82982d77b759ea9b3f31599e049728d9d61c",
+  "authorization": {
+    "issue": 135,
+    "pr": 138,
+    "head": "be8b82982d77b759ea9b3f31599e049728d9d61c",
+    "merge": false
+  },
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 135,
+    "pr": 138,
+    "head": "be8b82982d77b759ea9b3f31599e049728d9d61c",
+    "base": "f83e4978cdd3d341df363deda17007af42f0585c",
+    "branch": "main",
+    "intent": "937c7a39bb6b842081278c137453a13272c590fd8230a98e38ecd71149d4bcdd",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "prIntent": "1e915034808a313bcf2c4eeb8ee0d4fa96e5f764516b0734d6f4e794dcbc7629",
+    "files": "40dd899878039d22710c6f3b01b24324e0f4c9a5784293b5385937e96a8ce857"
+  }
+}

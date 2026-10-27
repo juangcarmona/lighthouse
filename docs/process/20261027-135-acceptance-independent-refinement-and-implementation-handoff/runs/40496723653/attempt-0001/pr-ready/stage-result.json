@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "runId": "97dba474da8f3ab4a5582964db0c8389eb8776ce49d8d21ba0619d1c21a9ec39",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "github-check:122162423995",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40496279223/job/122162423995",
+      "reason": "Host-authenticated repository check from app 15368 passed for the full accepted head. This satisfies the only configured required GitHub check. ci.yml runs npm run verify, whose package script includes Markdown, tests, links and public-site verification; it does not run strict OpenSpec validation."
+    },
+    {
+      "id": "acceptance:visible-fixture-and-scope",
+      "status": "passed",
+      "source": "/workspace/docs/evidence/stage-handoff-fixture.md",
+      "reason": "Read fixture matches the owner-specified heading, blank line and sentence. Host-supplied changed paths show only this added fixture and four added OpenSpec planning files, with no existing code, workflow, dependency or configuration changes. Text rendering alone does not establish exact bytes or final newline."
+    },
+    {
+      "id": "acceptance:exact-bytes",
+      "status": "unavailable",
+      "source": "/workspace/openspec/changes/issue-135-proposal/design.md:11-25",
+      "reason": "Plan requires UTF-8, LF and final-newline verification. PR prose and checked tasks claim execution, but the supplied context contains no authenticated exact-byte assertion result, and available file rendering does not prove these byte properties."
+    },
+    {
+      "id": "acceptance:strict-openspec",
+      "status": "unavailable",
+      "source": "/input/context.json#/completion/pullRequest/body",
+      "reason": "PR body claims strict OpenSpec exit 0 and links an earlier workflow, but no authenticated strict validation receipt or log bound to the accepted delivery is supplied. The green repository check does not execute this explicit acceptance requirement. No failed strict check was observed."
+    },
+    {
+      "id": "guidance:openspec-citations",
+      "status": "unavailable",
+      "source": "/workspace/openspec/config.yaml:125-130",
+      "reason": "Proposal, design and tasks each contain one explicit no-product-semantic-scope declaration with the owner-authored documentation-only reason; no product behavior change is evident. Tasks claim the required citation verification ran, but no execution evidence is supplied. This is a verification gap, not proof of invalid exemptions."
+    },
+    {
+      "id": "coordination:closure-intent",
+      "status": "pending-review",
+      "source": "https://github.com/juangcarmona/lighthouse/pull/138",
+      "reason": "PR body says Closes #135 whereas issue #135 and proposal.md:29 reserve closure to the operator. Current host finalization leaves the issue open, but the closing keyword remains inconsistent with delivery intent. Owner/PR maintainer must resolve the discrepancy."
+    },
+    {
+      "id": "coordination:mergeability",
+      "status": "pending-review",
+      "source": "/input/context.json#/completion/mergeable",
+      "reason": "Host observation is false, not ready-to-merge. No cause is supplied; do not infer conflicts, stale base or a failed check. Owner/PR maintainer must establish readiness before this integration preparation can be marked complete."
+    },
+    {
+      "id": "coordination:authority-and-label-plan",
+      "status": "passed",
+      "source": "/input/context.json#/completion/finalization",
+      "reason": "Preparation-only authorization has merge false. Profile and policy require zero approvals, so absent reviews do not independently block this assessment. Host plan preserves open issue state, ensures waiting-review, removes no issue labels, preserves PR labels and releases agent-working through cleanup. Effects remain unperformed by this assessment."
+    }
+  ],
+  "missingEvidence": [
+    "Accepted-delivery exact-byte fixture verification, including LF and final newline (owner: implementation evidence producer).",
+    "Authenticated strict OpenSpec validation result for issue-135-proposal bound to the accepted delivery (owner: implementation evidence producer/trusted host).",
+    "OpenSpec citation verification result required by openspec/config.yaml and claimed in tasks.md (owner: implementation evidence producer/trusted host)."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [
+    "Owner/PR maintainer: resolve PR #138 closing keyword against the explicit no-closure instruction; this assessment cannot edit the PR or authorize closure.",
+    "Owner/PR maintainer: resolve or explain host-observed mergeable false and provide refreshed readiness evidence; cause is unknown."
+  ],
+  "nextAction": "Owner/PR maintainer: reconcile the PR closing intent and mergeability, then supply the missing accepted-delivery verification evidence for a new integration assessment; retain preparation-only authority and leave the issue open.",
+  "output": {
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 135,
+      "pr": 138,
+      "head": "be8b82982d77b759ea9b3f31599e049728d9d61c",
+      "base": "f83e4978cdd3d341df363deda17007af42f0585c",
+      "branch": "main",
+      "intent": "937c7a39bb6b842081278c137453a13272c590fd8230a98e38ecd71149d4bcdd",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "1e915034808a313bcf2c4eeb8ee0d4fa96e5f764516b0734d6f4e794dcbc7629",
+      "files": "40dd899878039d22710c6f3b01b24324e0f4c9a5784293b5385937e96a8ce857"
+    },
+    "provenance": {
+      "source": "host-supplied accepted delivery and authenticated GitHub observations; no independent GitHub or git identity verification performed",
+      "requestId": "5193a25b398d6473466d3398ae23b74dd5ae526b9cf510fce4180188c0ba53bf",
+      "dispatchDigest": "24021e4952264f586603206421f0ae8761e298414e968334d8ab7e0b981c42a3",
+      "workflowRunId": "40496723653"
+    },
+    "integration": {
+      "action": "prepare-only",
+      "mergeAuthorized": false,
+      "mergeRequested": false,
+      "merged": false,
+      "priorIntegration": null,
+      "dependencyOrder": "Planning and fixture are delivered together as requested; no stacked dependency is declared. Null predecessor is not a failed dependency check.",
+      "target": "main at host-bound base; accepted head and checked revision agree",
+      "mergeability": "host reports false; cause unknown",
+      "sourceDefects": "None demonstrated in inspected fixture or planning text. Exact-byte and OpenSpec execution remain unverified.",
+      "processGaps": "Acceptance evidence is asserted in PR prose and checked tasks rather than supplied as authenticated receipts. PR closing keyword conflicts with issue intent. No recurrence claim is supported.",
+      "guidanceInspected": [
+        "AGENTS.md",
+        "src/packages/cli/README.md",
+        "docs/README.md",
+        "openspec/config.yaml",
+        "openspec/changes/issue-135-proposal/.openspec.yaml",
+        "openspec/changes/issue-135-proposal/proposal.md",
+        "openspec/changes/issue-135-proposal/design.md",
+        "openspec/changes/issue-135-proposal/tasks.md",
+        ".lighthouse/github.json",
+        ".github/workflows/ci.yml",
+        "package.json"
+      ],
+      "guidanceAssessment": "Fixture is in repository docs as required; minimum planning artifacts carry explicit scope reasons and skip_specs for no behavior change. No guidance was rewritten. No applicable Humanizer skill is available in the inspected installed skill list.",
+      "finalizationPlan": {
+        "executor": "trusted publisher after validation and fresh authority/check/reservation checks",
+        "observedIssueLabels": [
+          "ready",
+          "waiting-review"
+        ],
+        "observedPullRequestLabels": [],
+        "blockedIssueLabelsAdd": [
+          "waiting-review"
+        ],
+        "blockedIssueLabelsRemove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve",
+        "reservation": "host cleanup releases agent-working on every outcome",
+        "assessment": "Plan is consistent with preparation and open-issue intent; PR closing keyword is separately unresolved. No finalization effect is claimed as already applied."
+      }
+    },
+    "laterStageEvidence": [
+      {
+        "check": "Runtime dispatch acceptance",
+        "status": "not performed here; explicitly deferred to operator",
+        "intendedStage": "operator acceptance after documentation delivery",
+        "owner": "operator"
+      },
+      {
+        "check": "Human PR acceptance",
+        "status": "not observed; zero approvals required by current forge policy",
+        "intendedStage": "owner acceptance",
+        "owner": "owner"
+      },
+      {
+        "check": "Merge and post-merge ci.yml",
+        "status": "not performed; merge false and no merge receipt",
+        "intendedStage": "explicitly authorized integration execution and subsequent verification",
+        "owner": "owner and trusted publisher"
+      }
+    ]
+  }
+}
