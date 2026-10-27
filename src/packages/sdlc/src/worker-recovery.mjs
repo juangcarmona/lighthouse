@@ -13,7 +13,11 @@ const intent = (issue, comments, owner) => digest(JSON.stringify({ title: issue.
 export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, now = Date.now() }) {
   const base = identity({ request, run });
   const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, nextAction, ...extra });
-  if (run.status !== 'completed') return result('active', 'worker-active', 'Inspect the current Actions execution; do not start another.');
+  if (run.status !== 'completed') {
+    const updated = Date.parse(run.updated_at);
+    if (Number.isFinite(updated) && now - updated >= 2 * 60 * 60 * 1000) return result('stalled', 'worker-stalled', 'Inspect the runner and current execution; maintenance never cancels or duplicates active work.');
+    return result('active', 'worker-active', 'Inspect the current Actions execution; do not start another.');
+  }
   if (run.run_attempt !== 1) return result('uncertain', 'execution-rerun', 'Inspect all attempts; a rerun does not reclaim the original request.');
   if (String(receipt.workerRunId) !== String(run.id)) return result('uncertain', 'dispatch-unconfirmed', 'Reconcile the request with the observed execution.');
   if (receipt.status === 'waiting') return result('waiting-human', 'human-decision', 'Answer the recorded question; no automatic retry.');

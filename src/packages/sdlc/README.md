@@ -132,3 +132,5 @@ Recovery authenticates the original dispatch and its bounded chain, current sour
 Cancellation, integration/review, human decisions, stale intent/source, expired artifacts, incomplete jobs, uncertain dispatch or publication, and abandoned reservations require operator inspection. A matching unclaimed execution can be identified for reconciliation, but missing confirmation never authorizes resend. Inspect the linked run and its actual effects before making a new owner request. Retries never clear another execution's reservation. Current receipt and Actions observations determine the decision; raw agent prose cannot grant retry authority.
 
 Maintenance bounds are 100 open owner issues, 500 scanned issue/PR entries, 1,000 comments per issue and 100 jobs per execution. Exceeding a bound fails visibly. Original dispatch artifacts retain their existing 14-day lifetime. Recovery does not outlive missing evidence. Scheduled observation only scans open owner issues; closed work requires explicit operator inspection.
+
+An active or queued execution without an Actions update for two hours is reported as stalled. Maintenance does not cancel it or release its reservation.

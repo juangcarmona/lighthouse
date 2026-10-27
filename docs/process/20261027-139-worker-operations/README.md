@@ -13,3 +13,9 @@ Implementation adds the catalogue and adapts the authority-adoption fixture to i
 Triage identified a bounded adapter change with authorization and stale-publication risk. Refinement preserves the lifecycle stage and existing correction publisher. The `apply-review-worker` OpenSpec plan adds an authenticated worker identity and a feedback-derived request key.
 
 Implementation reuses the existing proposal and implementation correction paths. The dedicated workflow compiles, installer/actionlint checks pass, 29 focused routing/feedback/catalogue checks pass, and full repository verification passes. Existing same-branch and stale-head tests remain in force. Native feedback delivery on an adopted default branch still needs a post-merge observation; local adapter tests do not claim a live agent correction.
+
+## Recovery — issue 142
+
+Triage identified duplicate-effect and stale-authority risk. Refinement narrowed automatic recovery to confirmed pre-publication technical failures and excluded irreversible completion stages. The `worker-recovery` OpenSpec plan records explicit enablement, 30-minute delay, two retries and bounded GitHub observation.
+
+Tests exercise human waiting, success, active/stalled runs, cancellation, uncertain publication, changed source/workflow/intent, missing artifacts, forged receipts, two-attempt exhaustion, superseding owner requests and lost dispatch responses. Original authority and fresh admission are checked separately so historical evidence remains readable. Workflow compilation/actionlint and full repository verification passed after refreshing the adopter projection. Schedule/retry variables remain disabled unless an operator opts in; no production recovery is claimed.

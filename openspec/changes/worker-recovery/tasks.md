@@ -5,7 +5,7 @@
 
 ## Delivery
 
-- [ ] Implement deterministic observation and bounded linked retry authorization.
-- [ ] Add opt-in maintenance workflow and installer support.
-- [ ] Test uncertainty, delay, budget, stale authority, duplicates and partial publication.
-- [ ] Compile workflows and run repository verification.
+- [x] Implement deterministic observation and bounded linked retry authorization.
+- [x] Add opt-in maintenance workflow and installer support.
+- [x] Test uncertainty, delay, budget, stale authority, duplicates and partial publication.
+- [x] Compile workflows and run repository verification.

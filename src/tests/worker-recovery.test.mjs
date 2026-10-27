@@ -42,6 +42,7 @@ test('recovery separates confirmed safe failure from human decisions, effects an
     [{ receipt: { ...f.receipt, status: 'waiting' } }, 'waiting-human'],
     [{ receipt: { ...f.receipt, status: 'completed' }, run: { ...f.run, conclusion: 'success' } }, 'succeeded'],
     [{ run: { ...f.run, status: 'in_progress' } }, 'active'],
+    [{ run: { ...f.run, status: 'queued', updated_at: '2020-01-01T00:00:00Z' } }, 'stalled'],
     [{ run: { ...f.run, conclusion: 'cancelled' } }, 'uncertain'],
     [{ run: { ...f.run, run_attempt: 2 } }, 'uncertain'],
     [{ jobs: f.jobs.slice(0, 2) }, 'uncertain'],

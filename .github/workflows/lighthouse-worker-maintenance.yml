@@ -1,0 +1,94 @@
+name: Lighthouse worker maintenance
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Optional source issue; empty scans open owner issues
+        required: false
+        type: string
+permissions:
+  contents: read
+env:
+  LIGHTHOUSE_MAINTENANCE_ENABLED: ${{ vars.LIGHTHOUSE_MAINTENANCE_ENABLED }}
+  LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+jobs:
+  scan:
+    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && github.actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+    outputs:
+      issues: ${{ steps.scan.outputs.issues }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: fadf112db2f3b105a166008962d1f8d1df9c3436
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - id: scan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs scan
+  reconcile:
+    needs: scan
+    if: needs.scan.outputs.issues != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        issue: ${{ fromJSON(needs.scan.outputs.issues) }}
+    concurrency:
+      group: lighthouse-dispatch-${{ matrix.issue }}
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+      pull-requests: read
+    env:
+      LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: fadf112db2f3b105a166008962d1f8d1df9c3436
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Reconcile and record one bounded retry
+        id: request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs prepare
+      - name: Preserve request before dispatch
+        if: steps.request.outputs.send == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.request.outputs.artifact }}
+          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/dispatch.json
+          retention-days: 14
+          if-no-files-found: error
+      - name: Send the recorded retry once
+        if: steps.request.outputs.send == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs send
+      - name: Preserve observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-maintenance-${{ matrix.issue }}
+          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/observations.json
+          retention-days: 14
+          if-no-files-found: error
