@@ -10,6 +10,8 @@ on:
     types: [submitted]
   pull_request_review_comment:
     types: [created]
+  pull_request:
+    types: [ready_for_review, converted_to_draft, closed, reopened]
   workflow_run:
     workflows: ["*"]
     types: [completed]
@@ -49,6 +51,34 @@ env:
   LIGHTHOUSE_AUTO_IMPLEMENT: true
   LIGHTHOUSE_COMPLETION_ENABLED: true
 jobs:
+  pr-state:
+    if: >-
+      vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
+      (github.event_name == 'workflow_run' ||
+       (github.event_name == 'pull_request' && github.actor == github.repository_owner))
+    concurrency:
+      group: lighthouse-pr-state-${{ github.event.pull_request.number || github.event.workflow_run.head_sha }}
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: 158ee20c8f60b3748ac684bb662d2253cd3faafe
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Project implementation PR state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/pr-state-actions.mjs
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
@@ -71,7 +101,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: ee158f04ddbf559a053e799bc85282741447f7ca
+          ref: 158ee20c8f60b3748ac684bb662d2253cd3faafe
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -103,7 +133,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: ee158f04ddbf559a053e799bc85282741447f7ca
+          ref: 158ee20c8f60b3748ac684bb662d2253cd3faafe
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
