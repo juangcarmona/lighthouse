@@ -1,0 +1,16 @@
+## What went well
+The merged revision passed authenticated repository, package-content and clean-consumer checks. The form is short, validators preserve original wording and require explained numeric estimates, and focused tests cover admission and stopping without continuation. Product intent and refinement's direct-engineering exception are explicit. Owner: Lighthouse SDLC maintainer.
+
+## What went wrong
+Closure evidence is incomplete: PR #154 requires a checked native-triage receipt, task 3.4 is unchecked, and priorIntegration is null. These are evidence/process gaps, not failed CI or proof of defective runtime behavior. Separately, worker-catalogue.md:18 contradicts its own installed triage section. No runtime source defect was established. Root cause of absent history is unknown; recurrence across work items is not established.
+
+## Start doing
+Retain a revision-bound native result/publication receipt and the protected integration record before closing #145. Owner: juangcarmona with the trusted publisher maintainer. Review original request fidelity, inference sources, explained estimate, uncertainty and stop behavior, not merely job color.
+
+## Stop doing
+Do not substitute build success, a pending agent job or earlier attended triage for the explicitly required post-merge native acceptance. Do not present provisional anchors as calibrated or infer recurrence from this issue's cancelled/retried execution.
+
+## Improvement candidates
+- **Acceptance evidence continuity (R1):** observed gap is task 3.4/PR #154 requiring a receipt absent from this review input. Owner: delivery maintainer. Smallest useful guard: an explicit receipt reference on the existing acceptance checklist. Reproduce with this merged delivery and passing CI but no native receipt; closure must remain blocked. Then supply a checked, matching native receipt and confirm this blocker clears while unrelated blockers remain. Any automated guard needs separate review and negative/positive regression proof.
+- **Historical record continuity (R2):** observed gap is null priorIntegration despite an observed merge; cause unknown. Owner: trusted publisher maintainer. Smallest useful guard candidate: a diagnostic naming the absent retained record, without synthesizing authorization. Reproduce review with null history, then with a valid hash-verified matching receipt, and with a mismatched receipt; only the matching receipt may satisfy history. Investigate through supported host records; policy changes need separate review and regression proof.
+- **Guidance consistency (R3):** observed source defect is worker-catalogue.md:18 saying no installed triage while lines 32-44 and the installed workflow describe it. Owner: SDLC documentation maintainer. Smallest correction: update the contradictory sentence through normal review. Reproduce by comparing those references; a proposed narrow documentation guard must fail on this contradiction and pass after correction without treating intentional host-specific differences as drift. No guard was implemented or proven here.
