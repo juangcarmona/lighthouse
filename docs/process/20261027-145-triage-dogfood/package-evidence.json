@@ -1,0 +1,26 @@
+{
+  "sourceRevision": "57d4e23da2831be5fad0331f1ba82326782943cc",
+  "origin": "npm registry; exact versions installed in an isolated prefix inside the repository",
+  "releaseRun": "https://github.com/juangcarmona/lighthouse/actions/runs/40522455418",
+  "packages": [
+    {
+      "name": "@juangcarmona/lighthouse",
+      "version": "0.11.3",
+      "resolved": "https://registry.npmjs.org/@juangcarmona/lighthouse/-/lighthouse-0.11.3.tgz",
+      "integrity": "sha512-orROMT0HlNxbBw7oQpwpQEJQeIErgQX3A5HKdPUNXaZYe6GcwwMR3KFjzbKrUwOj/P98XWasa6W1PnGSMrbnjQ=="
+    },
+    {
+      "name": "@juangcarmona/lighthouse-sdlc",
+      "version": "0.14.0",
+      "resolved": "https://registry.npmjs.org/@juangcarmona/lighthouse-sdlc/-/lighthouse-sdlc-0.14.0.tgz",
+      "integrity": "sha512-cHfKN1koHL/KPYnnEx95xcz33pkj1D7f+HpIh9hsbfXq5LruOAcPa0nwaQ2cNojl0rw1uMkLPXvaSTQ8wKF5sw=="
+    },
+    {
+      "name": "@juangcarmona/lighthouse-ui",
+      "version": "0.2.0",
+      "resolved": "https://registry.npmjs.org/@juangcarmona/lighthouse-ui/-/lighthouse-ui-0.2.0.tgz",
+      "integrity": "sha512-HVuInF4X+rqPJyMPcC4XxdIcopkVxrfqlt98dBTdlW6JABJTpqYmKgp+sWiSxv/ysoD6NnrDmL53aIxOImnNBw=="
+    }
+  ],
+  "assessmentMode": "attended Codex skill execution with installed package CLI validation; not a GitHub Actions triage run"
+}

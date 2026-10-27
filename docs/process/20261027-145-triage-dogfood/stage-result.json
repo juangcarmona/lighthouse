@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "runId": "attended-triage-145-20261027",
+  "stage": "triage",
+  "status": "blocked",
+  "gate": "triaged",
+  "input": {
+    "issue": "https://github.com/juangcarmona/lighthouse/issues/145",
+    "sourceRevision": "57d4e23da2831be5fad0331f1ba82326782943cc",
+    "execution": "attended"
+  },
+  "output": {
+    "schemaVersion": 1,
+    "status": "blocked",
+    "valid": true,
+    "canApply": false,
+    "workItem": {
+      "id": "GH-145",
+      "title": "Help users describe a request and give each issue an explained size estimate",
+      "type": "enhancement"
+    },
+    "assessment": {
+      "size": "L",
+      "urgency": "normal",
+      "impact": "high",
+      "risk": "medium",
+      "blastRadius": "high",
+      "dependencies": [],
+      "route": "plan-only",
+      "owner": "juangcarmona",
+      "confidence": {
+        "size": "low",
+        "urgency": "medium",
+        "impact": "high",
+        "risk": "medium",
+        "blast-radius": "high"
+      },
+      "evidence": [
+        {
+          "field": "size",
+          "status": "pending-review",
+          "reason": "Provisional L reflects intake, triage routing, estimate contracts and refinement handoff. No calibrated S/M/L/XL rubric or story-point mapping exists; review the proposed anchors before interpreting this as a numeric estimate."
+        },
+        {
+          "field": "urgency",
+          "source": "https://github.com/juangcarmona/lighthouse/issues/145; normal is an explicit working assumption because no deadline or incident was stated."
+        },
+        {
+          "field": "impact",
+          "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/docs/product/model/requirements/functional/fr-triage-work-item.md"
+        },
+        {
+          "field": "risk",
+          "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/docs/product/model/business-rules/br-entry-authority.md"
+        },
+        {
+          "field": "blast-radius",
+          "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/src/packages/sdlc/schemas/triage.schema.json"
+        }
+      ]
+    },
+    "transition": {
+      "from": "triage",
+      "to": "refine"
+    },
+    "labels": {
+      "current": [
+        "triage"
+      ],
+      "proposed": [
+        "blast-radius-high",
+        "impact-high",
+        "refine",
+        "risk-medium",
+        "size-l",
+        "urgency-normal"
+      ]
+    },
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [
+      "size"
+    ],
+    "suggestedColors": {
+      "size-s": "BFE3FF",
+      "size-m": "80C2FF",
+      "size-l": "4DA3FF",
+      "size-xl": "1F6FEB",
+      "urgency-normal": "8B949E",
+      "urgency-asap": "D29922",
+      "urgency-now": "CF222E",
+      "impact-low": "E9D5FF",
+      "impact-medium": "A371F7",
+      "impact-high": "6E40C9",
+      "risk-low": "FFEBE9",
+      "risk-medium": "F0883E",
+      "risk-high": "CF222E",
+      "blast-radius-low": "C7F0E8",
+      "blast-radius-medium": "4FB3A4",
+      "blast-radius-high": "0F766E"
+    },
+    "errors": [],
+    "warnings": [
+      {
+        "code": "evidence.pending-review",
+        "field": "size",
+        "message": "size is waiting for judgement"
+      }
+    ],
+    "applied": false
+  },
+  "evidence": [
+    {
+      "id": "repository-context",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/src/packages/sdlc/skills/triage/SKILL.md"
+    },
+    {
+      "id": "size-rubric",
+      "status": "pending-review",
+      "reason": "Review relative-point anchors and preserve unknown estimates rather than inventing a conversion."
+    },
+    {
+      "id": "external-intake-authority",
+      "status": "pending-review",
+      "reason": "Decide whether non-collaborator requests require owner admission before spending agent capacity."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [
+    "size-rubric",
+    "external-intake-authority"
+  ],
+  "nextAction": "Review the proposed estimation anchors and external-intake admission rule on issue #145 before requesting refinement."
+}
