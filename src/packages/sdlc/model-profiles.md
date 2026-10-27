@@ -4,7 +4,7 @@ Profiles are opt-in settings, not permissions or proven presets. The existing op
 
 ## Project declaration
 
-Create `.lighthouse/models.json` in the consuming repository after verifying identifiers and reasoning variants on its runner. The identifiers below are placeholders, not an available model catalog:
+Create `.lighthouse/models.json` in the consuming repository after verifying identifiers and reasoning variants on its runner. Lighthouse's own file is a dogfood candidate; it has no effect until the operator enables profiles. The identifiers below are placeholders, not an available model catalog:
 
 ```json
 {

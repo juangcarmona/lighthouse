@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "defaultProfile": "build",
+  "workers": {
+    "triage": "fast",
+    "refine": "plan",
+    "propose": "plan",
+    "implement": "build",
+    "apply-review": "fast",
+    "integrate": "plan",
+    "review": "plan"
+  },
+  "profiles": {
+    "plan": { "model": "openai/gpt-6.1-sol", "reasoningEffort": "high" },
+    "build": { "model": "openai/gpt-6.1-sol", "reasoningEffort": "medium" },
+    "fast": { "model": "openai/gpt-6-luna", "reasoningEffort": "high" }
+  }
+}
