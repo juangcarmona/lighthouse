@@ -49,6 +49,8 @@ async function main() {
   if (!/^sha256:[a-f0-9]{64}$/.test(config.image) || !/^[\w-]+$/.test(config.authVolume) || !Number.isInteger(config.uid)) throw Error('Invalid operator engine configuration');
   const runDir = join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
+  // Sequential workers share the runner temp directory; only this stage's outputs may survive.
+  for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await rm(join(runDir, file), { force: true });
   if (request.stage === 'implement') {
     if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage ?? '')) throw Error('Operator must provision and pin an implementation image');
     config.image = config.implementationImage;
