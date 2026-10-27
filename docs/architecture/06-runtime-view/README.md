@@ -184,6 +184,8 @@ The router decides and dispatches; each installed stage executes independently. 
 
 ```mermaid
 flowchart LR
+    accTitle: Independent lifecycle dispatch
+    accDescr: The router decides and dispatches one stage. A validated result or owner response can return through the router under the existing gates.
     Event[GitHub event or owner command] --> Route[Decide stage]
     Route --> Dispatch[Record request and dispatch]
     Dispatch --> Worker[Selected stage workflow]
