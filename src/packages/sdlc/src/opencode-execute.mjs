@@ -1,4 +1,4 @@
-// gh-aw engine adapter: one foreground container, no service or orchestration state.
+// gh-aw engine adapter: one foreground container and optional host-owned test services.
 import { readFile, writeFile, mkdir, mkdtemp, readdir, copyFile, chmod, rm, lstat } from 'node:fs/promises';
 import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync, appendFileSync } from 'node:fs';
@@ -8,6 +8,7 @@ import { sourceFiles, collectChanges, materializeCandidate, validateChanges, cha
 import { prepareWorkspace, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
+import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -51,7 +52,9 @@ async function main() {
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await rm(join(runDir, file), { force: true });
+  const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
   if (request.stage === 'implement') {
+    if (selected) config.implementationImage = selected.image;
     if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage ?? '')) throw Error('Operator must provision and pin an implementation image');
     config.image = config.implementationImage;
   }
@@ -63,12 +66,14 @@ async function main() {
   const implementing = request.stage === 'implement';
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, cancelled = false;
+  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, cancelled = false;
   const cancel = () => { cancelled = true; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
   try {
     console.log('Waiting for the operator host engine slot');
     slot = acquireEngineSlot(config.lock);
+    runtime = await startEnvironment({ selected, name: `${name}-agent`, uid: config.uid });
+    if (cancelled) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
     baseline = implementing ? await sourceFiles(source) : null;
@@ -90,19 +95,20 @@ async function main() {
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, environment: environmentReceipt(selected), model: config.model, engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
     const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', config.image];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${config.model}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), config.image];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
     const started = Date.now();
     let lastVisible = started;
-    const report = text => { lastVisible = Date.now(); console.log(redactLog(text)); };
+    const redact = text => redactLog(redactEnvironmentLog(runtime, text));
+    const report = text => { lastVisible = Date.now(); console.log(redact(text)); };
     const eventLine = line => {
-      const redacted = redactLog(line);
+      const redacted = redact(line);
       appendFileSync(eventsPath, redacted + '\n');
       const visible = formatOpenCodeEvent(redacted);
       if (visible) report(visible);
@@ -143,7 +149,8 @@ async function main() {
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       const checkBaseline = await sourceFiles(candidate);
-      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled });
+      if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
+      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected });
       if (collectChanges(checkBaseline, await sourceFiles(candidate, checkBaseline), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       if (request.implementation.policy.reviewRequired) {
@@ -179,6 +186,7 @@ async function main() {
   } finally {
     clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
     try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
+    runtime?.cleanup();
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     if (slot !== undefined) closeSync(slot);
     if (implementing) {
