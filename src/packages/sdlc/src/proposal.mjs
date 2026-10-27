@@ -80,7 +80,7 @@ export async function loadStageReport(api, repo, report, current) {
     }
     const request = values.input;
     if (request.dispatch) {
-      if (!['refine', 'propose', 'implement'].includes(request.stage) || !report.body.includes(`<!-- lighthouse-stage:${request.stage}:`)) throw Error('Unexpected dispatched stage');
+      if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage) || !report.body.includes(`<!-- lighthouse-stage:${request.stage}:`)) throw Error('Unexpected dispatched stage');
       const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run);
       if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== request.sourceRevision || dispatch.request.workflowRevision !== request.workflowRevision) throw Error('Dispatched report identity mismatch');
       await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);

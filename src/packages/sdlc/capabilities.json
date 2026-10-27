@@ -20,6 +20,7 @@
           { "name": "agent-working", "role": "overlay", "color": "D29922", "description": "An agent holds the host reservation; wait before editing." },
           { "name": "human-working", "role": "overlay", "color": "A371F7", "description": "Human reservation: agents must stop and release their work." },
           { "name": "ready", "role": "state", "color": "238636", "description": "Refinement passed; this does not authorize implementation or merge." },
+          { "name": "triaged", "role": "state", "color": "4FB3A4", "description": "Owner-admitted triage passed; the owner decides whether to refine." },
           { "name": "needs-info", "role": "state", "color": "D876E3", "description": "Refinement needs information or a decision; inspect its report." },
           { "name": "review", "role": "state", "color": "A371F7", "description": "Work item is awaiting review." },
           { "name": "size-s", "role": "classification", "dimension": "size", "value": "S", "color": "BFE3FF", "description": "Small work item." },

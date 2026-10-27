@@ -27,6 +27,8 @@
     "gates.json",
     "meta-commands",
     "README.md",
+    "request-triage.md",
+    "templates",
     "host-contract.md",
     "execution-environments.md",
     "completion.md",
@@ -43,6 +45,8 @@
   "exports": {
     ".": "./src/sdlc.mjs",
     "./triage": "./src/triage.mjs",
+    "./request-triage": "./src/request-triage.mjs",
+    "./schemas/estimate.schema.json": "./schemas/estimate.schema.json",
     "./contracts": "./src/contracts.mjs",
     "./control-plane": "./src/control-plane.mjs",
     "./decompose": "./src/decompose.mjs",
