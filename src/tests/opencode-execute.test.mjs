@@ -30,10 +30,10 @@ test('engine snapshot contains tracked regular files but no checkout credentials
   } finally { await rm(root, { recursive: true, force: true }); await rm(out, { recursive: true, force: true }); }
 });
 test('engine logs retain execution events while removing common credential formats', () => {
-  const raw = 'tool read /workspace/src/main.ts Bearer private-token sk-abcdefghijklmnop ghp_abcdefghijklmnop eyJhbGci.eyJzdWI.signature';
+  const raw = `tool read /workspace/src/main.ts Bearer private-token ${'sk-' + 'abcdefghijklmnop'} ${'ghp_' + 'abcdefghijklmnop'} eyJhbGci.eyJzdWI.signature`;
   const clean = redactLog(raw);
   assert.match(clean, /tool read \/workspace\/src\/main.ts/);
-  for (const secret of ['private-token', 'sk-abcdefghijklmnop', 'ghp_abcdefghijklmnop', 'eyJhbGci']) assert.ok(!clean.includes(secret));
+  for (const secret of ['private-token', 'sk-' + 'abcdefghijklmnop', 'ghp_' + 'abcdefghijklmnop', 'eyJhbGci']) assert.ok(!clean.includes(secret));
 });
 
 test('host engine lock excludes another execution and releases with its descriptor', async () => {

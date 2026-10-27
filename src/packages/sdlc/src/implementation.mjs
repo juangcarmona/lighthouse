@@ -113,7 +113,7 @@ export function validateChanges(changes, policy) {
     seen.add(file.path);
     const buffer = Buffer.from(file.content ?? '', 'base64'); bytes += buffer.length;
     if (buffer.length > 4 * 1024 * 1024 || bytes > 16 * 1024 * 1024) throw Error('Implementation exceeds byte bounds');
-    if (/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]{15,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----/.test(buffer.toString())) throw Error('Credential-shaped content rejected');
+    if (/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]{15,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----/.test(buffer.toString())) throw Error(`Credential-shaped content rejected in ${file.path}`);
   }
   return changes;
 }

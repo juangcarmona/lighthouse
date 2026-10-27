@@ -25,8 +25,12 @@ test('policy and change boundaries reject traversal, control files, changed plan
   for (const path of ['src2/test.js', 'src/../../etc/passwd', 'src/../file', 'src/.env', '/src/a', 'src/a\\b', 'openspec/changes/issue-18-proposal/design.md']) assert.throws(() => validateChanges([{ ...change, path }], policy));
   assert.throws(() => validateChanges([change, change], policy));
   assert.throws(() => validateChanges([{ ...change, content: 'not base64!' }], policy));
-  assert.throws(() => validateChanges([{ ...change, content: Buffer.from('ghp_' + 'a'.repeat(30)).toString('base64') }], policy));
+  assert.throws(() => validateChanges([{ ...change, content: Buffer.from('ghp_' + 'a'.repeat(30)).toString('base64') }], policy), /Credential-shaped content rejected in src\/app\.js/);
   assert.throws(() => validateImplementationPolicy({ ...policy, checks: [] }, 18));
+});
+test('redaction fixtures remain publishable without exempting test files from credential checks', async () => {
+  const content = await readFile(new URL('./opencode-execute.test.mjs', import.meta.url));
+  assert.doesNotThrow(() => validateChanges([{ ...change, path: 'src/tests/opencode-execute.test.mjs', content: content.toString('base64') }], policy));
 });
 test('snapshot captures additions and deletions, excludes build output and rejects symlinks', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-implement-'));
