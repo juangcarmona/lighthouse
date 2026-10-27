@@ -98,18 +98,12 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'workflows/shared/lighthouse-sdlc-stage.md',
     'package.json'
   ]) assert.ok(files.includes(path), `missing ${path}`);
-  for (const path of [
-    'lighthouse-sdlc-router.yml',
-    'lighthouse-sdlc-triage.md', 'lighthouse-sdlc-triage.lock.yml',
-    'lighthouse-sdlc-refine.md', 'lighthouse-sdlc-refine.lock.yml',
-    'lighthouse-sdlc-propose.md', 'lighthouse-sdlc-propose.lock.yml',
-    'lighthouse-sdlc-implement.md', 'lighthouse-sdlc-implement.lock.yml',
-    'lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-integrate.lock.yml',
-    'lighthouse-sdlc-review.md', 'lighthouse-sdlc-review.lock.yml',
-  ]) {
-    assert.equal(await readFile(join(root, `.github/workflows/${path}`), 'utf8'), await readFile(join(root, `src/packages/sdlc/workflows/${path}`), 'utf8'));
-  }
-  assert.equal(await readFile(join(root, '.github/workflows/shared/lighthouse-sdlc-stage.md'), 'utf8'), await readFile(join(root, 'src/packages/sdlc/workflows/shared/lighthouse-sdlc-stage.md'), 'utf8'));
+  // This repository adopts a released source pin; package templates stay unexpanded.
+  const router = await readFile(join(root, '.github/workflows/lighthouse-sdlc-router.yml'), 'utf8');
+  const revision = router.match(/ref: ([a-f0-9]{40})/)?.[1];
+  assert.ok(revision, 'Self-adoption requires an immutable source pin');
+  const adoption = spawnSync(process.execPath, ['src/packages/sdlc/src/install-workflows.mjs', '.', revision, '--with-propose'], { cwd: root, encoding: 'utf8' });
+  assert.equal(adoption.status, 0, adoption.stderr);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
   const aliases = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'aliases', '--format', 'json'], { cwd: root, encoding: 'utf8' });
