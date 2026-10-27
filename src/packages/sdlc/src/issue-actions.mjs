@@ -143,7 +143,6 @@ async function main(command) {
         checkHandoff(prior, result, issue, answers, revision.sha, env.GITHUB_RUN_ID);
       }
       if (issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
-      if (!implementationReview && !continuation && issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) throw Error('Resolve the pending decision before implementation');
       implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch);
       seed = implementationReview ? null : await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');
