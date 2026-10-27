@@ -9,6 +9,8 @@ concurrency:
   queue: max
   job-discriminator: ${{ github.run_id }}
 on:
+  # prepare authenticates the originating owner request; bot dispatch has no collaborator role.
+  roles: all
   workflow_dispatch:
     inputs:
       issue:
@@ -70,7 +72,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: a33305ef2270bddf05c9078076cdbbb6c4b7bf32
+      ref: 820f91ceb421af7a24afee03b918e98bccf5082f
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -127,7 +129,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a33305ef2270bddf05c9078076cdbbb6c4b7bf32
+          ref: 820f91ceb421af7a24afee03b918e98bccf5082f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -178,7 +180,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a33305ef2270bddf05c9078076cdbbb6c4b7bf32
+          ref: 820f91ceb421af7a24afee03b918e98bccf5082f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -194,6 +196,11 @@ jobs:
         with:
           name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
         env:
