@@ -98,11 +98,11 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'workflows/shared/lighthouse-sdlc-stage.md',
     'package.json'
   ]) assert.ok(files.includes(path), `missing ${path}`);
-  // This repository adopts a released source pin; package templates stay unexpanded.
+  // Preview the next package's upgrade over the released pin without writing or compiling.
   const router = await readFile(join(root, '.github/workflows/lighthouse-sdlc-router.yml'), 'utf8');
   const revision = router.match(/ref: ([a-f0-9]{40})/)?.[1];
   assert.ok(revision, 'Self-adoption requires an immutable source pin');
-  const adoption = spawnSync(process.execPath, ['src/packages/sdlc/src/install-workflows.mjs', '.', revision, '--with-completion'], { cwd: root, encoding: 'utf8' });
+  const adoption = spawnSync(process.execPath, ['src/packages/sdlc/src/install-workflows.mjs', '.', revision, '--with-completion', '--replace-reviewed'], { cwd: root, encoding: 'utf8' });
   assert.equal(adoption.status, 0, adoption.stderr);
   const verified = spawnSync(process.execPath, ['src/packages/sdlc/src/sdlc.mjs', 'verify'], { cwd: root, encoding: 'utf8' });
   assert.equal(verified.status, 0, verified.stderr);
@@ -291,6 +291,22 @@ test('triage produces a deterministic ready report and label projection', () => 
   assert.deepEqual(first.labels.proposed, ['blast-radius-low', 'impact-medium', 'refine', 'risk-low', 'size-m', 'unrelated', 'urgency-asap']);
   assert.equal(first.transition.from, 'triage');
   assert.equal(first.transition.to, 'refine');
+});
+
+test('optional numeric estimates preserve legacy classification without conversion', () => {
+  const input = triageInput();
+  const legacy = buildTriageReport(input);
+  assert.equal(Object.hasOwn(legacy.assessment, 'estimate'), false);
+  input.assessment.estimate = { points: 8, status: 'provisional', rationale: { scope: 'Several related contracts', dependencies: 'Existing adapter', verification: 'Several verification paths' }, confidence: 'medium', uncertainty: [] };
+  const report = buildTriageReport(input);
+  assert.equal(report.status, 'ready');
+  assert.equal(report.assessment.estimate.points, 8);
+  assert.equal(report.assessment.size, 'M');
+  assert.deepEqual(report.labels, legacy.labels);
+  input.assessment.estimate.points = 4;
+  const invalid = buildTriageReport(input);
+  assert.equal(invalid.status, 'invalid');
+  assert.equal(invalid.canApply, false);
 });
 
 test('work overlays survive a triage transition independently of lifecycle state', () => {

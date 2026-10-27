@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Preserved request and evidence-backed triage analysis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["originalRequest", "problem", "desiredResult", "inferences", "unknowns", "questions"],
+  "properties": {
+    "originalRequest": { "type": "string" },
+    "problem": { "type": "string", "minLength": 1 },
+    "desiredResult": { "type": "string", "minLength": 1 },
+    "inferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["inference", "source"],
+        "properties": {
+          "inference": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "unknowns": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question", "blocks"],
+        "properties": {
+          "question": { "type": "string", "minLength": 1 },
+          "blocks": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

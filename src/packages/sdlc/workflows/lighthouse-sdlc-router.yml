@@ -24,7 +24,7 @@ on:
         required: true
         default: refine
         type: choice
-        options: [refine, propose, implement, integrate, review]
+        options: [triage, refine, propose, implement, integrate, review]
       after_run:
         description: Recheck a completed execution through the same continuation rules
         required: false
@@ -45,7 +45,7 @@ on:
 permissions:
   contents: read
 env:
-  LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement,integrate,review
+  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
   LIGHTHOUSE_AUTO_IMPLEMENT: true
   LIGHTHOUSE_COMPLETION_ENABLED: true
 jobs:
@@ -55,7 +55,7 @@ jobs:
       (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
        (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && inputs.stage == 'implement' && inputs.after_run != '')) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
-       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
+        (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
     runs-on: ubuntu-24.04
     permissions:

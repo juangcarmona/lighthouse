@@ -1,3 +1,5 @@
+import { validateEstimate } from './request-triage.mjs';
+
 const DIMENSIONS = Object.freeze({
   size: ['S', 'M', 'L', 'XL'],
   urgency: ['normal', 'asap', 'now'],
@@ -126,6 +128,7 @@ function validateAssessment(assessment, errors) {
     addIssue(errors, 'assessment.invalid', 'assessment must be an object', 'assessment');
     return;
   }
+  if (assessment.estimate !== undefined) for (const message of validateEstimate(assessment.estimate, { provisional: true })) addIssue(errors, 'assessment.estimate', message, 'assessment.estimate');
   for (const dimension of Object.keys(DIMENSIONS)) {
     const value = normalizedValue(dimension, assessment[dimension === 'blast-radius' ? 'blastRadius' : dimension]);
     if (!DIMENSIONS[dimension].includes(value) && !(dimension === 'blast-radius' && value === 'unknown')) {
@@ -254,6 +257,7 @@ export function buildTriageReport(input) {
     canApply: status === 'ready',
     workItem: input.workItem ?? null,
     assessment: {
+      ...(assessment.estimate !== undefined ? { estimate: assessment.estimate } : {}),
       size: normalizedValue('size', assessment.size),
       urgency: normalizedValue('urgency', assessment.urgency),
       impact: normalizedValue('impact', assessment.impact),

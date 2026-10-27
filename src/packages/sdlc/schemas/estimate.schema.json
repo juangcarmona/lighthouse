@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explained relative estimate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["points", "status", "rationale", "confidence", "uncertainty"],
+  "properties": {
+    "points": { "enum": [1, 2, 3, 5, 8, 13] },
+    "status": { "enum": ["provisional", "confirmed"] },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "uncertainty": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "rationale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "dependencies", "verification"],
+      "properties": {
+        "scope": { "type": "string", "minLength": 1 },
+        "dependencies": { "type": "string", "minLength": 1 },
+        "verification": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

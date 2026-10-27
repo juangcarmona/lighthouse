@@ -29,6 +29,21 @@ The router records intent before sending. A worker authenticates the request and
 | ✅ Completed | Stage publication completed | Follow the declared next decision |
 | ❌ Failed or cancelled | Execution did not publish a completed assessment | Inspect failure and effects before retrying |
 
+## triage
+
+[Executable source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-triage.md). The owner admits an open issue by label or manual request. The worker preserves the request, cites inferences, asks blocking questions only and returns an explained provisional point estimate. External issue authorship grants no execution authority. A result stops at triaged without dispatching refinement.
+
+```mermaid
+flowchart LR
+    accTitle: triage worker
+    accDescr: Owner admission starts bounded assessment, then validated publication stops for an owner decision.
+    A[Verified owner admission] --> B[Authenticate receipt and reserve issue]
+    B --> C[Read request and repository evidence]
+    C --> D[Inferences, questions and provisional estimate]
+    D --> E[Validate and publish assessment]
+    E --> F[Release reservation and await owner]
+```
+
 ## refine
 
 **Entry:** Owner refine request or answer to its pending question. **Effects:** Issue comments and workflow labels; no product changes. **Stop:** Ready can continue to implementation under installed policy; future pauses it.

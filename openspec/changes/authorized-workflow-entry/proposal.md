@@ -35,7 +35,7 @@ The maintainer approved CHG-AUTHORIZED-WORKFLOW-ENTRY-001 and its first direct-r
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
 <!-- pdac:cite id="BR-AUTHORITY-BOUNDARIES" digest="sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d" -->
 <!-- pdac:cite id="BR-ROUTE-CONTRACT" digest="sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9" -->
-<!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:b2befe3f12cbe952b5704bc9640c231af11bd7389870c5c1476de8508d902074" -->
+<!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b" -->
 <!-- pdac:cite id="BR-STAGE-GATES" digest="sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e" -->
 <!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:7e14cf16e302995183008043d95caf100bce023e9c8a3edf0e098ae87d740c02" -->
 <!-- pdac:cite id="UC-IMPLEMENT-CHANGE" digest="sha256:35e3f3a049565dcde4627c7c6d15a88180c2aeeca702f3f510bdc913671aa5b8" -->

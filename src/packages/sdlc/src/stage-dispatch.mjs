@@ -2,7 +2,7 @@ import { digest } from './host-contract.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
-export const stages = ['refine', 'propose', 'implement', 'integrate', 'review'];
+export const stages = ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'];
 export const workers = [...stages, 'apply-review'];
 export const workerFor = request => request.worker ?? request.stage ?? 'implement';
 export const stagePath = stage => { if (!workers.includes(stage)) throw Error('Unknown dispatch worker'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
