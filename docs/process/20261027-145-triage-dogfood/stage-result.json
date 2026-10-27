@@ -122,15 +122,15 @@
     },
     {
       "id": "external-intake-authority",
-      "status": "pending-review",
-      "reason": "Decide whether non-collaborator requests require owner admission before spending agent capacity."
+      "status": "passed",
+      "reason": "Owner decided that external requests require owner admission before triage starts. This authorizes triage only; automatic enforcement remains unimplemented.",
+      "source": "https://github.com/juangcarmona/lighthouse/issues/145#issuecomment-6447430890"
     }
   ],
   "missingEvidence": [],
   "unavailableChecks": [],
   "pendingReview": [
-    "size-rubric",
-    "external-intake-authority"
+    "size-rubric"
   ],
-  "nextAction": "Review the proposed estimation anchors and external-intake admission rule on issue #145 before requesting refinement."
+  "nextAction": "Review the proposed estimation anchors on issue #145 before requesting refinement; external-intake admission has been decided."
 }

@@ -33,9 +33,9 @@ Use relative points as an initial proposal, then calibrate them with accepted Li
 
 Triage records a provisional estimate, rationale and confidence. Refine verifies assumptions, defines acceptance and revises the estimate. A confirmed value strictly above 8 triggers decomposition planning under #146. Each child gets its own triage and refinement. Meaningful dependencies control execution and integration; the parent remains open until the aggregate outcome is accepted. Neither a number nor an HTML marker grants merge authority.
 
-## First owner question
+## Owner admission decision
 
-May a request from someone outside the repository's collaborators start bounded automatic triage, or must the owner admit it first? The initial recommendation is owner admission for external requests, followed by automatic questions and classification within that authorization. This keeps the form public and simple while making agent capacity and execution authority explicit. Collaborator policy can be considered separately.
+The owner [decided](https://github.com/juangcarmona/lighthouse/issues/145#issuecomment-6447430890) that external requests need owner admission before the triage agent starts. The public form stays simple. Admission authorizes triage only; refinement, implementation and merging retain their own gates. This resolves the intake-authority question, while the estimation rubric still needs review. Automatic enforcement belongs to #145 and has not been implemented. Collaborator policy can be considered separately.
 
 ## Reproduction
 
