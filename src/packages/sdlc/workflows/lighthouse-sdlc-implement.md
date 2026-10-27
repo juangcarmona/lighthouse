@@ -107,7 +107,6 @@ jobs:
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
       LIGHTHOUSE_IMPLEMENT_HANDOFF: ${{ inputs.handoff }}
-      LIGHTHOUSE_HANDOFF_DIR: ${{ runner.temp }}/refinement-handoff
     steps:
       - uses: actions/checkout@v5
         with:

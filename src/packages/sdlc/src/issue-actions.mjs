@@ -137,8 +137,8 @@ async function main(command) {
     let predecessor, implementation, seed, planningReference;
     if (stage === 'implement') {
       if (handoff) {
-        const prior = JSON.parse(await readFile(join(env.LIGHTHOUSE_HANDOFF_DIR, 'request.json'), 'utf8'));
-        const result = JSON.parse(await readFile(join(env.LIGHTHOUSE_HANDOFF_DIR, 'envelope.json'), 'utf8'));
+        const prior = JSON.parse(await readFile(join(env.RUNNER_TEMP, 'refinement-handoff', 'request.json'), 'utf8'));
+        const result = JSON.parse(await readFile(join(env.RUNNER_TEMP, 'refinement-handoff', 'envelope.json'), 'utf8'));
         if (result.result?.status === 'blocked' || issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name))) { await output('eligible', 'false'); await summary('Implementation paused. Resolve the issue decision or remove future when ready.'); return; }
         checkHandoff(prior, result, issue, answers, revision.sha, env.GITHUB_RUN_ID);
       }
