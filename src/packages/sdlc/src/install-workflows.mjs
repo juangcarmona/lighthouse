@@ -8,7 +8,7 @@ const apply = flags.includes('--apply'), replace = flags.includes('--replace-rev
 const completion = flags.includes('--with-completion');
 const implement = flags.includes('--with-implement') || completion;
 const propose = flags.includes('--with-propose') || implement;
-const files = ['lighthouse-sdlc-router.yml', 'lighthouse-sdlc-refine.md', 'shared/lighthouse-opencode.md', ...(propose ? ['lighthouse-sdlc-propose.md'] : []), ...(implement ? ['lighthouse-sdlc-implement.md'] : []), ...(completion ? ['lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-review.md'] : [])];
+const files = ['lighthouse-sdlc-router.yml', 'lighthouse-sdlc-refine.md', 'shared/lighthouse-opencode.md', ...(propose ? ['lighthouse-sdlc-propose.md', 'lighthouse-sdlc-apply-review.md'] : []), ...(implement ? ['lighthouse-sdlc-implement.md'] : []), ...(completion ? ['lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-review.md'] : [])];
 const root = resolve(target), planned = [];
 for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
@@ -28,6 +28,6 @@ if (apply) {
   const compiler = execFileSync('gh', ['aw', '--version'], { encoding: 'utf8' }).trim();
   if (!/\bv?0\.93\.2\b/.test(compiler)) throw Error(`gh-aw v0.93.2 is required; found ${compiler}`);
   for (const { path, content } of planned) { await mkdir(dirname(path), { recursive: true }); await writeFile(path, content); }
-  for (const stage of completion ? ['refine', 'propose', 'implement', 'integrate', 'review'] : implement ? ['refine', 'propose', 'implement'] : propose ? ['refine', 'propose'] : ['refine']) execFileSync('gh', ['aw', 'compile', `lighthouse-sdlc-${stage}`], { cwd: root, stdio: 'inherit' });
+  for (const stage of completion ? ['refine', 'propose', 'implement', 'integrate', 'review', 'apply-review'] : implement ? ['refine', 'propose', 'implement', 'apply-review'] : propose ? ['refine', 'propose', 'apply-review'] : ['refine']) execFileSync('gh', ['aw', 'compile', `lighthouse-sdlc-${stage}`], { cwd: root, stdio: 'inherit' });
 }
-console.log(`Enabled workers: ${completion ? 'refine, propose, implement, integrate, review' : implement ? 'refine, propose, implement' : propose ? 'refine, propose' : 'refine'}. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.`);
+console.log(`Enabled workers: ${completion ? 'refine, propose, implement, integrate, review, apply-review' : implement ? 'refine, propose, implement, apply-review' : propose ? 'refine, propose, apply-review' : 'refine'}. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.`);

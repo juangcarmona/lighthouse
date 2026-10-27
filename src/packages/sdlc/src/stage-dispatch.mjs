@@ -3,7 +3,9 @@ import { readActionsJson } from './actions-artifact.mjs';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
 export const stages = ['refine', 'propose', 'implement', 'integrate', 'review'];
-export const stagePath = stage => { if (!stages.includes(stage)) throw Error('Unknown dispatch stage'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
+export const workers = [...stages, 'apply-review'];
+export const workerFor = request => request.worker ?? request.stage ?? 'implement';
+export const stagePath = stage => { if (!workers.includes(stage)) throw Error('Unknown dispatch worker'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
 export const implementPath = stagePath('implement');
 export const statusText = (stage, status) => `${({ requested: '📥 Requested', running: '▶️ Execution admitted', completed: '✅ Completed', waiting: '⏸️ Waiting for your response', failed: '❌ Failed or cancelled' })[status]} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
@@ -17,13 +19,13 @@ export function readDispatchReceipt(comment, repository, issue) {
   const matches = [...comment.body.matchAll(/<!-- lighthouse-dispatch:(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Missing or ambiguous dispatch receipt');
   const receipt = JSON.parse(matches[0][1]);
-  if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== dispatchId(repository, receipt.eventRunId ?? receipt.routerRunId, receipt.stage ?? 'implement') || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
+  if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== dispatchId(repository, receipt.feedbackKey ?? receipt.eventRunId ?? receipt.routerRunId, receipt.stage ?? 'implement') || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
 }
 
 export function dispatchReceiptBody(repository, receipt) {
   const root = `https://github.com/${repository}/actions/runs/`;
-  const heading = statusText(receipt.stage ?? 'implement', receipt.status ?? (receipt.workerRunId ? 'running' : 'requested'));
+  const heading = statusText(workerFor(receipt), receipt.status ?? (receipt.workerRunId ? 'running' : 'requested'));
   const status = receipt.workerRunId ? `[Execution](${root}${receipt.workerRunId}). Open the execution for its current status and result.` : 'Execution requested; execution is not yet confirmed. Do not resend while confirmation is pending.';
   return `${heading}\n\n${status}\n\n[Router request](${root}${receipt.routerRunId})\n\n<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->`;
 }
@@ -49,9 +51,9 @@ export async function recordDispatch(api, repository, request) {
     if (receipt.id === request.id) return { send: false, comment, receipt };
     if (!receipt.workerRunId) throw Error('An earlier stage dispatch is unconfirmed; reconcile it before requesting another');
     const run = await api(`actions/runs/${receipt.workerRunId}`);
-    if (run.path !== stagePath(receipt.stage ?? 'implement') || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
+    if (run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
-  const receipt = { schemaVersion: 1, stage: request.stage, status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
+  const receipt = { schemaVersion: 1, stage: request.stage, ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });
   return { send: true, comment, receipt };
 }
@@ -61,16 +63,17 @@ export async function sendDispatch(api, repository, request, commentId) {
   if (receipt.id !== request.id || receipt.digest !== digest(JSON.stringify(request))) throw Error('Dispatch request changed');
   if (receipt.workerRunId) return;
   // Never retry this POST automatically: its response can be lost after admission.
-  return api(`actions/workflows/lighthouse-sdlc-${request.stage}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId) } });
+  return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId) } });
 }
 
 export function verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue) {
+  if (workerFor(request) !== workerFor(receipt) || request.feedbackKey !== receipt.feedbackKey || workerFor(request) !== request.stage && !(workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage))) throw Error('Dispatch worker responsibility mismatch');
   const events = ['issues', 'issue_comment', 'pull_request_review', 'pull_request_review_comment', 'workflow_dispatch', 'workflow_run'];
   if (request.schemaVersion !== 1 || request.id !== receipt.id || request.repository !== repository || request.issue !== issue || request.stage !== (receipt.stage ?? 'implement') || !stages.includes(request.stage) || !sha(request.sourceRevision) || !sha(request.workflowRevision) || !hash(request.taskDigest) || typeof request.handoff !== 'boolean' || digest(JSON.stringify(request)) !== receipt.digest) throw Error('Dispatch artifact identity mismatch');
   if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== routerPath || (parent.event !== 'workflow_run' && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !events.includes(parent.event) || parent.event !== request.eventName || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
-  if (worker.path !== stagePath(request.stage) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
+  if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
 }
 
 export async function loadDispatch(api, repository, owner, issue, commentId, worker, readArtifact = readActionsJson) {
@@ -105,7 +108,7 @@ export async function admitDispatch(api, repository, owner, env, event) {
   if (!Number.isSafeInteger(issue) || issue < 1 || String(issue) !== env.LIGHTHOUSE_ISSUE) throw Error('Dispatch issue must be a canonical positive integer');
   const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   const dispatch = await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], worker);
-  if (dispatch.request.stage !== env.LIGHTHOUSE_STAGE) throw Error('Dispatch targets a different stage');
+  if (env.LIGHTHOUSE_WORKER ? workerFor(dispatch.request) !== env.LIGHTHOUSE_WORKER : dispatch.request.stage !== env.LIGHTHOUSE_STAGE) throw Error('Dispatch targets a different stage or worker');
   const admitted = await claimDispatch(api, repository, dispatch, env.GITHUB_RUN_ID);
   return { ...dispatch, admitted };
 }

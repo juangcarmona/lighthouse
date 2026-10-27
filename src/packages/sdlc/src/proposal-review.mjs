@@ -1,6 +1,9 @@
 import { digest } from './host-contract.mjs';
 import { proposalRoot, validateProposalFiles } from './proposal.mjs';
 
+export const feedbackKey = review => digest(`${review.number}:${review.kind}:${review.id}:${review.feedbackDigest}`);
+export const feedbackWorker = review => review && !review.approved ? 'apply-review' : undefined;
+
 export function reviewTarget(event, eventName) {
   if (eventName === 'issue_comment' && event.issue?.pull_request) return event.issue.number;
   if (['pull_request_review', 'pull_request_review_comment'].includes(eventName)) return event.pull_request?.number;

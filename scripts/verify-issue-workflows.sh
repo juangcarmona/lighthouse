@@ -28,5 +28,6 @@ printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_d
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-implement.lock.yml" \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-apply-review.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-review.lock.yml"

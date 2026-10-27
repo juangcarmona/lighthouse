@@ -14,6 +14,8 @@ flowchart TD
     Router --> Implement[implement]
     Router --> Integrate[integrate]
     Router --> Review[review]
+    Router --> Apply[apply-review]
+    Apply -->|Updated PR and fresh CI| Router
     Refine -->|Ready and continuation authorized| Router
     Propose -->|PR feedback| Router
     Implement -->|PR feedback or accepted head| Router
@@ -57,7 +59,7 @@ flowchart TD
 
 ## propose
 
-**Entry:** Owner planning request after authenticated refinement, or proposal PR feedback. **Effects:** Proposal artifacts and their bot-owned PR only. **Stop:** Planning stays separate from implementation and merge approval.
+**Entry:** Owner planning request after authenticated refinement, . **Effects:** Proposal artifacts and their bot-owned PR only. **Stop:** Planning stays separate from implementation and merge approval.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-propose.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/propose/SKILL.md)
 
@@ -77,7 +79,7 @@ flowchart TD
 
 ## implement
 
-**Entry:** Owner implementation request, authorized refinement continuation or implementation PR feedback. **Effects:** Configured product paths on a bot-owned branch; no merge. **Stop:** Passed candidate waits for acceptance; ambiguous scope asks the owner.
+**Entry:** Owner implementation request, authorized refinement continuation. **Effects:** Configured product paths on a bot-owned branch; no merge. **Stop:** Passed candidate waits for acceptance; ambiguous scope asks the owner.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-implement.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/implement/SKILL.md)
 
@@ -133,4 +135,23 @@ flowchart TD
     Publish --> Cleanup[Release reservation]
     Wait --> Cleanup
     Inspect --> Cleanup
+```
+
+## apply-review
+
+**Entry:** Authorized non-approval feedback on an existing bot proposal or implementation PR. **Effects:** Update that same branch within its existing scope after checking the current head and complete bounded discussion. **Stop:** Ambiguous requests need an answer; duplicate feedback starts no second correction. Approval goes through the integration policy.
+
+[Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-apply-review.md) · [Feedback authentication](../../../src/packages/sdlc/src/proposal-review.mjs)
+
+```mermaid
+flowchart TD
+    accTitle: apply-review worker
+    accDescr: Verified feedback corrects the existing PR; ambiguity waits and stale publication stops.
+    Input[Authenticate feedback and current PR] --> Read[Read bounded conversation]
+    Read --> Decision{Actionable within scope}
+    Decision -->|Yes| Edit[Correct existing candidate]
+    Decision -->|Ambiguous| Wait[Ask owner and wait]
+    Edit --> Check[Run required checks]
+    Check -->|Passed and inputs unchanged| Publish[Update same PR branch]
+    Check -->|Failed or stale| Stop[Retain blocker and stop]
 ```

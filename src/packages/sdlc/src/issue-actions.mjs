@@ -6,7 +6,7 @@ import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
+import { feedbackKey, feedbackWorker, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
@@ -144,11 +144,14 @@ async function main(command) {
     }
     if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
     const eventRunId = after ? String(after.workflow_run.id) : undefined;
+    const feedback = implementationReview ?? proposalReview;
+    const worker = feedbackWorker(feedback);
+    const feedbackIdentity = worker ? feedbackKey(feedback) : undefined;
     const router = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
     // Review events can run on a PR merge ref, which is not a dispatchable branch.
     // Only an explicit owner dispatch selects a workflow branch; native events use main.
     const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
-    const request = { schemaVersion: 1, id: dispatchId(repo, eventRunId ?? env.GITHUB_RUN_ID, stage), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
+    const request = { schemaVersion: 1, id: dispatchId(repo, feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(worker ? { worker, feedbackKey: feedbackIdentity } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
     const recorded = await recordDispatch(api, repo, request);
     await output('send', String(recorded.send));
     await output('artifact', dispatchArtifact(request));
@@ -178,6 +181,7 @@ async function main(command) {
     const all = await comments(), answers = ownerAnswers(all);
     if (dispatch && (dispatch.request.sourceRevision !== baseRevision || dispatch.request.taskDigest !== taskDigest(issue, answers))) throw Error('Dispatched source or owner intent changed');
     if (dispatch && route.stage !== dispatch.request.stage) throw Error('Dispatched request no longer selects its stage');
+    if (dispatch?.request.worker === 'apply-review' && (feedbackWorker(implementationReview ?? proposalReview) !== 'apply-review' || feedbackKey(implementationReview ?? proposalReview) !== dispatch.request.feedbackKey)) throw Error('Dispatched feedback changed or is not a correction');
     if (dispatch?.request.handoff && JSON.stringify(route.predecessor) !== JSON.stringify(dispatch.request.predecessor)) throw Error('Refinement predecessor changed');
     let continuation;
     if (env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !handoff) {
@@ -199,6 +203,7 @@ async function main(command) {
       proposalReview.threadDigest = digest(JSON.stringify(proposalReview.thread));
     }
     const stage = route.stage;
+    await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
     let predecessor, implementation, seed, planningReference;
     if (stage === 'implement') {
       if (handoff) {
