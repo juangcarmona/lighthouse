@@ -33,7 +33,8 @@ test('pending reply ignores stale, empty and spoofed reports and cannot replay a
   assert.equal(pendingReply({ comment: { ...reply, body: ' ' } }, [report()]), null);
   assert.equal(pendingReply(event, [{ ...report(), user: { login: 'outsider', type: 'Bot' } }]), null);
   assert.equal(pendingReply(event, [report(), report('propose', 'passed')]), null);
-  assert.equal(pendingReply(event, [report('implement')]), null);
+  assert.equal(pendingReply(event, [report('implement')]).stage, 'implement');
+  assert.equal(pendingReply(event, [{ ...report('implement'), body: report('implement').body + '\n[Review the implementation](https://example.test/pr)' }]), null);
   assert.equal(pendingReply(event, [{ ...report(), body: report().body.replace(/<!-- lighthouse-stage:.* -->/, '') }]).stage, 'propose');
 });
 test('publication refuses changed answers, changed source, closed issues and human takeover', () => {
@@ -78,4 +79,21 @@ test('router refreshes a queued comment event and visibly acknowledges the owner
     assert.match(await readFile(join(dir, 'outputs'), 'utf8'), /stage=propose\nrun=true\nissue=18/);
     assert.match(await readFile(join(dir, 'calls'), 'utf8'), /issues\/comments\/11\/reactions/);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('refine handoff binds the passed result to this issue, run, source and owner answers', async () => {
+  const { checkHandoff } = await import('../packages/sdlc/src/issue-actions.mjs');
+  const request = { runId: 'a'.repeat(64), stage: 'refine', issue: 18, workflowRunId: '123', sourceRevision: 'b'.repeat(40), taskDigest: taskDigest(issue, []) };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [{ id: 'criteria', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'implement' }, effect: { type: 'issue-comment', body: 'Ready to implement.' } };
+  assert.doesNotThrow(() => checkHandoff(request, envelope, issue, [], request.sourceRevision, '123'));
+  for (const changed of [{ ...request, workflowRunId: 'other' }, { ...request, issue: 19 }, { ...request, taskDigest: 'changed' }, { ...request, sourceRevision: 'changed' }]) assert.throws(() => checkHandoff(changed, envelope, issue, [], request.sourceRevision, '123'));
+  assert.throws(() => checkHandoff(request, { ...envelope, result: { ...envelope.result, status: 'blocked' } }, issue, [], request.sourceRevision, '123'));
+  for (const name of ['future', 'needs-info', 'waiting-review', 'agent-working']) assert.throws(() => checkHandoff(request, envelope, { ...issue, labels: [{ name }] }, [], request.sourceRevision, '123'));
+});
+test('future pauses implementation and its removal resumes an implement-labelled issue', () => {
+  const event = { action: 'labeled', label: { name: 'implement' }, issue: { ...issue, labels: [{ name: 'future' }, { name: 'implement' }] } };
+  assert.equal(routeIssue(event, 'owner', 'owner', 'issues').run, false);
+  event.action = 'unlabeled'; event.label.name = 'future'; event.issue.labels = [{ name: 'implement' }];
+  assert.equal(routeIssue(event, 'owner', 'owner', 'issues').stage, 'implement');
+  assert.equal(routeIssue(event, 'outsider', 'owner', 'issues').run, false);
 });

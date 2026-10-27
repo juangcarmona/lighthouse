@@ -1,15 +1,18 @@
 # Optional GitHub-native stage adapter; source owned by lighthouse-sdlc.
 name: Lighthouse SDLC router
-run-name: "${{ inputs.stage || github.event.label.name || ((github.event.pull_request || github.event.issue.pull_request) && 'proposal review') || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || github.event.pull_request.number || inputs.issue }} · ${{ github.actor }}"
+run-name: "${{ (github.event_name == 'workflow_run' && 'Delivery after CI') || inputs.stage || github.event.label.name || ((github.event.pull_request || github.event.issue.pull_request) && 'PR review') || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || github.event.pull_request.number || inputs.issue }} · ${{ github.actor }}"
 on:
   issues:
-    types: [labeled]
+    types: [labeled, unlabeled]
   issue_comment:
     types: [created]
   pull_request_review:
     types: [submitted]
   pull_request_review_comment:
     types: [created]
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       issue:
@@ -41,12 +44,13 @@ jobs:
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
-      github.actor == github.repository_owner &&
-      (github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement')) ||
+      (github.actor == github.repository_owner || github.event_name == 'workflow_run') &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
+       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
     runs-on: ubuntu-24.04
     permissions:
+      actions: read
       contents: read
       issues: write
       pull-requests: write
@@ -67,6 +71,7 @@ jobs:
         id: route
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_COMPLETION_ENABLED: true
         run: node src/packages/sdlc/src/issue-actions.mjs route
   refine:
     needs: route
@@ -81,6 +86,7 @@ jobs:
     uses: ./.github/workflows/lighthouse-sdlc-refine.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}
+      auto-implement: true
   propose:
     needs: route
     concurrency:
@@ -96,19 +102,20 @@ jobs:
     with:
       issue: ${{ needs.route.outputs.issue }}
   implement:
-    needs: route
+    needs: [route, refine]
     concurrency:
       group: lighthouse-issue-${{ needs.route.outputs.issue }}
       cancel-in-progress: false
-    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'implement'
+    if: always() && needs.route.result == 'success' && needs.route.outputs.run == 'true' && (needs.route.outputs.stage == 'implement' || needs.refine.result == 'success')
     permissions:
-      actions: read
+      actions: write
       contents: write
       issues: write
       pull-requests: write
     uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}
+      handoff: ${{ needs.route.outputs.stage == 'refine' }}
   integrate:
     needs: route
     concurrency:

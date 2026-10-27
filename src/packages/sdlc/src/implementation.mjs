@@ -3,34 +3,35 @@ import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { proposalRoot } from './proposal.mjs';
+import { proposalRoot, changeName } from './proposal.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
-const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/');
+const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product|\.git|\.opencode)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/') || /(?:^|\/)(?:AGENTS|CLAUDE)\.md$/.test(path);
 export const changesDigest = changes => hash(JSON.stringify(changes));
 export function validateImplementationPolicy(policy, issue) {
-  if (!policy || Object.keys(policy).filter(k => k !== 'seed').sort().join(',') !== 'checks,paths,proposal,reviewRequired,scope' || typeof policy.reviewRequired !== 'boolean' || !Number.isSafeInteger(policy.proposal) || policy.proposal < 1 || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
-  if (!Array.isArray(policy.paths) || !policy.paths.length || policy.paths.length > 40 || policy.paths.some(p => !safePath(p.replace(/\/$/, '')) || protectedPath(p) || p.startsWith('openspec/') && p !== `${proposalRoot(issue)}/tasks.md` || p.startsWith('.github/') && !/^\.github\/workflows\/[\w-]+\.ya?ml$/.test(p))) throw Error('Implementation policy needs explicit safe paths; only this proposal tasks file may change');
+  if (!policy || Object.keys(policy).filter(k => !['seed', 'proposal'].includes(k)).sort().join(',') !== 'checks,paths,reviewRequired,scope' || typeof policy.reviewRequired !== 'boolean' || ('proposal' in policy && (!Number.isSafeInteger(policy.proposal) || policy.proposal < 1)) || typeof policy.scope !== 'string' || !policy.scope.trim() || policy.scope.length > 4000) throw Error('Invalid implementation policy');
+  if (!Array.isArray(policy.paths) || !policy.paths.length || policy.paths.length > 40 || policy.paths.some(p => p !== '*' && (!safePath(p.replace(/\/$/, '')) || protectedPath(p) || p.startsWith('openspec/') && p !== `${proposalRoot(issue)}/tasks.md` && p !== `${proposalRoot(issue)}/` || p.startsWith('.github/') && !/^\.github\/workflows\/[\w-]+\.ya?ml$/.test(p)))) throw Error('Implementation policy needs safe paths');
   if (!Array.isArray(policy.checks) || !policy.checks.length || policy.checks.length > 12 || policy.checks.some(c => !Array.isArray(c) || !c.length || c.length > 30 || c.some(a => typeof a !== 'string' || !a || a.length > 1000 || /[\0\r\n]/.test(a)))) throw Error('Implementation policy needs bounded command argument arrays');
   if ('seed' in policy && (!policy.seed || typeof policy.seed !== 'object' || Object.keys(policy.seed).sort().join(',') !== 'base,head' || !/^[a-f0-9]{40}$/.test(policy.seed.base ?? '') || !/^[a-f0-9]{40}$/.test(policy.seed.head ?? ''))) throw Error('Seed must identify immutable base and head commits');
   return policy;
 }
-export const withinScope = (path, policy) => safePath(path) && !protectedPath(path) && policy.paths.some(p => p.endsWith('/') ? path.startsWith(p) : path === p);
+export const withinScope = (path, policy) => safePath(path) && !protectedPath(path) && policy.paths.some(p => p === '*' || (p.endsWith('/') ? path.startsWith(p) : path === p));
 
 export async function loadImplementation(api, issue, owner, revision, defaultBranch) {
-  const config = await api(`contents/.lighthouse/implement.json?ref=${revision}`);
-  const policy = validateImplementationPolicy(JSON.parse(Buffer.from(config.content, 'base64').toString())[issue], issue);
-  const pr = await api(`pulls/${policy.proposal}`);
-  if (!pr.merged || pr.merged_by?.login !== owner || pr.base.ref !== defaultBranch || pr.base.repo.full_name !== pr.head.repo?.full_name) throw Error('Implementation requires a proposal merged by the repository owner');
-  const files = await api(`pulls/${policy.proposal}/files?per_page=100`);
-  if (files.length !== pr.changed_files || files.length < 4 || files.length > 24 || files.some(f => !f.filename.startsWith(`${proposalRoot(issue)}/`) || f.status !== 'added')) throw Error('Proposal must contain only the added OpenSpec change');
-  for (const required of ['proposal.md', 'design.md', 'tasks.md']) if (!files.some(f => f.filename === `${proposalRoot(issue)}/${required}`)) throw Error('Incomplete approved proposal');
-  for (const file of files) {
-    const current = await api(`contents/${file.filename}?ref=${revision}`);
-    if (current.sha !== file.sha) throw Error('Approved proposal changed; review a new proposal before implementation');
+  const config = await api(`contents/.lighthouse/implement.json?ref=${revision}`, 'GET', undefined, true);
+  const configured = config ? JSON.parse(Buffer.from(config.content, 'base64').toString()) : {};
+  let policy = configured[issue] ?? configured.defaults;
+  if (!policy) {
+    const manifest = await api(`contents/package.json?ref=${revision}`, 'GET', undefined, true);
+    const pkg = manifest ? JSON.parse(Buffer.from(manifest.content, 'base64').toString()) : {};
+    if (!pkg.scripts?.verify) throw Error('Configure repository implementation checks in .lighthouse/implement.json defaults, or provide npm run verify');
+    policy = { scope: 'Implement only this issue and its acceptance criteria.', paths: ['*'], checks: [['npm', 'ci', '--ignore-scripts'], ['npm', 'run', 'verify']], reviewRequired: false };
   }
-  return { policy, proposal: { number: pr.number, url: pr.html_url, head: pr.head.sha, merge: pr.merge_commit_sha, root: proposalRoot(issue) } };
+  const planCheck = ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', changeName(issue), '--strict', '--no-interactive'];
+  policy = validateImplementationPolicy(policy, issue);
+  policy = { ...policy, checks: [...policy.checks, planCheck] };
+  return { policy, proposal: { root: proposalRoot(issue) } };
 }
 
 // A reviewed immutable seed recovers a failed attempt without updating its branch.
@@ -137,7 +138,11 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
   const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
+  if (snapshot.implementationReview) {
+    await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
+    return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
+  }
   const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
-  return api('pulls', 'POST', { title: `Implementation for #${snapshot.issue}: ${snapshot.title.slice(0, 140)}`, head: branch, base: snapshot.defaultBranch, draft, body: `${body}\n\nRelated to #${snapshot.issue}. [Approved proposal](${snapshot.implementation.proposal.url}).\n\n[Execution, checks and process evidence](${runUrl}). Download the implementation evidence and OpenCode events artifacts. Review remains required; this workflow never merges or closes the issue.\n\n<!-- lighthouse-implementation:${snapshot.runId} -->` });
+  return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: snapshot.defaultBranch, draft, body: `${body}\n\nCloses #${snapshot.issue}. Planning artifacts and implementation are reviewed together in this PR.\n\n[Checks, screenshots and retrospective](${runUrl}). Comment here to request changes, or approve when ready.\n\n<!-- lighthouse-implementation:${snapshot.runId} -->` });
 }

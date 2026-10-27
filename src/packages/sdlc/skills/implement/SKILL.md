@@ -1,20 +1,21 @@
 ---
 name: lighthouse-sdlc-implement
-description: Use when a planned work item is approved for bounded implementation and needs red-green checks, evidence and Definition of Done verification.
+description: Use when an authorized issue needs planning, implementation, verification and a reviewable pull request.
 ---
 
 # Implement
 
-Implement one planned slice at a time.
+Deliver the issue in one branch, including its OpenSpec plan.
 
 ## Steps
 
-1. Read the approved plan, slice boundary, allowed paths and Definition of Done.
-2. Start with the smallest failing deterministic check when the stack supports red-green development.
-3. Make the smallest change that turns the check green, then run the required unit, integration and applicable higher-level checks.
-4. Record changed paths, commands, results, evidence and any finding that needs a human decision.
-5. Return a stage result with `stage: implement`, `gate: done`, implementation evidence as output and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays; stop at `done` when the Definition of Done is satisfied.
+1. Read the issue, owner answers, repository rules and acceptance criteria. If a required product decision is missing, ask one concrete question and stop.
+2. Read `/harness/skills/propose/SKILL.md` for planning and use the supplied OpenSpec instructions to create or update the proposal, specifications, design and tasks before changing production code. This is the planning part of implementation; return one final implementation envelope. Keep tasks coarse and dependency ordered. Reuse existing planning work where it still applies.
+3. Implement the tasks, with tests that exercise the changed behavior. Follow the repository's architecture and allowed write scope.
+4. Run the repository checks and capture the evidence needed to review the result. Mark only completed tasks as done.
+5. Write a short PR summary: what changed, how it was checked, and any blocker. Put logs, screenshots and the retrospective in the evidence output. Apply Humanizer when available; otherwise remove repetition and unexplained process jargon yourself.
+6. Return the implementation stage result and envelope. Keep missing evidence, failed checks and required decisions explicit. The host publishes the branch for review.
 
 ## Completion
 
-The slice has reviewable code and a valid `done` stage result for every required check, with no silent scope expansion or automatic transition to integration.
+The plan and code are ready to review together, with passing checks. Merge remains subject to repository policy and reviewer authorization.

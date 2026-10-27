@@ -48,7 +48,14 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
     if (!/^[1-9][0-9]*$/.test(workflow?.runId ?? '') || !/^[1-9][0-9]*$/.test(workflow?.attempt ?? '')) throw Error('Invalid retained workflow identity');
     if (!path.includes(`/runs/${workflow.runId}/attempt-${String(workflow.attempt).padStart(4, '0')}/`)) throw Error('Retained workflow identity differs from its path');
     const run = await api(`actions/runs/${workflow.runId}`);
-    if (run.repository?.full_name !== binding.repository || run.event !== 'workflow_dispatch' || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.head_sha !== payload.binding.base || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
+    const manual = run.event === 'workflow_dispatch' && run.actor?.login === owner && run.triggering_actor?.login === owner && run.head_sha === payload.binding.base;
+    let approved = false;
+    const approval = receipt.authorization.approval;
+    if (['pull_request_review', 'workflow_run'].includes(run.event) && approval?.owner === owner && approval.head === binding.head && Number.isSafeInteger(approval.id)) {
+      const review = await api(`pulls/${binding.pr}/reviews/${approval.id}`);
+      approved = review.user?.login === owner && review.state === 'APPROVED' && review.commit_id === binding.head;
+    }
+    if (run.repository?.full_name !== binding.repository || !(manual || approved) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
     return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'] };
   }
   if (pinned) throw Error('Previously supplied integration evidence is unavailable or stale');

@@ -15,10 +15,18 @@ export function checkProposal(pr, repo, expected) {
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };
 }
 
-export async function loadProposalReview(api, repo, owner, event, eventName) {
+export function checkImplementationPullRequest(pr, repo, expected) {
+  const match = pr.head?.ref?.match(/^lighthouse\/implement-([1-9][0-9]*)-([a-f0-9]{12})$/);
+  const marker = pr.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
+  if (!match || !marker?.startsWith(match[2]) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
+  if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Implementation changed during review');
+  return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };
+}
+
+export async function loadProposalReview(api, repo, owner, event, eventName, implementation = false) {
   const number = reviewTarget(event, eventName);
   if (!number) return null;
-  const pr = await api(`pulls/${number}`), target = checkProposal(pr, repo);
+  const pr = await api(`pulls/${number}`), target = (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo);
   const kind = eventName === 'pull_request_review' ? 'review' : eventName === 'pull_request_review_comment' ? 'inline' : 'comment';
   const id = kind === 'review' ? event.review?.id : event.comment?.id;
   if (!Number.isSafeInteger(id) || id < 1) throw Error('Missing feedback identity');
@@ -60,8 +68,8 @@ export async function loadProposalFiles(api, review) {
   return validateProposalFiles(files, review.issue);
 }
 
-export async function checkReviewCurrent(api, repo, review) {
-  checkProposal(await api(`pulls/${review.number}`), repo, review);
+export async function checkReviewCurrent(api, repo, review, implementation = false) {
+  (implementation ? checkImplementationPullRequest : checkProposal)(await api(`pulls/${review.number}`), repo, review);
   if (digest(JSON.stringify(await api(review.path))) !== review.feedbackDigest) throw Error('Review feedback changed; no update published');
 }
 

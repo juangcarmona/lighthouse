@@ -70,7 +70,7 @@ export async function loadStageReport(api, repo, report, current) {
   try {
     const values = {};
     for (const [kind, file] of [['input', 'request.json'], ['result', 'envelope.json']]) {
-      const artifact = artifacts.artifacts.find(a => a.name === `lighthouse-${kind}-${current.issue}-${run.run_attempt}` && !a.expired);
+      const artifact = artifacts.artifacts.find(a => a.name === `lighthouse-${/<!-- lighthouse-stage:implement:/.test(report.body) ? 'implement-' : ''}${kind}-${current.issue}-${run.run_attempt}` && !a.expired);
       if (!artifact || artifact.size_in_bytes > 2 * 1024 * 1024) throw Error('Refinement artifact unavailable or too large; run refine first');
       const archive = join(dir, `${kind}.zip`);
       const bytes = execFileSync('gh', ['api', `repos/${repo}/actions/artifacts/${artifact.id}/zip`], { maxBuffer: 2 * 1024 * 1024, timeout: 30000 });

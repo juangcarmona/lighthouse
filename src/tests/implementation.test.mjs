@@ -43,18 +43,31 @@ test('snapshot captures additions and deletions, excludes build output and rejec
     await symlink('/etc/passwd', join(root, 'src/link')); await assert.rejects(sourceFiles(root), /Unsafe/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
-test('approved proposal is bound to the owner merge and unchanged artifacts on the current revision', async () => {
-  const files = ['proposal.md', 'design.md', 'tasks.md', 'specs/feature/spec.md'].map(filename => ({ filename: `openspec/changes/issue-18-proposal/${filename}`, sha: filename, status: 'added' }));
-  let mergedBy = 'owner', edited = false;
+test('an issue uses repository checks without a proposal PR or per-issue configuration', async () => {
   const api = async path => {
-    if (path.startsWith('contents/.lighthouse/implement.json')) return { content: Buffer.from(JSON.stringify({ 18: policy })).toString('base64') };
-    if (path === 'pulls/33') return { number: 33, merged: true, merged_by: { login: mergedBy }, changed_files: 4, base: { ref: 'main', repo: { full_name: 'owner/repo' } }, head: { sha: 'c'.repeat(40), repo: { full_name: 'owner/repo' } }, merge_commit_sha: 'd'.repeat(40) };
-    if (path === 'pulls/33/files?per_page=100') return files;
-    return { sha: edited ? 'changed' : files.find(f => path.startsWith(`contents/${f.filename}?`)).sha };
+    if (path.startsWith('contents/.lighthouse/implement.json')) return null;
+    assert.ok(path.startsWith('contents/package.json'));
+    return { content: Buffer.from(JSON.stringify({ scripts: { verify: 'node verify.mjs' } })).toString('base64') };
   };
-  assert.equal((await loadImplementation(api, 18, 'owner', request.sourceRevision, 'main')).proposal.number, 33);
-  mergedBy = 'bot'; await assert.rejects(loadImplementation(api, 18, 'owner', request.sourceRevision, 'main'), /merged by/);
-  mergedBy = 'owner'; edited = true; await assert.rejects(loadImplementation(api, 18, 'owner', request.sourceRevision, 'main'), /changed/);
+  const actual = await loadImplementation(api, 18, 'owner', request.sourceRevision, 'main');
+  assert.equal(actual.proposal.root, 'openspec/changes/issue-18-proposal');
+  assert.equal(actual.policy.reviewRequired, false);
+  assert.deepEqual(actual.policy.checks.slice(0, 2), [['npm', 'ci', '--ignore-scripts'], ['npm', 'run', 'verify']]);
+  validateChanges([{ ...change, path: 'openspec/changes/issue-18-proposal/design.md' }], actual.policy);
+  for (const path of ['.github/workflows/run.yml', '.lighthouse/implement.json', '.git/config', '.opencode/config.json', 'src/.env', 'AGENTS.md']) assert.throws(() => validateChanges([{ ...change, path }], actual.policy));
+  await assert.rejects(loadImplementation(async () => null, 18, 'owner', request.sourceRevision, 'main'), /checks/);
+});
+test('repository defaults and existing bounded per-issue policies remain usable without merging a proposal', async () => {
+  for (const configured of [{ defaults: policy }, { 18: policy }]) {
+    const api = async path => {
+      assert.ok(path.startsWith('contents/.lighthouse/implement.json'));
+      return { content: Buffer.from(JSON.stringify(configured)).toString('base64') };
+    };
+    const actual = (await loadImplementation(api, 18, 'owner', request.sourceRevision, 'main')).policy;
+    assert.deepEqual(actual.paths, policy.paths);
+    assert.deepEqual(actual.checks[0], policy.checks[0]);
+    assert.ok(actual.checks.at(-1).includes('--strict'));
+  }
 });
 test('host checks bind the exact candidate and commands, preserving failures', () => {
   const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest([change]), checks: [{ command: ['npm', 'test'], exitCode: 0 }] };
@@ -124,4 +137,15 @@ test('an immutable recovery seed cannot overwrite newer source or expand its wri
   conflict = false; extraParent = true; await assert.rejects(loadImplementationSeed(api, seeded, revision), /one commit/);
   extraParent = false; path = '.github/workflows/agent.yml'; await assert.rejects(loadImplementationSeed(api, seeded, revision), /scope/);
   assert.throws(() => validateImplementationPolicy({ ...policy, seed: { base, head: 'main' } }, 18), /immutable/);
+});
+
+test('review feedback updates the existing implementation branch without a force push or second PR', async () => {
+  const calls = [];
+  const api = async (path, method, body) => { calls.push({ path, method, body }); return { sha: 'created', tree: { sha: 'tree' } }; };
+  const reviewed = { ...request, implementationReview: { number: 34, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
+  const pr = await createImplementationPullRequest(api, reviewed, [change], 'Updated', '', false, async () => calls.push({ path: 'recheck' }));
+  assert.equal(pr.number, 34);
+  assert.deepEqual(calls.at(-1), { path: 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa', method: 'PATCH', body: { sha: 'created', force: false } });
+  assert.equal(calls.some(c => c.path === 'pulls'), false);
+  assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.length - 1);
 });

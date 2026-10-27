@@ -245,3 +245,29 @@ test('review rejects tampered artifacts, links, uncertain source runs and wrong 
   for (const runOverrides of [{ conclusion: 'failure' }, { run_attempt: 2 }, { actor: { login: 'outsider' } }, { head_sha: merged }, { event: 'pull_request' }]) await assert.rejects(readIntegrationEvidence(retainedIntegration({ runOverrides }), completion), /not authenticated/);
   await assert.rejects(readIntegrationEvidence(retainedIntegration(), { ...completion, merge: base }), /index/);
 });
+
+test('native owner approval authorizes only the current bot implementation head', async () => {
+  const { authorizeCompletionEvent } = await import('../packages/sdlc/src/completion.mjs');
+  const head = 'a'.repeat(40), repo = 'owner/repo';
+  const pr = { number: 60, state: 'open', user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/implement-47-${'b'.repeat(12)}`, repo: { full_name: repo } }, base: { ref: 'main', repo: { full_name: repo } }, body: `<!-- lighthouse-implementation:${'b'.repeat(64)} -->` };
+  const review = { id: 7, state: 'APPROVED', commit_id: head, user: { login: 'owner', type: 'User' } };
+  const event = { action: 'submitted', pull_request: { number: 60 }, review: { id: 7 } };
+  const env = { GITHUB_EVENT_NAME: 'pull_request_review', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_REPOSITORY_OWNER: 'owner' };
+  let superseded = false;
+  const api = async path => path === 'pulls/60' ? pr : path.includes('/reviews/7/comments') ? [] : path.includes('/reviews?') ? [review, ...(superseded ? [{ ...review, id: 8, state: 'CHANGES_REQUESTED' }] : [])] : review;
+  assert.deepEqual(await authorizeCompletionEvent(api, repo, event, env, 'integrate'), { issue: 47, pr: 60, head, merge: true, approval: { id: 7, owner: 'owner', head } });
+  superseded = true;
+  await assert.rejects(authorizeCompletionEvent(api, repo, event, env, 'integrate'), /superseded/);
+  await assert.rejects(authorizeCompletionEvent(api, repo, event, { ...env, GITHUB_ACTOR: 'stranger' }, 'integrate'), /owner review/);
+});
+
+test('retained native approval is verified against the original owner review', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const completion = { ...observation, merged: true, merge: merged };
+  const original = retainedIntegration({ runOverrides: { event: 'pull_request_review', head_sha: head }, receiptOverrides: { authorization: { merge: true, issue: 42, pr: 50, head, approval: { id: 9, owner: 'owner', head } } } });
+  let state = 'APPROVED';
+  const api = path => path === 'pulls/50/reviews/9' ? { state, user: { login: 'owner' }, commit_id: head } : original(path);
+  assert.ok(await readIntegrationEvidence(api, completion));
+  state = 'DISMISSED';
+  await assert.rejects(readIntegrationEvidence(api, completion), /not authenticated/);
+});
