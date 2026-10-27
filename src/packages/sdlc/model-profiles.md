@@ -19,7 +19,7 @@ Create `.lighthouse/models.json` in the consuming repository after verifying ide
 }
 ```
 
-The only profile names are `plan`, `build` and `fast`. Models must be OpenAI provider-qualified identifiers without an embedded variant. Effort is independent: `none`, `minimal`, `low`, `medium`, `high` or `xhigh`, but only values explicitly permitted for that model by the operator can run. The resolver rejects unknown configuration keys, providers, profile names, effort values and unsupported tier or transport fields. It never chooses an alternative on failure.
+The only profile names are `plan`, `build` and `fast`. Models must be OpenAI provider-qualified identifiers without an embedded variant. Effort is independent: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, but only values explicitly permitted for that model by the operator can run. The resolver rejects unknown configuration keys, providers, profile names, effort values and unsupported tier or transport fields. It never chooses an alternative on failure.
 
 ## Operator opt-in and precedence
 

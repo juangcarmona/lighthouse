@@ -1,6 +1,6 @@
 // Selection is configuration, never authority or proof of provider access.
 export const MODEL_PROFILES = Object.freeze(['plan', 'build', 'fast']);
-export const REASONING_EFFORTS = Object.freeze(['none', 'minimal', 'low', 'medium', 'high', 'xhigh']);
+export const REASONING_EFFORTS = Object.freeze(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const own = (value, key) => Object.hasOwn(value ?? {}, key);
 function keys(value, allowed, label) {

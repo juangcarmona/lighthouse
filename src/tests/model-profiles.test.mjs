@@ -59,6 +59,14 @@ test('unavailable models, effort or tools fail without any fallback', () => {
   const bad = structuredClone(project); delete bad.profiles.build.reasoningEffort;
   assert.throws(() => resolve({ project: bad }), /Incomplete/);
 });
+test('max effort is accepted only when the operator declares support', () => {
+  const selectedProject = structuredClone(project);
+  selectedProject.profiles.build.reasoningEffort = 'max';
+  assert.throws(() => resolve({ project: selectedProject }), /unavailable/);
+  const selectedOperator = structuredClone(operator);
+  selectedOperator.modelCapabilities['openai/test-sol'].reasoningEfforts.push('max');
+  assert.equal(resolve({ project: selectedProject, operator: selectedOperator }).engineModel, 'openai/test-sol#max');
+});
 test('fast never implies premium processing or proven provider access and unknown is not zero', () => {
   const selection = resolve({ profile: 'fast' }), receipt = modelExecutionReceipt(selection);
   assert.equal(selection.engineModel, 'openai/test-luna#high');
