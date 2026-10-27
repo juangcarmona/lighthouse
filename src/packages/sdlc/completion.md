@@ -25,7 +25,7 @@ GitHub hides `bypass_actors` from tokens that cannot edit rulesets. Before activ
 
 ## Owner entry
 
-Approve the implementation PR in GitHub when it is ready. The router checks that the approval belongs to the owner and the current commit, then assesses integration. If CI is still running, its completion resumes the check. Comments request changes on the same PR; they do not authorize merge.
+Approve the implementation PR in GitHub when it is ready. A complete candidate starts as a draft, and passing required CI marks it ready. Manual draft changes are reflected on the issue; marking an incomplete or unchecked PR ready returns it to draft with a blocker. The router checks that approval belongs to the owner and the current commit, then assesses integration. If CI is still running, its completion resumes the check. Comments request changes on the same PR; they do not authorize merge.
 
 Manual `integrate` and `review` dispatches remain available for recovery. They require the issue, PR and accepted head SHA; integration needs `merge: true` to authorize a merge.
 

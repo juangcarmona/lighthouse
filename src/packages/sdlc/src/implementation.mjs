@@ -145,11 +145,16 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
   const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
+  const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
   if (snapshot.implementationReview) {
     await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
+    const current = await api(`pulls/${snapshot.implementationReview.number}`);
+    const marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
+    if (!marker) throw Error('Implementation PR marker missing during update');
+    await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: description(marker) });
     return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
   }
   const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
-  return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: snapshot.defaultBranch, draft, body: `${body}\n\nCloses #${snapshot.issue}. Planning artifacts and implementation are reviewed together in this PR.\n\n[Checks, screenshots and retrospective](${runUrl}). Comment here to request changes, or approve when ready.\n\n<!-- lighthouse-implementation:${snapshot.runId} -->` });
+  return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: snapshot.defaultBranch, draft, body: description(snapshot.runId) });
 }
