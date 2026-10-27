@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "runId": "5415d1360d5598a173fe8d496ce434c1589cea5293612d58da1e64e5d1f7ccbb",
+  "stage": "review",
+  "status": "passed",
+  "gate": null,
+  "input": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 148,
+    "pr": 153,
+    "requestId": "f2c9d5c40d3a5379bbe87e278de7776a54aa5e52b318cac92b0904eb70358776",
+    "workflowRunId": "40597765997",
+    "attempt": "1",
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 148,
+      "pr": 153,
+      "head": "a5a249e18f5343e760dbee80221578ad596dc8f7",
+      "base": "6342022c0026e1b0bca6d836d4738da3b7d327f4",
+      "branch": "main",
+      "intent": "a49843ee2af6573329110f94bc962061d46954acec1bc9823cd16a1b7ab7bafd",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "e8f37c5ef57040c6a3079c37b21d3e71897388c8ad4248dc01840a10f2a3280e",
+      "files": "b8b925f7d067140c4cd9dd4b730c3c33375d1650eb91a95ffd131e77ac8ebad9"
+    }
+  },
+  "output": {
+    "summary": "Review passed for the delivered opt-in model profiles and bounded host-delegation API. Host-authenticated observations establish the existing merge and successful merged-revision CI. Owner-accepted later evidence supplements the older checked-out evaluation. This assessment neither performs a merge nor approves a permanent preset, a billing-route change or a cost winner.",
+    "delivery": {
+      "acceptedHead": "a5a249e18f5343e760dbee80221578ad596dc8f7",
+      "integratedRevision": "6342022c0026e1b0bca6d836d4738da3b7d327f4",
+      "hostObservedCurrentRevision": "a3279843410b61f753a0f7857670e5b003101b2d",
+      "integrationEvidence": "integration:40595835975:1",
+      "retainedRecordCommit": "1c390743d6083768e62fd01fa0449a398cffee5b",
+      "retainedRecordSha256": "69419e7b189e1af55b4186b148d89656cf8ed7a7fb7a206717dffe1d51fbb4ec",
+      "authorization": "The retained integration receipt includes explicit owner merge:true authorization for this accepted head. The present review dispatch has merge:false and authorizes no integration action.",
+      "provenance": "Delivery identity, workflow identity, GitHub observations and protected historical publication are supplied by the host. No independent GitHub or git identity check was performed or required of this engine. Current review publication is still a subsequent host action."
+    },
+    "acceptanceAssessment": [
+      {
+        "requirement": "Delivery 1: opt-in profiles, independent effort, precedence, legacy compatibility and fail-closed behavior",
+        "assessment": "satisfied for the configurable implementation",
+        "evidence": [
+          "src/packages/sdlc/src/model-profiles.mjs:9-48 validates configuration, resolves explicit task/operator/project selection and rejects unavailable declared capabilities without fallback.",
+          "src/tests/model-profiles.test.mjs:15-79 covers worker selection, independent overrides, legacy forwarding, invalid settings, capability denial and non-premium fast semantics.",
+          "src/packages/sdlc/src/opencode-execute.mjs:56-65,109-113,149-157 propagates the resolved argument and fails on execution errors; src/tests/opencode-execute.test.mjs:121-170 covers forwarding, unavailable access and provider errors."
+        ],
+        "limits": "Operator capabilities and resolved arguments are configuration evidence, not authenticated provider-internal settings. Tests were inspected, not rerun in this engine; successful repository CI is supplied separately by the host."
+      },
+      {
+        "requirement": "Two native workers with different profiles and honest execution evidence",
+        "assessment": "owner-accepted with explicitly unverified provider settings",
+        "evidence": [
+          "Owner answer 6454998826 reports Refine #157 selecting plan/Sol high from project mapping and Triage #160 selecting build/Sol medium from operator override; their successful workflow jobs appear in authenticated observations.",
+          "src/packages/sdlc/src/model-profiles.mjs:51-57 and model-profiles.md:56-60 explicitly mark provider model/effort unverified and unknown cost/usage null."
+        ],
+        "limits": "Raw later runtime receipts were not inspected in this checkout. The owner acceptance and authenticated workflow success are distinct evidence; success alone does not authenticate model or reasoning settings. The work item expressly permits reporting unverified settings."
+      },
+      {
+        "requirement": "Repeatable candidate evaluation including Sol/Terra implementation and Luna lightweight work",
+        "assessment": "owner-accepted bounded evaluation; economic selection deferred",
+        "evidence": [
+          "openspec/changes/issue-148-proposal/evaluation.md:3-17 reports seven identical-prompt candidate cases, elapsed times, no retries for those cases and unreported usage; it includes a GPT-5.6 comparator.",
+          "Owner answer 6455252621 records PR #163 repository-task evidence: common source revision, isolated worktrees, Sol and Terra code fixes with regression tests, Luna documentation edit, operator inspection and npm run verify passing in all three. Both code prompts required a retry and patch-format repair."
+        ],
+        "limits": "The later exact prompts, raw outputs, detailed timings and usage were not independently inspected here. Acceptance is attributed to the owner, not invented as an engine observation. Existing authentication was retained; the actual account billing route and charges are not independently established by the inspected evaluation. Unknown is not zero. No permanent preset or least-cost winner is accepted."
+      },
+      {
+        "requirement": "Delivery 2: shared profile resolution, bounded waves, dependency/conflict checks and host verification",
+        "assessment": "satisfied for the declared host API",
+        "evidence": [
+          "src/packages/sdlc/src/profile-delegation.mjs preflights launch contracts and the graph, uses resolveModelProfile, bounds parallel waves, serializes overlapping scopes and blocks dependants after failure.",
+          "src/tests/profile-delegation.test.mjs covers limits, independent context/identity, wave verification, conflicts, invalid graphs, failures, cancellation and deadlines.",
+          "evaluation.md:19-23 reports four real model calls in two waves, peak parallelism 2, scoped host writes and an injected dependent-blocking case; scripts/dogfood-profile-delegation.mjs exposes the corresponding host callbacks."
+        ],
+        "limits": "This proves bounded host-callback integration, not automatic delegation inside a GitHub worker. The host remains responsible for actual path/tool enforcement, output validation, child termination and evidence. This documented architecture boundary is intentional, not guidance drift."
+      },
+      {
+        "requirement": "Product traceability and unchanged authority boundaries",
+        "assessment": "satisfied within the owner-authorized scope",
+        "evidence": [
+          "docs/product/changes/completed/chg-lh-model-profiles-001/change.md records the applied intent and explicit exclusions; canonical FR-MODEL-PROFILES and FR-PROFILE-DELEGATION state the required behavior.",
+          "openspec/changes/issue-148-proposal/tasks.md separates the two deliveries; design.md explicitly excludes preset activation, new transports and automatic worker delegation.",
+          "src/packages/sdlc/model-profiles.md preserves operator opt-in, authentication/billing, host limits and lifecycle gates."
+        ],
+        "limits": "Product Change application is not itself acceptance or merge authority. Historical pending evaluation and citation entries are retained below rather than relabelled as executed checks."
+      }
+    ],
+    "findings": [
+      {
+        "id": "R148-1",
+        "classification": "fixed",
+        "kind": "dogfood assignment / model-output failure",
+        "finding": "The Luna-high full-worker trial failed on malformed JSON. This is a real failed run, not missing evidence and not proof of a resolver defect. The owner reports that PR #162 removed full-worker fast assignments while retaining fast for bounded tasks.",
+        "owner": "juangcarmona, operator and SDLC maintainer",
+        "followUp": "PR #162 and issue #148 owner answer 6454998826",
+        "evidence": "github-check:122496977915; workflow 40591496516; checked-out .lighthouse/models.json:5,9 shows the earlier candidate assignments, not independent evidence that the later correction regressed."
+      },
+      {
+        "id": "R148-2",
+        "classification": "accepted",
+        "kind": "evidence limitation",
+        "finding": "Provider-internal model/effort, actual account charges and comparable cost per accepted task remain unverified. The supplied owner acceptance and prior integration explicitly retain these limits. They do not block review of the configurable implementation and do not authorize preset adoption.",
+        "owner": "juangcarmona, account operator",
+        "followUp": "Issue #148 evaluation record and owner answers 6454998826 / 6455252621; any later preset decision requires its own evidence and review",
+        "evidence": "modelExecutionReceipt; evaluation.md:3,15,23; retained integration report"
+      },
+      {
+        "id": "R148-3",
+        "classification": "deferred",
+        "kind": "guidance defect, not an established implementation defect",
+        "finding": "worker-catalogue.md:18 says triage is not installed, conflicting with its own triage section and the installer. The building-block view says only refinement is installed while the installer supports the other selected workers. No causal attribution to PR #153 or recurrence is established.",
+        "owner": "SDLC documentation and architecture maintainers; juangcarmona coordinates",
+        "followUp": "This issue #148 review record, improvement candidate IC-3; no new issue opened",
+        "evidence": "docs/architecture/06-runtime-view/worker-catalogue.md:18,32-44; docs/architecture/05-building-block-view/README.md:81-85; src/packages/sdlc/src/install-workflows.mjs:11-19,37-39"
+      },
+      {
+        "id": "R148-4",
+        "classification": "deferred",
+        "kind": "evaluation process gap",
+        "finding": "The later Sol/Terra repository-task trials required retries and human patch-format repair. Their accepted results must not be described as unassisted first-attempt success or used to infer a cost winner.",
+        "owner": "Model-evaluation harness maintainer and acceptance reviewer, coordinated by juangcarmona",
+        "followUp": "PR #163 / owner answer 6455252621; improvement candidate IC-2 in this review",
+        "evidence": "Owner reports both retries and patch-format repair; the earlier evaluation.md:15 no-retry statement applies only to its seven earlier fixed cases."
+      },
+      {
+        "id": "R148-5",
+        "classification": "deferred",
+        "kind": "pre-existing product-document classification gap",
+        "finding": "The historical plan reports failed repository-wide citation verification on older unclassified documents. The later owner answer tracks eight older documents in #161 and says existing citations are current. These are different-time reports, not evidence of new failures introduced here or recurrence across work items.",
+        "owner": "Product documentation maintainer, coordinated by juangcarmona",
+        "followUp": "Issue #161",
+        "evidence": "tasks.md:29-31 reports four older issue-125 documents at that time; owner answer 6454998826 supplies the later eight-document report. No fresh citation run was performed here."
+      },
+      {
+        "id": "R148-6",
+        "classification": "accepted",
+        "kind": "historical evidence continuity",
+        "finding": "The accepted-source evaluation and plan still say native receipts and integration acceptance are pending. Later owner answers, PRs #162/#163 and the protected integration receipt supplement that history. The old checkout does not establish current missing acceptance or prove the later evidence false.",
+        "owner": "juangcarmona, delivery record owner",
+        "followUp": "Issue #148 owner answers and integration:40595835975:1, retained with this review",
+        "evidence": "evaluation.md:17; tasks.md:14,29-35; host-supplied later acceptance and retained integration report"
+      }
+    ],
+    "historicalAndNonGatingChecks": [
+      {
+        "id": "github-check:122496977915",
+        "status": "failed",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40591496516/job/122496977915",
+        "disposition": "Failed Luna worker trial retained as acceptance learning; later owner-reported assignment correction is R148-1. Not the required repository check."
+      },
+      {
+        "id": "github-check:122500734860",
+        "status": "failed",
+        "state": "cancelled",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40592630310/job/122500734860",
+        "disposition": "Cancelled dispatch is not passed and not a demonstrated source defect. No evidence establishes that this optional routing observation is a current review gate."
+      },
+      {
+        "id": "historical-citation-verification",
+        "status": "failed",
+        "disposition": "Reported historical failure, separately tracked in #161; not silently converted into a required GitHub merge check or a new PR #153 defect."
+      },
+      {
+        "id": "optional-real-adopter-installation",
+        "status": "unconfigured",
+        "intendedStage": "implementation/package acceptance when an adopter checkout is supplied",
+        "disposition": "tasks.md:31 says no adopter checkout was supplied; skipped install jobs do not prove installation. No explicit current work-item gate requires this optional check."
+      }
+    ],
+    "finalization": {
+      "policyReferences": [
+        "src/packages/sdlc/completion.md:36",
+        ".lighthouse/github.json",
+        "host completion.finalization"
+      ],
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "ready",
+          "waiting-review"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedOnPassed": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "Host cleanup releases agent-working for every outcome; its absence from the pre-reservation observation is not missing evidence.",
+      "executionStatus": "Not applied by this engine. The trusted publisher must recheck current authority, checks and reservation, publish to process/retrospectives, then apply the adopted finalization plan. No new stage, issue, permission or policy change is requested."
+    },
+    "retrospective": "## What went well\n- One resolver serves workers and delegated tasks; source and tests cover precedence, legacy behavior, failure propagation, bounded waves and conflicts. Configuration receipts explicitly avoid claiming provider confirmation.\n- Host-authenticated required repository CI and post-merge CI passed at the integrated revision. The protected integration record preserves the accepted head and owner merge authorization.\n- Later owner acceptance fills the native-worker and repository-task gaps while preserving the original evaluation limits (answers 6454998826 and 6455252621).\n\n## What went wrong\n- Luna high failed the full-worker JSON task (run 40591496516); PR #162 reportedly corrected the dogfood assignments. This is a model-output/assignment finding, not an established resolver defect.\n- Both later code trials required retry and patch-format repair (PR #163). Their accepted outcomes do not establish first-attempt reliability or account economics.\n- Two architecture passages conflict with installed routes: worker-catalogue.md:18 and the building-block view:83. Older citation-classification failures remain tracked in #161. No additional source-code defect was established by this review.\n\n## Start doing\n- Preserve separate timelines for original implementation evidence, later owner acceptance and integration receipts; attribute manual acceptance rather than presenting it as independently observed execution. Owner: delivery record maintainer.\n- Qualify full-worker envelope behavior before using a lightweight profile for that role. Owner: account operator and SDLC maintainer.\n\n## Stop doing\n- Do not equate a selected model argument, green workflow or lower API rate with authenticated provider effort, task adequacy or actual cost. Keep unknowns explicit and preset selection separate.\n- Do not combine the seven earlier no-retry fixtures with the later repaired code trials into one success rate. These are trials within this work item, not established recurrence across issues.\n\n## Improvement candidates\n- **IC-1 — Full-worker profile qualification.** Observed failure: malformed JSON in Luna trial 40591496516; owner reports correction in PR #162. Owner: SDLC maintainer/operator. Smallest useful guard: a reviewed representative worker-envelope acceptance fixture before changing assignments, with no silent model fallback. Regression proof: retain the failing output and show it fails the existing envelope validator; then demonstrate valid output and failure handling for the corrected assignment. A single replay cannot prove model reliability.\n- **IC-2 — Separate patch validity from task correctness.** Observed failure: retries and patch-format repair in the Sol/Terra trials (owner answer 6455252621 / PR #163). Owner: evaluation harness maintainer. Smallest useful guard: record raw patch-application outcome, retry and human-repair fields before accepting repository checks. Regression proof: retain the malformed patch as a fixture, reproduce its application failure, then show a valid patch applies and its regression and repository checks pass without unrecorded correction.\n- **IC-3 — Reconcile route guidance.** Observed failure: worker-catalogue.md:18 contradicts its triage section, while the building-block view:83 contradicts install-workflows.mjs:11-19,37-39. Owner: SDLC documentation and architecture maintainers. Smallest useful guard: a reviewed route-documentation checklist linked to installer fixtures, not a new execution permission. Regression proof: first demonstrate the contradictory claims against default and completion installer plans; after a separately reviewed documentation correction, repeat that comparison and link checks. Do not rewrite provider-owned guidance through this stage.\n\nAll candidates require their own review and regression evidence before adoption. Provider-internal effort, actual charges and a least-cost preset remain unknown; no attention-time or cost-saving measurement is claimed."
+  },
+  "evidence": [
+    {
+      "id": "integration:40595835975:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/1c390743d6083768e62fd01fa0449a398cffee5b/docs/process/20261027-148-configure-openai-plan-build-and-fast-profiles-for-workers-and-de/runs/40595835975/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected historical record binds the accepted delivery, owner merge authorization, successful originating workflow and actual merged revision; this review did not merge."
+    },
+    {
+      "id": "github-check:122491955749",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40590145193/job/122491955749",
+      "reason": "Authenticated repository check succeeded at accepted head a5a249e18f5343e760dbee80221578ad596dc8f7."
+    },
+    {
+      "id": "github-check:122492952845",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40590433459/job/122492952845",
+      "reason": "Authenticated required repository check and adopted ci.yml post-merge verification succeeded at merged revision 6342022c0026e1b0bca6d836d4738da3b7d327f4; this is the sole configured forge check context."
+    },
+    {
+      "id": "github-check:122499082406",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40592102781/job/122499082406",
+      "reason": "Successful Refine #157 agent execution corroborates the owner's native plan-worker acceptance; configured model/effort attribution comes from owner answer 6454998826, not this check conclusion."
+    },
+    {
+      "id": "github-check:122501149670",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40592738559/job/122501149670",
+      "reason": "Successful Triage #160 agent execution corroborates the owner's native build-worker acceptance; this does not authenticate provider-internal settings."
+    },
+    {
+      "id": "owner-acceptance:6455252621",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/issues/148#issuecomment-6455252621",
+      "reason": "Host-supplied owner answer accepts the PR #163 repository-task results after isolated worktree inspection and verification, explicitly retaining retries, repairs and no cost-winner claim."
+    },
+    {
+      "id": "review:source-guidance-and-acceptance",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/model-profiles.md",
+      "reason": "Inspected requirements, applied Product Change, OpenSpec plan/evaluation, resolver, adapter, scheduler, tests and affected guidance. Findings are classified with owners and references; historical accepted limits and non-gating failures remain explicit. No local test rerun or later-PR diff inspection is claimed."
+    },
+    {
+      "id": "review:finalization-policy",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/completion.md",
+      "reason": "Adopted completion policy agrees with host observations and intended issue closure/delivery-label removal, PR-label preservation and reservation cleanup after validation. These effects have not been performed by the engine."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, checks and reservation, publish this review to the adopted protected evidence branch, then apply the passed-review finalization plan. Keep preset economics and recorded improvement candidates separate; do not start another stage."
+}
