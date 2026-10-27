@@ -10,6 +10,9 @@ on:
     types: [submitted]
   pull_request_review_comment:
     types: [created]
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       issue:
@@ -21,7 +24,20 @@ on:
         required: true
         default: refine
         type: choice
-        options: [refine, propose]
+        options: [refine, propose, implement, integrate, review]
+      pull_request:
+        description: PR number for integrate or review
+        required: false
+        type: string
+      head:
+        description: Full accepted PR head SHA for integrate or review
+        required: false
+        type: string
+      merge:
+        description: Explicitly authorize integrating this accepted PR head
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 jobs:
@@ -30,7 +46,7 @@ jobs:
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
       (github.actor == github.repository_owner || github.event_name == 'workflow_run') &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
-       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
+       (github.event_name == 'issues' && (github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
     runs-on: ubuntu-24.04
     permissions:
@@ -46,7 +62,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 83960d59975ef7fa147c08db6d403c0e1fb94ccc
+          ref: e01a82b933b72f1e69139e9f4155e6e89a674d0b
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -55,7 +71,7 @@ jobs:
         id: route
         env:
           GH_TOKEN: ${{ github.token }}
-          LIGHTHOUSE_COMPLETION_ENABLED: false
+          LIGHTHOUSE_COMPLETION_ENABLED: true
         run: node src/packages/sdlc/src/issue-actions.mjs route
   refine:
     needs: route
@@ -70,6 +86,7 @@ jobs:
     uses: ./.github/workflows/lighthouse-sdlc-refine.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}
+      auto-implement: true
   propose:
     needs: route
     concurrency:
@@ -82,5 +99,50 @@ jobs:
       issues: write
       pull-requests: write
     uses: ./.github/workflows/lighthouse-sdlc-propose.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+  implement:
+    needs: [route, refine]
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
+    if: always() && needs.route.result == 'success' && needs.route.outputs.run == 'true' && (needs.route.outputs.stage == 'implement' || needs.refine.result == 'success')
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-implement.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+      handoff: ${{ needs.route.outputs.stage == 'refine' }}
+  integrate:
+    needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'integrate'
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-integrate.lock.yml
+    with:
+      issue: ${{ needs.route.outputs.issue }}
+  review:
+    needs: route
+    concurrency:
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      cancel-in-progress: false
+    if: needs.route.outputs.run == 'true' && needs.route.outputs.stage == 'review'
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/lighthouse-sdlc-review.lock.yml
     with:
       issue: ${{ needs.route.outputs.issue }}

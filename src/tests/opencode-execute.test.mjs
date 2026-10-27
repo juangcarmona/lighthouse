@@ -1,11 +1,20 @@
 import { closeSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile, symlink, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, symlink, rm, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
+
+async function fixtureHarness(root) {
+  const harness = join(root, 'harness');
+  await cp(new URL('../packages/sdlc/', import.meta.url), harness, { recursive: true });
+  execFileSync('git', ['init', '-q', harness]);
+  execFileSync('git', ['-C', harness, 'add', '.']);
+  execFileSync('git', ['-C', harness, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Fixture harness']);
+  return join(harness, 'src/opencode-execute.mjs');
+}
 
 test('engine snapshot contains tracked regular files but no checkout credentials or symlink targets', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-source-')), out = await mkdtemp(join(tmpdir(), 'lh-snapshot-'));
@@ -82,7 +91,7 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
 }
 `);
     await chmod(shim, 0o755);
-    const execution = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+    const execution = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
     assert.equal(execution.status, 0, execution.stdout + execution.stderr);
     assert.match(execution.stdout, /\[OpenCode\] Checking scope/);
     assert.match(execution.stdout, /\[Result\] Scope is ready/);
@@ -122,9 +131,9 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
-    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); process.exitCode=1; }\n`);
+    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); process.exitCode=1; }\n`);
     await chmod(shim, 0o755);
-    const result = spawnSync(process.execPath, ['src/packages/sdlc/src/opencode-execute.mjs'], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 1, result.stdout + result.stderr);
     const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
     assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'partial implementation');

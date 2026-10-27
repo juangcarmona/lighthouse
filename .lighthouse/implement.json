@@ -1,0 +1,24 @@
+{
+  "defaults": {
+    "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ]
+    ]
+  }
+}
