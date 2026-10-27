@@ -6,6 +6,19 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs } from '../packages/sdlc/src/issue-actions.mjs';
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
+test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-dispatch-input-'));
+  try {
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ inputs: { issue: '018', 'dispatch-request': '30' } }));
+    await writeFile(join(dir, 'mock.mjs'), 'globalThis.fetch = () => { throw Error("Unexpected API access"); };');
+    for (const input of ['018', '18.0', ' 18', '1.8e1', '9007199254740993']) {
+      const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'prepare'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'github-actions[bot]', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), LIGHTHOUSE_ISSUE: input, RUNNER_TEMP: dir } });
+      assert.equal(run.status, 1);
+      assert.match(run.stderr, /Dispatch issue must be a canonical positive integer/);
+      assert.doesNotMatch(run.stderr, /Unexpected API access/);
+    }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
 test('only the owner can start refinement; reservations and PRs are excluded', () => {
   const event = { action: 'labeled', issue, label: { name: 'refine' } };
   assert.equal(routeIssue(event, 'owner', 'owner', 'issues').run, true);

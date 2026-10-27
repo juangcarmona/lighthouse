@@ -2,7 +2,25 @@
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC implement
 description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
+run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request || 'legacy' }}"
+concurrency:
+  group: ${{ inputs.dispatch-request && format('lighthouse-issue-{0}', inputs.issue) || format('lighthouse-legacy-{0}', github.run_id) }}
+  cancel-in-progress: false
+  queue: max
+  job-discriminator: ${{ github.run_id }}
 on:
+  # prepare authenticates the originating owner request; bot dispatch has no collaborator role.
+  roles: all
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Source issue
+        required: true
+        type: string
+      dispatch-request:
+        description: Authenticated router receipt comment ID
+        required: true
+        type: string
   workflow_call:
     inputs:
       issue:
@@ -117,13 +135,13 @@ jobs:
         with:
           node-version: 24
       - name: Load refinement request
-        if: inputs.handoff
+        if: inputs.handoff && !inputs.dispatch-request
         uses: actions/download-artifact@v8
         with:
           name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/refinement-handoff
       - name: Load refinement result
-        if: inputs.handoff
+        if: inputs.handoff && !inputs.dispatch-request
         uses: actions/download-artifact@v8
         with:
           name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
@@ -178,6 +196,11 @@ jobs:
         with:
           name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
         env:

@@ -72,7 +72,13 @@ The [external host contract](host-contract.md) supports owner-authorized `refine
 
 ## Implementation delivery
 
-Install with `--with-implement` and provision the implementation engine image. An owner can request `implement` directly. With this worker installed, successful refinement also hands the issue to implementation in the same Actions run. A blocked refinement waits for the owner's answer; `future` pauses implementation.
+Install with `--with-implement` and provision the implementation engine image. An owner can request `implement` directly. With this worker installed, successful refinement also hands the issue to an independently dispatched implementation workflow. A blocked refinement waits for the owner's answer; `future` pauses implementation.
+
+The implementation dispatch proof of concept keeps its receipt on the source issue and its original event in an immutable Actions artifact. The router records intent before sending and passes the receipt comment ID to the implementation workflow. Preparation authenticates the bot comment, router run and attempt, artifact digest, owner identity and worker revision, then rechecks current issue intent and source. Workflow revision and product revision are separate: an explicit owner dispatch can exercise a reviewed workflow branch against current product source.
+
+Each router run has one stable implementation request ID across reruns. Router dispatch jobs serialize receipt creation by issue; the implementation workflow shares the existing issue concurrency group with other stages and claims the receipt once before agent work. A duplicate dispatch or worker rerun skips the agent. The issue receipt links the exact worker; Actions supplies execution status and the existing report supplies the validated stage result. Dispatch acceptance never means stage success.
+
+A missing dispatch response stays unconfirmed. Rerunning the router does not send again, and another request for that issue is blocked until the uncertainty is resolved. Inspect the origin run and request artifact, then the worker runs identified by the receipt comment ID in their names; verify the matching revision and request before reconciling. Failed or cancelled preparation remains visible through its linked worker. Reruns do not reclaim an already claimed request; a deliberate new router request is required after inspecting the prior outcome and any reservation. Artifact expiry, changed intent, changed source and edited receipts fail closed. This is a bounded proof of concept, not a general queue or automatic recovery service; there is no database or SoFa dependency.
 
 The worker creates the OpenSpec plan, implements it and runs checks in one workspace. The PR contains both the plan and code. A separate proposal PR remains available for design-only work; merging one is not an implementation prerequisite.
 
