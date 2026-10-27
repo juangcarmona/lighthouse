@@ -134,3 +134,13 @@ Cancellation, integration/review, human decisions, stale intent/source, expired 
 Maintenance bounds are 100 open owner issues, 500 scanned issue/PR entries, 1,000 comments per issue and 100 jobs per execution. Exceeding a bound fails visibly. Original dispatch artifacts retain their existing 14-day lifetime. Recovery does not outlive missing evidence. Scheduled observation only scans open owner issues; closed work requires explicit operator inspection.
 
 An active or queued execution without an Actions update for two hours is reported as stalled. Maintenance does not cancel it or release its reservation.
+
+### Worker error reports
+
+Create one open issue as the repository owner, without workflow labels, for the worker report index. Set `LIGHTHOUSE_REPORT_INDEX_ISSUE` to its issue number after enabling maintenance. The reporter preserves owner prose and maintains a reserved HTML block with report links and creation intent. Removing the variable disables report publication; recovery remains a separate opt-in.
+
+Reports group failures by worker and a fixed cause code. They contain source issue and execution links, retry state, distinct observed counts and a concrete next action. No logs, issue text or model output enter the report. Repeated observations do not increase counts. Only a successful execution from the same request chain resolves an occurrence; unrelated success cannot hide an earlier failure. A new occurrence reopens the existing report. Manual closure survives repeated observation of that same failure.
+
+The index prevents duplicate creation when a GitHub response is lost. A later pass links a uniquely matching bot-owned report. If creation is still unconfirmed, reporting stops for inspection instead of sending again. Disable reporting, inspect the maintenance run and search open and closed reports for that worker/cause before editing the index. Preserve a pending entry until a report can be linked or the owner has established that no creation occurred; deleting it permits a new create. Resume only after reconciling actual effects.
+
+The reporter scans at most 500 issue/PR entries and retains at most 100 worker/cause entries and 200 distinct observations per report, within a 60 KB body. Overflow fails visibly and requires operator archival; nothing is silently evicted. Counts reflect observations made while reporting was enabled. A closed source issue is outside scheduled scanning, so explicitly dispatch maintenance for it when checking recovery. All report writes share one repository-wide Actions concurrency group.

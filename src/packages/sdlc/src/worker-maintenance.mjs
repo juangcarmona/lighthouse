@@ -1,8 +1,9 @@
-import { readFile, writeFile, mkdir, appendFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, appendFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch } from './stage-dispatch.mjs';
 import { maintenancePath, prepareRecovery } from './worker-recovery.mjs';
+import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
   const issues = [];
@@ -29,6 +30,25 @@ async function main(command) {
   const parent = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch'].includes(parent.event) || parent.actor?.login !== owner || parent.triggering_actor?.login !== owner) throw Error('Maintenance is not an authorized execution');
   if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
+  if (command === 'report') {
+    const root = join(env.RUNNER_TEMP, 'worker-observations'), observations = [], seen = [];
+    const directories = await readdir(root);
+    if (directories.length > 100) throw Error('Observation inventory exceeds bounds');
+    for (const directory of directories) {
+      const match = directory.match(/^lighthouse-maintenance-([1-9][0-9]*)$/);
+      if (!match) throw Error('Unexpected observation artifact');
+      const source = await readFile(join(root, directory, 'observations.json'), 'utf8');
+      if (Buffer.byteLength(source) > 256000) throw Error('Observation artifact exceeds bounds');
+      const rows = JSON.parse(source);
+      if (!Array.isArray(rows) || rows.some(r => r.issue !== Number(match[1]))) throw Error('Observation issue differs from its artifact');
+      observations.push(...rows); seen.push(Number(match[1]));
+    }
+    const expected = JSON.parse(env.LIGHTHOUSE_OBSERVED_ISSUES ?? '[]');
+    if (JSON.stringify(seen.sort((a, b) => a - b)) !== JSON.stringify(expected.sort((a, b) => a - b))) throw Error('Incomplete maintenance observations');
+    const reports = await publishReports(api, repository, owner, env.LIGHTHOUSE_REPORT_INDEX_ISSUE, observations);
+    if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, reports.map(r => `- [Report #${r.number}](https://github.com/${repository}/issues/${r.number}): ${r.count} distinct observation(s), ${r.state}.`).join('\n') + '\n');
+    return;
+  }
   if (command === 'scan') {
     const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
     const requested = event.inputs?.issue;

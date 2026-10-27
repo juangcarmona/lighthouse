@@ -59,7 +59,7 @@ flowchart TD
 
 ## propose
 
-**Entry:** Owner planning request after authenticated refinement, . **Effects:** Proposal artifacts and their bot-owned PR only. **Stop:** Planning stays separate from implementation and merge approval.
+**Entry:** Owner planning request after authenticated refinement. **Effects:** Proposal artifacts and their bot-owned PR only. **Stop:** Planning stays separate from implementation and merge approval.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-propose.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/propose/SKILL.md)
 
@@ -175,4 +175,25 @@ flowchart TD
     Record --> Dispatch[Send once and recheck at admission]
     Budget -->|Exhausted| Inspect
     Budget -->|Disabled or delayed| Leave
+```
+
+## Error reports
+
+[Report publisher](../../../src/packages/sdlc/src/worker-reports.mjs) · [Operator setup](../../../src/packages/sdlc/README.md#worker-error-reports)
+
+One issue groups each worker/cause pair, with affected issues, execution links, observed counts and a next action. A serialized job uses an owner-selected index issue to record creation intent before sending. It never copies logs or agent prose. Same-request recovery closes resolved reports; a new failure reopens the same report. Missing evidence stays unresolved.
+
+```mermaid
+flowchart TD
+    accTitle: Worker error reports
+    accDescr: Authenticated observations update one report per cause; recorded intent prevents duplicate creation after a lost response.
+    Observe[Authenticated maintenance observations] --> Cause[Group worker and cause]
+    Cause --> Exists{Report exists}
+    Exists -->|Yes| Update[Update distinct occurrences and links]
+    Exists -->|No| Intent[Record creation intent in index]
+    Intent --> Create[Create once and record report link]
+    Intent -->|Response uncertain| Reconcile[Find matching report or require inspection]
+    Update --> Outcome{Current evidence}
+    Outcome -->|All recovered| Close[Close report]
+    Outcome -->|New failure| Reopen[Open same report]
 ```
