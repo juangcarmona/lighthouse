@@ -15,9 +15,10 @@ grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine' "$validation_dir/consumer/.github
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
 grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
-node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-completion
+node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-completion --with-maintenance
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+"$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-worker-maintenance.yml"
 # gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
 # actionlint 1.7.12 cannot resolve. Scope these exceptions to compiler output only.
 "$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" \
@@ -28,5 +29,6 @@ printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_d
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-implement.lock.yml" \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-apply-review.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-review.lock.yml"

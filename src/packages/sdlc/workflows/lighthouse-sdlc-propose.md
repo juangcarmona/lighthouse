@@ -27,6 +27,7 @@ runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
 env:
+  LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_STAGE: propose
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:

@@ -27,6 +27,7 @@ runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
 env:
+  LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_STAGE: propose
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
@@ -66,7 +67,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: b2cb712be4cf57ab089959678311cbcd304eac8e
+      ref: 6e46a1ee7d2ecc366424ae37645e68f74330ce24
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -113,7 +114,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
+          ref: 6e46a1ee7d2ecc366424ae37645e68f74330ce24
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -151,7 +152,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b2cb712be4cf57ab089959678311cbcd304eac8e
+          ref: 6e46a1ee7d2ecc366424ae37645e68f74330ce24
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

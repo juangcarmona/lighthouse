@@ -2,6 +2,7 @@ import { refinementAfterRun } from '../packages/sdlc/src/stage-transition.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
+import { feedbackKey, feedbackWorker } from '../packages/sdlc/src/proposal-review.mjs';
 import { dispatchId, dispatchArtifact, dispatchReceiptBody, readDispatchReceipt, recordDispatch, sendDispatch, loadDispatch, verifyDispatchOrigin, claimDispatch, checkDispatchClaim, implementPath, stagePath, stages, finishDispatch, completedEvent } from '../packages/sdlc/src/stage-dispatch.mjs';
 
 const repo = 'owner/repo', owner = 'owner', issue = 18;
@@ -39,6 +40,27 @@ test('records intent before dispatch and reuses it across router reruns', async 
   assert.deepEqual(post.body, { ref: 'main', inputs: { issue: '18', 'dispatch-request': '30' } });
   assert.equal((await recordDispatch(f.api, repo, { ...f.request, routerAttempt: 2 })).send, false);
   assert.equal(f.calls.filter(c => c.path.endsWith('/dispatches')).length, 1);
+});
+
+test('feedback has one independent worker and dispatch identity across duplicate router events', async () => {
+  for (const stage of ['propose', 'implement']) {
+    const f = fixture(stage);
+    const review = { number: 7, kind: 'comment', id: 99, feedbackDigest: 'd'.repeat(64), approved: false };
+    const key = feedbackKey(review);
+    Object.assign(f.request, { worker: feedbackWorker(review), feedbackKey: key, id: dispatchId(repo, key, stage) });
+    const first = await recordDispatch(f.api, repo, f.request);
+    f.worker.path = stagePath('apply-review');
+    const loaded = await loadDispatch(f.api, repo, owner, issue, 30, f.worker, f.readArtifact);
+    assert.equal(loaded.request.stage, stage);
+    await sendDispatch(f.api, repo, f.request, 30);
+    assert.ok(f.calls.some(c => c.path === 'actions/workflows/lighthouse-sdlc-apply-review.lock.yml/dispatches'));
+    assert.equal((await recordDispatch(f.api, repo, { ...f.request, routerRunId: '101' })).send, false);
+    assert.equal(f.calls.filter(c => c.path.endsWith('/dispatches')).length, 1);
+    await assert.rejects(loadDispatch(f.api, repo, owner, issue, 30, { ...f.worker, path: stagePath(stage) }, f.readArtifact), /worker identity/);
+    assert.equal(first.receipt.worker, 'apply-review');
+    assert.notEqual(feedbackKey({ ...review, feedbackDigest: 'e'.repeat(64) }), key);
+    assert.equal(feedbackWorker({ ...review, approved: true }), undefined);
+  }
 });
 
 test('a lost dispatch response leaves recorded uncertainty, never an automatic resend', async () => {
