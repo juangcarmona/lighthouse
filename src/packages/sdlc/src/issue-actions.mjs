@@ -10,6 +10,7 @@ import { feedbackKey, feedbackWorker, checkProposal, reviewThread, reviewTarget,
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
+import { eligibleIssueAuthor } from './request-triage.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -18,7 +19,7 @@ export function pendingReply(event, comments) {
   if (!report || /<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
   const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
   const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
-  return ['refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
+  return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
 }
 
 export function routeIssue(event, actor, owner, eventName, comments = []) {
@@ -27,13 +28,13 @@ export function routeIssue(event, actor, owner, eventName, comments = []) {
   if (labels.includes('future') && (event.label?.name === 'implement' || event.inputs?.stage === 'implement')) return { run: false, reason: 'Implementation paused by future label' };
   if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
   if (eventName === 'issues' && event.action === 'unlabeled' && event.label?.name === 'future' && labels.includes('implement')) return { run: true, stage: 'implement', issue: event.issue.number, reason: 'Owner resumed implementation' };
-  if (eventName === 'issues' && event.action === 'labeled' && ['refine', 'propose', 'implement'].includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
+  if (eventName === 'issues' && event.action === 'labeled' && ['triage', 'refine', 'propose', 'implement'].includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
   if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
     const pending = pendingReply(event, comments);
     if (pending) return { run: true, stage: pending.stage, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
   }
   if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
-  if (eventName === 'workflow_dispatch' && ['refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
+  if (eventName === 'workflow_dispatch' && ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
   return { run: false, reason: 'No eligible stage event' };
 }
 export function checkHandoff(request, envelope, issue, answers, revision, runId) {
@@ -135,7 +136,7 @@ async function main(command) {
     if (!route.run || route.issue !== issueNumber || !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage) || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
     const issue = await api(issuePath), answers = ownerAnswers(await comments());
     const metadata = await api(''), revision = (await api(`commits/${metadata.default_branch}`)).sha;
-    if (issue.user.login !== owner || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
+    if (!eligibleIssueAuthor(issue, owner, stage) || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
     if (handoff) {
       const prior = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-input-${issueNumber}-${route.predecessor.attempt}`, 'request.json');
       const result = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-result-${issueNumber}-${route.predecessor.attempt}`, 'envelope.json');
@@ -173,7 +174,7 @@ async function main(command) {
     if (handoff && !after) route = { run: env.GITHUB_ACTOR === owner && !reviewTarget(event, env.GITHUB_EVENT_NAME) && ['issues', 'issue_comment', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), stage: 'implement', issue: issueNumber };
     if (!route.run || issueNumber !== route.issue || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Stage not authorized');
     const issue = await api(issuePath);
-    if (issue.user.login !== owner || issue.state !== 'open' || issue.pull_request || issue.labels.some(x => ['agent-working', 'human-working'].includes(x.name))) throw Error('Issue not eligible');
+    if (!eligibleIssueAuthor(issue, owner, route.stage) || issue.state !== 'open' || issue.pull_request || issue.labels.some(x => ['agent-working', 'human-working'].includes(x.name))) throw Error('Issue not eligible');
     const repository = await api('');
     const baseRevision = (await api(`commits/${repository.default_branch}`)).sha;
     const revision = { sha: implementationReview ? implementationReview.head : baseRevision };
@@ -204,7 +205,16 @@ async function main(command) {
     }
     const stage = route.stage;
     await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
-    let predecessor, implementation, seed, planningReference;
+    let predecessor, implementation, seed, planningReference, triage;
+    if (stage === 'refine' || issue.user.login !== owner && !proposalReview && !implementationReview && ['propose', 'implement'].includes(stage)) {
+      const report = [...all].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-stage:triage:passed -->'));
+      if (!report && issue.user.login !== owner) throw Error('External request requires authenticated passed triage before later work');
+      if (report) {
+        triage = await loadStageReport(api, repo, report, { owner, issue: issueNumber });
+        const errors = validateStageEnvelope(triage.envelope, triage.request);
+        if (errors.length || triage.request.stage !== 'triage' || triage.envelope.result.status !== 'passed' || triage.request.sourceRevision !== revision.sha || triage.request.originalRequest !== (issue.body ?? '')) throw Error('Triage evidence is invalid or stale; request triage again');
+      }
+    }
     if (stage === 'implement') {
       if (handoff) {
         const prior = JSON.parse(await readFile(join(env.RUNNER_TEMP, 'refinement-handoff', 'request.json'), 'utf8'));
@@ -213,6 +223,7 @@ async function main(command) {
         checkHandoff(prior, result, issue, answers, revision.sha, dispatch?.request.predecessor?.runId ?? dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID);
       }
       if (issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
+      if (issue.user.login !== owner && !handoff && !implementationReview) await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers) });
       implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch);
       seed = implementationReview ? null : await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');
@@ -237,12 +248,16 @@ async function main(command) {
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
     const snapshot = { autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
+    if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     await output('source_revision', revision.sha);
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
+    if (triage) context.triage = triage.envelope.result.output;
+    if (stage === 'triage') context.contract.rules += ' Preserve the exact issue body in output.requestAnalysis.originalRequest. Return output.estimate and output.requestAnalysis following /harness/request-triage.md. Stop at triaged; never authorize or dispatch refinement.';
     if (predecessor || proposalReview) {
       if (predecessor) context.predecessor = predecessor;
       if (proposalReview) {
@@ -370,12 +385,12 @@ async function main(command) {
       }
     }
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
-    const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nReply here to continue.` : '';
+    const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['triage', 'refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nThe owner can reply here to continue ${snapshot.stage}.` : '';
     const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
     const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
-    const label = ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? 'ready' : 'needs-info';
+    const label = ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : 'needs-info';
     await api(`${issuePath}/labels`, 'POST', { labels: [label] });
     const fresh = await api(issuePath);
     if (fresh.labels.some(x => x.name === snapshot.stage)) await api(`${issuePath}/labels/${snapshot.stage}`, 'DELETE');
@@ -384,7 +399,7 @@ async function main(command) {
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
     }
     await writeFile(join(dir, 'published'), report.html_url);
-    await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label}**\n\n${['propose', 'implement'].includes(snapshot.stage) ? 'Review the PR or blocker report; no next stage is authorized.' : label === 'needs-info' ? 'Reply to the question here; an owner reply resumes refinement.' : handoff ? 'Refinement complete. Implementation follows automatically unless paused with future.' : 'Refinement complete. Implementation is available when the repository enables the implement worker.'}`);
+    await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label}**\n\n${['propose', 'implement'].includes(snapshot.stage) ? 'Review the PR or blocker report; no next stage is authorized.' : label === 'needs-info' ? `The owner can answer the question to resume ${snapshot.stage}.` : snapshot.stage === 'triage' ? 'Triage complete. The owner decides whether to request refinement; no next stage has started.' : handoff ? 'Refinement complete. Implementation follows automatically unless paused with future.' : 'Refinement complete. Implementation is available when the repository enables the implement worker.'}`);
     console.log(`Published ${label}: ${report.html_url}`); return;
   }
   if (command === 'cleanup') {

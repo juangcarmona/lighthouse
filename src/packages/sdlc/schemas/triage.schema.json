@@ -23,6 +23,7 @@
       "additionalProperties": false,
       "required": ["size", "urgency", "impact", "risk", "blastRadius", "dependencies", "route", "nextState", "owner", "confidence", "evidence"],
       "properties": {
+        "estimate": { "$ref": "estimate.schema.json" },
         "size": { "enum": ["S", "M", "L", "XL"] },
         "urgency": { "enum": ["normal", "asap", "now"] },
         "impact": { "enum": ["low", "medium", "high"] },

@@ -629,7 +629,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
     const planned = run(dir, 'capabilities', ['plan', '--id', 'labels', '--provider', 'github', '--repo', 'juan/demo', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--format', 'json'], { env: environment });
     assert.equal(planned.status, 0, planned.stderr);
     const plan = JSON.parse(planned.stdout);
-    assert.equal(plan.reconciliation.operations.length, 24);
+    assert.equal(plan.reconciliation.operations.length, 25);
     assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', 'wrong'], { env: environment }).status, 1);
     const applied = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
     assert.equal(applied.status, 0, applied.stderr);

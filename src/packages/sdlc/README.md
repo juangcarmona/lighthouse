@@ -1,5 +1,7 @@
 # Lighthouse SDLC
 
+See [request intake and relative estimates](request-triage.md) for the public form, owner admission, evidence-backed clarification, initial point anchors and native workflow upgrade route.
+
 This package provides the provider-neutral delivery contract for Lighthouse adopters.
 
 It owns the six lifecycle skills, their command entrypoints, route, stage and gate descriptors, deterministic triage and decomposition projections, rebuildable state checks and the provider-neutral control-plane contract.
