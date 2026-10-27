@@ -223,8 +223,10 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'docs/roadmap'), join(dir, 'docs/roadmap'), { recursive: true });
     await mkdir(join(dir, 'src/examples/opencode-engine'), { recursive: true });
     await cp(join(process.cwd(), 'src/examples/opencode-engine/README.md'), join(dir, 'src/examples/opencode-engine/README.md'));
+    await cp(join(process.cwd(), 'src/examples/opencode-engine/ENVIRONMENTS.md'), join(dir, 'src/examples/opencode-engine/ENVIRONMENTS.md'));
     await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
+    await cp(join(process.cwd(), 'src/packages/sdlc/execution-environments.md'), join(dir, 'src/packages/sdlc/execution-environments.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/README.md'), join(dir, 'src/packages/sdlc/README.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/workflows'), join(dir, 'src/packages/sdlc/workflows'), { recursive: true });
     await cp(join(process.cwd(), 'docs/releasing.md'), join(dir, 'docs/releasing.md'));

@@ -28,10 +28,11 @@ test('container checks install workspace bins and execute temporary tools', { sk
     const checks = [
       ['npm', 'ci', '--ignore-scripts'],
       ['./node_modules/.bin/workspace-tool'],
+      ['node', '-e', 'const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote"],{encoding:"utf8"}).trim(),""); assert.equal(require("node:fs").existsSync(".git/hooks"),false);'],
       ['node', '-e', 'require("node:fs").writeFileSync("/tmp/tool", "#!/bin/sh\\nexit 0\\n", {mode:0o755}); require("node:child_process").execFileSync("/tmp/tool");'],
     ];
     const receipt = await runImplementationChecks({ config, request: { runId: 'workspace-test', sourceRevision: 'test', implementation: { policy: { checks } } }, changes: [], workspace, output: join(root, 'output'), name: `workspace-test-${process.pid}`, redact: text => text, cancelled: () => false });
-    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0]);
+    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0]);
   } finally {
     execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']);
     await rm(root, { recursive: true, force: true });

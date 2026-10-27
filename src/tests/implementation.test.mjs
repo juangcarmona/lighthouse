@@ -49,6 +49,7 @@ test('snapshot captures additions and deletions, excludes build output and rejec
 });
 test('an issue uses repository checks without a proposal PR or per-issue configuration', async () => {
   const api = async path => {
+    if (path.startsWith('contents/.lighthouse/environment.json')) return null;
     if (path.startsWith('contents/.lighthouse/implement.json')) return null;
     assert.ok(path.startsWith('contents/package.json'));
     return { content: Buffer.from(JSON.stringify({ scripts: { verify: 'node verify.mjs' } })).toString('base64') };
@@ -64,6 +65,7 @@ test('an issue uses repository checks without a proposal PR or per-issue configu
 test('repository defaults and existing bounded per-issue policies remain usable without merging a proposal', async () => {
   for (const configured of [{ defaults: policy }, { 18: policy }]) {
     const api = async path => {
+      if (path.startsWith('contents/.lighthouse/environment.json')) return null;
       assert.ok(path.startsWith('contents/.lighthouse/implement.json'));
       return { content: Buffer.from(JSON.stringify(configured)).toString('base64') };
     };

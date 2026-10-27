@@ -141,3 +141,75 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await assert.rejects(readFile(join(runDir, 'envelope.json')));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('declared environment preflights before agent, validates with fresh services, and cleans failures', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  for (const outcome of ['success', 'missing-sdk', 'missing-agent', 'agent-failure', 'agent-cancel']) {
+    const root = await mkdtemp(join(tmpdir(), 'lighthouse-environment-'));
+    try {
+      const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1'), callsFile = join(root, 'calls.jsonl');
+      for (const dir of [work, bin, runDir]) await mkdir(dir);
+      execFileSync('git', ['init', '-q', work]);
+      await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
+      const image = `sha256:${'b'.repeat(64)}`, postgresImage = `sha256:${'c'.repeat(64)}`;
+      const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { environment: { schemaVersion: 1, profile: 'dotnet', services: ['postgresql'] }, policy: { paths: ['demo.js'], checks: [['node', '--version']], reviewRequired: false } } };
+      const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'test', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Candidate ready.' } };
+      await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
+      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'d'.repeat(64)}`, environments: { dotnet: { image, postgresImage } }, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
+      const shim = join(bin, 'docker');
+      await writeFile(shim, `#!${process.execPath}
+const fs = require('node:fs'), args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
+const mount = dst => args.find(a => a.startsWith('type=bind,src=') && a.endsWith(',dst='+dst))?.slice(14).split(',dst=')[0];
+if(args.includes('cleanup-session') || args[0]==='rm' || args[0]==='network' || args.includes('chown')) process.exit(0);
+if(args.includes('-d')) process.exit(0);
+if(args[0]==='exec') { if(args.includes('postgres')) console.log('postgres (PostgreSQL) 17.7'); process.exit(0); }
+if(args.some(a => a.endsWith('-checks'))) { console.log(args.find(a=>a.startsWith('SOFA_TEST_DATABASE='))); process.exit(0); }
+if(args.includes('--entrypoint')) {
+ const cmd=args[args.indexOf('--entrypoint')+1];
+ if(cmd==='dotnet' && ${JSON.stringify(outcome)}==='missing-sdk') process.exit(1);
+ if(cmd==='opencode' && ${JSON.stringify(outcome)}==='missing-agent') process.exit(1);
+ console.log(cmd==='node'?'v24.13.0':cmd==='dotnet'?'10.0.100':cmd==='opencode'?'opencode v2.1.0':'ok'); process.exit(0);
+}
+if(mount('/output')) {
+ fs.writeFileSync(mount('/workspace')+'/demo.js','new');
+  if(${JSON.stringify(outcome)}==='agent-cancel') { process.kill(process.ppid, 'SIGTERM'); setTimeout(()=>process.exit(1), 1000); return; }
+ if(${JSON.stringify(outcome)}==='agent-failure') process.exit(1);
+ fs.writeFileSync(mount('/output')+'/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
+ console.log(JSON.stringify({type:'text',part:{text:'Checked environment.'}}));
+}
+`);
+      await chmod(shim, 0o755);
+      const execution = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+      const calls = (await readFile(callsFile, 'utf8')).trim().split('\n').map(JSON.parse);
+      const agents = calls.filter(a => a.some(v => v.endsWith(',dst=/output')));
+      const services = calls.filter(a => a[0] === 'run' && a.includes('-d'));
+      if (outcome === 'missing-sdk' || outcome === 'missing-agent') {
+        assert.notEqual(execution.status, 0); assert.equal(agents.length, 0); assert.equal(services.length, 0);
+        assert.match(execution.stderr, outcome === 'missing-sdk' ? /prerequisite failed: .NET SDK/ : /prerequisite failed: OpenCode 2.1.0/);
+      } else {
+        assert.equal(agents.length, 1); assert.ok(!agents[0].join(' ').includes('docker.sock'));
+        assert.ok(calls.findIndex(a => a.includes('dotnet')) < calls.indexOf(agents[0]));
+        assert.equal(services.length, outcome === 'success' ? 2 : 1);
+        for (const service of services) {
+          const name = service[service.indexOf('--name') + 1];
+          assert.ok(calls.some(a => a[0] === 'rm' && a.includes('-v') && a.includes(name)));
+          assert.ok(calls.some(a => a[0] === 'network' && a[1] === 'rm' && a.includes(name.replace(/-postgres$/, '-network'))));
+        }
+        if (outcome === 'success') {
+          assert.equal(execution.status, 0, execution.stdout + execution.stderr);
+          const check = calls.find(a => a.some(v => v.endsWith('-checks')) && a[0] === 'run');
+          assert.ok(!check.join(' ').includes('fixture,dst=')); assert.ok(!check.join(' ').includes('docker.sock'));
+          assert.notEqual(check.find(v => v.startsWith('SOFA_TEST_DATABASE=')), agents[0].find(v => v.startsWith('SOFA_TEST_DATABASE=')));
+          const receipt = JSON.parse(await readFile(join(runDir, 'checks.json'), 'utf8'));
+          assert.equal(receipt.image, image); assert.equal(receipt.serviceCleanup, true);
+          assert.equal(receipt.environment.services[0].image, postgresImage);
+          assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'), 'utf8')).environment.profile, 'dotnet');
+          const log = await readFile(join(runDir, 'evidence/host/check-1.log'), 'utf8');
+          assert.ok(!log.includes('Password=')); assert.match(log, /TEST DATABASE/);
+        } else assert.notEqual(execution.status, 0);
+      }
+    } finally { await rm(root, { recursive: true, force: true }); }
+  }
+});
