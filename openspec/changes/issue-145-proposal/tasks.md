@@ -14,8 +14,8 @@
 
 - [x] 3.1 Add owner-admitted triage dispatch, external-authored issue eligibility and matching owner replies without later-stage authorization; test routing, preparation and publication boundaries.
 - [x] 3.2 Provide the native triage worker source and installer projection, preserving existing content; verify source contracts and dry-run preservation with tests.
-- [ ] 3.3 Compile the triage worker with gh-aw v0.93.2 and validate the generated lock; the compiler is unavailable in this engine and the existing lock is not updated by hand.
-- [ ] 3.4 Explicitly adopt the reviewed form and native worker in Lighthouse and retain a native run receipt; the publisher excludes `.github` paths, so this delivery does not change them or expand that boundary.
+- [x] 3.3 Compile the triage worker with gh-aw v0.93.2 and validate the generated lock through the package check.
+- [ ] 3.4 Adopt the reviewed form and compiled worker in Lighthouse, then retain a native triage run receipt after merge. The implementation worker did not modify protected `.github` paths; this maintainer follow-up does not expand that worker boundary.
 
 ## 4. Candidate verification
 
