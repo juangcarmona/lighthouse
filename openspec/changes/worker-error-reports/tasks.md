@@ -5,7 +5,7 @@
 
 ## Delivery
 
-- [ ] Implement allowlisted report content, bounded counts and recovery/recurrence.
-- [ ] Record creation intent and reconcile lost responses before writing again.
-- [ ] Integrate a serialized report job and document operator setup.
-- [ ] Test duplicates, spoofing, privacy, lost responses and recovery; run final checks.
+- [x] Implement allowlisted report content, bounded counts and recovery/recurrence.
+- [x] Record creation intent and reconcile lost responses before writing again.
+- [x] Integrate a serialized report job and document operator setup.
+- [x] Test duplicates, spoofing, privacy, lost responses and recovery; run final checks.
