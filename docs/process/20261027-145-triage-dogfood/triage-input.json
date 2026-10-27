@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "workItem": {
+    "id": "GH-145",
+    "title": "Help users describe a request and give each issue an explained size estimate",
+    "type": "enhancement"
+  },
+  "currentLabels": [
+    "triage"
+  ],
+  "assessment": {
+    "size": "L",
+    "urgency": "normal",
+    "impact": "high",
+    "risk": "medium",
+    "blastRadius": "high",
+    "dependencies": [],
+    "route": "plan-only",
+    "nextState": "refine",
+    "owner": "juangcarmona",
+    "confidence": {
+      "size": "low",
+      "urgency": "medium",
+      "impact": "high",
+      "risk": "medium",
+      "blast-radius": "high"
+    },
+    "evidence": [
+      {
+        "field": "size",
+        "status": "pending-review",
+        "reason": "Provisional L reflects intake, triage routing, estimate contracts and refinement handoff. No calibrated S/M/L/XL rubric or story-point mapping exists; review the proposed anchors before interpreting this as a numeric estimate."
+      },
+      {
+        "field": "urgency",
+        "source": "https://github.com/juangcarmona/lighthouse/issues/145; normal is an explicit working assumption because no deadline or incident was stated."
+      },
+      {
+        "field": "impact",
+        "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/docs/product/model/requirements/functional/fr-triage-work-item.md"
+      },
+      {
+        "field": "risk",
+        "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/docs/product/model/business-rules/br-entry-authority.md"
+      },
+      {
+        "field": "blast-radius",
+        "source": "https://github.com/juangcarmona/lighthouse/blob/57d4e23da2831be5fad0331f1ba82326782943cc/src/packages/sdlc/schemas/triage.schema.json"
+      }
+    ]
+  },
+  "configuration": {
+    "roles": [
+      "state",
+      "command",
+      "classification",
+      "overlay"
+    ],
+    "labels": [
+      {
+        "name": "triage",
+        "role": "state",
+        "color": "8B949E",
+        "description": "Work item is being assessed."
+      },
+      {
+        "name": "refine",
+        "role": "state",
+        "color": "4DA3FF",
+        "description": "Work item is being refined."
+      },
+      {
+        "name": "implement",
+        "role": "state",
+        "color": "1F6FEB",
+        "description": "Work item is being implemented."
+      },
+      {
+        "name": "wip",
+        "role": "state",
+        "color": "D29922",
+        "description": "Work item is actively in progress."
+      },
+      {
+        "name": "agent-working",
+        "role": "overlay",
+        "color": "D29922",
+        "description": "An agent holds the host reservation; wait before editing."
+      },
+      {
+        "name": "human-working",
+        "role": "overlay",
+        "color": "A371F7",
+        "description": "Human reservation: agents must stop and release their work."
+      },
+      {
+        "name": "ready",
+        "role": "state",
+        "color": "238636",
+        "description": "Refinement passed; this does not authorize implementation or merge."
+      },
+      {
+        "name": "needs-info",
+        "role": "state",
+        "color": "D876E3",
+        "description": "Refinement needs information or a decision; inspect its report."
+      },
+      {
+        "name": "review",
+        "role": "state",
+        "color": "A371F7",
+        "description": "Work item is awaiting review."
+      },
+      {
+        "name": "size-s",
+        "role": "classification",
+        "dimension": "size",
+        "value": "S",
+        "color": "BFE3FF",
+        "description": "Small work item."
+      },
+      {
+        "name": "size-m",
+        "role": "classification",
+        "dimension": "size",
+        "value": "M",
+        "color": "80C2FF",
+        "description": "Medium work item."
+      },
+      {
+        "name": "size-l",
+        "role": "classification",
+        "dimension": "size",
+        "value": "L",
+        "color": "4DA3FF",
+        "description": "Large work item."
+      },
+      {
+        "name": "size-xl",
+        "role": "classification",
+        "dimension": "size",
+        "value": "XL",
+        "color": "1F6FEB",
+        "description": "Extra-large work item."
+      },
+      {
+        "name": "urgency-normal",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "normal",
+        "color": "8B949E",
+        "description": "Normal urgency."
+      },
+      {
+        "name": "urgency-asap",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "asap",
+        "color": "D29922",
+        "description": "High urgency."
+      },
+      {
+        "name": "urgency-now",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "now",
+        "color": "CF222E",
+        "description": "Immediate urgency."
+      },
+      {
+        "name": "impact-low",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "low",
+        "color": "E9D5FF",
+        "description": "Low impact."
+      },
+      {
+        "name": "impact-medium",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "medium",
+        "color": "A371F7",
+        "description": "Medium impact."
+      },
+      {
+        "name": "impact-high",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "high",
+        "color": "6E40C9",
+        "description": "High impact."
+      },
+      {
+        "name": "risk-low",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "low",
+        "color": "FFEBE9",
+        "description": "Low delivery risk."
+      },
+      {
+        "name": "risk-medium",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "medium",
+        "color": "F0883E",
+        "description": "Medium delivery risk."
+      },
+      {
+        "name": "risk-high",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "high",
+        "color": "CF222E",
+        "description": "High delivery risk."
+      },
+      {
+        "name": "blast-radius-low",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "low",
+        "color": "C7F0E8",
+        "description": "Small affected surface."
+      },
+      {
+        "name": "blast-radius-medium",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "medium",
+        "color": "4FB3A4",
+        "description": "Medium affected surface."
+      },
+      {
+        "name": "blast-radius-high",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "high",
+        "color": "0F766E",
+        "description": "Large affected surface."
+      }
+    ],
+    "transitions": [
+      {
+        "from": "triage",
+        "to": "refine"
+      }
+    ],
+    "transitionPolicy": {
+      "mode": "declared-only",
+      "description": "Only transitions declared by the adopter are legal; the catalog supplies the initial triage-to-refine example."
+    }
+  }
+}
