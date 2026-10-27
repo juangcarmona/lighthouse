@@ -11,6 +11,7 @@ import { loadImplementation, loadImplementationSeed, changesDigest, validateChan
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
+import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -288,7 +289,12 @@ async function main(command) {
     await writeFile(join(dir, 'context.json'), JSON.stringify(context));
     await api(`${issuePath}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
-    for (const label of stage === 'refine' ? ['needs-info', 'ready', 'waiting-review'] : ['needs-info', 'waiting-review']) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
+    for (const label of ['needs-info', 'waiting-review', ...(stage === 'refine' || stage === 'implement' ? ['ready'] : [])]) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
+    if (stage === 'implement' && implementationReview) {
+      const pr = await api(`pulls/${implementationReview.number}`);
+      if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
+      await projectImplementationPrState(api, issueNumber, true);
+    }
     await summary(`### ${stage} #${issueNumber}\nSource: \`${revision.sha}\`\n\nOwner request verified; reservation acquired.\n`);
     if (continuation) {
       const marker = `<!-- lighthouse-reply:${event.comment.id} -->`;
@@ -337,7 +343,7 @@ async function main(command) {
     const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
     const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
-    let proposalLink = '';
+    let proposalLink = '', prStateProof = '';
     if (snapshot.stage === 'propose' && value.result.status === 'passed') {
       const files = await prepareProposal(issueNumber, value.result.output.files);
       const recheck = async () => {
@@ -374,24 +380,27 @@ async function main(command) {
           }
           if (pulls.length >= 100 || pulls.some(pr => pr.number !== snapshot.implementationReview?.number && pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Existing implementation PR requires review');
         };
-        const draft = value.result.status !== 'passed' || !checksPassed;
+        const candidateComplete = value.result.status === 'passed' && checksPassed;
         const checks = receipt.checks.map(c => `- \`${c.command.join(' ')}\`: exit ${c.exitCode}`).join('\n');
-        const pr = await createImplementationPullRequest(api, snapshot, changes, `${value.effect.body}\n\nHost checks:\n${checks}`, runUrl, draft, recheck);
+        const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck);
+        prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID) })} -->`;
+        await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
         try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr); }
         catch (error) { value.effect.body += '\n\nThe PR was saved, but CI could not start. See the run for details.'; await summary(`CI dispatch failed: ${error.message}`); }
         if (snapshot.implementationReview) await api(`issues/${pr.number}/comments`, 'POST', { body: `Updated the PR with your feedback. [Checks and evidence](${runUrl}).\n\n${snapshot.implementationReview.receipt}` });
-        proposalLink = `\n\n[Review the implementation${draft ? ' draft' : ''}](${pr.html_url}). Human acceptance and merge remain separate decisions.`;
+        proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }
     }
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['triage', 'refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nThe owner can reply here to continue ${snapshot.stage}.` : '';
     const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
-    const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
+    const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
-    const label = ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : 'needs-info';
-    await api(`${issuePath}/labels`, 'POST', { labels: [label] });
+    const label = snapshot.stage === 'implement' && prStateProof ? 'pr-draft' : ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : 'needs-info';
+    if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);
+    else await api(`${issuePath}/labels`, 'POST', { labels: [label] });
     const fresh = await api(issuePath);
     if (fresh.labels.some(x => x.name === snapshot.stage)) await api(`${issuePath}/labels/${snapshot.stage}`, 'DELETE');
     if (handoff) {
@@ -406,11 +415,24 @@ async function main(command) {
     try { await readFile(join(dir, 'reserved')); } catch { return; }
     const issue = await api(issuePath);
     if (issue.labels.some(x => x.name === 'agent-working')) await api(`${issuePath}/labels/agent-working`, 'DELETE');
-    try { await readFile(join(dir, 'published')); }
+    let published = false;
+    try { await readFile(join(dir, 'published')); published = true; }
     catch {
       if (snapshot.proposalReview) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal update did not complete. Your feedback is retained. [See execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
       if (snapshot.replyTo) await api(`${issuePath}/labels`, 'POST', { labels: [snapshot.stage === 'refine' ? 'needs-info' : 'waiting-review'] });
       await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; the pending decision remains unfulfilled.');
+    }
+    if (published && snapshot.stage === 'implement') {
+      try {
+        const saved = JSON.parse(await readFile(join(dir, 'published-pr.json'), 'utf8'));
+        const pr = await api(`pulls/${saved.number}`);
+        if (pr.state === 'open' && pr.head.sha === saved.head) {
+          const profileFile = await api(`contents/.lighthouse/github.json?ref=${snapshot.defaultBranch}`);
+          const profile = JSON.parse(Buffer.from(profileFile.content, 'base64').toString());
+          const required = profile.requiredChecks.map(check => ({ context: check.context, app: check.integrationId }));
+          await reconcileImplementationPr(api, repo, pr, await api(issuePath), await comments(), required, (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto: true });
+        }
+      } catch (error) { await summary(`PR state will be retried after CI: ${error.message}.`); }
     }
     console.log('Execution reservation released'); return;
   }

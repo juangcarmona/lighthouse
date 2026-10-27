@@ -102,7 +102,7 @@ async function main() {
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
     const prompt = join(dir, 'prompt.txt');
-    const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Write the envelope and stop; do not install or invoke safeoutputs.\n';
+    const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));

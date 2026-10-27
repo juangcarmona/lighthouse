@@ -86,6 +86,8 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   const calls = [], api = async (path, method, body) => { calls.push({ path, method, body }); return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created', html_url: 'https://example.test/pr/34' }; };
   await createImplementationPullRequest(api, request, [change], 'Owner review pending', 'https://example.test/run', true, async () => calls.push({ path: 'recheck' }));
   assert.equal(calls.find(c => c.path === 'pulls').body.draft, true);
+  assert.match(calls.find(c => c.path === 'pulls').body.body, /Refs #18/);
+  assert.doesNotMatch(calls.find(c => c.path === 'pulls').body.body, /Closes #18/);
   assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.findIndex(c => c.path === 'git/refs'));
   assert.equal(calls.find(c => c.path === 'git/refs').method, 'POST');
   assert.ok(calls.every(c => !['PATCH', 'DELETE'].includes(c.method)));
@@ -147,11 +149,13 @@ test('an immutable recovery seed cannot overwrite newer source or expand its wri
 
 test('review feedback updates the existing implementation branch without a force push or second PR', async () => {
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); return { sha: 'created', tree: { sha: 'tree' } }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); return path === 'pulls/34' && method !== 'PATCH' ? { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` } : { sha: 'created', tree: { sha: 'tree' } }; };
   const reviewed = { ...request, implementationReview: { number: 34, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
   const pr = await createImplementationPullRequest(api, reviewed, [change], 'Updated', '', false, async () => calls.push({ path: 'recheck' }));
   assert.equal(pr.number, 34);
-  assert.deepEqual(calls.at(-1), { path: 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa', method: 'PATCH', body: { sha: 'created', force: false } });
+  assert.deepEqual(calls.find(c => c.path === 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa'), { path: 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa', method: 'PATCH', body: { sha: 'created', force: false } });
+  assert.match(calls.at(-1).body.body, /Refs #18/);
+  assert.doesNotMatch(calls.at(-1).body.body, /Closes #18/);
   assert.equal(calls.some(c => c.path === 'pulls'), false);
-  assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.length - 1);
+  assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.findIndex(c => c.path === 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa'));
 });
