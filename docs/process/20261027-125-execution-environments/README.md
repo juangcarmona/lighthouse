@@ -45,3 +45,5 @@ The first real image build found an older Debian snapshot incompatible with pack
 SoFa's original verification command mixed application checks with two tests of the Docker host itself. The explicit container and host commands keep that boundary visible, and default CI still runs everything. Persistent .NET build servers were disabled for container verification after browser checks crashed following .NET tests while passing in isolation. The final complete container run passed.
 
 Start running the actual image build and consumer verification before reporting environment support ready. Keep complete logs and immutable receipts with the PR. Stop treating a fixture-only test result or an agent-produced implementation as proof of runtime acceptance. A host prerequisite should become work for the trusted host, not a new manual task for the user.
+
+- [review, run 40506918643, attempt 1](runs/40506918643/attempt-0001/post-integration/report.md)

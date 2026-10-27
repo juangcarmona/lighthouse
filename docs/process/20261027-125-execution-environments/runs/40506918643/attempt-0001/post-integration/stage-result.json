@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "runId": "b9dba4aafa006bf647c033a27f7a90f253a8ed873ee410077a31146ca0e21be2",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "input": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 125,
+    "pr": 129,
+    "acceptedHead": "3b7df5b71835edd277d0ee697284b91b304dc8aa",
+    "integratedRevision": "496562b1deb8b217b231a0d7baad8d10889485b0",
+    "intent": "dd268a02fe62760f95d1acbfa22c096bd4175fd9c0c250358a3afb3a84f3ec10",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "files": "d338437f758eedda441780bc6f668a80ee8116d6fb7f2738b5055ed140071f40",
+    "provenance": "Host-supplied request, delivery fingerprints and authenticated GitHub observations; no independent API or git authentication performed."
+  },
+  "output": {
+    "summary": "Merge and required post-merge CI are observed successful. Review closure is blocked because the linked first-consumer acceptance report and receipts were not supplied for inspection. No source defect was established by the scoped inspection.",
+    "delivery": {
+      "merged": true,
+      "mergeActor": "juangcarmona",
+      "mergeEvidence": "completion.merged, completion.merge and completion.finalization.observedPullRequest",
+      "authorization": "This review request has merge:false and authorizes no integration. Host observations establish an existing merge, not a new permission. Submitted reviews are empty and priorIntegration is null; historical owner approval and an authorized integration receipt are not independently established here. Neither absence proves an unauthorized merge.",
+      "scope": "Owner answer 6435481863 accepted local pinned images and temporary host-managed PostgreSQL, preserving legacy consumers. Registry publication and production deployment remain outside this delivery."
+    },
+    "acceptanceAssessment": [
+      {
+        "requirement": "Repository-level selection and legacy compatibility",
+        "assessment": "Source and guidance inspected; validateEnvironment/selectEnvironment enforce supported declarations, immutable operator mappings and null declaration fallback.",
+        "references": [
+          "src/packages/sdlc/src/execution-environment.mjs:5-17",
+          "src/packages/sdlc/execution-environments.md:3-29"
+        ]
+      },
+      {
+        "requirement": "Pinned recipes, prerequisite checks and image receipts",
+        "assessment": "Implementation and operating instructions support the intended design. Actual built image IDs and runtime/check receipts remain uninspected.",
+        "references": [
+          "src/examples/opencode-engine/Dockerfile.environments",
+          "src/examples/opencode-engine/ENVIRONMENTS.md:7-39",
+          "src/packages/sdlc/src/execution-environment.mjs:22-55",
+          "src/packages/sdlc/src/implementation-runtime.mjs:50-55"
+        ]
+      },
+      {
+        "requirement": "Clean SoFa verification including .NET, browser tests and PostgreSQL",
+        "assessment": "PR and issue report 27 Node, 36 .NET and 4 browser tests, two separate host engine tests and full CI with 38 .NET tests. These are reported counts, not independently inspected results. The linked report is absent from the mounted source.",
+        "references": [
+          "completion.pullRequest.body",
+          "completion.workItem.body",
+          "src/examples/opencode-engine/ENVIRONMENTS.md:41-47"
+        ]
+      },
+      {
+        "requirement": "Service isolation and cleanup",
+        "assessment": "Source constructs phase-scoped services, readiness checks and cleanup; independent checks omit a Docker socket and provider volume. Real tests are opt-in. Their existence and ordinary CI success do not establish execution with real images or clean SoFa acceptance. Cancellation test terminates a check container; it does not establish the complete Actions cancellation path.",
+        "references": [
+          "src/packages/sdlc/src/execution-environment.mjs:32-77",
+          "src/packages/sdlc/src/implementation-runtime.mjs:65-88",
+          "src/tests/execution-environment.integration.test.mjs:19-61",
+          "src/examples/opencode-engine/ENVIRONMENTS.md:45-47"
+        ]
+      },
+      {
+        "requirement": "Adopter build, install, update and rollback guidance",
+        "assessment": "Documented, including digest review, receipts, host transfer, rollback and explicit reproducibility limits.",
+        "references": [
+          "src/examples/opencode-engine/ENVIRONMENTS.md:5-39"
+        ]
+      }
+    ],
+    "findings": [
+      {
+        "id": "R125-F1",
+        "classification": "accepted",
+        "kind": "current-stage evidence gap",
+        "resolution": "unresolved; accepted as a finding, not accepted as a waiver",
+        "owner": "juangcarmona, delivery owner, with the trusted completion-host maintainer",
+        "followUpReference": "Issue #125 / PR #129; this review R125-F1",
+        "finding": "The explicit first-consumer acceptance requirement cannot be checked from narrative test counts alone. The linked report and its image, runtime, check, browser and cleanup evidence are not mounted; priorIntegration is null.",
+        "evidence": "docs/process is absent in /workspace. The issue and PR link commit 262195be8b594b6f3f7ada1a8f2bdba6af7c67d5, but its report contents are not in the supplied input.",
+        "requiredResolution": "Supply the existing bounded acceptance report and relevant receipts, including their relationship to the accepted head and the tested SoFa revision/suite split. Preserve any untested cancellation limits. No new implementation or infrastructure probing is requested."
+      }
+    ],
+    "guidanceReview": {
+      "inspected": [
+        "AGENTS.md",
+        ".lighthouse/github.json",
+        "src/packages/sdlc/README.md",
+        "src/packages/sdlc/completion.md",
+        "src/packages/sdlc/execution-environments.md",
+        "src/examples/opencode-engine/ENVIRONMENTS.md",
+        "docs/architecture/07-deployment-view/README.md",
+        "openspec/changes/issue-125-proposal/specs/execution-environments/spec.md",
+        "openspec/changes/issue-125-proposal/tasks.md"
+      ],
+      "result": "No stale or conflicting guidance established in these inspected files. Package, deployment and operating guidance agree on host-owned provisioning, legacy fallback and local image scope. Completion guidance requires historical continuity; missing history is preserved, not invented. Tasks marked complete are assertions, not substitutes for receipts. Intentional read-only planning versus implementation-host differences are not drift."
+    },
+    "nonBlockingObservations": [
+      {
+        "evidenceId": "github-check:122198198102",
+        "name": "Publish public engineering site",
+        "status": "pending",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40506649802/job/122198198102",
+        "reason": "Optional publication is neither the policy-required repository check nor an explicit execution-environment acceptance requirement. It is not reported as passed or promoted into a review gate."
+      },
+      {
+        "name": "Stable package publication and production rollout",
+        "status": "not established",
+        "intendedStage": "separately authorized release/operations work",
+        "reason": "Stable publication was skipped; rollout was excluded by the accepted scope. No release or deployment is claimed."
+      }
+    ],
+    "finalization": {
+      "policyReferences": [
+        "src/packages/sdlc/completion.md:36",
+        "completion.finalization"
+      ],
+      "observedIssue": {
+        "state": "closed",
+        "labels": [
+          "enhancement",
+          "ready",
+          "waiting-review"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedBlockedTransition": {
+        "add": [
+          "waiting-review"
+        ],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "explanation": "Retain waiting-review and existing labels; do not request reopening the already closed issue. A future passed review would remove waiting-review, ready, integrate and review while preserving unrelated labels. The trusted publisher applies the validated policy; labels need not already reflect that future effect. Host cleanup releases agent-working for either outcome."
+    },
+    "retrospective": "## What went well\nThe accepted slice stayed narrow: local pinned base/.NET images, repository-level selection and host-managed PostgreSQL. The inspected implementation includes prerequisite checks and phase cleanup; operator guidance distinguishes container tests, host-only tests and snapshot versus full-history verification. Authenticated repository CI passed at the integrated revision (github-check:122197543771), and the configured post-merge ci.yml run passed.\n\n## What went wrong\nReview could not inspect the explicit SoFa acceptance evidence: the PR links a commit-pinned report, but /workspace has no docs/process directory and priorIntegration is null (R125-F1). Narrative counts are reported results, not inspected receipts. This is a review evidence handoff gap, not an established source defect or failed CI check. Historical owner approval is unknown in this input; the authenticated merge observation is retained without inventing an approval. No recurrence across work items is established.\n\n## Start doing\nDelivery owner juangcarmona and the completion-host maintainer should make the existing bounded acceptance report and relevant receipts available to the review engine, tied to the accepted revision. Preserve the documented cancellation limitation and identify the tested SoFa revision and host/container split.\n\n## Stop doing\nDo not use green generic CI, completed task checkboxes or PR narrative counts as substitutes for inspecting explicit first-consumer acceptance evidence. This review does not establish that earlier assessors made that substitution.\n\n## Improvement candidates\n- **Evidence handoff guard** — Observed failure: this review received a report URL without report contents or a retained integration bundle (R125-F1; completion.priorIntegration is null and docs/process is absent). Owner: completion-host maintainer, with juangcarmona supplying the delivery evidence. Smallest useful guard: check that a bounded, revision-bound acceptance evidence bundle is supplied whenever an explicit work-item verification relies on a separately stored report. Reproduce first with this input shape: successful required CI plus linked consumer report but no mounted bundle; review must remain blocked for missing verification. Then test a valid supplied bundle, a mismatched revision and an incomplete receipt set. Review the guard separately and retain regression proof before adoption; this stage changes no host policy or provider guidance.\n- No actual source-defect improvement candidate was established by this scoped inspection. Full Actions cancellation remains a documented test limitation, not a newly demonstrated defect. No timing, cost or cross-ticket recurrence measurements are available."
+  },
+  "evidence": [
+    {
+      "id": "github-check:122197543771",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40506649821/job/122197543771",
+      "reason": "Authenticated required repository check succeeded at integrated revision 496562b1deb8b217b231a0d7baad8d10889485b0; host postMerge also records ci.yml success at that revision."
+    },
+    {
+      "id": "host-merge-observation",
+      "status": "passed",
+      "source": "/input/context.json#/completion",
+      "reason": "Host reports PR #129 merged by juangcarmona at the checked revision. This is observed integration, not an inference from a passed assessment."
+    },
+    {
+      "id": "affected-guidance-inspection",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/execution-environments.md",
+      "reason": "Inspected package, operating, deployment, completion and OpenSpec guidance; no conflicting instruction established within this scope."
+    },
+    {
+      "id": "first-consumer-acceptance-receipts",
+      "status": "unavailable",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/262195be8b594b6f3f7ada1a8f2bdba6af7c67d5/docs/process/20261027-125-execution-environments/README.md",
+      "reason": "Report is referenced but not supplied for inspection; no external fetch performed. Actual image receipts, consumer logs, browser evidence and cleanup results remain unverified, not failed."
+    }
+  ],
+  "missingEvidence": [
+    "Existing bounded first-consumer acceptance report and relevant image, runtime/check, .NET/browser, host-test and cleanup receipts, with provenance linking the tested consumer and implementation to the accepted delivery."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Delivery owner and trusted completion host: supply the existing acceptance evidence bundle and rerun review for the same accepted delivery; do not merge again, change policy or start another stage."
+}
