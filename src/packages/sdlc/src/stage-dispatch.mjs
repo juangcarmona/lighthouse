@@ -9,6 +9,7 @@ export const stagePath = stage => { if (!workers.includes(stage)) throw Error('U
 export const implementPath = stagePath('implement');
 export const statusText = (stage, status) => `${({ requested: '📥 Requested', running: '▶️ Execution admitted', completed: '✅ Completed', waiting: '⏸️ Waiting for your response', failed: '❌ Failed or cancelled' })[status]} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
+export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'implement' && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const hash = value => /^[a-f0-9]{64}$/.test(value ?? '');
 export const dispatchId = (repository, runId, stage = 'implement') => digest(`${repository}:${runId}:${stage}`);
@@ -77,7 +78,8 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const recovery = !!request.recovery;
   const originPath = recovery ? '.github/workflows/lighthouse-worker-maintenance.yml' : routerPath;
   const originEvent = recovery ? request.routerEventName : request.eventName;
-  if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
+  const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && Number(request.event.inputs.issue) === issue && request.predecessor?.runId === request.event.inputs.after_run;
+  if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
   if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
@@ -91,6 +93,11 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   const parent = await api(`actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt}`);
   const request = await readArtifact(api, repository, receipt.routerRunId, dispatchArtifact(receipt), 'dispatch.json');
   verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue);
+  if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
+    const predecessor = await api(`actions/runs/${request.predecessor.runId}`);
+    const next = await (await import('./stage-transition.mjs')).refinementAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: predecessor.id, head_sha: predecessor.head_sha } }, readArtifact);
+    if (next?.issue !== issue || JSON.stringify(next.predecessor) !== JSON.stringify(request.predecessor)) throw Error('Bot continuation lacks an authenticated refinement');
+  }
   const dispatch = { request, receipt, commentId: Number(commentId) };
   if (request.recovery) await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, depth);
   return dispatch;
@@ -138,11 +145,20 @@ export async function finishDispatch(api, repository, issue, commentId, workerId
 
 // An owner can replay a completed run on a reviewed workflow branch for acceptance.
 // Automated events and manual replays use the same fresh GitHub observation.
-export async function completedEvent(api, event, env) {
+export async function completedEvent(api, event, env, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
   if (env.GITHUB_EVENT_NAME === 'workflow_run') return event;
   const id = event.inputs?.after_run;
   if (!id) return null;
-  if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER || env.GITHUB_TRIGGERING_ACTOR !== env.GITHUB_REPOSITORY_OWNER || !positive(id)) throw Error('Completion replay requires an owner and a run ID');
-  const run = await api(`actions/runs/${id}`);
+  const bot = isBotContinuation(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR);
+  if (!bot && (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER || env.GITHUB_TRIGGERING_ACTOR !== env.GITHUB_REPOSITORY_OWNER || !positive(id))) throw Error('Completion replay requires an owner and a run ID, or a verified refinement continuation');
+  let run = await api(`actions/runs/${id}`);
+  if (bot) {
+    if (run.path !== stagePath('refine')) throw Error('Bot continuation must reference a refinement');
+    // The publisher signals before its own workflow has finished its final jobs.
+    for (let attempt = 0; run.status !== 'completed' && attempt < 24; attempt++) {
+      await wait(5000); run = await api(`actions/runs/${id}`);
+    }
+    if (run.status !== 'completed') throw Error('Refinement completion timed out; replay after the execution completes');
+  }
   return { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } };
 }

@@ -1,4 +1,4 @@
-import { refinementAfterRun } from '../packages/sdlc/src/stage-transition.mjs';
+import { refinementAfterRun, signalRefinementContinuation } from '../packages/sdlc/src/stage-transition.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
@@ -167,10 +167,30 @@ test('refinement handoff requires an authenticated successful publication and th
   const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', status: 'passed', gate: 'ready', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'implement' }, effect: { type: 'issue-comment', body: 'Ready' } };
   const report = { user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-actions:${snapshot.runId} -->\n<!-- lighthouse-stage:refine:passed -->` };
   f.comments.push(report);
+  const signals = [];
+  const signalApi = async (path, method, body) => { if (path === '') return { default_branch: 'main' }; signals.push({ path, method, body }); };
+  assert.equal(await signalRefinementContinuation(signalApi, snapshot, envelope), true);
+  assert.deepEqual(signals, [{ path: 'actions/workflows/lighthouse-sdlc-router.yml/dispatches', method: 'POST', body: { ref: 'main', inputs: { issue: '18', stage: 'implement', after_run: '200' } } }]);
+  for (const patch of [{ stage: 'implement' }, { autoImplement: false }, { dispatch: undefined }]) assert.equal(await signalRefinementContinuation(signalApi, { ...snapshot, ...patch }, envelope), false);
+  for (const patch of [{ status: 'blocked' }, { gate: 'waiting' }]) assert.equal(await signalRefinementContinuation(signalApi, snapshot, { ...envelope, result: { ...envelope.result, ...patch } }), false);
+  assert.equal(signals.length, 1);
+  let attempts = 0;
+  await assert.rejects(signalRefinementContinuation(async path => { if (path === '') return { default_branch: 'main' }; attempts++; throw Error('Response lost'); }, snapshot, envelope), /Response lost/);
+  assert.equal(attempts, 1, 'Never retry an uncertain dispatch');
   const api = async (...args) => args[0] === 'actions/runs/200/artifacts?per_page=100' ? { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] } : f.api(...args);
   const readArtifact = async (a, r, run, name, file) => String(run) === '100' ? f.readArtifact(a, r, run, name, file) : file === 'request.json' ? snapshot : envelope;
   const event = { action: 'completed', workflow_run: { id: 200, head_sha: f.worker.head_sha } };
   assert.deepEqual((await refinementAfterRun(api, repo, owner, event, readArtifact)).predecessor, { runId: '200', attempt: 1 });
+  const next = fixture();
+  Object.assign(next.request, { routerRunId: '300', eventRunId: '200', id: dispatchId(repo, '200', 'implement'), handoff: true, predecessor: { runId: '200', attempt: 1 }, event: { inputs: { issue: '18', stage: 'implement', after_run: '200' } } });
+  Object.assign(next.parent, { id: 300, actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } });
+  next.comment.body = dispatchReceiptBody(repo, { ...next.receipt, routerRunId: '300', eventRunId: '200', id: next.request.id, digest: digest(JSON.stringify(next.request)) });
+  const chainApi = async (...args) => args[0] === 'issues/comments/31' ? next.comment : args[0] === 'actions/runs/300/attempts/1' ? next.parent : api(...args);
+  const chainArtifact = async (a, r, run, name, file) => String(run) === '300' ? next.request : readArtifact(a, r, run, name, file);
+  assert.equal((await loadDispatch(chainApi, repo, owner, issue, 31, { ...next.worker, id: 400 }, chainArtifact)).request.id, next.request.id);
+  f.parent.actor.login = 'outsider';
+  await assert.rejects(loadDispatch(chainApi, repo, owner, issue, 31, { ...next.worker, id: 400 }, chainArtifact), /authorized router/);
+  f.parent.actor.login = owner;
   for (const conclusion of ['failure', 'cancelled', 'skipped']) { f.worker.conclusion = conclusion; assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); }
   f.worker.conclusion = 'success';
   snapshot.autoImplement = false; assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null); snapshot.autoImplement = true;
@@ -179,12 +199,43 @@ test('refinement handoff requires an authenticated successful publication and th
   snapshot.dispatch.digest = 'f'.repeat(64); await assert.rejects(refinementAfterRun(api, repo, owner, event, readArtifact), /revoked or changed/);
 });
 
+test('bot wake-up waits for refinement completion and rejects other callers and stages', async () => {
+  const event = { inputs: { issue: '18', stage: 'implement', after_run: '200' } };
+  const env = { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_ACTOR: 'github-actions[bot]', GITHUB_TRIGGERING_ACTOR: 'github-actions[bot]', GITHUB_REPOSITORY_OWNER: owner };
+  const run = { id: 200, head_sha: 'a'.repeat(40), path: stagePath('refine'), status: 'in_progress' };
+  let waits = 0;
+  const result = await completedEvent(async () => run, event, env, async ms => { assert.equal(ms, 5000); waits++; run.status = 'completed'; });
+  assert.equal(waits, 1); assert.equal(result.workflow_run.id, 200);
+  for (const patch of [{ GITHUB_ACTOR: 'outsider' }, { GITHUB_TRIGGERING_ACTOR: 'outsider' }, { GITHUB_EVENT_NAME: 'issue_comment' }]) await assert.rejects(completedEvent(async () => run, event, { ...env, ...patch }), /requires an owner/);
+  for (const patch of [{ stage: 'integrate' }, { after_run: 'bad' }, { issue: '' }]) await assert.rejects(completedEvent(async () => run, { inputs: { ...event.inputs, ...patch } }, env), /requires an owner/);
+  await assert.rejects(completedEvent(async () => ({ ...run, path: implementPath }), event, env), /reference a refinement/);
+  run.status = 'in_progress'; waits = 0;
+  await assert.rejects(completedEvent(async () => run, event, env, async () => { waits++; }), /timed out/);
+  assert.equal(waits, 24);
+});
+
+test('bot router artifacts cannot authorize arbitrary stages or fabricate refinement authority', async () => {
+  const f = fixture();
+  Object.assign(f.request, { eventRunId: '50', id: dispatchId(repo, '50', 'implement'), handoff: true, predecessor: { runId: '50', attempt: 1 }, event: { inputs: { issue: '18', stage: 'implement', after_run: '50' } } });
+  Object.assign(f.parent, { actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } });
+  const receipt = { ...f.receipt, id: f.request.id, eventRunId: '50', digest: digest(JSON.stringify(f.request)) };
+  assert.doesNotThrow(() => verifyDispatchOrigin(f.request, receipt, f.parent, f.worker, repo, owner, issue));
+  for (const patch of [{ handoff: false }, { event: { inputs: { issue: '19', stage: 'implement', after_run: '50' } } }, { predecessor: { runId: '51', attempt: 1 } }, { event: { inputs: { issue: '18', stage: 'integrate', after_run: '50' } } }]) {
+    const request = { ...f.request, ...patch };
+    assert.throws(() => verifyDispatchOrigin(request, { ...receipt, digest: digest(JSON.stringify(request)) }, f.parent, f.worker, repo, owner, issue), /authorized router/);
+  }
+  f.comment.body = dispatchReceiptBody(repo, receipt);
+  const api = async (...args) => args[0] === 'actions/runs/50' ? { id: 50, path: stagePath('refine'), head_sha: 'a'.repeat(40), status: 'completed', conclusion: 'failure' } : f.api(...args);
+  await assert.rejects(loadDispatch(api, repo, owner, issue, 30, f.worker, f.readArtifact), /authenticated refinement/);
+});
+
 test('duplicate completion events retain the same request ID across router executions', async () => {
   const f = fixture('implement');
   const eventRunId = '50';
   const request = { ...f.request, eventName: 'workflow_run', event: { action: 'completed', workflow_run: { id: 50 } }, eventRunId, id: dispatchId(repo, eventRunId, 'implement') };
   await recordDispatch(f.api, repo, request);
   assert.equal((await recordDispatch(f.api, repo, { ...request, routerRunId: '101' })).send, false);
+  assert.equal((await recordDispatch(f.api, repo, { ...request, routerRunId: '102', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'implement', after_run: eventRunId } } })).send, false);
   const receipt = readDispatchReceipt(f.comment, repo, issue);
   const parent = { ...f.parent, event: 'workflow_run', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } };
   assert.doesNotThrow(() => verifyDispatchOrigin(request, receipt, parent, f.worker, repo, owner, issue));

@@ -2,6 +2,16 @@ import { readActionsJson } from './actions-artifact.mjs';
 import { loadDispatch, checkDispatchClaim, stagePath, issueComments } from './stage-dispatch.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 
+// Explicit dispatch also works when GitHub suppresses follow-up token events.
+// This is a wake-up only; the router rechecks the completed run and owner intent.
+export async function signalRefinementContinuation(api, request, envelope) {
+  if (request.stage !== 'refine' || !request.dispatch || request.autoImplement !== true || envelope.result?.status !== 'passed' || envelope.result?.gate !== 'ready') return false;
+  if (validateStageEnvelope(envelope, request).length) throw Error('Invalid refinement result');
+  const repository = await api('');
+  await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: 'implement', after_run: String(request.workflowRunId) } });
+  return true;
+}
+
 // The completed execution is an observation. Its retained owner request grants the handoff.
 export async function refinementAfterRun(api, repository, owner, event, readArtifact = readActionsJson) {
   if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;

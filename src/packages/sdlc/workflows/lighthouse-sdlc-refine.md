@@ -142,6 +142,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: write
       contents: read
       issues: write
     env:
@@ -182,6 +183,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Request the verified implementation continuation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-refinement
 ---
 
 # Refine the authorized issue
