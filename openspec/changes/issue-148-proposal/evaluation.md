@@ -14,7 +14,18 @@ The fixed cases in `scripts/evaluate-model-profiles.mjs` ran from source `d61825
 
 There were no retries or human corrections in these seven runs. Each process exited successfully and emitted no structured error. The build prompt supplied objects; Sol and Terra also handled absent objects, while GPT-5.6's answer did not. One tiny case per setting does not establish a quality or latency ranking. [OpenAI's model catalog](https://developers.openai.com/api/docs/models) and [standard API prices](https://developers.openai.com/api/docs/pricing) inform candidates, but API rates cannot establish this account's cost per accepted task. No cost winner or permanent preset is accepted from these observations.
 
-The committed Lighthouse `.lighthouse/models.json` is an inactive dogfood candidate until the operator opts in. Direct CLI calls proved that this host accepts Luna high, Sol medium/high, Terra medium and GPT-5.6 Sol medium. A native workflow receipt with two distinct worker profiles is still required.
+The committed Lighthouse `.lighthouse/models.json` needs operator opt-in; the operator enabled it for native dogfood. Direct CLI calls showed this host accepts Luna high, Sol medium/high, Terra medium and GPT-5.6 Sol medium. The two native worker receipts below show the adapter's actual profile resolution.
+
+The first native triage attempt for [#157](https://github.com/juangcarmona/lighthouse/issues/157) passed using the old single-model route: its worker container retained an earlier read-only bind mount of the operator file. After restarting the idle runner, [#158's run](https://github.com/juangcarmona/lighthouse/actions/runs/40591496516) resolved `fast` to Luna high in `runtime.json`, then failed because the agent wrote malformed JSON. That test request also presumed a release-notes page which the repository does not have. This is a failed triage candidate, not proof that Luna is reliable for a full worker. The Lighthouse dogfood mapping now uses `build` for triage and apply-review; `fast` remains available for bounded delegated tasks and explicit experiments.
+
+| Native worker | Profile resolution in `runtime.json` | Outcome | Receipt |
+| --- | --- | --- | --- |
+| Refine #157 | `plan` → `openai/gpt-6.1-sol#high`, from `project.workers` | Passed; one-point README scope confirmed | [run 40592102781](https://github.com/juangcarmona/lighthouse/actions/runs/40592102781) |
+| Triage #160 | `build` → `openai/gpt-6.1-sol#medium`, from `operator.workers` | Passed; one-point estimate and no blocking question | [run 40592738559](https://github.com/juangcarmona/lighthouse/actions/runs/40592738559) |
+
+Both used product revision `6342022c0026e1b0bca6d836d4738da3b7d327f4` and harness source `4da2e733ec0e6caa7247c95aee2a466346503432`. The receipts confirm the host's selected arguments, not provider-internal settings. Provider-reported model and effort remain `unverified`; actual billing and subscription usage remain unknown. No human correction or retry was needed for these two passing workers. Refine's automatic implementation continuation was cancelled before a worker started because #157 was only a test. Both test issues are closed without implementation.
+
+Repository verification passed with 241 tests and 3 optional skips; strict OpenSpec validation also passed. `prodshape citations verify --provider openspec` returned nonzero for eight unclassified documents from issues #125 and #145. All 53 recorded citations are current, including this change's citations. [Issue #161](https://github.com/juangcarmona/lighthouse/issues/161) tracks their product-scope classification; this run does not treat the verifier's failure as a pass.
 
 ## Delegated host callback
 
