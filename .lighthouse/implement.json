@@ -20,5 +20,31 @@
         "verify"
       ]
     ]
+  },
+  "125": {
+    "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ]
+    ],
+    "seed": {
+      "base": "94ea3daad04404814c57995ce2da185b25029632",
+      "head": "b74ae0a87396f96d63480e27cb75f84618f7ed73"
+    }
   }
 }
