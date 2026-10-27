@@ -2,20 +2,33 @@
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC refine
 description: Refine an authorized issue through OpenCode with execution logs and validated evidence.
+run-name: "refine #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
+concurrency:
+  group: lighthouse-issue-${{ inputs.issue }}
+  cancel-in-progress: false
+  queue: max
+  job-discriminator: ${{ github.run_id }}
 on:
-  workflow_call:
+  # The required preparation job authenticates the originating owner request.
+  roles: all
+  workflow_dispatch:
     inputs:
       issue:
+        description: Source issue
         required: true
         type: string
-      auto-implement:
-        required: false
-        type: boolean
-        default: false
+      dispatch-request:
+        description: Authenticated router receipt comment ID
+        required: true
+        type: string
   needs: [prepare]
+if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
+env:
+  LIGHTHOUSE_STAGE: refine
+  LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
   contents: read
 engine:
@@ -48,11 +61,12 @@ steps:
     uses: actions/checkout@v5
     with:
       persist-credentials: false
+      ref: ${{ needs.prepare.outputs.source_revision }}
   - name: Load the pinned harness package
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+      ref: 611345a8b25ed061c483057b7077dea260857f0e
       path: tools
       persist-credentials: false
   - name: Load the authorized issue context
@@ -83,9 +97,13 @@ post-steps:
       retention-days: 14
 jobs:
   prepare:
+    outputs:
+      eligible: ${{ steps.prepare.outputs.eligible }}
+      source_revision: ${{ steps.prepare.outputs.source_revision }}
     name: Authorize and reserve issue
     runs-on: ubuntu-24.04
     permissions:
+      actions: read
       contents: read
       issues: write
     env:
@@ -94,7 +112,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: 611345a8b25ed061c483057b7077dea260857f0e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -105,6 +123,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs prepare
       - name: Preserve the execution request
+        if: steps.prepare.outputs.eligible == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
@@ -119,7 +138,7 @@ jobs:
   publish:
     name: Validate, publish and release
     needs: [prepare, agent]
-    if: always() && needs.prepare.result == 'success'
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -130,7 +149,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 394eee9ba362efc6338fdf2cac5a0a5070cc675a
+          ref: 611345a8b25ed061c483057b7077dea260857f0e
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -146,12 +165,16 @@ jobs:
         with:
           name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Require an executed agent
+        if: needs.agent.result != 'success'
+        run: |
+          echo 'The authorized agent did not complete successfully; inspect its execution.' >&2
+          exit 1
       - name: Recheck authority and publish the validated result
         id: publish
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-          LIGHTHOUSE_AUTO_IMPLEMENT: ${{ inputs.auto-implement }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
       - name: Release the issue reservation
         if: always()
