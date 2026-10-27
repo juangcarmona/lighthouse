@@ -16,7 +16,7 @@
 ## 4. Integration evidence
 
 - [x] 4.1 Run repository checks and strict OpenSpec validation against the final candidate; retain logs and retrospective.
-- [ ] 4.2 On a Docker-capable host, build both profiles and run clean SoFa verification at the owner-supplied baseline, including browser and database tests; retain image and cleanup receipts.
+- [x] 4.2 Build both profiles and run clean SoFa verification, including browser and database tests, with separate Docker-host engine checks. The original baseline exposed its host-only tests; SoFa PR #64 adds explicit suite selection without changing default verification. Retain image, source revision and cleanup receipts on the process evidence branch.
 
 ## Workflow follow-up
 

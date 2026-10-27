@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { prepareWorkspace, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
+import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
@@ -86,7 +86,7 @@ async function main() {
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
       }
-      await prepareWorkspace(source, config);
+      await prepareImplementationWorkspace(source, config);
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);

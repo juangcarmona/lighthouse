@@ -3,7 +3,7 @@ ARG NODE_IMAGE
 ARG SDK_IMAGE
 FROM ${NODE_IMAGE} AS base
 ARG OPENCODE_SHA256
-RUN printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20260201T000000Z bookworm main\ndeb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20260201T000000Z bookworm-security main\n' > /etc/apt/sources.list \
+RUN printf 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261026T000000Z bookworm main\ndeb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261026T000000Z bookworm-security main\n' > /etc/apt/sources.list \
     && rm -f /etc/apt/sources.list.d/debian.sources \
     && apt-get -o Acquire::Check-Valid-Until=false update \
     && apt-get install -y --no-install-recommends ca-certificates git ripgrep chromium libicu72 libssl3 zlib1g \

@@ -130,7 +130,7 @@ test('image build inputs are immutable and both recipes use fixed package and SD
   assert.equal(validateBuildInputs(inputs), inputs);
   for (const key of ['nodeImage', 'sdkImage', 'postgresImage', 'opencodeSha256']) assert.throws(() => validateBuildInputs({ ...inputs, [key]: 'latest' }));
   const recipe = await readFile(new URL('../examples/opencode-engine/Dockerfile.environments', import.meta.url), 'utf8');
-  assert.match(recipe, /20260201T000000Z/); assert.match(recipe, /sha256sum --check/);
+  assert.match(recipe, /20261026T000000Z/); assert.match(recipe, /sha256sum --check/);
   assert.match(recipe, /10\.0\.100/); assert.match(recipe, /FROM base AS dotnet/);
 });
 
