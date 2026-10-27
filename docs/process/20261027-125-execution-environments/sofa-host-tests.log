@@ -1,0 +1,18 @@
+
+> sofa@0.0.0 test:runtime:host
+> node scripts/verify-runtime.mjs --host
+
+Runtime test scope: host
+  Determining projects to restore...
+  Restored /srv/workspaces/juangcarmona/sofa/container-verification/tests/SoFa.Runtime.Tests/SoFa.Runtime.Tests.csproj (in 1.99 sec).
+  Restored /srv/workspaces/juangcarmona/sofa/container-verification/src/SoFa.Runtime/SoFa.Runtime.csproj (in 1.99 sec).
+  Restored /srv/workspaces/juangcarmona/sofa/container-verification/src/SoFa.AppHost/SoFa.AppHost.csproj (in 2.02 sec).
+  SoFa.Runtime -> /srv/workspaces/juangcarmona/sofa/container-verification/src/SoFa.Runtime/bin/Debug/net10.0/SoFa.Runtime.dll
+  SoFa.Runtime.Tests -> /srv/workspaces/juangcarmona/sofa/container-verification/tests/SoFa.Runtime.Tests/bin/Debug/net10.0/SoFa.Runtime.Tests.dll
+Test run for /srv/workspaces/juangcarmona/sofa/container-verification/tests/SoFa.Runtime.Tests/bin/Debug/net10.0/SoFa.Runtime.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.2 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 7 s - SoFa.Runtime.Tests.dll (net10.0)

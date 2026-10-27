@@ -1,0 +1,10 @@
+
+> sofa@0.0.0 security:check
+> node src/tooling/security/check-secrets.mjs
+
+[90m7:48AM[0m [32mINF[0m [1m55 commits scanned.[0m
+[90m7:48AM[0m [32mINF[0m [1mscanned ~3045582 bytes (3.05 MB) in 549ms[0m
+[90m7:48AM[0m [32mINF[0m [1mno leaks found[0m
+[90m7:48AM[0m [32mINF[0m [1mscanned ~1553621 bytes (1.55 MB) in 239ms[0m
+[90m7:48AM[0m [32mINF[0m [1mno leaks found[0m
+Index and working-tree scans passed (including untracked and ignored environment/log files)

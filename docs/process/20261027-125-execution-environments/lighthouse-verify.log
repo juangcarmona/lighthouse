@@ -1,0 +1,1141 @@
+
+> @juangcarmona/lighthouse-workspace@0.1.0 verify
+> npm run markdownlint && npm test && node scripts/check-doc-links.mjs && npm run verify:public-site
+
+
+> @juangcarmona/lighthouse-workspace@0.1.0 markdownlint
+> npx -y markdownlint-cli2@0.23.3
+
+markdownlint-cli2 v0.23.3 (markdownlint v0.41.1)
+Finding: **/*.md !**/node_modules/** !**/bin/** !**/obj/** !**/dist/** !**/TestResults/** !playwright-report/** !test-results/** !.agents/** !openspec/schemas/** !docs/product/model/** !docs/product/changes/** !src/dotnet/**/AnalyzerReleases*.md
+Linting: 169 files
+Summary: 0 issues in 0 files
+
+> @juangcarmona/lighthouse-workspace@0.1.0 test
+> node --test src/tests/*.test.mjs
+
+TAP version 13
+# Subtest: completion authorization binds an owner dispatch to a full head; merge is opt-in
+ok 1 - completion authorization binds an owner dispatch to a full head; merge is opt-in
+  ---
+  duration_ms: 7.234803
+  type: 'test'
+  ...
+# Subtest: freshness rejects changed code, base, intent, policy, review and scope
+ok 2 - freshness rejects changed code, base, intent, policy, review and scope
+  ---
+  duration_ms: 2.41179
+  type: 'test'
+  ...
+# Subtest: required checks fail closed for absent, pending and failed evidence
+ok 3 - required checks fail closed for absent, pending and failed evidence
+  ---
+  duration_ms: 0.424898
+  type: 'test'
+  ...
+# Subtest: the host accepts authenticated current checks, not an unrelated maintenance failure
+ok 4 - the host accepts authenticated current checks, not an unrelated maintenance failure
+  ---
+  duration_ms: 1.064707
+  type: 'test'
+  ...
+# Subtest: live rules must enforce configured checks and merge queues fail closed
+ok 5 - live rules must enforce configured checks and merge queues fail closed
+  ---
+  duration_ms: 1.333349
+  type: 'test'
+  ...
+# Subtest: merge rechecks evidence immediately, binds head and reconciles lost responses without retrying
+ok 6 - merge rechecks evidence immediately, binds head and reconciles lost responses without retrying
+  ---
+  duration_ms: 1.127842
+  type: 'test'
+  ...
+# Subtest: an unconfirmed merge failure is not retried or reported successful
+ok 7 - an unconfirmed merge failure is not retried or reported successful
+  ---
+  duration_ms: 0.625044
+  type: 'test'
+  ...
+# Subtest: post-merge verification rejects mismatched runs and dispatches only at the merged tip
+ok 8 - post-merge verification rejects mismatched runs and dispatches only at the merged tip
+  ---
+  duration_ms: 0.896726
+  type: 'test'
+  ...
+# Subtest: evidence protection rejects missing rules, inactive protection and bypass actors
+ok 9 - evidence protection rejects missing rules, inactive protection and bypass actors
+  ---
+  duration_ms: 1.333426
+  type: 'test'
+  ...
+# Subtest: publication rejects path escapes, credential-shaped payloads and unbounded data
+ok 10 - publication rejects path escapes, credential-shaped payloads and unbounded data
+  ---
+  duration_ms: 3.280592
+  type: 'test'
+  ...
+# Subtest: retained report indexes the exact record bytes and keeps source and evidence identities separate
+ok 11 - retained report indexes the exact record bytes and keeps source and evidence identities separate
+  ---
+  duration_ms: 3.527871
+  type: 'test'
+  ...
+# Subtest: concurrent evidence updates preserve other files; exact duplicates do not write
+ok 12 - concurrent evidence updates preserve other files; exact duplicates do not write
+  ---
+  duration_ms: 4.313242
+  type: 'test'
+  ...
+# Subtest: uncertain evidence writes reconcile the confirmed bundle without duplicate commits
+ok 13 - uncertain evidence writes reconcile the confirmed bundle without duplicate commits
+  ---
+  duration_ms: 1.151991
+  type: 'test'
+  ...
+# Subtest: publisher refuses a symlink index and calls the live authority check before writing
+ok 14 - publisher refuses a symlink index and calls the live authority check before writing
+  ---
+  duration_ms: 1.042037
+  type: 'test'
+  ...
+# Subtest: completion opt-in has a bounded workflow allowlist
+ok 15 - completion opt-in has a bounded workflow allowlist
+  ---
+  duration_ms: 3.101751
+  type: 'test'
+  ...
+# Subtest: an owner-observed unchanged ruleset can be checked when GitHub redacts bypass actors
+ok 16 - an owner-observed unchanged ruleset can be checked when GitHub redacts bypass actors
+  ---
+  duration_ms: 1.258049
+  type: 'test'
+  ...
+# Subtest: protection observations require owner visibility and a stable provider timestamp
+ok 17 - protection observations require owner visibility and a stable provider timestamp
+  ---
+  duration_ms: 2.800159
+  type: 'test'
+  ...
+# Subtest: finalization declares future host effects instead of requiring final labels before review
+ok 18 - finalization declares future host effects instead of requiring final labels before review
+  ---
+  duration_ms: 1.664879
+  type: 'test'
+  ...
+# Subtest: pending checks remain unavailable with an explicit pending state, not failed
+ok 19 - pending checks remain unavailable with an explicit pending state, not failed
+  ---
+  duration_ms: 3.336335
+  type: 'test'
+  ...
+# Subtest: additional check observations can support review without silently changing required policy
+ok 20 - additional check observations can support review without silently changing required policy
+  ---
+  duration_ms: 1.306307
+  type: 'test'
+  ...
+# Subtest: current completion jobs cannot become external acceptance evidence or erase required gates
+ok 21 - current completion jobs cannot become external acceptance evidence or erase required gates
+  ---
+  duration_ms: 1.105216
+  type: 'test'
+  ...
+# Subtest: review receives hashed retained integration authorization and a permanent report
+ok 22 - review receives hashed retained integration authorization and a permanent report
+  ---
+  duration_ms: 8.571092
+  type: 'test'
+  ...
+# Subtest: review rejects tampered artifacts, links, uncertain source runs and wrong authorization
+ok 23 - review rejects tampered artifacts, links, uncertain source runs and wrong authorization
+  ---
+  duration_ms: 9.406604
+  type: 'test'
+  ...
+# Subtest: native owner approval authorizes only the current bot implementation head
+ok 24 - native owner approval authorizes only the current bot implementation head
+  ---
+  duration_ms: 3.74827
+  type: 'test'
+  ...
+# Subtest: retained native approval is verified against the original owner review
+ok 25 - retained native approval is verified against the original owner review
+  ---
+  duration_ms: 2.305952
+  type: 'test'
+  ...
+# Subtest: creator seeds an independent product and refuses an occupied target
+ok 26 - creator seeds an independent product and refuses an occupied target
+  ---
+  duration_ms: 567.603936
+  type: 'test'
+  ...
+# Subtest: creator rejects names that cannot be product identifiers
+ok 27 - creator rejects names that cannot be product identifiers
+  ---
+  duration_ms: 127.957381
+  type: 'test'
+  ...
+# Subtest: packaged creator seeds the profile assets and verifier without remote writes
+ok 28 - packaged creator seeds the profile assets and verifier without remote writes
+  ---
+  duration_ms: 592.294391
+  type: 'test'
+  ...
+# Subtest: CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing
+ok 29 - CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing
+  ---
+  duration_ms: 5.045221
+  type: 'test'
+  ...
+# Subtest: bot publications dispatch adopted CI for the exact branch and refuse a changed head
+ok 30 - bot publications dispatch adopted CI for the exact branch and refuse a changed head
+  ---
+  duration_ms: 3.685626
+  type: 'test'
+  ...
+# Subtest: only explicitly admitted engineering labels route; content and working labels grant no authority
+ok 31 - only explicitly admitted engineering labels route; content and working labels grant no authority
+  ---
+  duration_ms: 3.160083
+  type: 'test'
+  ...
+# Subtest: direct refinement has explicit versioned authority and never borrows triage or merge permission
+ok 32 - direct refinement has explicit versioned authority and never borrows triage or merge permission
+  ---
+  duration_ms: 5.12212
+  type: 'test'
+  ...
+# Subtest: real PostgreSQL is fresh between phases and leaves no container or network
+ok 33 - real PostgreSQL is fresh between phases and leaves no container or network # SKIP
+  ---
+  duration_ms: 2.701085
+  type: 'test'
+  ...
+# Subtest: real host checks preserve failure and cancellation and clean services
+ok 34 - real host checks preserve failure and cancellation and clean services # SKIP
+  ---
+  duration_ms: 0.231393
+  type: 'test'
+  ...
+# Subtest: repository declaration rejects unsupported profiles, services and extra control fields
+ok 35 - repository declaration rejects unsupported profiles, services and extra control fields
+  ---
+  duration_ms: 7.566553
+  type: 'test'
+  ...
+# Subtest: selection is read at source revision and is shared across issues
+ok 36 - selection is read at source revision and is shared across issues
+  ---
+  duration_ms: 1.980213
+  type: 'test'
+  ...
+# Subtest: prerequisites run without source, credentials or Docker mounts; services are run isolated and cleaned
+ok 37 - prerequisites run without source, credentials or Docker mounts; services are run isolated and cleaned
+  ---
+  duration_ms: 2.22887
+  type: 'test'
+  ...
+# Subtest: missing SDK stops before any database or agent and hides Docker diagnostics
+ok 38 - missing SDK stops before any database or agent and hides Docker diagnostics
+  ---
+  duration_ms: 1.126902
+  type: 'test'
+  ...
+# Subtest: missing base tools stop preflight before any test service starts
+ok 39 - missing base tools stop preflight before any test service starts
+  ---
+  duration_ms: 1.253429
+  type: 'test'
+  ...
+# Subtest: incompatible tool versions stop preflight before service provisioning
+ok 40 - incompatible tool versions stop preflight before service provisioning
+  ---
+  duration_ms: 0.996456
+  type: 'test'
+  ...
+# Subtest: an incompatible PostgreSQL version stops execution and cleans the service
+ok 41 - an incompatible PostgreSQL version stops execution and cleans the service
+  ---
+  duration_ms: 0.808966
+  type: 'test'
+  ...
+# Subtest: service failures and readiness timeout remove attempted containers and networks
+ok 42 - service failures and readiness timeout remove attempted containers and networks
+  ---
+  duration_ms: 1.801398
+  type: 'test'
+  ...
+# Subtest: agent and validation phases have different networks and fresh database credentials
+ok 43 - agent and validation phases have different networks and fresh database credentials
+  ---
+  duration_ms: 0.984127
+  type: 'test'
+  ...
+# Subtest: cleanup failures are explicit and can be retried without exposing connection strings
+ok 44 - cleanup failures are explicit and can be retried without exposing connection strings
+  ---
+  duration_ms: 1.120278
+  type: 'test'
+  ...
+# Subtest: base profile needs no SDK or service and legacy selection adds no arguments
+ok 45 - base profile needs no SDK or service and legacy selection adds no arguments
+  ---
+  duration_ms: 0.565601
+  type: 'test'
+  ...
+# Subtest: image build inputs are immutable and both recipes use fixed package and SDK inputs
+ok 46 - image build inputs are immutable and both recipes use fixed package and SDK inputs
+  ---
+  duration_ms: 19.599754
+  type: 'test'
+  ...
+# Subtest: declared environment check receipts require matching profile and immutable provenance
+ok 47 - declared environment check receipts require matching profile and immutable provenance
+  ---
+  duration_ms: 2.138773
+  type: 'test'
+  ...
+# Subtest: CLI discovers opt-in adoption and runs authorized plan/apply/live verify without changing source files
+ok 48 - CLI discovers opt-in adoption and runs authorized plan/apply/live verify without changing source files
+  ---
+  duration_ms: 8382.529337
+  type: 'test'
+  ...
+# Subtest: plans are read-only, applications preserve unrelated work and retries do not duplicate rules
+ok 49 - plans are read-only, applications preserve unrelated work and retries do not duplicate rules
+  ---
+  duration_ms: 39.257845
+  type: 'test'
+  ...
+# Subtest: bad authorization, forged operations and unknown configuration cannot mutate GitHub
+ok 50 - bad authorization, forged operations and unknown configuration cannot mutate GitHub
+  ---
+  duration_ms: 2.779138
+  type: 'test'
+  ...
+# Subtest: stale identity and formerly compliant controls stop apply before writes
+ok 51 - stale identity and formerly compliant controls stop apply before writes
+  ---
+  duration_ms: 5.567193
+  type: 'test'
+  ...
+# Subtest: provider failures are unavailable rather than compliant and never lead to writes
+ok 52 - provider failures are unavailable rather than compliant and never lead to writes
+  ---
+  duration_ms: 1.569677
+  type: 'test'
+  ...
+# Subtest: a reasoned protection exception remains visible when the provider cannot enforce it
+ok 53 - a reasoned protection exception remains visible when the provider cannot enforce it
+  ---
+  duration_ms: 0.981484
+  type: 'test'
+  ...
+# Subtest: partial failure reports completed writes and can retry without stored receipts
+ok 54 - partial failure reports completed writes and can retry without stored receipts
+  ---
+  duration_ms: 13.335737
+  type: 'test'
+  ...
+# Subtest: stricter existing rules satisfy the minimum and are never replaced
+ok 55 - stricter existing rules satisfy the minimum and are never replaced
+  ---
+  duration_ms: 18.375974
+  type: 'test'
+  ...
+# Subtest: bypass and wrong check issuers cannot satisfy required protection
+ok 56 - bypass and wrong check issuers cannot satisfy required protection
+  ---
+  duration_ms: 9.59054
+  type: 'test'
+  ...
+# Subtest: release immutability needs explicit workflow readiness and private repositories remain private
+ok 57 - release immutability needs explicit workflow readiness and private repositories remain private
+  ---
+  duration_ms: 8.758088
+  type: 'test'
+  ...
+# Subtest: custom merge policy and contribution policy are explicit reusable choices
+ok 58 - custom merge policy and contribution policy are explicit reusable choices
+  ---
+  duration_ms: 10.97876
+  type: 'test'
+  ...
+# Subtest: host request rejects untrusted identity, version, policy, deadline, commands and source writes
+ok 59 - host request rejects untrusted identity, version, policy, deadline, commands and source writes
+  ---
+  duration_ms: 6.124123
+  type: 'test'
+  ...
+# Subtest: refine requires predecessor digest and owner decision reference
+ok 60 - refine requires predecessor digest and owner decision reference
+  ---
+  duration_ms: 0.436375
+  type: 'test'
+  ...
+# Subtest: candidate publication has no target or credential chosen by the engine and cannot claim unresolved success
+ok 61 - candidate publication has no target or credential chosen by the engine and cannot claim unresolved success
+  ---
+  duration_ms: 2.431181
+  type: 'test'
+  ...
+# Subtest: packed consumer resolves preflight and result validation with no Lighthouse source tree
+ok 62 - packed consumer resolves preflight and result validation with no Lighthouse source tree
+  ---
+  duration_ms: 1216.53083
+  type: 'test'
+  ...
+# Subtest: engine context includes the exact stage-result schema and preserves the requested identity
+ok 63 - engine context includes the exact stage-result schema and preserves the requested identity
+  ---
+  duration_ms: 143.922937
+  type: 'test'
+  ...
+# Subtest: stage result rejects undeclared authority and malformed evidence fields
+ok 64 - stage result rejects undeclared authority and malformed evidence fields
+  ---
+  duration_ms: 0.617756
+  type: 'test'
+  ...
+# Subtest: workspace preparation rejects links before changing ownership
+ok 65 - workspace preparation rejects links before changing ownership
+  ---
+  duration_ms: 13.684824
+  type: 'test'
+  ...
+# Subtest: container checks install workspace bins and execute temporary tools
+ok 66 - container checks install workspace bins and execute temporary tools # SKIP
+  ---
+  duration_ms: 0.39771
+  type: 'test'
+  ...
+# Subtest: implement requires an owner event; replies do not advance a stage
+ok 67 - implement requires an owner event; replies do not advance a stage
+  ---
+  duration_ms: 3.539539
+  type: 'test'
+  ...
+# Subtest: policy and change boundaries reject traversal, control files, changed plans and credential material
+ok 68 - policy and change boundaries reject traversal, control files, changed plans and credential material
+  ---
+  duration_ms: 3.570316
+  type: 'test'
+  ...
+# Subtest: redaction fixtures remain publishable without exempting test files from credential checks
+ok 69 - redaction fixtures remain publishable without exempting test files from credential checks
+  ---
+  duration_ms: 13.552229
+  type: 'test'
+  ...
+# Subtest: snapshot captures additions and deletions, excludes build output and rejects symlinks
+ok 70 - snapshot captures additions and deletions, excludes build output and rejects symlinks
+  ---
+  duration_ms: 34.634847
+  type: 'test'
+  ...
+# Subtest: an issue uses repository checks without a proposal PR or per-issue configuration
+ok 71 - an issue uses repository checks without a proposal PR or per-issue configuration
+  ---
+  duration_ms: 3.660283
+  type: 'test'
+  ...
+# Subtest: repository defaults and existing bounded per-issue policies remain usable without merging a proposal
+ok 72 - repository defaults and existing bounded per-issue policies remain usable without merging a proposal
+  ---
+  duration_ms: 0.853905
+  type: 'test'
+  ...
+# Subtest: host checks bind the exact candidate and commands, preserving failures
+ok 73 - host checks bind the exact candidate and commands, preserving failures
+  ---
+  duration_ms: 1.59329
+  type: 'test'
+  ...
+# Subtest: publisher rechecks authority before a create-only branch and preserves draft state
+ok 74 - publisher rechecks authority before a create-only branch and preserves draft state
+  ---
+  duration_ms: 1.557021
+  type: 'test'
+  ...
+# Subtest: implementation shell progress identifies the command without dumping its output
+ok 75 - implementation shell progress identifies the command without dumping its output
+  ---
+  duration_ms: 2.072951
+  type: 'test'
+  ...
+# Subtest: patch progress names changed files without exposing the patch contents
+ok 76 - patch progress names changed files without exposing the patch contents
+  ---
+  duration_ms: 1.310275
+  type: 'test'
+  ...
+# Subtest: Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope
+ok 77 - Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope
+  ---
+  duration_ms: 24.671119
+  type: 'test'
+  ...
+# Subtest: an immutable recovery seed cannot overwrite newer source or expand its write scope
+ok 78 - an immutable recovery seed cannot overwrite newer source or expand its write scope
+  ---
+  duration_ms: 1.904493
+  type: 'test'
+  ...
+# Subtest: review feedback updates the existing implementation branch without a force push or second PR
+ok 79 - review feedback updates the existing implementation branch without a force push or second PR
+  ---
+  duration_ms: 0.677076
+  type: 'test'
+  ...
+# Subtest: only the owner can start refinement; reservations and PRs are excluded
+ok 80 - only the owner can start refinement; reservations and PRs are excluded
+  ---
+  duration_ms: 3.410369
+  type: 'test'
+  ...
+# Subtest: owner replies resume the blocked stage and never approve the next stage
+ok 81 - owner replies resume the blocked stage and never approve the next stage
+  ---
+  duration_ms: 1.433776
+  type: 'test'
+  ...
+# Subtest: pending reply ignores stale, empty and spoofed reports and cannot replay after publication
+ok 82 - pending reply ignores stale, empty and spoofed reports and cannot replay after publication
+  ---
+  duration_ms: 0.55326
+  type: 'test'
+  ...
+# Subtest: publication refuses changed answers, changed source, closed issues and human takeover
+ok 83 - publication refuses changed answers, changed source, closed issues and human takeover
+  ---
+  duration_ms: 2.372051
+  type: 'test'
+  ...
+# Subtest: repository metadata endpoint has no trailing slash while subresources retain their separator
+ok 84 - repository metadata endpoint has no trailing slash while subresources retain their separator
+  ---
+  duration_ms: 0.284592
+  type: 'test'
+  ...
+# Subtest: decision replies extend input without accepting edited history or stale source
+ok 85 - decision replies extend input without accepting edited history or stale source
+  ---
+  duration_ms: 0.793384
+  type: 'test'
+  ...
+# Subtest: router refreshes a queued comment event and visibly acknowledges the owner reply
+ok 86 - router refreshes a queued comment event and visibly acknowledges the owner reply
+  ---
+  duration_ms: 193.841336
+  type: 'test'
+  ...
+# Subtest: refine handoff binds the passed result to this issue, run, source and owner answers
+ok 87 - refine handoff binds the passed result to this issue, run, source and owner answers
+  ---
+  duration_ms: 3.785143
+  type: 'test'
+  ...
+# Subtest: future pauses implementation and its removal resumes an implement-labelled issue
+ok 88 - future pauses implementation and its removal resumes an implement-labelled issue
+  ---
+  duration_ms: 0.829509
+  type: 'test'
+  ...
+# Subtest: init creates a projection and refuses to overwrite product work
+ok 89 - init creates a projection and refuses to overwrite product work
+  ---
+  duration_ms: 922.506066
+  type: 'test'
+  ...
+# Subtest: verify reports projection drift and invalid manifests
+ok 90 - verify reports projection drift and invalid manifests
+  ---
+  duration_ms: 556.890157
+  type: 'test'
+  ...
+# Subtest: manifest cannot advertise unsupported checks or unverified managed files
+ok 91 - manifest cannot advertise unsupported checks or unverified managed files
+  ---
+  duration_ms: 1053.646405
+  type: 'test'
+  ...
+# Subtest: greenfield init creates the repository boundaries and a default manifest
+ok 92 - greenfield init creates the repository boundaries and a default manifest
+  ---
+  duration_ms: 397.316066
+  type: 'test'
+  ...
+# Subtest: aliases reports the harness and SDLC command contracts without duplicating implementations
+ok 93 - aliases reports the harness and SDLC command contracts without duplicating implementations
+  ---
+  duration_ms: 160.405569
+  type: 'test'
+  ...
+# Subtest: semantic init previews without a reference and applies only after explicit authorization
+ok 94 - semantic init previews without a reference and applies only after explicit authorization
+  ---
+  duration_ms: 553.261933
+  type: 'test'
+  ...
+# Subtest: semantic init stops on unresolved questions before writing
+ok 95 - semantic init stops on unresolved questions before writing
+  ---
+  duration_ms: 335.980035
+  type: 'test'
+  ...
+# Subtest: semantic init does not require a declared reference to exist
+ok 96 - semantic init does not require a declared reference to exist
+  ---
+  duration_ms: 234.793308
+  type: 'test'
+  ...
+# Subtest: existing-authority adoption is dry-run by default and does not initialize missing providers
+ok 97 - existing-authority adoption is dry-run by default and does not initialize missing providers
+  ---
+  duration_ms: 492.733743
+  type: 'test'
+  ...
+# Subtest: existing-authority adoption validates providers, records only Lighthouse files and is idempotent
+ok 98 - existing-authority adoption validates providers, records only Lighthouse files and is idempotent
+  ---
+  duration_ms: 13728.766421
+  type: 'test'
+  ...
+# Subtest: profiles exposes applicability and verification layers without making them all mandatory
+ok 99 - profiles exposes applicability and verification layers without making them all mandatory
+  ---
+  duration_ms: 765.447585
+  type: 'test'
+  ...
+# Subtest: profile catalog exposes adoptable metadata and rejects missing or incompatible composition
+ok 100 - profile catalog exposes adoptable metadata and rejects missing or incompatible composition
+  ---
+  duration_ms: 3.051431
+  type: 'test'
+  ...
+# Subtest: visual-theme init projects the UI guide and skill and verifies the token contract
+ok 101 - visual-theme init projects the UI guide and skill and verifies the token contract
+  ---
+  duration_ms: 1087.705311
+  type: 'test'
+  ...
+# Subtest: react web profile projects its guidance and requires the visual contract
+ok 102 - react web profile projects its guidance and requires the visual contract
+  ---
+  duration_ms: 487.717545
+  type: 'test'
+  ...
+# Subtest: web BFF profile projects its security contract and requires the private web composition
+ok 103 - web BFF profile projects its security contract and requires the private web composition
+  ---
+  duration_ms: 381.281401
+  type: 'test'
+  ...
+# Subtest: PWA capability projects its offline contract as an optional React extension
+ok 104 - PWA capability projects its offline contract as an optional React extension
+  ---
+  duration_ms: 405.53993
+  type: 'test'
+  ...
+# Subtest: Expo mobile profile projects native guidance without selecting the React web profile
+ok 105 - Expo mobile profile projects native guidance without selecting the React web profile
+  ---
+  duration_ms: 409.350166
+  type: 'test'
+  ...
+# Subtest: MAUI mobile profile projects native guidance and rejects the Expo combination
+ok 106 - MAUI mobile profile projects native guidance and rejects the Expo combination
+  ---
+  duration_ms: 630.248165
+  type: 'test'
+  ...
+# Subtest: visual-theme init reports a brownfield design conflict without overwriting it
+ok 107 - visual-theme init reports a brownfield design conflict without overwriting it
+  ---
+  duration_ms: 185.276544
+  type: 'test'
+  ...
+# Subtest: visual-theme validation requires its pinned UI package
+ok 108 - visual-theme validation requires its pinned UI package
+  ---
+  duration_ms: 408.878577
+  type: 'test'
+  ...
+# Subtest: init dry-run reports brownfield conflicts without writing
+ok 109 - init dry-run reports brownfield conflicts without writing
+  ---
+  duration_ms: 155.517081
+  type: 'test'
+  ...
+# Subtest: reconcile previews and applies missing managed paths without overwriting drift
+ok 110 - reconcile previews and applies missing managed paths without overwriting drift
+  ---
+  duration_ms: 756.391181
+  type: 'test'
+  ...
+# Subtest: upgrade previews and applies a missing owned projection
+ok 111 - upgrade previews and applies a missing owned projection
+  ---
+  duration_ms: 698.510311
+  type: 'test'
+  ...
+# Subtest: foundation initialization and upgrade preserve optional workflow ownership
+ok 112 - foundation initialization and upgrade preserve optional workflow ownership
+  ---
+  duration_ms: 365.649061
+  type: 'test'
+  ...
+# Subtest: upgrade projects the alias map as an SDLC-owned projection
+ok 113 - upgrade projects the alias map as an SDLC-owned projection
+  ---
+  duration_ms: 612.42696
+  type: 'test'
+  ...
+# Subtest: upgrade discovers pending SDLC capability adoption without writing remote or reconciliation state
+ok 114 - upgrade discovers pending SDLC capability adoption without writing remote or reconciliation state
+  ---
+  duration_ms: 849.884614
+  type: 'test'
+  ...
+# Subtest: capability adoption requires the plan hash, creates only missing labels and is idempotent
+ok 115 - capability adoption requires the plan hash, creates only missing labels and is idempotent
+  ---
+  duration_ms: 5121.054052
+  type: 'test'
+  ...
+# Subtest: capability selection and decline are explicit local decisions
+ok 116 - capability selection and decline are explicit local decisions
+  ---
+  duration_ms: 958.157305
+  type: 'test'
+  ...
+# Subtest: upgrade preserves customized projections and reports missing ownership evidence
+ok 117 - upgrade preserves customized projections and reports missing ownership evidence
+  ---
+  duration_ms: 804.819791
+  type: 'test'
+  ...
+# Subtest: upgrade stops a baseline mismatch for human review
+ok 118 - upgrade stops a baseline mismatch for human review
+  ---
+  duration_ms: 668.387311
+  type: 'test'
+  ...
+# Subtest: verify keeps the human output and exposes the existing catalog as JSON
+ok 119 - verify keeps the human output and exposes the existing catalog as JSON
+  ---
+  duration_ms: 566.693803
+  type: 'test'
+  ...
+# Subtest: verify JSON distinguishes managed projection drift
+ok 120 - verify JSON distinguishes managed projection drift
+  ---
+  duration_ms: 398.765221
+  type: 'test'
+  ...
+# Subtest: verify validates evidence indexes and reports drift without blocking delivery
+ok 121 - verify validates evidence indexes and reports drift without blocking delivery
+  ---
+  duration_ms: 694.513683
+  type: 'test'
+  ...
+# Subtest: catalog keeps level and kind independent and records pending human review
+ok 122 - catalog keeps level and kind independent and records pending human review
+  ---
+  duration_ms: 1.264075
+  type: 'test'
+  ...
+# Subtest: generated guidance follows adopted authorities and scopes the documentation-site gate
+ok 123 - generated guidance follows adopted authorities and scopes the documentation-site gate
+  ---
+  duration_ms: 1062.726367
+  type: 'test'
+  ...
+# Subtest: engine snapshot contains tracked regular files but no checkout credentials or symlink targets
+ok 124 - engine snapshot contains tracked regular files but no checkout credentials or symlink targets
+  ---
+  duration_ms: 74.364395
+  type: 'test'
+  ...
+# Subtest: engine logs retain execution events while removing common credential formats
+ok 125 - engine logs retain execution events while removing common credential formats
+  ---
+  duration_ms: 1.100284
+  type: 'test'
+  ...
+# Subtest: host engine lock excludes another execution and releases with its descriptor
+ok 126 - host engine lock excludes another execution and releases with its descriptor
+  ---
+  duration_ms: 12.186719
+  type: 'test'
+  ...
+# Subtest: gh-aw completion requires a valid completed envelope and does not imply publication
+ok 127 - gh-aw completion requires a valid completed envelope and does not imply publication
+  ---
+  duration_ms: 2.928876
+  type: 'test'
+  ...
+# Subtest: engine adapter preserves structured evidence while streaming readable output
+ok 128 - engine adapter preserves structured evidence while streaming readable output
+  ---
+  duration_ms: 644.992159
+  type: 'test'
+  ...
+# Subtest: oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers
+ok 129 - oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers
+  ---
+  duration_ms: 2.032608
+  type: 'test'
+  ...
+# Subtest: a failed implementation retains its bounded candidate but cannot emit successful completion
+ok 130 - a failed implementation retains its bounded candidate but cannot emit successful completion
+  ---
+  duration_ms: 990.491629
+  type: 'test'
+  ...
+# Subtest: declared environment preflights before agent, validates with fresh services, and cleans failures
+ok 131 - declared environment preflights before agent, validates with fresh services, and cleans failures
+  ---
+  duration_ms: 11485.287813
+  type: 'test'
+  ...
+# Subtest: public progress is readable and every line is inert in Actions
+ok 132 - public progress is readable and every line is inert in Actions
+  ---
+  duration_ms: 3.001603
+  type: 'test'
+  ...
+# Subtest: tools show the operation and target without copying file contents or patches
+ok 133 - tools show the operation and target without copying file contents or patches
+  ---
+  duration_ms: 0.59846
+  type: 'test'
+  ...
+# Subtest: errors remain visible, ordinary engine diagnostics stay in the event artifact
+ok 134 - errors remain visible, ordinary engine diagnostics stay in the event artifact
+  ---
+  duration_ms: 0.889156
+  type: 'test'
+  ...
+# Subtest: consumer fixture composes visual-theme, react-web-platform
+ok 135 - consumer fixture composes visual-theme, react-web-platform
+  ---
+  duration_ms: 8.810554
+  type: 'test'
+  ...
+# Subtest: consumer fixture composes visual-theme, react-web-platform, dotnet-backend, web-bff
+ok 136 - consumer fixture composes visual-theme, react-web-platform, dotnet-backend, web-bff
+  ---
+  duration_ms: 1.277539
+  type: 'test'
+  ...
+# Subtest: consumer fixture composes visual-theme, react-web-platform, pwa-capability
+ok 137 - consumer fixture composes visual-theme, react-web-platform, pwa-capability
+  ---
+  duration_ms: 1.24653
+  type: 'test'
+  ...
+# Subtest: consumer fixture composes mobile-expo, dotnet-backend
+ok 138 - consumer fixture composes mobile-expo, dotnet-backend
+  ---
+  duration_ms: 1.049518
+  type: 'test'
+  ...
+# Subtest: consumer fixture composes mobile-maui, dotnet-backend
+ok 139 - consumer fixture composes mobile-maui, dotnet-backend
+  ---
+  duration_ms: 1.700066
+  type: 'test'
+  ...
+# Subtest: consumer initialization projects the complete private web composition without remote writes
+ok 140 - consumer initialization projects the complete private web composition without remote writes
+  ---
+  duration_ms: 610.253477
+  type: 'test'
+  ...
+# Subtest: only existing bot proposal branches with intact identity can be updated
+ok 141 - only existing bot proposal branches with intact identity can be updated
+  ---
+  duration_ms: 2.597467
+  type: 'test'
+  ...
+# Subtest: owner feedback is fetched from source and approvals never request revision
+ok 142 - owner feedback is fetched from source and approvals never request revision
+  ---
+  duration_ms: 2.28538
+  type: 'test'
+  ...
+# Subtest: publication updates the same branch non-forcibly and rejects a concurrent writer
+ok 143 - publication updates the same branch non-forcibly and rejects a concurrent writer
+  ---
+  duration_ms: 5.842266
+  type: 'test'
+  ...
+# Subtest: real router maps a PR comment to its source issue and reports approvals without execution
+ok 144 - real router maps a PR comment to its source issue and reports approvals without execution
+  ---
+  duration_ms: 335.664219
+  type: 'test'
+  ...
+# Subtest: proposal boundaries reject traversal, executable/config files, duplicates, missing artifacts and completed tasks
+ok 145 - proposal boundaries reject traversal, executable/config files, duplicates, missing artifacts and completed tasks
+  ---
+  duration_ms: 5.134341
+  type: 'test'
+  ...
+# Subtest: a proposal needs an explicit owner request; an unrelated answer never starts proposal execution
+ok 146 - a proposal needs an explicit owner request; an unrelated answer never starts proposal execution
+  ---
+  duration_ms: 0.755697
+  type: 'test'
+  ...
+# Subtest: refinement admission binds successful workflow, issue, source, intent, result and publication marker
+ok 147 - refinement admission binds successful workflow, issue, source, intent, result and publication marker
+  ---
+  duration_ms: 0.907662
+  type: 'test'
+  ...
+# Subtest: passed proposal envelopes require bounded files while blockers remain publishable
+ok 148 - passed proposal envelopes require bounded files while blockers remain publishable
+  ---
+  duration_ms: 4.408523
+  type: 'test'
+  ...
+# Subtest: the real OpenSpec provider scaffolds, instructs and strictly validates proposal artifacts
+ok 149 - the real OpenSpec provider scaffolds, instructs and strictly validates proposal artifacts
+  ---
+  duration_ms: 3523.337429
+  type: 'test'
+  ...
+# Subtest: publisher rechecks authority before a create-only branch, preserves base tree and does not merge
+ok 150 - publisher rechecks authority before a create-only branch, preserves base tree and does not merge
+  ---
+  duration_ms: 1.411312
+  type: 'test'
+  ...
+# Subtest: the SDLC artifact contains its contract and lifecycle assets
+ok 151 - the SDLC artifact contains its contract and lifecycle assets
+  ---
+  duration_ms: 1148.900727
+  type: 'test'
+  ...
+# Subtest: the SDLC alias contract is deterministic and fails closed on collisions
+ok 152 - the SDLC alias contract is deterministic and fails closed on collisions
+  ---
+  duration_ms: 5.398416
+  type: 'test'
+  ...
+# Subtest: the capability catalog is versioned, validates independently and projects the label declaration
+ok 153 - the capability catalog is versioned, validates independently and projects the label declaration
+  ---
+  duration_ms: 2.48483
+  type: 'test'
+  ...
+# Subtest: the catalog fails closed when a future capability has no registered adapter
+ok 154 - the catalog fails closed when a future capability has no registered adapter
+  ---
+  duration_ms: 2.978665
+  type: 'test'
+  ...
+# Subtest: browser E2E evidence is deterministic and keeps missing, unavailable and pending states explicit
+ok 155 - browser E2E evidence is deterministic and keeps missing, unavailable and pending states explicit
+  ---
+  duration_ms: 0.808796
+  type: 'test'
+  ...
+# Subtest: evidence adapters preserve existing producer payloads and build deterministic coverage
+ok 156 - evidence adapters preserve existing producer payloads and build deterministic coverage
+  ---
+  duration_ms: 3.032906
+  type: 'test'
+  ...
+# Subtest: evidence coverage distinguishes missing, incomplete and conflicting observations
+ok 157 - evidence coverage distinguishes missing, incomplete and conflicting observations
+  ---
+  duration_ms: 0.496359
+  type: 'test'
+  ...
+# Subtest: evidence CLI builds and validates an index only when output is explicit
+ok 158 - evidence CLI builds and validates an index only when output is explicit
+  ---
+  duration_ms: 338.304518
+  type: 'test'
+  ...
+# Subtest: triage produces a deterministic ready report and label projection
+ok 159 - triage produces a deterministic ready report and label projection
+  ---
+  duration_ms: 11.719354
+  type: 'test'
+  ...
+# Subtest: work overlays survive a triage transition independently of lifecycle state
+ok 160 - work overlays survive a triage transition independently of lifecycle state
+  ---
+  duration_ms: 0.79782
+  type: 'test'
+  ...
+# Subtest: triage rejects ambiguous classifications and reports missing evidence
+ok 161 - triage rejects ambiguous classifications and reports missing evidence
+  ---
+  duration_ms: 0.539517
+  type: 'test'
+  ...
+# Subtest: triage keeps unavailable checks and pending judgement separate from missing evidence
+ok 162 - triage keeps unavailable checks and pending judgement separate from missing evidence
+  ---
+  duration_ms: 0.439626
+  type: 'test'
+  ...
+# Subtest: triage rejects duplicate evidence statuses for one field
+ok 163 - triage rejects duplicate evidence statuses for one field
+  ---
+  duration_ms: 0.439602
+  type: 'test'
+  ...
+# Subtest: triage CLI is read-only by default and applies only after an explicit matching request
+ok 164 - triage CLI is read-only by default and applies only after an explicit matching request
+  ---
+  duration_ms: 325.129341
+  type: 'test'
+  ...
+# Subtest: label reconciliation preserves existing values, adds only missing labels and is idempotent
+ok 165 - label reconciliation preserves existing values, adds only missing labels and is idempotent
+  ---
+  duration_ms: 5.774701
+  type: 'test'
+  ...
+# Subtest: label reconciliation blocks unsupported providers and malformed declarations
+ok 166 - label reconciliation blocks unsupported providers and malformed declarations
+  ---
+  duration_ms: 0.600312
+  type: 'test'
+  ...
+# Subtest: label reconciliation stops on a possible equivalent with a different name
+ok 167 - label reconciliation stops on a possible equivalent with a different name
+  ---
+  duration_ms: 1.009817
+  type: 'test'
+  ...
+# Subtest: workflow state replays independently per run and rejects illegal transitions
+ok 168 - workflow state replays independently per run and rejects illegal transitions
+  ---
+  duration_ms: 1.590944
+  type: 'test'
+  ...
+# Subtest: decomposition produces a deterministic dependency order and catches cycles
+ok 169 - decomposition produces a deterministic dependency order and catches cycles
+  ---
+  duration_ms: 1.324519
+  type: 'test'
+  ...
+# Subtest: route plans expose unmet prerequisites before mutation
+ok 170 - route plans expose unmet prerequisites before mutation
+  ---
+  duration_ms: 0.537661
+  type: 'test'
+  ...
+# Subtest: stacked plans follow dependency order and isolate pull-request bases
+ok 171 - stacked plans follow dependency order and isolate pull-request bases
+  ---
+  duration_ms: 1.06443
+  type: 'test'
+  ...
+# Subtest: control-plane validation keeps provider runtime outside the declaration
+ok 172 - control-plane validation keeps provider runtime outside the declaration
+  ---
+  duration_ms: 0.630113
+  type: 'test'
+  ...
+# Subtest: memory validation enforces typed run and project scopes
+ok 173 - memory validation enforces typed run and project scopes
+  ---
+  duration_ms: 0.462181
+  type: 'test'
+  ...
+# Subtest: agent launch validation is bounded by the declared role contract
+ok 174 - agent launch validation is bounded by the declared role contract
+  ---
+  duration_ms: 0.454003
+  type: 'test'
+  ...
+# Subtest: stage results require an explicit next action and evidence statuses
+ok 175 - stage results require an explicit next action and evidence statuses
+  ---
+  duration_ms: 0.336589
+  type: 'test'
+  ...
+# Subtest: GitHub issue projection is deterministic with a provider fixture
+ok 176 - GitHub issue projection is deterministic with a provider fixture
+  ---
+  duration_ms: 248.499952
+  type: 'test'
+  ...
+# Subtest: GitHub label projection is sorted and read-only by default
+ok 177 - GitHub label projection is sorted and read-only by default
+  ---
+  duration_ms: 142.209832
+  type: 'test'
+  ...
+# Subtest: GitHub decomposition stays read-only until apply is explicit
+ok 178 - GitHub decomposition stays read-only until apply is explicit
+  ---
+  duration_ms: 2.666094
+  type: 'test'
+  ...
+# Subtest: completion binds the result to the dispatched run, stage and declared gate
+ok 179 - completion binds the result to the dispatched run, stage and declared gate
+  ---
+  duration_ms: 6.503099
+  type: 'test'
+  ...
+# Subtest: unresolved reports remain structurally valid but cannot complete a worker
+ok 180 - unresolved reports remain structurally valid but cannot complete a worker
+  ---
+  duration_ms: 1.05984
+  type: 'test'
+  ...
+# Subtest: the CLI distinguishes report validation from completion and requires host identity
+ok 181 - the CLI distinguishes report validation from completion and requires host identity
+  ---
+  duration_ms: 932.474228
+  type: 'test'
+  ...
+# Subtest: all bundled routes stop ff before dispatch while individual stages remain available
+ok 182 - all bundled routes stop ff before dispatch while individual stages remain available
+  ---
+  duration_ms: 703.603437
+  type: 'test'
+  ...
+# Subtest: the authored worker shell preserves JSON input, including empty defaults
+ok 183 - the authored worker shell preserves JSON input, including empty defaults
+  ---
+  duration_ms: 30.242194
+  type: 'test'
+  ...
+# Subtest: the UI artifact contains the complete visual contract
+ok 184 - the UI artifact contains the complete visual contract
+  ---
+  duration_ms: 1114.109056
+  type: 'test'
+  ...
+1..184
+# tests 184
+# suites 0
+# pass 181
+# fail 0
+# cancelled 0
+# skipped 3
+# todo 0
+# duration_ms 37252.272838
+Local Markdown links checked in 748 documents.
+
+> @juangcarmona/lighthouse-workspace@0.1.0 verify:public-site
+> npm run build:public-site && node scripts/verify-public-site.mjs
+
+
+> @juangcarmona/lighthouse-workspace@0.1.0 build:public-site
+> node scripts/build-public-site.mjs
+
+Built Lighthouse public site at /srv/workspaces/juangcarmona/lighthouse/129-acceptance/dist/public-site, including ProductShape and ArcShape snapshots.
+Verified Lighthouse public site: 9 files, package CSS is current, local references resolve.

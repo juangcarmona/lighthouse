@@ -1,0 +1,38 @@
+{
+  "runId": "host-125-acceptance",
+  "sourceRevision": "45e66243219e51395cf85f3ef63429c72233fa2a",
+  "changesDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "image": "sha256:9706b4e2d73acf34a1ee339145296442dcbd81178d16f0b09f2808b29f436372",
+  "environment": {
+    "profile": "dotnet",
+    "image": "sha256:9706b4e2d73acf34a1ee339145296442dcbd81178d16f0b09f2808b29f436372",
+    "services": [
+      {
+        "type": "postgresql",
+        "image": "sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "command": [
+        "env",
+        "HUSKY=0",
+        "npm",
+        "ci"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "npm",
+        "run",
+        "verify:container"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "serviceCleanup": true
+}

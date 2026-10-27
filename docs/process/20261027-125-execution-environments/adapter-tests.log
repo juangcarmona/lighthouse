@@ -1,0 +1,136 @@
+TAP version 13
+# Subtest: implement requires an owner event; replies do not advance a stage
+ok 1 - implement requires an owner event; replies do not advance a stage
+  ---
+  duration_ms: 2.009646
+  type: 'test'
+  ...
+# Subtest: policy and change boundaries reject traversal, control files, changed plans and credential material
+ok 2 - policy and change boundaries reject traversal, control files, changed plans and credential material
+  ---
+  duration_ms: 2.107806
+  type: 'test'
+  ...
+# Subtest: redaction fixtures remain publishable without exempting test files from credential checks
+ok 3 - redaction fixtures remain publishable without exempting test files from credential checks
+  ---
+  duration_ms: 7.549226
+  type: 'test'
+  ...
+# Subtest: snapshot captures additions and deletions, excludes build output and rejects symlinks
+ok 4 - snapshot captures additions and deletions, excludes build output and rejects symlinks
+  ---
+  duration_ms: 30.471032
+  type: 'test'
+  ...
+# Subtest: an issue uses repository checks without a proposal PR or per-issue configuration
+ok 5 - an issue uses repository checks without a proposal PR or per-issue configuration
+  ---
+  duration_ms: 2.475661
+  type: 'test'
+  ...
+# Subtest: repository defaults and existing bounded per-issue policies remain usable without merging a proposal
+ok 6 - repository defaults and existing bounded per-issue policies remain usable without merging a proposal
+  ---
+  duration_ms: 0.600294
+  type: 'test'
+  ...
+# Subtest: host checks bind the exact candidate and commands, preserving failures
+ok 7 - host checks bind the exact candidate and commands, preserving failures
+  ---
+  duration_ms: 1.16832
+  type: 'test'
+  ...
+# Subtest: publisher rechecks authority before a create-only branch and preserves draft state
+ok 8 - publisher rechecks authority before a create-only branch and preserves draft state
+  ---
+  duration_ms: 1.136169
+  type: 'test'
+  ...
+# Subtest: implementation shell progress identifies the command without dumping its output
+ok 9 - implementation shell progress identifies the command without dumping its output
+  ---
+  duration_ms: 1.566222
+  type: 'test'
+  ...
+# Subtest: patch progress names changed files without exposing the patch contents
+ok 10 - patch progress names changed files without exposing the patch contents
+  ---
+  duration_ms: 0.92172
+  type: 'test'
+  ...
+# Subtest: Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope
+ok 11 - Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope
+  ---
+  duration_ms: 27.514578
+  type: 'test'
+  ...
+# Subtest: an immutable recovery seed cannot overwrite newer source or expand its write scope
+ok 12 - an immutable recovery seed cannot overwrite newer source or expand its write scope
+  ---
+  duration_ms: 2.071914
+  type: 'test'
+  ...
+# Subtest: review feedback updates the existing implementation branch without a force push or second PR
+ok 13 - review feedback updates the existing implementation branch without a force push or second PR
+  ---
+  duration_ms: 0.786854
+  type: 'test'
+  ...
+# Subtest: engine snapshot contains tracked regular files but no checkout credentials or symlink targets
+ok 14 - engine snapshot contains tracked regular files but no checkout credentials or symlink targets
+  ---
+  duration_ms: 107.157647
+  type: 'test'
+  ...
+# Subtest: engine logs retain execution events while removing common credential formats
+ok 15 - engine logs retain execution events while removing common credential formats
+  ---
+  duration_ms: 2.198956
+  type: 'test'
+  ...
+# Subtest: host engine lock excludes another execution and releases with its descriptor
+ok 16 - host engine lock excludes another execution and releases with its descriptor
+  ---
+  duration_ms: 19.352001
+  type: 'test'
+  ...
+# Subtest: gh-aw completion requires a valid completed envelope and does not imply publication
+ok 17 - gh-aw completion requires a valid completed envelope and does not imply publication
+  ---
+  duration_ms: 5.224833
+  type: 'test'
+  ...
+# Subtest: engine adapter preserves structured evidence while streaming readable output
+ok 18 - engine adapter preserves structured evidence while streaming readable output
+  ---
+  duration_ms: 795.179502
+  type: 'test'
+  ...
+# Subtest: oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers
+ok 19 - oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers
+  ---
+  duration_ms: 1.766157
+  type: 'test'
+  ...
+# Subtest: a failed implementation retains its bounded candidate but cannot emit successful completion
+ok 20 - a failed implementation retains its bounded candidate but cannot emit successful completion
+  ---
+  duration_ms: 1139.945725
+  type: 'test'
+  ...
+# Subtest: declared environment preflights before agent, validates with fresh services, and cleans failures
+ok 21 - declared environment preflights before agent, validates with fresh services, and cleans failures
+  ---
+  duration_ms: 11904.075802
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14194.112397

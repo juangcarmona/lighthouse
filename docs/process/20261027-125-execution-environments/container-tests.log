@@ -1,0 +1,51 @@
+TAP version 13
+# Subtest: real PostgreSQL is fresh between phases and leaves no container or network
+ok 1 - real PostgreSQL is fresh between phases and leaves no container or network
+  ---
+  duration_ms: 8212.543344
+  type: 'test'
+  ...
+# Host check 1: node check.mjs
+# Host check 1 exit: 7
+# Host check 1: node check.mjs
+# Host check 1 exit: 137
+# Subtest: real host checks preserve failure and cancellation and clean services
+ok 2 - real host checks preserve failure and cancellation and clean services
+  ---
+  duration_ms: 9685.857264
+  type: 'test'
+  ...
+# Subtest: workspace preparation rejects links before changing ownership
+ok 3 - workspace preparation rejects links before changing ownership
+  ---
+  duration_ms: 9.205824
+  type: 'test'
+  ...
+# Host check 1: npm ci --ignore-scripts
+# [Check] 
+# [Check] added 1 package, and audited 3 packages in 265ms
+# [Check] 
+# [Check] found 0 vulnerabilities
+# Host check 1 exit: 0
+# Host check 2: ./node_modules/.bin/workspace-tool
+# [Check] workspace tool ran
+# Host check 2 exit: 0
+# Host check 3: node -e const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote"],{encoding:"utf8"}).trim(),""); assert.equal(require("node:fs").existsSync(".git/hooks"),false);
+# Host check 3 exit: 0
+# Host check 4: node -e require("node:fs").writeFileSync("/tmp/tool", "\#!/bin/sh\\nexit 0\\n", {mode:0o755}); require("node:child_process").execFileSync("/tmp/tool");
+# Host check 4 exit: 0
+# Subtest: container checks install workspace bins and execute temporary tools
+ok 4 - container checks install workspace bins and execute temporary tools
+  ---
+  duration_ms: 2910.313356
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18063.429929

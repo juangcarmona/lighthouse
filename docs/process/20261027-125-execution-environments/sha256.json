@@ -1,0 +1,21 @@
+{
+  "openspec.log": "de1d3cdda7af2915e12706535b6d31037a1c3066eaf7fb73a07b53238b713fd6",
+  "browser-report.html": "42a5babf58b771e4eff9c6930b209cce3f5cf608fa07d7240b28c17288a13801",
+  "image-receipt.json": "65e6b7277430a1618f88268da9092a752dea2c9861845019d9c4ef951b9f7bdb",
+  "lighthouse-verify.log": "d51ef2e3210533b315e71cac51c0c3476f4c804a535dbb784e15c55ace2615a2",
+  "cleanup.json": "e67c7721e8c4ac3642f7ea4159075cd9405bcdc2e4c0df4c95411149b003347c",
+  "container-tests.log": "748c0841c82c26d1b893b6e94d28878a3c38f2737807864c18c8193bedcb61af",
+  "consumer.log": "3073395f07355d77d4f5be53b20ad64ce45ccf50f4bfa07faeb6176cfd2ee4f6",
+  "checks.json": "44bec90b9543aa97e272672e3467f7c49c3ae65ff83848d0bede3303acc9e089",
+  "sofa-ci.log": "a3d4b49ce8bd8cff4deca33a117c76a51fed1b0348b7cd99e2b669cfc3eaf69e",
+  "build-inputs.json": "71e3f70057f663f653b762479b44f4b931f318dbc60c1b411817b38af0dbe736",
+  "adapter-tests.log": "ff1e93ba5aadd15d48358031170b374ecc4fa5ec2456f06ce77eb8e5187041af",
+  "build.log": "07fd985bc694f5678669957d17d130d55ae25b0dcf8cfd1f94a4ee0495b26e43",
+  "history-scan.log": "61a1fd61e88ea126bbb374af93ade8ad89c0c41254687ce587315dfbe0e4f249",
+  "sofa-host-tests.log": "0c90f27ecfeecf1e9a167be8027204cdd293c3d9938fc58e066e4e821a80bbde",
+  "README.md": "9e8c1b9231c0d04ff9f0a52b09c2453482591a1f9e7f4bcb5d3d7f75df5585c7",
+  "screenshots/dark-desktop.png": "97dc96e7d66b34e80b5fc9739c67835a004a04a2b6ae5a17fe3ebd1301d00034",
+  "screenshots/light-mobile.png": "dac1a8198b216bcfb6e431e365b0730b28970f4e8443082fe76bc87830960e89",
+  "screenshots/dark-mobile.png": "b3bf081c56c9e3c20c3b4b80a8ecaf91d7826de416264281f750fe77d8acddc7",
+  "screenshots/light-desktop.png": "0f0d97d08208a64da85c39e30b8400dea35acfa61512ba98a83d663d5a8bc68d"
+}
