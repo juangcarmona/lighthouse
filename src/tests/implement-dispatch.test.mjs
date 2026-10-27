@@ -180,3 +180,14 @@ test('owner PR feedback may queue behind a confirmed worker while uncertain disp
   assert.equal((await recordDispatch(f.api, repo, next)).send, true);
   await assert.rejects(recordDispatch(f.api, repo, { ...next, id: dispatchId(repo, '102'), routerRunId: '102' }), /unconfirmed/);
 });
+
+
+test('PR event identity is preserved separately from the trusted dispatchable workflow branch', () => {
+  const f = fixture('integrate');
+  const request = { ...f.request, routerRevision: 'd'.repeat(40), routerRef: 'feature', eventName: 'pull_request_review', event: { action: 'submitted', review: { id: 9 } } };
+  const receipt = { ...f.receipt, digest: digest(JSON.stringify(request)) };
+  const parent = { ...f.parent, event: 'pull_request_review', head_sha: request.routerRevision, head_branch: request.routerRef };
+  assert.doesNotThrow(() => verifyDispatchOrigin(request, receipt, parent, f.worker, repo, owner, issue));
+  assert.throws(() => verifyDispatchOrigin(request, receipt, { ...parent, head_sha: f.worker.head_sha }, f.worker, repo, owner, issue), /authorized router/);
+  assert.throws(() => verifyDispatchOrigin(request, receipt, parent, { ...f.worker, head_branch: 'feature' }, repo, owner, issue), /worker identity/);
+});

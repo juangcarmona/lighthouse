@@ -144,7 +144,11 @@ async function main(command) {
     }
     if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
     const eventRunId = after ? String(after.workflow_run.id) : undefined;
-    const request = { schemaVersion: 1, id: dispatchId(repo, eventRunId ?? env.GITHUB_RUN_ID, stage), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), workflowRevision: env.GITHUB_SHA, sourceRevision: revision, ref: env.GITHUB_REF_NAME, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
+    const router = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+    // Review events can run on a PR merge ref, which is not a dispatchable branch.
+    // Only an explicit owner dispatch selects a workflow branch; native events use main.
+    const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
+    const request = { schemaVersion: 1, id: dispatchId(repo, eventRunId ?? env.GITHUB_RUN_ID, stage), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
     const recorded = await recordDispatch(api, repo, request);
     await output('send', String(recorded.send));
     await output('artifact', dispatchArtifact(request));
