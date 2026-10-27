@@ -20,6 +20,12 @@ test('two workers select independent model and reasoning with explicit provenanc
   assert.equal(plan.source, 'project.workers');
   assert.deepEqual(plan.fields, { model: 'project', reasoningEffort: 'project' });
 });
+test('inherited constructor worker assignments fall through to the project default', () => {
+  const local = { ...operator, modelProfiles: { ...operator.modelProfiles, workers: {} } };
+  const selection = resolve({ operator: local, worker: 'constructor' });
+  assert.equal(selection.profile, 'build');
+  assert.equal(selection.source, 'project.defaultProfile');
+});
 test('operator field overrides and worker selection have documented precedence', () => {
   const local = { ...operator, modelProfiles: { schemaVersion: 1, enabled: true, defaultProfile: 'fast', workers: { refine: 'build' }, profiles: { build: { reasoningEffort: 'high' } } } };
   assert.equal(resolve({ operator: local, worker: 'refine' }).profile, 'build');

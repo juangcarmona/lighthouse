@@ -36,7 +36,7 @@ export function resolveModelProfile({ project = null, operator, worker, profile 
     return { mode: 'legacy', profile: null, model: operator.model, reasoningEffort: null, engineModel: operator.model, source: 'operator.model', capabilityEvidence: 'not-checked-legacy' };
   }
   if (profile !== undefined && !MODEL_PROFILES.includes(profile)) throw Error('Invalid requested model profile');
-  const choices = [[profile, 'task.profile'], [local.workers?.[worker], 'operator.workers'], [project?.workers?.[worker], 'project.workers'], [local.defaultProfile, 'operator.defaultProfile'], [project?.defaultProfile, 'project.defaultProfile']];
+  const choices = [[profile, 'task.profile'], [own(local.workers, worker) ? local.workers[worker] : undefined, 'operator.workers'], [own(project?.workers, worker) ? project.workers[worker] : undefined, 'project.workers'], [local.defaultProfile, 'operator.defaultProfile'], [project?.defaultProfile, 'project.defaultProfile']];
   const choice = choices.find(([name]) => name !== undefined);
   if (!choice) throw Error('No model profile assigned to worker');
   const [name, source] = choice;
