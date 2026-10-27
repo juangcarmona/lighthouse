@@ -1,8 +1,12 @@
 # Design
 
+<!-- pdac-scope: cited -->
+
 ## Context
 
 See proposal.md for motivation. The host already accepts local image IDs, serializes runs and validates candidates in a credential-free container. Only the host has Docker access. Owner answers authorize local builds and temporary host-managed PostgreSQL, with SoFa as the first acceptance case.
+
+<!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->
 
 ## Goals / Non-Goals
 

@@ -1,8 +1,12 @@
 # Tasks
 
+<!-- pdac-scope: cited -->
+
 ## 1. Repository environment contract
 
 - [x] 1.1 Resolve and validate repository-selected environments at the source revision, preserving legacy consumers; verify selection and rejection tests and ship the schema and configuration guide.
+
+<!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->
 
 ## 2. Host execution lifecycle
 

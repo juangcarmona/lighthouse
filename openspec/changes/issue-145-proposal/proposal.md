@@ -1,5 +1,7 @@
 # Proposal
 
+<!-- pdac-scope: cited -->
+
 ## Why
 
 Requesters should describe their problem and desired result without learning the engineering process. Native intake currently cannot start triage, and its size classification does not explain relative effort.

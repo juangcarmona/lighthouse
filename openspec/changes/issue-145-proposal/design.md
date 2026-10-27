@@ -1,5 +1,7 @@
 # Design
 
+<!-- pdac-scope: cited -->
+
 ## Context
 
 See proposal.md for motivation. The native adapter already authenticates owner events, binds dispatch receipts to source and intent, reserves issues and rechecks publication. Its triage workflow predates that adapter. The classifier accepts legacy size labels, and no accepted OpenSpec capabilities exist.
@@ -7,6 +9,8 @@ See proposal.md for motivation. The native adapter already authenticates owner e
 ## Goals / Non-Goals
 
 **Goals:** Reuse the native dispatch and read-only agent boundary; admit external-authored issues only through verified owner requests; validate explained estimates before publishing passed triage.
+
+<!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b" -->
 
 **Non-Goals:** Automatic admission on issue opening, requester-authorized continuation, implicit refinement, hour estimates, historical calibration claims, decomposition or aggregate PR delivery.
 

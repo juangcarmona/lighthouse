@@ -1,9 +1,13 @@
 # Tasks
 
+<!-- pdac-scope: cited -->
+
 ## 1. Product intent and intake
 
 - [x] 1.1 Record the agreed Product Change, validate its overlay and explicitly apply it; retain authority and validation evidence.
 - [x] 1.2 Add the simple public form template and packaged installation guidance; verify required/optional fields and preservation of existing forms in tests.
+
+<!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b" -->
 
 ## 2. Triage and estimates
 

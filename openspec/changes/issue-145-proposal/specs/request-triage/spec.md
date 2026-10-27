@@ -1,5 +1,7 @@
 # Request triage
 
+<!-- pdac-scope: cited -->
+
 ## Purpose
 
 Help requesters describe an outcome and give owners an evidence-backed triage assessment before deciding whether to refine it.
@@ -9,6 +11,8 @@ Help requesters describe an outcome and give owners an evidence-backed triage as
 ### Requirement: Simple public request
 
 The public form SHALL require only a problem and desired result, with optional examples or context. It SHALL NOT require technical acceptance criteria, architecture, an estimate or a delivery plan.
+
+<!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b" -->
 
 #### Scenario: Nontechnical requester
 
