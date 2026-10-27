@@ -155,3 +155,24 @@ flowchart TD
     Check -->|Passed and inputs unchanged| Publish[Update same PR branch]
     Check -->|Failed or stale| Stop[Retain blocker and stop]
 ```
+
+## Deterministic maintenance
+
+[Maintenance workflow](../../../src/packages/sdlc/workflows/lighthouse-worker-maintenance.yml) · [Recovery decisions](../../../src/packages/sdlc/src/worker-recovery.mjs)
+
+Installed with `--with-maintenance`, enabled separately by repository variables. No model runs here. The issue receipt, original request artifact and current Actions jobs identify the outcome. At most two linked retries are allowed, 30 minutes apart, only after confirmed failure before publication. A newer request supersedes earlier recovery candidates. Human decisions, changed authority and uncertain effects require intervention. See [enablement and scan bounds](../../../src/packages/sdlc/README.md#worker-maintenance).
+
+```mermaid
+flowchart TD
+    accTitle: Deterministic worker recovery
+    accDescr: Current evidence distinguishes success, human decisions, uncertain effects and bounded technical retry.
+    Observe[Authenticate receipt and observe Actions] --> State{Outcome}
+    State -->|Succeeded or active| Leave[Keep current execution]
+    State -->|Human decision| Human[Wait for owner]
+    State -->|Uncertain or stale| Inspect[Report required inspection]
+    State -->|Confirmed safe technical failure| Budget{Opt-in, delay and budget}
+    Budget -->|Allowed| Record[Record linked retry]
+    Record --> Dispatch[Send once and recheck at admission]
+    Budget -->|Exhausted| Inspect
+    Budget -->|Disabled or delayed| Leave
+```

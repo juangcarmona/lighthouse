@@ -122,3 +122,13 @@ Passed proposal reports and unrelated issue comments do not grant continuation. 
 The source repository [worker catalogue](../../../docs/architecture/06-runtime-view/worker-catalogue.md) describes installed routes and worker boundaries.
 
 The `apply-review` worker is installed with proposal support. It also handles implementation feedback when implementation is installed, preserving its `implement` result. Verified feedback has a stable dispatch identity across repeated events. Approval retains its separate integration route.
+
+## Worker maintenance
+
+Install the optional deterministic workflow with `--with-maintenance`. After reviewing its permissions, set `LIGHTHOUSE_MAINTENANCE_ENABLED=true` and the existing `LIGHTHOUSE_AUTOMATION_ENABLED=true` to observe open owner issues every 30 minutes, or dispatch a single issue manually. Observation alone performs no retry. Set `LIGHTHOUSE_RECOVERY_ENABLED=true` separately to permit bounded recovery; removing it also stops admission of already-requested retries.
+
+Recovery authenticates the original dispatch and its bounded chain, current source and workflow revision, owner intent, reservation and Actions job evidence. It retries only failed or timed-out refine/propose/implement/apply-review executions whose preparation passed and whose trusted publication step is positively recorded as skipped. Each retry is a new receipt and immutable request, at most two per original request, delayed at least 30 minutes after the previous execution. A newer owner request supersedes older recovery candidates. Workers retain their lifecycle gates and current authority checks.
+
+Cancellation, integration/review, human decisions, stale intent/source, expired artifacts, incomplete jobs, uncertain dispatch or publication, and abandoned reservations require operator inspection. A matching unclaimed execution can be identified for reconciliation, but missing confirmation never authorizes resend. Inspect the linked run and its actual effects before making a new owner request. Retries never clear another execution's reservation. Current receipt and Actions observations determine the decision; raw agent prose cannot grant retry authority.
+
+Maintenance bounds are 100 open owner issues, 500 scanned issue/PR entries, 1,000 comments per issue and 100 jobs per execution. Exceeding a bound fails visibly. Original dispatch artifacts retain their existing 14-day lifetime. Recovery does not outlive missing evidence. Scheduled observation only scans open owner issues; closed work requires explicit operator inspection.
