@@ -11,10 +11,12 @@ gh extension install github/gh-aw --pin v0.93.2
 gh aw --version
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md"
-grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+test -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-triage.lock.yml"
+test -f "$validation_dir/consumer/.github/ISSUE_TEMPLATE/change-request.yml"
+grep -qx '  LIGHTHOUSE_ENABLED_STAGES: triage,refine' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
-grep -qx '  LIGHTHOUSE_ENABLED_STAGES: refine,propose,implement' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+grep -qx '  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node src/packages/sdlc/src/install-workflows.mjs "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-completion --with-maintenance
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
@@ -26,6 +28,7 @@ printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_d
   -ignore 'property "workflow_(repository|sha|ref|file_path)" is not defined' \
   -ignore 'property "admission-(result|max-ai-credits(-threat-detection|-evals)?)" is not defined' \
   -ignore 'property "start-mcp-gateway" is not defined' \
+  "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-triage.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-refine.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.lock.yml" \
   "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-implement.lock.yml" \
