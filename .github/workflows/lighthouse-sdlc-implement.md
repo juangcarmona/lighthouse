@@ -1,14 +1,19 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: Lighthouse SDLC implement
-description: Implement an owner-approved proposal in an isolated workspace and deliver a reviewable PR.
+description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
 on:
   workflow_call:
     inputs:
       issue:
         required: true
         type: string
+      handoff:
+        required: false
+        type: boolean
+        default: false
   needs: [prepare]
+if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
@@ -44,6 +49,7 @@ steps:
     uses: actions/checkout@v5
     with:
       persist-credentials: false
+      ref: ${{ needs.prepare.outputs.source_revision }}
   - name: Load the pinned harness package
     uses: actions/checkout@v5
     with:
@@ -54,7 +60,7 @@ steps:
   - name: Load the authorized issue context
     uses: actions/download-artifact@v8
     with:
-      name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+      name: lighthouse-implement-input-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
 post-steps:
   - name: Validate the Lighthouse result
@@ -63,7 +69,7 @@ post-steps:
     if: always()
     uses: actions/upload-artifact@v7
     with:
-      name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
+      name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
       path: |
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
@@ -83,12 +89,15 @@ post-steps:
     if: always()
     uses: actions/upload-artifact@v7
     with:
-      name: opencode-events-${{ inputs.issue }}-${{ github.run_attempt }}
+      name: opencode-implement-events-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/gh-aw/opencode-events-${{ github.run_id }}-${{ github.run_attempt }}.jsonl
       if-no-files-found: ignore
       retention-days: 14
 jobs:
   prepare:
+    outputs:
+      eligible: ${{ steps.prepare.outputs.eligible }}
+      source_revision: ${{ steps.prepare.outputs.source_revision }}
     name: Authorize and reserve issue
     runs-on: ubuntu-24.04
     permissions:
@@ -97,6 +106,7 @@ jobs:
       issues: write
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+      LIGHTHOUSE_IMPLEMENT_HANDOFF: ${{ inputs.handoff }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -106,15 +116,28 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+      - name: Load refinement request
+        if: inputs.handoff
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/refinement-handoff
+      - name: Load refinement result
+        if: inputs.handoff
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/refinement-handoff
       - name: Collect verified owner intent and reserve the issue
         id: prepare
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs prepare
       - name: Preserve the execution request
+        if: steps.prepare.outputs.eligible == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+          name: lighthouse-implement-input-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/
           if-no-files-found: error
           retention-days: 14
@@ -126,9 +149,10 @@ jobs:
   publish:
     name: Validate, publish and release
     needs: [prepare, agent]
-    if: always() && needs.prepare.result == 'success'
+    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -146,13 +170,13 @@ jobs:
       - name: Load the execution request
         uses: actions/download-artifact@v8
         with:
-          name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
+          name: lighthouse-implement-input-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Load the candidate result
         if: needs.agent.result == 'success'
         uses: actions/download-artifact@v8
         with:
-          name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
+          name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Recheck authority and publish the validated result
         if: needs.agent.result == 'success'
@@ -166,9 +190,9 @@ jobs:
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
 ---
 
-# Implement the approved change
+# Plan and implement the issue
 
-Execute `implement` using `/input/context.json` and `/harness/skills/implement/SKILL.md`. Read the merged proposal at `context.implementation.proposal.root`, the repository policy and the authorized scope. Work inside `/workspace`, a disposable writable copy; only `implementation.policy.paths` may change. The packaged harness and context remain read-only.
+Execute `implement` using `/input/context.json` and `/harness/skills/implement/SKILL.md`. Read the issue, owner answers and repository policy. Use `context.proposal.instructions` to create or update the OpenSpec proposal, design, specifications and tasks in `context.proposal.root` before implementing those tasks. Planning artifacts and code belong to the same implementation PR. Work inside `/workspace`, a disposable writable copy; only `implementation.policy.paths` may change. The packaged harness and context remain read-only.
 
 Report public progress before inspection and whenever a decision, test result or blocker changes the plan. Explain the evidence briefly; avoid dumping tool payloads. Use the shell to install public dependencies, edit source and run checks. Preserve content and author-owned work. Record completed tasks accurately. Store screenshots, test reports and a concise retrospective in `/output/evidence/`; the host retains them as Actions artifacts.
 

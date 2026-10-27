@@ -72,34 +72,37 @@ The [external host contract](host-contract.md) supports owner-authorized `refine
 
 ## Implementation delivery
 
-Opt in with `--with-implement`, provision the implementation-capable engine image, and create an `implement` request label. An owner label or manual dispatch authorizes one execution. Admission requires an OpenSpec proposal PR merged by the repository owner, its unchanged artifacts on the default branch, and an entry keyed by issue number in `.lighthouse/implement.json`:
+Install with `--with-implement` and provision the implementation engine image. An owner can request `implement` directly. With this worker installed, successful refinement also hands the issue to implementation in the same Actions run. A blocked refinement waits for the owner's answer; `future` pauses implementation.
+
+The worker creates the OpenSpec plan, implements it and runs checks in one workspace. The PR contains both the plan and code. A separate proposal PR remains available for design-only work; merging one is not an implementation prerequisite.
+
+By default, repositories with a `verify` npm script use `npm ci --ignore-scripts` and `npm run verify`. Other repositories configure checks once in `.lighthouse/implement.json`:
 
 ```json
 {
-  "18": {
-    "proposal": 33,
-    "reviewRequired": true,
-    "scope": "Implement the approved feature; owner visual review remains required.",
-    "paths": ["src/", "tests/", "package.json", "package-lock.json", "openspec/changes/issue-18-proposal/tasks.md"],
-    "checks": [["npm", "ci", "--ignore-scripts"], ["npm", "test"], ["npm", "run", "build"]]
+  "defaults": {
+    "reviewRequired": false,
+    "scope": "Implement only the issue and its acceptance criteria.",
+    "paths": ["*"],
+    "checks": [["npm", "ci", "--ignore-scripts"], ["npm", "run", "verify"]]
   }
 }
 ```
 
-This is executable repository policy, reviewed with the workflow adoption. Paths ending in `/` allow a subtree; other entries allow one file. Keep the scope specific to the approved change or slice. Harness configuration, installed agents, Git metadata, credential files, workflows and approved design/specification files cannot be changed by this worker. Workflow changes need a separate maintainer-authored change; the publisher has no workflow-write permission. Only the proposal tasks file is writable under OpenSpec. Set `reviewRequired: true` when candidate acceptance needs the owner; the host then forces a blocked assessment and draft PR even if the engine claims success. An adopter may explicitly set it to false where its Definition of Done permits automated assessment. Labels do not replace this policy or approve later stages.
+`*` permits project files; credentials, Git metadata, workflow and harness configuration remain protected. A directory ending in `/` limits writes to that subtree. Existing issue-specific policies still override defaults. `reviewRequired: true` reserves candidate acceptance for a human and produces a draft; `false` allows a checked candidate to be ready for PR review. Neither setting authorizes merge.
 
 OpenCode edits a temporary copy, with 30 minutes to return an envelope. The adapter validates at most 512 changed regular files, 4 MiB per file and 16 MiB total, excluding Git-ignored new output while retaining every tracked edit. New reports follow the project’s `.gitignore`; an ignore rule cannot hide changes to existing source. It reconstructs the exact candidate and reruns the configured commands in a fresh container without provider or GitHub credentials. Checks share a ten-minute limit. Only the candidate files enter the PR; logs, screenshots and the retrospective remain in the `implementation-evidence` Actions artifact for 30 days. Result receipts and redacted OpenCode events retain their existing 14-day lifetime. These artifacts are evidence delivery, not permanent archival.
 
-The publisher rechecks source, owner answers, reservation, proposal and policy before creating a new branch. Required human review or failed host checks produces a draft PR with blockers and `waiting-review`; it does not mark `done`, close the issue or start integration. An open implementation PR stops a second implementation run. Review and finish that PR before requesting another slice. The worker does not overwrite or resume an existing branch. The subscription engine still has outbound networking and provider authentication inside its container; shell permissions are not credential isolation. Use only owner-authorized work on the dedicated host.
+The publisher rechecks source, owner answers, reservation and policy before creating a new branch. Required human review or failed host checks produces a draft PR with blockers and `waiting-review`; it does not mark `done`, close the issue or start integration. An open implementation PR stops a second implementation run. Review and finish that PR before requesting another slice. Owner PR feedback updates that same branch with a non-forced push; a changed head or edited feedback stops publication. The subscription engine still has outbound networking and provider authentication inside its container; shell permissions are not credential isolation. Use only owner-authorized work on the dedicated host.
 
 To recover a failed candidate, an owner may add `"seed": {"base": "<40-character commit>", "head": "<40-character commit>"}` to that issue’s implementation policy. The head must be one commit directly on the declared base in the same repository. Preparation rejects out-of-scope files, links and changes whose base file no longer matches the current default branch. It binds the validated seed to the request and restores it in the disposable workspace. The engine continues that candidate, reruns checks and creates a fresh PR; the seed branch is never modified. A seed supplies work to inspect, not completion or approval evidence.
 
 ## Integration and review
 
-The optional [GitHub completion adapter](completion.md) adds accepted-head integration and permanent post-integration review to the existing router. Install with `--with-completion` and explicitly adopt evidence publication in the GitHub profile. Merge authorization remains separate from a passed agent assessment.
+The optional [GitHub completion adapter](completion.md) handles PR approval, CI completion, merge checks and the final review. Install with `--with-completion` and explicitly adopt evidence publication in the GitHub profile. Merge authorization remains separate from a passed agent assessment.
 
 ## Replies to blocked stages
 
 An owner reply to a blocked refinement or proposal resumes that same stage. The router reads current issue state, acknowledges receipt with a reaction and verifies the latest trusted blocked report before admitting work. Preparation validates its run and artifacts, binds the reply to the previous input and adds a source-linked acknowledgement. Proposal replies retain the passed refinement evidence and include all owner answers; they do not approve implementation or merge. Published reports name the stage explicitly.
 
-Passed proposal reports, implementation PR reviews and unrelated comments do not grant continuation. Reservations and existing proposal PRs prevent duplicate work. Changed source, edited earlier intent, unavailable artifacts or withdrawn readiness fail admission rather than reusing stale approval. The owner can request fresh refinement when those inputs change. Direct GitHub replies remain supported independently of any future external-client comment or receipt contract.
+Passed proposal reports and unrelated issue comments do not grant continuation. Owner feedback on an implementation PR updates that PR; approval requests integration when completion is enabled. Reservations and existing proposal PRs prevent duplicate work. Changed source, edited earlier intent, unavailable artifacts or withdrawn readiness fail admission rather than reusing stale approval. The owner can request fresh refinement when those inputs change. Direct GitHub replies remain supported independently of any future external-client comment or receipt contract.

@@ -8,6 +8,10 @@ on:
       issue:
         required: true
         type: string
+      auto-implement:
+        required: false
+        type: boolean
+        default: false
   needs: [prepare]
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
@@ -143,9 +147,11 @@ jobs:
           name: lighthouse-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Recheck authority and publish the validated result
+        id: publish
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_AUTO_IMPLEMENT: ${{ inputs.auto-implement }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
       - name: Release the issue reservation
         if: always()
