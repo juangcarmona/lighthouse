@@ -7,20 +7,12 @@ A worker is one bounded execution with inputs, steps and a result. Lifecycle sta
 ```mermaid
 flowchart TD
     accTitle: Worker routes
-    accDescr: Authorized events select one worker; results or human answers return through the router.
-    Event[Owner event or verified completion] --> Router[Authorize and select]
-    Router --> Refine[refine]
-    Router --> Propose[propose]
-    Router --> Implement[implement]
-    Router --> Integrate[integrate]
-    Router --> Review[review]
-    Router --> Apply[apply-review]
-    Apply -->|Updated PR and fresh CI| Router
-    Refine -->|Ready and continuation authorized| Router
-    Propose -->|PR feedback| Router
-    Implement -->|PR feedback or accepted head| Router
-    Integrate -->|Merged and checks observed| Router
-    Router -->|No authorized route| Idle[No worker]
+    accDescr: The router selects one independent worker; each result records the next decision without starting an unbounded loop.
+    Event[Owner event or verified completion] --> Router{Authorized route}
+    Router -->|Yes| Worker[One independent worker]
+    Router -->|No| Idle[No execution]
+    Worker --> Result[Publish result and next decision]
+    Result --> Next[New event only when continuation is authorized]
 ```
 
 The [router source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-router.yml) declares triggers; [routing and admission](../../../src/packages/sdlc/src/issue-actions.mjs) verifies their current meaning. Installation selects workers explicitly. Triage remains a lifecycle skill; it is not an installed Actions worker here. Release remains the repository's separate release automation.
