@@ -100,7 +100,7 @@ async function main() {
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
       }
-      await prepareImplementationWorkspace(source, config);
+      await prepareImplementationWorkspace(source, config, request.issue);
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);

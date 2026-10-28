@@ -24,7 +24,7 @@ for(let i=0;i<3;i++) {
 }
 console.log('Three sequential browser checks passed');
 `);
-    const receipt = await runImplementationChecks({ config: { image, uid: 20003 }, request: { runId: 'browser-budget', sourceRevision: 'fixture', implementation: { policy: { checks: [['node', 'browser.mjs']] } } }, changes: [], workspace, output: join(root, 'diagnostics'), name: `lighthouse-browser-budget-${process.pid}`, redact: text => text, cancelled: () => false });
+    const receipt = await runImplementationChecks({ config: { image, uid: 20003 }, request: { issue: 1, runId: 'browser-budget', sourceRevision: 'fixture', implementation: { policy: { checks: [['node', 'browser.mjs']] } } }, changes: [], workspace, output: join(root, 'diagnostics'), name: `lighthouse-browser-budget-${process.pid}`, redact: text => text, cancelled: () => false });
     const check = receipt.checks[0];
     assert.equal(check.exitCode, 0);
     assert.equal(receipt.limits.pids, 1024);

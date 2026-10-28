@@ -47,7 +47,7 @@ test('real host checks preserve failure and cancellation and clean services', { 
         }
       }, 200);
       try {
-        const receipt = await runImplementationChecks({ config: { image, uid: 20003 }, request: { runId: name, sourceRevision: 'integration-test', implementation: { policy: { checks: [['node', 'check.mjs'], ['node', '-e', 'process.exit(0)']] } } }, changes: [], workspace, output: join(root, `${scenario}-logs`), name, redact: text => text, cancelled: () => cancelled, selected });
+        const receipt = await runImplementationChecks({ config: { image, uid: 20003 }, request: { issue: 1, runId: name, sourceRevision: 'integration-test', implementation: { policy: { checks: [['node', 'check.mjs'], ['node', '-e', 'process.exit(0)']] } } }, changes: [], workspace, output: join(root, `${scenario}-logs`), name, redact: text => text, cancelled: () => cancelled, selected });
         assert.equal(receipt.serviceCleanup, true);
         assert.equal(receipt.checks.length, 2);
         assert.equal(receipt.checks[1].exitCode, 125);
