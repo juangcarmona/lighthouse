@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-10-28T23:44:03.469Z",
+  "status": "waiting-hosting-approval",
+  "run": 40787092437,
+  "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+  "pullRequest": {
+    "number": 202,
+    "url": "https://github.com/juangcarmona/lighthouse/pull/202",
+    "head": "9216e81d32e55dd945f19f7a425b718c4d2bf2ca"
+  },
+  "completed": [
+    "defect assessment",
+    "independent planning review",
+    "behavioral RED on unchanged source",
+    "GREEN preserving regression bytes",
+    "independent host repository checks",
+    "independent candidate review",
+    "separately dispatched forge CI",
+    "existing readiness reconciliation"
+  ],
+  "scope": {
+    "productionCodeChurn": 2,
+    "testChurn": 15,
+    "totalFiles": 2,
+    "modules": 1
+  },
+  "requiredHostingDecision": {
+    "repositoryApprovalPolicy": "first_time_contributors",
+    "uiMessage": "This workflow is awaiting approval from a maintainer in PR #202.",
+    "workflowRuns": [
+      40788636537,
+      40788636496
+    ]
+  },
+  "mergeConfirmed": false,
+  "releaseConfirmed": false,
+  "fastForwardPilot": "not yet dispatched"
+}
