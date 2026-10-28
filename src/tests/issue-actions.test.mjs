@@ -89,7 +89,7 @@ test('router refreshes a queued comment event and visibly acknowledges the owner
       };`.replace("+ '\n'", "+ '\\n'"));
     const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_EVENT_NAME: 'issue_comment', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: join(dir, 'outputs'), RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
     assert.equal(run.status, 0, run.stderr);
-    assert.match(await readFile(join(dir, 'outputs'), 'utf8'), /stage=propose\nrun=true\nissue=18/);
+    assert.match(await readFile(join(dir, 'outputs'), 'utf8'), /stage=propose\nworker=propose\nrun=true\nissue=18/);
     assert.match(await readFile(join(dir, 'calls'), 'utf8'), /issues\/comments\/11\/reactions/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

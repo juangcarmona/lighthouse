@@ -12,12 +12,16 @@ import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
+import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
+import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
 export function pendingReply(event, comments) {
   const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
   if (!report || /<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
+  const productChangeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
+  if (productChangeName) return { stage: 'propose', worker: 'product-change', productFeedback: { action: 'answer', changeName: productChangeName, text: event.comment.body, sourceCommentId: event.comment.id } , report };
   const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
   const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
   return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
@@ -32,9 +36,10 @@ export function routeIssue(event, actor, owner, eventName, comments = []) {
   if (eventName === 'issues' && event.action === 'labeled' && ['triage', 'refine', 'propose', 'implement'].includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
   if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
     const pending = pendingReply(event, comments);
-    if (pending) return { run: true, stage: pending.stage, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
+    if (pending) return { run: true, ...pending, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
   }
   if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
+  if (eventName === 'workflow_dispatch' && event.inputs?.workflow === 'product-change' && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: ['propose', 'implement'].includes(event.inputs?.stage) ? event.inputs.stage : 'propose', worker: 'product-change', issue: Number(event.inputs.issue), reason: 'Owner requested Product Change preparation from an idea' };
   if (eventName === 'workflow_dispatch' && ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
   return { run: false, reason: 'No eligible stage event' };
 }
@@ -72,7 +77,7 @@ async function main(command) {
     return;
   }
   let dispatch;
-  if (command === 'prepare' && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && (event.inputs?.['dispatch-request'] || env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true')) {
+  if (['prepare', 'product-apply-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && (event.inputs?.['dispatch-request'] || env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true')) {
     dispatch = await admitDispatch(api, repo, owner, env, event);
     if (!dispatch.admitted) {
       await output('eligible', 'false'); await summary('This request already has an execution. No duplicate agent started.'); return;
@@ -93,7 +98,57 @@ async function main(command) {
       }
     }
   }
+  if (command === 'product-apply-prepare') {
+    if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');
+    const current = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository: repo, root: process.cwd() });
+    const requested = dispatch.request.productApproval;
+    if (!current || current.issue !== issueNumber || current.pullRequest !== requested.pullRequest || current.head !== requested.head || current.approval.reviewKey !== requested.reviewKey || current.changeName !== requested.changeName) throw Error('Product approval changed before trusted apply admission');
+    const issue = await api(`issues/${issueNumber}`);
+    if (issue.state !== 'open' || issue.labels?.some(label => ['future', 'human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
+    const applyRequest = { approval: current.approval, binding: current.binding, checkpoint: current.checkpoint, issue: current.issue, pullRequest: current.pullRequest, head: current.head, changeName: current.changeName, repository: repo, owner, sourceRevision: current.head, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } };
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, 'product-apply.json'), JSON.stringify(applyRequest));
+    await output('eligible', 'true'); await output('head', current.head); await output('issue', String(current.issue)); await output('pull_request', String(current.pullRequest));
+    await summary(`Product Change ${current.approval.changeId} approval verified for PR #${current.pullRequest}. The apply job has no GitHub credentials.`);
+    return;
+  }
+  if (command === 'product-apply') {
+    const applyRequest = JSON.parse(await readFile(join(dir, 'product-apply.json'), 'utf8'));
+    const currentHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: process.cwd(), encoding: 'utf8' }).trim();
+    if (currentHead !== applyRequest.head) throw Error('Apply checkout does not match the approved Product Change head');
+    const bridge = await loadProductBridge();
+    let applyOutput;
+    await applyApprovedProductChange({ root: process.cwd(), changeName: applyRequest.changeName, checkpoint: applyRequest.checkpoint, approval: applyRequest.approval, currentBinding: applyRequest.binding, currentIdentity: applyRequest.checkpoint.identity, bridge, headAfter: currentHead, reportBeforeWrite: async citations => writeFile(join(dir, 'affected-citations.json'), JSON.stringify(citations)), publish: async (receipt, providerResult, details) => {
+      const output = await collectProductApplyFiles(process.cwd(), applyRequest.changeName, currentHead);
+      applyOutput = { receipt, files: output.files, modelRoot: output.modelRoot, affectedCitations: details.affectedCitations, resultingModelDigest: details.resultingModelDigest, head: currentHead, providerOutcome: providerResult.outcome };
+      await writeFile(join(dir, 'apply-result.json'), JSON.stringify(applyOutput));
+    } });
+    if (!applyOutput) throw Error('Trusted Product Change apply produced no receipt');
+    console.log(`Applied ${applyRequest.approval.changeId}; provider output is ready for independent publication.`); return;
+  }
+  if (command === 'product-apply-publish') {
+    const applyRequest = JSON.parse(await readFile(join(dir, 'product-apply.json'), 'utf8'));
+    const applyResult = JSON.parse(await readFile(join(dir, 'apply-result.json'), 'utf8'));
+    const dispatch = await admitDispatch(api, repo, owner, env, event);
+    if (!dispatch.admitted || dispatch.request.worker !== 'apply-product-change' || dispatch.request.productApproval?.reviewKey !== applyRequest.approval.reviewKey) throw Error('Product apply publication dispatch is invalid');
+    const published = await publishProductApply(api, repo, owner, dispatch, applyResult, async fresh => {
+      await checkDispatchClaim(api, repo, issueNumber, dispatch, env.GITHUB_RUN_ID);
+      const current = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository: repo, root: process.cwd() });
+      if (!current || current.head !== fresh.head || current.approval.reviewKey !== fresh.approval.reviewKey) throw Error('Product approval changed before apply publication');
+    });
+    await writeFile(join(dir, 'published'), JSON.stringify({ receipt: published.receipt, checkpoint: published.checkpoint }));
+    await finishDispatch(api, repo, issueNumber, dispatch.commentId, env.GITHUB_RUN_ID, 'passed');
+    await summary(`Product Change ${published.receipt.changeId} applied to PR #${published.pullRequest.number}. Review the refreshed model diff; merge is separate.`);
+    return;
+  }
   let route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
+  if (dispatch?.request.worker === 'product-change') route = { run: true, stage: dispatch.request.stage, worker: 'product-change', issue: dispatch.request.issue, reason: 'Authenticated Product Change dispatch' };
+  let productApproval;
+  if (['route', 'dispatch-prepare'].includes(command) && env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' && ['issue_comment', 'pull_request_review'].includes(env.GITHUB_EVENT_NAME)) {
+    productApproval = await loadProductApproval(api, { eventName: env.GITHUB_EVENT_NAME, event, owner, repository: repo, root: process.cwd() });
+    if (productApproval?.approval) route = { run: true, stage: 'propose', worker: 'apply-product-change', issue: productApproval.issue, productApproval, reason: 'Explicit current Product Change approval' };
+    else if (productApproval?.feedback) route = { run: true, stage: 'propose', worker: 'product-change', issue: productApproval.issue, productFeedback: productApproval.feedback, productReview: productApproval, reason: 'Owner requested a Product Change revision' };
+  }
   const after = ['route', 'dispatch-prepare', 'prepare'].includes(command) ? await completedEvent(api, event, env) : null;
   if (after) {
     const next = await refinementAfterRun(api, repo, owner, after) ?? (env.LIGHTHOUSE_COMPLETION_ENABLED === 'true' ? await deliveryAfterChecks(api, repo, owner, after) : null);
@@ -101,7 +156,7 @@ async function main(command) {
     if (event.inputs?.after_run && route.run && (Number(event.inputs.issue) !== route.issue || event.inputs.stage !== route.stage)) throw Error('Completion replay target differs from the verified continuation');
   }
   let proposalReview, implementationReview;
-  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && reviewTarget(event, env.GITHUB_EVENT_NAME)) {
+  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && !productApproval && reviewTarget(event, env.GITHUB_EVENT_NAME)) {
     if (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Review actor is not authorized');
     const pr = await api(`pulls/${reviewTarget(event, env.GITHUB_EVENT_NAME)}`);
     const implementation = pr.head?.ref?.startsWith('lighthouse/implement-');
@@ -113,7 +168,7 @@ async function main(command) {
     route = { run: !feedback.handled && (implementation || !feedback.approved), stage: implementation ? feedback.approved ? 'integrate' : 'implement' : 'propose', issue: feedback.issue, reason: feedback.approved ? implementation ? 'Review approved; checking the PR for merge.' : 'Proposal approval recorded.' : 'Applying review feedback.' };
     if (implementation && feedback.approved && env.LIGHTHOUSE_COMPLETION_ENABLED !== 'true') route = { ...route, run: false, reason: 'PR approved. Merge through GitHub; automatic completion is not enabled.' };
   }
-  const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? event.issue?.number ?? route.issue);
+  const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? route.issue ?? event.issue?.number);
   const issuePath = `issues/${issueNumber}`;
   const comments = async () => {
     const all = [];
@@ -124,7 +179,7 @@ async function main(command) {
     throw Error('Comment history exceeds bounded intake');
   };
   const ownerAnswers = all => all.filter(c => c.user.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
-  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview) {
+  if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !productApproval) {
     const fresh = await api(issuePath);
     route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
     if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
@@ -134,10 +189,12 @@ async function main(command) {
   if (command === 'dispatch-prepare') {
     if (!after && (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner)) throw Error('Dispatch actor is not authorized');
     const stage = route.stage, handoff = !!route.predecessor, queue = !!(proposalReview || implementationReview);
-    if (!route.run || route.issue !== issueNumber || !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage) || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
+    const productEntry = ['product-change', 'apply-product-change'].includes(route.worker);
+    const installed = productEntry ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' : (env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage);
+    if (!route.run || route.issue !== issueNumber || !installed || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
     const issue = await api(issuePath), answers = ownerAnswers(await comments());
     const metadata = await api(''), revision = (await api(`commits/${metadata.default_branch}`)).sha;
-    if (!eligibleIssueAuthor(issue, owner, stage) || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
+    if ((!productEntry && !eligibleIssueAuthor(issue, owner, stage)) || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
     if (handoff) {
       const prior = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-input-${issueNumber}-${route.predecessor.attempt}`, 'request.json');
       const result = await readActionsJson(api, repo, route.predecessor.runId, `lighthouse-result-${issueNumber}-${route.predecessor.attempt}`, 'envelope.json');
@@ -147,13 +204,13 @@ async function main(command) {
     if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
     const eventRunId = after ? String(after.workflow_run.id) : undefined;
     const feedback = implementationReview ?? proposalReview;
-    const worker = feedbackWorker(feedback);
-    const feedbackIdentity = worker ? feedbackKey(feedback) : undefined;
+    const worker = route.worker ?? feedbackWorker(feedback);
+    const feedbackIdentity = worker === 'apply-review' ? feedbackKey(feedback) : undefined;
     const router = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
     // Review events can run on a PR merge ref, which is not a dispatchable branch.
     // Only an explicit owner dispatch selects a workflow branch; native events use main.
     const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
-    const request = { schemaVersion: 1, id: dispatchId(repo, feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(worker ? { worker, feedbackKey: feedbackIdentity } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
+    const request = { schemaVersion: 1, id: dispatchId(repo, feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(worker ? { worker, ...(feedbackIdentity ? { feedbackKey: feedbackIdentity } : {}) } : {}), ...(route.productApproval?.approval ? { productApproval: { ...route.productApproval.approval, pullRequest: route.productApproval.pullRequest, head: route.productApproval.head, issue: route.productApproval.issue, changeName: route.productApproval.changeName } } : {}), ...(route.productFeedback ? { productFeedback: route.productFeedback } : {}), ...(route.productReview && !route.productApproval?.approval ? { productReview: { pullRequest: route.productReview.pullRequest, head: route.productReview.head, issue: route.productReview.issue, changeName: route.productReview.changeName } } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', taskDigest: taskDigest(issue, answers) };
     const recorded = await recordDispatch(api, repo, request);
     await output('send', String(recorded.send));
     await output('artifact', dispatchArtifact(request));
@@ -163,8 +220,8 @@ async function main(command) {
     return;
   }
   if (command === 'route') {
-    if (route.run && !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage)) route = { run: false, reason: 'Stage is not installed.' };
-    await output('stage', route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? '');
+    if (route.run && (['product-change', 'apply-product-change'].includes(route.worker) ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED !== 'true' : !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage))) route = { run: false, reason: 'Requested workflow is not installed.' };
+    await output('stage', route.stage ?? ''); await output('worker', route.worker ?? route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? '');
     if (implementationReview) await api(`issues/${implementationReview.number}/comments`, 'POST', { body: implementationReview.handled ? 'This feedback has already been applied.' : `${route.reason} [Follow progress](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
     else if (proposalReview) await api(`issues/${proposalReview.number}/comments`, 'POST', { body: proposalReview.handled ? 'This feedback has already been applied. Review the latest proposal diff.' : proposalReview.approved ? `Approval received for commit \`${proposalReview.head}\`. Implementation has not started.` : `Updating the proposal with your feedback. [Follow progress](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
     else if (env.GITHUB_EVENT_NAME === 'issue_comment' && env.GITHUB_ACTOR === owner && !route.run) await api(`${issuePath}/comments`, 'POST', { body: `No agent started: ${route.reason}. If you are reviewing a proposal, comment on its PR. [Routing details](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
@@ -173,9 +230,10 @@ async function main(command) {
   if (command === 'prepare') {
     const handoff = env.LIGHTHOUSE_IMPLEMENT_HANDOFF === 'true';
     if (handoff && !after) route = { run: env.GITHUB_ACTOR === owner && !reviewTarget(event, env.GITHUB_EVENT_NAME) && ['issues', 'issue_comment', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), stage: 'implement', issue: issueNumber };
+    const productWorker = dispatch?.request.worker === 'product-change';
     if (!route.run || issueNumber !== route.issue || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Stage not authorized');
     const issue = await api(issuePath);
-    if (!eligibleIssueAuthor(issue, owner, route.stage) || issue.state !== 'open' || issue.pull_request || issue.labels.some(x => ['agent-working', 'human-working'].includes(x.name))) throw Error('Issue not eligible');
+    if (!productWorker && !eligibleIssueAuthor(issue, owner, route.stage) || issue.state !== 'open' || issue.pull_request || issue.labels.some(x => ['agent-working', 'human-working'].includes(x.name))) throw Error('Issue not eligible');
     const repository = await api('');
     const baseRevision = (await api(`commits/${repository.default_branch}`)).sha;
     const revision = { sha: implementationReview ? implementationReview.head : baseRevision };
@@ -237,7 +295,7 @@ async function main(command) {
       }
     }
     if (proposalReview && (!issue.labels.some(x => x.name === 'ready') || proposalReview.base !== repository.default_branch)) throw Error('Proposal is not ready or targets a non-default branch');
-    if (stage === 'propose' && !proposalReview && !implementationReview) {
+    if (stage === 'propose' && !productWorker && !proposalReview && !implementationReview) {
       if (!issue.labels.some(x => x.name === 'ready')) throw Error('Proposal requires a ready issue');
       predecessor = continuation?.request.refinement ?? await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers) });
       if (predecessor.request.stage !== 'refine' || predecessor.request.issue !== issueNumber || predecessor.request.sourceRevision !== revision.sha || predecessor.envelope.result.status !== 'passed') throw Error('Continuation refinement is invalid');
@@ -248,7 +306,12 @@ async function main(command) {
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
-    const snapshot = { autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const authorizationDigest = digest(JSON.stringify({ repository: repo, issue: issueNumber, owner, routerRunId: dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID, routerAttempt: dispatch?.request.routerAttempt ?? Number(env.GITHUB_RUN_ATTEMPT), eventName: dispatch?.request.eventName ?? env.GITHUB_EVENT_NAME, eventId: dispatch?.request.event?.comment?.id ?? dispatch?.request.event?.inputs?.issue ?? issueNumber, stage, worker: dispatch?.request.worker ?? stage }));
+    const policyDigest = digest(JSON.stringify({ repository: repo, owner, workflowRevision: dispatch?.request.workflowRevision ?? env.GITHUB_SHA, sourceRevision: revision.sha, productChangeEnabled: env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' }));
+    const productChangeName = productWorker ? dispatch.request.productFeedback?.changeName ?? dispatch.request.event.inputs?.change_name?.trim() ?? `issue-${issueNumber}-product-change` : undefined;
+    if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
+    const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
+    const snapshot = { autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     await output('source_revision', revision.sha);
@@ -257,6 +320,27 @@ async function main(command) {
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
+    if (productWorker) {
+      const bridge = await loadProductBridge();
+      let productReview = dispatch.request.productReview;
+      if (!productReview) {
+        const pulls = await api('pulls?state=open&per_page=100');
+        if (pulls.length >= 100) throw Error('Open PR list exceeds bounds while resuming Product Change');
+        const existing = pulls.find(pr => (pr.head?.ref?.startsWith(`lighthouse/implement-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${issueNumber}-`)) && pr.body?.includes('<!-- lighthouse-product-change-review:'));
+        if (existing) productReview = { pullRequest: existing.number, head: existing.head.sha };
+      }
+      let existingFiles;
+      if (productReview) {
+        const pr = await api(`pulls/${productReview.pullRequest}`);
+        if (pr.head.sha !== productReview.head) throw Error('Product Change PR changed before feedback was prepared');
+        existingFiles = (await (await import('./product-change-actions.mjs')).loadProductCandidateFromPullRequest(api, repo, pr, productChangeName)).files;
+      }
+      const productChange = await prepareProductChange(process.cwd(), productChangeName, existingFiles, bridge);
+      context.request.worker = 'product-change';
+      context.authorization = { status: 'verified', verifiedBy: 'GitHub Actions workflow', authorizedStage: stage, owner, entry: 'product-idea', event: env.GITHUB_EVENT_NAME };
+      context.productChange = { ...productChange, baselineDigest, idea: `${issue.title}\n\n${issue.body ?? ''}`, scope: issue.body ?? issue.title, ...(dispatch.request.productFeedback ? { feedback: dispatch.request.productFeedback } : {}), ...(productReview ? { review: productReview } : {}), parent: { issue: issueNumber, stage, authorizationDigest, policyDigest, sourceRevision: revision.sha } };
+      context.contract.rules += ' Prepare only the Product Change candidate in context.productChange. The issue is the authorized idea. Do not require Ready or Planned stage evidence. Return productChange outcome and proposed files under its exact change root. A product approval and trusted apply must occur before a parent delivery handoff; this request grants no implementation authority.';
+    }
     if (triage) context.triage = triage.envelope.result.output;
     if (stage === 'triage') context.contract.rules += ' Preserve the exact issue body in output.requestAnalysis.originalRequest. Return output.estimate and output.requestAnalysis following /harness/request-triage.md. Stop at triaged; never authorize or dispatch refinement.';
     if (predecessor || proposalReview) {
@@ -344,7 +428,29 @@ async function main(command) {
     const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
     let proposalLink = '', prStateProof = '';
-    if (snapshot.stage === 'propose' && value.result.status === 'passed') {
+    if (snapshot.worker === 'product-change') {
+      const product = value.result.output?.productChange;
+      if (!product || product.entry !== 'idea') throw Error('Product Change worker returned no authorized idea outcome');
+      if (product.outcome === 'candidate') {
+        if (product.changeName !== snapshot.productChangeName || product.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate differs from its authenticated preparation context');
+        const bridge = await loadProductBridge();
+        const validation = await validateProductCandidate(process.cwd(), product.changeName, product.files, bridge);
+        if (validation.digest !== product.proposalDigest || validation.changeId !== product.changeId || validation.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate or baseline changed during validation');
+        if (product.providerValidation.status !== 'passed' || product.providerValidation.diagnosticCount !== validation.diagnosticCount) throw Error('Product Change provider validation evidence does not match the host result');
+        const published = await publishProductChangePullRequest(api, repo, snapshot, product, { validation, runUrl, beforeWrite: async () => {
+          if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
+          checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
+        } });
+        await writeFile(join(dir, 'product-review.json'), JSON.stringify({ pullRequest: published.pullRequest.number, head: published.binding.head, reviewKey: published.binding.key, changeName: product.changeName, changeId: product.changeId, proposalDigest: product.proposalDigest, baselineDigest: product.baselineDigest }));
+        proposalLink = `\n\n[Product decision on PR #${published.pullRequest.number}](${published.pullRequest.html_url}). The explicit action authorizes trusted product apply; implementation and merge remain separate.`;
+        await summary(`### Product Change review\n[PR #${published.pullRequest.number}](${published.pullRequest.html_url})\n\nProvider overlay and OpenSpec validation passed. Waiting for the explicit owner product decision.`);
+      } else if (product.outcome === 'aligned') {
+        proposalLink = '\n\nAccepted product intent already covers this idea. No Product Change was created; delivery still needs its own authorization.';
+      } else {
+        proposalLink = `\n\nProduct preparation is waiting for one owner decision: ${product.question}`;
+      }
+    }
+    if (snapshot.worker !== 'product-change' && snapshot.stage === 'propose' && value.result.status === 'passed') {
       const files = await prepareProposal(issueNumber, value.result.output.files);
       const recheck = async () => {
         const issue = await api(issuePath);
@@ -395,7 +501,8 @@ async function main(command) {
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['triage', 'refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nThe owner can reply here to continue ${snapshot.stage}.` : '';
     const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
-    const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->\n</details>`;
+    const productWorkflowMarker = snapshot.worker === 'product-change' ? `\n<!-- lighthouse-product-workflow:${snapshot.productChangeName} -->` : '';
+    const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.worker === 'product-change' ? value.effect.body : snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${productWorkflowMarker}\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
     const label = snapshot.stage === 'implement' && prStateProof ? 'pr-draft' : ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : 'needs-info';
