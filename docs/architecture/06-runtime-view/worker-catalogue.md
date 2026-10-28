@@ -94,3 +94,13 @@ Installed with `--with-maintenance`, enabled separately by repository variables.
 [Report publisher](../../../src/packages/sdlc/src/worker-reports.mjs) · [Operator setup](../../../src/packages/sdlc/github-actions.md#worker-error-reports)
 
 One issue groups each worker/cause pair, with affected issues, execution links, observed counts and a next action. A serialized job uses an owner-selected index issue to record creation intent before sending. It never copies logs or agent prose. Same-request recovery closes resolved reports; a new failure reopens the same report. Missing evidence stays unresolved.
+
+## Bounded unattended compositions
+
+The opt-in [unattended workflow](../../../src/packages/sdlc/workflows/lighthouse-sdlc-unattended.yml) runs fast-forward or test-first hotfix through the existing lifecycle contracts. A trusted [host adapter](../../../src/packages/sdlc/src/unattended-actions.mjs) authenticates owner intent and policy, serializes the issue, supplies isolated engine executions and retains candidate/check evidence. The read-only reviewer uses a distinct configured model and returns a candidate-bound engineering judgement. The host performs publication and separately delegated integration after fresh checks; model output grants no permission.
+
+Hotfix regression tests run against unchanged production code before repair; their bytes and RED/GREEN receipts remain bound to independent review. Scope and correction limits stop the composition before publication or integration. Existing supervised workers remain independently invocable. See [operator configuration](../../../src/packages/sdlc/unattended.md).
+
+<!-- pdac:cite id="FR-FAST-FORWARD-DELIVERY" digest="sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e" -->
+
+<!-- pdac:cite id="FR-HOTFIX-ROUTE" digest="sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3" -->

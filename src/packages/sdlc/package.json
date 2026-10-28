@@ -39,7 +39,8 @@
     "schemas",
     "skills",
     "workflows",
-    "src"
+    "src",
+    "unattended.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -84,6 +85,7 @@
     "./github-profile": "./src/github-profile.mjs",
     "./product-change": "./src/product-change.mjs",
     "./product-change-actions": "./src/product-change-actions.mjs",
-    "./schemas/product-change.schema.json": "./schemas/product-change.schema.json"
+    "./schemas/product-change.schema.json": "./schemas/product-change.schema.json",
+    "./unattended": "./src/unattended.mjs"
   }
 }

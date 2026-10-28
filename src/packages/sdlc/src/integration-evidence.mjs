@@ -3,6 +3,7 @@ import { authorizeCompletion } from './completion.mjs';
 import { createHash } from 'node:crypto';
 import { fingerprint, sha } from './completion.mjs';
 import { validateEvidenceRecord, validateEvidenceIndex } from './evidence.mjs';
+import { verifyUnattendedIntegration } from './unattended.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -72,7 +73,9 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
       const review = await api(`pulls/${binding.pr}/reviews/${approval.id}`);
       approved = review.user?.login === owner && review.state === 'APPROVED' && review.commit_id === binding.head;
     }
-    if (run.repository?.full_name !== binding.repository || !(manual || approved) || run.path !== (workflow.dispatchOrigin ? stagePath('integrate') : '.github/workflows/lighthouse-sdlc-router.yml') || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
+    const delegated = await verifyUnattendedIntegration(api, receipt.authorization, run, payload.binding);
+    const expectedPath = delegated ? '.github/workflows/lighthouse-sdlc-unattended.yml' : workflow.dispatchOrigin ? stagePath('integrate') : '.github/workflows/lighthouse-sdlc-router.yml';
+    if (run.repository?.full_name !== binding.repository || !(delegated || manual || approved) || run.path !== expectedPath || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
     return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'] };
   }
   if (pinned) throw Error('Previously supplied integration evidence is unavailable or stale');

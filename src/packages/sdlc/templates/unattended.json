@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "routes": [
+    "ff",
+    "hotfix"
+  ],
+  "paths": [
+    "src/features/example/",
+    "tests/example/"
+  ],
+  "reviewerProfile": "plan",
+  "allowFivePoint": false,
+  "merge": false,
+  "maxCorrections": 2,
+  "timeoutSeconds": 3600,
+  "hotfix": {
+    "setupCommands": [],
+    "testPaths": [
+      "tests/example/"
+    ],
+    "modules": {
+      "example": [
+        "src/features/example/",
+        "tests/example/"
+      ]
+    },
+    "regressionCommand": [
+      "node",
+      "--test",
+      "tests/example/regression.test.mjs"
+    ],
+    "failurePattern": [
+      "ERR_ASSERTION"
+    ]
+  }
+}
