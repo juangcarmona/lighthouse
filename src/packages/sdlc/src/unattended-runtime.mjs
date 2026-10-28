@@ -87,7 +87,15 @@ export async function executeUnattendedStage({ env, root, request, source, conte
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [fileURLToPath(new URL('./opencode-execute.mjs', import.meta.url))], { env: childEnv, stdio: 'inherit', signal });
     child.once('error', reject);
-    child.once('close', code => code === 0 ? resolve() : reject(Error('Independent engine execution failed: ' + request.worker)));
+    child.once('close', async code => {
+      if (code === 0) return resolve();
+      let detail = '';
+      try {
+        const failure = await json(join(run, 'engine-error.json'));
+        if (failure.schemaVersion === 1 && typeof failure.message === 'string') detail = ': ' + failure.message.slice(0, 3000);
+      } catch {}
+      reject(Error('Independent engine execution failed: ' + request.worker + detail));
+    });
   });
   const envelope = await json(join(run, 'envelope.json'));
   const errors = validateStageEnvelope(envelope, request);

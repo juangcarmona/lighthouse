@@ -205,7 +205,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         await notify('Integrated · ' + route + '\n\n[PR #' + pr.number + '](' + pr.html_url + ') was merged at ' + result.sha + '. Post-merge review follows the existing CI/completion policy. Release and deployment have not been established by this integration result.');
         return { ...result, postMerge };
       },
-      stop: async reason => { await notify('Blocked · ' + route + '\n\n' + reason + '\n\nYour next action: inspect the retained candidate and resolve this blocker before a new request. No automatic retry is scheduled.' + (published ? '\n\n[Candidate PR](' + published.html_url + ')' : '')); },
+      stop: async reason => { await notify('Blocked · ' + route + '\n\n' + reason + '\n\nYour next action: inspect the linked execution logs and retained artifacts, then resolve this blocker before a new request. No automatic retry is scheduled.' + (published ? '\n\n[Candidate PR](' + published.html_url + ')' : '')); },
     } });
     await writeFile(join(root, 'report.json'), JSON.stringify(outcome, null, 2));
     return outcome;
