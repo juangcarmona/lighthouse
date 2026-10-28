@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.15.2
+
+### Patch Changes
+
+- e92ef65: # Bound browser execution
+
+  Serialize implementation commands with terminal receipts and process-group cleanup. Add bounded operator task limits for agent and validation containers, with browser headroom and distinct resource, abort, timeout and cancellation diagnostics.
+
 ## 0.15.1
 
 ### Patch Changes
