@@ -15,6 +15,10 @@ export async function writableTree(root) {
     else throw Error('Workspace must contain regular files only');
   }
 }
+export function restoreWorkspaceOwnership(root, config) {
+  // Checks can create private directories; CHOWN alone cannot traverse another UID's tree.
+  execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--cap-add', 'DAC_OVERRIDE', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup'], { stdio: 'ignore', timeout: 30000 });
+}
 export async function prepareWorkspace(root, config) {
   await writableTree(root);
   // npm workspaces chmod linked executables; write permission alone is insufficient.

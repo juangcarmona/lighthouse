@@ -323,3 +323,14 @@ test('draft observation can await CI but never bypasses the final integration el
   pr.draft = false; pr.mergeable_state = 'clean';
   assert.equal((await read()).mergeable, true);
 });
+
+test('rejected merge preflight never attempts or recovers a merge', async () => {
+  const calls = [];
+  const api = async (path, method) => {
+    calls.push({ path, method });
+    return { merged: true, head: { sha: head }, merge_commit_sha: merged };
+  };
+  await assert.rejects(mergeAccepted(api, observation, async () => observation,
+    async () => { throw Error('Owner paused delivery'); }), /Owner paused/);
+  assert.deepEqual(calls, []);
+});

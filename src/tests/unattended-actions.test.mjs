@@ -244,13 +244,14 @@ test('delegated integration honors owner draft holds and new PR feedback before 
 
 
 test('the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch', async t => {
+  for (const interrupt of [null, 'pause', 'cancel', 'pause-before-publication', 'cancel-before-publication', 'post-merge-dispatch-error', 'post-merge-notification-error', 'post-merge-dispatch-and-notification-error']) await t.test(interrupt ?? 'success', async t => {
   const f = await fixture(); f.policy.merge = true;
   const originalApi = f.api, events = [];
   const revision = execFileSync('git', ['-C', f.env.LIGHTHOUSE_SOURCE_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const merged = 'c'.repeat(40), evidence = 'd'.repeat(40);
   const profile = { schemaVersion: 1, profileVersion: 1, repository: 'owner/repo', intake: 'collaborators', requiredChecks: [{ context: 'repository', integrationId: 7 }], requiredApprovals: 0,
     evidenceBranch: 'process/data', completion: { publishEvidence: true, postMergeWorkflows: ['verify.yml'] } };
-  let pr = null, integrated = false, promotionCalls = 0;
+  let pr = null, integrated = false, promotionCalls = 0, inspections = 0;
   t.mock.method(globalThis, 'fetch', async () => {
     promotionCalls++; pr.draft = false; pr.mergeable_state = 'clean';
     // Existing CI reconciliation completed the same transition just before this mutation.
@@ -258,6 +259,7 @@ test('the native host integrates with concurrent readiness and retains its merge
   });
   f.api = async (path, method = 'GET', body) => {
     events.push({ path, method, body });
+    if (integrated && path === 'issues/1/comments' && method === 'POST' && interrupt?.includes('notification')) throw Error('Notifications unavailable');
     if (path === 'commits/main') return { sha: integrated ? merged : revision };
     if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
     if (path.startsWith('rules/branches/process')) return ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
@@ -267,7 +269,12 @@ test('the native host integrates with concurrent readiness and retains its merge
     if (path.startsWith('actions/runs/123/jobs')) return { jobs: [{ check_run_url: 'https://api.github.com/repos/owner/repo/check-runs/99' }] };
     if (path.includes('/check-runs?')) return { check_runs: [{ id: 1, name: 'repository', head_sha: 'b'.repeat(40), app: { id: 7 }, status: 'completed', conclusion: 'success' }] };
     if (path.includes('/statuses')) return [];
-    if (path.startsWith('pulls/3/files')) return ['src/feature/rule.mjs', 'tests/edge.test.mjs'].map(filename => ({ filename, sha: 'b'.repeat(40), status: 'modified' }));
+    if (path.startsWith('pulls/3/files')) {
+      // Arrive during the last observation, after its issue/authority read and before the merge effect.
+      if (++inspections === 3 && interrupt === 'pause') f.labels.push('human-working');
+      if (inspections === 3 && interrupt === 'cancel') process.emit('SIGTERM');
+      return ['src/feature/rule.mjs', 'tests/edge.test.mjs'].map(filename => ({ filename, sha: 'b'.repeat(40), status: 'modified' }));
+    }
     if (path === 'pulls' && method === 'POST') {
       pr = await originalApi(path, method, body);
       Object.assign(pr, { title: body.title, body: body.body, draft: true, changed_files: 2, node_id: 'fixture-pr', mergeable: true, mergeable_state: 'draft',
@@ -283,16 +290,37 @@ test('the native host integrates with concurrent readiness and retains its merge
     if (path.startsWith('git/trees/' + evidence)) return { sha: evidence, truncated: false, tree: [] };
     if (path === 'git/refs/heads/process/data' && method === 'PATCH') return null;
     if (path.startsWith('actions/workflows/verify.yml/runs')) return { workflow_runs: [] };
-    if (path === 'actions/workflows/verify.yml/dispatches' && method === 'POST') return null;
-    return originalApi(path, method, body);
+    if (path === 'actions/workflows/verify.yml/dispatches' && method === 'POST') {
+      if (body.ref === 'main' && interrupt?.includes('dispatch')) throw Error('Post-merge CI unavailable');
+      return null;
+    }
+    const response = await originalApi(path, method, body);
+    if (path === 'git/refs' && method === 'POST' && interrupt === 'pause-before-publication') f.labels.push('human-working');
+    if (path === 'git/refs' && method === 'POST' && interrupt === 'cancel-before-publication') process.emit('SIGTERM');
+    return response;
   };
   try {
     const result = await runGithubUnattended(f);
+    if (interrupt?.startsWith('pause') || interrupt?.startsWith('cancel')) {
+      assert.equal(result.status, 'blocked', 'A late ' + interrupt + ' must stop the merge');
+      assert.equal(integrated, false); assert.equal(events.filter(e => e.method === 'PUT').length, 0);
+      if (interrupt.endsWith('before-publication')) assert.equal(events.filter(e => e.path === 'pulls' && e.method === 'POST').length, 0);
+      return;
+    }
     assert.equal(result.status, 'passed', result.reason); assert.equal(result.integrated.sha, merged);
+    if (interrupt?.includes('dispatch')) {
+      assert.equal(result.integrated.postMerge[0].status, 'unavailable');
+      assert.match(result.integrated.postMerge[0].reason, /CI unavailable/);
+    }
+    if (interrupt?.includes('notification')) {
+      assert.ok(result.integrated.notifications.length > 0);
+      assert.match(result.integrated.notifications[0].reason, /Notifications unavailable/);
+    }
     assert.equal(promotionCalls, 1); assert.equal(events.filter(e => e.method === 'PUT').length, 1);
     const bundle = events.findIndex(e => e.path === 'git/refs/heads/process/data' && e.method === 'PATCH');
     const postMerge = events.findIndex(e => e.path === 'actions/workflows/verify.yml/dispatches' && e.body.ref === 'main');
     assert.ok(bundle > 0 && postMerge > bundle);
     assert.ok(!f.labels.includes('agent-working'));
   } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
 });

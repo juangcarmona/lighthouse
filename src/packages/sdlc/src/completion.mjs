@@ -157,11 +157,13 @@ export function assertFresh(before, after) {
 export function assertChecks(observation) {
   if (!observation.checks.length || observation.checks.some(c => c.status !== 'passed')) throw Error('Required checks are missing, pending or failed');
 }
-export async function mergeAccepted(api, snapshot, recheck) {
+export async function mergeAccepted(api, snapshot, recheck, beforeMerge = async () => {}) {
   const fresh = await recheck();
   if (fresh.merged && fresh.binding.head === snapshot.binding.head) return { state: 'merged', sha: fresh.merge, recovered: true };
   assertFresh(snapshot, fresh); assertChecks(fresh);
   if (!fresh.mergeable) throw Error('GitHub has not declared the PR mergeable under its rules');
+  // Authority failures precede the attempted effect and cannot enter lost-response recovery.
+  await beforeMerge();
   try {
     const result = await api(`pulls/${snapshot.binding.pr}/merge`, 'PUT', { sha: snapshot.binding.head, merge_method: 'squash' });
     if (!result.merged || !sha(result.sha)) throw Error('GitHub did not confirm merge');
