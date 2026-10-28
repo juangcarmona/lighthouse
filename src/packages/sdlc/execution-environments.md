@@ -42,6 +42,8 @@ See the source repository's `src/examples/opencode-engine/ENVIRONMENTS.md` for l
 
 Implementation and independent validation each create a local Git repository containing one candidate snapshot commit, without remotes, checkout configuration or hooks. This supports Git-based working-tree checks without exposing the original checkout. It does not certify earlier commits; full-history security checks remain a separate repository CI responsibility.
 
+Agent evidence is bounded to 200 regular files and 64 MiB per collection, including static previews, screenshots and reports. Symbolic links at the collection root or within it are rejected. An exceeded budget reports the file count or byte count that crossed its limit; larger collections must be curated before handoff.
+
 ## Resource limits and command completion
 
 The optional operator setting `resources` accepts `implementationPids` and `planningPids`, each an integer from 128 to 4096. Defaults are 1024 and 128. Implementation and independent validation use the same implementation limit. These are Linux task slots, including threads; they do not count workflow jobs. Measure a representative sequential browser suite before lowering the limit or increasing browser concurrency.

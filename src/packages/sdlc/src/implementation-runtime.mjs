@@ -42,12 +42,16 @@ export async function copyEvidence(source, destination) {
       if (stat.isDirectory()) await visit(path, name);
       else {
         bytes += stat.size; count++;
-        if (bytes > 32 * 1024 * 1024 || count > 200) throw Error('Evidence exceeds 200 files or 32 MiB');
+        if (count > 200) throw Error(`Evidence exceeds 200 files (${count} observed)`);
+        if (bytes > 64 * 1024 * 1024) throw Error(`Evidence exceeds 64 MiB (${bytes} bytes observed)`);
         await mkdir(dirname(join(destination, name)), { recursive: true }); await copyFile(path, join(destination, name));
       }
     }
   }
-  try { await lstat(source); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
+  try {
+    const stat = await lstat(source);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw Error('Unsafe evidence root');
+  } catch (error) { if (error.code === 'ENOENT') return; throw error; }
   await visit(source);
 }
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
