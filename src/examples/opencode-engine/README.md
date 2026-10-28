@@ -35,6 +35,14 @@ The adapter keeps complete diagnostic lines up to 8,388,608 characters. It recor
 
 Engine and validation containers use Docker’s init process to reap orphaned browser children after interrupted checks. Keep browser concurrency within the configured CPU, memory and process limits.
 
+## Provider transport
+
+Both example policies select HTTP streaming for OpenAI through `providers.openai.settings.transport`. A provider WebSocket closure can leave OpenCode with a nonzero exit status even after subsequent steps finish. HTTP avoids that connection-reuse path while preserving the model, authentication and permissions. See the [OpenCode transport settings](https://opencode.ai/v2/docs/providers/#websockets).
+
+Rebuild the affected engine images and update their immutable operator pins between executions. Provider errors still fail the worker; a completed model message does not replace a successful engine exit, independent checks or required review.
+
+After an atomic replacement of the operator configuration, restart idle runners that bind-mount that file so they read the new inode. Runners mounting its parent directory see the replacement directly. Verify the configured image from inside each runner before admitting work.
+
 ## Browser resources and command completion
 
 See the packaged [resource and command-completion contract](../../packages/sdlc/execution-environments.md#resource-limits-and-command-completion) for operator settings, command receipts and failure diagnostics. Update each adopter through the [workflow installer](../../packages/sdlc/README.md#install-or-update-workflows), validate one consumer and then roll out between runs. Adapter and mounted-skill updates require a new immutable workflow pin; an engine-image rebuild is needed only when its tools, binary or baked policy change.
