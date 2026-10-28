@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat } 
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks, copyEvidence } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks, copyEvidence, restoreWorkspaceOwnership } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 test('browser preview evidence fits while byte and file budgets remain bounded', async () => {
   const root = await mkdtemp(join(tmpdir(), 'browser-evidence-'));
@@ -85,6 +85,23 @@ test('container checks install workspace bins and execute temporary tools', { sk
     assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0]);
   } finally {
     execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('ownership recovery traverses private build directories created by the engine UID', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'workspace-private-'));
+  const image = process.env.LIGHTHOUSE_TEST_IMAGE;
+  try {
+    await chmod(root, 0o777);
+    execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '20003:20003', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/workspace`, '--entrypoint', 'node', image, '-e', 'const fs=require("node:fs"); fs.mkdirSync("/workspace/private",{mode:0o700}); fs.mkdirSync("/workspace/private/nested",{mode:0o700}); fs.writeFileSync("/workspace/private/nested/report","retained",{mode:0o600});']);
+    restoreWorkspaceOwnership(root, { image });
+    for (const path of ['private', 'private/nested', 'private/nested/report']) {
+      const info = await stat(join(root, path));
+      assert.equal(info.uid, process.getuid()); assert.equal(info.gid, process.getgid());
+    }
+  } finally {
+    restoreWorkspaceOwnership(root, { image });
     await rm(root, { recursive: true, force: true });
   }
 });

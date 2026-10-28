@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks } from './implementation-runtime.mjs';
+import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
@@ -211,7 +211,7 @@ async function main() {
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     if (slot !== undefined) closeSync(slot);
     // Read-only stages also create engine-owned command receipt directories.
-    try { docker(['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--mount', `type=bind,src=${dir},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
+    try { restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
     await rm(dir, { recursive: true, force: true });
   }
 }
