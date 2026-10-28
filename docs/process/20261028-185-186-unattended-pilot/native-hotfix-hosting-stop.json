@@ -1,0 +1,332 @@
+{
+  "run": 40787092437,
+  "artifact": 12860578805,
+  "artifactSha256": "43507883e3c874468e34f01f44e40ad3df1ab55ae79f8588fc6a1ca2f1afcf6f",
+  "report": {
+    "status": "blocked",
+    "evidence": [
+      {
+        "kind": "red",
+        "receipt": {
+          "runId": "e627e6ae70883d2d36d741f2c6e324e8de8731e23997db21ac4377e17866349e",
+          "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+          "changesDigest": "f4ae453dc7eb2cc307680380dd375d86762aa2e1606686611b3fc83dc0fd5b82",
+          "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+          "limits": {
+            "cpus": 2,
+            "memory": "4g",
+            "pids": 1024
+          },
+          "environment": null,
+          "checks": [
+            {
+              "command": [
+                "node",
+                "--test",
+                "src/tests/fixtures/unattended/regression.test.mjs"
+              ],
+              "exitCode": 1,
+              "execution": {
+                "status": "failed",
+                "exitCode": 1,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 21,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 38912000,
+                  "oomKills": 0
+                }
+              },
+              "log": "\u2716 inclusive boundary qualifies (1.185061ms)\n\u2714 lower value does not qualify (0.161828ms)\n\u2714 higher value qualifies (0.104539ms)\n\u2139 tests 3\n\u2139 suites 0\n\u2139 pass 2\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 75.813479\n\n\u2716 failing tests:\n\ntest at src/tests/fixtures/unattended/regression.test.mjs:5:1\n\u2716 inclusive boundary qualifies (1.185061ms)\n  AssertionError [ERR_ASSERTION]: Expected inclusive boundary\n  \n  false !== true\n  \n      at TestContext.<anonymous> (file:///workspace/src/tests/fixtures/unattended/regression.test.mjs:6:10)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.start (node:internal/test_runner/test:1262:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+            }
+          ],
+          "serviceCleanup": true
+        },
+        "tests": {
+          "src/tests/fixtures/unattended/regression.test.mjs": {
+            "content": "aW1wb3J0IHRlc3QgZnJvbSAnbm9kZTp0ZXN0JzsKaW1wb3J0IGFzc2VydCBmcm9tICdub2RlOmFzc2VydC9zdHJpY3QnOwppbXBvcnQgeyBlbGlnaWJsZSB9IGZyb20gJy4vZWxpZ2liaWxpdHkubWpzJzsKCnRlc3QoJ2luY2x1c2l2ZSBib3VuZGFyeSBxdWFsaWZpZXMnLCAoKSA9PiB7CiAgYXNzZXJ0LmVxdWFsKGVsaWdpYmxlKDIpLCB0cnVlLCAnRXhwZWN0ZWQgaW5jbHVzaXZlIGJvdW5kYXJ5Jyk7Cn0pOwoKdGVzdCgnbG93ZXIgdmFsdWUgZG9lcyBub3QgcXVhbGlmeScsICgpID0+IHsKICBhc3NlcnQuZXF1YWwoZWxpZ2libGUoMSksIGZhbHNlKTsKfSk7Cgp0ZXN0KCdoaWdoZXIgdmFsdWUgcXVhbGlmaWVzJywgKCkgPT4gewogIGFzc2VydC5lcXVhbChlbGlnaWJsZSgzKSwgdHJ1ZSk7Cn0pOwo=",
+            "mode": "100644"
+          }
+        }
+      },
+      {
+        "kind": "candidate",
+        "round": 0,
+        "review": {
+          "accepted": true,
+          "verdict": "accept",
+          "findings": []
+        }
+      }
+    ],
+    "reason": "Required CI or mergeability is pending; retain the PR for a new authorized action",
+    "nextAction": "Inspect execution evidence and resolve the identified blocker"
+  },
+  "stageExecutions": [
+    {
+      "runId": "3dc350231754a827ee4061d5be42979585842ccc9e0a6d6c1a3e8f287b485ccb",
+      "stage": "integrate",
+      "worker": "independent-review",
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 306208768,
+          "oomKills": 0
+        }
+      },
+      "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61"
+    },
+    {
+      "runId": "c384ad3253b7cbe9038c4c79fee85cbb31ce590f2c06fdbc99032fec010e99bb",
+      "stage": "triage",
+      "worker": "triage",
+      "model": "openai/gpt-6.1-sol",
+      "modelExecution": {
+        "requested": {
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "engineModel": "openai/gpt-6.1-sol#medium",
+          "source": "operator.workers",
+          "fields": {
+            "model": "operator",
+            "reasoningEffort": "operator"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 437489664,
+          "oomKills": 0
+        }
+      },
+      "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61"
+    },
+    {
+      "runId": "e627e6ae70883d2d36d741f2c6e324e8de8731e23997db21ac4377e17866349e",
+      "stage": "implement",
+      "worker": "implement",
+      "model": "openai/gpt-6.1-sol",
+      "modelExecution": {
+        "requested": {
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "engineModel": "openai/gpt-6.1-sol#medium",
+          "source": "project.workers",
+          "fields": {
+            "model": "operator",
+            "reasoningEffort": "operator"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 1024,
+          "pidsPeak": 50,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 309022720,
+          "oomKills": 0
+        }
+      },
+      "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61"
+    },
+    {
+      "runId": "eddcadcfc16b2d6f1c574f51b22d3802b5841b333d712ea1993dea2108fe132f",
+      "stage": "implement",
+      "worker": "implement",
+      "model": "openai/gpt-6.1-sol",
+      "modelExecution": {
+        "requested": {
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "engineModel": "openai/gpt-6.1-sol#medium",
+          "source": "project.workers",
+          "fields": {
+            "model": "operator",
+            "reasoningEffort": "operator"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 1024,
+          "pidsPeak": 246,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 1805410304,
+          "oomKills": 0
+        }
+      },
+      "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61"
+    },
+    {
+      "runId": "fea15b10a10a1c98eb261d436a38cb604fc2557b453856c8c38d21cc58b89602",
+      "stage": "integrate",
+      "worker": "independent-review",
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 332308480,
+          "oomKills": 0
+        }
+      },
+      "sourceRevision": "2534d80269c13605bbf7b81b1f04f6bbf7d6d5b6",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61"
+    }
+  ],
+  "preservedPullRequest": "https://github.com/juangcarmona/lighthouse/pull/202",
+  "mergeConfirmed": false,
+  "executionCost": "unavailable",
+  "providerServedModelIdentity": "unverified"
+}
