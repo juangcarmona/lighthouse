@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "runId": "fba3770f954bffc2212dd4f82ed5b9b41f538e3dac3e2d26902f2c6bb8f316ad",
+  "stage": "propose",
+  "status": "blocked",
+  "gate": "planned",
+  "input": {
+    "issue": 184,
+    "authorization": "Direct user request in this task; engineering proposal review precedes implementation",
+    "approvedProductChange": "CHG-PRODUCT-CHANGE-WORKFLOW-001",
+    "reviewedProductProposalRevision": "5042380",
+    "productBaseRevision": "0b80c1845c3ede4519a38b22ecdcc77ab8c8db57",
+    "productContext": "Provider-applied on codex/184-proposal; acceptance on main awaits merge"
+  },
+  "output": {
+    "artifacts": [
+      "proposal.md",
+      "design.md",
+      "specs/product-change-workflow/spec.md",
+      "tasks.md"
+    ],
+    "changeOverview": "proposal.md#change-overview",
+    "planningArtifactsComplete": true,
+    "implementationTasks": {
+      "pending": 18,
+      "completed": 0
+    },
+    "productApply": {
+      "status": "applied",
+      "added": 3,
+      "modified": 4,
+      "removed": 0,
+      "resultingArtifacts": 135,
+      "archive": "not performed"
+    },
+    "laterDeliveryEvidence": {
+      "status": "not performed",
+      "required": [
+        "Product worker implementation and focused tests",
+        "Controlled GitHub issue and single-PR human-approval/apply/continuation trace",
+        "Merge, release and deployment evidence under their separate authority"
+      ]
+    }
+  },
+  "evidence": [
+    {
+      "id": "product-overlay-before-apply",
+      "status": "passed",
+      "source": "ProductShape bridge 0.6.6 pre-apply validator and dry-run"
+    },
+    {
+      "id": "product-apply",
+      "status": "passed",
+      "source": "Provider-owned apply; resulting model validation and seven-artifact equality check"
+    },
+    {
+      "id": "openspec-engineering",
+      "status": "passed",
+      "source": "openspec validate issue-184-proposal --strict --no-interactive"
+    },
+    {
+      "id": "product-citations",
+      "status": "passed",
+      "source": "42 documents; 231 current citations; zero errors and warnings"
+    },
+    {
+      "id": "repository-verify",
+      "status": "passed",
+      "source": "npm run verify: 252 passed, 3 skipped; Markdown, links and public site checks passed"
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [
+    "Maintainer review of the engineering proposal, design, specification and 18 pending tasks"
+  ],
+  "nextAction": "Review the engineering proposal and tasks; trigger implementation under the original issue scope when that plan is accepted."
+}

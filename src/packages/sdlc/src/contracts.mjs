@@ -1,5 +1,6 @@
 import stageContract from '../stages.json' with { type: 'json' };
 import resultSchema from '../schemas/stage-result.schema.json' with { type: 'json' };
+import { validateProductChangeOutput } from './product-change.mjs';
 
 export const STAGES = Object.freeze(['triage', 'refine', 'propose', 'implement', 'integrate', 'review']);
 export const GATES = Object.freeze(['triaged', 'ready', 'planned', 'done']);
@@ -39,6 +40,7 @@ export function validateStageResult(value) {
   for (const field of ['missingEvidence', 'unavailableChecks', 'pendingReview']) if (!Array.isArray(value[field]) || value[field].some((item) => typeof item !== 'string' || !item.trim())) errors.push(issue(`stage-result.${field}`, `${field} must be an array of names`, field));
   if (value.input !== undefined && !isRecord(value.input)) errors.push(issue('stage-result.input', 'input must be an object when present', 'input'));
   if (value.output !== undefined && !isRecord(value.output)) errors.push(issue('stage-result.output', 'output must be an object when present', 'output'));
+  else if (isRecord(value.output) && value.output.productChange !== undefined) errors.push(...validateProductChangeOutput(value.output.productChange).map(message => issue('stage-result.product-change', message, 'output.productChange')));
   return errors;
 }
 

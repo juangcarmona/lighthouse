@@ -30,7 +30,7 @@ The issue SHALL use `ready` only for completed refinement. Starting implementati
 The implementation result SHALL link to the exact PR and run. The PR description SHALL refer to the issue without closing it, summarize the current outcome and next action, and link to evidence. Only post-merge review SHALL close the issue.
 
 <!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0" -->
-<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:7e14cf16e302995183008043d95caf100bce023e9c8a3edf0e098ae87d740c02" -->
+<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674" -->
 
 #### Scenario: Draft PR merges only after review
 

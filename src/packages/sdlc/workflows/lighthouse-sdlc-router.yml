@@ -1,6 +1,6 @@
 # Optional GitHub-native stage adapter; source owned by lighthouse-sdlc.
 name: router
-run-name: "${{ (github.event_name == 'workflow_run' && 'Delivery after CI') || inputs.stage || github.event.label.name || ((github.event.pull_request || github.event.issue.pull_request) && 'PR review') || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || github.event.pull_request.number || inputs.issue }} · ${{ github.actor }}"
+run-name: "${{ (github.event_name == 'workflow_run' && 'Delivery after CI') || inputs.workflow || inputs.stage || github.event.label.name || ((github.event.pull_request || github.event.issue.pull_request) && 'PR review') || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || github.event.pull_request.number || inputs.issue }} · ${{ github.actor }}"
 on:
   issues:
     types: [labeled, unlabeled]
@@ -26,9 +26,15 @@ on:
       stage:
         description: Authorized lifecycle stage
         required: true
-        default: refine
+        default: propose
         type: choice
         options: [triage, refine, propose, implement, integrate, review]
+      workflow:
+        description: Select the authorized workflow
+        required: true
+        default: stage
+        type: choice
+        options: [stage, product-change]
       after_run:
         description: Recheck a completed execution through the same continuation rules
         required: false
@@ -52,6 +58,7 @@ env:
   LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
   LIGHTHOUSE_AUTO_IMPLEMENT: true
   LIGHTHOUSE_COMPLETION_ENABLED: true
+  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false
 jobs:
   pr-state:
     if: >-
@@ -99,6 +106,7 @@ jobs:
       run: ${{ steps.route.outputs.run }}
       issue: ${{ steps.route.outputs.issue }}
       stage: ${{ steps.route.outputs.stage }}
+      worker: ${{ steps.route.outputs.worker }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -113,6 +121,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_COMPLETION_ENABLED: true
+          LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${{ env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED }}
         run: node src/packages/sdlc/src/issue-actions.mjs route
   dispatch:
     name: 📥 Dispatch selected stage
@@ -131,6 +140,7 @@ jobs:
     env:
       LIGHTHOUSE_ISSUE: ${{ needs.route.outputs.issue }}
       LIGHTHOUSE_STAGE: ${{ needs.route.outputs.stage }}
+      LIGHTHOUSE_WORKER: ${{ needs.route.outputs.worker }}
     steps:
       - uses: actions/checkout@v5
         with:

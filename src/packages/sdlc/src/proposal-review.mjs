@@ -21,7 +21,7 @@ export function checkProposal(pr, repo, expected) {
 export function checkImplementationPullRequest(pr, repo, expected) {
   const match = pr.head?.ref?.match(/^lighthouse\/implement-([1-9][0-9]*)-([a-f0-9]{12})$/);
   const marker = pr.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
-  if (!match || !marker?.startsWith(match[2]) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
+  if (!match || pr.body?.includes('<!-- lighthouse-product-change:') || !marker?.startsWith(match[2]) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
   if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Implementation changed during review');
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };
 }

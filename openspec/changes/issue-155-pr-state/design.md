@@ -10,7 +10,7 @@ The publisher removes `ready` when implementation starts. A new implementation P
 Owner feedback keeps the existing PR branch and returns it to draft while corrections run. A manual conversion to draft is respected for that head. Missing link metadata, a foreign PR or a stale head cannot grant readiness. A closed unmerged PR leaves the issue open with a next action. Merge remains an owner decision; the final review remains the issue-closing action.
 
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
-<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:7e14cf16e302995183008043d95caf100bce023e9c8a3edf0e098ae87d740c02" -->
+<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674" -->
 
 Issue comments link to the exact PR and run. The PR body links to the issue with `Refs #...`, states the candidate result and next action, and links to evidence. The packaged writing skill keeps the worker's public result brief; detailed receipts stay in Actions.
 
