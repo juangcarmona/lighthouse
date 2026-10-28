@@ -37,8 +37,8 @@ The maintainer approved CHG-AUTHORIZED-WORKFLOW-ENTRY-001 and its first direct-r
 <!-- pdac:cite id="BR-ROUTE-CONTRACT" digest="sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9" -->
 <!-- pdac:cite id="BR-TRIAGE-CONTRACT" digest="sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b" -->
 <!-- pdac:cite id="BR-STAGE-GATES" digest="sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e" -->
-<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:7e14cf16e302995183008043d95caf100bce023e9c8a3edf0e098ae87d740c02" -->
-<!-- pdac:cite id="UC-IMPLEMENT-CHANGE" digest="sha256:35e3f3a049565dcde4627c7c6d15a88180c2aeeca702f3f510bdc913671aa5b8" -->
-<!-- pdac:cite id="BR-LABEL-STATE" digest="sha256:47f8d74072f4a65a0646992fd7c6613a51689d24bc08fbe05de4151a19bce455" -->
+<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674" -->
+<!-- pdac:cite id="UC-IMPLEMENT-CHANGE" digest="sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6" -->
+<!-- pdac:cite id="BR-LABEL-STATE" digest="sha256:89b37e9800f3bed08ebd4a95eb64bad036c292e763b212763362af6c41623012" -->
 
 The authority-boundary and human-authority rules remain applicable. Initialization, profiles, visual tokens and package distribution were checked as neighboring concerns and are unchanged by this delivery design.

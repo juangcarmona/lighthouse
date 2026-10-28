@@ -2,7 +2,7 @@
 id: CHG-PRODUCT-CHANGE-WORKFLOW-001
 type: product-change
 title: Prepare product changes from ideas and resume issue delivery after approval
-status: draft
+status: applied
 base-revision: '0b80c1845c3ede4519a38b22ecdcc77ab8c8db57'
 operations:
   add:
@@ -38,6 +38,8 @@ ProductShape keeps ownership of product meaning, artifacts, refinement, status p
 One product workflow avoids divergent handling of ideas and issue gaps. Sharing an issue PR for a small adjustment keeps the proposed intent and the work that consumes it reviewable together. Explicit product approval preserves human ownership of meaning, while continuation under an existing bounded authorization avoids a repeated implementation request after the product prerequisite is satisfied.
 
 The selected outcomes come from issue #184: two entry modes, the small-change single-PR path, authenticated explicit product approval, separate trusted apply and automatic continuation of already-authorized parent work. This proposal adds no broader preparation, implementation, merge or release authority.
+
+The maintainer explicitly approved this Product Change in the task conversation on 2026-10-28: "I explicitly approve this product change. Apply it and continue". That decision refers to the delta reviewed at commit `5042380`, against product baseline `0b80c1845c3ede4519a38b22ecdcc77ab8c8db57`; the proposed artifact contents are unchanged.
 
 ## Affected Product Areas
 

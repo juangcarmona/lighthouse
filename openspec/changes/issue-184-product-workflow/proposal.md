@@ -4,7 +4,7 @@
 
 ## Why
 
-[Issue #184](https://github.com/juangcarmona/lighthouse/issues/184) requests a bounded product-change workflow with two entry modes: an authorized idea and an in-scope product gap found during issue delivery. The accepted model describes engineering delivery, authority boundaries and resumable runs, but does not require this product preparation, approval, apply and parent-continuation interaction. A Product Change is required before engineering planning for that new behavior.
+[Issue #184](https://github.com/juangcarmona/lighthouse/issues/184) requests a bounded product-change workflow with two entry modes: an authorized idea and an in-scope product gap found during issue delivery. At the reviewed baseline, the model described engineering delivery, authority boundaries and resumable runs without requiring this product preparation, approval, apply and parent-continuation interaction. The maintainer approved the Product Change and ProductShape applied it on this issue branch before engineering planning.
 
 The baseline at `0b80c18` validates with zero errors and warnings across 132 artifacts. The four active standalone changes cover capability reconciliation, evidence coverage, general SDLC delivery and visual-profile adoption; none defines this workflow. They remain proposals and are not product authority for this change.
 
@@ -20,23 +20,23 @@ The host authenticates explicit human product approval and binds it to the ident
 
 ## Impacted Product Areas
 
-### Existing artifacts to modify
+### Existing artifacts modified
 
 - `UC-RUN-SDLC`: add the product handoff when accepted intent is insufficient, preserving stage and gate identities.
 
-<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:7e14cf16e302995183008043d95caf100bce023e9c8a3edf0e098ae87d740c02" -->
+<!-- pdac:cite id="UC-RUN-SDLC" digest="sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674" -->
 
 - `UC-IMPLEMENT-CHANGE`: preserve implementation already performed, checkpoint dependent work and revalidate the plan after approved product apply.
 
-<!-- pdac:cite id="UC-IMPLEMENT-CHANGE" digest="sha256:35e3f3a049565dcde4627c7c6d15a88180c2aeeca702f3f510bdc913671aa5b8" -->
+<!-- pdac:cite id="UC-IMPLEMENT-CHANGE" digest="sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6" -->
 
 - `UC-CONTINUE-AGENT-RUN`: resume a waiting parent from authenticated product evidence and the exact applied branch context.
 
-<!-- pdac:cite id="UC-CONTINUE-AGENT-RUN" digest="sha256:a6ab31dcb369c8343d06e628e8a76121878d4689a1f3b28fccfd9573f3ccaa62" -->
+<!-- pdac:cite id="UC-CONTINUE-AGENT-RUN" digest="sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b" -->
 
 - `FR-AUTHORIZED-WORKFLOW-ENTRY`: expose product preparation and authenticated product continuation through the existing routing contract without granting implementation authority from an idea request.
 
-<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:8331c79365b9d40d8970a0821efaad3d961f1e07d7f78a7083b441937fbdabc8" -->
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ### Governing artifacts retained
 
@@ -83,11 +83,9 @@ The host authenticates explicit human product approval and binds it to the ident
 - `BR-PRODUCT-CHANGE-HANDOFF`: approval binding, scope, same-PR publication and safe apply/continuation conditions.
 - `FR-PRODUCT-CHANGE-WORKFLOW`: the product obligation and observable acceptance scenarios, including duplicates and recovery.
 
-### Product definition drift
+### Resolved product definition drift
 
-The existing contracts permit bounded engineering workflows but do not specify the requested product-preparation and approval-triggered apply/resumption behavior. `CHG-PRODUCT-CHANGE-WORKFLOW-001` proposes that extension while leaving the accepted model untouched.
-
-<!-- pdac-drift ids="UC-RUN-SDLC,UC-IMPLEMENT-CHANGE,UC-CONTINUE-AGENT-RUN,FR-AUTHORIZED-WORKFLOW-ENTRY" summary="Product preparation from ideas or issue gaps and approval-triggered provider apply with parent resumption need explicit product intent." -->
+The reviewed contracts permitted bounded engineering workflows without specifying the requested product-preparation and approval-triggered apply/resumption behavior. `CHG-PRODUCT-CHANGE-WORKFLOW-001` supplied that extension through approved provider apply. There is no outstanding product-definition drift for this delivery scope. Canonical baseline acceptance still awaits the issue branch's merge.
 
 ## Neighbours Checked and Left Out
 
@@ -139,10 +137,16 @@ npm run verify
 
 The issue already selects the material alternatives: two entries into one provider workflow, a shared issue PR for a small adjustment, an explicit authenticated product decision, and trusted apply followed by the authorized parent continuation. Mandatory stacked product PRs, implicit approval and a repeated implementation request would contradict the request.
 
-The delta contains three additions and four modifications, with no removals. No material product decisions remain unresolved at this drafting pass. The proposal is ready for human product review; it is not approved or applied. Approval must follow another freshness and integrity check against the then-current model and proposal.
+The delta contains three additions and four modifications, with no removals. No material product decisions remain unresolved. Immediately before recording approval, all 17 cited authorities matched the reviewed baseline, the four modified nodes' structural impact was rechecked, and latest `origin/main` still matched `0b80c18`. The integrity pass above remains valid; no proposed product meaning changed.
 
-Queue: review this product intent and delta, record any human answers verbatim in this same change, then prepare the separate spec-driven delivery proposal and tasks under the applicable authorization. This task is currently bounded to preparing the product proposal for review. There are no parked questions or new human answers. The engineering approval interface, payload shapes and publication transaction design belong to subsequent delivery planning.
+The maintainer's answer on 2026-10-28 was: "I explicitly approve this product change. Apply it and continue". The approval identifies `CHG-PRODUCT-CHANGE-WORKFLOW-001` at reviewed commit `5042380` and baseline `0b80c1845c3ede4519a38b22ecdcc77ab8c8db57`. The seven proposed artifacts have aggregate digest `sha256:6c93686ec06a39f8f83b4f39dd8736681fcb769146fb505a98118fdbfc62a8ee`, computed from sorted relative filenames and their SHA-256 content digests. Approval was supplied by the user in this task conversation; this is not a GitHub approval event or evidence that the future host authentication adapter exists.
+
+ProductShape dry-run and apply both succeeded with three additions, four modifications and no removals. The resulting branch definition validates with zero errors and warnings across 135 artifacts; the manifest is `applied` and remains in this container without archival. The provider forecast identified 22 affected citations in other live changes. Review also found four affected references here and the previously reported stale `BR-LABEL-STATE` reference. All 27 references across 22 consumer documents were re-grounded with provider-emitted citations after checking their unchanged engineering meaning. Existing work keeps its original delivery status; refreshed citations do not attest the new worker's implementation.
+
+Queue: prepare the separate [engineering proposal and tasks](../issue-184-proposal/proposal.md) against this approved and applied branch context. There are no parked questions. The engineering approval interface, payload shapes and publication transaction design belong to delivery planning. Merge and release remain separate decisions.
+
+The engineering proposal, design, specification and 18 pending tasks are now drafted in that linked change. Its Planned decision awaits the maintainer's review. Product apply and engineering planning do not attest implementation of the new worker.
 
 ## Open Questions for the Product Owner
 
-None. The observable product alternatives above are selected by issue #184. Human product approval of this delta remains outstanding.
+None. The observable product alternatives above are selected by issue #184, and the maintainer has explicitly approved the identified delta.
