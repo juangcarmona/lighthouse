@@ -41,3 +41,24 @@ Cancellation first removes workload containers, then removes services. Forced ho
 See the source repository's `src/examples/opencode-engine/ENVIRONMENTS.md` for local build, host installation, update, rollback and clean consumer acceptance instructions. Registry publication and production deployment are not part of this profile.
 
 Implementation and independent validation each create a local Git repository containing one candidate snapshot commit, without remotes, checkout configuration or hooks. This supports Git-based working-tree checks without exposing the original checkout. It does not certify earlier commits; full-history security checks remain a separate repository CI responsibility.
+
+## Resource limits and command completion
+
+The optional operator setting `resources` accepts `implementationPids` and `planningPids`, each an integer from 128 to 4096. Defaults are 1024 and 128. Implementation and independent validation use the same implementation limit. These are Linux task slots, including threads; they do not count workflow jobs. Measure a representative sequential browser suite before lowering the limit or increasing browser concurrency.
+
+```json
+{
+  "resources": {
+    "implementationPids": 1024,
+    "planningPids": 128
+  }
+}
+```
+
+Merge this optional section into the operator configuration; preserve its image and authentication settings. The pinned adapter reads it at the start of each execution. Current runs keep their original settings. Older adapters do not consume these fields: update each adopter's immutable workflow pin through the supported installer before relying on them. The defaults require no configuration change.
+
+The [implementation skill](skills/implement/SKILL.md#workspace-command-slot) uses one managed command slot for installation, builds and tests. Each attempt has a unique receipt and log. A background shell response means execution is still pending; the agent waits for the terminal receipt before editing or retrying. Stopping a managed command terminates its process group, including background preview servers, before releasing the slot.
+
+The adapter supervises the image's existing entrypoint and each independent check with the same packaged Node helper. On Linux cgroup v2, it records task peak/limit, task-limit rejections, peak memory and OOM kills while the container still exists. `runtime.json.execution` and each `checks.json` entry retain the sanitized diagnostic summary, exit code and signal. Unsupported counters remain `null`. A confirmed resource rejection, abort, timeout or cancellation fails the attempt; diagnostics do not grant publication or retry authority.
+
+Adapter and mounted-skill updates require a new workflow source pin, without an engine-image rebuild. Rebuild only when changing tools, the engine binary or baked image policy. Follow the [workflow update procedure](README.md#install-or-update-workflows), validate on one consumer, then roll out to the remaining repositories between runs.

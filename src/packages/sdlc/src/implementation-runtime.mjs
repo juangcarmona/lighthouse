@@ -3,6 +3,8 @@ import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { changesDigest } from './implementation.mjs';
 import { startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
+import { executionLimits, resourceArgs, executionReceipt, executionFailure } from './execution-resources.mjs';
+import { fileURLToPath } from 'node:url';
 
 export async function writableTree(root) {
   await chmod(root, 0o777);
@@ -49,9 +51,12 @@ export async function copyEvidence(source, destination) {
 }
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
   await prepareImplementationWorkspace(workspace, config);
-  const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), image: config.image, environment: environmentReceipt(selected), checks: [] };
+  const limits = executionLimits(config);
+  const harness = fileURLToPath(new URL('../', import.meta.url));
+  const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), image: config.image, limits, environment: environmentReceipt(selected), checks: [] };
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
+  await chmod(output, 0o777);
   const runtime = await startEnvironment({ selected, name: `${name}-validation`, uid: config.uid });
   const originalRedact = redact;
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
@@ -62,10 +67,13 @@ export async function runImplementationChecks({ config, request, changes, worksp
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
       let log = '', pending = '';
-      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', '4g', '--pids-limit', '256', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--workdir', '/workspace', '--entrypoint', command[0], config.image, ...command.slice(1)];
-      const exitCode = await new Promise(resolve => {
+      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/diagnostics', `check-${i + 1}`, '--', ...command];
+      let reason = null;
+      const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
-        const timer = setTimeout(() => { child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); }, remaining);
+        const stop = why => { if (reason) return; reason = why; child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); };
+        const timer = setTimeout(() => stop('timeout'), remaining);
+        const cancellation = setInterval(() => { if (cancelled()) stop('cancelled'); }, 100);
         const consume = chunk => {
           pending += chunk;
           let end;
@@ -76,13 +84,20 @@ export async function runImplementationChecks({ config, request, changes, worksp
           if (pending.length > 65536) pending = '[oversized check log line omitted]\n';
         };
         for (const stream of [child.stdout, child.stderr]) { stream.setEncoding('utf8'); stream.on('data', consume); }
-        child.on('error', () => { clearTimeout(timer); resolve(127); });
-        child.on('close', code => { clearTimeout(timer); resolve(code ?? 124); });
+        const complete = (code, signal = null) => { clearTimeout(timer); clearInterval(cancellation); resolve({ code, signal }); };
+        child.on('error', () => complete(127));
+        child.on('close', complete);
       });
       log += redact(pending).slice(0, 65536);
       await writeFile(join(output, `check-${i + 1}.log`), log);
-      receipt.checks.push({ command, exitCode });
-      console.log(`Host check ${i + 1} exit: ${exitCode}`);
+      const execution = await executionReceipt(join(output, `check-${i + 1}.json`), exit, reason);
+      const exitCode = execution.status === 'passed' ? 0 : exit.code || 1;
+      receipt.checks.push({ command, exitCode, execution });
+      console.log(`Host check ${i + 1}: ${exitCode === 0 ? 'passed' : executionFailure(execution)}`);
+      if (exitCode !== 0) {
+        for (const skipped of request.implementation.policy.checks.slice(i + 1)) receipt.checks.push({ command: skipped, exitCode: 125, reason: 'Not run after a failed check' });
+        break;
+      }
     }
   } finally { receipt.serviceCleanup = runtime.cleanup() !== false; }
   if (!receipt.serviceCleanup && receipt.checks.length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Environment cleanup failed; operator cleanup required'; }

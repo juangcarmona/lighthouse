@@ -1,5 +1,5 @@
 // gh-aw engine adapter: one foreground container and optional host-owned test services.
-import { readFile, writeFile, mkdir, mkdtemp, readdir, copyFile, chmod, rm, lstat } from 'node:fs/promises';
+import { readFile, writeFile, appendFile, mkdir, mkdtemp, readdir, copyFile, chmod, rm, lstat } from 'node:fs/promises';
 import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,7 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
+import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -53,6 +54,7 @@ async function main() {
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await rm(join(runDir, file), { force: true });
+  const limits = executionLimits(config, request.stage === 'implement');
   let projectModels = null;
   try {
     const directory = join(env.GITHUB_WORKSPACE, '.lighthouse'), directoryStat = await lstat(directory);
@@ -77,9 +79,10 @@ async function main() {
   const implementing = request.stage === 'implement';
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, cancelled = false;
-  const cancel = () => { cancelled = true; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
-  process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
+  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, cancelled = false, stopReason = null;
+  const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
+  const onSignal = () => cancel();
+  process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
     console.log('Waiting for the operator host engine slot');
     slot = acquireEngineSlot(config.lock);
@@ -106,11 +109,13 @@ async function main() {
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify({ package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null }));
-    const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, '--cpus', '2', '--memory', implementing ? '4g' : '2g', '--pids-limit', implementing ? '256' : '128', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
+    const runtimeReceipt = { package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null };
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+    const command = imageCommand(config.image);
+    const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), config.image];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -129,7 +134,7 @@ async function main() {
     heartbeat = setInterval(() => {
       if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
     }, 10000);
-    await new Promise((ok, no) => {
+    const exit = await new Promise((ok, no) => {
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const consume = line => {
         try {
@@ -146,9 +151,12 @@ async function main() {
         stream.on('data', chunk => { if (!cancelled) lines.write(chunk); });
         stream.on('end', () => { if (!cancelled) lines.end(); });
       }
-      child.on('error', no); child.on('close', code => code === 0 && !cancelled ? ok() : no(Error('OpenCode failed or was cancelled')));
-      timer = setTimeout(cancel, implementing ? 1800000 : 600000);
+      child.on('error', () => ok({ code: 127, signal: null })); child.on('close', (code, signal) => ok({ code, signal }));
+      timer = setTimeout(() => cancel('timeout'), implementing ? 1800000 : 600000);
     });
+    runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+    if (exit.code !== 0 || cancelled || runtimeReceipt.execution.status !== 'passed') throw Error(executionFailure(runtimeReceipt.execution));
     if (engineError) throw Error('OpenCode reported an execution error; no model fallback attempted');
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
@@ -197,7 +205,7 @@ async function main() {
     }
     throw error;
   } finally {
-    clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
+    clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
     try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
     runtime?.cleanup();
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
@@ -208,4 +216,11 @@ async function main() {
     await rm(dir, { recursive: true, force: true });
   }
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { console.error(progressText('Engine error', redactLog(error.message))); process.exitCode = 1; });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {
+  const message = redactLog(error.message);
+  console.error(progressText('Engine error', message));
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    try { await appendFile(process.env.GITHUB_STEP_SUMMARY, `\n### Execution failed\n\n${message.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}\n\nInspect runtime.json and the retained engine events before retrying.\n`); } catch {}
+  }
+  process.exitCode = 1;
+});
