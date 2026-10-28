@@ -71,6 +71,18 @@ The router records intent before sending. A worker authenticates the request and
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-apply-review.md) · [Feedback authentication](../../../src/packages/sdlc/src/proposal-review.mjs)
 
+## product-change
+
+**Entry:** Owner selects Product Change from an issue idea or answers a pending product question. **Effects:** Prepare and publish a validated ProductShape proposal on the issue delivery PR. **Stop:** Wait for explicit product approval; idea entry does not authorize implementation.
+
+[Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-product-change.md) · [Product Change contract](../../../src/packages/sdlc/src/product-change.mjs)
+
+## apply-product-change
+
+**Entry:** Owner explicitly approves the current Product Change proposal. **Effects:** A credential-free job runs provider dry-run and apply, then a trusted publisher verifies and publishes the resulting model delta. **Stop:** Product approval does not authorize PR merge, release or deployment.
+
+[Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.md) · [Approval and apply](../../../src/packages/sdlc/src/product-change-actions.mjs)
+
 ## Deterministic maintenance
 
 [Maintenance workflow](../../../src/packages/sdlc/workflows/lighthouse-worker-maintenance.yml) · [Recovery decisions](../../../src/packages/sdlc/src/worker-recovery.mjs)
