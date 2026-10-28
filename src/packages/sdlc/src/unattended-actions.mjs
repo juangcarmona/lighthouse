@@ -242,14 +242,15 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           if (Date.now() >= until) throw Error('Required CI or mergeability is pending; retain the PR for a new authorized action');
           await new Promise(resolve => setTimeout(resolve, 30000));
         } while (!controller.signal.aborted);
-        const mergeApi = async (path, method, ...args) => {
-          if (method === 'PUT' && path === 'pulls/' + pr.number + '/merge') {
-            await recheck();
-            if (controller.signal.aborted) throw Error('Delivery was cancelled before merge');
-          }
-          return api(path, method, ...args);
-        };
-        const result = await mergeAccepted(mergeApi, observation, async () => { await recheck(); return inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID); });
+        const result = await mergeAccepted(api, observation, async () => {
+          await recheck();
+          const fresh = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
+          if (fresh.merged) throw Error('Candidate was merged before this delivery attempted integration');
+          return fresh;
+        }, async () => {
+          await recheck();
+          if (controller.signal.aborted) throw Error('Delivery was cancelled before merge');
+        });
         const finalObservation = { ...observation, merged: true, merge: result.sha };
         const request = { runId, issue: issueNumber, stage: 'integrate', title: issue.title, observedAt: new Date().toISOString(), workflowRunId: env.GITHUB_RUN_ID,
           attempt: env.GITHUB_RUN_ATTEMPT, runUrl, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), completion: finalObservation };
@@ -259,14 +260,19 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         envelope.effect.body = 'Integrated the independently verified ' + route + ' candidate under explicit bounded repository delegation. Post-merge verification and release retain their existing decisions.';
         const receipt = { ...result, acceptedHead: pr.head.sha, authorization, postMerge: [] };
         await publishProcessBundle(api, request, completionBundle(request, envelope, receipt));
+        const notifications = [];
+        const notifyIntegrated = async body => {
+          try { await notify(body); }
+          catch (error) { notifications.push({ status: 'unavailable', reason: error.message.slice(0, 3000) }); }
+        };
         let postMerge;
         try { postMerge = await postMergeRuns(dispatchApi, observation, result.sha, !controller.signal.aborted); }
         catch (error) {
           postMerge = observation.profile.completion.postMergeWorkflows.map(workflow => ({ workflow, revision: result.sha, state: 'missing', status: 'unavailable', reason: error.message.slice(0, 3000) }));
-          await notify('Post-merge verification needs attention. The merge at ' + result.sha + ' and its retained receipt are confirmed; inspect current CI runs before requesting verification again. ' + error.message.slice(0, 3000));
+          await notifyIntegrated('Post-merge verification needs attention. The merge at ' + result.sha + ' and its retained receipt are confirmed; inspect current CI runs before requesting verification again. ' + error.message.slice(0, 3000));
         }
-        await notify('Integrated · ' + route + '\n\n[PR #' + pr.number + '](' + pr.html_url + ') was merged at ' + result.sha + '. Post-merge review follows the existing CI/completion policy. Release and deployment have not been established by this integration result.');
-        return { ...result, postMerge };
+        await notifyIntegrated('Integrated · ' + route + '\n\n[PR #' + pr.number + '](' + pr.html_url + ') was merged at ' + result.sha + '. Post-merge review follows the existing CI/completion policy. Release and deployment have not been established by this integration result.');
+        return { ...result, postMerge, notifications };
       },
       stop: async reason => { await notify('Blocked · ' + route + '\n\n' + reason + '\n\nYour next action: inspect the linked execution logs and retained artifacts, then resolve this blocker before a new request. No automatic retry is scheduled.' + (published ? '\n\n[Candidate PR](' + published.html_url + ')' : '')); },
     } });

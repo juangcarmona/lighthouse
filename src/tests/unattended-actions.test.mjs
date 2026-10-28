@@ -244,7 +244,7 @@ test('delegated integration honors owner draft holds and new PR feedback before 
 
 
 test('the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch', async t => {
-  for (const interrupt of [null, 'pause', 'cancel', 'pause-before-publication', 'cancel-before-publication', 'post-merge-dispatch-error']) await t.test(interrupt ?? 'success', async t => {
+  for (const interrupt of [null, 'pause', 'cancel', 'pause-before-publication', 'cancel-before-publication', 'post-merge-dispatch-error', 'post-merge-notification-error', 'post-merge-dispatch-and-notification-error']) await t.test(interrupt ?? 'success', async t => {
   const f = await fixture(); f.policy.merge = true;
   const originalApi = f.api, events = [];
   const revision = execFileSync('git', ['-C', f.env.LIGHTHOUSE_SOURCE_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -259,6 +259,7 @@ test('the native host integrates with concurrent readiness and retains its merge
   });
   f.api = async (path, method = 'GET', body) => {
     events.push({ path, method, body });
+    if (integrated && path === 'issues/1/comments' && method === 'POST' && interrupt?.includes('notification')) throw Error('Notifications unavailable');
     if (path === 'commits/main') return { sha: integrated ? merged : revision };
     if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
     if (path.startsWith('rules/branches/process')) return ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
@@ -290,7 +291,7 @@ test('the native host integrates with concurrent readiness and retains its merge
     if (path === 'git/refs/heads/process/data' && method === 'PATCH') return null;
     if (path.startsWith('actions/workflows/verify.yml/runs')) return { workflow_runs: [] };
     if (path === 'actions/workflows/verify.yml/dispatches' && method === 'POST') {
-      if (body.ref === 'main' && interrupt === 'post-merge-dispatch-error') throw Error('Post-merge CI unavailable');
+      if (body.ref === 'main' && interrupt?.includes('dispatch')) throw Error('Post-merge CI unavailable');
       return null;
     }
     const response = await originalApi(path, method, body);
@@ -307,9 +308,13 @@ test('the native host integrates with concurrent readiness and retains its merge
       return;
     }
     assert.equal(result.status, 'passed', result.reason); assert.equal(result.integrated.sha, merged);
-    if (interrupt === 'post-merge-dispatch-error') {
+    if (interrupt?.includes('dispatch')) {
       assert.equal(result.integrated.postMerge[0].status, 'unavailable');
       assert.match(result.integrated.postMerge[0].reason, /CI unavailable/);
+    }
+    if (interrupt?.includes('notification')) {
+      assert.ok(result.integrated.notifications.length > 0);
+      assert.match(result.integrated.notifications[0].reason, /Notifications unavailable/);
     }
     assert.equal(promotionCalls, 1); assert.equal(events.filter(e => e.method === 'PUT').length, 1);
     const bundle = events.findIndex(e => e.path === 'git/refs/heads/process/data' && e.method === 'PATCH');
