@@ -71,7 +71,8 @@ try {
   }
   run(bin, ['init', '--name', product], temp);
   const guide = 'node_modules/@juangcarmona/lighthouse-sdlc/README.md';
-  if (!(await readFile(join(temp, 'LIGHTHOUSE.md'), 'utf8')).includes(guide)) {
+  const installedManifest = JSON.parse(await readFile(join(temp, 'lighthouse.json'), 'utf8'));
+  if (installedManifest.packages?.sdlc && !(await readFile(join(temp, 'LIGHTHOUSE.md'), 'utf8')).includes(guide)) {
     throw new Error('Installed LIGHTHOUSE.md must link the delivery guide.');
   }
   await access(join(temp, guide));

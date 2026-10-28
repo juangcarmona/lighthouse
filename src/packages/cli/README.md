@@ -2,7 +2,7 @@
 
 This package is the core Lighthouse harness. It provides the `lighthouse` command, the manifest schema and the generated `LIGHTHOUSE.md` projection.
 
-For delivery actions, labels and workflow upgrades, read the [SDLC delivery guide](../sdlc/README.md) from the installed package version.
+For delivery actions, labels and workflow upgrades, read the installed SDLC guide at `node_modules/@juangcarmona/lighthouse-sdlc/README.md` from the adopter root. The generated `LIGHTHOUSE.md` links it directly.
 
 ## Initialize a repository
 

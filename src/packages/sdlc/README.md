@@ -43,7 +43,7 @@ The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`
 | Risk | `risk-low`, `risk-medium`, `risk-high` | Delivery risk. |
 | Affected surface | `blast-radius-low`, `blast-radius-medium`, `blast-radius-high` | Extent of potentially affected components and consumers. |
 
-Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Catalog version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules.
+Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules.
 
 ## Install or update workflows
 
@@ -55,7 +55,7 @@ node node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs . <imm
 
 The default installs `triage` and `refine`. `--with-propose` adds proposal and corrections; `--with-implement` adds implementation and automatic refinement continuation; `--with-completion` also adds integration and review. Maintenance is a separate `--with-maintenance` opt-in.
 
-Review the preview, then repeat with `--apply`; updating differing existing workflows also requires `--replace-reviewed`. Use gh-aw v0.93.2. Commit the source Markdown, router, compiled locks and action pins together. Reconcile [labels](commands/github-labels.md) through the [capability plan/apply commands](commands/capabilities.md); retain adopter customizations. Existing declarations need an explicit review when adopting catalog version 2. Provision the runner and disable older routers before setting `LIGHTHOUSE_AUTOMATION_ENABLED=true`. See [operator setup and recovery](github-actions.md) and [completion configuration](completion.md).
+Review the preview, then repeat with `--apply`; updating differing existing workflows also requires `--replace-reviewed`. Use gh-aw v0.93.2. Commit the source Markdown, router, compiled locks and action pins together. Reconcile [labels](commands/github-labels.md) through the [capability plan/apply commands](commands/capabilities.md); retain adopter customizations. Existing declarations need an explicit review when adopting labels capability version 2. Provision the runner and disable older routers before setting `LIGHTHOUSE_AUTOMATION_ENABLED=true`. See [operator setup and recovery](github-actions.md) and [completion configuration](completion.md).
 
 ## References
 
