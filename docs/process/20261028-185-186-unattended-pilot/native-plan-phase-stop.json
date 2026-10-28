@@ -1,0 +1,394 @@
+{
+  "run": 40781884527,
+  "artifact": 12857453224,
+  "artifactSha256": "5dbe52e13dfa5e75c767e4bb012b35a1f1e69a941dd388b0ffdf85e828cae8f0",
+  "records": {
+    "35a5c1eb8c43b4fabc961c2224b64f8df7955b489068d05d97845b8129c2acab/tmp/lighthouse-40781884527-1/envelope.json": {
+      "schemaVersion": 1,
+      "result": {
+        "schemaVersion": 1,
+        "runId": "35a5c1eb8c43b4fabc961c2224b64f8df7955b489068d05d97845b8129c2acab",
+        "stage": "integrate",
+        "status": "blocked",
+        "gate": "done",
+        "evidence": [
+          {
+            "id": "mounted-candidate-inspection",
+            "status": "failed",
+            "source": "/workspace/src/tests/fixtures/unattended/eligibility.mjs and /workspace/src/tests/fixtures/unattended/",
+            "reason": "The mounted candidate still compares value > 2 and the required regression.test.mjs is absent; the requested repair and regression candidate are not present."
+          },
+          {
+            "id": "candidate-and-execution-receipts",
+            "status": "unavailable",
+            "source": "/input/context.json contract.envelope.result",
+            "reason": "The supplied result has empty evidence and output; no candidate binding/diff or executed RED, GREEN, adjacent-test, repository-check, or hosting-check receipts are available."
+          }
+        ],
+        "missingEvidence": [
+          "Candidate diff and candidate identity bound to review binding 2c6911e3090c132d69abab9f2c9d990c7c526f0c9611270032ee7ed70909c631",
+          "Behavioral RED receipt on unchanged source, preserving the exact inclusive-boundary assertion",
+          "GREEN receipt for the preserved regression test and adjacent unattended tests",
+          "Configured repository-check receipts: npm ci --ignore-scripts and env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify",
+          "Current hosting-check receipts"
+        ],
+        "unavailableChecks": [
+          "Candidate diff and candidate identity review",
+          "Executed RED/GREEN and adjacent unattended test verification",
+          "Configured repository checks",
+          "Current hosting checks"
+        ],
+        "pendingReview": [],
+        "nextAction": "Escalate for the implementation candidate and host-executed evidence; then repeat independent review against the exact candidate binding.",
+        "output": {
+          "review": {
+            "binding": "2c6911e3090c132d69abab9f2c9d990c7c526f0c9611270032ee7ed70909c631",
+            "verdict": "escalate",
+            "findings": [
+              "The mounted source is not the requested repaired candidate: eligibility.mjs still uses > 2, and regression.test.mjs is absent. The documented inclusive rule and requested assertions are clear, but there is no change to assess against them.",
+              "The supplied integrate result contains no executed evidence or candidate binding/diff. RED on unchanged source, preserved regression bytes, GREEN, adjacent tests, configured repository checks, and current hosting checks therefore cannot be verified. Provide those receipts and the exact candidate binding for a fresh review."
+            ]
+          }
+        }
+      },
+      "effect": {
+        "type": "issue-comment",
+        "body": "Independent review of issue #197 is blocked: the mounted source still excludes 2, and the requested regression test and candidate diff are absent. RED/GREEN, repository and hosting-check receipts are also unavailable; provide the candidate and executed evidence for a fresh review, with merge authorization remaining separate."
+      }
+    },
+    "35a5c1eb8c43b4fabc961c2224b64f8df7955b489068d05d97845b8129c2acab/tmp/lighthouse-40781884527-1/runtime.json": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "88a77178f7b8c814a571e4de4be08617e99900eb",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "406a678b05a17931e799e68bf1658ca1a6f5d4a9",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 344899584,
+          "oomKills": 0
+        }
+      }
+    },
+    "f5439afb482271040465e9d7db11f321d568c720b4d932f4c45ceea4f42ac691/tmp/lighthouse-40781884527-1/envelope.json": {
+      "schemaVersion": 1,
+      "result": {
+        "schemaVersion": 1,
+        "runId": "f5439afb482271040465e9d7db11f321d568c720b4d932f4c45ceea4f42ac691",
+        "stage": "triage",
+        "status": "passed",
+        "gate": "triaged",
+        "evidence": [
+          {
+            "id": "intended-behavior",
+            "status": "passed",
+            "source": "src/tests/fixtures/unattended/README.md:3-7; src/tests/fixtures/unattended/eligibility.mjs:1-3",
+            "reason": "Provided repository evidence explicitly requires inclusive eligibility at 2; the strict comparison contradicts that rule. The fixture is not application runtime code."
+          },
+          {
+            "id": "bounded-policy",
+            "status": "passed",
+            "source": "/input/context.json admission; .lighthouse/unattended.json:8-33",
+            "reason": "Provided admission and repository policy agree on the exact regression argv, test path and single acceptance-fixture module. Both planned files are inside the admitted directory."
+          },
+          {
+            "id": "callers-and-verification",
+            "status": "passed",
+            "source": "src/packages/sdlc/src/unattended-actions.mjs:121-171; src/packages/sdlc/src/unattended.mjs:31-72,116-145; src/tests/unattended.test.mjs:163-175; src/tests/unattended-actions.test.mjs:10-31; package.json:12-17",
+            "reason": "Inspected orchestration callers consume eligibility and hotfix plans, enforce the owner-declared runner, isolate test-only RED and preserve regression bytes for GREEN. Adjacent tests use independent synthetic boundary fixtures rather than importing this fixture. Root npm test selects only direct src/tests/*.test.mjs, so the nested regression requires its explicit admitted command. These are source inspections, not test execution receipts."
+          }
+        ],
+        "missingEvidence": [],
+        "unavailableChecks": [],
+        "pendingReview": [],
+        "nextAction": "Return to the trusted host for independent planning review and the authorized test-first hotfix composition; this assessment grants no implementation, merge or release authority.",
+        "output": {
+          "eligibility": {
+            "points": 1,
+            "risk": "low",
+            "reversible": true,
+            "dependenciesResolved": true,
+            "scopeKnown": true,
+            "productChangeNeeded": false,
+            "humanDecisionRequired": false,
+            "reason": "The fixture README:3-7 and eligibility.mjs:2 already define the inclusive threshold; eligibility.mjs:3 uses > and therefore returns false at 2. This is a localized comparison correction plus a new regression file within the admitted acceptance-fixture module, with no new product meaning, migration or deployment. The admitted Node runner and repository checks are declared. One point follows the localized-correction anchor, not a size-label conversion. Independent review and executed RED/GREEN remain later-stage requirements, not established results.",
+            "confirmedDefect": true,
+            "rollback": "Revert the isolated eligibility.mjs comparison repair to contain the fixture change; alternatively the owner can disable the fixture-only unattended policy. No operational deployment is involved."
+          },
+          "hotfix": {
+            "command": [
+              "node",
+              "--test",
+              "src/tests/fixtures/unattended/regression.test.mjs"
+            ],
+            "assertion": "Expected inclusive boundary",
+            "rootCause": "src/tests/fixtures/unattended/eligibility.mjs:3 compares value > 2, excluding equality despite the adjacent README's explicit value >= 2 rule. Repair only that comparison after reproducing the behavioral failure.",
+            "estimatedProductionLines": 2,
+            "plannedFiles": [
+              "src/tests/fixtures/unattended/eligibility.mjs",
+              "src/tests/fixtures/unattended/regression.test.mjs"
+            ]
+          },
+          "requestAnalysis": {
+            "originalRequest": "Controlled acceptance for #186 and PR #190, authorized as part of the owner's fast-forward implementation request.\n\nThe known intended behavior of `src/tests/fixtures/unattended/eligibility.mjs` is stated in the adjacent README: values equal to or above 2 must qualify; values below 2 must not. The deliberate strict comparison currently excludes 2. This is an isolated fixture defect with explicit intended behavior, not new product intent.\n\nAdd `src/tests/fixtures/unattended/regression.test.mjs` with node:test and node:assert/strict. Assert that eligible(2) is true with the exact message `Expected inclusive boundary`, plus lower (1) and higher (3) cases. Demonstrate the behavioral RED on unchanged source before repairing only the comparison. Preserve those regression bytes and prove GREEN, adjacent checks and repository checks.\n\nExpected production churn: two lines (one removed plus one added), two changed files, one declared module. Estimate: one point, low risk and reversible. Rollback/containment: revert the isolated fixture repair, or disable the owner-dispatched fixture-only unattended policy. No operational deployment is involved. Integrate to main only through current explicit policy, hosting checks and independent review. Retain RED/GREEN, review and merge receipts; release stays separately authorized.",
+            "originalRequestUrl": "https://github.com/juangcarmona/lighthouse/issues/197",
+            "problem": "The controlled eligibility fixture excludes its documented inclusive boundary.",
+            "desiredResult": "Restore the documented boundary behavior through a retained test-first regression, without expanding fixture scope or bypassing review and integration policy.",
+            "inferences": [
+              {
+                "inference": "No Product Change is needed because repository meaning is already explicit and this is not application runtime code.",
+                "source": "src/tests/fixtures/unattended/README.md:3-5; eligibility.mjs:2"
+              },
+              {
+                "inference": "The expected correction is one removed and one added source line, with one new test file in a single declared module.",
+                "source": "src/tests/fixtures/unattended/eligibility.mjs:3; .lighthouse/unattended.json:18-24"
+              },
+              {
+                "inference": "The regression must be run explicitly in addition to root repository verification because the root test glob does not include nested fixture tests.",
+                "source": "package.json:12-17; .lighthouse/unattended.json:26-30"
+              }
+            ],
+            "unknowns": [],
+            "questions": []
+          },
+          "estimate": {
+            "points": 1,
+            "status": "provisional",
+            "rationale": {
+              "scope": "Localized familiar correction: change only the strict comparison and add focused regression coverage; two files, one module, two production lines counting addition plus deletion.",
+              "dependencies": "No external feature, migration or product decision is required. The admitted regression uses Node built-ins and existing policy supplies verification commands.",
+              "verification": "Capture the inclusive-boundary assertion failing against unchanged source, preserve those regression bytes, then require GREEN, lower/higher cases, adjacent unattended tests and configured repository checks."
+            },
+            "confidence": "high",
+            "uncertainty": [
+              "Execution outcomes and current hosting checks remain to be established by later stages; none changes the known product outcome or bounded estimate."
+            ]
+          },
+          "assessments": {
+            "urgency": {
+              "value": "normal",
+              "confidence": "high",
+              "source": "Fixture README:3 states this is controlled acceptance, not application runtime code; no operational incident is identified."
+            },
+            "impact": {
+              "value": "low",
+              "confidence": "high",
+              "source": "Fixture README:3-7 confines the behavior and admission to the acceptance fixture."
+            },
+            "dependencies": {
+              "value": "resolved for triage",
+              "confidence": "high",
+              "source": "/input/context.json admission and .lighthouse/unattended.json declare the runner and module; repository meaning is explicit."
+            },
+            "risk": {
+              "value": "low",
+              "confidence": "high",
+              "source": "eligibility.mjs:3 requires only an isolated reversible operator correction."
+            },
+            "blastRadius": {
+              "value": "low",
+              "confidence": "high",
+              "source": "Two planned files inside the single acceptance-fixture module; inspected adjacent tests exercise separate synthetic fixtures."
+            },
+            "route": {
+              "value": "hotfix",
+              "confidence": "high",
+              "source": "/input/context.json unattended.route and admission.hotfix"
+            },
+            "owner": {
+              "value": "juangcarmona",
+              "confidence": "high",
+              "source": "/input/context.json issue.user.login; host-verified admission. Future execution and merge authority remain host decisions."
+            }
+          },
+          "labels": {
+            "proposed": [
+              "triaged",
+              "urgency-normal",
+              "impact-low",
+              "risk-low",
+              "blast-radius-low"
+            ],
+            "transition": "Record triaged; no labels are mutated by this worker and no size label is inferred from points.",
+            "source": "src/packages/sdlc/README.md:31-47"
+          },
+          "laterStageRequirements": [
+            {
+              "status": "pending-review",
+              "stage": "independent planning review",
+              "requirement": "Review this bounded plan in a separate execution with a distinct model before reproduction."
+            },
+            {
+              "status": "not-run",
+              "stage": "implement RED",
+              "requirement": "Add node:test and node:assert/strict coverage for eligible(1) false, eligible(2) true with exact message Expected inclusive boundary, and eligible(3) true; record assertion failure on unchanged source with ERR_ASSERTION."
+            },
+            {
+              "status": "not-run",
+              "stage": "implement GREEN",
+              "requirement": "Preserve RED regression bytes and repair only > to >=; execute the exact admitted regression command and adjacent node --test src/tests/unattended.test.mjs src/tests/unattended-actions.test.mjs."
+            },
+            {
+              "status": "not-run",
+              "stage": "implement verification",
+              "requirement": "Run configured .lighthouse/implement.json checks: npm ci --ignore-scripts and env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify."
+            },
+            {
+              "status": "pending-review",
+              "stage": "integrate",
+              "requirement": "Independent candidate review, current hosting checks, current explicit merge delegation and retained receipts remain mandatory; release is separately authorized."
+            }
+          ]
+        }
+      },
+      "effect": {
+        "type": "issue-comment",
+        "body": "[Issue #197](https://github.com/juangcarmona/lighthouse/issues/197) is eligible for the bounded hotfix route: provisionally 1 point for an isolated comparison repair and regression test, with high confidence, low risk and no blocking questions. The inferred scope is two fixture files in one module; execution outcomes remain unverified. Next, the trusted host must obtain independent planning review and test-first RED/GREEN evidence before any repair or integration."
+      }
+    },
+    "f5439afb482271040465e9d7db11f321d568c720b4d932f4c45ceea4f42ac691/tmp/lighthouse-40781884527-1/runtime.json": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "88a77178f7b8c814a571e4de4be08617e99900eb",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6.1-sol",
+      "modelExecution": {
+        "requested": {
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "engineModel": "openai/gpt-6.1-sol#medium",
+          "source": "operator.workers",
+          "fields": {
+            "model": "operator",
+            "reasoningEffort": "operator"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "406a678b05a17931e799e68bf1658ca1a6f5d4a9",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 312647680,
+          "oomKills": 0
+        }
+      }
+    },
+    "report.json": {
+      "status": "blocked",
+      "evidence": [],
+      "reason": "Independent planning review requires correction or a human decision",
+      "nextAction": "Inspect execution evidence and resolve the identified blocker"
+    }
+  }
+}
