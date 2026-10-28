@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { implementationPrProof, reconcileImplementationPr } from '../packages/sdlc/src/pr-state.mjs';
 import { runGithubUnattended } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
@@ -44,7 +45,7 @@ async function fixture() {
     if (path.startsWith('contents/.lighthouse/')) return null;
     if (path === 'issues/1') return issue();
     if (path.startsWith('issues/1/comments')) {
-      if (method === 'POST') { const result = { id: comments.length + 1, user: { login: 'github-actions[bot]' }, body: body.body }; comments.push(result); return result; }
+      if (method === 'POST') { const result = { id: comments.length + 1, user: { login: 'github-actions[bot]', type: 'Bot' }, body: body.body }; comments.push(result); return result; }
       return comments;
     }
     if (path === 'issues/1/labels' && method === 'POST') { labels.push(...body.labels); return []; }
@@ -100,6 +101,43 @@ test('native adapter connects triage, independent planning, RED, repair, review 
     assert.ok(!f.labels.includes('agent-working'));
     await assert.rejects(runGithubUnattended(f), /already has a receipt/);
     assert.equal(f.executions.length, 5);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('published unattended candidates remain compatible with existing CI PR reconciliation', async () => {
+  const f = await fixture();
+  try {
+    assert.equal((await runGithubUnattended(f)).status, 'waiting-human');
+    const creation = f.writes.find(w => w.path === 'pulls').body;
+    const pr = { number: 3, body: creation.body, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' },
+      head: { sha: 'b'.repeat(40), ref: creation.head, repo: { full_name: 'owner/repo' } }, base: { ref: 'main', repo: { full_name: 'owner/repo' } } };
+    assert.equal(implementationPrProof(f.comments, pr).complete, true);
+    let promoted = false;
+    const api = async (path, ...args) => path.includes('/check-runs?')
+      ? { check_runs: [{ id: 1, name: 'repository', app: { id: 7 }, head_sha: pr.head.sha, status: 'completed', conclusion: 'success' }] }
+      : path.includes('/statuses') ? [] : f.api(path, ...args);
+    const result = await reconcileImplementationPr(api, 'owner/repo', pr, await f.api('issues/1'), f.comments,
+      [{ context: 'repository', app: 7 }], async () => { promoted = true; }, { auto: true });
+    assert.equal(result.status, 'ready'); assert.equal(promoted, true);
+    assert.ok(!f.labels.includes('agent-working'));
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('a rejected plan reports the actual reviewer findings and does not start implementation', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.missingEvidence = ['Root-cause justification'];
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Root cause is not justified by source'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked'); assert.match(result.reason, /Root cause is not justified by source/);
+    assert.equal(f.executions.length, 2); assert.ok(!f.writes.some(w => w.path === 'pulls'));
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 

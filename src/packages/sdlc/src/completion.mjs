@@ -123,14 +123,14 @@ export async function checkCommit(api, revision, required) {
 export function completionEffects(stage, status) {
   return stage === 'review' && status === 'passed' ? { add: [], remove: ['waiting-review', 'ready', 'pr-draft', 'pr-ready', 'integrate', 'review'], closeIssue: true } : { add: ['waiting-review'], remove: [], closeIssue: false };
 }
-export async function inspectCompletion(api, repository, owner, input, stage, workflowRunId = null) {
+export async function inspectCompletion(api, repository, owner, input, stage, workflowRunId = null, { observeDraft = false } = {}) {
   const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);
   const profile = await loadProfile(api, repository, current.sha);
   if (profile.evidenceBranch === repo.default_branch) throw Error('Evidence branch must be separate');
   await evidenceProtection(api, profile.evidenceBranch, profile.completion.protectionObservations);
   const pr = await api(`pulls/${input.pr}`), issue = await api(`issues/${input.issue}`);
   if (pr.head.sha !== input.head || pr.head.repo?.full_name !== repository || pr.base.repo.full_name !== repository || pr.base.ref !== repo.default_branch || issue.pull_request || issue.user.login !== owner) throw Error('Accepted PR identity or work-item authority changed');
-  if (stage === 'review' && !pr.merged || stage === 'integrate' && !pr.merged && (pr.state !== 'open' || pr.draft || issue.state !== 'open')) throw Error('PR is not eligible for this stage');
+  if (stage === 'review' && !pr.merged || stage === 'integrate' && !pr.merged && (pr.state !== 'open' || pr.draft && !observeDraft || issue.state !== 'open')) throw Error('PR is not eligible for this stage');
   const comments = await list(api, `issues/${input.issue}/comments`);
   const answers = comments.filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at }));
   const policy = await requiredPolicy(api, repo.default_branch, profile);
