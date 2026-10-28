@@ -216,7 +216,14 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           try { assertChecks(observation); checked = true; } catch {}
           if (checked) {
             await recheck();
-            if (current.draft) await setPullRequestDraft(env.GH_TOKEN, current, false);
+            if (current.draft) {
+              try { await setPullRequestDraft(env.GH_TOKEN, current, false); }
+              catch (error) {
+                const reconciled = await api('pulls/' + pr.number);
+                if (reconciled.state !== 'open' || reconciled.head.sha !== pr.head.sha || reconciled.draft) throw error;
+              }
+            }
+            await recheck();
             promoted = true;
             observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
             if (observation.mergeable) break;

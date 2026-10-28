@@ -32,7 +32,7 @@ async function fixture() {
     plannedFiles: ['src/feature/rule.mjs', 'tests/edge.test.mjs'] };
   const comments = [], labels = [], executions = [], writes = [];
   let publishedPr = null;
-  const issue = () => ({ number: 1, state: 'open', title: 'Correct the inclusive boundary', body: 'Values equal to 2 must be eligible.', user: { login: 'owner' }, labels: labels.map(name => ({ name })) });
+  const issue = () => ({ number: 1, state: 'open', title: 'Correct the inclusive boundary', body: 'Values equal to 2 must be eligible.', html_url: 'https://github.com/owner/repo/issues/1', user: { login: 'owner' }, labels: labels.map(name => ({ name })) });
   const encode = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
   const api = async (path, method = 'GET', body) => {
     if (method !== 'GET') writes.push({ path, method, body });
@@ -240,4 +240,59 @@ test('delegated integration honors owner draft holds and new PR feedback before 
   }
   const approved = async url => url.includes('/reviews?') ? [{ user: { login: 'owner' }, state: 'APPROVED', commit_id: pr.head.sha }] : [];
   await assertUnattendedPullRequest(approved, [], pr, 'owner');
+});
+
+
+test('the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch', async t => {
+  const f = await fixture(); f.policy.merge = true;
+  const originalApi = f.api, events = [];
+  const revision = execFileSync('git', ['-C', f.env.LIGHTHOUSE_SOURCE_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  const merged = 'c'.repeat(40), evidence = 'd'.repeat(40);
+  const profile = { schemaVersion: 1, profileVersion: 1, repository: 'owner/repo', intake: 'collaborators', requiredChecks: [{ context: 'repository', integrationId: 7 }], requiredApprovals: 0,
+    evidenceBranch: 'process/data', completion: { publishEvidence: true, postMergeWorkflows: ['verify.yml'] } };
+  let pr = null, integrated = false, promotionCalls = 0;
+  t.mock.method(globalThis, 'fetch', async () => {
+    promotionCalls++; pr.draft = false; pr.mergeable_state = 'clean';
+    // Existing CI reconciliation completed the same transition just before this mutation.
+    return { ok: true, json: async () => ({ errors: [{ message: 'Already ready for review' }] }) };
+  });
+  f.api = async (path, method = 'GET', body) => {
+    events.push({ path, method, body });
+    if (path === 'commits/main') return { sha: integrated ? merged : revision };
+    if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
+    if (path.startsWith('rules/branches/process')) return ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
+    if (path === 'rulesets/1') return { enforcement: 'active', bypass_actors: [] };
+    if (path.startsWith('rules/branches/main')) return [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'repository', integration_id: 7 }] } }];
+    if (path === 'branches/main') return { protection: { enabled: false } };
+    if (path.startsWith('actions/runs/123/jobs')) return { jobs: [{ check_run_url: 'https://api.github.com/repos/owner/repo/check-runs/99' }] };
+    if (path.includes('/check-runs?')) return { check_runs: [{ id: 1, name: 'repository', head_sha: 'b'.repeat(40), app: { id: 7 }, status: 'completed', conclusion: 'success' }] };
+    if (path.includes('/statuses')) return [];
+    if (path.startsWith('pulls/3/files')) return ['src/feature/rule.mjs', 'tests/edge.test.mjs'].map(filename => ({ filename, sha: 'b'.repeat(40), status: 'modified' }));
+    if (path === 'pulls' && method === 'POST') {
+      pr = await originalApi(path, method, body);
+      Object.assign(pr, { title: body.title, body: body.body, draft: true, changed_files: 2, node_id: 'fixture-pr', mergeable: true, mergeable_state: 'draft',
+        base: { ref: 'main', repo: { full_name: 'owner/repo' } } });
+      pr.head.repo = { full_name: 'owner/repo' }; return pr;
+    }
+    if (path === 'pulls/3/merge' && method === 'PUT') {
+      assert.equal(pr.draft, false); assert.equal(body.sha, pr.head.sha);
+      integrated = true; pr.merged = true; pr.state = 'closed'; pr.merge_commit_sha = merged;
+      return { merged: true, sha: merged };
+    }
+    if (path === 'git/ref/heads/process/data') return { object: { sha: evidence } };
+    if (path.startsWith('git/trees/' + evidence)) return { sha: evidence, truncated: false, tree: [] };
+    if (path === 'git/refs/heads/process/data' && method === 'PATCH') return null;
+    if (path.startsWith('actions/workflows/verify.yml/runs')) return { workflow_runs: [] };
+    if (path === 'actions/workflows/verify.yml/dispatches' && method === 'POST') return null;
+    return originalApi(path, method, body);
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'passed', result.reason); assert.equal(result.integrated.sha, merged);
+    assert.equal(promotionCalls, 1); assert.equal(events.filter(e => e.method === 'PUT').length, 1);
+    const bundle = events.findIndex(e => e.path === 'git/refs/heads/process/data' && e.method === 'PATCH');
+    const postMerge = events.findIndex(e => e.path === 'actions/workflows/verify.yml/dispatches' && e.body.ref === 'main');
+    assert.ok(bundle > 0 && postMerge > bundle);
+    assert.ok(!f.labels.includes('agent-working'));
+  } finally { await rm(f.root, { recursive: true, force: true }); }
 });
