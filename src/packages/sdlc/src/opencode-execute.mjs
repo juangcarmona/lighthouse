@@ -53,7 +53,7 @@ async function main() {
   const runDir = join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
-  for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await rm(join(runDir, file), { force: true });
+  for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
   const limits = executionLimits(config, request.stage === 'implement');
   let projectModels = null;
   try {
@@ -218,6 +218,7 @@ async function main() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {
   const message = redactLog(error.message);
   console.error(progressText('Engine error', message));
+  try { await writeFile(join(process.env.RUNNER_TEMP, `lighthouse-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`, 'engine-error.json'), JSON.stringify({ schemaVersion: 1, message: message.slice(0, 3000) })); } catch {}
   if (process.env.GITHUB_STEP_SUMMARY) {
     try { await appendFile(process.env.GITHUB_STEP_SUMMARY, `\n### Execution failed\n\n${message.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}\n\nInspect runtime.json and the retained engine events before retrying.\n`); } catch {}
   }

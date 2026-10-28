@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { runGithubUnattended } from '../packages/sdlc/src/unattended-actions.mjs';
-import { applyCandidate, stageContext, boundedOpenSpecProvider } from '../packages/sdlc/src/unattended-runtime.mjs';
+import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
@@ -169,4 +169,18 @@ test('provider deadline is checked before any process starts', async () => {
   const controller = new AbortController(); controller.abort();
   const provider = boundedOpenSpecProvider({ root: tmpdir(), deadline: Date.now() + 1000, signal: controller.signal });
   await assert.rejects(provider(tmpdir(), ['status']), /deadline/);
+});
+
+
+test('a real child startup failure retains its precise diagnostic without starting Docker', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-engine-failure-'));
+  const config = join(root, 'engine.json');
+  await writeFile(config, JSON.stringify({ image: 'invalid' }));
+  const request = { runId: 'f'.repeat(64), issue: 1, stage: 'triage', worker: 'triage', sourceRevision: 'a'.repeat(40) };
+  try {
+    await assert.rejects(executeUnattendedStage({ root, request, source: new Map(), context: stageContext(request, {}), prompt: 'Do not execute',
+      env: { PATH: process.env.PATH, HOME: root, LIGHTHOUSE_ENGINE_CONFIG: config, GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1' } }), /triage: Invalid operator engine configuration/);
+    const failure = JSON.parse(await readFile(join(root, request.runId, 'tmp/lighthouse-123-1/engine-error.json'), 'utf8'));
+    assert.equal(failure.message, 'Invalid operator engine configuration');
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

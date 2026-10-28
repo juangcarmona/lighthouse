@@ -60,6 +60,7 @@ jobs:
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/envelope.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/checks.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/runtime.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/engine-error.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/evidence/**
           if-no-files-found: warn
           retention-days: 14

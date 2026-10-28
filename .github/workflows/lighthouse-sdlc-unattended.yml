@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 87f84db21acdc2f4da71860649852317c7704a6f
+          ref: 88a77178f7b8c814a571e4de4be08617e99900eb
           path: tools
           persist-credentials: false
       - name: Load current product source
@@ -60,6 +60,7 @@ jobs:
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/envelope.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/checks.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/runtime.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/engine-error.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/evidence/**
           if-no-files-found: warn
           retention-days: 14
