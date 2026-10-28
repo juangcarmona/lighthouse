@@ -3,14 +3,16 @@ import { resolve, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const [target, revision, ...flags] = process.argv.slice(2);
-if (!target || !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change]');
+if (!target || !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended]');
 const apply = flags.includes('--apply'), replace = flags.includes('--replace-reviewed');
 const productChange = flags.includes('--with-product-change');
-const completion = flags.includes('--with-completion');
+const unattended = flags.includes('--with-unattended');
+const completion = flags.includes('--with-completion') || unattended;
 const implement = flags.includes('--with-implement') || completion;
 const propose = flags.includes('--with-propose') || implement;
 const files = [...(flags.includes('--with-maintenance') ? ['lighthouse-worker-maintenance.yml'] : []), 'lighthouse-sdlc-router.yml', 'lighthouse-sdlc-triage.md', 'lighthouse-sdlc-refine.md', 'shared/lighthouse-opencode.md', ...(propose ? ['lighthouse-sdlc-propose.md', 'lighthouse-sdlc-apply-review.md'] : []), ...(implement ? ['lighthouse-sdlc-implement.md'] : []), ...(completion ? ['lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-review.md'] : []), ...(productChange ? ['lighthouse-sdlc-product-change.md', 'lighthouse-sdlc-apply-product-change.md'] : [])];
 const root = resolve(target), planned = [];
+if (unattended) files.push('lighthouse-sdlc-unattended.yml');
 for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
   if (name === 'lighthouse-sdlc-router.yml') {
@@ -27,6 +29,14 @@ for (const name of files) {
   console.log(`${apply ? 'Write' : 'Would write'} ${path}`);
 }
 const formPath = join(root, '.github/ISSUE_TEMPLATE/change-request.yml');
+if (unattended) {
+  const policyPath = join(root, '.lighthouse/unattended.json');
+  if (await access(policyPath).then(() => true, () => false)) console.log('Preserve existing unattended policy: ' + policyPath);
+  else {
+    planned.push({ path: policyPath, content: await readFile(new URL('../templates/unattended.json', import.meta.url), 'utf8') });
+    console.log((apply ? 'Write disabled policy ' : 'Would write disabled policy ') + policyPath);
+  }
+}
 if (await access(formPath).then(() => true, () => false)) console.log(`Preserve existing request form: ${formPath}`);
 else {
   planned.push({ path: formPath, content: await readFile(new URL('../templates/change-request.yml', import.meta.url), 'utf8') });

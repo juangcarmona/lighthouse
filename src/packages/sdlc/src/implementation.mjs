@@ -19,7 +19,7 @@ export function validateImplementationPolicy(policy, issue) {
 }
 export const withinScope = (path, policy) => safePath(path) && !protectedPath(path) && policy.paths.some(p => p === '*' || (p.endsWith('/') ? path.startsWith(p) : path === p));
 
-export async function loadImplementation(api, issue, owner, revision, defaultBranch) {
+export async function loadImplementation(api, issue, owner, revision, defaultBranch, route = null) {
   const config = await api(`contents/.lighthouse/implement.json?ref=${revision}`, 'GET', undefined, true);
   const configured = config ? JSON.parse(Buffer.from(config.content, 'base64').toString()) : {};
   let policy = configured[issue] ?? configured.defaults;
@@ -31,7 +31,7 @@ export async function loadImplementation(api, issue, owner, revision, defaultBra
   }
   const planCheck = ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', changeName(issue), '--strict', '--no-interactive'];
   policy = validateImplementationPolicy(policy, issue);
-  policy = { ...policy, checks: [...policy.checks, planCheck] };
+  policy = { ...policy, checks: [...policy.checks, ...(route === 'hotfix' ? [] : [planCheck])] };
   const environmentFile = await api(`contents/.lighthouse/environment.json?ref=${revision}`, 'GET', undefined, true);
   const environment = environmentFile ? validateEnvironment(JSON.parse(Buffer.from(environmentFile.content, 'base64').toString())) : null;
   return { policy, proposal: { root: proposalRoot(issue) }, ...(environment ? { environment } : {}) };

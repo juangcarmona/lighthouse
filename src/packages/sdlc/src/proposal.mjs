@@ -37,18 +37,18 @@ export async function prepareProposal(issue, files, provider = openspec) {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-proposal-'));
   const name = changeName(issue);
   try {
-    provider(dir, ['new', 'change', name, '--schema', 'spec-driven', '--json']);
+    await provider(dir, ['new', 'change', name, '--schema', 'spec-driven', '--json']);
     if (!files) {
       const instructions = {};
       for (const artifact of ['proposal', 'specs', 'design', 'tasks']) {
-        const value = JSON.parse(provider(dir, ['instructions', artifact, '--change', name, '--json']));
+        const value = JSON.parse(await provider(dir, ['instructions', artifact, '--change', name, '--json']));
         instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
       }
       return { provider: '@fission-ai/openspec@1.15.0', schema: 'spec-driven', root: proposalRoot(issue), instructions };
     }
     for (const file of files) { const path = join(dir, file.path); await mkdir(dirname(path), { recursive: true }); await writeFile(path, file.content); }
-    provider(dir, ['validate', name, '--strict', '--no-interactive']);
-    const status = JSON.parse(provider(dir, ['status', '--change', name, '--json']));
+    await provider(dir, ['validate', name, '--strict', '--no-interactive']);
+    const status = JSON.parse(await provider(dir, ['status', '--change', name, '--json']));
     if (!status.isPlanningComplete) throw Error('OpenSpec planning artifacts are incomplete');
     const metadata = `${proposalRoot(issue)}/.openspec.yaml`;
     return [...files, { path: metadata, content: await readFile(join(dir, metadata), 'utf8') }];

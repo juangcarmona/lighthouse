@@ -24,10 +24,12 @@ The defect, impact or containment context, rollback plan, affected paths and dec
 
 ## Main Flow
 
-1. Lighthouse marks the item as a hotfix and records its bounded scope.
-2. `implement` applies the smallest correction and runs the required focused checks.
-3. Lighthouse verifies the result, updates the evidence and stops on any failed check.
-4. `integrate` updates the tracker and repository or pull-request state, then `review` records the outcome.
+1. Lighthouse authenticates the hotfix request, confirms the defect against intended behavior and records impact, affected version, reproduction, rollback and the bounded scope.
+2. `implement` investigates the root cause and relevant shared callers, demonstrates the regression failing before the correction, and records a compact correction plan.
+3. The worker applies the smallest root-cause correction, demonstrates the preserved regression passing, runs adjacent and required checks and re-evaluates actual scope.
+4. A separate read-only reviewer using a different configured model verifies the exact candidate against intent, regression evidence, scope and recovery context. Bounded corrections require fresh applicable evidence.
+5. `integrate` rechecks current authorization, candidate, hosting requirements and independent verdict before any delegated merge; `review` records the observed outcome.
+6. Existing release and deployment routes continue only under their separate authority. The outcome distinguishes integration, release, deployment and runtime verification.
 
 ## Alternative Flows
 

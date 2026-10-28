@@ -64,7 +64,7 @@ async function main() {
     projectModels = JSON.parse(await readFile(path, 'utf8'));
   }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage });
+  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage, ...(env.LIGHTHOUSE_MODEL_PROFILE ? { profile: env.LIGHTHOUSE_MODEL_PROFILE } : {}) });
   const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
   if (request.stage === 'implement') {
     if (selected) config.implementationImage = selected.image;
@@ -210,9 +210,8 @@ async function main() {
     runtime?.cleanup();
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     if (slot !== undefined) closeSync(slot);
-    if (implementing) {
-      try { docker(['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${dir},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
-    }
+    // Read-only stages also create engine-owned command receipt directories.
+    try { docker(['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--mount', `type=bind,src=${dir},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
     await rm(dir, { recursive: true, force: true });
   }
 }

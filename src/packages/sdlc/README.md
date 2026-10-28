@@ -58,6 +58,10 @@ The default installs `triage` and `refine`. `--with-propose` adds proposal and c
 
 Review the preview, then repeat with `--apply`; updating differing existing workflows also requires `--replace-reviewed`. Use gh-aw v0.93.2. Commit the source Markdown, router, compiled locks and action pins together. Reconcile [labels](commands/github-labels.md) through the [capability plan/apply commands](commands/capabilities.md); retain adopter customizations. Existing declarations need an explicit review when adopting labels capability version 2. Provision the runner and disable older routers before setting `LIGHTHOUSE_AUTOMATION_ENABLED=true`. See [operator setup and recovery](github-actions.md) and [completion configuration](completion.md).
 
+## Bounded unattended routes
+
+Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops.
+
 ## References
 
 - [Lifecycle stages](stages.json), [gates](gates.json) and [routes](routes.json): provider-neutral contracts. Native worker compositions are described above; an implementation worker includes planning.
