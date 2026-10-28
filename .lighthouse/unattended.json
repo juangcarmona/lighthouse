@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "routes": [
+    "ff",
+    "hotfix"
+  ],
+  "paths": [
+    "src/tests/fixtures/unattended/"
+  ],
+  "reviewerProfile": "fast",
+  "allowFivePoint": false,
+  "merge": true,
+  "maxCorrections": 2,
+  "timeoutSeconds": 3600,
+  "hotfix": {
+    "setupCommands": [],
+    "testPaths": [
+      "src/tests/fixtures/unattended/regression.test.mjs"
+    ],
+    "modules": {
+      "acceptance-fixture": [
+        "src/tests/fixtures/unattended/"
+      ]
+    },
+    "regressionCommand": [
+      "node",
+      "--test",
+      "src/tests/fixtures/unattended/regression.test.mjs"
+    ],
+    "failurePattern": [
+      "ERR_ASSERTION"
+    ]
+  }
+}
