@@ -1,5 +1,47 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.15.0
+
+### Minor Changes
+
+- 158ee20: # Implementation PR state and concise results
+
+  Project draft and ready implementation PR states onto issues, keep corrections on the same PR, and link concise issue and PR results without closing the issue before post-merge review.
+
+- bf4ee58: # Worker profiles and delegation
+
+  Add opt-in OpenAI worker profiles with independent reasoning, explicit operator precedence and honest runtime receipts. Export a bounded profile-aware delegation executor with dependency, file-conflict and wave-verification checks; preserve legacy model and authentication behavior.
+
+- cdc5390: # Request triage
+
+  Add simple request intake, owner-admitted native triage and explained relative estimates with refinement re-estimation. Preserve legacy size classifications without numeric conversion.
+
+### Patch Changes
+
+- 55d236d: # Permit draft conversion during review preparation
+
+  Give the apply-review preparation job permission to return a ready implementation PR to draft before correction work starts.
+
+- 7708132: # Worker profile own-key lookup
+
+  Ignore inherited object properties when resolving a worker's model profile.
+
+- d40c0e7: # Reconcile after implementation CI
+
+  Allow a successful CI job to project the verified implementation PR state directly when GitHub suppresses its chained completion event.
+
+- de872e6: # Recover implementation PR readiness
+
+  Reconcile implementation PR state on a bounded schedule when GitHub suppresses chained workflow completion events.
+
+- 1daa757: # Resume implementation after refinement
+
+  Explicitly request implementation after a published refinement, retaining owner authorization, completed-run verification, pause controls and duplicate-dispatch protection when GitHub does not emit a follow-up workflow event.
+
+- ee158f0: # Review retained integration after later commits
+
+  Verify the authenticated integration dispatch independently of the PR's historical base commit, so review can use retained evidence after later commits land on main.
+
 ## 0.14.0
 
 ### Minor Changes
