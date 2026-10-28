@@ -6,7 +6,7 @@
 - [x] Implement bounded admission, scope measurement, independent review binding and correction control.
 - [x] Connect isolated stage executions, provider planning, RED/GREEN checks, publication and current merge checks.
 - [x] Add opt-in workflow installation, operator policy and runtime documentation.
-- [ ] Complete adversarial review and resolve the findings with regression coverage.
+- [x] Complete adversarial review and resolve the findings with regression coverage.
 - [ ] Run repository, provider, packaging and workflow checks and retain their actual results.
 - [ ] Demonstrate a native controlled GitHub FF/hotfix trace and negative handoff.
 - [ ] Integrate the verified feature, prepare the version PR and verify published Lighthouse 0.12.0 independently.

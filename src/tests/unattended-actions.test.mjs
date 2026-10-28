@@ -27,7 +27,7 @@ async function fixture() {
       setupCommands: [], testPaths: ['tests/'], regressionCommand: ['node', '--test', 'tests/edge.test.mjs'], failurePattern: ['ERR_ASSERTION'] } };
   const eligibility = { points: 1, risk: 'low', reversible: true, dependenciesResolved: true, scopeKnown: true, productChangeNeeded: false,
     humanDecisionRequired: false, reason: 'An isolated boundary and known assertion', confirmedDefect: true, rollback: 'Revert the correction' };
-  const plan = { command: policy.hotfix.regressionCommand, assertion: 'Expected inclusive boundary', rootCause: 'Strict comparison excludes equality',
+  const plan = { command: policy.hotfix.regressionCommand, assertion: 'Expected inclusive boundary', estimatedProductionLines: 2, rootCause: 'Strict comparison excludes equality',
     plannedFiles: ['src/feature/rule.mjs', 'tests/edge.test.mjs'] };
   const comments = [], labels = [], executions = [], writes = [];
   const issue = () => ({ number: 1, state: 'open', title: 'Correct the inclusive boundary', body: 'Values equal to 2 must be eligible.', user: { login: 'owner' }, labels: labels.map(name => ({ name })) });

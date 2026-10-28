@@ -120,7 +120,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       recheck,
       refine: async () => {
         const result = await step(route === 'hotfix' ? 'triage' : 'refine', route === 'hotfix' ? 'triage' : 'refine',
-          'Assess the authorized issue using the canonical stage skill (/harness/skills/' + (route === 'hotfix' ? 'triage' : 'refine') + '/SKILL.md) and /input/context.json. Return output.eligibility with points (numeric; never infer a legacy-label conversion), risk, reversible, dependenciesResolved, scopeKnown, productChangeNeeded, humanDecisionRequired and a reason grounded in source. FF requires low risk and 1–3 points, or five only under explicit opt-in. For hotfix also return confirmedDefect and rollback, plus output.hotfix containing command (argv), assertion (the exact expected failing behavioral assertion text), rootCause and plannedFiles. Investigate relevant callers. Missing product meaning or an ambiguous outcome is a blocker. Write only the envelope.',
+          'Assess the authorized issue using the canonical stage skill (/harness/skills/' + (route === 'hotfix' ? 'triage' : 'refine') + '/SKILL.md) and /input/context.json. Return output.eligibility with points (numeric; never infer a legacy-label conversion), risk, reversible, dependenciesResolved, scopeKnown, productChangeNeeded, humanDecisionRequired and a reason grounded in source. FF requires low risk and 1–3 points, or five only under explicit opt-in. For hotfix also return confirmedDefect and rollback, plus output.hotfix containing command (argv), assertion (the exact expected failing behavioral assertion text), rootCause, estimatedProductionLines (additions plus deletions, at most 100) and plannedFiles. Investigate relevant callers. Missing product meaning or an ambiguous outcome is a blocker. Write only the envelope.',
           { admission: { allowFivePoint: policy.allowFivePoint, hotfix: policy.hotfix ?? null } });
         refined = result.envelope.result.output; planProducer = result;
         if (route === 'hotfix') {
@@ -215,4 +215,4 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runGithubUnattended().catch(error => { console.error(error.message); process.exitCode = 1; });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runGithubUnattended().then(result => { if (result.status === 'blocked') process.exitCode = 1; }).catch(error => { console.error(error.message); process.exitCode = 1; });

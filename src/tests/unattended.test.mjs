@@ -14,7 +14,7 @@ const policy = () => ({ schemaVersion: 1, enabled: true, routes: ['ff', 'hotfix'
   allowFivePoint: false, merge: true, maxCorrections: 2, timeoutSeconds: 60,
   hotfix: { setupCommands: [], regressionCommand: ['node', '--test', 'tests/edge.test.mjs'], failurePattern: ['Expected inclusive boundary'], testPaths: ['tests/'], modules: { feature: ['src/feature/', 'tests/'] } } });
 const eligible = () => ({ points: 2, risk: 'low', reversible: true, dependenciesResolved: true, scopeKnown: true, productChangeNeeded: false, humanDecisionRequired: false, reason: 'Known reversible behavior with a focused assertion', confirmedDefect: true, rollback: 'Revert the isolated commit' });
-const plan = () => ({ command: ['node', '--test', 'tests/edge.test.mjs'], assertion: 'Expected inclusive boundary', rootCause: 'Strict comparison excludes the boundary', plannedFiles: ['src/feature/rule.mjs', 'tests/edge.test.mjs'] });
+const plan = () => ({ command: ['node', '--test', 'tests/edge.test.mjs'], assertion: 'Expected inclusive boundary', estimatedProductionLines: 2, rootCause: 'Strict comparison excludes the boundary', plannedFiles: ['src/feature/rule.mjs', 'tests/edge.test.mjs'] });
 const check = (exitCode = 0, log = '') => ({ checks: [{ command: plan().command, exitCode, log, execution: { status: exitCode ? 'failed' : 'passed', exitCode, signal: null } }] });
 const file = (path = 'src/feature/rule.mjs', additions = 1, deletions = 1) => ({ path, additions, deletions, binary: false });
 
@@ -55,6 +55,7 @@ test('RED/GREEN receipts require the named assertion and executed command', () =
   assert.throws(() => assertRegression(check(), p, 'red'), /RED/);
   assert.throws(() => assertRegression(check(1), p, 'green'), /GREEN/);
   assert.throws(() => assertRegression(check(124, p.assertion), p, 'red'), /RED/);
+  assert.throws(() => regressionPlan({ ...p, estimatedProductionLines: 101 }), /bounded/);
   assert.throws(() => regressionPlan({ ...p, command: ['node', 'bad\ncommand'] }), /bounded/);
 });
 

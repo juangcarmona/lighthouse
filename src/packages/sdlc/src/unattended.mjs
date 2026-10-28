@@ -58,7 +58,7 @@ export function hotfixScope(files, policy) {
 
 export function regressionPlan(value) {
   if (!record(value) || !command(value.command) || typeof value.assertion !== 'string' || !value.assertion.trim() ||
-      value.assertion.length > 1000 || typeof value.rootCause !== 'string' || !value.rootCause.trim() ||
+      value.assertion.length > 1000 || !Number.isInteger(value.estimatedProductionLines) || value.estimatedProductionLines < 0 || value.estimatedProductionLines > 100 || typeof value.rootCause !== 'string' || !value.rootCause.trim() ||
       !Array.isArray(value.plannedFiles) || !value.plannedFiles.length || value.plannedFiles.length > 10 || value.plannedFiles.some(p => !boundedPath(p))) throw Error('Hotfix needs bounded regression command, assertion, root cause and planned files');
   return value;
 }
