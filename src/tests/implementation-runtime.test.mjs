@@ -1,10 +1,38 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks, copyEvidence } from '../packages/sdlc/src/implementation-runtime.mjs';
+
+test('browser preview evidence fits while byte and file budgets remain bounded', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'browser-evidence-'));
+  try {
+    const source = join(root, 'source'); await mkdir(source);
+    const preview = join(source, 'preview.bin'); await writeFile(preview, '');
+    await truncate(preview, 40 * 1024 * 1024);
+    await copyEvidence(source, join(root, 'preview'));
+    assert.equal((await stat(join(root, 'preview/preview.bin'))).size, 40 * 1024 * 1024);
+    await truncate(preview, 64 * 1024 * 1024 + 1);
+    await assert.rejects(copyEvidence(source, join(root, 'oversized')), /Evidence exceeds 64 MiB/);
+    await rm(preview);
+    await Promise.all(Array.from({ length: 201 }, (_, i) => writeFile(join(source, `report-${i}`), '')));
+    await assert.rejects(copyEvidence(source, join(root, 'too-many')), /Evidence exceeds 200 files/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('evidence rejects symbolic links at the root and inside the collection', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'evidence-links-'));
+  try {
+    const source = join(root, 'source'); await mkdir(source);
+    await writeFile(join(source, 'report'), 'evidence');
+    await symlink(source, join(root, 'linked-root'));
+    await assert.rejects(copyEvidence(join(root, 'linked-root'), join(root, 'out')), /Unsafe evidence/);
+    await symlink(join(source, 'report'), join(source, 'linked-member'));
+    await assert.rejects(copyEvidence(source, join(root, 'out')), /Unsafe evidence/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test('candidate Git metadata passes the baseline branch guard without copying repository hooks', async () => {
   const root = await mkdtemp(join(tmpdir(), 'workspace-branch-'));
