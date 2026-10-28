@@ -28,6 +28,19 @@ export async function githubJson(env, path, method = 'GET', body, optional = fal
   return response.status === 204 ? null : response.json();
 }
 
+// A delegated merge never overrides a later owner hold or new review input.
+export async function assertUnattendedPullRequest(api, comments, pr, owner) {
+  const hold = '<!-- lighthouse-pr-hold:' + pr.number + ':' + pr.head.sha + ' -->';
+  if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body?.includes(hold))) throw Error('Owner placed this PR head on hold');
+  const [events, reviews, discussion, inline] = await Promise.all([
+    list(api, 'issues/' + pr.number + '/timeline'), list(api, 'pulls/' + pr.number + '/reviews'),
+    list(api, 'issues/' + pr.number + '/comments'), list(api, 'pulls/' + pr.number + '/comments'),
+  ]);
+  if (events.some(e => e.event === 'converted_to_draft' && e.actor?.login === owner)) throw Error('Owner converted this PR to draft; new authorization is required');
+  if (reviews.some(r => r.user?.login === owner && (r.state !== 'APPROVED' || r.commit_id !== pr.head.sha)) ||
+      [...discussion, ...inline].some(c => c.user?.login === owner)) throw Error('New owner PR feedback requires fresh independent review');
+}
+
 export async function runGithubUnattended({ env = process.env, api = (...args) => githubJson(env, ...args), execute = executeUnattendedStage } = {}) {
   const event = await readJson(env.GITHUB_EVENT_PATH), owner = env.GITHUB_REPOSITORY_OWNER;
   if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner ||
@@ -80,6 +93,11 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     const fresh = await api('issues/' + issueNumber);
     if (fresh.state !== 'open' || fresh.labels.some(l => ['human-working', 'future', 'needs-info', 'waiting-review'].includes(l.name)) ||
         reserved && !fresh.labels.some(l => l.name === 'agent-working') || !reserved && fresh.labels.some(l => l.name === 'agent-working') || taskDigest(fresh, owners(await comments(), owner)) !== intent) throw Error('Issue scope, reservation or owner authorization changed');
+    if (published) {
+      const current = await api('pulls/' + published.number);
+      if (current.state !== 'open' || current.head.sha !== published.head.sha) throw Error('Published candidate changed before integration');
+      await assertUnattendedPullRequest(api, await comments(), current, owner);
+    }
   };
   const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
   const step = async (stage, worker, text, extra = {}, selectedPolicy = implementation.policy) => {
@@ -184,24 +202,27 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       },
       integrate: async (candidate, pr) => {
         const until = Math.min(Date.now() + 600000, Date.now() + policy.timeoutSeconds * 1000);
-        let observation;
+        let observation, promoted = false;
         const authorization = { issue: issueNumber, pr: pr.number, head: pr.head.sha, merge: true,
           unattended: { route, owner, policyDigest, review: lastReview } };
         do {
           await recheck();
           const current = await api('pulls/' + pr.number);
           if (current.head.sha !== pr.head.sha || current.state !== 'open') throw Error('Published candidate changed before integration');
+          if (promoted && current.draft) throw Error('PR returned to draft; new authorization is required');
           // Observe a draft without promoting it while CI is pending. The final merge recheck still rejects drafts.
           observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID, { observeDraft: true });
           let checked = false;
           try { assertChecks(observation); checked = true; } catch {}
           if (checked) {
+            await recheck();
             if (current.draft) await setPullRequestDraft(env.GH_TOKEN, current, false);
+            promoted = true;
             observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
             if (observation.mergeable) break;
           }
           if (Date.now() >= until) throw Error('Required CI or mergeability is pending; retain the PR for a new authorized action');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 30000));
         } while (!controller.signal.aborted);
         const result = await mergeAccepted(api, observation, async () => { await recheck(); return inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID); });
         const finalObservation = { ...observation, merged: true, merge: result.sha };

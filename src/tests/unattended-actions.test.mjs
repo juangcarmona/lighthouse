@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { implementationPrProof, reconcileImplementationPr } from '../packages/sdlc/src/pr-state.mjs';
-import { runGithubUnattended } from '../packages/sdlc/src/unattended-actions.mjs';
+import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
 async function fixture() {
@@ -31,6 +31,7 @@ async function fixture() {
   const plan = { command: policy.hotfix.regressionCommand, assertion: 'Expected inclusive boundary', estimatedProductionLines: 2, rootCause: 'Strict comparison excludes equality',
     plannedFiles: ['src/feature/rule.mjs', 'tests/edge.test.mjs'] };
   const comments = [], labels = [], executions = [], writes = [];
+  let publishedPr = null;
   const issue = () => ({ number: 1, state: 'open', title: 'Correct the inclusive boundary', body: 'Values equal to 2 must be eligible.', user: { login: 'owner' }, labels: labels.map(name => ({ name })) });
   const encode = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
   const api = async (path, method = 'GET', body) => {
@@ -54,7 +55,9 @@ async function fixture() {
     if (path === 'git/commits/' + revision) return { tree: { sha: 'tree' } };
     if (path === 'git/blobs' || path === 'git/trees' || path === 'git/commits') return { sha: 'b'.repeat(40) };
     if (path === 'git/refs') return { object: { sha: 'b'.repeat(40) } };
-    if (path === 'pulls' && method === 'POST') return { number: 3, html_url: 'https://github.com/owner/repo/pull/3', head: { sha: 'b'.repeat(40), ref: body.head } };
+    if (path === 'pulls' && method === 'POST') return publishedPr = { number: 3, state: 'open', html_url: 'https://github.com/owner/repo/pull/3', head: { sha: 'b'.repeat(40), ref: body.head } };
+    if (path === 'pulls/3') return publishedPr;
+    if (path.startsWith('issues/3/') || path.startsWith('pulls/3/')) return [];
     throw Error('Unexpected fixture API: ' + method + ' ' + path);
   };
   const execute = async options => {
@@ -221,4 +224,20 @@ test('a real child startup failure retains its precise diagnostic without starti
     const failure = JSON.parse(await readFile(join(root, request.runId, 'tmp/lighthouse-123-1/engine-error.json'), 'utf8'));
     assert.equal(failure.message, 'Invalid operator engine configuration');
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test('delegated integration honors owner draft holds and new PR feedback before promotion or merge', async () => {
+  const pr = { number: 3, head: { sha: 'b'.repeat(40) } };
+  await assert.rejects(assertUnattendedPullRequest(async () => [], [{ user: { login: 'github-actions[bot]' }, body: '<!-- lighthouse-pr-hold:3:' + pr.head.sha + ' -->' }], pr, 'owner'), /on hold/);
+  for (const [path, value, pattern] of [
+    ['timeline', [{ event: 'converted_to_draft', actor: { login: 'owner' } }], /converted.*draft/],
+    ['reviews', [{ user: { login: 'owner' }, state: 'CHANGES_REQUESTED', commit_id: pr.head.sha }], /feedback/],
+    ['comments', [{ user: { login: 'owner' }, body: 'Please fix the boundary before merging' }], /feedback/],
+  ]) {
+    const api = async url => url.includes('/' + path + '?') ? value : [];
+    await assert.rejects(assertUnattendedPullRequest(api, [], pr, 'owner'), pattern);
+  }
+  const approved = async url => url.includes('/reviews?') ? [{ user: { login: 'owner' }, state: 'APPROVED', commit_id: pr.head.sha }] : [];
+  await assertUnattendedPullRequest(approved, [], pr, 'owner');
 });
