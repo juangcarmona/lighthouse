@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/lighthouse-product-change.schema.json",
+  "title": "Lighthouse Product Change handoff contract",
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "identity": {
+      "type": "object",
+      "required": ["repository", "issue", "parentRunId", "authorizationDigest", "policyDigest", "workflowRevision", "head"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+        "issue": { "type": "integer", "minimum": 1 },
+        "parentRunId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "authorizationDigest": { "$ref": "#/$defs/digest" },
+        "policyDigest": { "$ref": "#/$defs/digest" },
+        "workflowRevision": { "$ref": "#/$defs/revision" },
+        "head": { "$ref": "#/$defs/revision" }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "identity", "entry", "idea", "scope", "createdAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "request" },
+        "identity": { "$ref": "#/$defs/identity" },
+        "entry": { "enum": ["idea", "parent-handoff", "feedback"] },
+        "idea": { "type": "string", "minLength": 1, "maxLength": 12000 },
+        "scope": { "type": "string", "minLength": 1, "maxLength": 12000 },
+        "changeName": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 120 },
+        "feedback": { "type": "string", "maxLength": 12000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "checkpoint": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "identity", "requestDigest", "changeName", "changeId", "proposalDigest", "baselineDigest", "state", "effectIds"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "checkpoint" },
+        "identity": { "$ref": "#/$defs/identity" },
+        "requestDigest": { "$ref": "#/$defs/digest" },
+        "changeName": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 120 },
+        "changeId": { "type": "string", "pattern": "^CHG-[A-Z0-9-]+$", "maxLength": 160 },
+        "proposalDigest": { "$ref": "#/$defs/digest" },
+        "baselineDigest": { "$ref": "#/$defs/digest" },
+        "state": { "enum": ["preparing", "waiting-product-decision", "approved", "applying", "applied", "blocked"] },
+        "pendingQuestion": { "type": "string", "maxLength": 4000 },
+        "effectIds": { "type": "array", "uniqueItems": true, "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 256 } }
+      },
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "actor", "source", "reviewKey", "changeId", "proposalDigest", "baselineDigest", "policyDigest", "head", "decisionId", "observedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "approval" },
+        "actor": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "source": { "enum": ["issue-comment", "pull-request-comment", "pull-request-review"] },
+        "reviewKey": { "$ref": "#/$defs/digest" },
+        "changeId": { "type": "string", "pattern": "^CHG-[A-Z0-9-]+$", "maxLength": 160 },
+        "proposalDigest": { "$ref": "#/$defs/digest" },
+        "baselineDigest": { "$ref": "#/$defs/digest" },
+        "policyDigest": { "$ref": "#/$defs/digest" },
+        "head": { "$ref": "#/$defs/revision" },
+        "decisionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "observedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "stageOutput": {
+      "type": "object",
+      "required": ["schemaVersion", "outcome", "entry", "affectedAreas", "decisions"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "outcome": { "enum": ["aligned", "candidate", "blocked"] },
+        "entry": { "enum": ["idea", "parent-handoff", "feedback"] },
+        "affectedAreas": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 256 } },
+        "decisions": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 1000 } },
+        "changeName": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 120 },
+        "changeId": { "type": "string", "pattern": "^CHG-[A-Z0-9-]+$", "maxLength": 160 },
+        "files": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "object", "required": ["path", "content"], "properties": { "path": { "type": "string", "maxLength": 512 }, "content": { "type": "string", "maxLength": 65536 }, "mode": { "enum": ["100644", "100755"] } }, "additionalProperties": false } },
+        "question": { "type": "string", "maxLength": 4000 },
+        "proposalDigest": { "$ref": "#/$defs/digest" },
+        "baselineDigest": { "$ref": "#/$defs/digest" },
+        "providerValidation": { "type": "object", "required": ["status", "diagnosticCount"], "properties": { "status": { "const": "passed" }, "diagnosticCount": { "type": "integer", "minimum": 0 } }, "additionalProperties": false }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "properties": { "outcome": { "const": "candidate" } }, "required": ["outcome"] }, "then": { "required": ["changeName", "changeId", "files", "proposalDigest", "baselineDigest", "providerValidation"] } },
+        { "if": { "properties": { "outcome": { "const": "blocked" } }, "required": ["outcome"] }, "then": { "required": ["question"] } }
+      ]
+    },
+    "applyReceipt": {
+      "type": "object",
+      "required": ["schemaVersion", "kind", "intentId", "approvalDigest", "changeId", "headBefore", "headAfter", "proposalDigest", "baselineDigest", "resultingModelDigest", "validated", "appliedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "apply-receipt" },
+        "intentId": { "$ref": "#/$defs/digest" },
+        "approvalDigest": { "$ref": "#/$defs/digest" },
+        "changeId": { "type": "string", "pattern": "^CHG-[A-Z0-9-]+$", "maxLength": 160 },
+        "headBefore": { "$ref": "#/$defs/revision" },
+        "headAfter": { "$ref": "#/$defs/revision" },
+        "proposalDigest": { "$ref": "#/$defs/digest" },
+        "baselineDigest": { "$ref": "#/$defs/digest" },
+        "resultingModelDigest": { "$ref": "#/$defs/digest" },
+        "validated": { "const": true },
+        "appliedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

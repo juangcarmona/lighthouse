@@ -3,7 +3,7 @@ import { readActionsJson } from './actions-artifact.mjs';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
 export const stages = ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'];
-export const workers = [...stages, 'apply-review'];
+export const workers = [...stages, 'apply-review', 'product-change', 'apply-product-change'];
 export const workerFor = request => request.worker ?? request.stage ?? 'implement';
 export const stagePath = stage => { if (!workers.includes(stage)) throw Error('Unknown dispatch worker'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
 export const implementPath = stagePath('implement');
@@ -67,11 +67,19 @@ export async function sendDispatch(api, repository, request, commentId) {
   if (receipt.id !== request.id || receipt.digest !== digest(JSON.stringify(request))) throw Error('Dispatch request changed');
   if (receipt.workerRunId) return;
   // Never retry this POST automatically: its response can be lost after admission.
-  return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId) } });
+  return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId), ...(workerFor(request) === 'apply-product-change' ? { 'pull-request': String(request.productApproval.pullRequest), head: request.productApproval.head } : {}) } });
 }
 
 export function verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue) {
-  if (workerFor(request) !== workerFor(receipt) || request.feedbackKey !== receipt.feedbackKey || workerFor(request) !== request.stage && !(workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage))) throw Error('Dispatch worker responsibility mismatch');
+  const delegatedWorker = workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage) || workerFor(request) === 'product-change' && ['propose', 'implement'].includes(request.stage);
+  const applyProductWorker = workerFor(request) === 'apply-product-change' && ['propose', 'implement'].includes(request.stage);
+  if (workerFor(request) !== workerFor(receipt) || request.feedbackKey !== receipt.feedbackKey || workerFor(request) !== request.stage && !delegatedWorker && !applyProductWorker) throw Error('Dispatch worker responsibility mismatch');
+  if (workerFor(request) === 'product-change') {
+    const idea = request.eventName === 'workflow_dispatch' && request.event?.inputs?.workflow === 'product-change';
+    const feedback = request.productFeedback && ['answer', 'request-changes'].includes(request.productFeedback.action) && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(request.productFeedback.changeName ?? '') && typeof request.productFeedback.text === 'string' && request.productFeedback.text.trim().length > 0 && request.productFeedback.text.length <= 12000 && ['issue_comment', 'pull_request_review'].includes(request.eventName);
+    if (!idea && !feedback) throw Error('Product Change worker needs an authorized idea selector or authenticated owner feedback');
+  }
+  if (workerFor(request) === 'apply-product-change' && (!request.productApproval || request.productApproval.kind !== 'approval' || !hash(request.productApproval.reviewKey))) throw Error('Trusted Product Change apply requires a bound approval');
   if (JSON.stringify(request.recovery) !== JSON.stringify(receipt.recovery)) throw Error('Recovery receipt identity mismatch');
   const events = ['issues', 'issue_comment', 'pull_request_review', 'pull_request_review_comment', 'workflow_dispatch', 'workflow_run'];
   if (request.schemaVersion !== 1 || request.id !== receipt.id || request.repository !== repository || request.issue !== issue || request.stage !== (receipt.stage ?? 'implement') || !stages.includes(request.stage) || !sha(request.sourceRevision) || !sha(request.workflowRevision) || !hash(request.taskDigest) || typeof request.handoff !== 'boolean' || digest(JSON.stringify(request)) !== receipt.digest) throw Error('Dispatch artifact identity mismatch');

@@ -81,6 +81,9 @@
     "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json",
     "./workflows/*": "./workflows/*",
     "./host-contract": "./src/host-contract.mjs",
-    "./github-profile": "./src/github-profile.mjs"
+    "./github-profile": "./src/github-profile.mjs",
+    "./product-change": "./src/product-change.mjs",
+    "./product-change-actions": "./src/product-change-actions.mjs",
+    "./schemas/product-change.schema.json": "./schemas/product-change.schema.json"
   }
 }

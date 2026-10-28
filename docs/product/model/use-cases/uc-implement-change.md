@@ -6,7 +6,7 @@ status: draft
 primary-actor: ACT-ADOPTER
 supporting-actors: [ACT-AGENT-HOST, ACT-INTEGRATED-SYSTEM]
 bounded-context: BC-FOUNDATION
-governed-by: [BR-OWNED-AUTHORITY, BR-AUTHORITY-BOUNDARIES, BR-HUMAN-AUTHORITY, BR-FAIL-CLOSED, BR-BOUNDED-WORKFLOW, BR-STAGE-GATES]
+governed-by: [BR-OWNED-AUTHORITY, BR-AUTHORITY-BOUNDARIES, BR-HUMAN-AUTHORITY, BR-FAIL-CLOSED, BR-BOUNDED-WORKFLOW, BR-STAGE-GATES, BR-PRODUCT-CHANGE-HANDOFF]
 uses-terms: [TERM-GUARDRAIL, TERM-INTEGRATION, TERM-AUTHORITY-MAP, TERM-CHANGE-FLOW, TERM-WORKFLOW-STAGE, TERM-GATE, TERM-TRIAGE, TERM-LABEL-STATE]
 ---
 
@@ -35,9 +35,11 @@ An authorized implementation workflow may enter before the internal proposal sta
 
 A project can use a manual route when no supported agent workflow is installed; the same project guardrails, stage contract and human decisions still apply.
 
+If implementation discovers an in-scope product gap, it checkpoints its parent and preserves existing work, then uses UC-PREPARE-PRODUCT-CHANGE on the issue branch and PR. Dependent implementation pauses for explicit authenticated human product approval, provider-owned apply and resulting-definition validation. Successful apply resumes the same authorized parent once without another implementation request, after affected citations and dependent planning or gate evidence are refreshed as needed. The stage records the applied branch context without claiming canonical baseline acceptance before merge. A broader adjustment stops for an owner scope decision.
+
 ## Failure Conditions
 
-The change exceeds its declared scope, an authority is stale, a Definition of Done dimension is missing or a verification check fails.
+The change exceeds its declared scope, an authority is stale, a required product decision is missing or stale, product apply or publication is failed or uncertain, authority is revoked, a Definition of Done dimension is missing or a verification check fails. Dependent work stops with its checkpoint preserved.
 
 ## Postconditions
 

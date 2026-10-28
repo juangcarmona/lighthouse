@@ -6,7 +6,7 @@ status: draft
 primary-actor: ACT-ADOPTER
 supporting-actors: [ACT-AGENT-HOST, ACT-INTEGRATED-SYSTEM]
 bounded-context: BC-FOUNDATION
-governed-by: [BR-AUTHORITY-BOUNDARIES, BR-STAGE-GATES, BR-ROUTE-CONTRACT, BR-TRIAGE-CONTRACT, BR-LABEL-STATE, BR-FAIL-CLOSED, BR-HUMAN-AUTHORITY, BR-ENTRY-AUTHORITY]
+governed-by: [BR-AUTHORITY-BOUNDARIES, BR-STAGE-GATES, BR-ROUTE-CONTRACT, BR-TRIAGE-CONTRACT, BR-LABEL-STATE, BR-FAIL-CLOSED, BR-HUMAN-AUTHORITY, BR-ENTRY-AUTHORITY, BR-PRODUCT-CHANGE-HANDOFF]
 uses-terms: [TERM-HARNESS, TERM-AUTHORITY-MAP, TERM-GATE, TERM-CHANGE-OVERVIEW, TERM-DELIVERY-ROUTE, TERM-CHANGE-FLOW, TERM-WORKFLOW-STAGE, TERM-TRIAGE, TERM-LABEL-STATE]
 ---
 
@@ -36,6 +36,10 @@ The project has a declared authority map, an adopted Lighthouse profile, a confi
 ## Alternative Flows
 
 An adopter can run the supervised route one stage at a time, stop after `propose` for a plan-only review, use bounded `ff` for unattended work, select `hotfix` for a confirmed defect or select `decompose` for a large item; all routes preserve the same authority context, label state, gate semantics and evidence contract.
+
+An authorized idea request may enter UC-PREPARE-PRODUCT-CHANGE before delivery. When any authorized delivery stage finds a product-definition gap, it may invoke that same bounded product workflow within its current issue scope, preserve its parent checkpoint and existing work, and wait for explicit human product approval and successful provider apply before dependent work continues. A small issue adjustment shares the issue branch and PR while product and engineering artifacts retain separate identities. Accepted intent that already covers the issue needs alignment evidence and no new Product Change. Scope expansion requires an owner decision.
+
+A valid product apply may unblock the waiting parent once under its still-effective delivery authorization and applicable gates, consuming an explicitly recorded applied branch context whose baseline acceptance still awaits merge. An idea request alone grants no implementation authority. Product approval does not authorize merge or release.
 
 ## Failure Conditions
 

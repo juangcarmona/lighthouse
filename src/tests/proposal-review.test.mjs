@@ -57,7 +57,7 @@ test('real router maps a PR comment to its source issue and reports approvals wi
       const output = join(dir, `output-${approved}`);
       const result = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_EVENT_NAME: approved ? 'pull_request_review' : 'issue_comment', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: output, RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
       assert.equal(result.status, 0, result.stderr);
-      assert.match(await readFile(output, 'utf8'), new RegExp(`stage=propose\\nrun=${!approved}\\nissue=47`));
+      assert.match(await readFile(output, 'utf8'), new RegExp(`stage=propose\\nworker=propose\\nrun=${!approved}\\nissue=47`));
     }
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
