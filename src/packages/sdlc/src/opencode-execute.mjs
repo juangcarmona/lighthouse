@@ -210,9 +210,8 @@ async function main() {
     runtime?.cleanup();
     try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     if (slot !== undefined) closeSync(slot);
-    if (implementing) {
-      try { docker(['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${dir},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
-    }
+    // Read-only stages also create engine-owned command receipt directories.
+    try { docker(['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--mount', `type=bind,src=${dir},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
     await rm(dir, { recursive: true, force: true });
   }
 }
