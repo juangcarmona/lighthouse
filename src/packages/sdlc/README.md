@@ -113,7 +113,7 @@ The publisher rechecks source, owner answers, reservation and policy before crea
 
 To recover a failed candidate, an owner may add `"seed": {"base": "<40-character commit>", "head": "<40-character commit>"}` to that issue’s implementation policy. The head must be one commit directly on the declared base in the same repository. Preparation rejects out-of-scope files, links and changes whose base file no longer matches the current default branch. It binds the validated seed to the request and restores it in the disposable workspace. The engine continues that candidate, reruns checks and creates a fresh PR; the seed branch is never modified. A seed supplies work to inspect, not completion or approval evidence.
 
-A maintainer can return a ready implementation PR to draft while making a correction.
+A maintainer can return a ready implementation PR to draft for corrections.
 
 ## Integration and review
 

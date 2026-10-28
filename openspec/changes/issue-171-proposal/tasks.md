@@ -11,6 +11,10 @@
 
 - [x] 2.1 Run configured dependency installation, repository verification and strict OpenSpec validation, plus product citation verification; retain check receipts and a concise retrospective under `/output/evidence/` and confirm only the README and this change directory differ.
 
+## 3. Owner wording correction
+
+- [x] 3.1 Replace the added README sentence with “A maintainer can return a ready implementation PR to draft for corrections.”; verify the exact sentence and otherwise unchanged README, then rerun the configured checks and retain evidence for the same PR #172.
+
 ## Workflow follow-up
 
 - The owner traces draft/ready/correction transitions on the fixture PR and closes it without merging; these later actions are not implementation-stage evidence.
