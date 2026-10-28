@@ -1,0 +1,15 @@
+{
+  "run": 40781039122,
+  "artifact": 12857652012,
+  "artifactSha256": "2e6df271f12cf3b9a232b8b506dc085a63ef7c958b178c5dbbba55536194f1f3",
+  "report": {
+    "status": "blocked",
+    "evidence": [],
+    "reason": "Independent engine execution failed: triage: Host engine capacity unavailable",
+    "nextAction": "Inspect execution evidence and resolve the identified blocker"
+  },
+  "engineError": {
+    "schemaVersion": 1,
+    "message": "Host engine capacity unavailable"
+  }
+}

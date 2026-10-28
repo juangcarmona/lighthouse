@@ -1,0 +1,165 @@
+{
+  "run": 40786174632,
+  "artifact": 12859726560,
+  "artifactSha256": "b85b17f14df7af1bd53f85e11c324f7ace65b6156fbc8e4cd54561258ef0d7ac",
+  "status": "blocked",
+  "candidatePublished": false,
+  "records": {
+    "53e32688bed2c13b43488b425f812f0c0f309ebff979ea6817cdbaf8b83aeefe/tmp/lighthouse-40786174632-1/runtime.json": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "52592b23ddeeb14223bf5294432820695659ff1b",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6.1-sol",
+      "modelExecution": {
+        "requested": {
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "build",
+          "model": "openai/gpt-6.1-sol",
+          "reasoningEffort": "medium",
+          "engineModel": "openai/gpt-6.1-sol#medium",
+          "source": "operator.workers",
+          "fields": {
+            "model": "operator",
+            "reasoningEffort": "operator"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "106d1184332987d960ffb48163ab1bfeb4d1cec1",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 355733504,
+          "oomKills": 0
+        }
+      }
+    },
+    "b921287d891cfd0d83f8f35c7da05a79a1ca92d642ab0562a33d4b884685897e/tmp/lighthouse-40786174632-1/engine-error.json": {
+      "schemaVersion": 1,
+      "message": "envelope.schemaVersion is required\nunsupported envelope schemaVersion"
+    },
+    "b921287d891cfd0d83f8f35c7da05a79a1ca92d642ab0562a33d4b884685897e/tmp/lighthouse-40786174632-1/runtime.json": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "52592b23ddeeb14223bf5294432820695659ff1b",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "106d1184332987d960ffb48163ab1bfeb4d1cec1",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 322195456,
+          "oomKills": 0
+        }
+      }
+    }
+  }
+}
