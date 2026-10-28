@@ -28,6 +28,19 @@ export async function githubJson(env, path, method = 'GET', body, optional = fal
   return response.status === 204 ? null : response.json();
 }
 
+// A delegated merge never overrides a later owner hold or new review input.
+export async function assertUnattendedPullRequest(api, comments, pr, owner) {
+  const hold = '<!-- lighthouse-pr-hold:' + pr.number + ':' + pr.head.sha + ' -->';
+  if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body?.includes(hold))) throw Error('Owner placed this PR head on hold');
+  const [events, reviews, discussion, inline] = await Promise.all([
+    list(api, 'issues/' + pr.number + '/timeline'), list(api, 'pulls/' + pr.number + '/reviews'),
+    list(api, 'issues/' + pr.number + '/comments'), list(api, 'pulls/' + pr.number + '/comments'),
+  ]);
+  if (events.some(e => e.event === 'converted_to_draft' && e.actor?.login === owner)) throw Error('Owner converted this PR to draft; new authorization is required');
+  if (reviews.some(r => r.user?.login === owner && (r.state !== 'APPROVED' || r.commit_id !== pr.head.sha)) ||
+      [...discussion, ...inline].some(c => c.user?.login === owner)) throw Error('New owner PR feedback requires fresh independent review');
+}
+
 export async function runGithubUnattended({ env = process.env, api = (...args) => githubJson(env, ...args), execute = executeUnattendedStage } = {}) {
   const event = await readJson(env.GITHUB_EVENT_PATH), owner = env.GITHUB_REPOSITORY_OWNER;
   if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner ||
@@ -79,7 +92,12 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     if ((await api('commits/' + encodeURIComponent(metadata.default_branch))).sha !== revision) throw Error('Authorized base or policy changed; reassess before continuing');
     const fresh = await api('issues/' + issueNumber);
     if (fresh.state !== 'open' || fresh.labels.some(l => ['human-working', 'future', 'needs-info', 'waiting-review'].includes(l.name)) ||
-        reserved && !fresh.labels.some(l => l.name === 'agent-working') || taskDigest(fresh, owners(await comments(), owner)) !== intent) throw Error('Issue scope, reservation or owner authorization changed');
+        reserved && !fresh.labels.some(l => l.name === 'agent-working') || !reserved && fresh.labels.some(l => l.name === 'agent-working') || taskDigest(fresh, owners(await comments(), owner)) !== intent) throw Error('Issue scope, reservation or owner authorization changed');
+    if (published) {
+      const current = await api('pulls/' + published.number);
+      if (current.state !== 'open' || current.head.sha !== published.head.sha) throw Error('Published candidate changed before integration');
+      await assertUnattendedPullRequest(api, await comments(), current, owner);
+    }
   };
   const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
   const step = async (stage, worker, text, extra = {}, selectedPolicy = implementation.policy) => {
@@ -97,8 +115,11 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   };
   const review = async (purpose, details, producingRun = null) => {
     const binding = unattendedDigest({ revision, intent, policyDigest, purpose, details });
+    const phase = purpose === 'plan'
+      ? 'This is pre-implementation PLANNING review. Assess context.review.details.refined and plan for scope, readiness, rollback and the planned verification. The mounted source is intentionally unrepaired. Candidate diffs, RED/GREEN and CI are future-stage requirements, not missing evidence for this planning decision. Do not claim those future checks passed.'
+      : 'This is CANDIDATE review. Assess context.review.details changes, originalFiles, RED and executed host checks. Forge CI and merge/release are subsequent trusted-host gates after PR publication; do not claim they passed or require their receipts at this pre-publication review.';
     const result = await step('integrate', 'independent-review',
-      'Execute only read-only independent engineering review. Source is mounted at /workspace. Copy runId, stage and gate from contract.envelope.result for every outcome, including blocked. Read /input/context.json and /harness/skills/independent-review/SKILL.md. Assess the original issue, criteria and authorities against the candidate and executed evidence. Write /output/envelope.json. Return output.review with the exact binding, verdict accept/request-changes/escalate and concrete findings. Product decisions and unavailable proof require escalation. Acceptance requires passed status and empty blocker arrays; requested corrections use blocked status. Never grant merge authority or edit the workspace.',
+      phase + ' The contract.envelope is an OUTPUT TEMPLATE, never an execution receipt. Actual review inputs are context.review.details and the original issue. Execute only read-only independent engineering review. Source is mounted at /workspace. Copy runId, stage and gate from contract.envelope.result for every outcome, including blocked. Read /input/context.json and /harness/skills/independent-review/SKILL.md. Assess the original issue, criteria and authorities against the candidate and executed evidence. Write /output/envelope.json. Return output.review with the exact binding, verdict accept/request-changes/escalate and concrete findings. Product decisions and unavailable proof require escalation. Acceptance requires passed status and empty blocker arrays; requested corrections use blocked status. Never grant merge authority or edit the workspace.',
       { review: { purpose, binding, details, originalIssue: issueContext } });
     const value = result.envelope.result.output?.review;
     if (!value || value.binding !== binding || !['accept', 'request-changes', 'escalate'].includes(value.verdict) ||
@@ -140,7 +161,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         working = applyCandidate(working, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
         return { files, refinement: refined };
       },
-      reviewPlan: async details => { if (!(await review('plan', details, planProducer)).accepted) throw Error('Independent planning review requires correction or a human decision'); },
+      reviewPlan: async details => { const assessment = await review('plan', details, planProducer); if (!assessment.accepted) throw Error('Independent planning review ' + assessment.verdict + ': ' + assessment.findings.join(' ').slice(0, 3000)); },
       reproduce: async plan => {
         const selected = { ...implementation.policy, paths: policy.hotfix.testPaths, checks: [...policy.hotfix.setupCommands, plan.command] };
         const result = await step('implement', 'implement',
@@ -172,24 +193,43 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       publish: async candidate => {
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         published = await createImplementationPullRequest(api, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
+        await recheck();
+        await notify('Candidate checks and independent review passed.\n\n<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->');
+        await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true); reserved = false;
         await dispatchDeliveryChecks(api, revision, published);
         await notify('Ready for integration · ' + route + '\n\n[PR #' + published.number + '](' + published.html_url + ') contains the independently reviewed candidate. Required CI and current merge authority are checked before integration.');
         return published;
       },
       integrate: async (candidate, pr) => {
         const until = Math.min(Date.now() + 600000, Date.now() + policy.timeoutSeconds * 1000);
-        let observation;
+        let observation, promoted = false;
         const authorization = { issue: issueNumber, pr: pr.number, head: pr.head.sha, merge: true,
           unattended: { route, owner, policyDigest, review: lastReview } };
         do {
           await recheck();
           const current = await api('pulls/' + pr.number);
           if (current.head.sha !== pr.head.sha || current.state !== 'open') throw Error('Published candidate changed before integration');
-          if (current.draft) await setPullRequestDraft(env.GH_TOKEN, current, false);
-          observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
-          try { assertChecks(observation); if (observation.mergeable) break; } catch {}
+          if (promoted && current.draft) throw Error('PR returned to draft; new authorization is required');
+          // Observe a draft without promoting it while CI is pending. The final merge recheck still rejects drafts.
+          observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID, { observeDraft: true });
+          let checked = false;
+          try { assertChecks(observation); checked = true; } catch {}
+          if (checked) {
+            await recheck();
+            if (current.draft) {
+              try { await setPullRequestDraft(env.GH_TOKEN, current, false); }
+              catch (error) {
+                const reconciled = await api('pulls/' + pr.number);
+                if (reconciled.state !== 'open' || reconciled.head.sha !== pr.head.sha || reconciled.draft) throw error;
+              }
+            }
+            await recheck();
+            promoted = true;
+            observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
+            if (observation.mergeable) break;
+          }
           if (Date.now() >= until) throw Error('Required CI or mergeability is pending; retain the PR for a new authorized action');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 30000));
         } while (!controller.signal.aborted);
         const result = await mergeAccepted(api, observation, async () => { await recheck(); return inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID); });
         const finalObservation = { ...observation, merged: true, merge: result.sha };

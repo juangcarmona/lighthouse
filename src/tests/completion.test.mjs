@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { authorizeCompletion, assertFresh, assertChecks, mergeAccepted, checkCommit, evidenceProtection, postMergeRuns, requiredPolicy } from '../packages/sdlc/src/completion.mjs';
+import { authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, checkCommit, evidenceProtection, postMergeRuns, requiredPolicy } from '../packages/sdlc/src/completion.mjs';
 import { validatePublishable, publishProcessBundle, completionBundle } from '../packages/sdlc/src/process-publication.mjs';
 import { validateGithubProfile } from '../packages/sdlc/src/github-profile.mjs';
 const head = 'a'.repeat(40), base = 'b'.repeat(40), merged = 'c'.repeat(40);
@@ -289,4 +289,37 @@ test('retained independent integration binds the original owner merge decision w
   await assert.rejects(read({ event: { inputs: { ...event.inputs, merge: 'false' } } }), /not authenticated/);
   await assert.rejects(read({}, { actor: { login: 'outsider' } }), /authorized router/);
   assert.ok(await read({ sourceRevision: head, workflowRevision: head }, { head_sha: head }));
+});
+
+
+test('draft observation can await CI but never bypasses the final integration eligibility check', async () => {
+  const profile = { schemaVersion: 1, profileVersion: 1, repository: 'owner/repo', intake: 'collaborators', requiredChecks: [{ context: 'test', integrationId: 7 }], requiredApprovals: 0,
+    evidenceBranch: 'process/data', completion: { publishEvidence: true, postMergeWorkflows: ['verify.yml'] } };
+  const pr = { number: 3, state: 'open', draft: true, merged: false, changed_files: 1, mergeable: true, mergeable_state: 'draft',
+    head: { sha: head, repo: { full_name: 'owner/repo' } }, base: { ref: 'main', repo: { full_name: 'owner/repo' } } };
+  let puts = 0;
+  const api = async (path, method) => {
+    if (method === 'PUT') puts++;
+    if (path === '') return { default_branch: 'main' };
+    if (path === 'commits/main') return { sha: base };
+    if (path.startsWith('contents/')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
+    if (path.startsWith('rules/branches/process')) return ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
+    if (path === 'rulesets/1') return { enforcement: 'active', bypass_actors: [] };
+    if (path.startsWith('rules/branches/main')) return [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'test', integration_id: 7 }] } }];
+    if (path === 'branches/main') return { protection: { enabled: false } };
+    if (path === 'pulls/3') return pr;
+    if (path === 'issues/1') return { state: 'open', user: { login: 'owner' }, labels: [] };
+    if (path.includes('/check-runs?')) return { check_runs: [{ id: 1, name: 'test', app: { id: 7 }, head_sha: head, status: 'completed', conclusion: 'success' }] };
+    if (path.startsWith('pulls/3/files')) return [{ filename: 'src/feature.mjs', sha: head, status: 'modified' }];
+    return [];
+  };
+  const input = { issue: 1, pr: 3, head, merge: true };
+  const read = () => inspectCompletion(api, 'owner/repo', 'owner', input, 'integrate');
+  await assert.rejects(read(), /not eligible/);
+  const pending = await inspectCompletion(api, 'owner/repo', 'owner', input, 'integrate', null, { observeDraft: true });
+  assertChecks(pending);
+  await assert.rejects(mergeAccepted(api, pending, read), /not eligible/);
+  assert.equal(puts, 0);
+  pr.draft = false; pr.mergeable_state = 'clean';
+  assert.equal((await read()).mergeable, true);
 });
