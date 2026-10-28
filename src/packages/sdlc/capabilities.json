@@ -7,23 +7,26 @@
       "id": "labels",
       "provider": "github",
       "adapter": "github-labels",
-      "version": "1",
+      "version": "2",
       "title": "Lighthouse tracker labels",
       "selection": "selected-by-default",
       "configuration": {
         "roles": ["state", "command", "classification", "overlay"],
         "labels": [
-          { "name": "triage", "role": "state", "color": "8B949E", "description": "Work item is being assessed." },
-          { "name": "refine", "role": "state", "color": "4DA3FF", "description": "Work item is being refined." },
-          { "name": "implement", "role": "state", "color": "1F6FEB", "description": "Work item is being implemented." },
+          { "name": "triage", "role": "command", "color": "8B949E", "description": "Owner request to assess this issue; publication stops at triaged." },
+          { "name": "refine", "role": "command", "color": "4DA3FF", "description": "Owner request to refine; installed policy may continue to implementation." },
+          { "name": "implement", "role": "command", "color": "1F6FEB", "description": "Owner request to plan and implement this issue in one PR." },
+          { "name": "propose", "role": "command", "color": "A371F7", "description": "Owner request for a separate proposal PR from current refinement evidence." },
+          { "name": "future", "role": "overlay", "color": "8B949E", "description": "Pause implementation; triage, refinement and proposal remain available." },
+          { "name": "waiting-review", "role": "state", "color": "D29922", "description": "Inspect the result or PR for feedback or a pending decision." },
           { "name": "wip", "role": "state", "color": "D29922", "description": "Work item is actively in progress." },
           { "name": "agent-working", "role": "overlay", "color": "D29922", "description": "An agent holds the host reservation; wait before editing." },
           { "name": "human-working", "role": "overlay", "color": "A371F7", "description": "Human reservation: agents must stop and release their work." },
-          { "name": "ready", "role": "state", "color": "238636", "description": "Refinement passed; this does not authorize implementation or merge." },
+          { "name": "ready", "role": "state", "color": "238636", "description": "Refinement passed; continuation depends on installed policy and future. Never authorizes merge." },
           { "name": "pr-draft", "role": "state", "color": "8B949E", "description": "The linked implementation PR is a draft." },
           { "name": "pr-ready", "role": "state", "color": "238636", "description": "The linked implementation PR is ready for human review." },
           { "name": "triaged", "role": "state", "color": "4FB3A4", "description": "Owner-admitted triage passed; the owner decides whether to refine." },
-          { "name": "needs-info", "role": "state", "color": "D876E3", "description": "Refinement needs information or a decision; inspect its report." },
+          { "name": "needs-info", "role": "state", "color": "D876E3", "description": "Triage or refinement needs information; the owner answers the reported question." },
           { "name": "review", "role": "state", "color": "A371F7", "description": "Work item is awaiting review." },
           { "name": "size-s", "role": "classification", "dimension": "size", "value": "S", "color": "BFE3FF", "description": "Small work item." },
           { "name": "size-m", "role": "classification", "dimension": "size", "value": "M", "color": "80C2FF", "description": "Medium work item." },
@@ -42,10 +45,10 @@
           { "name": "blast-radius-medium", "role": "classification", "dimension": "blast-radius", "value": "medium", "color": "4FB3A4", "description": "Medium affected surface." },
           { "name": "blast-radius-high", "role": "classification", "dimension": "blast-radius", "value": "high", "color": "0F766E", "description": "Large affected surface." }
         ],
-        "transitions": [{ "from": "triage", "to": "refine" }],
+        "transitions": [],
         "transitionPolicy": {
           "mode": "declared-only",
-          "description": "Only transitions declared by the adopter are legal; the catalog supplies the initial triage-to-refine example."
+          "description": "Declare state transitions for the generic triage CLI explicitly. Native Actions requests and results follow the authenticated adapter; command labels are not state transitions."
         }
       },
       "operations": {

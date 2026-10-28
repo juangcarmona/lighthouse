@@ -27,6 +27,7 @@
     "gates.json",
     "meta-commands",
     "README.md",
+    "github-actions.md",
     "request-triage.md",
     "templates",
     "host-contract.md",

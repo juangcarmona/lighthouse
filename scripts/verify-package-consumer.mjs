@@ -16,7 +16,7 @@ function run(command, args, cwd) {
   if (result.status !== 0) {
     process.stderr.write(result.stdout);
     process.stderr.write(result.stderr);
-    process.exit(result.status ?? 1);
+    process.exit(result.status || 1);
   }
   return result.stdout;
 }
@@ -70,6 +70,11 @@ try {
     }
   }
   run(bin, ['init', '--name', product], temp);
+  const guide = 'node_modules/@juangcarmona/lighthouse-sdlc/README.md';
+  if (!(await readFile(join(temp, 'LIGHTHOUSE.md'), 'utf8')).includes(guide)) {
+    throw new Error('Installed LIGHTHOUSE.md must link the delivery guide.');
+  }
+  await access(join(temp, guide));
 
   const visualFixture = join(temp, '.fixture/visual-profile');
   await mkdir(visualFixture, { recursive: true });
@@ -77,14 +82,14 @@ try {
   if (visualInit.status !== 0) {
     process.stderr.write(visualInit.stdout);
     process.stderr.write(visualInit.stderr);
-    process.exit(visualInit.status ?? 1);
+    process.exit(visualInit.status || 1);
   }
   const visualVerify = spawnSync(bin, ['verify', '--format', 'json'], { cwd: visualFixture, encoding: 'utf8' });
   if (visualVerify.status !== 0 || !JSON.parse(visualVerify.stdout).results.some((item) => item.id === 'visual.design-contract' && item.status === 'passed')) {
     process.stderr.write(visualVerify.stdout);
     process.stderr.write(visualVerify.stderr);
     console.error('Expected the packed visual-theme profile to initialize and verify.');
-    process.exit(visualVerify.status ?? 1);
+    process.exit(visualVerify.status || 1);
   }
 
   const dotnetFixture = join(temp, '.fixture/dotnet-profile');
@@ -93,7 +98,7 @@ try {
     process.stderr.write(dotnetCreate.stdout);
     process.stderr.write(dotnetCreate.stderr);
     console.error('Expected the packed .NET profile creator to seed guidance and the verifier.');
-    process.exit(dotnetCreate.status ?? 1);
+    process.exit(dotnetCreate.status || 1);
   }
 
   const labelsPath = join(temp, '.fixture/github-labels.json');
@@ -141,7 +146,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
   if (upgrade.status !== 0) {
     process.stderr.write(upgrade.stdout);
     process.stderr.write(upgrade.stderr);
-    process.exit(upgrade.status ?? 1);
+    process.exit(upgrade.status || 1);
   }
   const upgradePlan = JSON.parse(upgrade.stdout);
   if (upgradePlan.adoption?.capabilities?.labels?.status !== 'pending-adoption') {
@@ -180,7 +185,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
   if (planned.status !== 0) {
     process.stderr.write(planned.stdout);
     process.stderr.write(planned.stderr);
-    process.exit(planned.status ?? 1);
+    process.exit(planned.status || 1);
   }
   const plan = JSON.parse(planned.stdout);
   if (plan.status !== 'ready' || plan.reconciliation.operations.length === 0) {
@@ -219,18 +224,19 @@ if (args[1] === '--method' && args[2] === 'POST') {
   if (resumed.status !== 0 || JSON.parse(resumed.stdout).status !== 'adopted') {
     process.stderr.write(resumed.stdout);
     process.stderr.write(resumed.stderr);
-    process.exit(resumed.status ?? 1);
+    process.exit(resumed.status || 1);
   }
   const verified = consumerRun(bin, ['verify', '--format', 'json'], temp, providerEnv);
-  if (verified.status !== 0 || JSON.parse(verified.stdout).results.find((item) => item.id === 'foundation.capability-adoption')?.status !== 'passed') {
+  const adoption = JSON.parse(await readFile(join(temp, '.lighthouse/upgrade.json'), 'utf8'));
+  if (verified.status !== 0 || adoption.adoption?.labels?.status !== 'adopted') {
     process.stderr.write(verified.stdout);
     process.stderr.write(verified.stderr);
-    process.exit(verified.status ?? 1);
+    process.exit(verified.status || 1);
   }
   const repeated = consumerRun(bin, ['capabilities', 'apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], temp, providerEnv);
   if (repeated.status !== 0 || JSON.parse(repeated.stdout).reconciliation.operations.length !== 0) {
     console.error('Expected a resumed adoption to be idempotent.');
-    process.exit(repeated.status ?? 1);
+    process.exit(repeated.status || 1);
   }
   await writeFile(labelsPath, JSON.stringify([
     ...JSON.parse(await readFile(labelsPath, 'utf8')),
@@ -241,7 +247,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
     process.stderr.write(drift.stdout);
     process.stderr.write(drift.stderr);
     console.error('Expected a future plan to expose provider drift from adoption evidence.');
-    process.exit(drift.status ?? 1);
+    process.exit(drift.status || 1);
   }
   if (process.env.LIGHTHOUSE_AUTHORITIES_APPLY === 'true') {
     run(bin, ['authorities', '--apply'], temp);

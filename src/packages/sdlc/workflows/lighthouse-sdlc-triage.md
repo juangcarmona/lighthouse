@@ -1,6 +1,6 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
-name: Lighthouse SDLC triage
+name: triage
 description: Assess an owner-admitted request without starting refinement.
 run-name: "triage #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:

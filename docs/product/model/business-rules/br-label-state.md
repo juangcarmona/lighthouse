@@ -29,9 +29,9 @@ An explicit application boundary keeps human-visible changes reviewable and prev
 
 ## Examples
 
-The first GitHub profile can map persistent state labels such as `triage`, `refine`, `implement`, `wip` and `review` to the project's existing labels.
+The native GitHub adapter treats owner-added `triage`, `refine`, `propose` and `implement` labels as work requests. Result labels such as `triaged` and `ready` record validated outcomes.
 
-A triage report can propose a transition from `triage` to `refine` and project `size-m` and `risk-low`, while the tracker remains unchanged until the adopter explicitly applies it.
+A generic triage report can propose an explicitly configured state transition and project `size-m` and `risk-low`. Native triage publication uses its bounded owner authorization and stops at `triaged`; it does not dispatch refinement.
 
 ## Exceptions
 

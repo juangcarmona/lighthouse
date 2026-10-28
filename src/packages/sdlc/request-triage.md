@@ -1,5 +1,7 @@
 # Request intake and relative estimates
 
+For GitHub actions and labels, start with the [delivery guide](README.md).
+
 The public form requires the problem and desired result. Examples or context are optional. Do not ask a reporter for acceptance criteria, architecture, an estimate or a PR plan; refinement derives engineering criteria.
 
 ## Admission and continuation
@@ -27,4 +29,4 @@ Refinement rechecks a supplied `context.triage`, returns `output.estimate`, and 
 
 ## Upgrade and recovery
 
-Preview `node src/packages/sdlc/src/install-workflows.mjs <repository> <immutable-lighthouse-commit>` from the pinned Lighthouse source. The native triage worker is installed with refinement. Inspect the plan, provision the runner and gh-aw v0.93.2, then add `--apply`; use `--replace-reviewed` only after reviewing differing workflow sources. The installer preserves an existing `.github/ISSUE_TEMPLATE/change-request.yml` and reports it instead of overwriting it. Add `triage` and `triaged` to the repository's declared labels through its normal reconciliation route. Enable automation only after reviewing the workflows and runner. To recover, disable automation and restore the previously reviewed package/workflow revision; issue bodies are never changed.
+Follow the [packaged workflow installation and update procedure](README.md#install-or-update-workflows). Triage is included by default. The installer preserves an existing `.github/ISSUE_TEMPLATE/change-request.yml`. Reconcile `triage`, `triaged` and `needs-info` through the declared label catalog. To recover, disable automation and restore the previously reviewed package/workflow revision; issue bodies are never changed.

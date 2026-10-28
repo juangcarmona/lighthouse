@@ -1,6 +1,6 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
-name: Lighthouse SDLC propose
+name: propose
 description: Produce a validated OpenSpec proposal PR from an owner-authorized ready issue.
 run-name: "propose #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:

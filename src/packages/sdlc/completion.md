@@ -4,7 +4,7 @@ The optional completion adapter finishes an implementation through the adopter's
 
 ## Adoption
 
-Install with `install-workflows <repository> <immutable-lighthouse-commit> --with-completion`. Preview first; `--apply` writes selected workflows and compiles them with gh-aw v0.93.2. Existing differing files require `--replace-reviewed`. Completion includes refine, propose and implement; it adds no new lifecycle stage.
+Follow the [packaged workflow installation and update procedure](README.md#install-or-update-workflows) with `--with-completion`. This includes triage, refine, propose, implement and corrections; it adds no new lifecycle stage.
 
 In the existing `.lighthouse/github.json`, retain the adopted required checks and protected `evidenceBranch`, and add:
 

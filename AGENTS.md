@@ -2,6 +2,8 @@
 
 Lighthouse is the juangcarmona engineering baseline. Start with [the harness package guide](src/packages/cli/README.md). For a backend, read [the .NET profile](src/dotnet/profile/README.md), then its architecture, use-case and guardrail contracts. For interface work, read the UI package's [design guide](src/packages/ui/DESIGN.md).
 
+For delivery, labels or GitHub workflows, read [the SDLC delivery guide](src/packages/sdlc/README.md) first. Confirm the installed package version, workflow source pin and current branch before describing deployed behavior.
+
 Keep implementation under `src/`, including packages and examples. Package documentation stays with its owning package; repository documentation belongs under `docs/`; repository automation stays in the conventional `scripts/` root. Root-level tool directories (`.agents/`, `.github/`, `.product/`, `.vscode/`, `openspec/`) and package entrypoint metadata are integration contracts; do not relocate them without checking their owning tool. The optional .NET profile and its guidance are scoped under `src/dotnet/` and do not make the repository a root-level .NET solution.
 
 - For agent-facing documents, use the installed `writing-for-agents` skill. For code and architecture work, use the installed `ponytail` skill.

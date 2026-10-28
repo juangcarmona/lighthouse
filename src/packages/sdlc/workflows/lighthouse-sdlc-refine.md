@@ -1,6 +1,6 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
-name: Lighthouse SDLC refine
+name: refine
 description: Refine an authorized issue through OpenCode with execution logs and validated evidence.
 run-name: "refine #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:

@@ -1,6 +1,6 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
-name: Lighthouse SDLC apply-review
+name: apply review
 description: Apply authorized feedback to the existing proposal or implementation PR.
 run-name: "apply-review #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:

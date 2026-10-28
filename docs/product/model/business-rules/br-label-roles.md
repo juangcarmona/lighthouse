@@ -9,7 +9,7 @@ uses-terms: [TERM-LABEL-STATE, TERM-WORKFLOW-STATE, TERM-DELIVERY-ROUTE, TERM-WO
 
 ## Rule
 
-Each configured tracker label MUST be one of three roles: a persistent workflow state marker, a transient route command or a persistent triage classification.
+Each configured tracker label MUST be one of four roles: a persistent workflow state marker, a transient route command, a persistent triage classification or an independent work overlay.
 
 Lighthouse MUST keep execution leases and concurrency claims in workflow execution state, and MUST keep the triage record authoritative for evidence, confidence and unresolved values.
 
@@ -19,7 +19,7 @@ Separating workflow handoff, route requests and classification keeps labels read
 
 ## Examples
 
-`wip` remains a persistent workflow state, a configured command label can request `triage` and then be removed after acceptance and `size-m` can remain as the current triage classification.
+The native GitHub adapter consumes owner-added `triage`, `refine`, `propose` and `implement` commands. Validated results project states such as `triaged` and `ready`; `size-m` remains a classification. `future`, `agent-working` and `human-working` are independent overlays.
 
 The dimensions `size`, `urgency`, `impact`, `risk` and `blast-radius` each allow at most one active classification value.
 
