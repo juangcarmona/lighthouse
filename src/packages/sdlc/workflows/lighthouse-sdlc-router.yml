@@ -1,5 +1,5 @@
 # Optional GitHub-native stage adapter; source owned by lighthouse-sdlc.
-name: Lighthouse SDLC router
+name: router
 run-name: "${{ (github.event_name == 'workflow_run' && 'Delivery after CI') || inputs.stage || github.event.label.name || ((github.event.pull_request || github.event.issue.pull_request) && 'PR review') || (github.event_name == 'issue_comment' && 'reply') || 'refine' }} #${{ github.event.issue.number || github.event.pull_request.number || inputs.issue }} · ${{ github.actor }}"
 on:
   issues:

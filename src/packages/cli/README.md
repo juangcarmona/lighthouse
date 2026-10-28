@@ -2,6 +2,8 @@
 
 This package is the core Lighthouse harness. It provides the `lighthouse` command, the manifest schema and the generated `LIGHTHOUSE.md` projection.
 
+For delivery actions, labels and workflow upgrades, read the installed SDLC guide at `node_modules/@juangcarmona/lighthouse-sdlc/README.md` from the adopter root. The generated `LIGHTHOUSE.md` links it directly.
+
 ## Initialize a repository
 
 Install the exact Lighthouse package artifact selected for the release and run `lighthouse init --name <product>` in a new repository. Add `--profile visual-theme` when the project wants the Lighthouse UI contract. Lighthouse creates the manifest, the `src/`, `docs/`, `infra/` and `scripts/` boundaries, the repository guardrails and the generated `LIGHTHOUSE.md`. Inspect the plan and projection, then run `lighthouse verify` before adding project-specific policy or exceptions.

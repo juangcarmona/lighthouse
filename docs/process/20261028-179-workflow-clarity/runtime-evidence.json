@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "repository": "juangcarmona/lighthouse",
+  "issue": 179,
+  "sourceRevision": "ffa7e92613ad55989eb16133b1df26d2b7072603",
+  "runtime": {
+    "package": {
+      "name": "@juangcarmona/lighthouse-sdlc",
+      "version": "0.14.0"
+    },
+    "harnessRevision": "55d236d96cf293537af5498ba6f6eb5674c27103",
+    "engine": "OpenCode 2.1.0"
+  },
+  "refine": {
+    "routerRunId": "40669682113",
+    "workerRunId": "40669740226",
+    "runId": "a218207bca93d2fd826892c91bd1a76c8bbf55e4e3300adec775652cd198ed17",
+    "assessment": "passed",
+    "stageResultValidated": true,
+    "envelopeSha256": "cf890a7884f9f7eace176b29fa927a6bb9ce4e63ec053872a0993837e1506c16",
+    "report": "https://github.com/juangcarmona/lighthouse/issues/179#issuecomment-6466482640"
+  },
+  "propose": {
+    "routerRunId": "40671721541",
+    "workerRunId": "40671795403",
+    "assessment": "passed",
+    "runId": "4b6bfffea3b0bd5ae7df25a657f59d568deaff30ef69b5062bbcce7e55bcd990",
+    "stageResultValidated": true,
+    "envelopeSha256": "7c3c905e265ee8d0e1ab49604f26d24ecfff85b51f9ab0ae5b96b30d4eafcf78",
+    "report": "https://github.com/juangcarmona/lighthouse/issues/179#issuecomment-6466766066",
+    "pullRequest": "https://github.com/juangcarmona/lighthouse/pull/181",
+    "pullRequestHead": "dc26d39795e527c4e4c158da1f3a96ea74415d64",
+    "runtime": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.14.0"
+      },
+      "harnessRevision": "55d236d96cf293537af5498ba6f6eb5674c27103",
+      "engine": "OpenCode 2.1.0"
+    }
+  },
+  "labelEvents": [
+    {
+      "actor": "juangcarmona",
+      "created_at": "2026-10-28T10:07:52Z",
+      "event": "labeled",
+      "label": "documentation"
+    },
+    {
+      "actor": "juangcarmona",
+      "created_at": "2026-10-28T10:07:53Z",
+      "event": "labeled",
+      "label": "future"
+    },
+    {
+      "actor": "juangcarmona",
+      "created_at": "2026-10-28T10:08:02Z",
+      "event": "labeled",
+      "label": "refine"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:08:44Z",
+      "event": "labeled",
+      "label": "agent-working"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:22:40Z",
+      "event": "labeled",
+      "label": "ready"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:22:41Z",
+      "event": "unlabeled",
+      "label": "refine"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:22:42Z",
+      "event": "labeled",
+      "label": "implement"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:22:44Z",
+      "event": "unlabeled",
+      "label": "agent-working"
+    },
+    {
+      "actor": "juangcarmona",
+      "created_at": "2026-10-28T10:23:19Z",
+      "event": "labeled",
+      "label": "propose"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:24:27Z",
+      "event": "labeled",
+      "label": "agent-working"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:36:20Z",
+      "event": "labeled",
+      "label": "waiting-review"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:36:21Z",
+      "event": "unlabeled",
+      "label": "propose"
+    },
+    {
+      "actor": "github-actions[bot]",
+      "created_at": "2026-10-28T10:36:23Z",
+      "event": "unlabeled",
+      "label": "agent-working"
+    }
+  ],
+  "finalLabels": [
+    "documentation",
+    "ready",
+    "waiting-review",
+    "future",
+    "implement"
+  ]
+}

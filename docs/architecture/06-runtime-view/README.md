@@ -197,6 +197,6 @@ Successful refinement can hand off to implementation under the installed policy.
 
 A lost response remains unconfirmed and prevents automatic resend. A claimed request cannot start a second agent. The receipt's icon and phase describe the last host observation; Actions remains authoritative for current execution status, including interrupted cleanup. Temporary request artifacts are needed for new admission. Published integration evidence retains its authenticated dispatch origin in the protected process record for later review. No database or SoFa process participates in execution.
 
-See the [operator recovery boundary](../../../src/packages/sdlc/README.md#implementation-delivery) and the [original implementation acceptance record](implementation-dispatch-poc.md).
+See the [operator recovery boundary](../../../src/packages/sdlc/github-actions.md#implementation-delivery) and the [original implementation acceptance record](implementation-dispatch-poc.md).
 
 See the [worker catalogue](worker-catalogue.md) for source-linked routes, per-worker diagrams and operator actions.

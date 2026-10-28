@@ -97,7 +97,10 @@ test('greenfield init creates the repository boundaries and a default manifest',
     assert.deepEqual(generated.application, { shape: 'unknown', stacks: [] });
     assert.deepEqual(generated.packages.sdlc, { name: sdlcPackage.name, version: sdlcPackage.version });
     assert.match(await readFile(join(dir, '.lighthouse/sdlc.json'), 'utf8'), /"provider": "agent-host"/);
-    assert.match(await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8'), /Repository roots/);
+    const baseline = await readFile(join(dir, 'LIGHTHOUSE.md'), 'utf8');
+    assert.match(baseline, /Repository roots/);
+    assert.match(baseline, /node_modules\/@juangcarmona\/lighthouse-sdlc\/README\.md/);
+    assert.match(baseline, /workflow source pin and current branch/);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
     assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
     const aliases = JSON.parse(await readFile(join(dir, '.lighthouse/commands.json'), 'utf8'));
@@ -228,6 +231,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/execution-environments.md'), join(dir, 'src/packages/sdlc/execution-environments.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/README.md'), join(dir, 'src/packages/sdlc/README.md'));
+    await cp(join(process.cwd(), 'src/packages/sdlc/github-actions.md'), join(dir, 'src/packages/sdlc/github-actions.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/workflows'), join(dir, 'src/packages/sdlc/workflows'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/skills'), join(dir, 'src/packages/sdlc/skills'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/src'), join(dir, 'src/packages/sdlc/src'), { recursive: true });
@@ -598,6 +602,27 @@ test('upgrade discovers pending SDLC capability adoption without writing remote 
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('a new label capability version requests adoption review without resetting other capabilities', async () => {
+  const dir = await fixture();
+  try {
+    assert.equal(run(dir, 'init').status, 0);
+    const path = join(dir, '.lighthouse/upgrade.json');
+    const state = JSON.parse(await readFile(path, 'utf8'));
+    state.adoption.labels.version = '1';
+    state.adoption.labels.status = 'adopted';
+    state.adoption['github-profile'].status = 'declined';
+    await writeFile(path, JSON.stringify(state));
+    const before = await readFile(path, 'utf8');
+    const preview = run(dir, 'upgrade', ['--format', 'json']);
+    assert.equal(preview.status, 0, preview.stderr);
+    const adoption = JSON.parse(preview.stdout).adoption.capabilities;
+    assert.equal(adoption.labels.version, '2');
+    assert.equal(adoption.labels.status, 'pending-adoption');
+    assert.equal(adoption['github-profile'].status, 'declined');
+    assert.equal(await readFile(path, 'utf8'), before);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('capability adoption requires the plan hash, creates only missing labels and is idempotent', async () => {
   const dir = await fixture();
   const labelsPath = join(dir, 'github-labels.json');
@@ -629,7 +654,8 @@ if (args[1] === '--method' && args[2] === 'POST') {
     const planned = run(dir, 'capabilities', ['plan', '--id', 'labels', '--provider', 'github', '--repo', 'juan/demo', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--format', 'json'], { env: environment });
     assert.equal(planned.status, 0, planned.stderr);
     const plan = JSON.parse(planned.stdout);
-    assert.equal(plan.reconciliation.operations.length, 27);
+    const catalog = JSON.parse(await readFile(new URL('../packages/sdlc/capabilities.json', import.meta.url), 'utf8'));
+    assert.equal(plan.reconciliation.operations.length, catalog.capabilities.find((item) => item.id === 'labels').configuration.labels.length - 1);
     assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', 'wrong'], { env: environment }).status, 1);
     const applied = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
     assert.equal(applied.status, 0, applied.stderr);

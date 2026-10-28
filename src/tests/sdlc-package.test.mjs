@@ -29,6 +29,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
   const files = artifact.files.map((file) => file.path);
   for (const path of [
     'README.md',
+    'github-actions.md',
     'commands/status.md',
     'commands/aliases.md',
     'commands/control-plane.md',
@@ -136,7 +137,8 @@ test('the capability catalog is versioned, validates independently and projects 
   assert.equal(declaration.capabilities[0].provider, 'github');
   assert.equal(declaration.capabilities[0].adapter, 'github-labels');
   assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'size-m').color, '80C2FF');
-  assert.deepEqual(declaration.capabilities[0].configuration.transitions, [{ from: 'triage', to: 'refine' }]);
+  assert.equal(catalog.capabilities[0].version, '2');
+  assert.deepEqual(declaration.capabilities[0].configuration.transitions, []);
 });
 
 test('the catalog fails closed when a future capability has no registered adapter', async () => {

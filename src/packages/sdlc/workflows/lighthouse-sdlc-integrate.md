@@ -1,6 +1,6 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
-name: Lighthouse SDLC integrate
+name: integrate
 description: Assess integrate with OpenCode and retain a verified delivery record.
 run-name: "integrate #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:

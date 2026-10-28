@@ -2,6 +2,8 @@
 
 A worker is one bounded execution with inputs, steps and a result. Lifecycle stages describe delivery decisions; a worker can perform a correction within an existing stage. GitHub Actions runs the work. Issue receipts link requests, executions and results.
 
+Read the [packaged delivery guide](../../../src/packages/sdlc/README.md) for owner actions, labels and continuation.
+
 ## Route map
 
 ```mermaid
@@ -15,7 +17,7 @@ flowchart TD
     Result --> Next[New event only when continuation is authorized]
 ```
 
-The [router source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-router.yml) declares triggers; [routing and admission](../../../src/packages/sdlc/src/issue-actions.mjs) verifies their current meaning. Installation selects workers explicitly. Triage remains a lifecycle skill; it is not an installed Actions worker here. Release remains the repository's separate release automation.
+The [router source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-router.yml) declares triggers; [routing and admission](../../../src/packages/sdlc/src/issue-actions.mjs) verifies their current meaning. Installation selects workers explicitly. Triage and refinement are installed by default; proposal, implementation and completion are selected by installer flags. Release remains the repository's separate release automation.
 
 ## Common execution boundary
 
@@ -33,36 +35,11 @@ The router records intent before sending. A worker authenticates the request and
 
 [Executable source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-triage.md). The owner admits an open issue by label or manual request. The worker preserves the request, cites inferences, asks blocking questions only and returns an explained provisional point estimate. External issue authorship grants no execution authority. A result stops at triaged without dispatching refinement.
 
-```mermaid
-flowchart LR
-    accTitle: triage worker
-    accDescr: Owner admission starts bounded assessment, then validated publication stops for an owner decision.
-    A[Verified owner admission] --> B[Authenticate receipt and reserve issue]
-    B --> C[Read request and repository evidence]
-    C --> D[Inferences, questions and provisional estimate]
-    D --> E[Validate and publish assessment]
-    E --> F[Release reservation and await owner]
-```
-
 ## refine
 
 **Entry:** Owner refine request or answer to its pending question. **Effects:** Issue comments and workflow labels; no product changes. **Stop:** Ready can continue to implementation under installed policy; future pauses it.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-refine.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/refine/SKILL.md)
-
-```mermaid
-flowchart TD
-    accTitle: refine worker
-    accDescr: Authentication precedes assessment; publication distinguishes success, a human blocker and a technical failure.
-    Input[Authenticate current request] --> Work[Read issue and authority context]
-    Work --> Result{Validated result}
-    Result -->|Passed| Publish[Publish readiness or a bounded question]
-    Result -->|Decision needed| Wait[Publish question and wait]
-    Work -->|Technical failure| Inspect[Record failure and inspect effects]
-    Publish --> Cleanup[Release reservation]
-    Wait --> Cleanup
-    Inspect --> Cleanup
-```
 
 ## propose
 
@@ -70,39 +47,11 @@ flowchart TD
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-propose.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/propose/SKILL.md)
 
-```mermaid
-flowchart TD
-    accTitle: propose worker
-    accDescr: Authentication precedes assessment; publication distinguishes success, a human blocker and a technical failure.
-    Input[Authenticate current request] --> Work[Load refinement and prepare OpenSpec artifacts]
-    Work --> Result{Validated result}
-    Result -->|Passed| Publish[Publish or update a planning PR]
-    Result -->|Decision needed| Wait[Publish question and wait]
-    Work -->|Technical failure| Inspect[Record failure and inspect effects]
-    Publish --> Cleanup[Release reservation]
-    Wait --> Cleanup
-    Inspect --> Cleanup
-```
-
 ## implement
 
 **Entry:** Owner implementation request, authorized refinement continuation. **Effects:** Configured product paths on a bot-owned branch; no merge. **Stop:** Passed candidate waits for acceptance; ambiguous scope asks the owner.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-implement.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/implement/SKILL.md)
-
-```mermaid
-flowchart TD
-    accTitle: implement worker
-    accDescr: Authentication precedes assessment; publication distinguishes success, a human blocker and a technical failure.
-    Input[Authenticate current request] --> Work[Plan, edit candidate and run independent checks]
-    Work --> Result{Validated result}
-    Result -->|Passed| Publish[Publish or update the implementation PR]
-    Result -->|Decision needed| Wait[Publish question and wait]
-    Work -->|Technical failure| Inspect[Record failure and inspect effects]
-    Publish --> Cleanup[Release reservation]
-    Wait --> Cleanup
-    Inspect --> Cleanup
-```
 
 ## integrate
 
@@ -110,39 +59,11 @@ flowchart TD
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-integrate.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/integrate/SKILL.md)
 
-```mermaid
-flowchart TD
-    accTitle: integrate worker
-    accDescr: Authentication precedes assessment; publication distinguishes success, a human blocker and a technical failure.
-    Input[Authenticate current request] --> Work[Check accepted head, CI, policy and evidence]
-    Work --> Result{Validated result}
-    Result -->|Passed| Publish[Retain assessment and perform only authorized merge]
-    Result -->|Decision needed| Wait[Publish question and wait]
-    Work -->|Technical failure| Inspect[Record failure and inspect effects]
-    Publish --> Cleanup[Release reservation]
-    Wait --> Cleanup
-    Inspect --> Cleanup
-```
-
 ## review
 
 **Entry:** Authorized completion request for a merged PR. **Effects:** Process evidence and configured issue labels. **Stop:** Missing historical or post-merge evidence remains a blocker.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-review.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/review/SKILL.md)
-
-```mermaid
-flowchart TD
-    accTitle: review worker
-    accDescr: Authentication precedes assessment; publication distinguishes success, a human blocker and a technical failure.
-    Input[Authenticate current request] --> Work[Verify retained integration and post-merge checks]
-    Work --> Result{Validated result}
-    Result -->|Passed| Publish[Publish retrospective and configured final state]
-    Result -->|Decision needed| Wait[Publish question and wait]
-    Work -->|Technical failure| Inspect[Record failure and inspect effects]
-    Publish --> Cleanup[Release reservation]
-    Wait --> Cleanup
-    Inspect --> Cleanup
-```
 
 ## apply-review
 
@@ -150,57 +71,14 @@ flowchart TD
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-apply-review.md) · [Feedback authentication](../../../src/packages/sdlc/src/proposal-review.mjs)
 
-```mermaid
-flowchart TD
-    accTitle: apply-review worker
-    accDescr: Verified feedback corrects the existing PR; ambiguity waits and stale publication stops.
-    Input[Authenticate feedback and current PR] --> Read[Read bounded conversation]
-    Read --> Decision{Actionable within scope}
-    Decision -->|Yes| Edit[Correct existing candidate]
-    Decision -->|Ambiguous| Wait[Ask owner and wait]
-    Edit --> Check[Run required checks]
-    Check -->|Passed and inputs unchanged| Publish[Update same PR branch]
-    Check -->|Failed or stale| Stop[Retain blocker and stop]
-```
-
 ## Deterministic maintenance
 
 [Maintenance workflow](../../../src/packages/sdlc/workflows/lighthouse-worker-maintenance.yml) · [Recovery decisions](../../../src/packages/sdlc/src/worker-recovery.mjs)
 
-Installed with `--with-maintenance`, enabled separately by repository variables. No model runs here. The issue receipt, original request artifact and current Actions jobs identify the outcome. At most two linked retries are allowed, 30 minutes apart, only after confirmed failure before publication. A newer request supersedes earlier recovery candidates. Human decisions, changed authority and uncertain effects require intervention. See [enablement and scan bounds](../../../src/packages/sdlc/README.md#worker-maintenance).
-
-```mermaid
-flowchart TD
-    accTitle: Deterministic worker recovery
-    accDescr: Current evidence distinguishes success, human decisions, uncertain effects and bounded technical retry.
-    Observe[Authenticate receipt and observe Actions] --> State{Outcome}
-    State -->|Succeeded or active| Leave[Keep current execution]
-    State -->|Human decision| Human[Wait for owner]
-    State -->|Uncertain or stale| Inspect[Report required inspection]
-    State -->|Confirmed safe technical failure| Budget{Opt-in, delay and budget}
-    Budget -->|Allowed| Record[Record linked retry]
-    Record --> Dispatch[Send once and recheck at admission]
-    Budget -->|Exhausted| Inspect
-    Budget -->|Disabled or delayed| Leave
-```
+Installed with `--with-maintenance`, enabled separately by repository variables. No model runs here. The issue receipt, original request artifact and current Actions jobs identify the outcome. At most two linked retries are allowed, 30 minutes apart, only after confirmed failure before publication. A newer request supersedes earlier recovery candidates. Human decisions, changed authority and uncertain effects require intervention. See [enablement and scan bounds](../../../src/packages/sdlc/github-actions.md#worker-maintenance).
 
 ## Error reports
 
-[Report publisher](../../../src/packages/sdlc/src/worker-reports.mjs) · [Operator setup](../../../src/packages/sdlc/README.md#worker-error-reports)
+[Report publisher](../../../src/packages/sdlc/src/worker-reports.mjs) · [Operator setup](../../../src/packages/sdlc/github-actions.md#worker-error-reports)
 
 One issue groups each worker/cause pair, with affected issues, execution links, observed counts and a next action. A serialized job uses an owner-selected index issue to record creation intent before sending. It never copies logs or agent prose. Same-request recovery closes resolved reports; a new failure reopens the same report. Missing evidence stays unresolved.
-
-```mermaid
-flowchart TD
-    accTitle: Worker error reports
-    accDescr: Authenticated observations update one report per cause; recorded intent prevents duplicate creation after a lost response.
-    Observe[Authenticated maintenance observations] --> Cause[Group worker and cause]
-    Cause --> Exists{Report exists}
-    Exists -->|Yes| Update[Update distinct occurrences and links]
-    Exists -->|No| Intent[Record creation intent in index]
-    Intent --> Create[Create once and record report link]
-    Intent -->|Response uncertain| Reconcile[Find matching report or require inspection]
-    Update --> Outcome{Current evidence}
-    Outcome -->|All recovered| Close[Close report]
-    Outcome -->|New failure| Reopen[Open same report]
-```
