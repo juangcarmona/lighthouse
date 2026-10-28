@@ -13,6 +13,10 @@ export async function scheduledImplementationPulls(api) {
   throw Error('Open PR history exceeds reconciliation bound');
 }
 
+export function authorizedCiCallback(run, { id, sha, repo, workflows }) {
+  return Number.isSafeInteger(id) && /^[a-f0-9]{40}$/.test(sha ?? '') && run.id === id && run.event === 'workflow_dispatch' && run.head_sha === sha && run.repository?.full_name === repo && workflows?.some(name => run.path === `.github/workflows/${name}`) === true;
+}
+
 export async function setPullRequestDraft(token, pr, draft) {
   if (!pr.node_id) throw Error('PR lacks GraphQL identity');
   const field = draft ? 'convertPullRequestToDraft' : 'markPullRequestReadyForReview';

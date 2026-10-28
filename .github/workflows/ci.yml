@@ -23,3 +23,25 @@ jobs:
       - name: Install Chrome for architecture rendering
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
+  reconcile-implementation-pr:
+    needs: repository
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: d40c0e7a5b003b5c1facfc9933e30feca06dee4f
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Project the verified implementation PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_CI_RECONCILE: 'true'
+        run: node src/packages/sdlc/src/pr-state-actions.mjs

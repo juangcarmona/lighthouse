@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { authorizedCiCallback, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 
 const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
   const response = await fetch(`https://api.github.com/repos/${repo}${path ? `/${path}` : ''}`, {
@@ -36,6 +36,7 @@ async function main() {
   const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
   if (profile.repository !== repo) throw Error('Repository profile differs from the event');
   let candidates = [];
+  const ciCallback = env.GITHUB_EVENT_NAME === 'workflow_dispatch' && env.LIGHTHOUSE_CI_RECONCILE === 'true';
   if (env.GITHUB_EVENT_NAME === 'pull_request') {
     if (env.GITHUB_ACTOR !== owner || !['ready_for_review', 'converted_to_draft', 'closed', 'reopened'].includes(event.action)) return;
     candidates = [event.pull_request?.number];
@@ -49,12 +50,21 @@ async function main() {
     candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
   } else if (env.GITHUB_EVENT_NAME === 'schedule') {
     candidates = await scheduledImplementationPulls(api);
+  } else if (ciCallback) {
+    const id = Number(env.GITHUB_RUN_ID);
+    if (!Number.isSafeInteger(id) || !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '')) throw Error('CI callback lacks a run or head');
+    const run = await api(`actions/runs/${id}`);
+    if (!authorizedCiCallback(run, { id, sha: env.GITHUB_SHA, repo, workflows: profile.completion?.postMergeWorkflows })) return;
+    const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
+    if (pulls.length >= 100) throw Error('PR lookup exceeds bound');
+    candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
   } else return;
   for (const number of candidates) {
     if (!Number.isSafeInteger(number)) continue;
     const pr = await api(`pulls/${number}`);
     if (env.GITHUB_EVENT_NAME === 'pull_request' && pr.head.sha !== event.pull_request.head.sha) continue;
     if (env.GITHUB_EVENT_NAME === 'workflow_run' && pr.head.sha !== event.workflow_run.head_sha) continue;
+    if (ciCallback && pr.head.sha !== env.GITHUB_SHA) continue;
     if (pr.base.ref !== metadata.default_branch) continue;
     let target;
     try { target = checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repo); }
@@ -88,7 +98,7 @@ async function main() {
       continue;
     }
     const hold = comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`));
-    const auto = ['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) && !hold;
+    const auto = (['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) || ciCallback) && !hold;
     const result = await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto });
     if (event.action === 'ready_for_review' && result.status === 'draft') await api(`issues/${target.issue}/comments`, 'POST', { body: `PR #${pr.number} remains a draft: ${result.reason}. [Open PR](${pr.html_url}).` });
   }

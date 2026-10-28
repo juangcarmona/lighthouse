@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls } from '../packages/sdlc/src/pr-state.mjs';
+import { authorizedCiCallback, implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
 const pr = draft => ({
@@ -78,4 +78,11 @@ test('scheduled reconciliation selects only bot implementation PRs', async () =>
     ];
   };
   assert.deepEqual(await scheduledImplementationPulls(api), [172]);
+});
+
+test('CI callback accepts only the current configured repository run', () => {
+  const context = { id: 123, sha: head, repo, workflows: ['ci.yml'] };
+  const run = { id: 123, event: 'workflow_dispatch', head_sha: head, path: '.github/workflows/ci.yml', repository: { full_name: repo } };
+  assert.equal(authorizedCiCallback(run, context), true);
+  for (const changed of [{ id: 124 }, { event: 'pull_request' }, { head_sha: 'c'.repeat(40) }, { path: '.github/workflows/other.yml' }, { repository: { full_name: 'other/repo' } }]) assert.equal(authorizedCiCallback({ ...run, ...changed }, context), false);
 });
