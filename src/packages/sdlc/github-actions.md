@@ -22,6 +22,8 @@ The worker requires a Linux runner labelled `lighthouse-workflow`, Node.js, Dock
 
 Implementation can opt into [repository execution environments](execution-environments.md) for preflighted Node or .NET images and temporary host-managed PostgreSQL. Existing undeclared consumers keep their current image configuration.
 
+Implementation and validation default to 1,024 process/thread slots. The operator can set bounded `resources.implementationPids` and `resources.planningPids` in the engine configuration. The [resource guide](execution-environments.md#resource-limits-and-command-completion) covers sizing and adoption. Managed commands serialize installs, builds and tests; a background shell response must be followed to a terminal receipt. Runtime and check receipts record observed cgroup resource failures separately from abort, timeout and cancellation.
+
 Workers can opt into [OpenAI model profiles and bounded delegation](model-profiles.md). Project settings cannot replace the legacy operator model without explicit operator opt-in; configuration receipts do not prove live provider access.
 
 The subscription profile uses Docker isolation and explicitly disables gh-aw's AWF agent sandbox. It has no AWF egress filtering or credential proxy. The engine gets no GitHub token or Docker socket. Only trusted repository workflows may use the runner, whose Docker access is privileged infrastructure access. All repository runners sharing a host must use the same operator lock path to serialize model execution.

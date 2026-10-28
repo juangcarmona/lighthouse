@@ -84,6 +84,7 @@ test('engine adapter preserves structured evidence while streaming readable outp
     await writeFile(shim, `#!${process.execPath}
 const fs = require('node:fs');
 const args = process.argv.slice(2);
+if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
 if (args[0] === 'run' && !args.includes('cleanup-session')) {
   const output = args.find(x => x.startsWith('type=bind,src=') && x.endsWith(',dst=/output')).slice(14, -12);
   fs.writeFileSync(output + '/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
@@ -139,6 +140,7 @@ test('profile adapter forwards two worker variants, marks receipts unverified an
       await writeFile(shim, `#!${process.execPath}
 const fs = require('node:fs'), args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
+if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
 const mount=args.find(a=>a.startsWith('type=bind,src=')&&a.endsWith(',dst=/output'));
 if(mount) {
   fs.writeFileSync(mount.slice(14,-12)+'/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
@@ -183,12 +185,17 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
-    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); process.exitCode=1; }\n`);
+    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
     await chmod(shim, 0o755);
     const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 1, result.stdout + result.stderr);
     const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
     assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'partial implementation');
+    const receipt = JSON.parse(await readFile(join(runDir, 'runtime.json')));
+    assert.equal(receipt.execution.status, 'process-limit');
+    assert.equal(receipt.execution.exitCode, 134);
+    assert.equal(receipt.execution.resources.pidsDenied, 2);
+    assert.match(result.stderr, /Container process\/thread limit reached/);
     await assert.rejects(readFile(join(root, 'completion')));
     await assert.rejects(readFile(join(runDir, 'envelope.json')));
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -213,12 +220,13 @@ test('declared environment preflights before agent, validates with fresh service
       await writeFile(shim, `#!${process.execPath}
 const fs = require('node:fs'), args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
+if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
 const mount = dst => args.find(a => a.startsWith('type=bind,src=') && a.endsWith(',dst='+dst))?.slice(14).split(',dst=')[0];
 if(args.includes('cleanup-session') || args[0]==='rm' || args[0]==='network' || args.includes('chown')) process.exit(0);
 if(args.includes('-d')) process.exit(0);
 if(args[0]==='exec') { if(args.includes('postgres')) console.log('postgres (PostgreSQL) 17.7'); process.exit(0); }
 if(args.some(a => a.endsWith('-checks'))) { console.log(args.find(a=>a.startsWith('SOFA_TEST_DATABASE='))); process.exit(0); }
-if(args.includes('--entrypoint')) {
+if(args.includes('--entrypoint') && !mount('/output')) {
  const cmd=args[args.indexOf('--entrypoint')+1];
  if(cmd==='dotnet' && ${JSON.stringify(outcome)}==='missing-sdk') process.exit(1);
  if(cmd==='opencode' && ${JSON.stringify(outcome)}==='missing-agent') process.exit(1);
@@ -253,6 +261,7 @@ if(mount('/output')) {
           assert.equal(execution.status, 0, execution.stdout + execution.stderr);
           const check = calls.find(a => a.some(v => v.endsWith('-checks')) && a[0] === 'run');
           assert.ok(!check.join(' ').includes('fixture,dst=')); assert.ok(!check.join(' ').includes('docker.sock'));
+          for (const container of [agents[0], check]) assert.equal(container[container.indexOf('--pids-limit') + 1], '1024');
           assert.notEqual(check.find(v => v.startsWith('SOFA_TEST_DATABASE=')), agents[0].find(v => v.startsWith('SOFA_TEST_DATABASE=')));
           const receipt = JSON.parse(await readFile(join(runDir, 'checks.json'), 'utf8'));
           assert.equal(receipt.image, image); assert.equal(receipt.serviceCleanup, true);
