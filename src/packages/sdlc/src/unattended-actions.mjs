@@ -100,6 +100,17 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     }
   };
   const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  const publicationApi = async (path, method, ...args) => {
+    if (method === 'POST' && ['git/refs', 'pulls'].includes(path)) {
+      await recheck();
+      if (controller.signal.aborted) throw Error('Delivery was cancelled before candidate publication');
+    }
+    return api(path, method, ...args);
+  };
+  const dispatchApi = (path, method, ...args) => {
+    if (method === 'POST' && path.endsWith('/dispatches') && controller.signal.aborted) throw Error('Delivery was cancelled before dependent dispatch');
+    return api(path, method, ...args);
+  };
   const step = async (stage, worker, text, extra = {}, selectedPolicy = implementation.policy) => {
     await recheck();
     const request = { runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
@@ -192,11 +203,11 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         red: candidate.red, checks: candidate.receipt }, lastStep),
       publish: async candidate => {
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
-        published = await createImplementationPullRequest(api, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
+        published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
         await recheck();
         await notify('Candidate checks and independent review passed.\n\n<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->');
         await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true); reserved = false;
-        await dispatchDeliveryChecks(api, revision, published);
+        await dispatchDeliveryChecks(dispatchApi, revision, published);
         await notify('Ready for integration · ' + route + '\n\n[PR #' + published.number + '](' + published.html_url + ') contains the independently reviewed candidate. Required CI and current merge authority are checked before integration.');
         return published;
       },
@@ -231,7 +242,14 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           if (Date.now() >= until) throw Error('Required CI or mergeability is pending; retain the PR for a new authorized action');
           await new Promise(resolve => setTimeout(resolve, 30000));
         } while (!controller.signal.aborted);
-        const result = await mergeAccepted(api, observation, async () => { await recheck(); return inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID); });
+        const mergeApi = async (path, method, ...args) => {
+          if (method === 'PUT' && path === 'pulls/' + pr.number + '/merge') {
+            await recheck();
+            if (controller.signal.aborted) throw Error('Delivery was cancelled before merge');
+          }
+          return api(path, method, ...args);
+        };
+        const result = await mergeAccepted(mergeApi, observation, async () => { await recheck(); return inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID); });
         const finalObservation = { ...observation, merged: true, merge: result.sha };
         const request = { runId, issue: issueNumber, stage: 'integrate', title: issue.title, observedAt: new Date().toISOString(), workflowRunId: env.GITHUB_RUN_ID,
           attempt: env.GITHUB_RUN_ATTEMPT, runUrl, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), completion: finalObservation };
@@ -241,7 +259,12 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         envelope.effect.body = 'Integrated the independently verified ' + route + ' candidate under explicit bounded repository delegation. Post-merge verification and release retain their existing decisions.';
         const receipt = { ...result, acceptedHead: pr.head.sha, authorization, postMerge: [] };
         await publishProcessBundle(api, request, completionBundle(request, envelope, receipt));
-        const postMerge = await postMergeRuns(api, observation, result.sha, true);
+        let postMerge;
+        try { postMerge = await postMergeRuns(dispatchApi, observation, result.sha, !controller.signal.aborted); }
+        catch (error) {
+          postMerge = observation.profile.completion.postMergeWorkflows.map(workflow => ({ workflow, revision: result.sha, state: 'missing', status: 'unavailable', reason: error.message.slice(0, 3000) }));
+          await notify('Post-merge verification needs attention. The merge at ' + result.sha + ' and its retained receipt are confirmed; inspect current CI runs before requesting verification again. ' + error.message.slice(0, 3000));
+        }
         await notify('Integrated · ' + route + '\n\n[PR #' + pr.number + '](' + pr.html_url + ') was merged at ' + result.sha + '. Post-merge review follows the existing CI/completion policy. Release and deployment have not been established by this integration result.');
         return { ...result, postMerge };
       },
