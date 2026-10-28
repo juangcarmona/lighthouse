@@ -51,9 +51,22 @@ done
 git -C "$validation_dir/consumer" add .
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --apply
 git -C "$validation_dir/consumer" diff --exit-code
+# Unattended is a separate opt-in; preserve the adopter-owned policy on reinstall.
+test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended.yml"
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --apply
+node --input-type=module - "$validation_dir/consumer/.lighthouse/unattended.json" <<'JS'
+import { readFileSync, writeFileSync } from 'node:fs';
+const path = process.argv[2], policy = JSON.parse(readFileSync(path));
+if (policy.enabled !== false || policy.merge !== false) throw Error('Installation must start disabled');
+policy.timeoutSeconds = 120;
+writeFileSync(path, JSON.stringify(policy));
+JS
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --apply
+node -e 'if (JSON.parse(require("fs").readFileSync(process.argv[1])).timeoutSeconds !== 120) process.exit(1)' "$validation_dir/consumer/.lighthouse/unattended.json"
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-worker-maintenance.yml"
+"$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended.yml"
 # gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
 # actionlint 1.7.12 cannot resolve. Scope these exceptions to compiler output only.
 "$validation_dir/actionlint" -shellcheck='' -config-file "$validation_dir/consumer/.github/actionlint.yaml" \
