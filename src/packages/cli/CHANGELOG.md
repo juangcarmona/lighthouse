@@ -1,5 +1,22 @@
 # @juangcarmona/lighthouse
 
+## 0.12.0
+
+### Minor Changes
+
+- 158fc35: <!-- markdownlint-disable MD041 --> Add opt-in bounded fast-forward and test-first hotfix workflows with independent read-only review, current evidence checks, explicit merge delegation and retained recovery context.
+
+### Patch Changes
+
+- Updated dependencies [158fc35]
+- Updated dependencies [a2aaa8e]
+- Updated dependencies [e2e4a79]
+- Updated dependencies [106d118]
+- Updated dependencies [014e4ef]
+- Updated dependencies [0d509af]
+- Updated dependencies [983c479]
+  - @juangcarmona/lighthouse-sdlc@0.16.0
+
 ## 0.11.6
 
 ### Patch Changes
