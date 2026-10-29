@@ -1,0 +1,20 @@
+### What went well
+- The isolated fixture repair matches the documented inclusive rule and all requested assertions, including the exact boundary message (eligibility.mjs:3; regression.test.mjs:1-15). The host reports exactly the two intended paths. Owner: juangcarmona.
+- Host-authenticated repository checks passed on both the accepted head and merged revision; ci.yml passed post-merge on that exact merge (github-check:123277482768 and github-check:123278773365). The merge is independently observed, not inferred from an assessment.
+
+### What went wrong
+- The handoff lacks the required historical RED/GREEN receipts, unchanged-test proof, adjacent-check receipts and measured diff. PR #202 prose claims them but cannot establish them. The root cause of the missing handoff evidence is unknown.
+- priorIntegration is null and no independent candidate-review receipt is supplied. Historical merge authorization cannot be reconstructed from the current merge:false request, empty forge reviews or observed owner merge. These are blocking record gaps, not failed CI or proof of unauthorized activity. Owner: juangcarmona with the SDLC host maintainer.
+- No remaining source defect or affected-guidance drift was established. No recurrence across work items, retry frequency, attention time or cost was measured.
+
+### Start doing
+- Carry commit-pinned acceptance and independent-review/integration receipts into the review handoff, including the original source identity and identical test snapshot hashes. Recover existing #197/#202 records before closing this review. Owner: juangcarmona with the SDLC host maintainer.
+
+### Stop doing
+- Do not use green repository CI or implementation-summary prose as substitutes for test-first history, independent review or historical merge authorization. Do not treat skipped optional jobs as verification or turn them into merge gates.
+
+### Improvement candidates
+1. **Handoff completeness (F2/F3).** Observed failure: required historical records are not available to this review (context priorIntegration=null and PR summary without receipts). Owner: SDLC host maintainer, coordinated by juangcarmona; follow-up stays in #197/PR #202's review record. Smallest useful guard: carry and validate references to the already-required receipts in the review handoff, retaining explicit missing states rather than inferring success. Before correction, reproduce in a bounded host-contract test by supplying a merged delivery with green CI but omitting RED/test hashes or independent-review/integration receipts; it must remain blocked. After correction, prove complete, matching records are supplied and accepted, while omitted, stale, changed-test and mismatched-head records still block. This is a proposal, not a diagnosed host source defect; any guard change needs its own review and regression proof.
+2. **Explicit regression coverage (F4, deferred).** Observed limitation: package.json:12 selects src/tests/*.test.mjs, whereas this regression is nested; ci.yml:25 runs npm run verify. Owner: repository CI/SDLC maintainer (juangcarmona); follow-up stays in #197's review record. Smallest useful guard to evaluate: a dedicated fixture-regression invocation in the acceptance-check path, without broad recursive discovery or changing merge policy. Before correction, demonstrate in an isolated test fixture that the top-level selector omits the nested test and that the declared direct command exposes the original strict-boundary assertion. After correction, require the intended assertion failure for the strict variant and GREEN for >= with identical test bytes; preserve deliberate pre-repair fixture workflows. This proposal requires separate review and regression proof and is not an added closure gate here.
+
+No product or architecture change is proposed, no follow-up issue is opened, and no permissions change.

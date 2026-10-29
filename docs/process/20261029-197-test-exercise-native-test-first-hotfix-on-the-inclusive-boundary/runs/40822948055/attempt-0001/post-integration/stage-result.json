@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "runId": "cb761af3de4f3743bdf3e601b2edcfd24ef23831ebc2d48a8f40aa584e120059",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "evidence": [
+    {
+      "id": "source:inclusive-boundary",
+      "status": "passed",
+      "source": "/workspace/src/tests/fixtures/unattended/eligibility.mjs:3",
+      "reason": "Static inspection finds value >= 2, matching the accepted inclusive boundary. This is not a test execution receipt."
+    },
+    {
+      "id": "source:requested-regression",
+      "status": "passed",
+      "source": "/workspace/src/tests/fixtures/unattended/regression.test.mjs:1-15",
+      "reason": "Uses node:test and node:assert/strict; asserts eligible(2) is true with the exact message Expected inclusive boundary, plus false for 1 and true for 3."
+    },
+    {
+      "id": "source:affected-guidance",
+      "status": "passed",
+      "source": "/workspace/src/tests/fixtures/unattended/README.md:3-7",
+      "reason": "Guidance agrees with the repair and describes the initial defect historically. Fixture-only opt-in policy differs intentionally from the disabled distributed template; no affected-guidance drift established."
+    },
+    {
+      "id": "github-check:123277482768",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40788636537/job/123277482768",
+      "reason": "Host-authenticated repository check succeeded on accepted PR head 9216e81d32e55dd945f19f7a425b718c4d2bf2ca from app 15368."
+    },
+    {
+      "id": "github-check:123278773365",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/40822767772/job/123278773365",
+      "reason": "Host-authenticated required repository check succeeded on merged/checked revision 7cc78a8a1ab2b136f8994f48b4838ef341baaf38; postMerge also reports ci.yml passed at that exact revision."
+    },
+    {
+      "id": "host:observed-merge",
+      "status": "passed",
+      "source": "/input/context.json#/request/completion",
+      "reason": "Host independently observes PR #202 closed and merged by juangcarmona at the checked revision. This proves observed integration, not the missing historical authorization or independent-review receipts."
+    },
+    {
+      "id": "acceptance:historical-regression-proof",
+      "status": "pending-review",
+      "source": "/input/context.json#/request/completion/pullRequest/body",
+      "reason": "PR prose claims RED, GREEN and adjacent checks and links run 40787092437, but supplies no execution receipts or before/after test snapshot comparison. Generic repository success does not establish this history."
+    },
+    {
+      "id": "acceptance:retained-review-and-integration",
+      "status": "pending-review",
+      "source": "/input/context.json#/request/priorIntegration",
+      "reason": "priorIntegration is null, predecessor is null and PR reviews is empty. No retained independent candidate-review record or matching historical owner merge-authorization receipt is supplied. Zero required forge approvals does not waive the work item's independent-review requirement."
+    },
+    {
+      "id": "host:finalization-plan",
+      "status": "passed",
+      "source": "/input/context.json#/request/completion/finalization",
+      "reason": "Blocked plan adds waiting-review, removes nothing and does not close the issue; the issue is already closed and no reopening is declared. PR labels are preserved and host reservation cleanup applies for every outcome. These are future host effects, not actions performed here."
+    }
+  ],
+  "missingEvidence": [
+    "#197 behavioral RED receipt on unchanged original source, GREEN receipt using identical regression-test bytes, and adjacent-check receipts bound to accepted head 9216e81d32e55dd945f19f7a425b718c4d2bf2ca. Include the test snapshots or hashes that establish preservation.",
+    "Retained independent candidate-review evidence for #202, including the reviewed source/test/RED binding, reviewer identity and disposition. Empty GitHub reviews do not establish whether a separate model review occurred.",
+    "Matching retained integration record and historical owner merge authorization for #202's accepted head and actual merge. priorIntegration is null; observed merge and current merge:false do not reconstruct historical permission.",
+    "Measured before/after diff evidence confirming only the comparison was repaired and the stated two production-line churn/one-module scope. The host's two-path inventory confirms file scope, but supplies no original contents or line statistics."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "juangcarmona: attach or restore the existing commit-pinned acceptance, independent-review and authorized integration records for #197/#202 so this review can be completed; do not substitute a new GREEN run for historical RED proof.",
+  "output": {
+    "summary": "Observed fixture repair and exact requested assertions match intent; merge and post-merge repository CI are host-confirmed. Delivery-record closure is blocked by missing explicit acceptance and historical review/integration evidence, not a failed check or an established remaining source defect.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 197,
+      "pr": 202,
+      "acceptedHead": "9216e81d32e55dd945f19f7a425b718c4d2bf2ca",
+      "integratedRevision": "7cc78a8a1ab2b136f8994f48b4838ef341baaf38",
+      "checkedRevision": "7cc78a8a1ab2b136f8994f48b4838ef341baaf38",
+      "intent": "05aec590cdaa26ad44cfe4fb0c7597d43b51d92f0285755128f357d67504f184",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "a7a0b5c7f7b0232790d417c68ae15928ee80a67e5cb0a1f7b00d99c7eecfde72",
+      "files": "2dab6aac93d49cb74b7392acec0f65a369ffc48ab623a2460180d5c5b2b1917d",
+      "requestId": "16148e0e495e51c4ca49f0274e21112de5458ffa37f74784f754d6877f9bf071",
+      "harnessRevision": "11869fd5664aab1e11235947e906d460e7f17f61",
+      "provenance": "Host-supplied identities and authenticated GitHub observations; no independent API or git authentication attempted."
+    },
+    "acceptance": [
+      {
+        "requirement": "Inclusive boundary, lower and higher cases, exact assertion message",
+        "assessment": "Source inspection satisfied; direct execution receipt missing."
+      },
+      {
+        "requirement": "Two files, comparison-only repair, one declared module and two production-line churn",
+        "assessment": "Host changed paths are exactly eligibility.mjs and regression.test.mjs under the policy's acceptance-fixture module. Original-source diff and measured churn are not supplied."
+      },
+      {
+        "requirement": "Test-first RED, unchanged test bytes, GREEN and adjacent checks",
+        "assessment": "Unverified historical requirements. PR prose is a claim, not an authenticated execution artifact. A later rerun cannot prove test-first chronology."
+      },
+      {
+        "requirement": "Required repository and post-merge ci.yml checks",
+        "assessment": "Passed on the exact accepted head and integrated revision through authenticated observations."
+      },
+      {
+        "requirement": "Independent review and retained authorized integration evidence",
+        "assessment": "Missing historical records; no waiver or explicit owner disposition supplied. Actual merge remains established by the separate host observation."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "finding": "The deliberately strict fixture boundary described by #197 is repaired to >= 2, with all requested assertions present. No remaining source defect established by inspection; execution history is separately unverified.",
+        "owner": "juangcarmona",
+        "followUpReference": "#197 / PR #202; src/tests/fixtures/unattended/eligibility.mjs:3 and regression.test.mjs:1-15"
+      },
+      {
+        "id": "F2",
+        "classification": "accepted",
+        "kind": "evidence-gap",
+        "finding": "Required RED/GREEN, byte preservation, adjacent-check and measured-diff evidence is absent from the supplied review handoff. Accepted means this review acknowledges the gap, not that the owner waived it; it remains blocking.",
+        "owner": "juangcarmona, with the SDLC host maintainer",
+        "followUpReference": "#197 acceptance requirements; PR #202 body links implementation run 40787092437"
+      },
+      {
+        "id": "F3",
+        "classification": "accepted",
+        "kind": "evidence-gap",
+        "finding": "No matching retained integration bundle or independent candidate-review receipt is supplied. The current authorization is merge:false, while GitHub independently reports an owner merge. Neither fact establishes historical authorization, and this review does not allege an unauthorized merge.",
+        "owner": "juangcarmona, with the SDLC host maintainer",
+        "followUpReference": "#197 / PR #202; context request.priorIntegration=null and completion.pullRequest.reviews=[]; src/packages/sdlc/completion.md:30-36"
+      },
+      {
+        "id": "F4",
+        "classification": "deferred",
+        "kind": "verification-coverage-candidate",
+        "finding": "The default npm test pattern selects top-level test files, not the nested fixture regression. This limits what repository success alone demonstrates. No claim is made that the nested test never ran through another route or that this deliberate fixture must join default discovery.",
+        "owner": "SDLC package and repository CI maintainer (juangcarmona)",
+        "followUpReference": "#197 review record; package.json:12,17; .github/workflows/ci.yml:22-25; .lighthouse/unattended.json:26-30"
+      }
+    ],
+    "guidanceReview": {
+      "references": [
+        "AGENTS.md:5-19",
+        "src/tests/fixtures/unattended/README.md:3-7",
+        "src/packages/sdlc/README.md:24-47,61-63",
+        "src/packages/sdlc/unattended.md:9-11,28-40",
+        "src/packages/sdlc/completion.md:30-44",
+        ".lighthouse/github.json",
+        ".lighthouse/unattended.json"
+      ],
+      "assessment": "No stale or conflicting affected instruction established. Historical initial-defect wording is compatible with the repair. Repository opt-in and disabled distributed defaults are intentional differences. Package source reports 0.15.2 and router source pin is 11869fd5664aab1e11235947e906d460e7f17f61; these are inspected source facts, not independent proof of installed/deployed configuration."
+    },
+    "checksAndLimits": {
+      "failedRequiredChecks": [],
+      "missingChecksVersusFailedChecks": "The supplied required repository and configured post-merge checks passed. Missing explicit work-item artifacts are unverified acceptance evidence, not failed or unavailable GitHub checks.",
+      "optionalObservations": "Skipped dispatch, adopter-install and stable-publication jobs are not treated as executed verification, release evidence or extra acceptance gates.",
+      "localExecution": "No tests or commands executed: this session exposes read/patch tools but no shell/test executor. No new rerun is required solely for this review; historical acceptance artifacts are the missing evidence.",
+      "evidenceAccess": "Review used /input/context.json and readable /workspace source. Listing /input was denied and was not retried or bypassed; no additional artifact locations were inferred.",
+      "reviewState": "No known outstanding review decision is supplied, so pendingReview is empty. The independent-review receipt is missing, not assumed rejected or currently pending."
+    },
+    "finalization": {
+      "policyReferences": [
+        "src/packages/sdlc/completion.md:36",
+        "/input/context.json#/request/completion/finalization"
+      ],
+      "observedIssue": {
+        "state": "closed",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedBlockedTransition": {
+        "add": [
+          "waiting-review"
+        ],
+        "remove": [],
+        "closeIssue": false,
+        "reopenIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "conditionalPassedTransition": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true,
+        "pullRequestLabels": "preserve"
+      },
+      "executor": "Trusted publisher after current-stage validation and fresh authority/check/reservation checks; no label mutation or evidence-branch publication performed by this engine.",
+      "reservation": "Host cleanup releases agent-working for either outcome.",
+      "permissions": "Review records learning only. No merge, release, deployment, policy change, issue creation or new stage is requested or authorized."
+    },
+    "retrospective": "### What went well\n- The isolated fixture repair matches the documented inclusive rule and all requested assertions, including the exact boundary message (eligibility.mjs:3; regression.test.mjs:1-15). The host reports exactly the two intended paths. Owner: juangcarmona.\n- Host-authenticated repository checks passed on both the accepted head and merged revision; ci.yml passed post-merge on that exact merge (github-check:123277482768 and github-check:123278773365). The merge is independently observed, not inferred from an assessment.\n\n### What went wrong\n- The handoff lacks the required historical RED/GREEN receipts, unchanged-test proof, adjacent-check receipts and measured diff. PR #202 prose claims them but cannot establish them. The root cause of the missing handoff evidence is unknown.\n- priorIntegration is null and no independent candidate-review receipt is supplied. Historical merge authorization cannot be reconstructed from the current merge:false request, empty forge reviews or observed owner merge. These are blocking record gaps, not failed CI or proof of unauthorized activity. Owner: juangcarmona with the SDLC host maintainer.\n- No remaining source defect or affected-guidance drift was established. No recurrence across work items, retry frequency, attention time or cost was measured.\n\n### Start doing\n- Carry commit-pinned acceptance and independent-review/integration receipts into the review handoff, including the original source identity and identical test snapshot hashes. Recover existing #197/#202 records before closing this review. Owner: juangcarmona with the SDLC host maintainer.\n\n### Stop doing\n- Do not use green repository CI or implementation-summary prose as substitutes for test-first history, independent review or historical merge authorization. Do not treat skipped optional jobs as verification or turn them into merge gates.\n\n### Improvement candidates\n1. **Handoff completeness (F2/F3).** Observed failure: required historical records are not available to this review (context priorIntegration=null and PR summary without receipts). Owner: SDLC host maintainer, coordinated by juangcarmona; follow-up stays in #197/PR #202's review record. Smallest useful guard: carry and validate references to the already-required receipts in the review handoff, retaining explicit missing states rather than inferring success. Before correction, reproduce in a bounded host-contract test by supplying a merged delivery with green CI but omitting RED/test hashes or independent-review/integration receipts; it must remain blocked. After correction, prove complete, matching records are supplied and accepted, while omitted, stale, changed-test and mismatched-head records still block. This is a proposal, not a diagnosed host source defect; any guard change needs its own review and regression proof.\n2. **Explicit regression coverage (F4, deferred).** Observed limitation: package.json:12 selects src/tests/*.test.mjs, whereas this regression is nested; ci.yml:25 runs npm run verify. Owner: repository CI/SDLC maintainer (juangcarmona); follow-up stays in #197's review record. Smallest useful guard to evaluate: a dedicated fixture-regression invocation in the acceptance-check path, without broad recursive discovery or changing merge policy. Before correction, demonstrate in an isolated test fixture that the top-level selector omits the nested test and that the declared direct command exposes the original strict-boundary assertion. After correction, require the intended assertion failure for the strict variant and GREEN for >= with identical test bytes; preserve deliberate pre-repair fixture workflows. This proposal requires separate review and regression proof and is not an added closure gate here.\n\nNo product or architecture change is proposed, no follow-up issue is opened, and no permissions change."
+  }
+}
