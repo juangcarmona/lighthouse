@@ -13,12 +13,12 @@
 </head>
 <body class="lh-root">
   <a class="skip-link" href="#main">Skip to content</a>
-  <aside class="site-sidebar" data-expanded="false">
+  <aside class="site-sidebar" data-expanded="true">
     <div class="sidebar-top">
       <div class="sidebar-account">
         <a class="sidebar-brand" href="#top" aria-label="Lighthouse home">
           <img class="sidebar-brand-icon" data-theme-asset="icon" data-theme-light="assets/lighthouse-icon-light.svg" data-theme-dark="assets/lighthouse-icon.svg" src="assets/lighthouse-icon.svg" width="40" height="40" alt="">
-          <span class="sidebar-account-copy"><strong>Lighthouse</strong><small>Public baseline</small></span>
+          <span class="sidebar-account-copy"><strong>Lighthouse</strong></span>
         </a>
       </div>
       <button class="mobile-sidebar-close" type="button" data-mobile-toggle aria-label="Close navigation" title="Close navigation">
@@ -26,9 +26,9 @@
       </button>
     </div>
     <div class="sidebar-search-wrap">
-      <button class="sidebar-search" type="button" data-search-open aria-label="Open search" title="Open search">
+      <button class="sidebar-search" type="button" data-search-open aria-label="Quick search ⌘ K" title="Quick search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"></circle><path d="m15 15 4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
-        <span>Quick search...</span><kbd>⌘ K</kbd>
+        <span>Quick search</span><kbd aria-hidden="true">⌘ K</kbd>
       </button>
     </div>
     <nav class="sidebar-nav" aria-label="Primary navigation">
@@ -38,25 +38,21 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5M6.5 10v9h11v-9M10 19v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>
           <span>Overview</span>
         </a>
-        <a class="sidebar-link" href="#authorities">
+        <a class="sidebar-link" href="#excellence">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
-          <span>Authorities</span>
+          <span>Excellence</span>
         </a>
-        <a class="sidebar-link" href="#flow">
+        <a class="sidebar-link" href="#harness">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          <span>Flow</span>
+          <span>Agentic Harness</span>
         </a>
-        <a class="sidebar-link" href="#foundation">
+        <a class="sidebar-link" href="#workflows">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
-          <span>Foundation</span>
+          <span>Workflows</span>
         </a>
-        <a class="sidebar-link" href="#adoption">
+        <a class="sidebar-link" href="#run">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg>
-          <span>Adoption</span>
-        </a>
-        <a class="sidebar-link" href="#routes">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 14h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v4h6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          <span>Routes</span>
+          <span>Run it yourself</span>
         </a>
       </div>
       <div class="sidebar-group">
@@ -76,8 +72,8 @@
       </div>
     </nav>
     <div class="sidebar-footer">
-      <span class="sidebar-footer-copy">Lighthouse baseline<br><small>v0.1 / public</small></span>
-      <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="false" aria-label="Expand navigation" title="Expand navigation">
+      <span class="sidebar-footer-copy">Lighthouse<br><small>v__LIGHTHOUSE_VERSION__</small></span>
+      <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="sidebar-toggle-icon">
           <path d="M21.25 6.72v10.56a2.97 2.97 0 0 1-2.97 2.97H5.72a2.97 2.97 0 0 1-2.97-2.97V6.72a2.97 2.97 0 0 1 2.97-2.97h12.56a2.97 2.97 0 0 1 2.97 2.97"></path>
           <path d="M6.25 7.25v9.5" class="sidebar-toggle-indicator"></path>
@@ -93,11 +89,6 @@
         <button class="mobile-menu-toggle" type="button" data-mobile-toggle aria-label="Open navigation" title="Open navigation">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true" focusable="false" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12H21M3 6H21M3 18H11"></path></svg>
         </button>
-        <div class="header-context">
-          <span class="header-kicker">PUBLIC BASELINE</span>
-          <span class="header-divider" aria-hidden="true">/</span>
-          <span>Lighthouse</span>
-        </div>
         <div class="header-actions">
           <a class="header-link" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source</span><span aria-hidden="true">↗</span></a>
           <div class="theme-switcher" role="group" aria-label="Appearance">
@@ -117,108 +108,71 @@
 
     <main id="main">
       <section class="hero" id="top" aria-labelledby="hero-title">
+        <img class="hero-art" src="assets/lighthouse-beam.svg" width="1000" height="340" alt="">
         <div class="hero-copy">
-          <p class="eyebrow">LIGHTHOUSE / ENGINEERING BASELINE</p>
-          <h1 id="hero-title">A clear path to <span>engineering excellence.</span></h1>
-          <p class="hero-intro">Proven techniques and best practices for a practical, AI-driven SDLC.</p>
+          <h1 id="hero-title">Lighthouse</h1>
+          <h2>A clear path to engineering excellence.</h2>
+          <h3>Proven techniques and best practices for a practical, AI-driven SDLC.</h3>
           <div class="actions">
-            <a class="lh-button" href="#authorities">See the baseline <span aria-hidden="true">↘</span></a>
-            <a class="hero-link" href="#adoption">Choose an adoption route</a>
-          </div>
-          <p class="hero-caption">The public story is generated from ProductShape, ArcShape and the Lighthouse package contracts.</p>
-        </div>
-        <div class="hero-visual" role="img" aria-label="Lighthouse beacon over an engineering grid">
-          <div class="hero-grid" aria-hidden="true"></div>
-          <img data-theme-asset="icon" data-theme-light="assets/lighthouse-icon-light.svg" data-theme-dark="assets/lighthouse-icon.svg" src="assets/lighthouse-icon.svg" width="224" height="224" alt="">
-        </div>
-      </section>
-
-      <section class="signal-strip" aria-label="Lighthouse baseline characteristics">
-        <div><span>01</span><strong>Adoptable</strong><small>Clear routes for new and existing projects.</small></div>
-        <div><span>02</span><strong>Evidence-backed</strong><small>Guidance stays close to executable checks.</small></div>
-        <div><span>03</span><strong>Profile-based</strong><small>Use the stack support your product needs.</small></div>
-        <div><span>04</span><strong>Human-owned</strong><small>Automation reports; maintainers decide.</small></div>
-      </section>
-
-      <section class="brand-section section" aria-labelledby="brand-title">
-        <div class="brand-copy">
-          <p class="eyebrow">IDENTITY / SIGNAL BLUE</p>
-          <h2 id="brand-title">The signal has a color.</h2>
-          <p>Signal blue is the Lighthouse accent for the beam, the grid and the moments that need to stand out.</p>
-          <div class="signal-token">
-            <span aria-hidden="true"></span>
-            <div><strong>Signal blue</strong><code>#4DA3FF</code></div>
+            <a class="lh-button" href="#pillars">Explore Lighthouse <span aria-hidden="true">↘</span></a>
+            <a class="hero-link" href="#run">Run it yourself</a>
           </div>
         </div>
-        <figure class="brand-banner">
-          <img src="assets/github-banner.svg" width="1280" height="640" alt="Lighthouse engineering baseline with a blue lighthouse beam">
-          <figcaption>Blue and white, with enough contrast to stay legible at a glance.</figcaption>
-        </figure>
       </section>
 
-      <section class="section authority-section" id="authorities" aria-labelledby="authorities-title">
-        <div class="section-heading"><div><p class="eyebrow">01 / AUTHORITIES</p><h2 id="authorities-title">One story, two sources of truth.</h2></div><p>ProductShape defines what to build. ArcShape records how the system is shaped.</p></div>
-        <div class="authority-grid">
-          <a class="authority-card" href="model/index.html"><span class="card-index">PRODUCT</span><h3>Product model</h3><p>The generated ProductShape snapshot shows the accepted product model and its delivery capabilities.</p><span class="route-action">Open the product snapshot <span aria-hidden="true">↗</span></span></a>
-          <a class="authority-card" href="architecture/index.html"><span class="card-index">ARCHITECTURE</span><h3>Architecture snapshot</h3><p>The ArcShape reader separates the implemented Lighthouse repository from the target initialized application.</p><span class="route-action">Open the architecture snapshot <span aria-hidden="true">↗</span></span></a>
+      <section class="pillar-index" id="pillars" aria-label="Explore the three Lighthouse pillars">
+        <a class="pillar-card" href="#excellence"><span class="card-index">01 / PRACTICE</span><h2>Engineering Excellence</h2><p>Patterns, checks and examples for code, architecture, testing and design.</p><span class="route-action">Explore practices <span aria-hidden="true">↘</span></span></a>
+        <a class="pillar-card" href="#harness"><span class="card-index">02 / ENVIRONMENT</span><h2>Agentic Development Environment</h2><p>A local agent works with you in a repository, guided by versioned context and checks.</p><span class="route-action">Explore the environment <span aria-hidden="true">↘</span></span></a>
+        <a class="pillar-card" href="#workflows"><span class="card-index">03 / DELIVERY</span><h2>Delivery Workflows</h2><p>Supervised workers carry an issue through implementation, evidence and review.</p><span class="route-action">Explore workflows <span aria-hidden="true">↘</span></span></a>
+      </section>
+      <a class="run-band" href="#run"><span><strong>Run it yourself</strong><small>Adopt the baseline locally, then add the workers your project needs.</small></span><span class="route-action">See the two entry points <span aria-hidden="true">↘</span></span></a>
+
+      <section class="section" id="excellence" aria-labelledby="excellence-title">
+        <div class="section-heading"><div><p class="eyebrow">01 / ENGINEERING EXCELLENCE</p><h2 id="excellence-title">Practices with a way to check them.</h2></div><p>Take the parts that fit your product. Lighthouse keeps recommendations, reference examples and enforced rules distinct.</p></div>
+        <div class="practice-list" aria-label="Engineering practice topics">
+          <a href="model/index.html"><span>01</span><strong>Product intent</strong><small>Trace a change back to an accepted product model.</small><b aria-hidden="true">↗</b></a>
+          <a href="architecture/index.html"><span>02</span><strong>Architecture &amp; repository boundaries</strong><small>Make ownership and module dependencies visible.</small><b aria-hidden="true">↗</b></a>
+          <a href="https://github.com/juangcarmona/lighthouse/blob/main/src/dotnet/profile/practices.md"><span>03</span><strong>Testing &amp; quality</strong><small>Exercise behavior and run the checks your stack supports.</small><b aria-hidden="true">↗</b></a>
+          <a href="https://github.com/juangcarmona/lighthouse/blob/main/src/dotnet/profile/guardrails.md"><span>04</span><strong>Dependencies &amp; security</strong><small>See the .NET profile's locked restore, audit and explicit exceptions.</small><b aria-hidden="true">↗</b></a>
+          <a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md"><span>05</span><strong>Interface design</strong><small>Use semantic tokens, accessible states and native CSS recipes.</small><b aria-hidden="true">↗</b></a>
         </div>
-        <div class="scope-compare" aria-label="Current repository and target initialized application">
-          <article><span class="meta-label">IMPLEMENTED TODAY</span><h3>Lighthouse repository</h3><p>CLI, UI package, .NET reference profile, verification, gallery and this generated site.</p></article>
-          <div class="scope-arrow" aria-hidden="true">→</div>
-          <article><span class="meta-label">TARGET ADOPTION</span><h3>Initialized application</h3><p>Predictable structure, selected profiles, Aspire composition and project-owned decisions.</p></article>
-        </div>
+        <div class="example-panel"><div><span class="meta-label">A CHECK YOU CAN RUN</span><h3>Keep module internals behind contracts.</h3><p>In the .NET reference, Roslyn rule <code>LH1002</code> rejects a sibling module implementation reference. A compiled architecture test checks the boundary too. Recommendations elsewhere in the profile are identified as such.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/dotnet/profile/guardrails.md">Read the .NET guardrails <span aria-hidden="true">↗</span></a></div><code>npm run verify:dotnet</code></div>
       </section>
 
-      <section class="section flow-section" id="flow" aria-labelledby="flow-title">
-        <div class="section-heading"><div><p class="eyebrow">02 / DELIVERY FLOW</p><h2 id="flow-title">Make the next step visible.</h2></div><p>The target SDLC package keeps product, design, implementation and evidence connected.</p></div>
-        <div class="flow-grid" aria-label="Target Lighthouse delivery stages">
-          <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess urgency, complexity, dependencies and blast radius.</p></article>
-          <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Turn the work item into a bounded, reviewable change.</p></article>
-          <article class="flow-step"><span class="step-number">03</span><h3>Propose</h3><p>Describe the solution and its affected contracts.</p></article>
-          <article class="flow-step"><span class="step-number">04</span><h3>Implement</h3><p>Build from red to green with the applicable checks.</p></article>
-          <article class="flow-step"><span class="step-number">05</span><h3>Integrate</h3><p>Review the gate, merge the change and preserve evidence.</p></article>
-          <article class="flow-step"><span class="step-number">06</span><h3>Review</h3><p>Record what the delivery taught the project.</p></article>
+      <section class="section" id="harness" aria-labelledby="harness-title">
+        <div class="section-heading"><div><p class="eyebrow">02 / AGENTIC DEVELOPMENT ENVIRONMENT</p><h2 id="harness-title">Work with an agent in your repository.</h2></div><p>Instructions, skills and verification travel with the code. The developer still owns the request, scope and decision.</p></div>
+        <div class="environment-grid">
+          <article><span class="step-number">01</span><h3>Give it context</h3><p>The agent reads the repository entrypoint and the guidance for the selected package or stack.</p></article>
+          <article><span class="step-number">02</span><h3>Keep the work bounded</h3><p>Skills and commands describe the task, the files it owns and the evidence it should return.</p></article>
+          <article><span class="step-number">03</span><h3>Check the result</h3><p>Run the relevant verifier and review the change before accepting it.</p></article>
         </div>
-        <div class="flow-note"><span class="meta-label">TRACKER STATE</span><p>Labels expose state and route requests such as <code>Ready</code>, <code>Planned</code>, <code>WIP</code> and <code>Done</code>. The workflow does not infer state from issue prose.</p><span class="flow-note-status">SDLC package contract · the CLI projects it; the host runs each stage.</span></div>
+        <div class="editorial-note"><span class="meta-label">IN PRACTICE</span><p>Ask for a .NET use case. The agent follows the repository and profile contracts, edits the selected slice, then reports the result of <code>npm run verify:dotnet</code>. The check provides feedback; it does not approve the change.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/README.md">Explore the harness package <span aria-hidden="true">↗</span></a></div>
       </section>
 
-      <section class="section" id="foundation" aria-labelledby="foundation-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">03 / FOUNDATION</p>
-            <h2 id="foundation-title">Engineering expectations you can adopt.</h2>
-          </div>
-          <p>One baseline for repository practice, profiles and interface work.</p>
+      <section class="section" id="workflows" aria-labelledby="workflows-title">
+        <div class="section-heading"><div><p class="eyebrow">03 / DELIVERY WORKFLOWS</p><h2 id="workflows-title">From issue to reviewed change.</h2></div><p>With the selected workers installed, an owner requests a stage through GitHub. Each result links to the work and the next decision.</p></div>
+        <div class="flow-grid" aria-label="Supervised Lighthouse delivery route">
+          <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess the request and estimate it. Stop for the owner's decision.</p></article>
+          <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Define acceptance criteria or ask a specific question.</p></article>
+          <article class="flow-step"><span class="step-number">03</span><h3>Implement</h3><p>Plan, change code and verify. Publish both plan and code in a draft PR.</p></article>
+          <article class="flow-step"><span class="step-number">04</span><h3>PR &amp; checks</h3><p>Apply feedback in the same PR. Wait for required checks and owner approval.</p></article>
+          <article class="flow-step"><span class="step-number">05</span><h3>Integrate</h3><p>Assess the current approved head and merge only when authorized.</p></article>
+          <article class="flow-step"><span class="step-number">06</span><h3>Review</h3><p>After post-merge CI, record the retrospective and close the issue if passed.</p></article>
         </div>
-        <div class="foundation-grid">
-          <article class="lh-card foundation-card"><span class="card-index">01</span><h3>Repository baseline</h3><p>Concise conventions, evidence and verification keep the repository understandable to people and agents.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/AGENTS.md">Read the contributor entrypoint <span aria-hidden="true">↗</span></a></article>
-          <article class="lh-card foundation-card"><span class="card-index">02</span><h3>Clear boundaries</h3><p>Product intent, architecture, agent skills and operational tooling keep their own authorities and managed files.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/docs/architecture/09-architecture-decisions/0001-lighthouse-and-factory-ownership.md">See the boundary decision <span aria-hidden="true">↗</span></a></article>
-          <article class="lh-card foundation-card"><span class="card-index">03</span><h3>Lighthouse .NET profile</h3><p>A creator, use-case contracts, Aspire orchestration and Roslyn guardrails give .NET work a small, testable starting point.</p><a href="https://github.com/juangcarmona/lighthouse/tree/main/src/dotnet/profile">Explore the profile <span aria-hidden="true">↗</span></a></article>
-          <article class="lh-card foundation-card"><span class="card-index">04</span><h3>Visual system</h3><p>Semantic tokens and native CSS recipes provide a calm interface foundation with light, dark and system appearance.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md">Read the design guide <span aria-hidden="true">↗</span></a></article>
-        </div>
+        <div class="workflow-detail"><div><span class="meta-label">HUMAN STOPS</span><p>Questions, <code>future</code>, human reservations and failed checks pause continuation. A passing worker run alone does not authorize merge.</p></div><div><span class="meta-label">OTHER ROUTES</span><p><code>propose</code> opens a separate design PR when requested. Product Change, fast-forward and test-first hotfix are optional installations with their own gates.</p></div></div>
+        <a class="section-link" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/sdlc/README.md">Read the workflows and owner actions <span aria-hidden="true">↗</span></a>
       </section>
 
-      <section class="section adoption-section" id="adoption" aria-labelledby="adoption-title">
-        <div class="section-heading"><div><p class="eyebrow">04 / ADOPTION</p><h2 id="adoption-title">A smaller loop for better decisions.</h2></div><p>The baseline meets a project where it is.</p></div>
-        <div class="adoption-flow">
-          <article><span class="step-number">01</span><h3>Choose a route</h3><p>Start with the profile that matches the work. Keep the rest optional.</p></article>
-          <article><span class="step-number">02</span><h3>Adopt the contract</h3><p>Run the initializer, inspect its managed paths and record exceptions with an owner.</p></article>
-          <article><span class="step-number">03</span><h3>Verify the result</h3><p>Run the local checks, review the evidence and let a maintainer accept the change.</p></article>
-        </div>
-        <div class="command-panel"><div><span class="meta-label">LOCAL LOOP</span><p>Keep the feedback close to the repository.</p></div><code><span>$</span> lighthouse init<br><span>$</span> lighthouse verify</code></div>
-      </section>
-
-      <section class="section" id="routes" aria-labelledby="routes-title">
-        <div class="section-heading"><div><p class="eyebrow">05 / ROUTES</p><h2 id="routes-title">Start where the work is.</h2></div><p>Use one entrypoint, then add only what the product needs.</p></div>
-        <div class="route-grid">
-          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/dotnet/profile/adoption.md"><span class="route-label">Backend</span><h3>New or existing .NET work</h3><p>Use the creator for a new backend or follow the assessment route for an existing one.</p><span class="route-action">Open the .NET route <span aria-hidden="true">↗</span></span></a>
-          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md"><span class="route-label">Interface</span><h3>Adopt the visual system</h3><p>Use the UI package's semantic tokens and native recipes in an existing product.</p><span class="route-action">Open the design route <span aria-hidden="true">↗</span></span></a>
-          <a class="route-card" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/README.md"><span class="route-label">Foundation</span><h3>Install the harness and selected packages</h3><p>Use the package guide to initialize a repository and add the profiles it needs.</p><span class="route-action">Open the package guide <span aria-hidden="true">↗</span></span></a>
+      <section class="section run-section" id="run" aria-labelledby="run-title">
+        <div class="section-heading"><div><p class="eyebrow">THE BASE / RUN IT YOURSELF</p><h2 id="run-title">Start locally. Add workers when you need them.</h2></div><p>The baseline can live in your repository. Automation is a separate, selected installation.</p></div>
+        <div class="run-grid">
+          <article class="run-card"><span class="step-number">01 / ADOPT</span><h3>Adopt the baseline</h3><p>Initialize a repository, inspect the generated boundaries and run its local checks. Select stack profiles and external authorities only where they fit.</p><code>lighthouse init --name &lt;product&gt;<br>lighthouse verify</code><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/README.md">Open the package guide <span aria-hidden="true">↗</span></a></article>
+          <article class="run-card"><span class="step-number">02 / OPERATE</span><h3>Run the workers</h3><p>Install selected SDLC workflows, review their configuration and provision a trusted runner and agent engine. The repository owner enables automation after setup.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/sdlc/README.md">Choose workflows <span aria-hidden="true">↗</span></a><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/examples/opencode-engine/README.md">See the single-host runtime example <span aria-hidden="true">↗</span></a></article>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer"><div class="footer-inner"><span class="footer-credit">Made with <span class="footer-heart" aria-hidden="true">♥</span> by <a href="https://jgcarmona.com">Juan G Carmona</a></span><span class="footer-status"><i aria-hidden="true"></i>Product + architecture / public</span><a class="footer-source" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source on GitHub</span><span aria-hidden="true">↗</span></a></div></footer>
+    <footer class="site-footer"><div class="footer-inner"><span class="footer-credit">Made with <span class="footer-heart" aria-hidden="true">♥</span> by <a href="https://jgcarmona.com">Juan G Carmona</a></span><span class="footer-status"><i aria-hidden="true"></i>Engineering · agents · delivery</span><a class="footer-source" href="https://github.com/juangcarmona/lighthouse"><svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"></path></svg><span>Source on GitHub</span><span aria-hidden="true">↗</span></a></div></footer>
   </div>
 
   <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-dialog-title">
@@ -231,20 +185,17 @@
       <div class="search-results" id="search-results">
         <section class="search-section" aria-labelledby="search-dialog-title">
           <h2 id="search-dialog-title">Recent</h2>
-          <button class="search-option" type="button" data-search-target="#authorities" data-search-name="ProductShape ArcShape authorities">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Authorities <small>Product and architecture</small></span><b aria-hidden="true">↗</b>
+          <button class="search-option" type="button" data-search-target="#excellence" data-search-name="engineering excellence practices product architecture testing quality design">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Engineering Excellence <small>Practices and checks</small></span><b aria-hidden="true">↗</b>
           </button>
-          <button class="search-option" type="button" data-search-target="#flow" data-search-name="delivery flow triage refine propose implement integrate review">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery flow <small>Stages and state</small></span><b aria-hidden="true">↗</b>
+          <button class="search-option" type="button" data-search-target="#harness" data-search-name="agentic development environment local agent skills harness">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h4v4H5zM15 13h4v4h-4zM9 9h6M15 9v4M9 13H5v-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Agentic Environment <small>Local agent and skills</small></span><b aria-hidden="true">↗</b>
           </button>
-          <button class="search-option" type="button" data-search-target="#foundation" data-search-name="Foundation">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Foundation <small>Baseline</small></span><b aria-hidden="true">↗</b>
+          <button class="search-option" type="button" data-search-target="#workflows" data-search-name="delivery workflows triage refine propose implement integrate review">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Delivery Workflows <small>Stages and owner actions</small></span><b aria-hidden="true">↗</b>
           </button>
-          <button class="search-option" type="button" data-search-target="#adoption" data-search-name="Adoption">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg><span>Adoption <small>Workflow</small></span><b aria-hidden="true">↗</b>
-          </button>
-          <button class="search-option" type="button" data-search-target="#routes" data-search-name="Routes">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v5H5zM14 14h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v4h6.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Routes <small>Profiles</small></span><b aria-hidden="true">↗</b>
+          <button class="search-option" type="button" data-search-target="#run" data-search-name="run it yourself adopt baseline operate workers runtime">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg><span>Run it yourself <small>Adopt and operate</small></span><b aria-hidden="true">↗</b>
           </button>
           <button class="search-option" type="button" data-search-target="model/index.html" data-search-name="ProductShape model snapshot">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM8 9h8M8 12h5M8 15h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Product model <small>Generated snapshot</small></span><b aria-hidden="true">↗</b>
@@ -255,7 +206,7 @@
         </section>
         <section class="search-section" aria-labelledby="search-tips-title">
           <h2 id="search-tips-title">Search tips</h2>
-          <button class="search-option" type="button" data-search-target="#top" data-search-name="lighthouse verify">
+          <button class="search-option" type="button" data-search-target="#run" data-search-name="lighthouse verify">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12v14H6zM9 9h6M9 12h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span><code>verify</code><small>Check the baseline</small></span><b aria-hidden="true">↗</b>
           </button>
           <button class="search-option" type="button" data-search-target="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/ui/DESIGN.md" data-search-name="design guide">

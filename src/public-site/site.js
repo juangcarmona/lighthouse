@@ -52,7 +52,7 @@ function setMobileOpen(open) {
 
 function updateViewportMode() {
   root.dataset.lhViewport = mobileViewport.matches ? 'mobile' : 'desktop';
-  setSidebarExpanded(false);
+  setSidebarExpanded(!mobileViewport.matches);
   setMobileOpen(false);
 }
 
@@ -102,6 +102,12 @@ systemTheme.addEventListener('change', () => {
 mobileViewport.addEventListener('change', updateViewportMode);
 
 sidebarToggle?.addEventListener('click', () => setSidebarExpanded(sidebar.dataset.expanded !== 'true'));
+document.querySelector('.sidebar-node summary')?.addEventListener('click', (event) => {
+  if (!mobileViewport.matches && sidebar.dataset.expanded !== 'true') {
+    event.preventDefault();
+    setSidebarExpanded(true);
+  }
+});
 
 sectionLinks.forEach((link) => link.addEventListener('click', () => {
   activeSectionLockUntil = performance.now() + 700;

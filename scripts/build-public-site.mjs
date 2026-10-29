@@ -39,8 +39,11 @@ const stage = await mkdtemp(join(parent, '.public-site-'));
 try {
   await cp(source, stage, { recursive: true });
   await mkdir(join(stage, 'assets'), { recursive: true });
+  const cliPackage = JSON.parse(await readFile(join(root, 'src/packages/cli/package.json'), 'utf8'));
+  const page = await readFile(join(stage, 'index.html'), 'utf8');
+  await writeFile(join(stage, 'index.html'), page.replace('__LIGHTHOUSE_VERSION__', cliPackage.version));
 
-  for (const asset of ['lighthouse-icon.svg', 'lighthouse-icon-light.svg', 'github-banner.svg']) {
+  for (const asset of ['lighthouse-icon.svg', 'lighthouse-icon-light.svg', 'github-banner.svg', 'lighthouse-beam.svg']) {
     await cp(join(brandAssets, asset), join(stage, 'assets', asset));
   }
 
