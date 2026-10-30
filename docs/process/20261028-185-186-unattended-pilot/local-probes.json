@@ -1,0 +1,285 @@
+{
+  "provenance": "Local isolated Docker acceptance probes, not authenticated native GitHub delivery receipts. Source fixtures were constructed by the host. Model settings are configured resolution; provider-reported identity remains unverified.",
+  "positive": {
+    "status": "passed",
+    "red": {
+      "runId": "0000000000000000000000000000000000000000000000000000000000000001",
+      "sourceRevision": "3e4d2ab",
+      "changesDigest": "7afab0a40f133178b1fdab717e0510072c447d46e544cc4dea2b17ea32330a91",
+      "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+      "limits": {
+        "cpus": 2,
+        "memory": "4g",
+        "pids": 1024
+      },
+      "environment": null,
+      "checks": [
+        {
+          "command": [
+            "node",
+            "--test",
+            "tests/edge.test.mjs"
+          ],
+          "exitCode": 1,
+          "execution": {
+            "status": "failed",
+            "exitCode": 1,
+            "signal": null,
+            "resources": {
+              "pidsLimit": 1024,
+              "pidsPeak": 21,
+              "pidsDenied": 0,
+              "memoryPeakBytes": 38457344,
+              "oomKills": 0
+            }
+          },
+          "log": "\u2716 accepts the inclusive boundary (1.2024ms)\n\u2714 rejects values below the boundary (0.152875ms)\n\u2714 accepts values above the boundary (0.131417ms)\n\u2139 tests 3\n\u2139 suites 0\n\u2139 pass 2\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 59.043382\n\n\u2716 failing tests:\n\ntest at tests/edge.test.mjs:5:1\n\u2716 accepts the inclusive boundary (1.2024ms)\n  AssertionError [ERR_ASSERTION]: Expected inclusive boundary\n  \n  false !== true\n  \n      at TestContext.<anonymous> (file:///workspace/tests/edge.test.mjs:6:10)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.start (node:internal/test_runner/test:1262:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+        }
+      ],
+      "serviceCleanup": true
+    },
+    "green": {
+      "runId": "0000000000000000000000000000000000000000000000000000000000000002",
+      "sourceRevision": "3e4d2ab",
+      "changesDigest": "868b767953e165e946be27b6ebc6333917c24e03aac6d4233c06eaeedd7a79a8",
+      "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+      "limits": {
+        "cpus": 2,
+        "memory": "4g",
+        "pids": 1024
+      },
+      "environment": null,
+      "checks": [
+        {
+          "command": [
+            "node",
+            "--test",
+            "tests/edge.test.mjs"
+          ],
+          "exitCode": 0,
+          "execution": {
+            "status": "passed",
+            "exitCode": 0,
+            "signal": null,
+            "resources": {
+              "pidsLimit": 1024,
+              "pidsPeak": 21,
+              "pidsDenied": 0,
+              "memoryPeakBytes": 38100992,
+              "oomKills": 0
+            }
+          },
+          "log": "\u2714 accepts the inclusive boundary (0.742398ms)\n\u2714 rejects values below the boundary (0.117239ms)\n\u2714 accepts values above the boundary (0.116345ms)\n\u2139 tests 3\n\u2139 suites 0\n\u2139 pass 3\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 81.069134\n"
+        }
+      ],
+      "serviceCleanup": true
+    },
+    "review": {
+      "schemaVersion": 1,
+      "runId": "0000000000000000000000000000000000000000000000000000000000000004",
+      "stage": "integrate",
+      "status": "passed",
+      "gate": "done",
+      "evidence": [
+        {
+          "id": "issue-185186-acceptance-criteria",
+          "status": "passed",
+          "source": "/input/context.json",
+          "reason": "The original issue explicitly requires accepting 2 and higher and rejecting 1."
+        },
+        {
+          "id": "actual-implementation-and-regression",
+          "status": "passed",
+          "source": "/workspace/src/rule.mjs; /workspace/tests/edge.test.mjs",
+          "reason": "The implementation uses value >= 2, and the preserved node:test regression checks 2, 1, and 3 against the stated outcomes."
+        },
+        {
+          "id": "red-boundary-reproduction",
+          "status": "passed",
+          "source": "/input/context.json red receipt",
+          "reason": "The recorded node --test run fails specifically at the inclusive-boundary assertion while the below/above cases pass."
+        },
+        {
+          "id": "green-regression-run",
+          "status": "passed",
+          "source": "/input/context.json green receipt",
+          "reason": "The recorded node --test run passes all three boundary regression tests with no skips or failures."
+        }
+      ],
+      "missingEvidence": [],
+      "unavailableChecks": [],
+      "pendingReview": [],
+      "nextAction": "Return to the trusted host",
+      "output": {
+        "review": {
+          "binding": "real-docker-hotfix-proof-schema",
+          "verdict": "accept",
+          "findings": []
+        }
+      }
+    },
+    "runtime": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "34493bff8e311e84cc3bbd885a5d2d9b9272770a",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "3e4d2ab",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 346218496,
+          "oomKills": 0
+        }
+      }
+    }
+  },
+  "negative": {
+    "status": "blocked",
+    "review": {
+      "binding": "insufficient-check-negative-proof",
+      "verdict": "request-changes",
+      "findings": [
+        "src/rule.mjs uses value > 2, so the required boundary value 2 is rejected.",
+        "tests/edge.test.mjs contains only a trivial assertion and does not test that 2 is accepted and 1 is rejected."
+      ]
+    },
+    "runtime": {
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.15.2"
+      },
+      "harnessRevision": "34493bff8e311e84cc3bbd885a5d2d9b9272770a",
+      "image": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+      "limits": {
+        "cpus": 2,
+        "memory": "2g",
+        "pids": 128
+      },
+      "environment": null,
+      "model": "openai/gpt-6-luna",
+      "modelExecution": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "engine": "OpenCode 2.1.0",
+      "isolation": "Docker; no AWF egress filtering",
+      "skills": [
+        "browser-e2e",
+        "concise-results",
+        "implement",
+        "independent-review",
+        "integrate",
+        "product-change",
+        "propose",
+        "refine",
+        "review",
+        "triage"
+      ],
+      "sourceRevision": "3e4d2ab",
+      "seed": null,
+      "seedDigest": null,
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 29,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 344866816,
+          "oomKills": 0
+        }
+      }
+    }
+  }
+}

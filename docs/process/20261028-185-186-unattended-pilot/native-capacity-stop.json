@@ -1,0 +1,11 @@
+{
+  "run": 40779638460,
+  "artifact": 12857131020,
+  "artifactSha256": "c5cb9f1d51a6aed2bb443d2cfcdca83b4992d68c1dd3fd676aa8f170746211ba",
+  "report": {
+    "status": "blocked",
+    "evidence": [],
+    "reason": "Independent engine execution failed: triage",
+    "nextAction": "Inspect the retained candidate and resolve the identified blocker"
+  }
+}

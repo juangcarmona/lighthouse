@@ -1,0 +1,379 @@
+{
+  "run": 40784015362,
+  "url": "https://github.com/juangcarmona/lighthouse/actions/runs/40784015362",
+  "provenance": "Locally recovered original stage records after GitHub artifact upload failed on the same private-directory traversal. Digests bind recovered bytes; no uploaded artifact is claimed.",
+  "status": "blocked",
+  "candidatePublished": false,
+  "records": {
+    "envelope.json": {
+      "sha256": "f35ab41dcde62bc8a78f4bd080a6fe78c8a3c822f8d5adc1dd8fae86e744f944",
+      "record": {
+        "schemaVersion": 1,
+        "result": {
+          "schemaVersion": 1,
+          "runId": "6dd2188339a09da1f343f150b2be76d0e13bb45a44d0c3189488b577c166a150",
+          "stage": "implement",
+          "status": "passed",
+          "gate": "done",
+          "evidence": [
+            {
+              "id": "behavioral-red",
+              "status": "passed",
+              "source": "/output/evidence/red-confirm.log",
+              "reason": "Unchanged source fails the exact inclusive boundary assertion with ERR_ASSERTION; lower and higher cases pass. Supplied RED receipt also retained in input."
+            },
+            {
+              "id": "green",
+              "status": "passed",
+              "source": "/output/evidence/commands/green.json",
+              "reason": "Completed with exitCode 0; log at /output/evidence/green.log."
+            },
+            {
+              "id": "adjacent",
+              "status": "passed",
+              "source": "/output/evidence/commands/adjacent.json",
+              "reason": "Completed with exitCode 0; log at /output/evidence/adjacent.log."
+            },
+            {
+              "id": "npm-ci",
+              "status": "passed",
+              "source": "/output/evidence/commands/npm-ci.json",
+              "reason": "Completed with exitCode 0; log at /output/evidence/npm-ci.log."
+            },
+            {
+              "id": "verify",
+              "status": "passed",
+              "source": "/output/evidence/commands/verify.json",
+              "reason": "Completed with exitCode 0; log at /output/evidence/verify.log."
+            },
+            {
+              "id": "regression-preserved",
+              "status": "passed",
+              "source": "/output/evidence/regression-preservation-after.json",
+              "reason": "Exact supplied RED bytes preserved before and after repair."
+            },
+            {
+              "id": "bounded-diff",
+              "status": "passed",
+              "source": "/output/evidence/candidate.diff",
+              "reason": "One production addition and one deletion, one changed file relative to supplied snapshot, one acceptance-fixture module. Supplied regression already exists unchanged."
+            }
+          ],
+          "missingEvidence": [],
+          "unavailableChecks": [],
+          "pendingReview": [],
+          "nextAction": "Return candidate to the trusted host for independent validation and applicable review; no merge or release authorization is granted.",
+          "output": {
+            "eligibility": {
+              "points": 1,
+              "risk": "low",
+              "reversible": true,
+              "dependenciesResolved": true,
+              "scopeKnown": true,
+              "productChangeNeeded": false,
+              "humanDecisionRequired": false,
+              "confirmedDefect": true,
+              "rollback": "Revert the isolated eligibility.mjs comparison repair; the owner may disable the fixture-only unattended policy to contain further runs. No operational deployment is involved.",
+              "reason": "Current inspection and completed checks confirm the documented inclusive-boundary defect and isolated two-line production churn in one module. Supplied regression bytes are unchanged; no new dependency or human-only product, visual or architecture decision is needed. One point, low risk, reversible, and within admitted scope. This assessment grants no merge or release authority."
+            },
+            "plan": "/output/evidence/hotfix-plan.md",
+            "summary": "Changed only the fixture comparison from > to >=; retained the supplied regression unchanged.",
+            "checks": [
+              {
+                "id": "red-confirm",
+                "state": "completed",
+                "pid": 57,
+                "startTicks": "44943860",
+                "exitCode": 1,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 50,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 349839360,
+                  "oomKills": 0
+                },
+                "log": "/output/evidence/red-confirm.log"
+              },
+              {
+                "id": "green",
+                "state": "completed",
+                "pid": 79,
+                "startTicks": "44944961",
+                "exitCode": 0,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 50,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 349839360,
+                  "oomKills": 0
+                },
+                "log": "/output/evidence/green.log"
+              },
+              {
+                "id": "adjacent",
+                "state": "completed",
+                "pid": 100,
+                "startTicks": "44945418",
+                "exitCode": 0,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 64,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 349839360,
+                  "oomKills": 0
+                },
+                "log": "/output/evidence/adjacent.log"
+              },
+              {
+                "id": "npm-ci",
+                "state": "completed",
+                "pid": 241,
+                "startTicks": "44946005",
+                "exitCode": 0,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 64,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 1415380992,
+                  "oomKills": 0
+                },
+                "log": "/output/evidence/npm-ci.log"
+              },
+              {
+                "id": "verify",
+                "state": "completed",
+                "pid": 282,
+                "startTicks": "44958180",
+                "exitCode": 0,
+                "signal": null,
+                "resources": {
+                  "pidsLimit": 1024,
+                  "pidsPeak": 246,
+                  "pidsDenied": 0,
+                  "memoryPeakBytes": 1821286400,
+                  "oomKills": 0
+                },
+                "log": "/output/evidence/verify.log"
+              }
+            ],
+            "regression": {
+              "path": "src/tests/fixtures/unattended/regression.test.mjs",
+              "bytes": 423,
+              "sha256": "320c777d094899b8041ddbc98efbb17aff8e26d0f98066422e2c88277c1d81e3",
+              "matchesSuppliedRed": true,
+              "mode": "666"
+            },
+            "diff": {
+              "artifact": "/output/evidence/candidate.diff",
+              "productionAdditions": 1,
+              "productionDeletions": 1,
+              "changedFiles": [
+                "src/tests/fixtures/unattended/eligibility.mjs"
+              ],
+              "preservedRegression": "src/tests/fixtures/unattended/regression.test.mjs",
+              "module": "acceptance-fixture"
+            },
+            "verification": {
+              "regression": {
+                "passed": 3,
+                "failed": 0
+              },
+              "adjacent": {
+                "passed": 27,
+                "failed": 0
+              },
+              "repository": {
+                "tests": 292,
+                "passed": 287,
+                "failed": 0,
+                "skipped": 5
+              },
+              "notes": [
+                "Five repository tests were skipped by their existing opt-in integration conditions; the configured verification command exited 0.",
+                "npm ci reported three low-severity advisories; no dependency files were modified.",
+                "Workspace HEAD is the synthetic candidate snapshot 4e02c21ef64552245d7e9ef09cbd4b7e37318de6; requested source revision is retained in input and history validation belongs to the host."
+              ]
+            },
+            "proseReview": "Manual clarity and factuality review; Humanizer unavailable in inspected installed skills.",
+            "authority": "Independent candidate review, hosting checks, merge and release decisions remain with the trusted host and authorized reviewers."
+          }
+        },
+        "effect": {
+          "type": "issue-comment",
+          "body": "Fixed #197’s fixture comparison so 2 qualifies, preserving the supplied RED regression bytes. The three regression cases, 27 adjacent tests, dependency installation and repository verification passed; repository verification skipped five opt-in tests. The candidate is ready for independent host validation and review; merge and release remain separately authorized."
+        }
+      }
+    },
+    "runtime.json": {
+      "sha256": "52e1c7474acbeecd992079a291cbe90b3d3b985149db51f4c1e5651e0fc11894",
+      "record": {
+        "package": {
+          "name": "@juangcarmona/lighthouse-sdlc",
+          "version": "0.15.2"
+        },
+        "harnessRevision": "8a57fc53a77336b03858328b20e09ca2b49b5a02",
+        "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+        "limits": {
+          "cpus": 2,
+          "memory": "4g",
+          "pids": 1024
+        },
+        "environment": null,
+        "model": "openai/gpt-6.1-sol",
+        "modelExecution": {
+          "requested": {
+            "profile": "build",
+            "model": "openai/gpt-6.1-sol",
+            "reasoningEffort": "medium"
+          },
+          "resolved": {
+            "mode": "profile",
+            "profile": "build",
+            "model": "openai/gpt-6.1-sol",
+            "reasoningEffort": "medium",
+            "engineModel": "openai/gpt-6.1-sol#medium",
+            "source": "project.workers",
+            "fields": {
+              "model": "operator",
+              "reasoningEffort": "operator"
+            },
+            "capabilityEvidence": "operator-configuration-only"
+          },
+          "providerReported": {
+            "model": null,
+            "reasoningEffort": null,
+            "status": "unverified",
+            "reason": "The current adapter has no authenticated provider-settings receipt"
+          },
+          "billing": {
+            "route": "unchanged",
+            "actualCost": null,
+            "estimatedApiEquivalentCost": null,
+            "subscriptionUsage": null
+          }
+        },
+        "engine": "OpenCode 2.1.0",
+        "isolation": "Docker; no AWF egress filtering",
+        "skills": [
+          "browser-e2e",
+          "concise-results",
+          "implement",
+          "independent-review",
+          "integrate",
+          "product-change",
+          "propose",
+          "refine",
+          "review",
+          "triage"
+        ],
+        "sourceRevision": "84f7974d988087c29deecda28cd7ba8fabcc0ef9",
+        "seed": null,
+        "seedDigest": null,
+        "execution": {
+          "status": "passed",
+          "exitCode": 0,
+          "signal": null,
+          "resources": {
+            "pidsLimit": 1024,
+            "pidsPeak": 246,
+            "pidsDenied": 0,
+            "memoryPeakBytes": 1821286400,
+            "oomKills": 0
+          }
+        }
+      }
+    },
+    "checks.json": {
+      "sha256": "c2bc41e5270ca1c00697f1d968b7088864e19a274906f9babe80290b26479a55",
+      "record": {
+        "runId": "6dd2188339a09da1f343f150b2be76d0e13bb45a44d0c3189488b577c166a150",
+        "sourceRevision": "84f7974d988087c29deecda28cd7ba8fabcc0ef9",
+        "changesDigest": "5a93df1619b1076f593ec849370f2b4982aec3d630f7cd3ff4741ce145b84b0a",
+        "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+        "limits": {
+          "cpus": 2,
+          "memory": "4g",
+          "pids": 1024
+        },
+        "environment": null,
+        "checks": [
+          {
+            "command": [
+              "node",
+              "--test",
+              "src/tests/fixtures/unattended/regression.test.mjs"
+            ],
+            "exitCode": 0,
+            "execution": {
+              "status": "passed",
+              "exitCode": 0,
+              "signal": null,
+              "resources": {
+                "pidsLimit": 1024,
+                "pidsPeak": 21,
+                "pidsDenied": 0,
+                "memoryPeakBytes": 38899712,
+                "oomKills": 0
+              }
+            }
+          },
+          {
+            "command": [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            "exitCode": 0,
+            "execution": {
+              "status": "passed",
+              "exitCode": 0,
+              "signal": null,
+              "resources": {
+                "pidsLimit": 1024,
+                "pidsPeak": 20,
+                "pidsDenied": 0,
+                "memoryPeakBytes": 1157296128,
+                "oomKills": 0
+              }
+            }
+          },
+          {
+            "command": [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            "exitCode": 0,
+            "execution": {
+              "status": "passed",
+              "exitCode": 0,
+              "signal": null,
+              "resources": {
+                "pidsLimit": 1024,
+                "pidsPeak": 223,
+                "pidsDenied": 0,
+                "memoryPeakBytes": 798040064,
+                "oomKills": 0
+              }
+            }
+          }
+        ],
+        "serviceCleanup": true
+      }
+    },
+    "engine-error.json": {
+      "sha256": "76909505fdd8b2ef5222f8686bc44034b15a88cb91b8fde819af826381f620da",
+      "record": {
+        "schemaVersion": 1,
+        "message": "EACCES: permission denied, scandir '/home/juan/.local/share/lighthouse-runtime/runner-lighthouse/_work/_temp/lighthouse-unattended-40784015362/6dd2188339a09da1f343f150b2be76d0e13bb45a44d0c3189488b577c166a150/tmp/lighthouse-engine-rPIwSf/candidate/dist/public-site'"
+      }
+    }
+  }
+}
