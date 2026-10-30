@@ -16,6 +16,7 @@ const required = [
   'assets/lighthouse-icon.svg',
   'assets/lighthouse-icon-light.svg',
   'assets/github-banner.svg',
+  'assets/lighthouse-beam.svg',
 ];
 if (publicSiteEnabled) required.push('model/index.html', 'architecture/index.html');
 const exists = async (path) => stat(path).then(() => true).catch(() => false);
@@ -25,6 +26,10 @@ for (const file of required) {
 }
 
 const html = await readFile(join(output, 'index.html'), 'utf8');
+const cliPackage = JSON.parse(await readFile(join(root, 'src/packages/cli/package.json'), 'utf8'));
+if (!html.includes(`v${cliPackage.version}`) || html.includes('__LIGHTHOUSE_VERSION__')) {
+  throw new Error('Published Lighthouse version does not match the CLI package.');
+}
 for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/gu)) {
   const target = match[1];
   if (/^(?:https?:|mailto:|#|data:)/u.test(target)) continue;
