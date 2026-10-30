@@ -14,6 +14,9 @@ export function buildStackedPlan(input) {
   const errors = [];
   if (!isRecord(input) || !isRecord(input.parent) || !Array.isArray(input.slices)) return { schemaVersion: 1, status: 'invalid', valid: false, canApply: false, errors: [issue('stacked.invalid', 'stacked input needs parent and slices')] };
   const parentRef = input.parent.number ?? input.parent.id;
+  const epic = input.mode === 'epic';
+  if (input.mode !== undefined && !['epic', 'nested'].includes(input.mode)) errors.push(issue('stacked.mode', 'mode must be epic or nested', 'mode'));
+  if (epic && (typeof input.parent.integrationBranch !== 'string' || !/^lighthouse\/epic-[1-9]\d*$/.test(input.parent.integrationBranch) || input.parent.integrationBranch === (input.parent.base ?? 'main'))) errors.push(issue('stacked.integration-branch', 'epic mode needs a dedicated lighthouse/epic-<issue> integrationBranch', 'parent.integrationBranch'));
   if (parentRef === undefined || parentRef === null || String(parentRef).trim() === '') errors.push(issue('stacked.parent', 'parent needs an id or number', 'parent'));
   const seenBranches = new Set();
   const slices = input.slices.map((slice, index) => {
@@ -23,9 +26,14 @@ export function buildStackedPlan(input) {
     if (!branch) { errors.push(issue('stacked.branch', `slice ${slice.id} needs an explicit branch when the parent has no numeric issue id`, `slices[${index}].branch`)); return null; }
     if (seenBranches.has(branch)) errors.push(issue('stacked.branch-duplicate', `branch ${branch} appears more than once`, `slices[${index}].branch`));
     seenBranches.add(branch);
-    return { id: slice.id, title: slice.title, branch, base: slice.base ?? null, dependencies: [...(slice.dependencies ?? [])].sort(), acceptance: [...(slice.acceptance ?? [])] };
+    if (epic && slice.base !== undefined && slice.base !== input.parent.integrationBranch) errors.push(issue('stacked.epic-base', 'epic children must target the shared integration branch', `slices[${index}].base`));
+    const strings = value => Array.isArray(value) && value.every(item => typeof item === 'string' && item.trim());
+    if (!strings(slice.dependencies)) errors.push(issue('stacked.dependencies', 'dependencies must be a string array', `slices[${index}].dependencies`));
+    if (slice.acceptance !== undefined && !strings(slice.acceptance)) errors.push(issue('stacked.acceptance', 'acceptance must be a string array', `slices[${index}].acceptance`));
+    return { id: slice.id, title: slice.title, branch, base: slice.base ?? null, dependencies: strings(slice.dependencies) ? [...slice.dependencies].sort() : [], acceptance: strings(slice.acceptance) ? [...slice.acceptance] : [] };
   }).filter(Boolean);
   const byId = new Map(slices.map((slice) => [slice.id, slice]));
+  if (byId.size !== slices.length) errors.push(issue('stacked.duplicate', 'slice identities must be unique', 'slices'));
   const order = [];
   const visiting = new Set();
   const visited = new Set();
@@ -44,7 +52,8 @@ export function buildStackedPlan(input) {
   for (const slice of slices) visit(slice.id);
   const operations = order.map((id, index) => {
     const slice = byId.get(id);
-    return { type: 'open-pull-request', sliceId: id, branch: slice.branch, base: slice.base ?? (index === 0 ? input.parent.base ?? 'main' : slices.find((candidate) => candidate.id === order[index - 1])?.branch) };
+    return { type: 'open-pull-request', sliceId: id, branch: slice.branch, base: epic ? input.parent.integrationBranch : slice.base ?? (index === 0 ? input.parent.base ?? 'main' : slices.find((candidate) => candidate.id === order[index - 1])?.branch) };
   });
-  return { schemaVersion: 1, status: errors.length ? 'invalid' : 'ready', valid: errors.length === 0, canApply: errors.length === 0, parent: input.parent, slices, order, operations, errors };
+  if (epic) operations.push({ type: 'open-aggregate-pull-request', branch: input.parent.integrationBranch, base: input.parent.base ?? 'main', requires: [...order] });
+  return { schemaVersion: 1, status: errors.length ? 'invalid' : 'ready', valid: errors.length === 0, canApply: errors.length === 0, parent: input.parent, slices, order, operations: errors.length ? [] : operations, errors };
 }
