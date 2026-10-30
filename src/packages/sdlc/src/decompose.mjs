@@ -6,6 +6,8 @@ function issue(code, message, field) {
   return field ? { code, message, field } : { code, message };
 }
 
+const strings = value => Array.isArray(value) && value.every(item => typeof item === 'string' && item.trim());
+
 function orderSlices(slices) {
   const byId = new Map(slices.map((slice) => [slice.id, slice]));
   const visiting = new Set();
@@ -36,9 +38,10 @@ export function buildDecompositionPlan(input) {
     if (!isRecord(slice) || typeof slice.id !== 'string' || !slice.id.trim() || typeof slice.title !== 'string' || !slice.title.trim()) { errors.push(issue('decompose.slice', `slice ${index} needs id and title`, `slices[${index}]`)); return null; }
     if (ids.has(slice.id)) errors.push(issue('decompose.duplicate', `slice ${slice.id} appears more than once`, `slices[${index}].id`));
     ids.add(slice.id);
-    if (!Array.isArray(slice.dependencies)) errors.push(issue('decompose.dependencies', `slice ${slice.id} needs a dependencies array`, `slices[${index}].dependencies`));
+    if (!strings(slice.dependencies)) errors.push(issue('decompose.dependencies', `slice ${slice.id} needs a string dependencies array`, `slices[${index}].dependencies`));
+    for (const field of ['scope', 'labels']) if (slice[field] !== undefined && !strings(slice[field])) errors.push(issue(`decompose.${field}`, `slice ${slice.id} needs a string ${field} array`, `slices[${index}].${field}`));
     if (!Array.isArray(slice.acceptance) || slice.acceptance.length === 0 || slice.acceptance.some((item) => typeof item !== 'string' || !item.trim())) errors.push(issue('decompose.acceptance', `slice ${slice.id} needs independent acceptance evidence`, `slices[${index}].acceptance`));
-    return { id: slice.id, title: slice.title, acceptance: [...(slice.acceptance ?? [])], dependencies: [...(slice.dependencies ?? [])].sort(), scope: [...(slice.scope ?? [])].sort(), labels: [...(slice.labels ?? [])].sort() };
+    return { id: slice.id, title: slice.title, acceptance: strings(slice.acceptance) ? [...slice.acceptance] : [], dependencies: strings(slice.dependencies) ? [...new Set(slice.dependencies)].sort() : [], scope: strings(slice.scope) ? [...slice.scope].sort() : [], labels: strings(slice.labels) ? [...slice.labels].sort() : [] };
   }).filter(Boolean) : [];
   for (const slice of slices) for (const dependency of slice.dependencies) if (!ids.has(dependency)) errors.push(issue('decompose.unknown-dependency', `slice ${slice.id} depends on unknown slice ${dependency}`, 'slices'));
   const order = orderSlices(slices);
