@@ -20,7 +20,7 @@ export const repositoryApiUrl = (repository, path = '') => `https://api.github.c
 
 export function pendingReply(event, comments) {
   const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
-  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
+  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-handoff:v1 -->|<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
   const productChangeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
   if (productChangeName) return { stage: 'propose', worker: 'product-change', productFeedback: { action: 'answer', changeName: productChangeName, text: event.comment.body, sourceCommentId: event.comment.id } , report };
   const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
@@ -532,7 +532,7 @@ async function main(command) {
     const isReview = projection.review;
     const action = question ? `Owner: ${question} Reply here.` : isReview ? 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : next.trim() || 'Any continuation follows the configured authorization.';
-    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
+    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
     const label = projection.label;
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);

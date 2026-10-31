@@ -49,6 +49,9 @@ test('pending reply ignores stale, empty and spoofed reports and cannot replay a
   assert.equal(pendingReply(event, [report('implement')]).stage, 'implement');
   assert.equal(pendingReply(event, [{ ...report('implement'), body: report('implement').body + '\n[Review the implementation](https://example.test/pr)' }]), null);
   assert.equal(pendingReply(event, [{ ...report(), body: report().body.replace(/<!-- lighthouse-stage:.* -->/, '') }]).stage, 'propose');
+  const operationalBlocker = { ...report(), body: `${report().body}\n<!-- lighthouse-handoff:v1 -->` };
+  assert.equal(pendingReply(event, [operationalBlocker]), null);
+  assert.equal(pendingReply(event, [{ ...operationalBlocker, body: `${operationalBlocker.body}\n<!-- lighthouse-question -->` }]).stage, 'propose');
 });
 test('publication refuses changed answers, changed source, closed issues and human takeover', () => {
   const comments = [{ id: 1, body: 'Authorized', updated_at: 'now' }];
