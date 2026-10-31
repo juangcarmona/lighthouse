@@ -8,6 +8,7 @@ import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
 
 const marker = '<!-- lighthouse-product-change:';
+const digest = value => createHash('sha256').update(value).digest('hex');
 export function preparePendingProductCandidate(product) {
   if (product.providerValidation?.status !== 'pending') return product;
   validateProductChangeFiles(product.files, { changeName: product.changeName });
@@ -148,13 +149,13 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   }
   const repositoryInfo = await api('');
   const policyDigest = snapshot.policyDigest;
-  const binding = productReviewBinding({ repository, issue: snapshot.issue, pullRequest: pr.number, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest, policyDigest, authorityDigest: snapshot.authorizationDigest, head: pr.head.sha });
+  const binding = productReviewBinding({ repository, issue: snapshot.issue, pullRequest: pr.number, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest, policyDigest, authorityDigest: snapshot.authorizationDigest, head: pr.head.sha, ...(snapshot.productParent ? { parentDigest: digest(JSON.stringify(snapshot.productParent)) } : {}) });
   const checkpoint = {
     schemaVersion: 1, kind: 'checkpoint',
     identity: { repository, issue: snapshot.issue, parentRunId: String(snapshot.dispatch?.routerRunId ?? snapshot.workflowRunId), authorizationDigest: snapshot.authorizationDigest, policyDigest, workflowRevision: snapshot.workflowRevision, head: pr.head.sha },
     requestDigest: snapshot.dispatch?.digest ?? snapshot.taskDigest,
     changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest,
-    state: 'waiting-product-decision', effectIds: [`pr:${pr.number}:${pr.head.sha}`]
+    state: 'waiting-product-decision', effectIds: [`pr:${pr.number}:${pr.head.sha}`], ...(snapshot.productParent ? { parent: snapshot.productParent } : {})
   };
   const checkpointErrors = validateProductCheckpoint(checkpoint);
   if (checkpointErrors.length) throw Error(checkpointErrors.join('; '));
@@ -307,7 +308,7 @@ export async function loadProductApproval(api, { eventName, event, owner, reposi
   if (checkpoints.length !== 1) throw Error('PR has no unique Product Change checkpoint');
   const checkpoint = JSON.parse(checkpoints[0][1]);
   const checkpointErrors = validateProductCheckpoint(checkpoint);
-  if (checkpointErrors.length || checkpoint.state !== 'waiting-product-decision' || checkpoint.changeName !== bound.changeName || checkpoint.changeId !== bound.changeId || checkpoint.proposalDigest !== bound.proposalDigest || checkpoint.baselineDigest !== bound.baselineDigest || checkpoint.identity.head !== pr.head.sha || checkpoint.identity.issue !== bound.issue || checkpoint.identity.repository !== repository || checkpoint.effectIds.length !== 1 || checkpoint.effectIds[0] !== `pr:${pr.number}:${pr.head.sha}`) throw Error('Product Change checkpoint is stale or invalid');
+  if (checkpointErrors.length || (checkpoint.parent ? digest(JSON.stringify(checkpoint.parent)) !== bound.parentDigest : bound.parentDigest !== undefined) || checkpoint.state !== 'waiting-product-decision' || checkpoint.changeName !== bound.changeName || checkpoint.changeId !== bound.changeId || checkpoint.proposalDigest !== bound.proposalDigest || checkpoint.baselineDigest !== bound.baselineDigest || checkpoint.identity.head !== pr.head.sha || checkpoint.identity.issue !== bound.issue || checkpoint.identity.repository !== repository || checkpoint.effectIds.length !== 1 || checkpoint.effectIds[0] !== `pr:${pr.number}:${pr.head.sha}`) throw Error('Product Change checkpoint is stale or invalid');
   if (decision.changeName !== bound.changeName || decision.reviewKey !== bound.key) throw Error('Product approval action does not identify the current Product Change');
   const candidate = await loadProductCandidateFromPullRequest(api, repository, pr, bound.changeName);
   const repositoryInfo = await api('');
@@ -317,6 +318,15 @@ export async function loadProductApproval(api, { eventName, event, owner, reposi
   const verified = verifyProductDecision({ decision, actor, actorType, owner, source, submitted: true, currentBinding: bound, observedBinding: bound, decisionId });
   const issue = await api(`issues/${bound.issue}`);
   if (issue.state !== 'open' || issue.labels?.some(label => ['future', 'human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
+  if (checkpoint.parent) {
+    const run = await api(`actions/runs/${checkpoint.parent.predecessor.runId}`);
+    const observed = await (await import('./stage-transition.mjs')).productGapAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } });
+    const comments = await (await import('./stage-dispatch.mjs')).issueComments(api, bound.issue);
+    const ownerAnswers = comments.filter(c => c.user?.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
+    const intent = digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers.map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
+    if (JSON.stringify(observed) !== JSON.stringify(checkpoint.parent) || defaultHead !== checkpoint.parent.sourceRevision || intent !== checkpoint.parent.taskDigest) throw Error('Product prerequisite parent or owner authorization changed before the product decision');
+  }
+
   const feedback = decision.action === 'approve' ? null : { action: decision.action, changeName: decision.changeName, reviewKey: decision.reviewKey, text: decision.detail, sourceCommentId: decisionId, source: 'pull-request' };
   return { ...(decision.action === 'approve' ? { approval: verified } : { feedback }), binding: bound, checkpoint, issue: bound.issue, pullRequest: pr.number, head: pr.head.sha, changeName: bound.changeName, candidate, modelRoot: accepted.modelRoot };
 }

@@ -48,6 +48,18 @@
         "proposalDigest": { "$ref": "#/$defs/digest" },
         "baselineDigest": { "$ref": "#/$defs/digest" },
         "state": { "enum": ["preparing", "waiting-product-decision", "approved", "applying", "applied", "blocked"] },
+        "parent": {
+          "type": "object", "additionalProperties": false,
+          "required": ["issue", "stage", "predecessor", "gap", "sourceRevision", "taskDigest"],
+          "properties": {
+            "issue": { "type": "integer", "minimum": 1 },
+            "stage": { "enum": ["triage", "refine", "propose", "implement"] },
+            "predecessor": { "type": "object", "additionalProperties": false, "required": ["runId", "attempt"], "properties": { "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" }, "attempt": { "type": "integer", "minimum": 1 } } },
+            "gap": { "type": "object", "additionalProperties": false, "required": ["summary", "scope"], "properties": { "summary": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" }, "scope": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" } } },
+            "sourceRevision": { "$ref": "#/$defs/revision" },
+            "taskDigest": { "$ref": "#/$defs/digest" }
+          }
+        },
         "pendingQuestion": { "type": "string", "maxLength": 4000 },
         "effectIds": { "type": "array", "uniqueItems": true, "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 256 } }
       },

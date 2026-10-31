@@ -112,7 +112,7 @@ export function validateProductIdentity(value) {
 
 export function validateProductCheckpoint(value) {
   const fields = ['schemaVersion', 'kind', 'identity', 'requestDigest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'state', 'effectIds'];
-  const optional = ['pendingQuestion'];
+  const optional = ['pendingQuestion', 'parent'];
   if (!exact(value, [...fields, ...optional.filter(key => Object.hasOwn(value ?? {}, key))])) return ['Product Change checkpoint has unsupported or missing fields'];
   const errors = [...validateProductIdentity(value.identity)];
   if (value.schemaVersion !== 1 || value.kind !== 'checkpoint') errors.push('Product Change checkpoint identity is unsupported');
@@ -120,6 +120,10 @@ export function validateProductCheckpoint(value) {
   for (const field of ['requestDigest', 'proposalDigest', 'baselineDigest']) if (!hashPattern.test(value[field] ?? '')) errors.push(`${field} must be SHA-256`);
   if (!['preparing', 'waiting-product-decision', 'approved', 'applying', 'applied', 'blocked'].includes(value.state)) errors.push('Product Change checkpoint state is unsupported');
   if (!Array.isArray(value.effectIds) || value.effectIds.length > 32 || value.effectIds.some(item => typeof item !== 'string' || !item.trim() || item.length > 256) || new Set(value.effectIds).size !== value.effectIds.length) errors.push('Product Change checkpoint effectIds are invalid');
+  if (value.parent !== undefined) {
+    const parent = value.parent;
+    if (!exact(parent, ['issue', 'stage', 'predecessor', 'gap', 'sourceRevision', 'taskDigest']) || parent.issue !== value.identity?.issue || !['triage', 'refine', 'propose', 'implement'].includes(parent.stage) || !exact(parent.predecessor, ['runId', 'attempt']) || !/^[1-9][0-9]*$/.test(parent.predecessor.runId ?? '') || !Number.isSafeInteger(parent.predecessor.attempt) || parent.predecessor.attempt < 1 || !exact(parent.gap, ['summary', 'scope']) || !['summary', 'scope'].every(key => typeof parent.gap[key] === 'string' && parent.gap[key].trim() && parent.gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(parent.gap[key])) || !revisionPattern.test(parent.sourceRevision ?? '') || !hashPattern.test(parent.taskDigest ?? '')) errors.push('Product Change parent checkpoint is invalid');
+  }
   if (value.pendingQuestion !== undefined && (typeof value.pendingQuestion !== 'string' || value.pendingQuestion.length > 4000)) errors.push('Product Change checkpoint pendingQuestion exceeds its bound');
   return errors;
 }
@@ -257,11 +261,12 @@ export async function prepareProductEvidence(root, destination, core, { baseline
 }
 
 export function productReviewBinding(input) {
-  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head'];
+  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head', ...('parentDigest' in input ? ['parentDigest'] : [])];
   if (!exact(input, fields)) throw Error('Product review binding has unsupported or missing fields');
   if (typeof input.repository !== 'string' || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(input.repository) || !Number.isSafeInteger(input.issue) || input.issue < 1 || !Number.isSafeInteger(input.pullRequest) || input.pullRequest < 1) throw Error('Product review target is invalid');
   if (!namePattern.test(input.changeName) || !/^CHG-[A-Z0-9-]+$/.test(input.changeId)) throw Error('Product review change identity is invalid');
   for (const field of ['proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest']) if (!hashPattern.test(input[field] ?? '')) throw Error(`Product review ${field} is invalid`);
+  if (input.parentDigest !== undefined && !hashPattern.test(input.parentDigest)) throw Error('Product review parent digest is invalid');
   if (!revisionPattern.test(input.head ?? '')) throw Error('Product review head must be a full commit SHA');
   const key = digest(JSON.stringify(input));
   return { ...input, key };

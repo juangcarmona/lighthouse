@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProductChangeFiles, validateProductChangeOutput, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
+import { validateProductChangeFiles, validateProductChangeOutput, validateProductCheckpoint, productReviewBinding, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
 import { bindValidatedProductCandidate, preparePendingProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
 import { installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
@@ -95,4 +95,15 @@ test('the host supplies OpenSpec product-only metadata before validating pending
   assert.throws(() => preparePendingProductCandidate({ ...product, files: [{ ...product.files[0], content: 'schema: product-change\nskip_specs: false\n' }, ...product.files.slice(1)] }), /conflicting/);
   const passed = { ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } };
   assert.equal(preparePendingProductCandidate(passed), passed);
+});
+
+test('a waiting product decision binds the authenticated parent checkpoint to review', () => {
+  const parent = { issue: 18, stage: 'refine', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Authorized issue' }, sourceRevision: 'a'.repeat(40), taskDigest: 'b'.repeat(64) };
+  const identity = { repository: 'owner/repo', issue: 18, parentRunId: '200', authorizationDigest: 'c'.repeat(64), policyDigest: 'd'.repeat(64), workflowRevision: 'e'.repeat(40), head: 'f'.repeat(40) };
+  const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity, requestDigest: '1'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '2'.repeat(64), baselineDigest: '3'.repeat(64), state: 'waiting-product-decision', effectIds: [], parent };
+  assert.deepEqual(validateProductCheckpoint(checkpoint), []);
+  for (const invalid of [{ ...parent, issue: 19 }, { ...parent, stage: 'review' }, { ...parent, taskDigest: 'invalid' }, { ...parent, gap: { ...parent.gap, approved: true } }]) assert.ok(validateProductCheckpoint({ ...checkpoint, parent: invalid }).length);
+  const binding = { repository: identity.repository, issue: 18, pullRequest: 7, changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: checkpoint.proposalDigest, baselineDigest: checkpoint.baselineDigest, policyDigest: identity.policyDigest, authorityDigest: identity.authorizationDigest, head: identity.head };
+  assert.notEqual(productReviewBinding({ ...binding, parentDigest: '4'.repeat(64) }).key, productReviewBinding({ ...binding, parentDigest: '5'.repeat(64) }).key);
+  assert.throws(() => productReviewBinding({ ...binding, parentDigest: 'invalid' }));
 });
