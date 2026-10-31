@@ -218,6 +218,10 @@ export function validateProductApplyFiles(files, changeName, modelRoot = 'docs/p
 
 const safeRelative = path => !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(part => !part || part === '.' || part === '..');
 
+export function productApplyHandoff({ stage, receipt, pullRequest, url, affectedCitations }) {
+  return handoff({ status: 'completed', stage, happened: `Product Change ${receipt.changeId} was applied to the provider-validated model on PR #${pullRequest}.\n\nAffected citations:\n${(affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}`, action: 'Owner: review the applied model and affected citations on the linked PR.', next: 'Merge and any further delivery require their own authorization.', link: `[Review PR #${pullRequest}](${url})`, details: `<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->` });
+}
+
 export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite) {
   const approvalInfo = dispatch.request.productApproval;
   if (dispatch.request.worker !== 'apply-product-change' || !approvalInfo || !result || result.head !== approvalInfo.head) throw Error('Product apply result does not match its authenticated dispatch');
@@ -239,11 +243,10 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   validateProductCheckpoint(checkpoint);
   prBody = prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
   await api(`pulls/${fresh.pullRequest}`, 'PATCH', { body: prBody });
-  const issueBody = `Product Change ${receipt.changeId} was applied to [PR #${fresh.pullRequest}](${updated.html_url}). The issue branch contains the provider-validated product model. Merge is still separate.\n\nAffected citations:\n${(result.affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}\n\n<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->`;
+  const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations });
   const comments = await api(`issues/${fresh.issue}/comments?per_page=100`);
   const prior = comments.find(comment => comment.user?.login === 'github-actions[bot]' && [...(comment.body ?? '').matchAll(/<!-- lighthouse-product-apply:(\{[^\n]*\}) -->/g)].some(match => JSON.parse(match[1]).intentId === receipt.intentId));
-  if (prior) await api(`issues/comments/${prior.id}`, 'PATCH', { body: issueBody });
-  else await api(`issues/${fresh.issue}/comments`, 'POST', { body: issueBody });
+  if (!prior) await api(`issues/${fresh.issue}/comments`, 'POST', { body: issueBody });
   return { pullRequest: updated, receipt, checkpoint };
 }
 
