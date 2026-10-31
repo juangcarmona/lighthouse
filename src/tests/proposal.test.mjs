@@ -124,6 +124,8 @@ test('a resumed proposal updates its applied product PR without opening another 
   const body = calls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
   assert.match(body, /Product decision retained/);
   assert.equal(checkProposal({ ...productPr, head: { ...productPr.head, sha: after }, body }, repository).productProposal, true);
+  const { scheduledImplementationPulls } = await import('../packages/sdlc/src/pr-state.mjs');
+  assert.deepEqual(await scheduledImplementationPulls(async () => [{ ...productPr, head: { ...productPr.head, sha: after }, body }]), []);
   assert.throws(() => checkProposal({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body }, repository));
   const { updateProposal } = await import('../packages/sdlc/src/proposal-review.mjs');
   const current = { ...productPr, head: { ...productPr.head, sha: after }, body };

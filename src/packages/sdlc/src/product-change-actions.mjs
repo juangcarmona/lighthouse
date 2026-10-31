@@ -7,7 +7,7 @@ import { validateProductChangeFiles, validateProductCheckpoint, validateProductW
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
 
-const marker = '<!-- lighthouse-product-change:';
+const marker = '<!-- lighthouse-product-change-';
 const digest = value => createHash('sha256').update(value).digest('hex');
 export function preparePendingProductCandidate(product) {
   if (product.providerValidation?.status !== 'pending') return product;
@@ -165,11 +165,11 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   const reviewMarker = `${marker}review:${JSON.stringify(binding)} -->`;
   const checkpointMarker = `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`;
   let prBody = pr.body ?? '';
-  prBody = prBody.includes('<!-- lighthouse-product-change-review:')
-    ? prBody.replace(/<!-- lighthouse-product-change-review:\{[^\n]*\} -->/g, reviewMarker)
+  prBody = /<!-- lighthouse-product-change(?:-review|:review):/.test(prBody)
+    ? prBody.replace(/<!-- lighthouse-product-change(?:-review|:review):\{[^\n]*\} -->/g, reviewMarker)
     : `${prBody}\n\n${reviewMarker}`;
-  prBody = prBody.includes('<!-- lighthouse-product-change-checkpoint:')
-    ? prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, checkpointMarker)
+  prBody = /<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(prBody)
+    ? prBody.replace(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):\{[^\n]*\} -->/g, checkpointMarker)
     : `${prBody}\n${checkpointMarker}`;
   await api(`pulls/${pr.number}`, 'PATCH', { body: prBody });
   return { pullRequest: pr, binding, checkpoint, body, repositoryDefaultBranch: repositoryInfo.default_branch };
@@ -263,7 +263,7 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   let prBody = updated.body ?? '';
   const checkpoint = { ...fresh.checkpoint, state: 'applied', identity: { ...fresh.checkpoint.identity, head: updated.head.sha }, effectIds: [...new Set([...fresh.checkpoint.effectIds, `apply:${receipt.intentId}:${updated.head.sha}`])].slice(0, 32) };
   validateProductCheckpoint(checkpoint);
-  prBody = prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
+  prBody = prBody.replace(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
   await api(`pulls/${fresh.pullRequest}`, 'PATCH', { body: prBody });
   const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations, parent: checkpoint.parent });
   if (checkpoint.parent && (await api(`issues/${fresh.issue}`)).labels?.some(label => label.name === 'waiting-review')) await api(`issues/${fresh.issue}/labels/waiting-review`, 'DELETE');
@@ -301,13 +301,13 @@ export async function loadProductApproval(api, { eventName, event, owner, reposi
   const number = event.pull_request?.number ?? event.issue?.number;
   const pr = await api(`pulls/${number}`);
   if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository) throw Error('Product approval target is not a current Lighthouse PR');
-  const markers = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change-review:(\{[^\n]*\}) -->/g)];
+  const markers = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-review|:review):(\{[^\n]*\}) -->/g)];
   if (markers.length !== 1) throw Error('PR has no unique Product Change review binding');
   const raw = JSON.parse(markers[0][1]);
   const { key, ...fields } = raw;
   const bound = productReviewBinding(fields);
   if (bound.key !== key || bound.head !== pr.head.sha || bound.pullRequest !== pr.number || bound.repository !== repository) throw Error('Product Change review binding is stale or belongs to another PR');
-  const checkpoints = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  const checkpoints = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
   if (checkpoints.length !== 1) throw Error('PR has no unique Product Change checkpoint');
   const checkpoint = JSON.parse(checkpoints[0][1]);
   const checkpointErrors = validateProductCheckpoint(checkpoint);

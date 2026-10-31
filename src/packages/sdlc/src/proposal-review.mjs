@@ -15,7 +15,7 @@ export function checkProposal(pr, repo, expected) {
   const match = pr.head?.ref?.match(/^lighthouse\/(?:propose|implement)-([1-9][0-9]*)-([a-f0-9]{12})$/);
   const marker = pr.body?.match(/<!-- lighthouse-proposal:([a-f0-9]{64}) -->/)?.[1];
   const productProof = productProposalProof(pr);
-  const standard = pr.head?.ref?.startsWith('lighthouse/propose-') && !pr.body?.includes('<!-- lighthouse-product-change-checkpoint:') && marker?.startsWith(match?.[2] ?? 'invalid');
+  const standard = pr.head?.ref?.startsWith('lighthouse/propose-') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(match?.[2] ?? 'invalid');
   if (!match || !(standard || productProof?.issue === Number(match[1])) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned Lighthouse proposal');
   if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Proposal changed during review; no update published');
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, ...(productProof ? { productProposal: true } : {}) };
@@ -25,7 +25,7 @@ export function checkImplementationPullRequest(pr, repo, expected) {
   const match = pr.head?.ref?.match(/^lighthouse\/(?:implement|propose)-([1-9][0-9]*)-([a-f0-9]{12})$/);
   const marker = pr.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
   const productProof = productImplementationProof(pr);
-  const standard = pr.head?.ref?.startsWith('lighthouse/implement-') && !pr.body?.includes('<!-- lighthouse-product-change:') && !pr.body?.includes('<!-- lighthouse-product-change-checkpoint:') && marker?.startsWith(match?.[2] ?? 'invalid');
+  const standard = pr.head?.ref?.startsWith('lighthouse/implement-') && !pr.body?.includes('<!-- lighthouse-product-change:') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(match?.[2] ?? 'invalid');
   if (!match || !(standard || productProof?.issue === Number(match[1])) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
   if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Implementation changed during review');
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };

@@ -336,7 +336,7 @@ export function verifyProductChangePath(root, relativePath) {
 
 export function checkProductResumePullRequest(pr, repository, resume) {
   if (!resume || pr?.number !== resume.pullRequest || pr.state !== 'open' || pr.merged || !pr.draft || pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository || pr.head.sha !== resume.head || pr.head.ref !== resume.branch) throw Error('Applied product PR changed before parent continuation');
-  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Applied product checkpoint is unavailable');
   const checkpoint = JSON.parse(matches[0][1]);
   if (validateProductCheckpoint(checkpoint).length || checkpoint.state !== 'applied' || checkpoint.identity.issue !== resume.issue || checkpoint.identity.head !== resume.head || JSON.stringify(checkpoint.parent) !== JSON.stringify(resume.parent) || !checkpoint.effectIds.includes(`apply:${resume.receiptIntent}:${resume.head}`)) throw Error('Applied product checkpoint changed before parent continuation');
@@ -346,7 +346,7 @@ export function checkProductResumePullRequest(pr, repository, resume) {
 function productDeliveryProof(pr, kind) {
   const expression = new RegExp(`<!-- lighthouse-product-${kind}:(\\{[^\\n]*\\}) -->`, 'g');
   const proofs = [...(pr?.body ?? '').matchAll(expression)];
-  const checkpoints = [...(pr?.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  const checkpoints = [...(pr?.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
   if (proofs.length !== 1 || checkpoints.length !== 1) return null;
   let proof, checkpoint;
   try { proof = JSON.parse(proofs[0][1]); checkpoint = JSON.parse(checkpoints[0][1]); } catch { return null; }

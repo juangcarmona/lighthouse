@@ -162,7 +162,7 @@ export async function productApplyAfterRun(api, repository, owner, event, readAr
   if (output.head !== input.head || output.receipt?.headBefore !== input.head || output.receipt?.validated !== true || output.receipt?.proposalDigest !== input.checkpoint.proposalDigest || output.receipt?.baselineDigest !== input.checkpoint.baselineDigest || output.receipt?.resultingModelDigest !== output.resultingModelDigest) throw Error('Product apply provider result does not match its approval');
   const pr = await api(`pulls/${input.pullRequest}`);
   if (pr.state !== 'open' || pr.merged || !pr.draft || pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository) throw Error('Applied product PR is no longer eligible for continuation');
-  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Applied product checkpoint is unavailable or ambiguous');
   const checkpoint = JSON.parse(matches[0][1]);
   const { validateProductCheckpoint, productReviewBinding } = await import('./product-change.mjs');

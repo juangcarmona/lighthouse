@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { authorizedCiCallback, isProductOnlyPullRequest, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { authorizedCiCallback, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 import { handoff } from './handoff.mjs';
+import { productProposalProof } from './product-change.mjs';
 
 const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
   const response = await fetch(`https://api.github.com/repos/${repo}${path ? `/${path}` : ''}`, {
@@ -70,7 +71,18 @@ async function main() {
     let target;
     try { target = checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repo); }
     catch {
-      if (isProductOnlyPullRequest(pr)) continue;
+      if (productProposalProof(pr)) continue;
+      const product = productOnlyCheckpoint(pr);
+      if (product) {
+        if (!isStaleProductDecision(pr) || product.identity.repository !== repo || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo || pr.state !== 'open') continue;
+        const issue = await api(`issues/${product.identity.issue}`);
+        if (issue.state !== 'open') continue;
+        if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
+        await projectImplementationPrState(api, issue.number, true);
+        const notice = `<!-- lighthouse-stale-product:${pr.number}:${pr.head.sha} -->`;
+        if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'product-change', happened: `The product decision for PR #${pr.number} no longer matches its current head.`, action: 'Workflow maintainer: revalidate the Product Change and request a new decision for the current PR.', next: 'Product apply and parent continuation remain stopped until current evidence and approval are available.', link: `[Open PR #${pr.number}](${pr.html_url})`, details: notice }) });
+        continue;
+      }
       const match = pr.head.ref.match(/^lighthouse\/(?:implement|propose)-([1-9][0-9]*)-[a-f0-9]{12}$/);
       if (pr.head.ref.startsWith('lighthouse/propose-') && !pr.body?.includes('<!-- lighthouse-product-implementation:')) continue;
       if (!match || pr.user?.login !== 'github-actions[bot]' || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo || pr.state !== 'open') continue;

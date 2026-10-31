@@ -434,7 +434,7 @@ async function main(command) {
       if (!productReview) {
         const pulls = await api('pulls?state=open&per_page=100');
         if (pulls.length >= 100) throw Error('Open PR list exceeds bounds while resuming Product Change');
-        const existing = pulls.find(pr => (pr.head?.ref?.startsWith(`lighthouse/implement-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/propose-${issueNumber}-`)) && pr.body?.includes('<!-- lighthouse-product-change-review:'));
+        const existing = pulls.find(pr => (pr.head?.ref?.startsWith(`lighthouse/implement-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/propose-${issueNumber}-`)) && /<!-- lighthouse-product-change(?:-review|:review):/.test(pr.body ?? ''));
         if (existing) productReview = { pullRequest: existing.number, head: existing.head.sha };
       }
       let existingFiles;
