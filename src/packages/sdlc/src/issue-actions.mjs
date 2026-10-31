@@ -567,6 +567,7 @@ async function main(command) {
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
     const publicationIssue = await api(issuePath);
     checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
+    if (snapshot.productParent && publicationIssue.labels.some(label => label.name === 'future')) throw Error('Product prerequisite was paused before publication');
     const checkFeedback = async () => {
       if (!snapshot.proposalReview) return;
       if (snapshot.productResume) { checkProductResumePullRequest(await api(`pulls/${snapshot.productResume.pullRequest}`), repo, snapshot.productResume); if (digest(JSON.stringify(await api(snapshot.proposalReview.path))) !== snapshot.proposalReview.feedbackDigest) throw Error('Proposal feedback changed'); }
@@ -595,7 +596,15 @@ async function main(command) {
         const productSnapshot = snapshot.productParent && snapshot.replyTo ? { ...snapshot, productParent: { ...snapshot.productParent, feedback: { runId: String(snapshot.workflowRunId), attempt: Number(env.GITHUB_RUN_ATTEMPT), taskDigest: snapshot.taskDigest, replyTo: snapshot.replyTo, commentId: snapshot.commentId } } } : snapshot;
         const published = await publishProductChangePullRequest(api, repo, productSnapshot, candidate, { validation, runUrl, beforeWrite: async () => {
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
-          checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
+          const currentIssue = await api(issuePath);
+          checkPublication(snapshot, currentIssue, ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
+          if (snapshot.productParent) {
+            if (currentIssue.labels.some(label => label.name === 'future')) throw Error('Product prerequisite was paused before publication');
+            const { feedback, ...original } = snapshot.productParent;
+            const parentRun = await api(`actions/runs/${original.predecessor.runId}`);
+            const observed = await productGapAfterRun(api, repo, owner, { action: 'completed', workflow_run: { id: parentRun.id, head_sha: parentRun.head_sha } });
+            if (JSON.stringify(observed) !== JSON.stringify(original)) throw Error('Product prerequisite or its review changed before publication');
+          }
         } });
         await writeFile(join(dir, 'product-review.json'), JSON.stringify({ pullRequest: published.pullRequest.number, head: published.binding.head, reviewKey: published.binding.key, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest }));
         proposalLink = `\n\n[Product decision on PR #${published.pullRequest.number}](${published.pullRequest.html_url}). The explicit action authorizes trusted product apply; implementation and merge remain separate.`;
