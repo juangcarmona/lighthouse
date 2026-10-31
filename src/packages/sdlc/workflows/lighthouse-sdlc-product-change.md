@@ -1,7 +1,7 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: product-change
-description: Prepare and publish an authenticated Product Change candidate for an authorized issue idea.
+description: Prepare and publish an authenticated Product Change candidate for an idea or issue prerequisite.
 run-name: "product change #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
   group: lighthouse-issue-${{ inputs.issue }}
@@ -222,4 +222,4 @@ Read the authenticated context and follow `/harness/skills/product-change/SKILL.
 
 For a candidate, return the complete provider-owned change files under `context.productChange.root`, the host-assigned `changeName`, CHG ID, baseline digest and pending provider validation. Copy `context.productChange.schemaPin` into `.openspec.yaml` and omit the proposal digest; the host calculates it after validation. Keep the manifest in draft status. Do not approve, apply, alter the accepted model, publish a branch or continue implementation. The trusted publisher rechecks the exact candidate, validates it against the current accepted model, publishes the PR and requests an explicit product decision. Product approval, apply, implementation, merge and release are separate effects.
 
-Return the supplied stage result identity and keep the enclosing lifecycle stage as `propose`. A product idea does not grant implementation authority. The host owns all GitHub effects and releases execution resources when the decision request is durable.
+Return the supplied stage result identity and retain its enclosing lifecycle stage. An idea or parent prerequisite grants no new implementation authority. The host owns all GitHub effects and releases execution resources when the decision request is durable.

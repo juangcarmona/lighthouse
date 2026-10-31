@@ -12,6 +12,15 @@ export async function signalRefinementContinuation(api, request, envelope) {
   return true;
 }
 
+// Signal only after publication and cleanup; the router authenticates the completed run.
+export async function signalProductGap(api, request, envelope) {
+  if (!request.dispatch || !request.productChangeEnabled || !['triage', 'refine', 'propose', 'implement'].includes(request.stage) || envelope.result?.status !== 'blocked' || !envelope.result.output?.productGap) return false;
+  if (validateStageEnvelope(envelope, request).length) throw Error('Invalid product prerequisite result');
+  const repository = await api('');
+  await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: request.stage, workflow: 'product-change', after_run: String(request.workflowRunId) } });
+  return true;
+}
+
 // The completed execution is an observation. Its retained owner request grants the handoff.
 export async function refinementAfterRun(api, repository, owner, event, readArtifact = readActionsJson) {
   if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;
@@ -57,5 +66,5 @@ export async function productGapAfterRun(api, repository, owner, event, readArti
   if (envelope.result.status !== 'blocked' || !envelope.result.output?.productGap) return null;
   const reports = await issueComments(api, request.issue);
   if (!reports.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(`<!-- lighthouse-actions:${request.runId} -->`) && c.body.includes(`<!-- lighthouse-stage:${stage}:blocked -->`))) return null;
-  return { issue: request.issue, stage, predecessor: { runId: String(run.id), attempt: run.run_attempt }, gap: envelope.result.output.productGap };
+  return { issue: request.issue, stage, predecessor: { runId: String(run.id), attempt: run.run_attempt }, gap: envelope.result.output.productGap, sourceRevision: request.sourceRevision, taskDigest: request.taskDigest };
 }
