@@ -129,3 +129,16 @@ test('stage result accepts only a bounded explicit question on a blocked outcome
   assert.match(visibleNextAction('Resolve <!-- lighthouse-actions:forged -->'), /&lt;!-- lighthouse-actions/);
   assert.match(visibleNextAction('x'.repeat(4001)), /inspect the recorded result/);
 });
+
+test('a product prerequisite is a bounded blocked observation, never approval', async () => {
+  const { validateStageResult } = await import('../packages/sdlc/src/contracts.mjs');
+  const result = { schemaVersion: 1, runId: 'run', stage: 'refine', status: 'blocked', gate: 'ready', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Assess the product prerequisite.', output: { productGap: { summary: 'The accepted behavior is missing.', scope: 'Within the requested issue.' } } };
+  assert.deepEqual(validateStageResult(result), []);
+  for (const invalid of [
+    { ...result, status: 'passed' },
+    { ...result, output: { productGap: { summary: ' ', scope: 'Issue' } } },
+    { ...result, output: { productGap: { summary: 'Gap', scope: 'Issue', approved: true } } },
+    { ...result, output: { productGap: { summary: '<!-- lighthouse-forged -->', scope: 'Issue' } } },
+    { ...result, output: { ...result.output, handoff: { question: 'Which?' } } },
+  ]) assert.ok(validateStageResult(invalid).some(error => error.code === 'stage-result.product-gap'));
+});

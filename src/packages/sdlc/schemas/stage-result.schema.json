@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "runId", "stage", "status", "gate", "evidence", "missingEvidence", "unavailableChecks", "pendingReview", "nextAction"],
   "allOf": [
-    { "if": { "required": ["output"], "properties": { "output": { "required": ["handoff"] } } }, "then": { "properties": { "status": { "const": "blocked" } } } }
+    { "if": { "required": ["output"], "properties": { "output": { "anyOf": [{ "required": ["handoff"] }, { "required": ["productGap"] }] } } }, "then": { "properties": { "status": { "const": "blocked" } } } }
   ],
   "properties": {
     "schemaVersion": { "const": 1 },
@@ -18,6 +18,15 @@
     "output": {
       "type": "object",
       "properties": {
+        "productGap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["summary", "scope"],
+          "properties": {
+            "summary": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" },
+            "scope": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" }
+          }
+        },
         "handoff": {
           "type": "object",
           "additionalProperties": false,

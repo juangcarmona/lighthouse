@@ -1,4 +1,4 @@
-import { refinementAfterRun, signalRefinementContinuation } from '../packages/sdlc/src/stage-transition.mjs';
+import { refinementAfterRun, signalRefinementContinuation, productGapAfterRun } from '../packages/sdlc/src/stage-transition.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
@@ -283,4 +283,23 @@ test('execution model selection is bound to an authenticated direct owner dispat
   assert.throws(() => executionModelSelection({ ...f.request, event: { inputs: { ...f.request.event.inputs, workflow: 'product-change' } } }), /direct owner/);
   f.request.event.inputs.model_selection = JSON.stringify({ profile: 'fast' });
   assert.throws(() => verifyDispatchOrigin(f.request, f.receipt, f.parent, f.worker, repo, owner, issue), /artifact identity/);
+});
+
+test('product prerequisite observation requires its published authenticated parent and cannot outlive its receipt', async () => {
+  const f = fixture('refine');
+  await recordDispatch(f.api, repo, f.request);
+  await claimDispatch(f.api, repo, { request: f.request, receipt: f.receipt, commentId: 30 }, '200');
+  Object.assign(f.worker, { status: 'completed', conclusion: 'success' });
+  const snapshot = { issue, stage: 'refine', runId: 'e'.repeat(64), workflowRunId: '200', workflowRevision: f.request.workflowRevision, sourceRevision: f.request.sourceRevision, taskDigest: f.request.taskDigest, dispatch: { commentId: 30, requestId: f.request.id, digest: f.receipt.digest } };
+  const gap = { summary: 'Accepted intent does not cover the requested behavior.', scope: 'The authorized issue.' };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', status: 'blocked', gate: 'ready', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Assess the prerequisite.', output: { productGap: gap } }, effect: { type: 'issue-comment', body: 'A product prerequisite was identified.' } };
+  const report = { user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-actions:${snapshot.runId} -->\n<!-- lighthouse-stage:refine:blocked -->` };
+  f.comments.push(report);
+  const api = async (...args) => args[0] === 'actions/runs/200/artifacts?per_page=100' ? { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] } : f.api(...args);
+  const readArtifact = async (a, r, run, name, file) => String(run) === '100' ? f.readArtifact(a, r, run, name, file) : file === 'request.json' ? snapshot : envelope;
+  const event = { action: 'completed', workflow_run: { id: 200, head_sha: f.worker.head_sha } };
+  assert.deepEqual(await productGapAfterRun(api, repo, owner, event, readArtifact), { issue, stage: 'refine', predecessor: { runId: '200', attempt: 1 }, gap });
+  f.comments.pop(); assert.equal(await productGapAfterRun(api, repo, owner, event, readArtifact), null); f.comments.push(report);
+  f.worker.conclusion = 'failure'; assert.equal(await productGapAfterRun(api, repo, owner, event, readArtifact), null); f.worker.conclusion = 'success';
+  snapshot.dispatch.digest = 'f'.repeat(64); await assert.rejects(productGapAfterRun(api, repo, owner, event, readArtifact), /revoked or changed/);
 });
