@@ -338,6 +338,19 @@ test('triage rejects ambiguous classifications and reports missing evidence', ()
   assert.deepEqual(report.missingEvidence, ['size', 'urgency', 'impact', 'risk', 'blast-radius']);
 });
 
+test('triage preserves the native proposal gate while review is pending', () => {
+  const input = triageInput();
+  input.currentLabels = ['ready', 'waiting-review', 'unrelated'];
+  input.configuration.labels.push({ name: 'ready', role: 'state' }, { name: 'waiting-review', role: 'state' });
+  const report = buildTriageReport(input);
+  assert.equal(report.status, 'blocked');
+  assert.equal(report.canApply, false);
+  assert.deepEqual(report.labels.proposed, [...input.currentLabels].sort());
+  assert.ok(report.warnings.some(item => item.code === 'state.review-pending'));
+  input.currentLabels.push('triage');
+  assert.ok(buildTriageReport(input).errors.some(item => item.code === 'state.ambiguous'));
+});
+
 test('triage keeps unavailable checks and pending judgement separate from missing evidence', () => {
   const input = triageInput({
     assessment: {

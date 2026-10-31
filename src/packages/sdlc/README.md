@@ -46,6 +46,8 @@ The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`
 
 Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules. Labels capability version 3 adds `execution-failed`; existing adopters review and reconcile the new capability version before depending on it.
 
+During native proposal review, `ready` retains the revocable refinement gate while `waiting-review` points to the proposal. Generic triage reports this pair as a pending review and cannot apply label changes until the review is resolved.
+
 ## Install or update workflows
 
 Installing or upgrading npm packages does not install or update Actions workflows. Use the [workflow installer](src/install-workflows.mjs) from the selected package:
