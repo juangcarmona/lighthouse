@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.16.2
+
+### Patch Changes
+
+- 6762bf8: # Product Change schema pin
+
+  Accept the required OpenSpec schema pin in Product Change candidates.
+
 ## 0.16.1
 
 ### Patch Changes
