@@ -144,6 +144,36 @@ test('maintenance reconciles a missing terminal handoff before any authorized re
   assert.equal(f.comments.length, count);
 });
 
+test('maintenance restores a missing authenticated refinement handoff only while its state remains current', async () => {
+  const f = fixture();
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml'; f.run.conclusion = 'success';
+  f.jobs[1].conclusion = 'success'; f.jobs[2].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'success';
+  f.issue.labels = [{ name: 'ready' }];
+  const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'completed' };
+  f.comment.body = dispatchReceiptBody(repository, receipt);
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'The refinement is complete.' } };
+  const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.match(f.comments.at(-1).body, /Stage completed · refine/);
+  assert.match(f.comments.at(-1).body, /Owner: review the refinement/);
+  const count = f.comments.length;
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.equal(f.comments.length, count);
+  f.comments.pop();
+  receipt.status = 'waiting'; f.comment.body = dispatchReceiptBody(repository, receipt);
+  envelope.result.status = 'blocked'; envelope.result.output = { handoff: { question: 'May the fixture be used?' } };
+  envelope.effect.body = 'The refinement needs an answer.';
+  f.issue.labels = [{ name: 'needs-info' }];
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.match(f.comments.at(-1).body, /Owner: May the fixture be used\? Reply here/);
+  f.comments.pop(); f.issue.labels = [];
+  const changed = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.equal(f.comments.length, 1);
+  assert.equal(changed.observations[0].code, 'handoff-unconfirmed');
+});
+
 test('maintenance reports failed preparation without claiming the agent started', async () => {
   const f = fixture();
   f.jobs[0].conclusion = 'failure';
