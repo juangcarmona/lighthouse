@@ -23,7 +23,7 @@
     "verify:adoption": "node scripts/verify-adoption.mjs",
     "gallery": "node src/gallery/serve.mjs",
     "create:dotnet": "node src/packages/cli/internal/create-dotnet.mjs",
-    "version": "changeset version && npm install --package-lock-only --ignore-scripts",
+    "version": "changeset version && npx --yes --package=npm@10.9.9 npm install --package-lock-only --ignore-scripts",
     "release": "changeset publish"
   },
   "engines": {
