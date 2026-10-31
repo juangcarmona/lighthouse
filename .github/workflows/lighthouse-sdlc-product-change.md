@@ -130,6 +130,7 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
   publish:
     name: Validate and publish the product candidate

@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, stages, executionModelSelection } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, stages, executionModelSelection } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -394,15 +394,24 @@ async function main(command) {
     await output('eligible', 'true');
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
   }
+  let preparationStop;
   if (command === 'cleanup' && event.inputs?.['dispatch-request']) {
     let outcome;
     try { await readFile(join(dir, 'published')); outcome = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8')).result.status; } catch {}
+    if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
     try { await finishDispatch(api, repo, issueNumber, event.inputs['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
     catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
+    if (env.LIGHTHOUSE_PREPARE_FAILED === 'true') {
+      try {
+        const commentId = Number(event.inputs['dispatch-request']);
+        const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repo, issueNumber);
+        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository: repo, issue: issueNumber, stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure' };
+      } catch (error) { await summary(`Preparation outcome could not be authenticated: ${error.message}. Inspect the execution.`); }
+    }
   }
-  if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { return; } }
+  if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { if (preparationStop) await publishObservedStop(api, preparationStop); return; } }
   const snapshot = JSON.parse(await readFile(join(dir, 'request.json'), 'utf8'));
   if (command === 'continue-refinement') {
     await readFile(join(dir, 'published'));
@@ -539,6 +548,7 @@ async function main(command) {
     try { await readFile(join(dir, 'reserved')); } catch { return; }
     const issue = await api(issuePath);
     if (issue.labels.some(x => x.name === 'agent-working')) await api(`${issuePath}/labels/agent-working`, 'DELETE');
+    if (preparationStop) await publishObservedStop(api, preparationStop);
     let published = false;
     try { await readFile(join(dir, 'published')); published = true; }
     catch {

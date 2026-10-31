@@ -137,6 +137,7 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/completion-actions.mjs cleanup
   publish:
     concurrency:

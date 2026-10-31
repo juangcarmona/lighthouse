@@ -84,4 +84,7 @@ test('interrupted failure publication retries the comment and missing label rema
   await publishObservedStop(api, { ...input, observation: 'cancelled' });
   assert.match(comments.at(-1).body, /Cancelled · refine/);
   assert.doesNotMatch(comments.at(-1).body, /Execution failed/);
+  comments.pop();
+  await publishObservedStop(api, { ...input, observation: 'preparation-failure', sourceRevision: undefined });
+  assert.match(comments.at(-1).body, /Preparation failed before the agent started/);
 });

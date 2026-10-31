@@ -28,7 +28,7 @@ export function handoff({ status, stage, happened, action, next, link, details }
 
 // A newer authenticated dispatch owns current status, even if an older cleanup finishes late.
 export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false }) {
-  if (!['failure', 'cancelled'].includes(observation) || !dispatch?.commentId) return false;
+  if (!['failure', 'cancelled', 'preparation-failure'].includes(observation) || !dispatch?.commentId) return false;
   const { checkDispatchClaim, issueComments, readDispatchReceipt } = await import('./stage-dispatch.mjs');
   await checkDispatchClaim(api, repository, issue, dispatch, run);
   const comments = await issueComments(api, issue);
@@ -43,7 +43,7 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   if (item.state !== 'open' || item.labels.some(l => l.name === 'human-working')) return false;
   await checkDispatchClaim(api, repository, issue, dispatch, run);
   let adopted = false;
-  if (observation === 'failure' && /^[a-f0-9]{40}$/.test(sourceRevision ?? '')) {
+  if (observation !== 'cancelled' && /^[a-f0-9]{40}$/.test(sourceRevision ?? '')) {
     const file = await api(`contents/.lighthouse/reconciliation/labels.json?ref=${sourceRevision}`, 'GET', undefined, true);
     if (file?.encoding === 'base64' && typeof file.content === 'string') {
       try { const record = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8')); adopted = record.verified === true && record.capability?.id === 'labels' && record.capability?.provider === 'github' && Number(record.capability?.version) >= 3; } catch {}
@@ -51,9 +51,9 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   }
   const available = adopted && await api('labels/execution-failed', 'GET', undefined, true);
   if (available) await api(`issues/${issue}/labels`, 'POST', { labels: ['execution-failed'] });
-  const status = observation === 'failure' ? 'failed' : 'cancelled';
-  const result = observation === 'failure' ? 'The agent execution failed before a validated result could be published.' : 'The agent execution was cancelled before a validated result could be published.';
-  const gap = observation === 'failure' && !available ? ' The execution-failed label is not adopted or available; the maintainer must review label capability adoption.' : '';
+  const status = observation === 'cancelled' ? 'cancelled' : 'failed';
+  const result = observation === 'preparation-failure' ? 'Preparation failed before the agent started; no validated result was published.' : observation === 'failure' ? 'The agent execution failed before a validated result could be published.' : 'The agent execution was cancelled before a validated result could be published.';
+  const gap = observation !== 'cancelled' && !available ? ' The execution-failed label is not adopted or available; the maintainer must review label capability adoption.' : '';
   const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action: 'The workflow maintainer should inspect the execution and configured recovery policy.', next: 'Recovery follows the configured policy and requires its existing authorization.', link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: marker });
   await api(`issues/${issue}/comments`, 'POST', { body });
   return true;
