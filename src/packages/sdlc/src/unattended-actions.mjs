@@ -12,7 +12,7 @@ import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } f
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
-import { handoff } from './handoff.mjs';
+import { handoff, pendingQuestion } from './handoff.mjs';
 
 const harness = fileURLToPath(new URL('../', import.meta.url));
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
@@ -140,6 +140,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       prompt: text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal });
     if (result.runtime.execution?.status !== 'passed') throw Error('Host cannot verify completed model execution');
     if (worker === 'independent-review' && result.runtime.model !== reviewer.model || stage === 'implement' && result.runtime.model !== producer.model) throw Error('Operator model selection changed during delivery');
+    const question = result.envelope.result.status === 'blocked' ? pendingQuestion(result.envelope.result.output?.handoff?.question) : null;
+    if (question) { const error = Error(result.envelope.effect.body); error.question = question; throw error; }
     if (stage !== 'implement' && worker !== 'independent-review' && result.envelope.result.status !== 'passed') throw Error(result.envelope.effect.body);
     return result;
   };
@@ -293,7 +295,13 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         await notifyIntegrated(handoff({ status: postMergeError ? 'blocked' : 'completed', stage: route, happened: `PR #${pr.number} was merged at ${result.sha}.${postMergeError ? ' Post-merge verification could not be requested.' : ''}`, action: postMergeError ? 'Workflow maintainer: inspect the execution and current CI before requesting verification again.' : 'None.', next: postMergeError ? 'Post-merge verification remains unconfirmed.' : 'Post-merge review follows the configured CI and completion policy; release and deployment remain separate.', link: `[Merged PR #${pr.number}](${pr.html_url})` }));
         return { ...result, postMerge, notifications };
       },
-      stop: async reason => { const released = await releaseReservation(); if (released === 'stale') return; await notify(handoff({ status: released === 'held' ? 'unknown' : 'blocked', stage: route, happened: String(reason).slice(0, 4000).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-'), action: released === 'held' ? 'Workflow maintainer: inspect the human hold and existing execution reservation before releasing it.' : 'Workflow maintainer: inspect the execution and retained artifacts, then resolve the blocker.', next: 'No automatic retry is scheduled.', ...(published ? { link: `[Candidate PR #${published.number}](${published.html_url})` } : {}) })); },
+      stop: async (reason, _evidence, error) => {
+        const released = await releaseReservation();
+        if (released === 'stale') return;
+        const question = released === 'released' ? pendingQuestion(error?.question) : null;
+        if (question) await api('issues/' + issueNumber + '/labels', 'POST', { labels: ['needs-info'] });
+        await notify(handoff({ status: released === 'held' ? 'unknown' : question ? 'question' : 'blocked', stage: route, happened: String(reason).slice(0, 4000).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-'), action: released === 'held' ? 'Workflow maintainer: inspect the human hold and existing execution reservation before releasing it.' : question ? `Owner: ${question} Reply here.` : 'Workflow maintainer: inspect the execution and retained artifacts, then resolve the blocker.', next: question ? 'The reply is retained. The maintainer must clear needs-info, then the owner can request a new bounded run; the reply does not approve another gate.' : 'No automatic retry is scheduled.', ...(published ? { link: `[Candidate PR #${published.number}](${published.html_url})` } : {}) }));
+      },
     } });
     await writeFile(join(root, 'report.json'), JSON.stringify(outcome, null, 2));
     return outcome;

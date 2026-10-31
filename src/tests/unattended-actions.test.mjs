@@ -375,3 +375,37 @@ test('a human hold preserves an uncertain execution reservation and names the re
     assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
+
+test('an unattended product question is actionable and its answer survives an authorized retry', async () => {
+  const f = await fixture(), execute = f.execute, question = 'Who can enable the option?';
+  let first = true, observedAnswer = false;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (first && options.request.stage === 'triage') {
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.output.handoff = { question };
+      result.envelope.effect.body = 'The product decision is missing.';
+    }
+    if (!first && options.request.stage === 'triage') observedAnswer = options.context.issue.ownerAnswers.some(answer => answer.body === 'The repository owner.');
+    return result;
+  };
+  try {
+    const stopped = await runGithubUnattended(f);
+    assert.equal(stopped.status, 'blocked');
+    assert.ok(f.labels.includes('needs-info'));
+    assert.match(f.comments.at(-1).body, /Owner: Who can enable the option\? Reply here\./);
+    assert.match(f.comments.at(-1).body, /reply does not approve another gate/);
+    const last = f.writes.findLastIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Waiting for your answer'));
+    const label = f.writes.findLastIndex(w => w.path === 'issues/1/labels' && w.body.labels.includes('needs-info'));
+    assert.ok(label >= 0 && label < last);
+    f.comments.push({ id: f.comments.length + 1, user: { login: 'owner', type: 'User' }, body: 'The repository owner.', updated_at: '2026-10-31T12:00:00Z' });
+    f.labels.splice(f.labels.indexOf('needs-info'), 1);
+    first = false;
+    const oldApi = f.api;
+    f.api = (path, ...args) => oldApi(path === 'actions/runs/124' ? 'actions/runs/123' : path, ...args);
+    f.env.GITHUB_RUN_ID = '124';
+    const retried = await runGithubUnattended(f);
+    assert.equal(retried.status, 'waiting-human', retried.reason);
+    assert.equal(observedAnswer, true);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
