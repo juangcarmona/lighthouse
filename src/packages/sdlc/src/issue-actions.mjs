@@ -87,6 +87,10 @@ async function main(command) {
     if (!dispatch.admitted) {
       await output('eligible', 'false'); await summary('This request already has an execution. No duplicate agent started.'); return;
     }
+    if (command === 'prepare') {
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'admission.json'), JSON.stringify({ requestId: dispatch.request.id, digest: dispatch.receipt.digest, sourceRevision: dispatch.request.sourceRevision }));
+    }
     // Only the authenticated router artifact supplies the original event/actor.
     // Execution IDs and GITHUB_SHA still identify this independent worker.
     event = dispatch.request.event;
@@ -420,7 +424,12 @@ async function main(command) {
       try {
         const commentId = Number(event.inputs['dispatch-request']);
         const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repo, issueNumber);
-        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository: repo, issue: issueNumber, stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure' };
+        let sourceRevision;
+        try {
+          const admission = JSON.parse(await readFile(join(dir, 'admission.json'), 'utf8'));
+          if (admission.requestId === receipt.id && admission.digest === receipt.digest && /^[a-f0-9]{40}$/.test(admission.sourceRevision)) sourceRevision = admission.sourceRevision;
+        } catch {}
+        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository: repo, issue: issueNumber, stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision };
       } catch (error) { await summary(`Preparation outcome could not be authenticated: ${error.message}. Inspect the execution.`); }
     }
   }
