@@ -84,7 +84,9 @@
         "changeName": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 120 },
         "changeId": { "type": "string", "pattern": "^CHG-[A-Z0-9-]+$", "maxLength": 160 },
         "files": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "object", "required": ["path", "content"], "properties": { "path": { "type": "string", "maxLength": 512 }, "content": { "type": "string", "maxLength": 65536 }, "mode": { "enum": ["100644", "100755"] } }, "additionalProperties": false } },
-        "question": { "type": "string", "maxLength": 4000 },
+        "question": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S", "not": { "pattern": "<!--[\\s]*[lL][iI][gG][hH][tT][hH][oO][uU][sS][eE]-" } },
+        "blocker": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S", "not": { "pattern": "<!--[\\s]*[lL][iI][gG][hH][tT][hH][oO][uU][sS][eE]-" } },
+        "recovery": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S", "not": { "pattern": "<!--[\\s]*[lL][iI][gG][hH][tT][hH][oO][uU][sS][eE]-" } },
         "proposalDigest": { "$ref": "#/$defs/digest" },
         "baselineDigest": { "$ref": "#/$defs/digest" },
         "providerValidation": { "type": "object", "required": ["status", "diagnosticCount"], "properties": { "status": { "const": "passed" }, "diagnosticCount": { "type": "integer", "minimum": 0 } }, "additionalProperties": false }
@@ -92,7 +94,7 @@
       "additionalProperties": false,
       "allOf": [
         { "if": { "properties": { "outcome": { "const": "candidate" } }, "required": ["outcome"] }, "then": { "required": ["changeName", "changeId", "files", "proposalDigest", "baselineDigest", "providerValidation"] } },
-        { "if": { "properties": { "outcome": { "const": "blocked" } }, "required": ["outcome"] }, "then": { "required": ["question"] } }
+        { "if": { "properties": { "outcome": { "const": "blocked" } }, "required": ["outcome"] }, "then": { "oneOf": [{ "required": ["question"], "properties": { "question": { "pattern": "\\S" } }, "not": { "anyOf": [{ "required": ["blocker"] }, { "required": ["recovery"] }] } }, { "required": ["blocker", "recovery"], "not": { "required": ["question"] } }], "not": { "required": ["files"] } }, "else": { "not": { "anyOf": [{ "required": ["blocker"] }, { "required": ["recovery"] }] } } }
       ]
     },
     "applyReceipt": {

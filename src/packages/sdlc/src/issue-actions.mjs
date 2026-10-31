@@ -65,6 +65,9 @@ export function continuationHistory(continuation, answer) {
   if (history.length > 16) throw Error('Question and answer history exceeds its bound');
   return history;
 }
+export function checkProductEntry(product, snapshot) {
+  if (!product || product.entry !== (snapshot.productEntry ?? 'idea')) throw Error('Product Change worker returned an outcome for a different authorized entry');
+}
 export function refinementNextAction({ stage, status, autoImplement, paused }) {
   if (stage !== 'refine' || status !== 'passed') return null;
   if (!autoImplement) return { action: 'Owner: review the refinement and request the next authorized stage through the configured workflow.', next: 'No automatic continuation is configured for this refinement.' };
@@ -342,7 +345,7 @@ async function main(command) {
     const productChangeName = productWorker ? dispatch.request.productFeedback?.changeName ?? dispatch.request.event.inputs?.change_name?.trim() ?? `issue-${issueNumber}-product-change` : undefined;
     if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
     const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
-    const snapshot = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : 'idea' } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     await output('source_revision', revision.sha);
@@ -375,7 +378,7 @@ async function main(command) {
       context.request.worker = 'product-change';
       context.authorization = { status: 'verified', verifiedBy: 'GitHub Actions workflow', authorizedStage: stage, owner, entry: 'product-idea', event: env.GITHUB_EVENT_NAME };
       context.productChange = { ...productChange, baselineDigest, idea: `${issue.title}\n\n${issue.body ?? ''}`, scope: issue.body ?? issue.title, ...(dispatch.request.productFeedback ? { feedback: dispatch.request.productFeedback } : {}), ...(productReview ? { review: productReview } : {}), parent: { issue: issueNumber, stage, authorizationDigest, policyDigest, sourceRevision: revision.sha } };
-      context.contract.rules += ' Prepare only the Product Change candidate in context.productChange. The issue is the authorized idea. Do not require Ready or Planned stage evidence. Return productChange outcome and proposed files under its exact change root. A product approval and trusted apply must occur before a parent delivery handoff; this request grants no implementation authority.';
+      context.contract.rules += ` Prepare only the Product Change candidate in context.productChange. The issue is the authorized idea. Do not require Ready or Planned stage evidence. Return productChange.entry as ${snapshot.productEntry}, matching this authenticated request, and return the outcome and proposed files under its exact change root. For a blocked outcome, provide either question for a product decision or both blocker and recovery for a technical condition; never turn a technical blocker into an owner question. A product approval and trusted apply must occur before a parent delivery handoff; this request grants no implementation authority.`;
     }
     if (triage) context.triage = triage.envelope.result.output;
     if (stage === 'triage') context.contract.rules += ' Preserve the exact issue body in output.requestAnalysis.originalRequest. Return output.estimate and output.requestAnalysis following /harness/request-triage.md. Stop at triaged; never authorize or dispatch refinement.';
@@ -489,7 +492,7 @@ async function main(command) {
     let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview;
     if (snapshot.worker === 'product-change') {
       const product = value.result.output?.productChange;
-      if (!product || product.entry !== 'idea') throw Error('Product Change worker returned no authorized idea outcome');
+      checkProductEntry(product, snapshot);
       if (product.outcome === 'candidate') {
         if (product.changeName !== snapshot.productChangeName || product.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate differs from its authenticated preparation context');
         const bridge = await loadProductBridge();
@@ -509,7 +512,7 @@ async function main(command) {
       } else if (product.outcome === 'aligned') {
         proposalLink = '\n\nAccepted product intent already covers this idea. No Product Change was created; delivery still needs its own authorization.';
       } else {
-        proposalLink = `\n\nProduct preparation is waiting for one owner decision: ${product.question}`;
+        proposalLink = product.question ? `\n\nProduct preparation is waiting for one owner decision: ${product.question}` : `\n\nProduct preparation is blocked: ${product.blocker}`;
       }
     }
     if (snapshot.worker !== 'product-change' && snapshot.stage === 'propose' && value.result.status === 'passed') {
@@ -568,7 +571,8 @@ async function main(command) {
     const question = value.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
     const projection = resultHandoffState({ status: value.result.status, stage: snapshot.stage, question, reviewTarget, draft: !!prStateProof });
     const isReview = projection.review;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : refinementAction?.action ?? 'None.';
+    const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
+    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : 'The workflow maintainer should resolve the blocker described above.' : refinementAction?.action ?? 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';

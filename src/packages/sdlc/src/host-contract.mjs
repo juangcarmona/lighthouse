@@ -73,6 +73,7 @@ export function validateStageEnvelope(value, request) {
     const outcome = result.output?.productChange?.outcome;
     if (!['propose', 'implement'].includes(request.stage) || !['aligned', 'candidate', 'blocked'].includes(outcome)) errors.push('Product Change worker must retain an enclosing delivery stage and a declared product outcome');
     if (result.status === 'blocked' && outcome !== 'blocked' || result.status === 'passed' && outcome === 'blocked') errors.push('Product Change outcome and stage status disagree');
+    if (result.output?.productChange?.blocker && result.output?.handoff?.question) errors.push('A technical Product Change blocker cannot also claim an owner question');
   }
   if (exact(value.effect, ['type', 'body'], 'effect', errors)) {
     if (value.effect.type !== 'issue-comment') errors.push('only an issue-comment effect is supported');

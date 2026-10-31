@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('continuation binds the previous question to the authenticated reply', () => {
   const prior = { request: { runId: 'prior-run' }, envelope: { result: { output: { handoff: { question: 'May these assets be reused?' } } } } };
@@ -22,6 +22,13 @@ test('completed refinement names the actual next action for each continuation po
   assert.match(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: true }).action, /remove the future label/);
   assert.equal(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: false }).action, 'None.');
   assert.equal(refinementNextAction({ stage: 'refine', status: 'blocked', autoImplement: true }), null);
+});
+
+test('product outcomes must match the authenticated idea or feedback entry', () => {
+  assert.doesNotThrow(() => checkProductEntry({ entry: 'idea' }, {}));
+  assert.doesNotThrow(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'feedback' }));
+  assert.throws(() => checkProductEntry({ entry: 'idea' }, { productEntry: 'feedback' }), /different authorized entry/);
+  assert.throws(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'idea' }), /different authorized entry/);
 });
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
