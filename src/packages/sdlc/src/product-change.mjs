@@ -144,7 +144,7 @@ export function validateProductChangeFiles(files, { changeName, root = 'openspec
     if (file.mode !== undefined && file.mode !== '100644' && file.mode !== '100755') throw Error(`Product Change file mode is not regular: ${file.path}`);
     const relative = file.path.slice(base.length);
     const allowed = relative === '.openspec.yaml' || relative === 'proposal.md' || relative === 'product-change/change.md' || relative === 'product-change/impact.json' || /^product-change\/proposed\/[A-Za-z0-9._/-]+\.(?:md|json|ya?ml)$/.test(relative);
-    if (!allowed || relative.split('/').some(part => part.startsWith('.'))) throw Error(`Unsupported Product Change file: ${file.path}`);
+    if (!allowed || relative !== '.openspec.yaml' && relative.split('/').some(part => part.startsWith('.'))) throw Error(`Unsupported Product Change file: ${file.path}`);
     if (file.path.startsWith('docs/product/model/')) throw Error('Product Change candidates cannot write accepted model artifacts');
     if (typeof file.content !== 'string') throw Error(`Product Change file content must be text: ${file.path}`);
     const bytes = Buffer.byteLength(file.content, 'utf8');
