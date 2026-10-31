@@ -8,7 +8,7 @@ import { completionBundle, publishProcessBundle } from './process-publication.mj
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
-import { handoff, pendingQuestion, publishObservedStop } from './handoff.mjs';
+import { handoff, pendingQuestion, publishObservedStop, visibleNextAction } from './handoff.mjs';
 
 async function main(command) {
   const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
@@ -154,7 +154,7 @@ async function main(command) {
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
   const proposedQuestion = envelope.result.output?.handoff?.question;
   const question = envelope.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
-  const body = handoff({ status: question ? 'question' : envelope.result.status === 'blocked' ? 'blocked' : 'completed', stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
+  const body = handoff({ status: question ? 'question' : envelope.result.status === 'blocked' ? 'blocked' : 'completed', stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
   const effects = completionEffects(request.stage, envelope.result.status);
   if (question) effects.add.push('needs-info');
   for (const label of effects.remove) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);

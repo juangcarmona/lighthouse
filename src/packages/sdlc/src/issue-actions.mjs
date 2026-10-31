@@ -14,7 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
 import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -580,7 +580,7 @@ async function main(command) {
     const projection = resultHandoffState({ status: value.result.status, stage: snapshot.stage, question, reviewTarget, draft: !!prStateProof });
     const isReview = projection.review;
     const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : 'The workflow maintainer should resolve the blocker described above.' : refinementAction?.action ?? 'None.';
+    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : visibleNextAction(value.result.nextAction) : refinementAction?.action ?? 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
@@ -603,7 +603,7 @@ async function main(command) {
       const reviewMarker = `<!-- lighthouse-proposal-blocked:${snapshot.runId} -->`;
       const prior = await api(`issues/${snapshot.proposalReview.number}/comments?per_page=100`);
       if (prior.length >= 100) throw Error('Proposal discussion exceeds bounded publication');
-      if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewMarker))) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: question ? 'question' : 'blocked', stage: snapshot.stage, happened: value.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : 'The workflow maintainer should resolve the blocker described above.', next: question ? 'The answer will be checked against the pending question before continuation.' : 'Work remains stopped until the blocker is resolved and continuation is authorized.', link: `[Issue #${issueNumber}](https://github.com/${repo}/issues/${issueNumber})`, details: `[Execution](${runUrl})\n\n${reviewMarker}` }) });
+      if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewMarker))) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: question ? 'question' : 'blocked', stage: snapshot.stage, happened: value.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : visibleNextAction(value.result.nextAction), next: question ? 'The answer will be checked against the pending question before continuation.' : 'Work remains stopped until the blocker is resolved and continuation is authorized.', link: `[Issue #${issueNumber}](https://github.com/${repo}/issues/${issueNumber})`, details: `[Execution](${runUrl})\n\n${reviewMarker}` }) });
     }
     await writeFile(join(dir, 'published'), report.html_url);
     await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label ?? 'no status label'}**\n\n${action}\n\n${whatNext}`);

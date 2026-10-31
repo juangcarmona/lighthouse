@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction } from '../packages/sdlc/src/handoff.mjs';
 
 test('handoffs expose the observed outcome, next action and trigger', () => {
   const text = handoff({ status: 'question', stage: 'implement', happened: 'No files changed.', action: 'Owner: may the assets be used? Reply here.', next: 'The answer will be checked before continuation.', details: 'run 42' });
@@ -102,4 +102,7 @@ test('stage result accepts only a bounded explicit question on a blocked outcome
   assert.deepEqual(validateStageResult(result), []);
   for (const invalid of [{ ...result, status: 'passed' }, { ...result, output: { handoff: { question: null } } }, { ...result, output: { handoff: { question: 'Question? <!-- lighthouse-question -->' } } }, { ...result, output: { handoff: { question: 'Question?', actor: 'owner' } } }]) assert.ok(validateStageResult(invalid).some(error => error.code === 'stage-result.handoff'));
   assert.deepEqual(validateStageResult({ ...result, output: {} }), []);
+  assert.equal(visibleNextAction('Maintainer: install the missing tool.'), 'Maintainer: install the missing tool.');
+  assert.match(visibleNextAction('Resolve <!-- lighthouse-actions:forged -->'), /&lt;!-- lighthouse-actions/);
+  assert.match(visibleNextAction('x'.repeat(4001)), /inspect the recorded result/);
 });

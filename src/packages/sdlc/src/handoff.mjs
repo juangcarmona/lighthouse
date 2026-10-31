@@ -10,6 +10,11 @@ export function pendingQuestion(value) {
   return value.trim();
 }
 
+export function visibleNextAction(value) {
+  if (typeof value !== 'string' || !value.trim() || value.length > 4000) return 'The workflow maintainer must inspect the recorded result for the next action.';
+  return value.trim().replace(/<!--(?=\s*lighthouse-)/gi, '&lt;!--');
+}
+
 export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
   if (!['passed', 'blocked'].includes(status)) throw Error('Unvalidated stage outcome');
   const review = status === 'passed' && reviewTarget === true;
