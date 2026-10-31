@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { authorizedCiCallback, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { handoff } from './handoff.mjs';
 
 const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
   const response = await fetch(`https://api.github.com/repos/${repo}${path ? `/${path}` : ''}`, {
@@ -76,7 +77,7 @@ async function main() {
       if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
       await projectImplementationPrState(api, issue.number, true);
       const notice = `<!-- lighthouse-pr-link-changed:${pr.number}:${pr.head.sha} -->`;
-      if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: `PR #${pr.number} is back in draft because its Lighthouse link changed. Restore the PR description before review. [Open PR](${pr.html_url}).\n\n${notice}` });
+      if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} is back in draft because its Lighthouse link changed.`, action: 'The PR owner must restore the link in the PR description.', next: 'The workflow can recheck the PR after the link is restored.', link: `[Open PR](${pr.html_url})`, details: notice }) });
       continue;
     }
     const issue = await api(`issues/${target.issue}`);
@@ -84,23 +85,22 @@ async function main() {
     if (pr.state !== 'open' || pr.merged) {
       for (const name of ['pr-draft', 'pr-ready']) if (issue.labels.some(label => label.name === name)) await api(`issues/${issue.number}/labels/${name}`, 'DELETE', undefined, true);
       if (!pr.merged) {
-        await api(`issues/${issue.number}/labels`, 'POST', { labels: ['waiting-review'] });
         const notice = `<!-- lighthouse-pr-closed:${pr.number}:${pr.head.sha} -->`;
-        if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: `PR #${pr.number} was closed without merging. Reopen it or request a new implementation. [Open PR](${pr.html_url}).\n\n${notice}` });
+        if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} was closed without merging.`, action: 'The owner can reopen the PR or request a new implementation.', next: 'No implementation resumes until an authorized request is made.', link: `[Open PR](${pr.html_url})`, details: notice }) });
       }
       continue;
     }
     const comments = await commentsFor(api, target.issue);
     if (event.action === 'converted_to_draft') {
       const hold = `<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`;
-      if (!comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(hold))) await api(`issues/${target.issue}/comments`, 'POST', { body: `PR #${pr.number} is a draft by owner choice. [Open PR](${pr.html_url}).\n\n${hold}` });
       await projectImplementationPrState(api, target.issue, true);
+      if (!comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(hold))) await api(`issues/${target.issue}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} is a draft by owner choice.`, action: 'The PR owner can mark it ready when appropriate.', next: 'Automatic readiness remains on hold until the owner changes the PR state.', link: `[Open PR](${pr.html_url})`, details: hold }) });
       continue;
     }
     const hold = comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`));
     const auto = (['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) || ciCallback) && !hold;
     const result = await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto });
-    if (event.action === 'ready_for_review' && result.status === 'draft') await api(`issues/${target.issue}/comments`, 'POST', { body: `PR #${pr.number} remains a draft: ${result.reason}. [Open PR](${pr.html_url}).` });
+    if (event.action === 'ready_for_review' && result.status === 'draft') await api(`issues/${target.issue}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} remains a draft: ${result.reason}.`, action: 'The PR owner should resolve the stated blocker.', next: 'The workflow rechecks readiness when the relevant checks or PR state change.', link: `[Open PR](${pr.html_url})` }) });
   }
 }
 main().catch(error => { console.error(`::error::${error.message}`); process.exitCode = 1; });

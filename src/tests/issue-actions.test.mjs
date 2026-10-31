@@ -110,3 +110,10 @@ test('future pauses implementation and its removal resumes an implement-labelled
   assert.equal(routeIssue(event, 'owner', 'owner', 'issues').stage, 'implement');
   assert.equal(routeIssue(event, 'outsider', 'owner', 'issues').run, false);
 });
+
+test('an explicit question remains answerable when a proposal review is also linked', () => {
+  const question = { ...report('propose'), body: `${report('propose').body}\n<!-- lighthouse-proposal-review:44 -->\n<!-- lighthouse-question -->` };
+  assert.equal(pendingReply({ comment: reply }, [question])?.stage, 'propose');
+  const reviewOnly = { ...question, body: question.body.replace('<!-- lighthouse-question -->', '') };
+  assert.equal(pendingReply({ comment: reply }, [reviewOnly]), null);
+});

@@ -4,6 +4,22 @@ const headings = {
   completed: 'Stage completed', unknown: 'Execution status unknown', blocked: 'Blocked',
 };
 
+export function pendingQuestion(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || !value.trim() || value.length > 4000 || /<!--\s*lighthouse-/i.test(value)) throw Error('Invalid pending question');
+  return value.trim();
+}
+
+export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
+  if (!['passed', 'blocked'].includes(status)) throw Error('Unvalidated stage outcome');
+  const review = status === 'passed' && reviewTarget === true;
+  return {
+    status: question ? 'question' : review ? 'review' : status === 'blocked' ? 'blocked' : 'completed',
+    label: question ? 'needs-info' : stage === 'implement' && draft ? 'pr-draft' : review ? 'waiting-review' : status === 'passed' && ['triage', 'refine'].includes(stage) ? stage === 'triage' ? 'triaged' : 'ready' : null,
+    review,
+  };
+}
+
 export function handoff({ status, stage, happened, action, next, link, details }) {
   if (!headings[status] || !stage || !happened || !action || !next) throw Error('Incomplete handoff');
   if (status === 'review' && !link) throw Error('Review handoff needs an identified result');

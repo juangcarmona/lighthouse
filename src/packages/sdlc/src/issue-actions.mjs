@@ -14,7 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
 import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
-import { handoff as renderHandoff, publishObservedStop } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -389,7 +389,7 @@ async function main(command) {
     await summary(`### ${stage} #${issueNumber}\nSource: \`${revision.sha}\`\n\nOwner request verified; reservation acquired.\n`);
     if (continuation) {
       const marker = `<!-- lighthouse-reply:${event.comment.id} -->`;
-      if (!all.some(c => c.user.login === 'github-actions[bot]' && c.body.includes(marker))) await api(`${issuePath}/comments`, 'POST', { body: `Thanks for the [answer](${event.comment.html_url}). Continuing **${stage}**. [Follow progress](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).\n\n${marker}` });
+      if (!all.some(c => c.user.login === 'github-actions[bot]' && c.body.includes(marker))) await api(`${issuePath}/comments`, 'POST', { body: renderHandoff({ status: 'queued', stage, happened: `The [answer](${event.comment.html_url}) was recorded; its relevance has not yet been evaluated.`, action: 'None. Wait for the outcome.', next: 'The worker will check the answer against the pending question before proceeding.', details: `[Execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})\n\n${marker}` }) });
     }
     await output('eligible', 'true');
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
@@ -398,6 +398,7 @@ async function main(command) {
     let outcome;
     try { await readFile(join(dir, 'published')); outcome = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8')).result.status; } catch {}
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
+    if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
     try { await finishDispatch(api, repo, issueNumber, event.inputs['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
     catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
   }
@@ -513,14 +514,14 @@ async function main(command) {
     const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
     const productWorkflowMarker = snapshot.worker === 'product-change' ? `\n<!-- lighthouse-product-workflow:${snapshot.productChangeName} -->` : '';
     const proposedQuestion = value.result.output?.handoff?.question ?? value.result.output?.productChange?.question;
-    const question = value.result.status === 'blocked' && typeof proposedQuestion === 'string' && proposedQuestion.trim() ? proposedQuestion.trim() : null;
-    const isReview = reviewTarget && value.result.status === 'passed';
-    const status = question ? 'question' : isReview ? 'review' : value.result.status === 'blocked' ? 'blocked' : 'completed';
+    const question = value.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
+    const projection = resultHandoffState({ status: value.result.status, stage: snapshot.stage, question, reviewTarget, draft: !!prStateProof });
+    const isReview = projection.review;
     const action = question ? `Owner: ${question} Reply here.` : isReview ? 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : next.trim() || 'Any continuation follows the configured authorization.';
-    const body = renderHandoff({ status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
+    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
-    const label = question ? 'needs-info' : snapshot.stage === 'implement' && prStateProof ? 'pr-draft' : isReview ? 'waiting-review' : value.result.status === 'passed' && ['triage', 'refine'].includes(snapshot.stage) ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : null;
+    const label = projection.label;
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);
     else if (label) await api(`${issuePath}/labels`, 'POST', { labels: [label] });
     const fresh = await api(issuePath);

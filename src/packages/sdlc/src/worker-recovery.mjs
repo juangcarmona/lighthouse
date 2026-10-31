@@ -1,5 +1,6 @@
 import { digest } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch } from './stage-dispatch.mjs';
+import { publishObservedStop } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
@@ -59,7 +60,11 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
-  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch };
+  const agent = jobs.jobs.find(job => job.name === 'agent');
+  const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
+  const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
+  const stop = run.status === 'completed' && publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? { run: String(run.id), attempt: String(run.run_attempt), observation: agent.conclusion } : null;
+  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop };
 }
 
 // Called again by the worker, before claiming a maintenance-created retry.
@@ -93,8 +98,9 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
   const currentRoot = entries.at(-1)?.receipt.recovery?.rootId ?? entries.at(-1)?.receipt.id;
   for (const { comment } of latest.values()) {
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
-    const { dispatch, ...publicObservation } = observation;
+    const { dispatch, stop, ...publicObservation } = observation;
     observations.push(publicObservation);
+    if (stop && observation.rootId === currentRoot) await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, ...stop, sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } });
     if (observation.state !== 'retryable' || enabled !== true || observation.rootId !== currentRoot) continue;
     const attempt = observation.attempt + 1;
     const request = { ...dispatch.request, id: recoveryId(repository, observation.rootId, attempt), routerRunId: String(parent.id), routerAttempt: parent.run_attempt, routerRevision: parent.head_sha, routerRef: parent.head_branch, routerEventName: parent.event, recovery: { rootId: observation.rootId, previousComment: comment.id, attempt } };

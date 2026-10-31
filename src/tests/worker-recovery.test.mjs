@@ -22,6 +22,7 @@ function fixture() {
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha };
     if (path === 'issues/7') return issue;
+    if (path.startsWith('contents/.lighthouse/reconciliation/labels.json?')) return null;
     if (path.startsWith('issues/7/comments?')) return comments;
     if (path === 'issues/7/comments' && method === 'POST') { const next = { ...comment, id: 30 + comments.length, body: body.body }; comments.push(next); return next; }
     if (path.startsWith('issues/comments/')) { const c = comments.find(c => c.id === Number(path.split('/')[2])); if (method === 'PATCH') c.body = body.body; return c; }
@@ -129,4 +130,15 @@ test('a newer request supersedes older failures and two linked retries exhaust t
 test('maintenance scan selects bounded owner issues and excludes bot reports and PRs', async () => {
   assert.deepEqual(await ownerIssues(async () => [{ number: 1, user: { login: owner } }, { number: 2, user: { login: 'github-actions[bot]' } }, { number: 3, user: { login: owner }, pull_request: {} }], owner), [1]);
   await assert.rejects(ownerIssues(async () => Array.from({ length: 100 }, (_, i) => ({ number: i + 1, user: { login: owner } })), owner), /bounds/);
+});
+
+test('maintenance reconciles a missing terminal handoff before any authorized retry', async () => {
+  const f = fixture();
+  const first = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+  assert.equal(first.request, undefined);
+  assert.match(f.comments.at(-1).body, /Execution failed · implement/);
+  assert.match(f.comments.at(-1).body, /label is not adopted or available/);
+  const count = f.comments.length;
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+  assert.equal(f.comments.length, count);
 });

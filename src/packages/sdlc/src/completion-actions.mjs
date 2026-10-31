@@ -8,7 +8,7 @@ import { completionBundle, publishProcessBundle } from './process-publication.mj
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
-import { handoff, publishObservedStop } from './handoff.mjs';
+import { handoff, pendingQuestion, publishObservedStop } from './handoff.mjs';
 
 async function main(command) {
   const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
@@ -68,12 +68,13 @@ async function main(command) {
     let outcome;
     try { await load('published.json'); outcome = (await load('envelope.json')).result.status; } catch {}
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
+    if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
     try { await finishDispatch(api, repository, Number(env.LIGHTHOUSE_ISSUE), event.inputs?.['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
     catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
     if (!await access(join(dir, 'reserved')).then(() => true, () => false)) return;
     const request = await load('request.json');
     await api(`issues/${request.issue}/labels/agent-working`, 'DELETE', undefined, true);
-    if ((!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') || outcome === 'failed') await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT });
+    if (['failed', 'cancelled'].includes(outcome)) await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT });
     await summary('Issue reservation released.'); return;
   }
   const request = await load('request.json'), envelope = await load('envelope.json');
@@ -130,17 +131,17 @@ async function main(command) {
   await save('publication-receipt.json', publication);
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
   const proposedQuestion = envelope.result.output?.handoff?.question;
-  const question = envelope.result.status === 'blocked' && typeof proposedQuestion === 'string' && proposedQuestion.trim() ? proposedQuestion.trim() : null;
+  const question = envelope.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
   const body = handoff({ status: question ? 'question' : envelope.result.status === 'blocked' ? 'blocked' : 'completed', stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
   const effects = completionEffects(request.stage, envelope.result.status);
   if (question) effects.add.push('needs-info');
   for (const label of effects.remove) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);
   if (effects.add.length) await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add });
-  if (effects.closeIssue) await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
   for (const target of new Set([request.issue, request.authorization.pr])) {
     const comments = await list(api, `issues/${target}/comments`);
     if (!comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) await api(`issues/${target}/comments`, 'POST', { body });
   }
+  if (effects.closeIssue) await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
   await save('published.json', { url: publication.url });
   await summary(`### Retained delivery result\n${receipt.state}\n\n[Permanent report](${publication.url})\n\n${receipt.dispatchError ?? 'Publication confirmed; source and evidence commits are recorded separately.'}`);
 }

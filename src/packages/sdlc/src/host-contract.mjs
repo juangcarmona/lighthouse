@@ -77,7 +77,7 @@ export function validateStageEnvelope(value, request) {
   if (exact(value.effect, ['type', 'body'], 'effect', errors)) {
     if (value.effect.type !== 'issue-comment') errors.push('only an issue-comment effect is supported');
     if (typeof value.effect.body !== 'string' || !value.effect.body.trim() || value.effect.body.length > 16000) errors.push('effect body must contain 1-16000 characters');
-    if (typeof value.effect.body === 'string' && /<!-- lighthouse-(?:run|actions|proposal|implementation):/.test(value.effect.body)) errors.push('effect body contains a reserved publication marker');
+    if (typeof value.effect.body === 'string' && /<!--\s*lighthouse-/i.test(value.effect.body)) errors.push('effect body contains a reserved publication marker');
   }
   return errors;
 }

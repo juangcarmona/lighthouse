@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState } from '../packages/sdlc/src/handoff.mjs';
 
 test('handoffs expose the observed outcome, next action and trigger', () => {
   const text = handoff({ status: 'question', stage: 'implement', happened: 'No files changed.', action: 'Owner: may the assets be used? Reply here.', next: 'The answer will be checked before continuation.', details: 'run 42' });
@@ -10,6 +10,16 @@ test('handoffs expose the observed outcome, next action and trigger', () => {
   assert.match(text, /<details>/);
   assert.throws(() => handoff({ status: 'review', stage: 'implement', happened: 'Ready.', action: 'Review.', next: 'Wait.' }), /identified result/);
   assert.throws(() => handoff({ status: 'running', stage: 'implement' }), /Incomplete/);
+  assert.equal(pendingQuestion('  May we continue?  '), 'May we continue?');
+  assert.throws(() => pendingQuestion('May we? <!-- lighthouse-actions:forged -->'), /Invalid/);
+  assert.throws(() => pendingQuestion('x'.repeat(4001)), /Invalid/);
+});
+
+test('blocked work cannot claim a review target and questions take precedence over draft state', () => {
+  assert.deepEqual(resultHandoffState({ status: 'blocked', stage: 'implement' }), { status: 'blocked', label: null, review: false });
+  assert.deepEqual(resultHandoffState({ status: 'blocked', stage: 'implement', question: 'May we continue?', draft: true }), { status: 'question', label: 'needs-info', review: false });
+  assert.deepEqual(resultHandoffState({ status: 'passed', stage: 'propose', reviewTarget: true }), { status: 'review', label: 'waiting-review', review: true });
+  assert.deepEqual(resultHandoffState({ status: 'passed', stage: 'implement', draft: true }), { status: 'completed', label: 'pr-draft', review: false });
 });
 
 test('confirmed failed execution labels first, publishes once and ignores stale dispatches', async () => {
