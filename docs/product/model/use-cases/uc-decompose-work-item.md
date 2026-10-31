@@ -12,31 +12,32 @@ uses-terms: [TERM-WORK-ITEM-SLICE, TERM-STACKED-CHANGE, TERM-COMPLEXITY-ESTIMATE
 
 ## Goal
 
-Split a large work item into independently verifiable child issues and an ordered delivery plan.
+Preserve a large parent request while defining useful independently verifiable children.
 
 ## Trigger
 
-Triage marks the item `L` or `XL`, identifies independent seams or reports coordination risk.
+Refinement confirms an estimate strictly greater than eight relative points, or an authorized adopter requests decomposition.
 
 ## Preconditions
 
-The parent issue has a triage result, a complexity estimate and enough context to define child outcomes.
+The admitted parent has a reasoned estimate and enough context to identify independently verifiable outcomes.
 
 ## Main Flow
 
-1. Lighthouse proposes child slices with scope, acceptance criteria, dependencies and verification boundaries.
-2. The adopter reviews the slice order and adjusts the boundaries before creation.
-3. Lighthouse creates or updates child issues, parent links, dependency links and slice labels through the tracker adapter.
-4. Lighthouse records the stacked delivery plan and reports the first child as the next action.
+1. Refinement rechecks the estimate and records scope, dependencies, verification and uncertainty separately.
+2. Lighthouse proposes useful slices, stable identities, independent acceptance and acyclic dependencies.
+3. The adopter reviews the boundaries before authorized child creation.
+4. The tracker adapter reconciles native parent relationships and dependency correlations without altering the parent request.
+5. Each child enters bounded triage with its own estimate and questions; refinement requires its applicable authorization.
 
 ## Alternative Flows
 
-The adopter keeps one change when the proposed split would add more coordination than value and records the reason against the estimate.
+When no safe useful split exists, Lighthouse records the reason and requests the owner's decision.
 
 ## Failure Conditions
 
-A child has no independent outcome, a dependency cycle exists, the adapter cannot preserve parent links or the requested paths overlap without an explicit order.
+Missing independent outcomes, dependency cycles, uncertain writes, unauthenticated correlations or inability to preserve native relationships stop dependent work.
 
 ## Postconditions
 
-The parent issue shows its child slices, dependency order, labels and decision owner, and each child can enter its own change flow.
+The open parent identifies all children, dependencies, blocked work and the aggregate delivery plan without pretending child intake or delivery has completed.
