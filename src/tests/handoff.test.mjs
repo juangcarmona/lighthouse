@@ -57,11 +57,11 @@ test('interrupted failure publication retries the comment and missing label rema
   const repo = 'owner/repo', requestId = dispatchId(repo, '100', 'refine'), digest = 'c'.repeat(64);
   const receipt = { schemaVersion: 1, stage: 'refine', id: requestId, digest, routerRunId: '100', routerAttempt: 1, workerRunId: '200' };
   const dispatch = { commentId: 30, requestId, digest }, comments = [{ id: 30, issue_url: 'https://api.github.com/repos/owner/repo/issues/18', user: { login: 'github-actions[bot]', type: 'Bot' }, body: dispatchReceiptBody(repo, receipt) }];
-  let fail = true, available = true, writes = 0;
+  let fail = true, available = true, writes = 0, reserved = false;
   const api = async (path, method = 'GET', body) => {
     if (path === 'issues/comments/30') return comments[0];
     if (path.startsWith('issues/18/comments?')) return comments;
-    if (path === 'issues/18' && method === 'GET') return { state: 'open', labels: [] };
+    if (path === 'issues/18' && method === 'GET') return { state: 'open', labels: reserved ? [{ name: 'agent-working' }] : [] };
     if (path.startsWith('contents/.lighthouse/reconciliation/labels.json?')) return { encoding: 'base64', content: Buffer.from(JSON.stringify({ verified: true, capability: { id: 'labels', provider: 'github', version: '3' } })).toString('base64') };
     if (path === 'labels/execution-failed') return available ? { name: 'execution-failed' } : null;
     if (path === 'issues/18/labels') { writes++; return null; }
@@ -91,6 +91,9 @@ test('interrupted failure publication retries the comment and missing label rema
   await publishObservedStop(api, { ...input, observation: 'publication-unknown' });
   assert.match(comments.at(-1).body, /effects and final result are not confirmed/);
   assert.doesNotMatch(comments.at(-1).body, /Execution failed/);
+  comments.pop(); reserved = true;
+  await publishObservedStop(api, input);
+  assert.match(comments.at(-1).body, /release it only after verifying that no newer worker owns it/);
 });
 
 test('stage result accepts only a bounded explicit question on a blocked outcome', async () => {
