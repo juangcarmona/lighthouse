@@ -199,6 +199,7 @@ export async function prepareProductChange(root, changeName, files, bridge) {
       return { provider: '@fission-ai/openspec@1.15.0', schema: 'product-change', root: rootPath, changeName, schemaPin, instructions };
     }
     const summary = validateProductChangeFiles(files, { changeName });
+    const schemaPin = files.find(file => file.path === `${rootPath}/.openspec.yaml`).content;
     for (const file of files) {
       const target = join(temp, file.path);
       await mkdir(dirname(target), { recursive: true });
@@ -211,8 +212,8 @@ export async function prepareProductChange(root, changeName, files, bridge) {
       const value = JSON.parse(openspec(temp, ['instructions', artifact, '--change', changeName, '--json']));
       instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
     }
-    if (bridge && validation) return { ...summary, provider: '@prodshape/integration-openspec', root: rootPath, openSpec: 'passed', diagnostics: validation.diagnostics, instructions, files };
-    return { ...summary, root: rootPath, openSpec: 'passed', provider: 'unavailable', instructions, files };
+    if (bridge && validation) return { ...summary, provider: '@prodshape/integration-openspec', root: rootPath, openSpec: 'passed', diagnostics: validation.diagnostics, schemaPin, instructions, files };
+    return { ...summary, root: rootPath, openSpec: 'passed', provider: 'unavailable', schemaPin, instructions, files };
   } finally { await rm(temp, { recursive: true, force: true }); }
 }
 
