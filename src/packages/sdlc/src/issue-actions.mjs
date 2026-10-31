@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, stages, executionModelSelection } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -17,6 +17,14 @@ import { validateProductCandidate, publishProductChangePullRequest, loadProductA
 import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
+
+export async function publishRoutingHandoff(api, number, identity, body) {
+  const marker = `<!-- lighthouse-routing:${digest(identity)} -->`;
+  const prior = await issueComments(api, number);
+  if (prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) return false;
+  await api(`issues/${number}/comments`, 'POST', { body: `${body}\n\n${marker}` });
+  return true;
+}
 
 export function pendingReply(event, comments) {
   const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
@@ -255,9 +263,9 @@ async function main(command) {
     if (route.run && (['product-change', 'apply-product-change'].includes(route.worker) ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED !== 'true' : !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage))) route = { run: false, reason: 'Requested workflow is not installed.' };
     await output('stage', route.stage ?? ''); await output('worker', route.worker ?? route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? '');
     const routedDetails = `[Routing execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})`;
-    if (implementationReview) await api(`issues/${implementationReview.number}/comments`, 'POST', { body: renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'implement', happened: implementationReview.handled ? 'This feedback has already been applied.' : route.reason, action: implementationReview.handled ? 'Owner: review the latest PR state.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated blocker on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No new worker has been requested by this event.', link: `[Open PR](${implementationReview.url})`, details: routedDetails }) });
-    else if (proposalReview) await api(`issues/${proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'propose', happened: proposalReview.handled ? 'This feedback has already been applied.' : proposalReview.approved ? `Approval was received for commit \`${proposalReview.head}\`. Implementation has not started.` : route.reason, action: proposalReview.handled ? 'Owner: review the latest proposal diff.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated next step on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No implementation has been authorized by this acknowledgement.', link: `[Open PR](${proposalReview.url})`, details: routedDetails }) });
-    else if (env.GITHUB_EVENT_NAME === 'issue_comment' && env.GITHUB_ACTOR === owner && !route.run) await api(`${issuePath}/comments`, 'POST', { body: renderHandoff({ status: 'blocked', stage: route.stage ?? 'stage not identified', happened: `No agent started: ${route.reason}.`, action: 'Owner: review the stated reason; proposal feedback belongs on its PR.', next: 'A new worker requires a matching authorized request or answer.', details: routedDetails }) });
+    if (implementationReview) await publishRoutingHandoff(api, implementationReview.number, `${repo}:review:${feedbackKey(implementationReview)}`, renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'implement', happened: implementationReview.handled ? 'This feedback has already been applied.' : route.reason, action: implementationReview.handled ? 'Owner: review the latest PR state.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated blocker on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No new worker has been requested by this event.', link: `[Open PR](${implementationReview.url})`, details: routedDetails }));
+    else if (proposalReview) await publishRoutingHandoff(api, proposalReview.number, `${repo}:review:${feedbackKey(proposalReview)}`, renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'propose', happened: proposalReview.handled ? 'This feedback has already been applied.' : proposalReview.approved ? `Approval was received for commit \`${proposalReview.head}\`. Implementation has not started.` : route.reason, action: proposalReview.handled ? 'Owner: review the latest proposal diff.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated next step on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No implementation has been authorized by this acknowledgement.', link: `[Open PR](${proposalReview.url})`, details: routedDetails }));
+    else if (env.GITHUB_EVENT_NAME === 'issue_comment' && env.GITHUB_ACTOR === owner && !route.run) await publishRoutingHandoff(api, issueNumber, `${repo}:issue-comment:${event.comment.id}`, renderHandoff({ status: 'blocked', stage: route.stage ?? 'stage not identified', happened: `No agent started: ${route.reason}.`, action: 'Owner: review the stated reason; proposal feedback belongs on its PR.', next: 'A new worker requires a matching authorized request or answer.', details: routedDetails }));
     console.log(route.reason); await summary(`### Routing\n${route.reason}`); return;
   }
   if (command === 'prepare') {

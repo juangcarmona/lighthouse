@@ -4,7 +4,20 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, publishRoutingHandoff } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('routing handoffs are idempotent per authenticated feedback identity', async () => {
+  const comments = [], posts = [];
+  const api = async (path, method = 'GET', payload) => {
+    if (method === 'GET') return comments;
+    posts.push(payload.body);
+    comments.push({ user: { login: 'github-actions[bot]', type: 'Bot' }, body: payload.body });
+  };
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-1', 'Requested'), true);
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-1', 'Already handled'), false);
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-2', 'Requested'), true);
+  assert.equal(posts.length, 2);
+});
 
 test('continuation binds the previous question to the authenticated reply', () => {
   const prior = { request: { runId: 'prior-run' }, envelope: { result: { output: { handoff: { question: 'May these assets be reused?' } } } } };
