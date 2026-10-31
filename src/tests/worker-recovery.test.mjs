@@ -152,6 +152,16 @@ test('maintenance reports failed preparation without claiming the agent started'
   assert.match(f.comments.at(-1).body, /Preparation failed before the agent started/);
 });
 
+test('maintenance retains an authenticated issue answer in the recovered failure notice', async () => {
+  const f = fixture();
+  f.request.eventName = 'issue_comment';
+  f.request.event = { action: 'created', issue: { number: 7 }, comment: { body: 'Yes', user: { login: owner, type: 'User' } } };
+  f.parent.event = 'issue_comment';
+  f.comment.body = dispatchReceiptBody(repository, { ...f.receipt, digest: digest(JSON.stringify(f.request)) });
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+  assert.match(f.comments.at(-1).body, /recorded answer remains available/);
+});
+
 test('maintenance reports uncertain publication without retrying or duplicating the notice', async () => {
   const f = fixture();
   f.jobs[1].conclusion = 'success';
