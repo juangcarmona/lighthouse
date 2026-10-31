@@ -65,7 +65,16 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
   const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
-  const observation = prepare?.conclusion === 'failure' && (!agent || agent.conclusion === 'skipped') ? 'preparation-failure' : publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? agent.conclusion : agent?.conclusion === 'success' && publish?.conclusion === 'failure' && !['completed', 'waiting', 'blocked'].includes(receipt.status) ? 'publication-unknown' : null;
+  const unpublished = publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
+  const notStarted = !agent || agent.conclusion === 'skipped';
+  const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
+  const observation = ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
+    : agent?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(publish?.conclusion) ? 'publication-unknown'
+    : ['failure', 'timed_out'].includes(prepare?.conclusion) && notStarted ? 'preparation-failure'
+    : prepare?.conclusion === 'success' && activationFailed && notStarted && unpublished ? 'activation-failure'
+    : unpublished && ['failure', 'timed_out'].includes(agent?.conclusion) ? 'failure'
+    : unpublished && agent?.conclusion === 'cancelled' ? 'cancelled'
+    : run.conclusion === 'cancelled' && notStarted && (unpublished || !publishJob) ? 'pre-agent-cancelled' : null;
   const event = dispatch.request.event;
   const answered = dispatch.request.eventName === 'issue_comment' && event?.action === 'created' && event.issue?.number === issue.number && !event.issue.pull_request && event.comment?.user?.login === owner && event.comment.user.type === 'User' && typeof event.comment.body === 'string' && !!event.comment.body.trim() && !dispatch.request.feedbackKey;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation, answerRetained: answered } : null;

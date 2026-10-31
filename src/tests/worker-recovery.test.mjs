@@ -152,6 +152,22 @@ test('maintenance reports failed preparation without claiming the agent started'
   assert.match(f.comments.at(-1).body, /Preparation failed before the agent started/);
 });
 
+test('maintenance distinguishes timeouts and cancellation before and during publication', async () => {
+  for (const scenario of ['agent-timeout', 'activation-timeout', 'pre-agent-cancelled', 'publication-cancelled']) {
+    const f = fixture();
+    if (scenario === 'agent-timeout') f.jobs[1].conclusion = 'timed_out';
+    if (scenario === 'activation-timeout') { f.jobs.splice(1, 0, { name: 'activation', conclusion: 'timed_out' }); f.jobs[2].conclusion = 'skipped'; }
+    if (scenario === 'pre-agent-cancelled') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'skipped'; }
+    if (scenario === 'publication-cancelled') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'cancelled'; }
+    await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+    const body = f.comments.at(-1).body;
+    if (scenario === 'agent-timeout') assert.match(body, /agent execution failed/);
+    if (scenario === 'activation-timeout') assert.match(body, /environment failed before the agent started/);
+    if (scenario === 'pre-agent-cancelled') assert.match(body, /cancelled before the agent started/);
+    if (scenario === 'publication-cancelled') assert.match(body, /effects and final result are not confirmed/);
+  }
+});
+
 test('maintenance retains an authenticated issue answer in the recovered failure notice', async () => {
   const f = fixture();
   f.request.eventName = 'issue_comment';
