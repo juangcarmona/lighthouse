@@ -57,6 +57,12 @@ export function continuationContext(continuation, answer) {
   const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
   return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
 }
+export function refinementNextAction({ stage, status, autoImplement, paused }) {
+  if (stage !== 'refine' || status !== 'passed') return null;
+  if (!autoImplement) return { action: 'Owner: review the refinement and request the next authorized stage through the configured workflow.', next: 'No automatic continuation is configured for this refinement.' };
+  if (paused) return { action: 'Owner: remove the future label when implementation may resume.', next: 'The workflow will recheck the authorized implementation request.' };
+  return { action: 'None.', next: 'The workflow will request implementation under the configured continuation policy; the owner can pause it with the future label.' };
+}
 export function checkPublication(snapshot, issue, comments, revision) {
   if (issue.state !== 'open' || issue.pull_request || revision !== (snapshot.baseRevision ?? snapshot.sourceRevision)) throw Error('Issue closed or source revision changed');
   if (issue.labels.some(x => x.name === 'human-working') || !issue.labels.some(x => x.name === 'agent-working')) throw Error('Execution reservation revoked');
@@ -543,14 +549,14 @@ async function main(command) {
       }
     }
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : '';
-    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
+    const refinementAction = refinementNextAction({ stage: snapshot.stage, status: value.result.status, autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', paused: publicationIssue.labels.some(x => x.name === 'future') });
     const productWorkflowMarker = snapshot.worker === 'product-change' ? `\n<!-- lighthouse-product-workflow:${snapshot.productChangeName} -->` : '';
     const proposedQuestion = value.result.output?.handoff?.question ?? value.result.output?.productChange?.question;
     const question = value.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
     const projection = resultHandoffState({ status: value.result.status, stage: snapshot.stage, question, reviewTarget, draft: !!prStateProof });
     const isReview = projection.review;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : 'None.';
-    const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : next.trim() || 'Any continuation follows the configured authorization.';
+    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? 'The workflow maintainer should resolve the blocker described above.' : refinementAction?.action ?? 'None.';
+    const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
     const label = projection.label;

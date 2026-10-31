@@ -4,13 +4,20 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, refinementNextAction } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('continuation binds the previous question to the authenticated reply', () => {
   const prior = { request: { runId: 'prior-run' }, envelope: { result: { output: { handoff: { question: 'May these assets be reused?' } } } } };
   assert.deepEqual(continuationContext(prior, { body: 'Yes, all ten.', html_url: 'https://example.test/reply' }), { question: 'May these assets be reused?', answer: { body: 'Yes, all ten.', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
   prior.envelope.result.output = {};
   assert.deepEqual(continuationContext(prior, { body: 'Yes', html_url: 'https://example.test/reply' }), { answer: { body: 'Yes', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
+});
+
+test('completed refinement names the actual next action for each continuation policy', () => {
+  assert.match(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: false }).action, /Owner: review/);
+  assert.match(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: true }).action, /remove the future label/);
+  assert.equal(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: false }).action, 'None.');
+  assert.equal(refinementNextAction({ stage: 'refine', status: 'blocked', autoImplement: true }), null);
 });
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
