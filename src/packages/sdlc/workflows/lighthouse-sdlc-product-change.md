@@ -106,6 +106,12 @@ jobs:
           repository: juangcarmona/lighthouse
           ref: __LIGHTHOUSE_REF__
           persist-credentials: false
+      - name: Check out the adopter's current product source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .lighthouse-product-source
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -117,7 +123,8 @@ jobs:
         id: prepare
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/issue-actions.mjs prepare
+        working-directory: .lighthouse-product-source
+        run: node "$GITHUB_WORKSPACE/src/packages/sdlc/src/issue-actions.mjs" prepare
       - name: Preserve the execution request
         if: steps.prepare.outputs.eligible == 'true'
         uses: actions/upload-artifact@v7
@@ -158,6 +165,7 @@ jobs:
         with:
           node-version: 24
       - name: Install the repository and optional product provider
+        working-directory: .lighthouse-harness
         run: |
           npm ci --ignore-scripts
           npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6

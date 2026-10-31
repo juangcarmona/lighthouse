@@ -113,6 +113,7 @@ jobs:
         with:
           node-version: 24
       - name: Install provider packages without credentials
+        working-directory: .lighthouse-harness
         run: |
           npm ci --ignore-scripts
           npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6

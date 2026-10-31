@@ -51,12 +51,12 @@ export function validateProductChangeOutput(value) {
   if (value.proposalDigest !== undefined && !hashPattern.test(value.proposalDigest)) errors.push('result.output.productChange proposalDigest is invalid');
   if (value.baselineDigest !== undefined && !hashPattern.test(value.baselineDigest)) errors.push('result.output.productChange baselineDigest is invalid');
   if (value.outcome === 'candidate') {
-    if (!value.changeName || !value.changeId || !value.proposalDigest || !value.baselineDigest || !Array.isArray(value.files)) errors.push('candidate Product Change output needs its change identity, proposal and baseline digests, and files');
+    if (!value.changeName || !value.changeId || !value.baselineDigest || !Array.isArray(value.files)) errors.push('candidate Product Change output needs its change identity, baseline digest, and files');
     else try {
       const checked = validateProductChangeFiles(value.files, { changeName: value.changeName });
-      if (checked.changeId !== value.changeId || checked.digest !== value.proposalDigest) errors.push('candidate Product Change identity or digest does not match its files');
+      if (checked.changeId !== value.changeId || value.proposalDigest !== undefined && checked.digest !== value.proposalDigest) errors.push('candidate Product Change identity or digest does not match its files');
     } catch (error) { errors.push(error.message); }
-    if (!exact(value.providerValidation, ['status', 'diagnosticCount']) || value.providerValidation.status !== 'passed' || !Number.isSafeInteger(value.providerValidation.diagnosticCount) || value.providerValidation.diagnosticCount < 0) errors.push('candidate Product Change needs successful provider overlay validation');
+    if (!exact(value.providerValidation, ['status', 'diagnosticCount']) || !['pending', 'passed'].includes(value.providerValidation.status) || !Number.isSafeInteger(value.providerValidation.diagnosticCount) || value.providerValidation.diagnosticCount < 0 || value.providerValidation.status === 'pending' && value.providerValidation.diagnosticCount !== 0 || value.providerValidation.status === 'passed' && !value.proposalDigest) errors.push('candidate Product Change needs pending host validation or a bound successful provider validation');
   }
   if (value.outcome === 'aligned' && (value.files !== undefined || value.changeName !== undefined || value.changeId !== undefined)) errors.push('aligned Product Change output cannot include a delta');
   const hasQuestion = typeof value.question === 'string' && !!value.question.trim();

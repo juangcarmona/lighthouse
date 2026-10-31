@@ -39,6 +39,13 @@ export async function validateProductCandidate(root, changeName, files, bridge) 
   } finally { await rm(temp, { recursive: true, force: true }); }
 }
 
+export function bindValidatedProductCandidate(product, validation, baselineDigest) {
+  if (validation.provider !== 'passed' || validation.openSpec !== 'passed' || !/^[a-f0-9]{64}$/.test(validation.digest ?? '') || !Number.isSafeInteger(validation.diagnosticCount) || validation.diagnosticCount < 0 || validation.changeId !== product.changeId || validation.baselineDigest !== baselineDigest || product.baselineDigest !== baselineDigest || product.proposalDigest !== undefined && product.proposalDigest !== validation.digest) throw Error('Product Change candidate or baseline changed during validation');
+  if (product.providerValidation?.status === 'passed' && product.providerValidation.diagnosticCount !== validation.diagnosticCount) throw Error('Product Change provider validation evidence does not match the host result');
+  if (!['pending', 'passed'].includes(product.providerValidation?.status)) throw Error('Product Change provider validation state is invalid');
+  return { ...product, proposalDigest: validation.digest, providerValidation: { status: 'passed', diagnosticCount: validation.diagnosticCount } };
+}
+
 export async function loadProductCandidateFromPullRequest(api, repository, pr, changeName) {
   if (pr?.state !== 'open' || pr.merged || pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository) throw Error('Product Change review needs an open bot-owned PR in this repository');
   const changed = await api(`pulls/${pr.number}/files?per_page=100`);

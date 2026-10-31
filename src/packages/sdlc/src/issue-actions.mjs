@@ -13,7 +13,7 @@ import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createP
 import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
-import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
+import { validateProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
@@ -417,7 +417,7 @@ async function main(command) {
       context.request.worker = 'product-change';
       context.authorization = { status: 'verified', verifiedBy: 'GitHub Actions workflow', authorizedStage: stage, owner, entry: 'product-idea', event: env.GITHUB_EVENT_NAME };
       context.productChange = { ...productChange, baselineDigest, idea: `${issue.title}\n\n${issue.body ?? ''}`, scope: issue.body ?? issue.title, ...(dispatch.request.productFeedback ? { feedback: dispatch.request.productFeedback } : {}), ...(productReview ? { review: productReview } : {}), parent: { issue: issueNumber, stage, authorizationDigest, policyDigest, sourceRevision: revision.sha } };
-      context.contract.rules += ` Prepare only the Product Change candidate in context.productChange. The issue is the authorized idea. Do not require Ready or Planned stage evidence. Return productChange.entry as ${snapshot.productEntry}, matching this authenticated request, and return the outcome and proposed files under its exact change root. For a blocked outcome, provide either question for a product decision or both blocker and recovery for a technical condition; never turn a technical blocker into an owner question. A product approval and trusted apply must occur before a parent delivery handoff; this request grants no implementation authority.`;
+      context.contract.rules += ` Prepare only the Product Change candidate in context.productChange. The issue is the authorized idea. Do not require Ready or Planned stage evidence. Return productChange.entry as ${snapshot.productEntry}, matching this authenticated request, and return the outcome and proposed files under its exact change root. Return candidate files with providerValidation.status pending and diagnosticCount 0; omit proposalDigest. The host computes the digest and validates with the pinned provider. For a blocked outcome, provide either question for a product decision or both blocker and recovery for a technical condition; never turn a technical blocker into an owner question. A product approval and trusted apply must occur before a parent delivery handoff; this request grants no implementation authority.`;
     }
     if (triage) context.triage = triage.envelope.result.output;
     if (stage === 'triage') context.contract.rules += ' Preserve the exact issue body in output.requestAnalysis.originalRequest. Return output.estimate and output.requestAnalysis following /harness/request-triage.md. Stop at triaged; never authorize or dispatch refinement.';
@@ -536,13 +536,12 @@ async function main(command) {
         if (product.changeName !== snapshot.productChangeName || product.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate differs from its authenticated preparation context');
         const bridge = await loadProductBridge();
         const validation = await validateProductCandidate(process.cwd(), product.changeName, product.files, bridge);
-        if (validation.digest !== product.proposalDigest || validation.changeId !== product.changeId || validation.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate or baseline changed during validation');
-        if (product.providerValidation.status !== 'passed' || product.providerValidation.diagnosticCount !== validation.diagnosticCount) throw Error('Product Change provider validation evidence does not match the host result');
-        const published = await publishProductChangePullRequest(api, repo, snapshot, product, { validation, runUrl, beforeWrite: async () => {
+        const candidate = bindValidatedProductCandidate(product, validation, snapshot.baselineDigest);
+        const published = await publishProductChangePullRequest(api, repo, snapshot, candidate, { validation, runUrl, beforeWrite: async () => {
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
         } });
-        await writeFile(join(dir, 'product-review.json'), JSON.stringify({ pullRequest: published.pullRequest.number, head: published.binding.head, reviewKey: published.binding.key, changeName: product.changeName, changeId: product.changeId, proposalDigest: product.proposalDigest, baselineDigest: product.baselineDigest }));
+        await writeFile(join(dir, 'product-review.json'), JSON.stringify({ pullRequest: published.pullRequest.number, head: published.binding.head, reviewKey: published.binding.key, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest }));
         proposalLink = `\n\n[Product decision on PR #${published.pullRequest.number}](${published.pullRequest.html_url}). The explicit action authorizes trusted product apply; implementation and merge remain separate.`;
         const productNotice = `<!-- lighthouse-product-review:${snapshot.runId} -->`;
         reviewNotice = { pr: published.pullRequest, marker: productNotice, body: `${published.body}\n\n${productNotice}` };
