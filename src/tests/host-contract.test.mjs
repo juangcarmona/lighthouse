@@ -43,6 +43,12 @@ test('product technical blockers cannot also project an owner question', () => {
   assert.deepEqual(validateStageEnvelope(envelope, productRequest), []);
   envelope.result.output.handoff = { question: 'Can you decide?' };
   assert.ok(validateStageEnvelope(envelope, productRequest).some(error => /cannot also claim an owner question/.test(error)));
+  envelope.result.output.productChange = { ...productChange, blocker: undefined, recovery: undefined, question: 'Which behavior?' };
+  delete envelope.result.output.productChange.blocker;
+  delete envelope.result.output.productChange.recovery;
+  assert.ok(validateStageEnvelope(envelope, productRequest).some(error => /questions do not match/.test(error)));
+  envelope.result.output.handoff.question = 'Which behavior?';
+  assert.deepEqual(validateStageEnvelope(envelope, productRequest), []);
 });
 
 test('packed consumer resolves preflight and result validation with no Lighthouse source tree', async () => {
