@@ -97,6 +97,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
       LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: "true"
