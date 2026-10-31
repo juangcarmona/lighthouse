@@ -21,5 +21,5 @@
 ## 3. Acceptance
 
 - [ ] 3.1 Test the full question, answer, resume and failure sequence, review delivery, cancellation, stale and duplicate events, and partial publication.
-- [ ] 3.2 Run repository and provider projection verification.
-- [ ] 3.3 Review and record a controlled GitHub conversation showing the required chronological handoffs and labels.
+- [x] 3.2 Run repository and provider projection verification.
+- [x] 3.3 Review and record a controlled GitHub conversation showing the required chronological handoffs and labels. Evidence: [question, answer and controlled failure](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/issues/1) and [question, answer and successful continuation](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/issues/9); both fixtures are private to the owner.
