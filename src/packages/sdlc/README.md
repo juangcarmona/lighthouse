@@ -35,7 +35,7 @@ The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`
 | Category | Labels | Meaning |
 | --- | --- | --- |
 | Requests | `triage`, `refine`, `propose`, `implement` | Owner-added commands consumed by the native router; presence alone is not authorization. |
-| Results | `triaged`, `ready`, `needs-info`, `waiting-review`, `pr-draft`, `pr-ready` | Read the linked result or PR for outcome, question or required decision. |
+| Results | `triaged`, `ready`, `needs-info`, `waiting-review`, `execution-failed`, `pr-draft`, `pr-ready` | Read the linked result or PR for outcome, question or required decision. |
 | Overlays | `future`, `agent-working`, `human-working` | Pause implementation, show an agent reservation or reserve work for a human. The host owns the lock. |
 | Compatibility states | `wip`, `review` | Available to configured trackers; adding them does not dispatch a native worker. |
 | Size | `size-s`, `size-m`, `size-l`, `size-xl` | Relative work-item size. Point estimates use the separate [estimate contract](request-triage.md#estimate-contract). |
@@ -44,7 +44,7 @@ The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`
 | Risk | `risk-low`, `risk-medium`, `risk-high` | Delivery risk. |
 | Affected surface | `blast-radius-low`, `blast-radius-medium`, `blast-radius-high` | Extent of potentially affected components and consumers. |
 
-Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules.
+Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules. Labels capability version 3 adds `execution-failed`; existing adopters review and reconcile the new capability version before depending on it.
 
 ## Install or update workflows
 
@@ -56,7 +56,7 @@ node node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs . <imm
 
 The default installs `triage` and `refine`. `--with-propose` adds proposal and corrections; `--with-implement` adds implementation and automatic refinement continuation; `--with-completion` also adds integration and review. `--with-product-change` separately installs the idea preparation and trusted apply workers. The product worker installs the pinned `@prodshape/integration-openspec@0.6.6` bridge in trusted preparation and publication jobs; adopters still own their ProductShape model, OpenSpec schema integration and credentials. Maintenance is a separate `--with-maintenance` opt-in.
 
-Review the preview, then repeat with `--apply`; updating differing existing workflows also requires `--replace-reviewed`. Use gh-aw v0.93.2. Commit the source Markdown, router, compiled locks and action pins together. Reconcile [labels](commands/github-labels.md) through the [capability plan/apply commands](commands/capabilities.md); retain adopter customizations. Existing declarations need an explicit review when adopting labels capability version 2. Provision the runner and disable older routers before setting `LIGHTHOUSE_AUTOMATION_ENABLED=true`. See [operator setup and recovery](github-actions.md) and [completion configuration](completion.md).
+Review the preview, then repeat with `--apply`; updating differing existing workflows also requires `--replace-reviewed`. Use gh-aw v0.93.2. Commit the source Markdown, router, compiled locks and action pins together. Reconcile [labels](commands/github-labels.md) through the [capability plan/apply commands](commands/capabilities.md); retain adopter customizations. Existing declarations need an explicit review when adopting labels capability version 3. Provision the runner and disable older routers before setting `LIGHTHOUSE_AUTOMATION_ENABLED=true`. See [operator setup and recovery](github-actions.md) and [completion configuration](completion.md).
 
 ## Bounded unattended routes
 

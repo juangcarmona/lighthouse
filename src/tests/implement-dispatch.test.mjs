@@ -144,7 +144,7 @@ test('all installed stages dispatch independently and cannot impersonate a diffe
       await finishDispatch(f.api, repo, issue, 30, '201', outcome);
       assert.equal(readDispatchReceipt(f.comment, repo, issue).status, 'running');
       await finishDispatch(f.api, repo, issue, 30, '200', outcome);
-      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : 'failed');
+      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : 'unknown');
       f.comment.body = dispatchReceiptBody(repo, { ...readDispatchReceipt(f.comment, repo, issue), status: 'running' });
     }
     await assert.rejects(loadDispatch(f.api, repo, owner, issue, 30, { ...f.worker, path: stagePath(stage === 'refine' ? 'propose' : 'refine') }, f.readArtifact), /worker identity/);

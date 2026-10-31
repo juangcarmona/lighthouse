@@ -137,7 +137,8 @@ test('the capability catalog is versioned, validates independently and projects 
   assert.equal(declaration.capabilities[0].provider, 'github');
   assert.equal(declaration.capabilities[0].adapter, 'github-labels');
   assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'size-m').color, '80C2FF');
-  assert.equal(catalog.capabilities[0].version, '2');
+  assert.equal(catalog.capabilities[0].version, '3');
+  assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'execution-failed').role, 'state');
   assert.deepEqual(declaration.capabilities[0].configuration.transitions, []);
 });
 

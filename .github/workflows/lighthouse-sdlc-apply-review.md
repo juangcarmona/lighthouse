@@ -194,6 +194,7 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
 ---
 
