@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse
 
+## 0.12.1
+
+### Patch Changes
+
+- c6b1112: # ArcShape authority update
+
+  Update the packaged ArcShape authority to 0.4.0.
+
 ## 0.12.0
 
 ### Minor Changes
