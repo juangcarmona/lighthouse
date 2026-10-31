@@ -13,7 +13,7 @@ import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createP
 import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, prepareProductEvidence, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore } from './product-change.mjs';
-import { validateProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
+import { validateProductCandidate, preparePendingProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
@@ -536,8 +536,9 @@ async function main(command) {
       if (product.outcome === 'candidate') {
         if (product.changeName !== snapshot.productChangeName || product.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate differs from its authenticated preparation context');
         const bridge = await loadProductBridge();
-        const validation = await validateProductCandidate(process.cwd(), product.changeName, product.files, bridge);
-        const candidate = bindValidatedProductCandidate(product, validation, snapshot.baselineDigest);
+        const prepared = preparePendingProductCandidate(product);
+        const validation = await validateProductCandidate(process.cwd(), prepared.changeName, prepared.files, bridge);
+        const candidate = bindValidatedProductCandidate(prepared, validation, snapshot.baselineDigest);
         const published = await publishProductChangePullRequest(api, repo, snapshot, candidate, { validation, runUrl, beforeWrite: async () => {
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);

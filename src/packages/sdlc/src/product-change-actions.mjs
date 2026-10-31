@@ -8,6 +8,18 @@ import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
 
 const marker = '<!-- lighthouse-product-change:';
+export function preparePendingProductCandidate(product) {
+  if (product.providerValidation?.status !== 'pending') return product;
+  validateProductChangeFiles(product.files, { changeName: product.changeName });
+  const path = `openspec/changes/${product.changeName}/.openspec.yaml`;
+  const metadata = product.files.find(file => file.path === path);
+  const flags = [...metadata.content.matchAll(/^\s*skip_specs\s*:\s*(.*?)\s*$/gm)];
+  if (flags.length > 1 || flags.length === 1 && !/^true(?:\s+#.*)?$/.test(flags[0][1])) throw Error('Product Change schema pin has conflicting skip_specs metadata');
+  if (flags.length) return product;
+  if (product.proposalDigest !== undefined) throw Error('Cannot normalize a Product Change with a supplied proposal digest');
+  return { ...product, files: product.files.map(file => file.path === path ? { ...file, content: `${file.content.trimEnd()}\nskip_specs: true\n` } : file) };
+}
+
 export async function validateProductCandidate(root, changeName, files, bridge) {
   const summary = validateProductChangeFiles(files, { changeName });
   const temp = await mkdtemp(join(tmpdir(), 'lighthouse-product-change-'));

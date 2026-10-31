@@ -189,12 +189,13 @@ export async function prepareProductChange(root, changeName, files, bridge) {
     openspec(temp, ['new', 'change', changeName, '--schema', 'product-change', '--json']);
     const rootPath = `openspec/changes/${changeName}`;
     if (!files) {
+      const schemaPin = `${(await readFile(join(temp, rootPath, '.openspec.yaml'), 'utf8')).trimEnd()}\nskip_specs: true\n`;
       const instructions = {};
       for (const artifact of ['intent', 'delta']) {
         const value = JSON.parse(openspec(temp, ['instructions', artifact, '--change', changeName, '--json']));
         instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
       }
-      return { provider: '@fission-ai/openspec@1.15.0', schema: 'product-change', root: rootPath, changeName, instructions };
+      return { provider: '@fission-ai/openspec@1.15.0', schema: 'product-change', root: rootPath, changeName, schemaPin, instructions };
     }
     const summary = validateProductChangeFiles(files, { changeName });
     for (const file of files) {

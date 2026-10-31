@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProductChangeFiles, validateProductChangeOutput, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
-import { bindValidatedProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
+import { bindValidatedProductCandidate, preparePendingProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
 import { installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -78,4 +78,21 @@ test('the host binds and validates a candidate without requiring a shell in the 
   }
   assert.ok(validateProductChangeOutput({ ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } }).length);
   assert.ok(validateProductChangeOutput({ ...product, providerValidation: { status: 'pending', diagnosticCount: 1 } }).length);
+});
+
+test('the host supplies OpenSpec product-only metadata before validating pending candidates', () => {
+  const path = 'openspec/changes/example/.openspec.yaml';
+  const product = { changeName: 'example', providerValidation: { status: 'pending', diagnosticCount: 0 }, files: [
+    { path, content: 'schema: product-change\ncreated: 2026-10-31\n' },
+    { path: 'openspec/changes/example/product-change/change.md', content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' },
+    { path: 'openspec/changes/example/product-change/proposed/requirement.md', content: 'Requirement' },
+  ] };
+  const prepared = preparePendingProductCandidate(product);
+  assert.match(prepared.files[0].content, /skip_specs: true/);
+  assert.doesNotMatch(product.files[0].content, /skip_specs/);
+  assert.equal(preparePendingProductCandidate(prepared), prepared);
+  assert.throws(() => preparePendingProductCandidate({ ...product, proposalDigest: 'a'.repeat(64) }), /supplied proposal digest/);
+  assert.throws(() => preparePendingProductCandidate({ ...product, files: [{ ...product.files[0], content: 'schema: product-change\nskip_specs: false\n' }, ...product.files.slice(1)] }), /conflicting/);
+  const passed = { ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } };
+  assert.equal(preparePendingProductCandidate(passed), passed);
 });
