@@ -10,7 +10,7 @@ engine:
       tools-allowlist: true
     execution:
       command-name: node
-      args: [tools/src/packages/sdlc/src/opencode-execute.mjs]
+      args: [.lighthouse-harness/src/packages/sdlc/src/opencode-execute.mjs]
       step-name: OpenCode progress and result
       write-timestamp: true
     log-parser: |

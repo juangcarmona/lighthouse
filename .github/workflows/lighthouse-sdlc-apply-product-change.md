@@ -107,7 +107,7 @@ jobs:
         with:
           repository: juangcarmona/lighthouse
           ref: 806223d06302628d25791e42e35b609ca6e1d32c
-          path: tools
+          path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -122,7 +122,7 @@ jobs:
           name: lighthouse-product-apply-input-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Run provider dry-run, apply and validation
-        run: node tools/src/packages/sdlc/src/issue-actions.mjs product-apply
+        run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs product-apply
       - name: Preserve the provider output and apply receipt
         if: always()
         uses: actions/upload-artifact@v7

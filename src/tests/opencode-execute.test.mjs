@@ -68,7 +68,16 @@ test('engine adapter preserves structured evidence while streaming readable outp
     for (const dir of [work, bin, runDir]) await mkdir(dir);
     execFileSync('git', ['init', '-q', work]);
     await writeFile(join(work, 'README.md'), 'Product source');
-    execFileSync('git', ['-C', work, 'add', 'README.md']);
+    await mkdir(join(work, 'tools'));
+    await writeFile(join(work, 'tools', 'adopter.txt'), 'Tracked adopter tool');
+    execFileSync('git', ['-C', work, 'add', 'README.md', 'tools/adopter.txt']);
+    const workflow = await readFile(new URL('../packages/sdlc/workflows/lighthouse-sdlc-refine.md', import.meta.url), 'utf8');
+    const engine = await readFile(new URL('../packages/sdlc/workflows/shared/lighthouse-opencode.md', import.meta.url), 'utf8');
+    assert.match(workflow, /path: \.lighthouse-harness/);
+    assert.match(engine, /\.lighthouse-harness\/src\/packages\/sdlc\/src\/opencode-execute\.mjs/);
+    await fixtureHarness(root);
+    await mkdir(join(work, '.lighthouse-harness', 'src', 'packages'), { recursive: true });
+    await cp(join(root, 'harness'), join(work, '.lighthouse-harness', 'src', 'packages', 'sdlc'), { recursive: true });
     const request = { runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) };
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Scope is ready.' } };
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
@@ -92,8 +101,9 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
 }
 `);
     await chmod(shim, 0o755);
-    const execution = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+    const execution = spawnSync(process.execPath, [join(work, '.lighthouse-harness/src/packages/sdlc/src/opencode-execute.mjs')], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
     assert.equal(execution.status, 0, execution.stdout + execution.stderr);
+    assert.equal(await readFile(join(work, 'tools/adopter.txt'), 'utf8'), 'Tracked adopter tool');
     assert.match(execution.stdout, /\[OpenCode\] Checking scope/);
     assert.match(execution.stdout, /\[Result\] Scope is ready/);
     assert.ok(!execution.stdout.includes('Full file content'));
