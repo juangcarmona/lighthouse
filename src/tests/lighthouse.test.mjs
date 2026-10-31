@@ -265,7 +265,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
     assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
     const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
-    assert.deepEqual(manifest.integrations, { productShape: '0.23.0', arcShape: '0.1.6' });
+    assert.deepEqual(manifest.integrations, { productShape: '0.23.0', arcShape: '0.4.0' });
     for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
@@ -800,7 +800,7 @@ test('catalog keeps level and kind independent and records pending human review'
 });
 
 test('generated guidance follows adopted authorities and scopes the documentation-site gate', async () => {
-  for (const integrations of [{ productShape: null, arcShape: null }, { productShape: '0.23.0', arcShape: null }, { productShape: '0.23.0', arcShape: '0.1.6' }]) {
+  for (const integrations of [{ productShape: null, arcShape: null }, { productShape: '0.23.0', arcShape: null }, { productShape: '0.23.0', arcShape: '0.4.0' }]) {
     for (const enabled of [false, true]) {
       const dir = await fixture();
       try {

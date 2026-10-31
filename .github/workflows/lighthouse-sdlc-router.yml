@@ -34,7 +34,7 @@ on:
         required: true
         default: stage
         type: choice
-        options: [stage]
+        options: [stage, product-change]
       after_run:
         description: Recheck a completed execution through the same continuation rules
         required: false
@@ -58,7 +58,7 @@ env:
   LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
   LIGHTHOUSE_AUTO_IMPLEMENT: true
   LIGHTHOUSE_COMPLETION_ENABLED: true
-  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false
+  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: true
 jobs:
   pr-state:
     if: >-
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 11869fd5664aab1e11235947e906d460e7f17f61
+          ref: 806223d06302628d25791e42e35b609ca6e1d32c
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 11869fd5664aab1e11235947e906d460e7f17f61
+          ref: 806223d06302628d25791e42e35b609ca6e1d32c
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -145,7 +145,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 11869fd5664aab1e11235947e906d460e7f17f61
+          ref: 806223d06302628d25791e42e35b609ca6e1d32c
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
