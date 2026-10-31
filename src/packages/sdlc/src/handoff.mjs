@@ -27,7 +27,7 @@ export function handoff({ status, stage, happened, action, next, link, details }
 }
 
 // A newer authenticated dispatch owns current status, even if an older cleanup finishes late.
-export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false }) {
+export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false, preparationReason }) {
   if (!['failure', 'cancelled', 'preparation-failure', 'publication-unknown'].includes(observation) || !dispatch?.commentId) return false;
   const { checkDispatchClaim, issueComments, readDispatchReceipt } = await import('./stage-dispatch.mjs');
   await checkDispatchClaim(api, repository, issue, dispatch, run);
@@ -52,10 +52,11 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   const available = adopted && await api('labels/execution-failed', 'GET', undefined, true);
   if (available) await api(`issues/${issue}/labels`, 'POST', { labels: ['execution-failed'] });
   const status = observation === 'cancelled' ? 'cancelled' : observation === 'publication-unknown' ? 'unknown' : 'failed';
-  const result = observation === 'publication-unknown' ? 'Publication did not complete cleanly; its effects and final result are not confirmed.' : observation === 'preparation-failure' ? 'Preparation failed before the agent started; no validated result was published.' : observation === 'failure' ? 'The agent execution failed before a validated result could be published.' : 'The agent execution was cancelled before a validated result could be published.';
+  const missingChecks = observation === 'preparation-failure' && preparationReason === 'missing-implementation-checks';
+  const result = observation === 'publication-unknown' ? 'Publication did not complete cleanly; its effects and final result are not confirmed.' : missingChecks ? 'Preparation stopped because the repository has no implementation verification policy; the agent did not start.' : observation === 'preparation-failure' ? 'Preparation failed before the agent started; no validated result was published.' : observation === 'failure' ? 'The agent execution failed before a validated result could be published.' : 'The agent execution was cancelled before a validated result could be published.';
   const gap = ['failure', 'preparation-failure'].includes(observation) && !available ? ' The execution-failed label is not adopted or available; the maintainer must review label capability adoption.' : '';
   const reservation = item.labels.some(l => l.name === 'agent-working') ? ' The maintainer must also inspect the remaining agent-working reservation and release it only after verifying that no newer worker owns it.' : '';
-  const action = (observation === 'publication-unknown' ? 'The workflow maintainer must inspect the linked execution and compare the issue and any linked PR with its publication steps.' : 'The workflow maintainer must inspect the failed or cancelled execution and the configured recovery policy.') + reservation;
+  const action = (missingChecks ? 'The repository maintainer must configure checks in .lighthouse/implement.json or add npm run verify before requesting implementation again.' : observation === 'publication-unknown' ? 'The workflow maintainer must inspect the linked execution and compare the issue and any linked PR with its publication steps.' : 'The workflow maintainer must inspect the failed or cancelled execution and the configured recovery policy.') + reservation;
   const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : 'Recovery follows the configured policy and requires its existing authorization.', link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: marker });
   await api(`issues/${issue}/comments`, 'POST', { body });
   return true;

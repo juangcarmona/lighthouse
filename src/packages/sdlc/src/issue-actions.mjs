@@ -430,12 +430,15 @@ async function main(command) {
       try {
         const commentId = Number(event.inputs['dispatch-request']);
         const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repo, issueNumber);
-        let sourceRevision;
+        let sourceRevision, preparationReason;
         try {
           const admission = JSON.parse(await readFile(join(dir, 'admission.json'), 'utf8'));
-          if (admission.requestId === receipt.id && admission.digest === receipt.digest && /^[a-f0-9]{40}$/.test(admission.sourceRevision)) sourceRevision = admission.sourceRevision;
+          if (admission.requestId === receipt.id && admission.digest === receipt.digest && /^[a-f0-9]{40}$/.test(admission.sourceRevision)) {
+            sourceRevision = admission.sourceRevision;
+            try { preparationReason = JSON.parse(await readFile(join(dir, 'preparation-failure.json'), 'utf8')).code; } catch {}
+          }
         } catch {}
-        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository: repo, issue: issueNumber, stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision };
+        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository: repo, issue: issueNumber, stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision, preparationReason };
       } catch (error) { await summary(`Preparation outcome could not be authenticated: ${error.message}. Inspect the execution.`); }
     }
   }
@@ -621,6 +624,12 @@ async function main(command) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv[2]).catch(async error => {
   console.error(`::error::${error.message.replaceAll('\n', ' ')}`); process.exitCode = 1;
   const env = process.env;
+  if (process.argv[2] === 'prepare' && error.message === 'Configure repository implementation checks in .lighthouse/implement.json defaults, or provide npm run verify') {
+    try {
+      const dir = env.LIGHTHOUSE_RUN_DIR ?? join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
+      await writeFile(join(dir, 'preparation-failure.json'), JSON.stringify({ code: 'missing-implementation-checks' }));
+    } catch { /* Admission may have failed before its trusted directory existed. */ }
+  }
   if (!['route', 'prepare'].includes(process.argv[2]) || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER) return;
   try {
     const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));

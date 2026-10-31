@@ -43,12 +43,14 @@ globalThis.fetch = async (url, options) => {
     assert.doesNotMatch(calls[post].body.body, /Ready for your review|waiting-review/);
     await rm(join(dir, 'reserved'));
     await writeFile(join(dir, 'admission.json'), JSON.stringify({ requestId: id, digest: hash, sourceRevision: revision }));
+    await writeFile(join(dir, 'preparation-failure.json'), JSON.stringify({ code: 'missing-implementation-checks' }));
     await writeFile(join(dir, 'calls.jsonl'), '');
     const preparation = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_PREPARE_FAILED: 'true', GH_TOKEN: 'fixture' } });
     assert.equal(preparation.status, 0, preparation.stderr);
     const prepCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
     const prepComment = prepCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments');
-    assert.match(prepComment.body.body, /Preparation failed before the agent started/);
+    assert.match(prepComment.body.body, /no implementation verification policy; the agent did not start/);
+    assert.match(prepComment.body.body, /\.lighthouse\/implement\.json or add npm run verify/);
     const prepLabel = prepCalls.findIndex(c => c.method === 'POST' && c.path === 'issues/18/labels');
     assert.ok(prepLabel >= 0 && prepLabel < prepCalls.indexOf(prepComment));
     await writeFile(join(dir, 'admission.json'), JSON.stringify({ requestId: id, digest: 'd'.repeat(64), sourceRevision: revision }));
@@ -57,6 +59,7 @@ globalThis.fetch = async (url, options) => {
     assert.equal(stalePreparation.status, 0, stalePreparation.stderr);
     const staleCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
     assert.equal(staleCalls.some(c => c.method === 'POST' && c.path === 'issues/18/labels'), false);
+    assert.match(staleCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments').body.body, /Preparation failed before the agent started/);
     await writeFile(join(dir, 'reserved'), 'run');
     await writeFile(join(dir, 'calls.jsonl'), '');
     const uncertain = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_AGENT_RESULT: 'success', LIGHTHOUSE_PUBLISH_STATUS: 'failure', GH_TOKEN: 'fixture' } });
