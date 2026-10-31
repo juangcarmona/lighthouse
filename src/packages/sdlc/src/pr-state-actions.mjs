@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { authorizedCiCallback, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { authorizedCiCallback, isProductOnlyPullRequest, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 import { handoff } from './handoff.mjs';
 
 const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
@@ -70,7 +70,9 @@ async function main() {
     let target;
     try { target = checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repo); }
     catch {
-      const match = pr.head.ref.match(/^lighthouse\/implement-([1-9][0-9]*)-[a-f0-9]{12}$/);
+      if (isProductOnlyPullRequest(pr)) continue;
+      const match = pr.head.ref.match(/^lighthouse\/(?:implement|propose)-([1-9][0-9]*)-[a-f0-9]{12}$/);
+      if (pr.head.ref.startsWith('lighthouse/propose-') && !pr.body?.includes('<!-- lighthouse-product-implementation:')) continue;
       if (!match || pr.user?.login !== 'github-actions[bot]' || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo || pr.state !== 'open') continue;
       const issue = await api(`issues/${match[1]}`);
       if (issue.state !== 'open') continue;

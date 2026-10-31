@@ -177,6 +177,11 @@ test('an approved product prerequisite resumes on its existing branch and retain
   assert.match(body, /Product decision retained/);
   const { checkImplementationPullRequest } = await import('../packages/sdlc/src/proposal-review.mjs');
   assert.equal(checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: after }, body }, repository).issue, 18);
+  const { scheduledImplementationPulls } = await import('../packages/sdlc/src/pr-state.mjs');
+  assert.deepEqual(await scheduledImplementationPulls(async () => [productPr]), []);
+  const proposalBranch = { ...productPr, head: { ...productPr.head, sha: after, ref: 'lighthouse/propose-18-aaaaaaaaaaaa' }, body };
+  assert.equal(checkImplementationPullRequest(proposalBranch, repository).issue, 18);
+  assert.deepEqual(await scheduledImplementationPulls(async () => [proposalBranch]), [34]);
   assert.throws(() => checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body }, repository));
   const staleWithLegacyMarker = `${body}\n<!-- lighthouse-implementation:${'a'.repeat(64)} -->`;
   assert.throws(() => checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body: staleWithLegacyMarker }, repository));
