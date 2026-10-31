@@ -29,6 +29,8 @@ async function main(command) {
     if (env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true' || event.inputs?.['dispatch-request']) {
       dispatch = await admitDispatch(api, repository, owner, env, event);
       if (!dispatch.admitted) { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, 'eligible=false\n'); await summary('Request already has an execution. No duplicate agent started.'); return; }
+      await mkdir(dir, { recursive: true });
+      await save('admission.json', { requestId: dispatch.request.id, digest: dispatch.receipt.digest, sourceRevision: dispatch.request.sourceRevision });
       event = dispatch.request.event; env.GITHUB_EVENT_NAME = dispatch.request.eventName;
       env.GITHUB_ACTOR = owner; env.GITHUB_TRIGGERING_ACTOR = owner;
     }
@@ -81,7 +83,12 @@ async function main(command) {
       try {
         const commentId = Number(event.inputs['dispatch-request']);
         const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repository, Number(env.LIGHTHOUSE_ISSUE));
-        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository, issue: Number(env.LIGHTHOUSE_ISSUE), stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure' };
+        let sourceRevision;
+        try {
+          const admission = await load('admission.json');
+          if (admission.requestId === receipt.id && admission.digest === receipt.digest && /^[a-f0-9]{40}$/.test(admission.sourceRevision)) sourceRevision = admission.sourceRevision;
+        } catch {}
+        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository, issue: Number(env.LIGHTHOUSE_ISSUE), stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision };
       } catch (error) { await summary(`Preparation outcome could not be authenticated: ${error.message}. Inspect the execution.`); }
     }
     if (!await access(join(dir, 'reserved')).then(() => true, () => false)) { if (preparationStop) await publishObservedStop(api, preparationStop); return; }

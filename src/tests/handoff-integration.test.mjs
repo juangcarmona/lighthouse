@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -77,5 +77,15 @@ globalThis.fetch = async (url, options) => {
     assert.match(proposalNotice.body.body, /Execution status unknown · propose/);
     assert.match(proposalNotice.body.body, /feedback remains recorded/);
     assert.match(proposalNotice.body.body, /Your next action:/);
+    const completionDir = join(dir, 'lighthouse-200-1');
+    await mkdir(completionDir);
+    await writeFile(join(completionDir, 'admission.json'), JSON.stringify({ requestId: id, digest: hash, sourceRevision: revision }));
+    await writeFile(join(dir, 'calls.jsonl'), '');
+    const completion = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/completion-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', RUNNER_TEMP: dir, LIGHTHOUSE_PREPARE_FAILED: 'true', GH_TOKEN: 'fixture' } });
+    assert.equal(completion.status, 0, completion.stderr);
+    const completionCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    const completionLabel = completionCalls.findIndex(c => c.method === 'POST' && c.path === 'issues/18/labels');
+    const completionNotice = completionCalls.findIndex(c => c.method === 'POST' && c.path === 'issues/18/comments');
+    assert.ok(completionLabel >= 0 && completionNotice > completionLabel);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
