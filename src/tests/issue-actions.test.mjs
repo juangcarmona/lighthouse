@@ -4,11 +4,15 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, refinementNextAction } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('continuation binds the previous question to the authenticated reply', () => {
   const prior = { request: { runId: 'prior-run' }, envelope: { result: { output: { handoff: { question: 'May these assets be reused?' } } } } };
   assert.deepEqual(continuationContext(prior, { body: 'Yes, all ten.', html_url: 'https://example.test/reply' }), { question: 'May these assets be reused?', answer: { body: 'Yes, all ten.', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
+  const first = continuationHistory(prior, { body: 'Yes, all ten.', html_url: 'https://example.test/reply' });
+  const second = { request: { runId: 'next-run', answerHistory: first }, envelope: { result: { output: { handoff: { question: 'Which format?' } } } } };
+  assert.deepEqual(continuationHistory(second, { body: 'PDF', html_url: 'https://example.test/reply2' }).map(item => [item.question, item.answer.body]), [['May these assets be reused?', 'Yes, all ten.'], ['Which format?', 'PDF']]);
+  assert.throws(() => continuationHistory({ ...second, request: { ...second.request, answerHistory: Array(17).fill(first[0]) } }, { body: 'PDF', html_url: 'https://example.test/reply2' }), /exceeds|Invalid/);
   prior.envelope.result.output = {};
   assert.deepEqual(continuationContext(prior, { body: 'Yes', html_url: 'https://example.test/reply' }), { answer: { body: 'Yes', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
 });

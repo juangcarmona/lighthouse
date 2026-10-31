@@ -57,6 +57,14 @@ export function continuationContext(continuation, answer) {
   const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
   return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
 }
+export function continuationHistory(continuation, answer) {
+  const prior = continuation.request.answerHistory ?? [];
+  if (!Array.isArray(prior) || prior.length > 16 || prior.some(item => typeof item?.question !== 'string' || typeof item.answer?.body !== 'string' || typeof item.answer?.url !== 'string' || typeof item.priorRunId !== 'string')) throw Error('Invalid retained question and answer history');
+  const current = continuationContext(continuation, answer);
+  const history = current.question ? [...prior, current] : prior;
+  if (history.length > 16) throw Error('Question and answer history exceeds its bound');
+  return history;
+}
 export function refinementNextAction({ stage, status, autoImplement, paused }) {
   if (stage !== 'refine' || status !== 'passed') return null;
   if (!autoImplement) return { action: 'Owner: review the refinement and request the next authorized stage through the configured workflow.', next: 'No automatic continuation is configured for this refinement.' };
@@ -265,9 +273,10 @@ async function main(command) {
     if (dispatch && route.stage !== dispatch.request.stage) throw Error('Dispatched request no longer selects its stage');
     if (dispatch?.request.worker === 'apply-review' && (feedbackWorker(implementationReview ?? proposalReview) !== 'apply-review' || feedbackKey(implementationReview ?? proposalReview) !== dispatch.request.feedbackKey)) throw Error('Dispatched feedback changed or is not a correction');
     if (dispatch?.request.handoff && JSON.stringify(route.predecessor) !== JSON.stringify(dispatch.request.predecessor)) throw Error('Refinement predecessor changed');
-    let continuation;
+    let continuation, continuationAnswer;
     if (env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !handoff) {
       const reply = answers.find(c => c.id === event.comment.id);
+      continuationAnswer = reply;
       const pending = pendingReply({ ...event, comment: reply }, all);
       if (!pending || pending.stage !== route.stage) throw Error('Reply no longer answers the pending stage');
       continuation = await loadStageReport(api, repo, pending.report, { owner, issue: issueNumber });
@@ -333,7 +342,7 @@ async function main(command) {
     const productChangeName = productWorker ? dispatch.request.productFeedback?.changeName ?? dispatch.request.event.inputs?.change_name?.trim() ?? `issue-${issueNumber}-product-change` : undefined;
     if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
     const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
-    const snapshot = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: event.comment.id } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest } : {}), ...(planningReference ? { planningReference } : {}), ...(implementationReview ? { implementationReview, baseRevision } : {}), ...(proposalReview ? { proposalReview } : {}), runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     await output('source_revision', revision.sha);
@@ -343,8 +352,9 @@ async function main(command) {
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
     if (continuation) {
-      context.continuation = continuationContext(continuation, event.comment);
-      context.contract.rules += ' The authenticated context.continuation binds the previous question, when available, to the owner reply. Evaluate whether the reply resolves that question; retain a resolved answer on later work and retries. Ask again only when scope changes, the answer conflicts, or evidence expires, and explain why. The reply grants no separate approval.';
+      context.continuation = continuationContext(continuation, continuationAnswer);
+      context.answerHistory = snapshot.answerHistory;
+      context.contract.rules += ' The authenticated context.continuation binds the previous question, when available, to the current owner reply; context.answerHistory retains earlier question and reply pairs. Evaluate whether each reply resolves its question; retain a resolved answer on later work and retries. Ask again only when scope changes, the answer conflicts, or evidence expires, and explain why. A reply grants no separate approval.';
     }
     if (productWorker) {
       const bridge = await loadProductBridge();
