@@ -28,6 +28,8 @@ For design-only work, add `future` before `refine`, then add `propose` after ref
 
 The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`, `integrate`, `review` and `apply review`. `integrate`, `review` and `apply review` normally start from approved PR, CI or feedback events, not labels with those names. Manual router dispatch is available for recovery. [Triggers](workflows/lighthouse-sdlc-router.yml), [admission](src/issue-actions.mjs) and [continuation](src/stage-transition.mjs) define the executable behavior.
 
+Product Change apply failures are reported on the issue and, while the approved PR head is current, on that PR. If publication may have started, the outcome remains unknown until the maintainer inspects its effects. A failure notice does not authorize a retry.
+
 ## Label catalog
 
 [capabilities.json](capabilities.json) contains the exact names, roles, colors and descriptions. A matching label name does not prove Lighthouse created it. Existing labels and custom descriptions are preserved by reconciliation.

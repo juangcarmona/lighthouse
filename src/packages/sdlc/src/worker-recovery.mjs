@@ -1,6 +1,6 @@
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
-import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction } from './handoff.mjs';
+import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
@@ -69,6 +69,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const notStarted = !agent || agent.conclusion === 'skipped';
   const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
   const observation = ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
+    : workerFor(dispatch.request) === 'apply-product-change' ? productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
     : agent?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(publish?.conclusion) ? 'publication-unknown'
     : ['failure', 'timed_out'].includes(prepare?.conclusion) && notStarted ? 'preparation-failure'
     : prepare?.conclusion === 'success' && activationFailed && notStarted && unpublished ? 'activation-failure'

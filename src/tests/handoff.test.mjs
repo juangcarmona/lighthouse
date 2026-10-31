@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState, visibleNextAction } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from '../packages/sdlc/src/handoff.mjs';
+
+test('product apply distinguishes local provider failure from uncertain remote publication', () => {
+  assert.equal(productApplyObservation({ prepare: 'failure' }), 'provider-preparation-failure');
+  assert.equal(productApplyObservation({ prepare: 'success', apply: 'failure' }), 'provider-failure');
+  assert.equal(productApplyObservation({ prepare: 'success', apply: 'cancelled' }), 'provider-cancelled');
+  assert.equal(productApplyObservation({ prepare: 'success', apply: 'success', publish: 'failure' }), 'publication-unknown');
+  assert.equal(productApplyObservation({ prepare: 'success', apply: 'success', publish: 'success' }), null);
+});
 
 test('handoffs expose the observed outcome, next action and trigger', () => {
   const text = handoff({ status: 'question', stage: 'implement', happened: 'No files changed.', action: 'Owner: may the assets be used? Reply here.', next: 'The answer will be checked before continuation.', details: 'run 42' });

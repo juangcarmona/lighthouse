@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -14,7 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
 import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -24,6 +24,36 @@ export async function publishRoutingHandoff(api, number, identity, body) {
   if (prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) return false;
   await api(`issues/${number}/comments`, 'POST', { body: `${body}\n\n${marker}` });
   return true;
+}
+
+export async function reportProductApplyStop(api, repo, owner, env, event, readArtifact = readActionsJson) {
+  const issue = Number(env.LIGHTHOUSE_ISSUE), commentId = Number(event.inputs?.['dispatch-request']);
+  const observation = productApplyObservation({ prepare: env.LIGHTHOUSE_PREPARE_RESULT, apply: env.LIGHTHOUSE_APPLY_RESULT, publish: env.LIGHTHOUSE_PUBLISH_RESULT });
+  if (!observation || !Number.isSafeInteger(issue) || issue < 1 || !Number.isSafeInteger(commentId) || commentId < 1) return;
+  const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+  const dispatch = await loadDispatch(api, repo, owner, issue, commentId, worker, readArtifact);
+  if (dispatch.request.worker !== 'apply-product-change' || String(dispatch.receipt.workerRunId) !== String(env.GITHUB_RUN_ID) || ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status)) return;
+  const claim = { commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest };
+  await checkDispatchClaim(api, repo, issue, claim, env.GITHUB_RUN_ID);
+  const outcome = observation === 'publication-unknown' ? undefined : observation.endsWith('cancelled') ? 'cancelled' : 'failed';
+  await finishDispatch(api, repo, issue, commentId, env.GITHUB_RUN_ID, outcome);
+  const reported = await publishObservedStop(api, { repository: repo, issue, stage: dispatch.request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: dispatch.request.sourceRevision, dispatch: claim, observation });
+  const approval = dispatch.request.productApproval;
+  if (reported && Number.isSafeInteger(approval?.pullRequest) && /^[a-f0-9]{40}$/.test(approval.head ?? '')) {
+    const pr = await api(`pulls/${approval.pullRequest}`, 'GET', undefined, true);
+    if (pr?.state === 'open' && pr.head?.sha === approval.head && pr.head.repo?.full_name === repo && pr.base?.repo?.full_name === repo) {
+      const current = await issueComments(api, issue);
+      const newer = current.some(comment => Number(comment.id) > commentId && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:') && readDispatchReceipt(comment, repo, issue));
+      const marker = `<!-- lighthouse-product-apply-stop:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT} -->`;
+      const prior = await issueComments(api, approval.pullRequest);
+      if (!newer && !prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) {
+        await checkDispatchClaim(api, repo, issue, claim, env.GITHUB_RUN_ID);
+        const status = observation === 'publication-unknown' ? 'unknown' : observation.endsWith('cancelled') ? 'cancelled' : 'failed';
+        await api(`issues/${approval.pullRequest}/comments`, 'POST', { body: renderHandoff({ status, stage: dispatch.request.stage, happened: observation === 'publication-unknown' ? 'The Product Change publication did not complete cleanly; its effects are not confirmed.' : 'The approved Product Change apply did not complete.', action: 'Workflow maintainer: inspect the execution and linked issue before any retry.', next: 'No retry is authorized by this notice.', link: `[Issue #${issue}](https://github.com/${repo}/issues/${issue})`, details: `[Execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})\n\n${marker}` }) });
+      }
+    }
+  }
+  return;
 }
 
 export function pendingReply(event, comments) {
@@ -100,6 +130,7 @@ async function main(command) {
   };
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  if (command === 'product-apply-cleanup') { await reportProductApplyStop(api, repo, owner, env, event); return; }
   if (command === 'dispatch-send') {
     const request = JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8'));
     await sendDispatch(api, repo, request, env.LIGHTHOUSE_DISPATCH_COMMENT);
