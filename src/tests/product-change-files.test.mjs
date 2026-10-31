@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProductChangeFiles, validateProductChangeOutput, productModelDirectory } from '../packages/sdlc/src/product-change.mjs';
+import { validateProductChangeFiles, validateProductChangeOutput, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
 import { bindValidatedProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -14,6 +15,25 @@ test('the product model path follows the adopter configuration without escaping 
     assert.equal(await productModelDirectory(root), 'custom/product/model');
     await writeFile(join(root, '.product/config.yaml'), 'product-root: ../outside\n');
     await assert.rejects(productModelDirectory(root), /unsafe/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('provider graph evidence reaches only the isolated product workspace', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-product-evidence-'));
+  try {
+    const node = { id: 'FR-ONE', type: 'functional-requirement', title: 'One', digest: `sha256:${'a'.repeat(64)}` };
+    const core = { version: '0.25.0', openRepository: async () => ({}), validateBaseline: async () => ({ diagnostics: [], graph: { nodes: [node] } }), inspectArtifact: (_graph, id) => ({ id }), analyzeImpact: (_graph, id) => ({ root: id, questioned: [] }), emitCitation: ({ id, digest }) => `pdac:cite id="${id}" digest="${digest}"` };
+    const evidence = join(root, 'input'), source = join(root, 'source');
+    await mkdir(source);
+    assert.equal((await prepareProductEvidence(root, evidence, core)).artifacts, 1);
+    await installProductEvidence(evidence, source);
+    const report = JSON.parse(await readFile(join(source, '.lighthouse-product-evidence/FR-ONE.json'), 'utf8'));
+    assert.equal(report.inspect.id, 'FR-ONE');
+    assert.match(report.citation, /pdac:cite id="FR-ONE"/);
+    await assert.rejects(installProductEvidence(evidence, source), /EEXIST/);
+    const other = join(root, 'other'); await mkdir(other);
+    await assert.rejects(installProductEvidence(evidence, other, 'b'.repeat(64)), /index is invalid/);
+    await assert.rejects(prepareProductEvidence(root, join(root, 'invalid'), { ...core, validateBaseline: async () => ({ diagnostics: [{ severity: 'error' }], graph: { nodes: [node] } }) }), /blocking diagnostic/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

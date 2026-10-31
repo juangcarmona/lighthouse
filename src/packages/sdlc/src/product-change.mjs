@@ -221,6 +221,38 @@ export async function loadProductBridge({ entry = process.env.PRODSHAPE_INTEGRAT
   return bridge;
 }
 
+export async function loadProductCore() {
+  const entry = require.resolve('@prodshape/core');
+  const metadata = JSON.parse(await readFile(join(dirname(dirname(entry)), 'package.json'), 'utf8'));
+  if (metadata.name !== '@prodshape/core' || metadata.version !== '0.25.0') throw Error('Pinned ProductShape core 0.25.0 is unavailable');
+  const core = await import(pathToFileURL(entry).href);
+  for (const name of ['openRepository', 'validateBaseline', 'inspectArtifact', 'analyzeImpact', 'emitCitation']) if (typeof core[name] !== 'function') throw Error(`Pinned ProductShape core does not provide ${name}`);
+  return { ...core, version: metadata.version };
+}
+
+export async function prepareProductEvidence(root, destination, core, { baselineDigest } = {}) {
+  if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed before evidence preparation');
+  const repository = await core.openRepository(resolve(root));
+  const baseline = await core.validateBaseline(repository);
+  const errors = baseline.diagnostics.filter(item => item.severity === 'error');
+  if (errors.length) throw Error(`ProductShape baseline has ${errors.length} blocking diagnostic(s); validate the adopter model before retrying`);
+  const nodes = baseline.graph.nodes;
+  if (!Array.isArray(nodes) || nodes.length > 512) throw Error('ProductShape evidence exceeds the artifact bound');
+  await mkdir(destination, { recursive: true });
+  const index = []; let bytes = 0;
+  for (const node of nodes) {
+    if (!/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) throw Error('ProductShape evidence has an unsafe artifact identity');
+    const report = { inspect: core.inspectArtifact(baseline.graph, node.id), impact: core.analyzeImpact(baseline.graph, node.id), citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }) };
+    const content = JSON.stringify(report, null, 2) + '\n'; bytes += Buffer.byteLength(content);
+    if (Buffer.byteLength(content) > 512 * 1024 || bytes > 16 * 1024 * 1024) throw Error('ProductShape evidence exceeds the byte bound');
+    await writeFile(join(destination, `${node.id}.json`), content, { flag: 'wx' });
+    index.push({ id: node.id, type: node.type, title: node.title, report: `${node.id}.json` });
+  }
+  if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed during evidence preparation');
+  await writeFile(join(destination, 'index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n', { flag: 'wx' });
+  return { artifacts: index.length, bytes };
+}
+
 export function productReviewBinding(input) {
   const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head'];
   if (!exact(input, fields)) throw Error('Product review binding has unsupported or missing fields');

@@ -73,6 +73,11 @@ steps:
     with:
       name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+  - name: Load ProductShape inspection evidence
+    uses: actions/download-artifact@v8
+    with:
+      name: lighthouse-product-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/product-evidence
 post-steps:
   - name: Validate the Lighthouse result
     run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs validate
@@ -131,7 +136,20 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/
+          path: |
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/admission.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/issue.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/context.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/reserved
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve ProductShape inspection evidence
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-product-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/product-evidence/
           if-no-files-found: error
           retention-days: 14
       - name: Release reservation if preparation failed

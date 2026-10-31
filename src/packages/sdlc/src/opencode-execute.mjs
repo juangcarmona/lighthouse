@@ -37,6 +37,22 @@ export async function snapshotSource(root, destination) {
     await mkdir(dirname(target), { recursive: true }); await copyFile(source, target); await chmod(target, stat.mode & 0o111 ? 0o555 : 0o444);
   }
 }
+export async function installProductEvidence(input, source, expectedBaseline) {
+  const stat = await lstat(input);
+  if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('ProductShape evidence directory is unavailable or unsafe');
+  const names = await readdir(input);
+  if (!names.includes('index.json') || names.length > 513 || names.some(name => name !== 'index.json' && !/^[A-Z0-9][A-Z0-9-]{0,159}\.json$/.test(name))) throw Error('ProductShape evidence inventory is invalid');
+  const index = JSON.parse(await readFile(join(input, 'index.json'), 'utf8'));
+  if (index.schemaVersion !== 1 || index.source !== '@prodshape/core' || index.version !== '0.25.0' || expectedBaseline && index.baselineDigest !== expectedBaseline || !Array.isArray(index.artifacts) || index.artifacts.length !== names.length - 1 || new Set(index.artifacts.map(item => item.report)).size !== index.artifacts.length || index.artifacts.some(item => !names.includes(item.report) || item.report !== `${item.id}.json`)) throw Error('ProductShape evidence index is invalid');
+  let bytes = 0;
+  const destination = join(source, '.lighthouse-product-evidence');
+  await mkdir(destination, { mode: 0o755 });
+  for (const name of names) {
+    const file = join(input, name), item = await lstat(file);
+    if (!item.isFile() || item.isSymbolicLink() || item.size > 512 * 1024 || (bytes += item.size) > 17 * 1024 * 1024) throw Error('ProductShape evidence is unsafe or exceeds bounds');
+    await copyFile(file, join(destination, name)); await chmod(join(destination, name), 0o444);
+  }
+}
 export function acquireEngineSlot(path, seconds = 240) {
   if (!isAbsolute(path ?? '')) throw Error('Operator engine lock must be an absolute path');
   const fd = openSync(path, 'a', 0o600);
@@ -90,6 +106,10 @@ async function main() {
     if (cancelled) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
+    if (request.worker === 'product-change') {
+      if (!/^[a-f0-9]{64}$/.test(request.baselineDigest ?? '')) throw Error('ProductShape evidence lacks its authenticated baseline');
+      await installProductEvidence(join(runDir, 'product-evidence'), source, request.baselineDigest);
+    }
     baseline = implementing ? await sourceFiles(source) : null;
     trackedSource = baseline ? new Map(baseline) : null;
     if (implementing) {
