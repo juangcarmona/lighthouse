@@ -40,5 +40,12 @@ globalThis.fetch = async (url, options) => {
     assert.match(calls[post].body.body, /Execution failed · implement/);
     assert.match(calls[post].body.body, /recorded answer remains available/);
     assert.doesNotMatch(calls[post].body.body, /Ready for your review|waiting-review/);
+    await rm(join(dir, 'reserved'));
+    await writeFile(join(dir, 'calls.jsonl'), '');
+    const preparation = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_PREPARE_FAILED: 'true', GH_TOKEN: 'fixture' } });
+    assert.equal(preparation.status, 0, preparation.stderr);
+    const prepCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    const prepComment = prepCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments');
+    assert.match(prepComment.body.body, /Preparation failed before the agent started/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
