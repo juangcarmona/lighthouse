@@ -1,5 +1,36 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.16.0
+
+### Minor Changes
+
+- 158fc35: <!-- markdownlint-disable MD041 --> Add opt-in bounded fast-forward and test-first hotfix workflows with independent read-only review, current evidence checks, explicit merge delegation and retained recovery context.
+- e2e4a79: # Product Change workflow
+
+  Add an opt-in ProductShape change workflow for issue ideas, explicit owner decisions and trusted provider apply.
+
+### Patch Changes
+
+- a2aaa8e: # Browser preview evidence
+
+  Allow up to 64 MiB of bounded browser evidence while retaining the 200-file limit and rejecting symbolic links at the collection root and inside it. Report the specific exceeded limit and observed count.
+
+- 106d118: # Unattended effect boundaries
+
+  Recheck authority immediately before candidate publication and merge, withhold dependent dispatch after cancellation, and preserve confirmed integration when post-merge verification or notifications are unavailable. Restore temporary workspace ownership through private build directories before cleanup.
+
+- 014e4ef: # Engine failure diagnostics
+
+  Retain bounded startup failure receipts and report the underlying engine error in unattended handoffs, including failures before a candidate exists.
+
+- 0d509af: # Unattended review and readiness
+
+  Separate planning review from candidate verification, preserve reviewer findings, and coordinate candidate readiness with existing CI reconciliation. Retain partial candidate changes in interrupted workflow artifacts.
+
+- 983c479: # Validation workspace branches
+
+  Prepare agent and independent-check snapshots on issue-scoped branches that satisfy the standard baseline naming policy, retaining isolated Git metadata without remotes or hooks.
+
 ## 0.15.2
 
 ### Patch Changes
