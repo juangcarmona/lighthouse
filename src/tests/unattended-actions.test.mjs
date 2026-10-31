@@ -50,7 +50,7 @@ async function fixture() {
       return comments;
     }
     if (path === 'issues/1/labels' && method === 'POST') { labels.push(...body.labels); return []; }
-    if (path === 'issues/1/labels/agent-working' && method === 'DELETE') { labels.splice(labels.indexOf('agent-working'), 1); return null; }
+    if (path.startsWith('issues/1/labels/') && method === 'DELETE') { const label = path.slice('issues/1/labels/'.length), index = labels.indexOf(label); if (index >= 0) labels.splice(index, 1); return null; }
     if (path.startsWith('pulls?state=open')) return [];
     if (path === 'git/commits/' + revision) return { tree: { sha: 'tree' } };
     if (path === 'git/blobs' || path === 'git/trees' || path === 'git/commits') return { sha: 'b'.repeat(40) };
@@ -143,6 +143,13 @@ test('a rejected plan reports the actual reviewer findings and does not start im
     const result = await runGithubUnattended(f);
     assert.equal(result.status, 'blocked'); assert.match(result.reason, /Root cause is not justified by source/);
     assert.equal(f.executions.length, 2); assert.ok(!f.writes.some(w => w.path === 'pulls'));
+    const startLabel = f.writes.findIndex(w => w.path === 'issues/1/labels' && w.body.labels.includes('agent-working'));
+    const startComment = f.writes.findIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Working ·'));
+    const endLabel = f.writes.findIndex(w => w.path === 'issues/1/labels/agent-working' && w.method === 'DELETE');
+    const endComment = f.writes.findIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Blocked ·'));
+    assert.ok(startLabel >= 0 && startLabel < startComment && endLabel > startComment && endLabel < endComment);
+    assert.match(f.comments.at(-1).body, /Root cause is not justified by source/);
+    assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
