@@ -189,7 +189,8 @@ export async function prepareProductChange(root, changeName, files, bridge) {
     openspec(temp, ['new', 'change', changeName, '--schema', 'product-change', '--json']);
     const rootPath = `openspec/changes/${changeName}`;
     if (!files) {
-      const schemaPin = `${(await readFile(join(temp, rootPath, '.openspec.yaml'), 'utf8')).trimEnd()}\nskip_specs: true\n`;
+      const schemaPin = await readFile(join(temp, rootPath, '.openspec.yaml'), 'utf8');
+      if ((schemaPin.match(/^skip_specs:\s*true\s*$/gm) ?? []).length !== 1) throw Error('OpenSpec scaffold must declare skip_specs exactly once');
       const instructions = {};
       for (const artifact of ['intent', 'delta']) {
         const value = JSON.parse(openspec(temp, ['instructions', artifact, '--change', changeName, '--json']));
