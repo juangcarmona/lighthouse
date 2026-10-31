@@ -53,6 +53,10 @@ export function checkReplyInputs(request, issue, answers, report, revision) {
   const priorAnswers = answers.filter(c => c.created_at < report.created_at);
   if (request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, priorAnswers)) throw Error('Pending stage inputs changed; refresh refinement before continuing');
 }
+export function continuationContext(continuation, answer) {
+  const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
+  return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
+}
 export function checkPublication(snapshot, issue, comments, revision) {
   if (issue.state !== 'open' || issue.pull_request || revision !== (snapshot.baseRevision ?? snapshot.sourceRevision)) throw Error('Issue closed or source revision changed');
   if (issue.labels.some(x => x.name === 'human-working') || !issue.labels.some(x => x.name === 'agent-working')) throw Error('Execution reservation revoked');
@@ -328,6 +332,10 @@ async function main(command) {
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
+    if (continuation) {
+      context.continuation = continuationContext(continuation, event.comment);
+      context.contract.rules += ' The authenticated context.continuation binds the previous question, when available, to the owner reply. Evaluate whether the reply resolves that question; retain a resolved answer on later work and retries. Ask again only when scope changes, the answer conflicts, or evidence expires, and explain why. The reply grants no separate approval.';
+    }
     if (productWorker) {
       const bridge = await loadProductBridge();
       let productReview = dispatch.request.productReview;
@@ -466,6 +474,8 @@ async function main(command) {
         } });
         await writeFile(join(dir, 'product-review.json'), JSON.stringify({ pullRequest: published.pullRequest.number, head: published.binding.head, reviewKey: published.binding.key, changeName: product.changeName, changeId: product.changeId, proposalDigest: product.proposalDigest, baselineDigest: product.baselineDigest }));
         proposalLink = `\n\n[Product decision on PR #${published.pullRequest.number}](${published.pullRequest.html_url}). The explicit action authorizes trusted product apply; implementation and merge remain separate.`;
+        const productNotice = `<!-- lighthouse-product-review:${snapshot.runId} -->`;
+        reviewNotice = { pr: published.pullRequest, marker: productNotice, body: `${published.body}\n\n${productNotice}` };
         reviewTarget = true;
         await summary(`### Product Change review\n[PR #${published.pullRequest.number}](${published.pullRequest.html_url})\n\nProvider overlay and OpenSpec validation passed. Waiting for the explicit owner product decision.`);
       } else if (product.outcome === 'aligned') {
