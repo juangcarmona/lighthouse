@@ -1,7 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProductChangeFiles, validateProductChangeOutput } from '../packages/sdlc/src/product-change.mjs';
+import { validateProductChangeFiles, validateProductChangeOutput, productModelDirectory } from '../packages/sdlc/src/product-change.mjs';
 import { bindValidatedProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+test('the product model path follows the adopter configuration without escaping the workspace', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-product-model-path-'));
+  try {
+    await mkdir(join(root, '.product'));
+    await writeFile(join(root, '.product/config.yaml'), 'product-root: custom/product\n');
+    assert.equal(await productModelDirectory(root), 'custom/product/model');
+    await writeFile(join(root, '.product/config.yaml'), 'product-root: ../outside\n');
+    await assert.rejects(productModelDirectory(root), /unsafe/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test('accepts the required schema pin while rejecting hidden and escaping paths', () => {
   const root = 'openspec/changes/example';
