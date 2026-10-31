@@ -567,7 +567,12 @@ async function main(command) {
     let published = false;
     try { await readFile(join(dir, 'published')); published = true; }
     catch {
-      if (snapshot.proposalReview) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal update did not complete. Your feedback is retained. [See execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
+      if (snapshot.proposalReview) {
+        const notice = `<!-- lighthouse-proposal-incomplete:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT} -->`;
+        const prior = await api(`issues/${snapshot.proposalReview.number}/comments?per_page=100`);
+        if (prior.length >= 100) throw Error('Proposal discussion exceeds bounded publication');
+        if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: 'unknown', stage: snapshot.stage, happened: 'The proposal update did not complete. Your feedback remains recorded.', action: 'The workflow maintainer must inspect the execution and the PR before retrying.', next: 'A further update requires an authorized continuation after the actual effects are reconciled.', link: `[Review PR](${snapshot.proposalReview.url})`, details: `[Execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})\n\n${notice}` }) });
+      }
       if (['failure', 'cancelled'].includes(env.LIGHTHOUSE_AGENT_RESULT)) await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT, answerRetained: !!snapshot.replyTo });
       else if (env.LIGHTHOUSE_AGENT_RESULT === 'success' && env.LIGHTHOUSE_PUBLISH_STATUS === 'failure') await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: 'publication-unknown', answerRetained: !!snapshot.replyTo });
       await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; the pending decision remains unfulfilled.');

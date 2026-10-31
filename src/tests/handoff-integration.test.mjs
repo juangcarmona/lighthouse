@@ -27,6 +27,7 @@ globalThis.fetch = async (url, options) => {
   else if (path === 'issues/18') value = { state: 'open', labels: [{ name: 'agent-working' }] };
   else if (path.startsWith('contents/.lighthouse/reconciliation/labels.json?')) value = { encoding: 'base64', content: record };
   else if (path === 'labels/execution-failed') value = { name: 'execution-failed' };
+  else if (path === 'issues/19/comments?per_page=100') value = [];
   else if (path === 'issues/18/comments' && method === 'POST') { value = { id: 32, user: { login: 'github-actions[bot]', type: 'Bot' }, body: JSON.parse(options.body).body }; comments.push(value); }
   else value = {};
   return { ok: true, status: 200, json: async () => value };
@@ -55,5 +56,14 @@ globalThis.fetch = async (url, options) => {
     const uncertainComment = uncertainCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments');
     assert.match(uncertainComment.body.body, /effects and final result are not confirmed/);
     assert.equal(uncertainCalls.some(c => c.method === 'POST' && c.path === 'issues/18/labels'), false);
+    await writeFile(join(dir, 'request.json'), JSON.stringify({ stage: 'propose', sourceRevision: revision, dispatch: { commentId: 30, requestId: id, digest: hash }, proposalReview: { number: 19, url: 'https://github.com/owner/repo/pull/19' } }));
+    await writeFile(join(dir, 'calls.jsonl'), '');
+    const proposal = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_AGENT_RESULT: 'success', LIGHTHOUSE_PUBLISH_STATUS: 'failure', GH_TOKEN: 'fixture' } });
+    assert.equal(proposal.status, 0, proposal.stderr);
+    const proposalCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    const proposalNotice = proposalCalls.find(c => c.method === 'POST' && c.path === 'issues/19/comments');
+    assert.match(proposalNotice.body.body, /Execution status unknown · propose/);
+    assert.match(proposalNotice.body.body, /feedback remains recorded/);
+    assert.match(proposalNotice.body.body, /Your next action:/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
