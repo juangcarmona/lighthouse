@@ -66,7 +66,7 @@ steps:
     with:
       repository: juangcarmona/lighthouse
       ref: __LIGHTHOUSE_REF__
-      path: tools
+      path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
     uses: actions/download-artifact@v8
@@ -75,7 +75,7 @@ steps:
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
 post-steps:
   - name: Validate the Lighthouse result
-    run: node tools/src/packages/sdlc/src/issue-actions.mjs validate
+    run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs validate
   - name: Preserve the result and runtime receipt
     if: always()
     uses: actions/upload-artifact@v7

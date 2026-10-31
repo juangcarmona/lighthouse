@@ -6,6 +6,9 @@ curl --fail --silent --show-error --location https://github.com/rhysd/actionlint
 printf '%s  %s\n' 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 "$validation_dir/actionlint.tar.gz" | sha256sum --check
 tar -xzf "$validation_dir/actionlint.tar.gz" -C "$validation_dir" actionlint
 git init -q "$validation_dir/consumer"
+mkdir -p "$validation_dir/consumer/tools"
+printf 'adopter tool\n' > "$validation_dir/consumer/tools/adopter.txt"
+git -C "$validation_dir/consumer" add tools/adopter.txt
 export XDG_DATA_HOME="$validation_dir/xdg"
 gh extension install github/gh-aw --pin v0.93.2
 gh aw --version
@@ -51,9 +54,19 @@ done
 git -C "$validation_dir/consumer" add .
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --apply
 git -C "$validation_dir/consumer" diff --exit-code
-# Unattended is a separate opt-in; preserve the adopter-owned policy on reinstall.
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended.yml"
-node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --apply
+# Every installed worker uses the same reserved checkout on reinstall and upgrade.
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply --replace-reviewed
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply
+if grep -R -E 'path: tools$|tools/src/packages/sdlc/' "$validation_dir/consumer/.github/workflows"; then
+  echo 'Worker checkout still collides with adopter tools' >&2
+  exit 1
+fi
+grep -q 'path: .lighthouse-harness' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-triage.lock.yml"
+grep -q '.lighthouse-harness/src/packages/sdlc/src/opencode-execute.mjs' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-triage.lock.yml"
+grep -qx 'adopter tool' "$validation_dir/consumer/tools/adopter.txt"
+# Unattended is a separate opt-in; preserve the adopter-owned policy on reinstall.
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --with-product-change --apply
 node --input-type=module - "$validation_dir/consumer/.lighthouse/unattended.json" <<'JS'
 import { readFileSync, writeFileSync } from 'node:fs';
 const path = process.argv[2], policy = JSON.parse(readFileSync(path));
@@ -61,7 +74,7 @@ if (policy.enabled !== false || policy.merge !== false) throw Error('Installatio
 policy.timeoutSeconds = 120;
 writeFileSync(path, JSON.stringify(policy));
 JS
-node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --apply
+node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unattended --with-maintenance --with-product-change --apply
 node -e 'if (JSON.parse(require("fs").readFileSync(process.argv[1])).timeoutSeconds !== 120) process.exit(1)' "$validation_dir/consumer/.lighthouse/unattended.json"
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
