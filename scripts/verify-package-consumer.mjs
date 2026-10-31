@@ -256,7 +256,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
       await access(join(temp, path));
     }
     const adopted = JSON.parse(await readFile(join(temp, 'lighthouse.json'), 'utf8'));
-    if (adopted.integrations.productShape !== '0.23.0' || adopted.integrations.arcShape !== '0.1.6') {
+    if (adopted.integrations.productShape !== '0.23.0' || adopted.integrations.arcShape !== '0.4.0') {
       console.error('Expected the authority versions to be recorded after application.');
       process.exit(1);
     }

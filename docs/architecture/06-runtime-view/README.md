@@ -94,7 +94,7 @@ sequenceDiagram
     accTitle: Current package and public-site verification
     participant Maintainer
     participant NPM as npm scripts
-    participant Tests as Node, link and package checks
+    participant Tests as Node, links, packages
     participant Authorities as ProductShape and ArcShape
     participant Site as Static-site verifier
     Maintainer->>NPM: npm run verify
