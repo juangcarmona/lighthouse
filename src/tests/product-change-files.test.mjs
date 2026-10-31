@@ -98,7 +98,7 @@ test('the host supplies OpenSpec product-only metadata before validating pending
 });
 
 test('a waiting product decision binds the authenticated parent checkpoint to review', () => {
-  const parent = { issue: 18, stage: 'refine', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Authorized issue' }, sourceRevision: 'a'.repeat(40), taskDigest: 'b'.repeat(64) };
+  const parent = { issue: 18, stage: 'refine', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Authorized issue' }, sourceRevision: 'a'.repeat(40), baseRevision: 'a'.repeat(40), taskDigest: 'b'.repeat(64), autoImplement: false };
   const identity = { repository: 'owner/repo', issue: 18, parentRunId: '200', authorizationDigest: 'c'.repeat(64), policyDigest: 'd'.repeat(64), workflowRevision: 'e'.repeat(40), head: 'f'.repeat(40) };
   const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity, requestDigest: '1'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '2'.repeat(64), baselineDigest: '3'.repeat(64), state: 'waiting-product-decision', effectIds: [], parent };
   assert.deepEqual(validateProductCheckpoint(checkpoint), []);
@@ -106,4 +106,18 @@ test('a waiting product decision binds the authenticated parent checkpoint to re
   const binding = { repository: identity.repository, issue: 18, pullRequest: 7, changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: checkpoint.proposalDigest, baselineDigest: checkpoint.baselineDigest, policyDigest: identity.policyDigest, authorityDigest: identity.authorizationDigest, head: identity.head };
   assert.notEqual(productReviewBinding({ ...binding, parentDigest: '4'.repeat(64) }).key, productReviewBinding({ ...binding, parentDigest: '5'.repeat(64) }).key);
   assert.throws(() => productReviewBinding({ ...binding, parentDigest: 'invalid' }));
+});
+
+test('a product handoff refuses to update an existing parent PR whose head changed', async () => {
+  const { publishProductChangePullRequest } = await import('../packages/sdlc/src/product-change-actions.mjs');
+  const root = 'openspec/changes/example', repository = 'owner/repo';
+  const files = [{ path: `${root}/.openspec.yaml`, content: 'schema: product-change\n' }, { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' }, { path: `${root}/product-change/proposed/example.md`, content: 'Proposed artifact' }];
+  const branch = 'lighthouse/implement-18-aaaaaaaaaaaa', parentHead = '1'.repeat(40), changedHead = '2'.repeat(40);
+  const pr = { number: 7, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: changedHead, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` };
+  const snapshot = { issue: 18, sourceRevision: '3'.repeat(40), defaultBranch: 'main', runId: '4'.repeat(64), productEntry: 'parent-handoff', productParent: { pullRequest: { number: 7, head: parentHead, branch } } };
+  const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest };
+  const calls = [];
+  const api = async (path, method = 'GET') => { calls.push({ path, method }); if (path === 'pulls?state=open&per_page=100') return [pr]; if (path === 'pulls/7') return pr; if (path === `git/commits/${changedHead}`) return { tree: { sha: 'tree' } }; throw Error(`Unexpected call ${path}`); };
+  await assert.rejects(publishProductChangePullRequest(api, repository, snapshot, candidate, { validation: { provider: 'passed', openSpec: 'passed' }, runUrl: 'https://example.test/run', beforeWrite: async () => {} }), /Parent issue PR changed/);
+  assert.equal(calls.some(call => call.method !== 'GET'), false);
 });

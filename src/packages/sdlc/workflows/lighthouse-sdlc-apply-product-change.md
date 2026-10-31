@@ -134,13 +134,20 @@ jobs:
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/affected-citations.json
           if-no-files-found: error
           retention-days: 30
+      - name: Preserve the bounded apply proof
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-product-apply-proof-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/apply-proof.json
+          if-no-files-found: error
+          retention-days: 30
   publish:
     name: Recheck and publish provider output
     needs: [prepare, apply]
     if: always() && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -169,6 +176,12 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: lighthouse-product-apply-result-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Load the bounded apply proof
+        if: needs.apply.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-product-apply-proof-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Stop when the provider apply did not complete
         if: needs.apply.result != 'success'

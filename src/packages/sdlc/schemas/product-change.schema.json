@@ -50,14 +50,19 @@
         "state": { "enum": ["preparing", "waiting-product-decision", "approved", "applying", "applied", "blocked"] },
         "parent": {
           "type": "object", "additionalProperties": false,
-          "required": ["issue", "stage", "predecessor", "gap", "sourceRevision", "taskDigest"],
+          "required": ["issue", "stage", "predecessor", "gap", "sourceRevision", "baseRevision", "taskDigest", "autoImplement"],
           "properties": {
             "issue": { "type": "integer", "minimum": 1 },
             "stage": { "enum": ["triage", "refine", "propose", "implement"] },
             "predecessor": { "type": "object", "additionalProperties": false, "required": ["runId", "attempt"], "properties": { "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" }, "attempt": { "type": "integer", "minimum": 1 } } },
             "gap": { "type": "object", "additionalProperties": false, "required": ["summary", "scope"], "properties": { "summary": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" }, "scope": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S" } } },
             "sourceRevision": { "$ref": "#/$defs/revision" },
-            "taskDigest": { "$ref": "#/$defs/digest" }
+            "baseRevision": { "$ref": "#/$defs/revision" },
+            "taskDigest": { "$ref": "#/$defs/digest" },
+            "autoImplement": { "type": "boolean" },
+            "review": { "type": "object", "additionalProperties": false, "required": ["number", "path", "feedbackDigest", "threadDigest"], "properties": { "number": { "type": "integer", "minimum": 1 }, "path": { "type": "string", "maxLength": 256 }, "feedbackDigest": { "$ref": "#/$defs/digest" }, "threadDigest": { "$ref": "#/$defs/digest" } } },
+            "pullRequest": { "type": "object", "additionalProperties": false, "required": ["number", "head", "branch"], "properties": { "number": { "type": "integer", "minimum": 1 }, "head": { "$ref": "#/$defs/revision" }, "branch": { "type": "string", "pattern": "^lighthouse/(?:implement|propose)-[1-9][0-9]*-[a-f0-9]{12}$" } } },
+            "feedback": { "type": "object", "additionalProperties": false, "required": ["runId", "attempt", "taskDigest", "replyTo", "commentId"], "properties": { "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" }, "attempt": { "type": "integer", "minimum": 1 }, "taskDigest": { "$ref": "#/$defs/digest" }, "replyTo": { "$ref": "#/$defs/digest" }, "commentId": { "type": "integer", "minimum": 1 } } }
           }
         },
         "pendingQuestion": { "type": "string", "maxLength": 4000 },

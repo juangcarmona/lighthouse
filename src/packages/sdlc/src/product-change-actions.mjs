@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { validateProductChangeFiles, validateProductCheckpoint, validateProductWorkspace, loadProductBridge, productReviewBinding, parseProductDecision, verifyProductDecision, authorizeProductApply, createProductApplyReceipt, productModelDigest, productModelDirectory } from './product-change.mjs';
-import { checkImplementationPullRequest } from './proposal-review.mjs';
+import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
 
 const marker = '<!-- lighthouse-product-change:';
@@ -115,14 +115,15 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   if (files.changeId !== candidate.changeId || files.digest !== candidate.proposalDigest || validation.provider !== 'passed' || validation.openSpec !== 'passed') throw Error('Product Change candidate validation evidence is stale');
   const pulls = await api('pulls?state=open&per_page=100');
   if (pulls.length >= 100) throw Error('Open pull request list exceeds bounds');
-  const issuePulls = pulls.filter(pr => pr.head?.ref?.startsWith(`lighthouse/implement-${snapshot.issue}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${snapshot.issue}-`));
+  const issuePulls = pulls.filter(pr => pr.head?.ref?.startsWith(`lighthouse/implement-${snapshot.issue}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${snapshot.issue}-`) || pr.head?.ref?.startsWith(`lighthouse/propose-${snapshot.issue}-`));
   if (issuePulls.length > 1) throw Error('Issue has multiple eligible delivery PRs; owner review is required');
   let pr = issuePulls[0] ? await api(`pulls/${issuePulls[0].number}`) : null;
   let base, branch, parent;
   if (pr) {
-    if (pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`) && pr.body?.includes('<!-- lighthouse-product-change:')) {
+    if ((pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`) || pr.head.ref.startsWith(`lighthouse/propose-${snapshot.issue}-`)) && (pr.body?.includes('<!-- lighthouse-product-change:') || pr.body?.includes('<!-- lighthouse-product-change-review:'))) {
       if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head?.repo?.full_name !== repository) throw Error('Existing Product Change PR is not a current bot-owned PR');
     } else if (pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`)) checkImplementationPullRequest(pr, repository);
+    else if (pr.head.ref.startsWith(`lighthouse/propose-${snapshot.issue}-`)) checkProposal(pr, repository);
     else if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || !pr.body?.includes('<!-- lighthouse-product-change:')) throw Error('Existing issue PR is not an eligible Lighthouse Product Change draft');
     if (pr.base?.ref !== snapshot.defaultBranch || pr.head?.repo?.full_name !== repository) throw Error('Existing issue PR targets an unexpected repository or base');
     if (!pr.draft) throw Error('Product Change cannot modify a PR already submitted for review');
@@ -133,6 +134,7 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
     parent = snapshot.sourceRevision;
     base = await api(`git/commits/${parent}`);
   }
+  if (snapshot.productParent?.pullRequest && (!pr || pr.number !== snapshot.productParent.pullRequest.number || snapshot.productEntry !== 'feedback' && pr.head.sha !== snapshot.productParent.pullRequest.head || pr.head.ref !== snapshot.productParent.pullRequest.branch)) throw Error('Parent issue PR changed before Product Change publication');
   const tree = await api('git/trees', 'POST', { base_tree: base.tree.sha, tree: candidate.files.map(file => ({ path: file.path, mode: '100644', type: 'blob', content: file.content })) });
   const commit = await api('git/commits', 'POST', { message: `docs: prepare product change for #${snapshot.issue}`, tree: tree.sha, parents: [parent] });
   await beforeWrite();
@@ -238,8 +240,8 @@ export function validateProductApplyFiles(files, changeName, modelRoot = 'docs/p
 
 const safeRelative = path => !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(part => !part || part === '.' || part === '..');
 
-export function productApplyHandoff({ stage, receipt, pullRequest, url, affectedCitations }) {
-  return handoff({ status: 'completed', stage, happened: `Product Change ${receipt.changeId} was applied to the provider-validated model on PR #${pullRequest}.\n\nAffected citations:\n${(affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}`, action: 'Owner: review the applied model and affected citations on the linked PR.', next: 'Merge and any further delivery require their own authorization.', link: `[Review PR #${pullRequest}](${url})`, details: `<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->` });
+export function productApplyHandoff({ stage, receipt, pullRequest, url, affectedCitations, parent }) {
+  return handoff({ status: 'completed', stage, happened: `Product Change ${receipt.changeId} was applied to the provider-validated model on PR #${pullRequest}.\n\nAffected citations:\n${(affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}`, action: 'Owner: review the applied model and affected citations on the linked PR.', next: parent ? 'The workflow will recheck the existing parent authorization before requesting its continuation. Merge remains separate.' : 'Merge and any further delivery require their own authorization.', link: `[Review PR #${pullRequest}](${url})`, details: `<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->` });
 }
 
 export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite) {
@@ -263,7 +265,8 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   validateProductCheckpoint(checkpoint);
   prBody = prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
   await api(`pulls/${fresh.pullRequest}`, 'PATCH', { body: prBody });
-  const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations });
+  const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations, parent: checkpoint.parent });
+  if (checkpoint.parent && (await api(`issues/${fresh.issue}`)).labels?.some(label => label.name === 'waiting-review')) await api(`issues/${fresh.issue}/labels/waiting-review`, 'DELETE');
   const comments = await api(`issues/${fresh.issue}/comments?per_page=100`);
   const prior = comments.find(comment => comment.user?.login === 'github-actions[bot]' && [...(comment.body ?? '').matchAll(/<!-- lighthouse-product-apply:(\{[^\n]*\}) -->/g)].some(match => JSON.parse(match[1]).intentId === receipt.intentId));
   if (!prior) await api(`issues/${fresh.issue}/comments`, 'POST', { body: issueBody });
@@ -319,14 +322,9 @@ export async function loadProductApproval(api, { eventName, event, owner, reposi
   const issue = await api(`issues/${bound.issue}`);
   if (issue.state !== 'open' || issue.labels?.some(label => ['future', 'human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
   if (checkpoint.parent) {
-    const run = await api(`actions/runs/${checkpoint.parent.predecessor.runId}`);
-    const observed = await (await import('./stage-transition.mjs')).productGapAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } });
     const comments = await (await import('./stage-dispatch.mjs')).issueComments(api, bound.issue);
-    const ownerAnswers = comments.filter(c => c.user?.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
-    const intent = digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers.map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
-    if (JSON.stringify(observed) !== JSON.stringify(checkpoint.parent) || defaultHead !== checkpoint.parent.sourceRevision || intent !== checkpoint.parent.taskDigest) throw Error('Product prerequisite parent or owner authorization changed before the product decision');
+    await (await import('./stage-transition.mjs')).verifyProductParent(api, repository, owner, checkpoint.parent, issue, comments, defaultHead);
   }
-
   const feedback = decision.action === 'approve' ? null : { action: decision.action, changeName: decision.changeName, reviewKey: decision.reviewKey, text: decision.detail, sourceCommentId: decisionId, source: 'pull-request' };
   return { ...(decision.action === 'approve' ? { approval: verified } : { feedback }), binding: bound, checkpoint, issue: bound.issue, pullRequest: pr.number, head: pr.head.sha, changeName: bound.changeName, candidate, modelRoot: accepted.modelRoot };
 }

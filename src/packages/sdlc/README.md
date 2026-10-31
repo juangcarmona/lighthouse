@@ -28,6 +28,8 @@ For design-only work, add `future` before `refine`, then add `propose` after ref
 
 The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`, `integrate`, `review` and `apply review`. `integrate`, `review` and `apply review` normally start from approved PR, CI or feedback events, not labels with those names. Manual router dispatch is available for recovery. [Triggers](workflows/lighthouse-sdlc-router.yml), [admission](src/issue-actions.mjs) and [continuation](src/stage-transition.mjs) define the executable behavior.
 
+When an authorized issue stage identifies a missing product prerequisite, the optional Product Change workflow uses the recorded issue scope and retains the parent checkpoint. A product question waits for an owner answer; only a separate approval of the current proposal authorizes provider apply. After apply, the host rechecks the parent, issue, baseline and PR before requesting the original stage on the same branch. A design-only request does not authorize implementation.
+
 Product Change apply failures are reported on the issue and, while the approved PR head is current, on that PR. If publication may have started, the outcome remains unknown until the maintainer inspects its effects. A failure notice does not authorize a retry.
 
 Product preparation checks out the adopter's current source separately from the harness. The pinned ProductShape core supplies read-only inspection, impact and citation reports for the accepted model; the host validates candidate files in a temporary workspace before publishing them. The adopter does not need a Node project or preinstalled dependencies for this worker.

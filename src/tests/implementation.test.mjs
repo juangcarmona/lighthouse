@@ -149,7 +149,7 @@ test('an immutable recovery seed cannot overwrite newer source or expand its wri
 
 test('review feedback updates the existing implementation branch without a force push or second PR', async () => {
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); return path === 'pulls/34' && method !== 'PATCH' ? { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` } : { sha: 'created', tree: { sha: 'tree' } }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); return path === 'pulls/34' && method !== 'PATCH' ? { head: { sha: request.sourceRevision }, body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` } : { sha: 'created', tree: { sha: 'tree' } }; };
   const reviewed = { ...request, implementationReview: { number: 34, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
   const pr = await createImplementationPullRequest(api, reviewed, [change], 'Updated', '', false, async () => calls.push({ path: 'recheck' }));
   assert.equal(pr.number, 34);
@@ -158,4 +158,35 @@ test('review feedback updates the existing implementation branch without a force
   assert.doesNotMatch(calls.at(-1).body.body, /Closes #18/);
   assert.equal(calls.some(c => c.path === 'pulls'), false);
   assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.findIndex(c => c.path === 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa'));
+});
+
+test('an approved product prerequisite resumes on its existing branch and retains review evidence', async () => {
+  const repository = 'owner/repo', head = request.sourceRevision, after = 'c'.repeat(40), intent = 'd'.repeat(64);
+  const parent = { issue: 18, stage: 'implement', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Issue scope' }, sourceRevision: 'e'.repeat(40), baseRevision: 'e'.repeat(40), taskDigest: 'f'.repeat(64), autoImplement: false };
+  const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity: { repository, issue: 18, parentRunId: '200', authorizationDigest: '1'.repeat(64), policyDigest: '2'.repeat(64), workflowRevision: '3'.repeat(40), head }, requestDigest: '4'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '5'.repeat(64), baselineDigest: '6'.repeat(64), state: 'applied', effectIds: [`apply:${intent}:${head}`], parent };
+  const branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+  const resume = { issue: 18, parent, pullRequest: 34, head, branch, receiptIntent: intent };
+  const productPr = { number: 34, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, html_url: 'https://example.test/pr/34', body: `Product decision retained.\n<!-- lighthouse-product-change:{"changeId":"CHG-EXAMPLE"} -->\n<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->` };
+  const calls = [];
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  const result = await createImplementationPullRequest(api, { ...request, repository, productResume: resume }, [change], 'Implemented the bounded issue.', 'https://example.test/run', true, async () => {});
+  assert.equal(result.number, 34);
+  assert.deepEqual(calls.find(call => call.path === `git/refs/heads/${branch}`).body, { sha: after, force: false });
+  assert.equal(calls.some(call => call.path === 'pulls' || call.path === 'git/refs'), false);
+  const body = calls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
+  assert.match(body, /Product decision retained/);
+  const { checkImplementationPullRequest } = await import('../packages/sdlc/src/proposal-review.mjs');
+  assert.equal(checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: after }, body }, repository).issue, 18);
+  assert.throws(() => checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body }, repository));
+  const staleWithLegacyMarker = `${body}\n<!-- lighthouse-implementation:${'a'.repeat(64)} -->`;
+  assert.throws(() => checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body: staleWithLegacyMarker }, repository));
+  const correctedHead = '7'.repeat(40), reviewCalls = [];
+  const reviewedPr = { ...productPr, head: { ...productPr.head, sha: after }, body };
+  const reviewApi = async (path, method, payload) => { reviewCalls.push({ path, method, body: payload }); if (path === 'pulls/34' && method !== 'PATCH') return reviewedPr; if (path === 'git/commits' && method === 'POST') return { sha: correctedHead }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  await createImplementationPullRequest(reviewApi, { ...request, repository, sourceRevision: after, implementationReview: { number: 34, branch, url: productPr.html_url } }, [change], 'Reviewed correction.', 'https://example.test/review-run', true, async () => {});
+  const correctedBody = reviewCalls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
+  assert.equal(checkImplementationPullRequest({ ...reviewedPr, head: { ...reviewedPr.head, sha: correctedHead }, body: correctedBody }, repository).issue, 18);
+  assert.match(correctedBody, /Product decision retained/);
+  productPr.head.sha = '9'.repeat(40);
+  await assert.rejects(createImplementationPullRequest(api, { ...request, repository, productResume: resume }, [change], 'Implemented.', '', true, async () => {}), /changed/);
 });

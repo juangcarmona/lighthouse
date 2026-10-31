@@ -5,6 +5,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
+import { checkProductResumePullRequest, productImplementationProof } from './product-change.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
@@ -146,12 +147,25 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
   const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
+  if (snapshot.productResume) {
+    const resume = snapshot.productResume;
+    const current = await api(`pulls/${resume.pullRequest}`);
+    checkProductResumePullRequest(current, snapshot.repository, resume);
+    await api(`git/refs/heads/${resume.branch}`, 'PATCH', { sha: created.sha, force: false });
+    const proof = { schemaVersion: 1, issue: snapshot.issue, runId: snapshot.runId, applyIntent: resume.receiptIntent, head: created.sha };
+    const prior = (current.body ?? '').replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/g, '');
+    await api(`pulls/${resume.pullRequest}`, 'PATCH', { body: `${prior}\n\n${body.trim()}\n\n[Implementation evidence](${runUrl}).\n\n<!-- lighthouse-product-implementation:${JSON.stringify(proof)} -->` });
+    return { number: resume.pullRequest, html_url: current.html_url, head: { sha: created.sha, ref: resume.branch } };
+  }
   if (snapshot.implementationReview) {
-    await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
     const current = await api(`pulls/${snapshot.implementationReview.number}`);
+    if (current.head?.sha !== snapshot.sourceRevision) throw Error('Implementation PR changed before update');
+    await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
+    const productProof = productImplementationProof(current);
     const marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
-    if (!marker) throw Error('Implementation PR marker missing during update');
-    await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: description(marker) });
+    if (!marker && !productProof) throw Error('Implementation PR marker missing during update');
+    const revised = productProof ? `${current.body.replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/g, '')}\n\n${body.trim()}\n\n[Implementation evidence](${runUrl}).\n\n<!-- lighthouse-product-implementation:${JSON.stringify({ ...productProof, runId: snapshot.runId, head: created.sha })} -->` : description(marker);
+    await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: revised });
     return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
   }
   const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;

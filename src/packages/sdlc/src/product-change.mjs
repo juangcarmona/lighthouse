@@ -122,7 +122,19 @@ export function validateProductCheckpoint(value) {
   if (!Array.isArray(value.effectIds) || value.effectIds.length > 32 || value.effectIds.some(item => typeof item !== 'string' || !item.trim() || item.length > 256) || new Set(value.effectIds).size !== value.effectIds.length) errors.push('Product Change checkpoint effectIds are invalid');
   if (value.parent !== undefined) {
     const parent = value.parent;
-    if (!exact(parent, ['issue', 'stage', 'predecessor', 'gap', 'sourceRevision', 'taskDigest']) || parent.issue !== value.identity?.issue || !['triage', 'refine', 'propose', 'implement'].includes(parent.stage) || !exact(parent.predecessor, ['runId', 'attempt']) || !/^[1-9][0-9]*$/.test(parent.predecessor.runId ?? '') || !Number.isSafeInteger(parent.predecessor.attempt) || parent.predecessor.attempt < 1 || !exact(parent.gap, ['summary', 'scope']) || !['summary', 'scope'].every(key => typeof parent.gap[key] === 'string' && parent.gap[key].trim() && parent.gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(parent.gap[key])) || !revisionPattern.test(parent.sourceRevision ?? '') || !hashPattern.test(parent.taskDigest ?? '')) errors.push('Product Change parent checkpoint is invalid');
+    if (!exact(parent, ['issue', 'stage', 'predecessor', 'gap', 'sourceRevision', 'baseRevision', 'taskDigest', 'autoImplement', ...(['feedback', 'pullRequest', 'review'].filter(key => Object.hasOwn(parent ?? {}, key)))]) || parent.issue !== value.identity?.issue || !['triage', 'refine', 'propose', 'implement'].includes(parent.stage) || !exact(parent.predecessor, ['runId', 'attempt']) || !/^[1-9][0-9]*$/.test(parent.predecessor.runId ?? '') || !Number.isSafeInteger(parent.predecessor.attempt) || parent.predecessor.attempt < 1 || !exact(parent.gap, ['summary', 'scope']) || !['summary', 'scope'].every(key => typeof parent.gap[key] === 'string' && parent.gap[key].trim() && parent.gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(parent.gap[key])) || !revisionPattern.test(parent.sourceRevision ?? '') || !revisionPattern.test(parent.baseRevision ?? '') || !hashPattern.test(parent.taskDigest ?? '') || typeof parent.autoImplement !== 'boolean') errors.push('Product Change parent checkpoint is invalid');
+  }
+  if (value.parent?.pullRequest !== undefined) {
+    const pr = value.parent.pullRequest;
+    if (!exact(pr, ['number', 'head', 'branch']) || !Number.isSafeInteger(pr.number) || pr.number < 1 || !revisionPattern.test(pr.head ?? '') || typeof pr.branch !== 'string' || !new RegExp(`^lighthouse/(?:implement|propose)-${value.identity?.issue}-[a-f0-9]{12}$`).test(pr.branch)) errors.push('Product Change parent PR evidence is invalid');
+  }
+  if (value.parent?.review !== undefined) {
+    const review = value.parent.review;
+    if (!exact(review, ['number', 'path', 'feedbackDigest', 'threadDigest']) || !Number.isSafeInteger(review.number) || review.number < 1 || review.number !== value.parent.pullRequest?.number || typeof review.path !== 'string' || !/^(?:issues\/comments|pulls\/comments|pulls\/[1-9][0-9]*\/reviews)\/[1-9][0-9]*$/.test(review.path) || !hashPattern.test(review.feedbackDigest ?? '') || !hashPattern.test(review.threadDigest ?? '')) errors.push('Product Change parent review evidence is invalid');
+  }
+  if (value.parent?.feedback !== undefined) {
+    const feedback = value.parent.feedback;
+    if (!exact(feedback, ['runId', 'attempt', 'taskDigest', 'replyTo', 'commentId']) || !/^[1-9][0-9]*$/.test(feedback.runId ?? '') || !Number.isSafeInteger(feedback.attempt) || feedback.attempt < 1 || !hashPattern.test(feedback.taskDigest ?? '') || !hashPattern.test(feedback.replyTo ?? '') || !Number.isSafeInteger(feedback.commentId) || feedback.commentId < 1) errors.push('Product Change parent answer evidence is invalid');
   }
   if (value.pendingQuestion !== undefined && (typeof value.pendingQuestion !== 'string' || value.pendingQuestion.length > 4000)) errors.push('Product Change checkpoint pendingQuestion exceeds its bound');
   return errors;
@@ -261,7 +273,7 @@ export async function prepareProductEvidence(root, destination, core, { baseline
 }
 
 export function productReviewBinding(input) {
-  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head', ...('parentDigest' in input ? ['parentDigest'] : [])];
+  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head', ...(Object.hasOwn(input ?? {}, 'parentDigest') ? ['parentDigest'] : [])];
   if (!exact(input, fields)) throw Error('Product review binding has unsupported or missing fields');
   if (typeof input.repository !== 'string' || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(input.repository) || !Number.isSafeInteger(input.issue) || input.issue < 1 || !Number.isSafeInteger(input.pullRequest) || input.pullRequest < 1) throw Error('Product review target is invalid');
   if (!namePattern.test(input.changeName) || !/^CHG-[A-Z0-9-]+$/.test(input.changeId)) throw Error('Product review change identity is invalid');
@@ -321,3 +333,26 @@ export function verifyProductChangePath(root, relativePath) {
     return absolute;
   });
 }
+
+export function checkProductResumePullRequest(pr, repository, resume) {
+  if (!resume || pr?.number !== resume.pullRequest || pr.state !== 'open' || pr.merged || !pr.draft || pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository || pr.head.sha !== resume.head || pr.head.ref !== resume.branch) throw Error('Applied product PR changed before parent continuation');
+  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  if (matches.length !== 1) throw Error('Applied product checkpoint is unavailable');
+  const checkpoint = JSON.parse(matches[0][1]);
+  if (validateProductCheckpoint(checkpoint).length || checkpoint.state !== 'applied' || checkpoint.identity.issue !== resume.issue || checkpoint.identity.head !== resume.head || JSON.stringify(checkpoint.parent) !== JSON.stringify(resume.parent) || !checkpoint.effectIds.includes(`apply:${resume.receiptIntent}:${resume.head}`)) throw Error('Applied product checkpoint changed before parent continuation');
+  return checkpoint;
+}
+
+function productDeliveryProof(pr, kind) {
+  const expression = new RegExp(`<!-- lighthouse-product-${kind}:(\\{[^\\n]*\\}) -->`, 'g');
+  const proofs = [...(pr?.body ?? '').matchAll(expression)];
+  const checkpoints = [...(pr?.body ?? '').matchAll(/<!-- lighthouse-product-change-checkpoint:(\{[^\n]*\}) -->/g)];
+  if (proofs.length !== 1 || checkpoints.length !== 1) return null;
+  let proof, checkpoint;
+  try { proof = JSON.parse(proofs[0][1]); checkpoint = JSON.parse(checkpoints[0][1]); } catch { return null; }
+  if (!exact(proof, ['schemaVersion', 'issue', 'runId', 'applyIntent', 'head']) || proof.schemaVersion !== 1 || !Number.isSafeInteger(proof.issue) || proof.issue < 1 || !hashPattern.test(proof.runId ?? '') || !hashPattern.test(proof.applyIntent ?? '') || proof.head !== pr.head?.sha || validateProductCheckpoint(checkpoint).length || checkpoint.state !== 'applied' || checkpoint.identity.issue !== proof.issue || !checkpoint.parent || !checkpoint.effectIds.includes(`apply:${proof.applyIntent}:${checkpoint.identity.head}`)) return null;
+  return proof;
+}
+
+export const productImplementationProof = pr => productDeliveryProof(pr, 'implementation');
+export const productProposalProof = pr => productDeliveryProof(pr, 'proposal');
