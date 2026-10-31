@@ -92,3 +92,11 @@ test('interrupted failure publication retries the comment and missing label rema
   assert.match(comments.at(-1).body, /effects and final result are not confirmed/);
   assert.doesNotMatch(comments.at(-1).body, /Execution failed/);
 });
+
+test('stage result accepts only a bounded explicit question on a blocked outcome', async () => {
+  const { validateStageResult } = await import('../packages/sdlc/src/contracts.mjs');
+  const result = { schemaVersion: 1, runId: 'run', stage: 'refine', status: 'blocked', gate: 'ready', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Answer on the issue.', output: { handoff: { question: 'May we use the assets?' } } };
+  assert.deepEqual(validateStageResult(result), []);
+  for (const invalid of [{ ...result, status: 'passed' }, { ...result, output: { handoff: { question: null } } }, { ...result, output: { handoff: { question: 'Question? <!-- lighthouse-question -->' } } }, { ...result, output: { handoff: { question: 'Question?', actor: 'owner' } } }]) assert.ok(validateStageResult(invalid).some(error => error.code === 'stage-result.handoff'));
+  assert.deepEqual(validateStageResult({ ...result, output: {} }), []);
+});

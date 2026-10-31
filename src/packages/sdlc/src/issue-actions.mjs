@@ -449,7 +449,7 @@ async function main(command) {
     const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
     const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
-    let proposalLink = '', prStateProof = '', reviewTarget = !!snapshot.proposalReview;
+    let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview;
     if (snapshot.worker === 'product-change') {
       const product = value.result.output?.productChange;
       if (!product || product.entry !== 'idea') throw Error('Product Change worker returned no authorized idea outcome');
@@ -482,7 +482,7 @@ async function main(command) {
         if (!issue.labels.some(x => x.name === 'ready')) throw Error('Readiness revoked');
       };
       const pr = snapshot.proposalReview ? await updateProposal(api, repo, snapshot, files, recheck) : await createProposalPullRequest(api, snapshot, files, value.effect.body, runUrl, recheck);
-      if (snapshot.proposalReview) await api(`issues/${pr.number}/comments`, 'POST', { body: `Updated from your [feedback](${snapshot.proposalReview.feedbackUrl}). Please review the latest diff. [Run](${runUrl}).\n\n${snapshot.proposalReview.receipt}` });
+      if (snapshot.proposalReview) reviewNotice = { pr, marker: snapshot.proposalReview.receipt, body: renderHandoff({ status: 'review', stage: snapshot.stage, happened: `The proposal was updated from your [feedback](${snapshot.proposalReview.feedbackUrl}).`, action: 'Owner: review the latest diff and record your decision on this PR.', next: 'The workflow waits for the required decision before continuing.', link: `[Review PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.proposalReview.receipt}` }) };
       proposalLink = `\n\n[Review the OpenSpec proposal](${pr.html_url}). Implementation requires a separate owner decision.`;
       reviewTarget = true;
       await summary(`### Proposal PR\n[Review #${pr.number}](${pr.html_url})\n\nOpenSpec strict validation passed. Implementation has not started.`);
@@ -517,7 +517,7 @@ async function main(command) {
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
         try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr); }
         catch (error) { value.effect.body += '\n\nThe PR was saved, but CI could not start. See the run for details.'; await summary(`CI dispatch failed: ${error.message}`); }
-        if (snapshot.implementationReview) await api(`issues/${pr.number}/comments`, 'POST', { body: `Updated the PR with your feedback. [Checks and evidence](${runUrl}).\n\n${snapshot.implementationReview.receipt}` });
+        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: 'queued', stage: snapshot.stage, happened: 'The draft PR was updated with your feedback.', action: 'None. Wait for the required checks.', next: 'The workflow will recheck readiness when the checks finish.', link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
         proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }
@@ -541,6 +541,11 @@ async function main(command) {
     if (handoff) {
       await api(`${issuePath}/labels`, 'POST', { labels: ['implement'] });
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
+    }
+    if (reviewNotice) {
+      const prior = await api(`issues/${reviewNotice.pr.number}/comments?per_page=100`);
+      if (prior.length >= 100) throw Error('PR discussion exceeds bounded publication');
+      if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewNotice.marker))) await api(`issues/${reviewNotice.pr.number}/comments`, 'POST', { body: reviewNotice.body });
     }
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     if (snapshot.proposalReview && value.result.status === 'blocked') {

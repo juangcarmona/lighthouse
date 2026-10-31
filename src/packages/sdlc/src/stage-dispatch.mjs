@@ -8,7 +8,7 @@ export const workers = [...stages, 'apply-review', 'product-change', 'apply-prod
 export const workerFor = request => request.worker ?? request.stage ?? 'implement';
 export const stagePath = stage => { if (!workers.includes(stage)) throw Error('Unknown dispatch worker'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
 export const implementPath = stagePath('implement');
-export const statusText = (stage, status) => `${({ requested: '📥 Requested', running: '▶️ Execution admitted', completed: '✅ Completed', waiting: '⏸️ Waiting for your response', failed: '❌ Failed or cancelled' })[status]} · ${stage}`;
+export const statusText = (stage, status) => `${({ requested: 'Requested', running: 'Queued', completed: 'Stage completed', waiting: 'Waiting for your answer', blocked: 'Blocked', failed: 'Execution failed', cancelled: 'Cancelled', unknown: 'Execution status unknown' })[status] ?? 'Execution status unknown'} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
 export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'implement' && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');

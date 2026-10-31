@@ -5,6 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "runId", "stage", "status", "gate", "evidence", "missingEvidence", "unavailableChecks", "pendingReview", "nextAction"],
+  "allOf": [
+    { "if": { "required": ["output"], "properties": { "output": { "required": ["handoff"] } } }, "then": { "properties": { "status": { "const": "blocked" } } } }
+  ],
   "properties": {
     "schemaVersion": { "const": 1 },
     "runId": { "type": "string", "minLength": 1 },
@@ -12,7 +15,17 @@
     "status": { "enum": ["ready", "blocked", "failed", "passed"] },
     "gate": { "type": ["string", "null"] },
     "input": { "type": "object" },
-    "output": { "type": "object" },
+    "output": {
+      "type": "object",
+      "properties": {
+        "handoff": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question"],
+          "properties": { "question": { "type": "string", "minLength": 1, "maxLength": 4000, "pattern": "\\S", "not": { "pattern": "<!--[\\s]*[lL][iI][gG][hH][tT][hH][oO][uU][sS][eE]-" } } }
+        }
+      }
+    },
     "evidence": { "type": "array", "items": { "type": "object", "required": ["id", "status"], "properties": { "id": { "type": "string" }, "status": { "enum": ["passed", "failed", "unavailable", "unconfigured", "pending-review", "not-applicable"] }, "source": { "type": "string" }, "reason": { "type": "string" } }, "additionalProperties": false } },
     "missingEvidence": { "type": "array", "items": { "type": "string" } },
     "unavailableChecks": { "type": "array", "items": { "type": "string" } },
