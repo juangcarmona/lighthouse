@@ -102,12 +102,18 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       await assertUnattendedPullRequest(api, await comments(), current, owner);
     }
   };
-  const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  const newerAttempt = async () => {
+    const latest = (await comments()).filter(c => c.id > initialCommentId && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended|dispatch|actions|stop):/.test(c.body ?? '')).at(-1);
+    return !!latest && !latest.body.includes(marker);
+  };
+  const notify = async body => {
+    if (await newerAttempt()) throw Error('A newer workflow attempt has taken over');
+    return api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  };
   const releaseReservation = async () => {
+    if (await newerAttempt()) { reserved = false; return 'stale'; }
     if (!reserved) return 'released';
     const fresh = await api('issues/' + issueNumber);
-    const newer = (await comments()).filter(c => c.id > initialCommentId && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended|dispatch|actions|stop):/.test(c.body ?? '')).at(-1);
-    if (newer && !newer.body.includes(marker)) { reserved = false; return 'stale'; }
     if (fresh.labels.some(label => label.name === 'human-working')) { reserved = false; return 'held'; }
     if (fresh.labels.some(label => label.name === 'agent-working')) await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true);
     reserved = false;
