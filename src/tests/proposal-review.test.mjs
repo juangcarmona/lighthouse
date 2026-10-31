@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkProposal, reviewTarget, loadProposalReview, updateProposal } from '../packages/sdlc/src/proposal-review.mjs';
+import { checkProposal, reviewTarget, loadProposalReview, loadProposalFiles, updateProposal } from '../packages/sdlc/src/proposal-review.mjs';
 const repo = 'owner/repo', head = 'a'.repeat(40);
 const pr = { number: 60, state: 'open', user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/propose-47-${'b'.repeat(12)}`, repo: { full_name: repo } }, base: { ref: 'main', repo: { full_name: repo } }, body: `<!-- lighthouse-proposal:${'b'.repeat(64)} -->`, html_url: 'https://github.com/owner/repo/pull/60' };
 const comment = { id: 7, body: 'Support phones', user: { login: 'owner', type: 'User' }, issue_url: `https://api.github.com/repos/${repo}/issues/60` };
@@ -23,6 +23,18 @@ test('owner feedback is fetched from source and approvals never request revision
   assert.equal((await loadProposalReview(reviewApi, repo, 'owner', reviewEvent, 'pull_request_review')).approved, true);
   await assert.rejects(loadProposalReview(async p => p === 'pulls/60' ? pr : { ...review, commit_id: 'old' }, repo, 'owner', reviewEvent, 'pull_request_review'), /older/);
 });
+test('feedback reloads the provider skip flag without exposing mutable schema metadata', async () => {
+  const root = 'openspec/changes/issue-47-proposal';
+  const data = { 'proposal.md': '# Proposal', 'design.md': '# Design', 'tasks.md': '- [ ] Correct text', '.openspec.yaml': 'schema: spec-driven\ncreated: 2026-10-31\nskip_specs: true\n' };
+  const api = async path => {
+    if (path === 'pulls/60/files?per_page=100') return Object.keys(data).map(name => ({ filename: `${root}/${name}`, status: 'modified' }));
+    const name = path.split('?')[0].split('/').at(-1);
+    return { type: 'file', encoding: 'base64', size: data[name].length, content: Buffer.from(data[name]).toString('base64') };
+  };
+  const files = await loadProposalFiles(api, { number: 60, issue: 47, head });
+  assert.equal(files.find(file => file.path.endsWith('/.openspec.yaml')).content, 'skip_specs: true\n');
+});
+
 test('publication updates the same branch non-forcibly and rejects a concurrent writer', async () => {
   const files = ['proposal.md', 'design.md', 'tasks.md', 'specs/control/spec.md'].map(name => ({ path: `openspec/changes/issue-47-proposal/${name}`, content: name === 'tasks.md' ? '- [ ] Implement' : '# Proposal' }));
   let changed = false; const writes = [];
