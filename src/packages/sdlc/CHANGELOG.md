@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.16.1
+
+### Patch Changes
+
+- c0847b8: # Worker checkout isolation
+
+  Keep worker harness checkouts separate from adopter-owned tools directories.
+
 ## 0.16.0
 
 ### Minor Changes
