@@ -22,6 +22,7 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
   if (run.run_attempt !== 1) return result('uncertain', 'execution-rerun', 'Inspect all attempts; a rerun does not reclaim the original request.');
   if (String(receipt.workerRunId) !== String(run.id)) return result('uncertain', 'dispatch-unconfirmed', 'Reconcile the request with the observed execution.');
   if (receipt.status === 'waiting') return result('waiting-human', 'human-decision', 'Answer the recorded question; no automatic retry.');
+  if (receipt.status === 'blocked') return result('blocked', 'stage-blocked', 'Resolve the recorded blocker before requesting an authorized continuation.');
   if (receipt.status === 'completed' && run.conclusion === 'success') return result('succeeded', 'worker-completed', 'No recovery needed.');
   if (issue.state !== 'open' || issue.user?.login !== owner || issue.pull_request || issue.labels.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) return result('blocked', 'issue-paused', 'Inspect the issue decision or reservation before requesting work.');
   if (request.sourceRevision !== revision || request.workflowRevision !== workflowRevision || request.taskDigest !== intent(issue, comments, owner)) return result('blocked', 'authority-changed', 'Request fresh work against the current source and owner intent.');
@@ -63,7 +64,9 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const agent = jobs.jobs.find(job => job.name === 'agent');
   const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
   const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
-  const stop = run.status === 'completed' && publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? { run: String(run.id), attempt: String(run.run_attempt), observation: agent.conclusion } : null;
+  const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
+  const observation = prepare?.conclusion === 'failure' && (!agent || agent.conclusion === 'skipped') ? 'preparation-failure' : publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? agent.conclusion : null;
+  const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation } : null;
   return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop };
 }
 

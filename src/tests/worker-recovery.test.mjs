@@ -41,6 +41,7 @@ test('recovery separates confirmed safe failure from human decisions, effects an
   const f = fixture(); assert.equal(decide(f).state, 'retryable');
   for (const [patch, state] of [
     [{ receipt: { ...f.receipt, status: 'waiting' } }, 'waiting-human'],
+    [{ receipt: { ...f.receipt, status: 'blocked' } }, 'blocked'],
     [{ receipt: { ...f.receipt, status: 'completed' }, run: { ...f.run, conclusion: 'success' } }, 'succeeded'],
     [{ run: { ...f.run, status: 'in_progress' } }, 'active'],
     [{ run: { ...f.run, status: 'queued', updated_at: '2020-01-01T00:00:00Z' } }, 'stalled'],
@@ -141,4 +142,12 @@ test('maintenance reconciles a missing terminal handoff before any authorized re
   const count = f.comments.length;
   await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
   assert.equal(f.comments.length, count);
+});
+
+test('maintenance reports failed preparation without claiming the agent started', async () => {
+  const f = fixture();
+  f.jobs[0].conclusion = 'failure';
+  f.jobs[1].conclusion = 'skipped';
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+  assert.match(f.comments.at(-1).body, /Preparation failed before the agent started/);
 });

@@ -66,7 +66,11 @@ async function main(command) {
   if (command === 'cleanup') {
     const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
     let outcome;
-    try { await load('published.json'); outcome = (await load('envelope.json')).result.status; } catch {}
+    try {
+      await load('published.json');
+      const result = (await load('envelope.json')).result;
+      outcome = result.status === 'blocked' && pendingQuestion(result.output?.handoff?.question) ? 'question' : result.status;
+    } catch {}
     if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
@@ -85,6 +89,7 @@ async function main(command) {
     await api(`issues/${request.issue}/labels/agent-working`, 'DELETE', undefined, true);
     if (preparationStop) await publishObservedStop(api, preparationStop);
     else if (['failed', 'cancelled'].includes(outcome)) await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT });
+    else if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'success' && env.LIGHTHOUSE_PUBLISH_STATUS === 'failure') await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: 'publication-unknown' });
     await summary('Issue reservation released.'); return;
   }
   const request = await load('request.json'), envelope = await load('envelope.json');

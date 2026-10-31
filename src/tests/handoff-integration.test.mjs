@@ -47,5 +47,13 @@ globalThis.fetch = async (url, options) => {
     const prepCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
     const prepComment = prepCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments');
     assert.match(prepComment.body.body, /Preparation failed before the agent started/);
+    await writeFile(join(dir, 'reserved'), 'run');
+    await writeFile(join(dir, 'calls.jsonl'), '');
+    const uncertain = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'cleanup'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '18', LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_AGENT_RESULT: 'success', LIGHTHOUSE_PUBLISH_STATUS: 'failure', GH_TOKEN: 'fixture' } });
+    assert.equal(uncertain.status, 0, uncertain.stderr);
+    const uncertainCalls = (await readFile(join(dir, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    const uncertainComment = uncertainCalls.find(c => c.method === 'POST' && c.path === 'issues/18/comments');
+    assert.match(uncertainComment.body.body, /effects and final result are not confirmed/);
+    assert.equal(uncertainCalls.some(c => c.method === 'POST' && c.path === 'issues/18/labels'), false);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });

@@ -179,6 +179,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
+          LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
 ---
 

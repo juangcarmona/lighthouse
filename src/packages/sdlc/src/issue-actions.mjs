@@ -397,7 +397,11 @@ async function main(command) {
   let preparationStop;
   if (command === 'cleanup' && event.inputs?.['dispatch-request']) {
     let outcome;
-    try { await readFile(join(dir, 'published')); outcome = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8')).result.status; } catch {}
+    try {
+      await readFile(join(dir, 'published'));
+      const result = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8')).result;
+      outcome = result.status === 'blocked' && pendingQuestion(result.output?.handoff?.question ?? result.output?.productChange?.question) ? 'question' : result.status;
+    } catch {}
     if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
@@ -518,7 +522,6 @@ async function main(command) {
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }
     }
-    if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : '';
     const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
     const productWorkflowMarker = snapshot.worker === 'product-change' ? `\n<!-- lighthouse-product-workflow:${snapshot.productChangeName} -->` : '';
@@ -540,6 +543,12 @@ async function main(command) {
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
     }
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
+    if (snapshot.proposalReview && value.result.status === 'blocked') {
+      const reviewMarker = `<!-- lighthouse-proposal-blocked:${snapshot.runId} -->`;
+      const prior = await api(`issues/${snapshot.proposalReview.number}/comments?per_page=100`);
+      if (prior.length >= 100) throw Error('Proposal discussion exceeds bounded publication');
+      if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewMarker))) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: question ? 'question' : 'blocked', stage: snapshot.stage, happened: value.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : 'The workflow maintainer should resolve the blocker described above.', next: question ? 'The answer will be checked against the pending question before continuation.' : 'Work remains stopped until the blocker is resolved and continuation is authorized.', link: `[Issue #${issueNumber}](https://github.com/${repo}/issues/${issueNumber})`, details: `[Execution](${runUrl})\n\n${reviewMarker}` }) });
+    }
     await writeFile(join(dir, 'published'), report.html_url);
     await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label ?? 'no status label'}**\n\n${action}\n\n${whatNext}`);
     console.log(`Published ${label}: ${report.html_url}`); return;
@@ -554,6 +563,7 @@ async function main(command) {
     catch {
       if (snapshot.proposalReview) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal update did not complete. Your feedback is retained. [See execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}).` });
       if (['failure', 'cancelled'].includes(env.LIGHTHOUSE_AGENT_RESULT)) await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT, answerRetained: !!snapshot.replyTo });
+      else if (env.LIGHTHOUSE_AGENT_RESULT === 'success' && env.LIGHTHOUSE_PUBLISH_STATUS === 'failure') await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: 'publication-unknown', answerRetained: !!snapshot.replyTo });
       await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; the pending decision remains unfulfilled.');
     }
     if (published && snapshot.stage === 'implement') {

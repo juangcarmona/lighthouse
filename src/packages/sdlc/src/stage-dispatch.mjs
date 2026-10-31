@@ -35,6 +35,7 @@ export function dispatchReceiptBody(repository, receipt) {
     running: ['queued', 'The worker admitted the request; agent execution is not yet confirmed.', 'None. Wait for the result.', 'The workflow will publish a result or an actionable stop.'],
     completed: ['completed', 'The stage published a validated result.', 'Follow the latest stage handoff.', 'The configured continuation applies only when authorized.'],
     waiting: ['blocked', 'The stage published a blocked result.', 'Follow the latest stage handoff.', 'Continuation depends on the recorded blocker and authorization.'],
+    blocked: ['blocked', 'The stage published a blocker without a pending owner question.', 'The workflow maintainer should follow the latest stage handoff.', 'Work remains stopped until the blocker is resolved and continuation is authorized.'],
     failed: ['failed', 'This attempt did not publish a validated result.', 'The workflow maintainer should inspect the execution and recovery policy.', 'Any retry requires the configured authorization.'],
     cancelled: ['cancelled', 'This attempt was cancelled before a validated result was published.', 'The workflow maintainer should inspect the execution.', 'Any restart requires the configured authorization.'],
     unknown: ['unknown', 'Publication of a validated result could not be confirmed.', 'The workflow maintainer should inspect the execution.', 'Reconcile the outcome before requesting another attempt.'],
@@ -172,7 +173,7 @@ export async function finishDispatch(api, repository, issue, commentId, workerId
   if (!positive(commentId)) return;
   const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repository, issue);
   if (String(receipt.workerRunId) !== String(workerId)) return;
-  receipt.status = outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : outcome === 'failed' ? 'failed' : outcome === 'cancelled' ? 'cancelled' : 'unknown';
+  receipt.status = outcome === 'passed' ? 'completed' : outcome === 'question' ? 'waiting' : outcome === 'blocked' ? 'blocked' : outcome === 'failed' ? 'failed' : outcome === 'cancelled' ? 'cancelled' : 'unknown';
   await api(`issues/comments/${commentId}`, 'PATCH', { body: dispatchReceiptBody(repository, receipt) });
 }
 
