@@ -333,3 +333,45 @@ test('the native host integrates with concurrent readiness and retains its merge
   } finally { await rm(f.root, { recursive: true, force: true }); }
   });
 });
+
+test('an unattended stop never clears a newer execution reservation or overwrites its handoff', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      f.comments.push({ id: f.comments.length + 1, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-dispatch:{"newer":true} -->' });
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.missingEvidence = ['New blocker'];
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['The plan needs a decision.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.ok(f.labels.includes('agent-working'));
+    assert.match(f.comments.at(-1).body, /lighthouse-dispatch/);
+    assert.equal(f.writes.some(w => w.path === 'issues/1/labels/agent-working' && w.method === 'DELETE'), false);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('a human hold preserves an uncertain execution reservation and names the recovery action', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      f.labels.push('human-working');
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.missingEvidence = ['Owner hold'];
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Owner intervention is needed.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.ok(f.labels.includes('agent-working'));
+    assert.match(f.comments.at(-1).body, /human hold and existing execution reservation/);
+    assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});

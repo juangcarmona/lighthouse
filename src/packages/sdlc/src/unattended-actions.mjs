@@ -61,7 +61,9 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const issue = await api('issues/' + issueNumber);
   if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) throw Error('Issue is closed, reserved, paused or requires owner admission');
   const comments = () => list(api, 'issues/' + issueNumber + '/comments');
-  const ownerAnswers = owners(await comments(), owner);
+  const initialComments = await comments();
+  const initialCommentId = Math.max(0, ...initialComments.map(comment => Number.isSafeInteger(comment.id) ? comment.id : 0));
+  const ownerAnswers = owners(initialComments, owner);
   const intent = taskDigest(issue, ownerAnswers);
   const issueContext = { ...issue, ownerAnswers };
   const runId = unattendedDigest({ repository, issue: issueNumber, route, run: env.GITHUB_RUN_ID });
@@ -101,6 +103,16 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     }
   };
   const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  const releaseReservation = async () => {
+    if (!reserved) return 'released';
+    const fresh = await api('issues/' + issueNumber);
+    const newer = (await comments()).filter(c => c.id > initialCommentId && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended|dispatch|actions|stop):/.test(c.body ?? '')).at(-1);
+    if (newer && !newer.body.includes(marker)) { reserved = false; return 'stale'; }
+    if (fresh.labels.some(label => label.name === 'human-working')) { reserved = false; return 'held'; }
+    if (fresh.labels.some(label => label.name === 'agent-working')) await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true);
+    reserved = false;
+    return 'released';
+  };
   const publicationApi = async (path, method, ...args) => {
     if (method === 'POST' && ['git/refs', 'pulls'].includes(path)) {
       await recheck();
@@ -207,7 +219,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
         await recheck();
         await projectImplementationPrState(api, issueNumber, true);
-        await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true); reserved = false;
+        if (await releaseReservation() !== 'released') throw Error('The execution reservation changed before PR handoff; inspect the current issue and PR.');
         await notify(handoff({ status: policy.merge ? 'queued' : 'review', stage: route, happened: 'The candidate passed its executed checks and independent review.', action: policy.merge ? 'None. Wait for the required CI and integration check.' : 'Owner: review the linked PR and authorize integration if appropriate.', next: policy.merge ? 'The workflow will recheck the PR head, CI and delegated merge authority.' : 'Integration waits for separate authorization.', link: `[Candidate PR #${published.number}](${published.html_url})`, details: '<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->' }));
         await dispatchDeliveryChecks(dispatchApi, revision, published);
         return published;
@@ -275,13 +287,13 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         await notifyIntegrated(handoff({ status: postMergeError ? 'blocked' : 'completed', stage: route, happened: `PR #${pr.number} was merged at ${result.sha}.${postMergeError ? ' Post-merge verification could not be requested.' : ''}`, action: postMergeError ? 'Workflow maintainer: inspect the execution and current CI before requesting verification again.' : 'None.', next: postMergeError ? 'Post-merge verification remains unconfirmed.' : 'Post-merge review follows the configured CI and completion policy; release and deployment remain separate.', link: `[Merged PR #${pr.number}](${pr.html_url})` }));
         return { ...result, postMerge, notifications };
       },
-      stop: async reason => { if (reserved) { await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true); reserved = false; } await notify(handoff({ status: 'blocked', stage: route, happened: String(reason).slice(0, 4000).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-'), action: 'Workflow maintainer: inspect the execution and retained artifacts, then resolve the blocker.', next: 'No automatic retry is scheduled.', ...(published ? { link: `[Candidate PR #${published.number}](${published.html_url})` } : {}) })); },
+      stop: async reason => { const released = await releaseReservation(); if (released === 'stale') return; await notify(handoff({ status: released === 'held' ? 'unknown' : 'blocked', stage: route, happened: String(reason).slice(0, 4000).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-'), action: released === 'held' ? 'Workflow maintainer: inspect the human hold and existing execution reservation before releasing it.' : 'Workflow maintainer: inspect the execution and retained artifacts, then resolve the blocker.', next: 'No automatic retry is scheduled.', ...(published ? { link: `[Candidate PR #${published.number}](${published.html_url})` } : {}) })); },
     } });
     await writeFile(join(root, 'report.json'), JSON.stringify(outcome, null, 2));
     return outcome;
   } finally {
     clearTimeout(timer); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
-    if (reserved) await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true);
+    if (reserved) await releaseReservation();
   }
 }
 
