@@ -151,3 +151,15 @@ test('maintenance reports failed preparation without claiming the agent started'
   await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
   assert.match(f.comments.at(-1).body, /Preparation failed before the agent started/);
 });
+
+test('maintenance reports uncertain publication without retrying or duplicating the notice', async () => {
+  const f = fixture();
+  f.jobs[1].conclusion = 'success';
+  f.jobs[2].steps[0].conclusion = 'failure';
+  const first = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(first.request, undefined);
+  assert.match(f.comments.at(-1).body, /effects and final result are not confirmed/);
+  const count = f.comments.length;
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(f.comments.length, count);
+});

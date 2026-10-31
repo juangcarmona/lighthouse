@@ -65,7 +65,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
   const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
-  const observation = prepare?.conclusion === 'failure' && (!agent || agent.conclusion === 'skipped') ? 'preparation-failure' : publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? agent.conclusion : null;
+  const observation = prepare?.conclusion === 'failure' && (!agent || agent.conclusion === 'skipped') ? 'preparation-failure' : publish?.conclusion === 'skipped' && ['failure', 'cancelled'].includes(agent?.conclusion) ? agent.conclusion : agent?.conclusion === 'success' && publish?.conclusion === 'failure' && !['completed', 'waiting', 'blocked'].includes(receipt.status) ? 'publication-unknown' : null;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation } : null;
   return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop };
 }
