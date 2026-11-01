@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('epic routing is opt-in and authenticates bot children before selecting a parent lease', async () => {
   const route = { run: true, stage: 'triage' }, parent = { parent: 146 }, calls = [];
@@ -19,6 +19,14 @@ test('epic routing is opt-in and authenticates bot children before selecting a p
   await assert.doesNotReject(checkEpicAuthority(parent, async () => parent));
   await assert.rejects(checkEpicAuthority(parent, async () => ({ parent: 147 })), /authority changed/);
   await assert.rejects(checkEpicAuthority(parent, async () => { throw Error('paused'); }), /paused/);
+});
+
+test('epic child refinement rejects triage from a different parent, slice or plan', () => {
+  const epic = { parent: 146, slice: 'first', planDigest: 'a'.repeat(64), base: 'lighthouse/epic-146', sourceRevision: 'b'.repeat(40) };
+  assert.doesNotThrow(() => checkEpicTriageBinding(epic, { request: { epic: { ...epic } } }));
+  for (const change of [{ parent: 147 }, { slice: 'second' }, { planDigest: 'c'.repeat(64) }, { sourceRevision: 'd'.repeat(40) }]) assert.throws(() => checkEpicTriageBinding(epic, { request: { epic: { ...epic, ...change } } }), /current authenticated epic plan/);
+  assert.throws(() => checkEpicTriageBinding(epic, { request: {} }), /current authenticated epic plan/);
+  assert.doesNotThrow(() => checkEpicTriageBinding(undefined, { request: {} }));
 });
 
 test('routing handoffs are idempotent per authenticated feedback identity', async () => {
