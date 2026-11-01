@@ -123,6 +123,14 @@ export function productApplyRequest({ dispatch, current, issueNumber, issue, rep
   if (issue.state !== 'open' || issue.labels?.some(label => ['future', 'human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
   return { approval: current.approval, binding: current.binding, checkpoint: current.checkpoint, issue: current.issue, pullRequest: current.pullRequest, head: current.head, changeName: current.changeName, repository, owner, sourceRevision: current.head, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } };
 }
+export async function loadProductApplyDispatch(api, repository, owner, env, event, applyRequest, readArtifact = readActionsJson) {
+  const issueNumber = Number(env.LIGHTHOUSE_ISSUE);
+  const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+  const dispatch = await loadDispatch(api, repository, owner, issueNumber, event.inputs?.['dispatch-request'], worker, readArtifact);
+  if (dispatch.request.worker !== 'apply-product-change' || dispatch.request.productApproval?.reviewKey !== applyRequest.approval.reviewKey) throw Error('Product apply publication dispatch is invalid');
+  await checkDispatchClaim(api, repository, issueNumber, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, env.GITHUB_RUN_ID);
+  return dispatch;
+}
 export function refinementNextAction({ stage, status, autoImplement, paused }) {
   if (stage !== 'refine' || status !== 'passed') return null;
   if (!autoImplement) return { action: 'Owner: review the refinement and request the next authorized stage through the configured workflow.', next: 'No automatic continuation is configured for this refinement.' };
@@ -213,10 +221,7 @@ async function main(command) {
     const applyResult = JSON.parse(await readFile(join(dir, 'apply-result.json'), 'utf8'));
     const applyProof = JSON.parse(await readFile(join(dir, 'apply-proof.json'), 'utf8'));
     if (JSON.stringify(applyProof) !== JSON.stringify({ head: applyResult.head, resultingModelDigest: applyResult.resultingModelDigest, receipt: applyResult.receipt })) throw Error('Product apply proof does not match the provider output');
-    const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
-    const dispatch = await loadDispatch(api, repo, owner, issueNumber, event.inputs?.['dispatch-request'], worker);
-    if (dispatch.request.worker !== 'apply-product-change' || dispatch.request.productApproval?.reviewKey !== applyRequest.approval.reviewKey) throw Error('Product apply publication dispatch is invalid');
-    await checkDispatchClaim(api, repo, issueNumber, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, env.GITHUB_RUN_ID);
+    const dispatch = await loadProductApplyDispatch(api, repo, owner, env, event, applyRequest);
     const published = await publishProductApply(api, repo, owner, dispatch, applyResult, async fresh => {
       await checkDispatchClaim(api, repo, issueNumber, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, env.GITHUB_RUN_ID);
       const current = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository: repo, root: process.cwd() });
