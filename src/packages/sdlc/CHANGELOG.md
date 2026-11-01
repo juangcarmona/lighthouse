@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.11
+
+### Patch Changes
+
+- 79a28e4: # Admit aligned continuations
+
+  Allow the router to receive authenticated aligned product continuations at every supported parent stage.
+
 ## 0.18.10
 
 ### Patch Changes
