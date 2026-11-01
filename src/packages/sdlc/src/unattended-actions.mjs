@@ -165,7 +165,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       propose: async () => {
         const proposal = await prepareProposal(issueNumber, null, provider);
         const result = await step('propose', 'propose',
-          'Prepare the smallest engineering plan through context.proposal.instructions. Return all provider-required Markdown files in output.files under proposal.root with unchecked tasks. For a change without spec-level behavior, return .openspec.yaml containing exactly skip_specs: true in place of a spec; the host combines it with provider metadata and validates it. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
+          'Prepare the smallest engineering plan through context.proposal.instructions. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, return .openspec.yaml containing exactly skip_specs: true in place of a spec; the host combines it with provider metadata and validates it. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
           { proposal, refinement: refined });
         planProducer = result;
         const files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider);
