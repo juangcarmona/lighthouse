@@ -192,7 +192,7 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   const expectedStatus = result.status === 'passed' ? 'completed' : question ? 'waiting' : 'blocked';
   if (!interrupted && dispatch.receipt.status !== expectedStatus) return 'uncertain';
   const projection = resultHandoffState({ status: result.status, stage: snapshot.stage, question });
-  if (!projection.label || (!issue.labels.some(l => l.name === projection.label) && !(interrupted && issue.labels.some(l => l.name === snapshot.stage))) || issue.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label)) return 'uncertain';
+  if ((projection.label && !issue.labels.some(l => l.name === projection.label) && !(interrupted && issue.labels.some(l => l.name === snapshot.stage))) || issue.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label)) return 'uncertain';
   let action = question ? `Owner: ${question} Reply here.` : 'None.';
   let next = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : 'Any continuation follows the configured authorization.';
   if (snapshot.stage === 'refine' && result.status === 'passed') {
@@ -205,10 +205,10 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
   const fresh = await api(`issues/${issue.number}`), freshComments = await issueComments(api, issue.number);
   const currentRepo = await api(''), currentRevision = (await api(`commits/${encodeURIComponent(currentRepo.default_branch)}`)).sha;
-  if (currentRevision !== revision || (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha !== workflowRevision || fresh.state !== 'open' || fresh.user?.login !== owner || fresh.pull_request || fresh.labels.some(l => ['agent-working', 'human-working'].includes(l.name) || incompatibleStage(l)) || (!fresh.labels.some(l => l.name === projection.label) && !(interrupted && fresh.labels.some(l => l.name === snapshot.stage))) || fresh.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label) || intent(fresh, freshComments, owner) !== dispatch.request.taskDigest) return 'uncertain';
+  if (currentRevision !== revision || (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha !== workflowRevision || fresh.state !== 'open' || fresh.user?.login !== owner || fresh.pull_request || fresh.labels.some(l => ['agent-working', 'human-working'].includes(l.name) || incompatibleStage(l)) || (projection.label && !fresh.labels.some(l => l.name === projection.label) && !(interrupted && fresh.labels.some(l => l.name === snapshot.stage))) || fresh.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label) || intent(fresh, freshComments, owner) !== dispatch.request.taskDigest) return 'uncertain';
   if (freshComments.some(c => c.user?.login === 'github-actions[bot]' && Number(c.id) > Number(dispatch.commentId) && c.body?.includes('<!-- lighthouse-dispatch:'))) return 'uncertain';
   if (interrupted && fresh.labels.some(l => l.name === snapshot.stage)) {
-    if (!fresh.labels.some(l => l.name === projection.label)) {
+    if (projection.label && !fresh.labels.some(l => l.name === projection.label)) {
       await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
       await api(`issues/${issue.number}/labels`, 'POST', { labels: [projection.label] });
     }
