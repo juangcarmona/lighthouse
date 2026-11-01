@@ -80,6 +80,14 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   const reservation = item.labels.some(l => l.name === 'agent-working') ? ' The maintainer must also inspect the remaining agent-working reservation and release it only after verifying that no newer worker owns it.' : '';
   const action = (missingChecks ? 'The repository maintainer must configure checks in .lighthouse/implement.json or add npm run verify before requesting implementation again.' : observation === 'publication-unknown' ? 'The workflow maintainer must inspect the linked execution and compare the issue and any linked PR with its publication steps.' : 'The workflow maintainer must inspect the failed or cancelled execution and the configured recovery policy.') + reservation;
   const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : 'Recovery follows the configured policy and requires its existing authorization.', link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: marker });
+  await checkDispatchClaim(api, repository, issue, dispatch, run);
+  const current = await issueComments(api, issue);
+  for (const comment of current) {
+    if (Number(comment.id) <= Number(dispatch.commentId) || comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || !comment.body.includes('<!-- lighthouse-dispatch:')) continue;
+    readDispatchReceipt(comment, repository, issue);
+    return false;
+  }
+  if (current.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(marker))) return true;
   await api(`issues/${issue}/comments`, 'POST', { body });
   return true;
 }
