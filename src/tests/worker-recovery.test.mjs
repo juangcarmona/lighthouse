@@ -337,6 +337,25 @@ test('product apply finalizer authenticates and deduplicates its failure handoff
   assert.equal(prComments.length, 1);
 });
 
+test('product apply finalizer records an authenticated pre-claim failure without retrying', async () => {
+  const f = fixture();
+  f.request.stage = 'propose'; f.request.worker = 'apply-product-change';
+  f.request.id = dispatchId(repository, '100', 'propose');
+  f.request.productApproval = { kind: 'approval', reviewKey: 'b'.repeat(64) };
+  f.run.path = '.github/workflows/lighthouse-sdlc-apply-product-change.lock.yml';
+  f.comment.body = dispatchReceiptBody(repository, { ...f.receipt, stage: 'propose', worker: 'apply-product-change', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'requested', workerRunId: null });
+  const env = { LIGHTHOUSE_ISSUE: '7', GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_PREPARE_RESULT: 'failure', LIGHTHOUSE_APPLY_RESULT: 'skipped', LIGHTHOUSE_PUBLISH_RESULT: 'skipped' };
+  const event = { inputs: { 'dispatch-request': '30' } };
+  await reportProductApplyStop(f.api, repository, owner, env, event, f.readArtifact);
+  const receipt = readDispatchReceipt(f.comment, repository, 7);
+  assert.equal(receipt.workerRunId, '200');
+  assert.equal(receipt.status, 'failed');
+  assert.match(f.comments.at(-1).body, /Product Change preparation failed before the provider started/);
+  const count = f.comments.length;
+  await reportProductApplyStop(f.api, repository, owner, env, event, f.readArtifact);
+  assert.equal(f.comments.length, count);
+});
+
 test('maintenance restores a failed read-only publication after its label was written', async () => {
   const f = fixture();
   f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');

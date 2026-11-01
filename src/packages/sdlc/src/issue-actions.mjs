@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -32,7 +32,13 @@ export async function reportProductApplyStop(api, repo, owner, env, event, readA
   if (!observation || !Number.isSafeInteger(issue) || issue < 1 || !Number.isSafeInteger(commentId) || commentId < 1) return;
   const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   const dispatch = await loadDispatch(api, repo, owner, issue, commentId, worker, readArtifact);
-  if (dispatch.request.worker !== 'apply-product-change' || String(dispatch.receipt.workerRunId) !== String(env.GITHUB_RUN_ID) || ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status)) return;
+  if (dispatch.request.worker !== 'apply-product-change' || ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status)) return;
+  if (!dispatch.receipt.workerRunId && observation === 'provider-preparation-failure' && String(env.GITHUB_RUN_ATTEMPT) === '1') {
+    const current = await issueComments(api, issue);
+    if (current.some(comment => Number(comment.id) > commentId && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:'))) return;
+    if (!await claimDispatch(api, repo, dispatch, env.GITHUB_RUN_ID)) return;
+  }
+  if (String(dispatch.receipt.workerRunId) !== String(env.GITHUB_RUN_ID)) return;
   const claim = { commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest };
   await checkDispatchClaim(api, repo, issue, claim, env.GITHUB_RUN_ID);
   const outcome = observation === 'publication-unknown' ? undefined : observation.endsWith('cancelled') ? 'cancelled' : 'failed';
