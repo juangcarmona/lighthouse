@@ -84,6 +84,7 @@ test('abandoned reservation cleanup requires matching execution evidence and an 
     // This recovery only handles read-only stages; use the corresponding authenticated triage identity.
     f.request.stage = 'triage'; f.request.id = dispatchId(repository, '100', 'triage'); f.receipt.stage = 'triage'; f.receipt.id = f.request.id; f.receipt.digest = digest(JSON.stringify(f.request));
     f.run.path = '.github/workflows/lighthouse-sdlc-triage.lock.yml'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
+    f.jobs[2].steps[0].name = 'Recheck authority and publish';
     snapshot.runId = digest(`${repository}:7:triage:200:1`); snapshot.stage = 'triage'; snapshot.dispatch.requestId = f.request.id; snapshot.dispatch.digest = f.receipt.digest;
     let removed = false, eventReads = 0;
     const api = async (path, method = 'GET', body) => {

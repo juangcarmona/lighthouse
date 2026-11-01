@@ -121,7 +121,7 @@ export async function reconcileAbandonedReservation(api, repository, owner, issu
   const prepare = jobs.find(job => job.name === 'Authorize and reserve issue');
   const agent = jobs.find(job => job.name === 'agent');
   const publish = jobs.find(job => job.name === 'Validate, publish and release');
-  const step = publish?.steps?.find(item => item.name === 'Recheck authority and publish the validated result');
+  const step = publishStep(publish);
   if (prepare?.conclusion !== 'success' || !['failure', 'timed_out', 'cancelled', 'skipped'].includes(agent?.conclusion) || !(publish?.conclusion === 'skipped' || step?.conclusion === 'skipped')) return false;
   let snapshot;
   try { snapshot = await readArtifact(api, repository, run.id, `lighthouse-input-${issue.number}-${run.run_attempt}`, 'request.json'); } catch { return false; }
