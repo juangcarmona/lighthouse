@@ -30,8 +30,8 @@
 
 ## 4. Candidate-wide verification
 
-- [ ] 4.1 Run the required clean install, full repository verification, strict OpenSpec validation and citation verification after implementation; retain completed command receipts and a retrospective, and mark only actually completed work done.
-- [ ] 4.2 Map every issue acceptance criterion to delivered tests/evidence; distinguish deterministic fixture results from any separately authorized live provider verification, leaving missing current-stage acceptance evidence explicit.
+- [x] 4.1 Run the required clean install, full repository verification, strict OpenSpec validation and citation verification after implementation; retain completed command receipts and a retrospective, and mark only actually completed work done.
+- [x] 4.2 Map every issue acceptance criterion to delivered tests/evidence; distinguish deterministic fixture results from any separately authorized live provider verification, leaving missing current-stage acceptance evidence explicit.
 
 <!-- pdac:cite id="BR-FAIL-CLOSED" digest="sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d" -->
 
