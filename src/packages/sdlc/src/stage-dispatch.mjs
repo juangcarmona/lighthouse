@@ -80,7 +80,20 @@ export async function sendDispatch(api, repository, request, commentId) {
   if (receipt.id !== request.id || receipt.digest !== digest(JSON.stringify(request))) throw Error('Dispatch request changed');
   if (receipt.workerRunId) return;
   // Never retry this POST automatically: its response can be lost after admission.
-  return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId), ...(workerFor(request) === 'apply-product-change' ? { 'pull-request': String(request.productApproval.pullRequest), head: request.productApproval.head } : {}) } });
+  const parent = epicLeaseParent(request);
+  return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId), ...(parent ? { 'epic-parent': String(parent) } : {}), ...(workerFor(request) === 'apply-product-change' ? { 'pull-request': String(request.productApproval.pullRequest), head: request.productApproval.head } : {}) } });
+}
+
+export function epicLeaseParent(request) {
+  if (request.epic === undefined) return null;
+  const epic = request.epic;
+  if (!epic || !Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === request.issue || !['triage', 'refine', 'implement'].includes(workerFor(request)) || epic.base !== `lighthouse/epic-${epic.parent}` || !hash(epic.planDigest)) throw Error('Invalid epic dispatch lease');
+  return epic.parent;
+}
+
+export function checkEpicWorkerLease(request, inputs) {
+  const parent = epicLeaseParent(request);
+  if ((inputs?.['epic-parent'] ?? '') !== (parent ? String(parent) : '')) throw Error('Worker epic lease does not match the authenticated dispatch');
 }
 
 // Called only for a dispatch whose router identity is authenticated by the host.
@@ -159,6 +172,7 @@ export async function admitDispatch(api, repository, owner, env, event) {
   if (!Number.isSafeInteger(issue) || issue < 1 || String(issue) !== env.LIGHTHOUSE_ISSUE) throw Error('Dispatch issue must be a canonical positive integer');
   const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   const dispatch = await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], worker);
+  checkEpicWorkerLease(dispatch.request, event.inputs);
   if (env.LIGHTHOUSE_WORKER ? workerFor(dispatch.request) !== env.LIGHTHOUSE_WORKER : dispatch.request.stage !== env.LIGHTHOUSE_STAGE) throw Error('Dispatch targets a different stage or worker');
   if (dispatch.request.recovery) {
     if (env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true') throw Error('Automatic recovery has been disabled');

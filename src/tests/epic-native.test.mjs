@@ -22,13 +22,15 @@ async function fixture(t) {
   const bot = { login: 'github-actions[bot]', type: 'Bot' };
   const report = { id: 1, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/${issue}`, html_url: 'https://example.test/report', body: '<!-- lighthouse-stage:refine:passed -->' };
   const comments = [report], issues = [], parents = new Map(), dependencies = new Map(), calls = [];
-  let router = 'jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n';
+  let router = 'jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n';
   const workflow = 'name: epic\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n';
+  let worker = 'name: worker\nconcurrency:\n  cancel-in-progress: false\n  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}\n  queue: max\n';
   const api = async (path, method = 'GET', body) => {
     calls.push({ path, method, body });
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha };
     if (path === `contents/.github/workflows/lighthouse-sdlc-router.yml?ref=${sha}` || path === `contents/.github/workflows/lighthouse-sdlc-epic.yml?ref=${sha}`) { const content = path.includes('router') ? router : workflow; return { type: 'file', encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') }; }
+    if (/^contents\/\.github\/workflows\/lighthouse-sdlc-(?:triage|refine|implement)\.lock\.yml\?ref=/.test(path)) return { type: 'file', encoding: 'base64', size: Buffer.byteLength(worker), content: Buffer.from(worker).toString('base64') };
     if (path === `issues/${issue}`) return parent;
     if (path.startsWith(`issues/${issue}/comments?`)) return comments;
     if (path === `issues/${issue}/comments` && method === 'POST') { const comment = { id: comments.length + 1, user: bot, issue_url: report.issue_url, body: body.body }; comments.push(comment); return structuredClone(comment); }
@@ -44,7 +46,7 @@ async function fixture(t) {
   };
   const load = async (_api, _repo, _comments, current) => ({ request: { ...request, taskDigest: current.taskDigest }, envelope, report: report.html_url });
   const actor = { login: owner }, run = { id: 500, run_attempt: 1, status: 'in_progress', path: '.github/workflows/lighthouse-sdlc-epic.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
-  return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; } };
+  return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; }, setWorker: value => { worker = value; } };
 }
 
 test('native host creates bounded children and links the authenticated dependency graph', async t => {
@@ -99,5 +101,12 @@ test('native host refuses a router without the shared issue lease', async t => {
   await assert.doesNotReject(checkEpicLeaseConfiguration(f.api, sha));
   f.setRouter('jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-dispatch-${{ needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n');
   await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /shared issue dispatch lease/);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});
+
+test('native host refuses older workers without the shared parent lease', async t => {
+  const f = await fixture(t);
+  f.setWorker('name: old worker\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n');
+  await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /worker does not hold the shared parent lease/);
   assert.equal(f.calls.some(call => call.method !== 'GET'), false);
 });

@@ -4,7 +4,22 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, publishRoutingHandoff } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('epic routing is opt-in and authenticates bot children before selecting a parent lease', async () => {
+  const route = { run: true, stage: 'triage' }, parent = { parent: 146 }, calls = [];
+  const api = async path => { calls.push(path); return { user: { login: 'github-actions[bot]', type: 'Bot' } }; };
+  const authenticate = async input => { calls.push(input.child); return parent; };
+  assert.equal(await resolveEpicRouting(api, 'owner/repo', 'owner', 18, route, 'false', authenticate), undefined);
+  assert.deepEqual(calls, []);
+  assert.deepEqual(await resolveEpicRouting(api, 'owner/repo', 'owner', 18, route, 'true', authenticate), parent);
+  assert.deepEqual(calls, ['issues/18', 18]);
+  await assert.rejects(resolveEpicRouting(api, 'owner/repo', 'owner', 18, route, 'true', async () => { throw Error('untrusted'); }), /untrusted/);
+  assert.equal(await resolveEpicRouting(async () => ({ user: { login: 'owner', type: 'User' } }), 'owner/repo', 'owner', 18, route, 'true', authenticate), undefined);
+  await assert.doesNotReject(checkEpicAuthority(parent, async () => parent));
+  await assert.rejects(checkEpicAuthority(parent, async () => ({ parent: 147 })), /authority changed/);
+  await assert.rejects(checkEpicAuthority(parent, async () => { throw Error('paused'); }), /paused/);
+});
 
 test('routing handoffs are idempotent per authenticated feedback identity', async () => {
   const comments = [], posts = [];

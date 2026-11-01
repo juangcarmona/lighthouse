@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 import { feedbackKey, feedbackWorker } from '../packages/sdlc/src/proposal-review.mjs';
-import { dispatchId, dispatchArtifact, dispatchReceiptBody, readDispatchReceipt, recordDispatch, sendDispatch, loadDispatch, verifyDispatchOrigin, claimDispatch, checkDispatchClaim, implementPath, stagePath, stages, finishDispatch, completedEvent } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, dispatchReceiptBody, readDispatchReceipt, recordDispatch, sendDispatch, loadDispatch, verifyDispatchOrigin, claimDispatch, checkDispatchClaim, epicLeaseParent, checkEpicWorkerLease, implementPath, stagePath, stages, finishDispatch, completedEvent } from '../packages/sdlc/src/stage-dispatch.mjs';
 
 const repo = 'owner/repo', owner = 'owner', issue = 18;
 function fixture(stage = 'implement') {
@@ -40,6 +40,21 @@ test('records intent before dispatch and reuses it across router reruns', async 
   assert.deepEqual(post.body, { ref: 'main', inputs: { issue: '18', 'dispatch-request': '30' } });
   assert.equal((await recordDispatch(f.api, repo, { ...f.request, routerAttempt: 2 })).send, false);
   assert.equal(f.calls.filter(c => c.path.endsWith('/dispatches')).length, 1);
+});
+
+test('child dispatch binds the parent lease to the authenticated request', async () => {
+  const f = fixture();
+  f.request.epic = { parent: 146, base: 'lighthouse/epic-146', planDigest: 'd'.repeat(64) };
+  await recordDispatch(f.api, repo, f.request);
+  await sendDispatch(f.api, repo, f.request, 30);
+  assert.equal(f.calls.find(call => call.path.endsWith('/dispatches')).body.inputs['epic-parent'], '146');
+  assert.equal(epicLeaseParent(f.request), 146);
+  assert.doesNotThrow(() => checkEpicWorkerLease(f.request, { 'epic-parent': '146' }));
+  assert.throws(() => checkEpicWorkerLease(f.request, { 'epic-parent': '147' }), /does not match/);
+  assert.throws(() => checkEpicWorkerLease(f.request, {}), /does not match/);
+  assert.throws(() => checkEpicWorkerLease({ ...f.request, epic: undefined }, { 'epic-parent': '146' }), /does not match/);
+  for (const epic of [{ ...f.request.epic, parent: issue }, { ...f.request.epic, base: 'main' }, { ...f.request.epic, planDigest: 'invalid' }]) assert.throws(() => epicLeaseParent({ ...f.request, epic }), /Invalid epic/);
+  assert.throws(() => epicLeaseParent({ ...f.request, worker: 'integrate' }), /Invalid epic/);
 });
 
 test('feedback has one independent worker and dispatch identity across duplicate router events', async () => {

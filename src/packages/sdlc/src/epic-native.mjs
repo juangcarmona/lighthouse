@@ -79,9 +79,13 @@ export async function checkEpicLeaseConfiguration(api, revision) {
   let end = starts[0] + 1;
   while (end < router.length && !/^  [A-Za-z0-9_-]+:/.test(router[end])) end++;
   const dispatch = router.slice(starts[0], end).join('\n');
-  if (!dispatch.includes('    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max')) throw Error('Epic requires the shared issue dispatch lease');
+  if (!dispatch.includes('    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max')) throw Error('Epic requires the shared issue dispatch lease');
   const workflow = await file('.github/workflows/lighthouse-sdlc-epic.yml');
   if (!workflow.includes('\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n')) throw Error('Epic workflow does not hold the shared issue lease');
+  for (const stage of ['triage', 'refine', 'implement']) {
+    const worker = await file(`.github/workflows/lighthouse-sdlc-${stage}.lock.yml`);
+    if (!worker.includes('\nconcurrency:\n  cancel-in-progress: false\n  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}\n  queue: max\n')) throw Error(`Epic ${stage} worker does not hold the shared parent lease`);
+  }
 }
 
 export async function runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load }) {

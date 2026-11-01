@@ -109,6 +109,7 @@ jobs:
     outputs:
       run: ${{ steps.route.outputs.run }}
       issue: ${{ steps.route.outputs.issue }}
+      epic_parent: ${{ steps.route.outputs.epic_parent }}
       stage: ${{ steps.route.outputs.stage }}
       worker: ${{ steps.route.outputs.worker }}
     steps:
@@ -125,6 +126,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_COMPLETION_ENABLED: true
+          LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
           LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${{ env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED }}
         run: node src/packages/sdlc/src/issue-actions.mjs route
   dispatch:
@@ -132,7 +134,7 @@ jobs:
     needs: route
     if: needs.route.outputs.run == 'true'
     concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04
@@ -143,6 +145,8 @@ jobs:
       pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ needs.route.outputs.issue }}
+      LIGHTHOUSE_EPIC_PARENT: ${{ needs.route.outputs.epic_parent }}
+      LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
       LIGHTHOUSE_STAGE: ${{ needs.route.outputs.stage }}
       LIGHTHOUSE_WORKER: ${{ needs.route.outputs.worker }}
     steps:

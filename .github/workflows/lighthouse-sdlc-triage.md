@@ -4,7 +4,7 @@ name: triage
 description: Assess an owner-admitted request without starting refinement.
 run-name: "triage #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
-  group: lighthouse-issue-${{ inputs.issue }}
+  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}
   cancel-in-progress: false
   queue: max
   job-discriminator: ${{ github.run_id }}
@@ -19,6 +19,10 @@ on:
       dispatch-request:
         description: Authenticated owner admission receipt
         required: true
+        type: string
+      epic-parent:
+        description: Authenticated parent issue for shared epic serialization
+        required: false
         type: string
   needs: [prepare]
 if: needs.prepare.outputs.eligible == 'true'
