@@ -1,5 +1,12 @@
 # @juangcarmona/lighthouse
 
+## 0.12.13
+
+### Patch Changes
+
+- Updated dependencies [19e0f29]
+  - @juangcarmona/lighthouse-sdlc@0.18.6
+
 ## 0.12.12
 
 ### Patch Changes
