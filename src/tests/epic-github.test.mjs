@@ -151,3 +151,7 @@ test('cancelled prerequisites stop dependent creation before any remote write', 
   assert.deepEqual(result.children.map(child => child.state), ['cancelled', 'blocked']);
   assert.equal(f.writes.length, 0);
 });
+
+test('epic correlation cannot target another parent branch', () => {
+  assert.throws(() => epicCorrelation({ ...correlation(), base: 'lighthouse/epic-147' }), /Invalid epic correlation/);
+});

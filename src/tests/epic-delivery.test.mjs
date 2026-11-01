@@ -60,7 +60,7 @@ test('epic mode plans a shared base for independent and dependent children and o
 
 test('epic mode rejects default or predecessor bases and duplicate identities', () => {
   const data = input();
-  for (const integrationBranch of ['main', undefined, 'bad branch']) assert.equal(buildStackedPlan({ ...data, mode: 'epic', parent: { ...data.parent, integrationBranch } }).valid, false);
+  for (const integrationBranch of ['main', undefined, 'bad branch', 'lighthouse/epic-147']) assert.equal(buildStackedPlan({ ...data, mode: 'epic', parent: { ...data.parent, integrationBranch } }).valid, false);
   data.slices[0].base = 'main';
   assert.deepEqual(buildStackedPlan({ ...data, mode: 'epic', parent: { ...data.parent, integrationBranch: 'lighthouse/epic-146' } }).operations, []);
   assert.equal(buildStackedPlan({ ...input(), slices: [input().slices[0], input().slices[0]] }).valid, false);

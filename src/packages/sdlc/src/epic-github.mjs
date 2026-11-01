@@ -6,7 +6,7 @@ const positive = value => Number.isSafeInteger(value) && value > 0;
 const prefix = '<!-- lighthouse-epic:';
 
 export function epicCorrelation({ repository, parent, slice, planDigest, base, dependencies, kind = 'child' }) {
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || !positive(parent) || typeof slice !== 'string' || !slice.trim() || !/^[a-f0-9]{64}$/.test(planDigest ?? '') || !/^lighthouse\/epic-[1-9]\d*$/.test(base ?? '') || !Array.isArray(dependencies) || dependencies.some(id => typeof id !== 'string' || !id.trim()) || !['child', 'pull-request', 'aggregate'].includes(kind)) throw Error('Invalid epic correlation');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || !positive(parent) || typeof slice !== 'string' || !slice.trim() || !/^[a-f0-9]{64}$/.test(planDigest ?? '') || base !== `lighthouse/epic-${parent}` || !Array.isArray(dependencies) || dependencies.some(id => typeof id !== 'string' || !id.trim()) || !['child', 'pull-request', 'aggregate'].includes(kind)) throw Error('Invalid epic correlation');
   return { schemaVersion: 1, kind, repository, parent, slice, planDigest, base, dependencies: [...new Set(dependencies)].sort() };
 }
 
