@@ -1,0 +1,81 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { prepareNativeEpic, authorizeNativeEpic, checkEpicLeaseConfiguration, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
+
+const repository = 'owner/repo', owner = 'owner', issue = 146, sha = 'a'.repeat(40);
+const estimate = { points: 13, status: 'confirmed', confidence: 'medium', rationale: { scope: 'Several outcomes', dependencies: 'Dependent slices', verification: 'Independent tests' }, uncertainty: ['Host evidence'] };
+const decomposition = { schemaVersion: 1, parent: { id: 'GH-146', title: 'Parent' }, slices: [
+  { id: 'a', title: 'First outcome', scope: ['First bounded scope'], acceptance: ['First outcome verified'], dependencies: [] },
+  { id: 'b', title: 'Second outcome', acceptance: ['Second outcome verified'], dependencies: ['a'] },
+] };
+const request = { schemaVersion: 1, runId: 'run', issue, stage: 'refine', workflowRunId: '100', sourceRevision: sha };
+const result = { schemaVersion: 1, runId: 'run', stage: 'refine', gate: 'ready', status: 'passed', output: { estimate, decomposition }, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Review the plan.' };
+const envelope = { schemaVersion: 1, result, effect: { type: 'issue-comment', body: 'Plan ready.' } };
+
+async function fixture(t) {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-epic-native-test-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const parent = { number: issue, title: 'Parent', body: 'Bounded request', state: 'open', user: { login: owner, type: 'User' }, labels: [{ name: 'ready' }] };
+  const bot = { login: 'github-actions[bot]', type: 'Bot' };
+  const report = { id: 1, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/${issue}`, html_url: 'https://example.test/report', body: '<!-- lighthouse-stage:refine:passed -->' };
+  const comments = [report], issues = [], parents = new Map(), dependencies = new Map(), calls = [];
+  let router = 'jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n';
+  const workflow = 'name: epic\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n';
+  const api = async (path, method = 'GET', body) => {
+    calls.push({ path, method, body });
+    if (path === '') return { default_branch: 'main' };
+    if (path === 'commits/main') return { sha };
+    if (path === `contents/.github/workflows/lighthouse-sdlc-router.yml?ref=${sha}` || path === `contents/.github/workflows/lighthouse-sdlc-epic.yml?ref=${sha}`) { const content = path.includes('router') ? router : workflow; return { type: 'file', encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') }; }
+    if (path === `issues/${issue}`) return parent;
+    if (path.startsWith(`issues/${issue}/comments?`)) return comments;
+    if (path === `issues/${issue}/comments` && method === 'POST') { const comment = { id: comments.length + 1, user: bot, issue_url: report.issue_url, body: body.body }; comments.push(comment); return structuredClone(comment); }
+    if (path.startsWith('issues/comments/') && method === 'PATCH') { const comment = comments.find(c => c.id === Number(path.split('/')[2])); comment.body = body.body; return structuredClone(comment); }
+    if (path === 'issues?state=all&per_page=100&page=1') return issues;
+    if (path === 'issues' && method === 'POST') { const child = { id: 1000 + issues.length, number: 200 + issues.length, user: bot, ...body }; issues.push(child); return structuredClone(child); }
+    const parentMatch = path.match(/^issues\/(\d+)\/parent$/);
+    if (parentMatch) return parents.get(Number(parentMatch[1])) ?? null;
+    if (path === `issues/${issue}/sub_issues` && method === 'POST') { const child = issues.find(item => item.id === body.sub_issue_id); parents.set(child.number, { number: issue }); return {}; }
+    const dependency = path.match(/^issues\/(\d+)\/dependencies\/blocked_by$/);
+    if (dependency) { const number = Number(dependency[1]); if (method === 'POST') { dependencies.set(number, [...(dependencies.get(number) ?? []), { id: body.issue_id }]); return {}; } return dependencies.get(number) ?? []; }
+    throw Error(`Unexpected ${method} ${path}`);
+  };
+  const load = async (_api, _repo, _comments, current) => ({ request: { ...request, taskDigest: current.taskDigest }, envelope, report: report.html_url });
+  const actor = { login: owner }, run = { id: 500, run_attempt: 1, status: 'in_progress', path: '.github/workflows/lighthouse-sdlc-epic.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
+  return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; } };
+}
+
+test('native host creates bounded children and links the authenticated dependency graph', async t => {
+  const f = await fixture(t);
+  const output = await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  assert.equal(output.status, 'reconciled');
+  assert.equal(output.parent, 'open');
+  assert.equal(f.issues.length, 2);
+  assert.match(f.issues[0].body, /First bounded scope/);
+  assert.equal(f.parents.get(200).number, issue);
+  assert.deepEqual(f.dependencies.get(201), [{ id: 1000 }]);
+  const journal = JSON.parse(await readFile(f.path, 'utf8'));
+  assert.equal(Object.values(journal.entries).every(entry => entry.receipt.state === 'linked'), true);
+});
+
+test('native host blocks changed owner intent, pause and later refinement', async t => {
+  const f = await fixture(t);
+  const snapshot = await prepareNativeEpic(f.api, repository, owner, issue, f.load);
+  await assert.doesNotReject(authorizeNativeEpic(f.api, snapshot));
+  f.parent.labels.push({ name: 'human-working' });
+  await assert.rejects(authorizeNativeEpic(f.api, snapshot), /authority or refinement changed/);
+  f.parent.labels.pop(); f.parent.body = 'Changed request';
+  await assert.rejects(authorizeNativeEpic(f.api, snapshot), /authority or refinement changed/);
+  f.parent.body = 'Bounded request'; f.comments.push({ id: 10, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-stage:refine:passed -->' });
+  await assert.rejects(authorizeNativeEpic(f.api, snapshot), /authority or refinement changed/);
+});
+
+test('native host refuses a router without the shared issue lease', async t => {
+  const f = await fixture(t);
+  await assert.doesNotReject(checkEpicLeaseConfiguration(f.api, sha));
+  f.setRouter('jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-dispatch-${{ needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n');
+  await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /shared issue dispatch lease/);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});

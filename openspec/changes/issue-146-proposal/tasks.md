@@ -21,7 +21,7 @@
 - [ ] 3.2 Wire authorized child triage/refinement and implementation dispatch, epic-targeted publication and internal completion without closing the parent; test revoked authority, capacity, blocked questions and base changes.
 - [ ] 3.3 Publish and reconcile one aggregate PR after accepted children, preserving final owner approval and parent lifetime; test retries, cancellations and stale head/check decisions.
 
-The correlation/child reconciliation adapter and fixture tests for 3.1 are delivered in `epic-github.mjs`. The native host still needs to supply durable storage, a serialized parent lease, authenticated observations and current authority callbacks. This task remains unchecked until that integration is complete; passing callback-driven fixtures do not establish live orchestration.
+The native host now supplies an authenticated artifact-backed journal, verifies the shared parent lease and rechecks authority before writes. Its workflow is deliberately not installed until child delivery and aggregate publication are connected. Task 3.1 remains unchecked until native integration and interruption recovery are demonstrated on GitHub; passing fixtures do not establish live orchestration.
 
 ## 4. Candidate verification
 
