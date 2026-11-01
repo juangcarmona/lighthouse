@@ -121,6 +121,17 @@ test('native host refuses a router without the shared issue lease', async t => {
   assert.equal(f.calls.some(call => call.method !== 'GET'), false);
 });
 
+test('current workflow projections satisfy the native lease checks', async () => {
+  const root = new URL('../packages/sdlc/workflows/', import.meta.url);
+  const api = async path => {
+    const name = path.match(/^contents\/\.github\/workflows\/([^?]+)\?ref=/)?.[1];
+    assert.ok(name);
+    const content = await readFile(new URL(name, root));
+    return { type: 'file', encoding: 'base64', size: content.length, content: content.toString('base64') };
+  };
+  await assert.doesNotReject(checkEpicLeaseConfiguration(api, sha));
+});
+
 test('native host refuses older workers without the shared parent lease', async t => {
   const f = await fixture(t);
   f.setWorker('name: old worker\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n');

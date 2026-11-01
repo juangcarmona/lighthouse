@@ -27,6 +27,8 @@ A controlled GitHub test with simulated refinement created [two native children]
 
 Two controlled runs tested the proposed lease expressions: [the first](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356522) and [the second](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356528) ran their agent jobs concurrently while preparation and publication jobs were serialized. These synthetic runs do not establish child delivery.
 
+In a separate test, GitHub created a child but the [simulated response was lost](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356584). The [next attempt](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330471946) stopped on the uncertain receipt and left exactly one matching child. Both runs intentionally failed; the fixture does not establish automatic recovery of that uncertainty.
+
 ## 4. Candidate verification
 
 - [x] 4.1 Run required install, repository checks, strict OpenSpec validation and citation verification; retain completed receipts, reports and retrospective, accurately recording incomplete work.
