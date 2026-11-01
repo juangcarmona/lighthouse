@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareNativeEpic, authorizeNativeEpic, checkEpicLeaseConfiguration, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
+import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, checkEpicLeaseConfiguration, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
 
 const repository = 'owner/repo', owner = 'owner', issue = 146, sha = 'a'.repeat(40);
 const estimate = { points: 13, status: 'confirmed', confidence: 'medium', rationale: { scope: 'Several outcomes', dependencies: 'Dependent slices', verification: 'Independent tests' }, uncertainty: ['Host evidence'] };
@@ -70,6 +70,28 @@ test('native host blocks changed owner intent, pause and later refinement', asyn
   await assert.rejects(authorizeNativeEpic(f.api, snapshot), /authority or refinement changed/);
   f.parent.body = 'Bounded request'; f.comments.push({ id: 10, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-stage:refine:passed -->' });
   await assert.rejects(authorizeNativeEpic(f.api, snapshot), /authority or refinement changed/);
+});
+
+test('child admission binds the current plan, native parent and retained owner workflow', async t => {
+  const f = await fixture(t);
+  await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  const journal = JSON.parse(await readFile(f.path, 'utf8'));
+  f.issues[0].state = 'open';
+  const api = async (path, ...args) => {
+    if (path === 'issues/200') return f.issues[0];
+    if (path === 'actions/runs/500/attempts/1') return { ...f.run, status: 'completed' };
+    return f.api(path, ...args);
+  };
+  const args = { api, repository, owner, child: 200, load: f.load, readArtifact: async () => journal };
+  assert.equal((await authenticateEpicChild(args)).slice, 'a');
+  f.issues[0].body += '\nChanged scope';
+  await assert.rejects(authenticateEpicChild(args), /no longer matches/);
+  f.issues[0].body = f.issues[0].body.replace('\nChanged scope', '');
+  f.parents.set(200, { number: 147 });
+  await assert.rejects(authenticateEpicChild(args), /parent link changed/);
+  f.parents.set(200, { number: issue });
+  f.parent.labels.push({ name: 'future' });
+  await assert.rejects(authenticateEpicChild(args), /paused/);
 });
 
 test('native host refuses a router without the shared issue lease', async t => {

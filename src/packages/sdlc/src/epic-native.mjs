@@ -5,9 +5,10 @@ import { issueComments } from './stage-dispatch.mjs';
 import { taskDigest } from './issue-actions.mjs';
 import { loadRefinement } from './proposal.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
-import { assessDecomposition } from './epic.mjs';
-import { reconcileEpicChildren, readEpicMarker } from './epic-github.mjs';
-import { createEpicJournal } from './epic-journal.mjs';
+import { assessDecomposition, epicPlanDigest } from './epic.mjs';
+import { reconcileEpicChildren, readEpicMarker, epicCorrelation, epicChildBody } from './epic-github.mjs';
+import { createEpicJournal, readEpicChildReceipt } from './epic-journal.mjs';
+import { isDeepStrictEqual } from 'node:util';
 
 const isOwnerAnswer = (comment, owner) => comment.user?.login === owner && !comment.body?.includes('<!-- lighthouse-run:') && !comment.body?.includes('<!-- lighthouse-actions:');
 const paused = issue => issue.state !== 'open' || issue.pull_request || issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info', 'waiting-review', 'execution-failed', 'triage', 'refine', 'propose', 'implement'].includes(label.name));
@@ -35,6 +36,21 @@ export async function authorizeNativeEpic(api, snapshot) {
   const later = comments.some(comment => Number(comment.id) > Number(snapshot.reportId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && /<!-- lighthouse-(?:stage:refine:|dispatch:)/.test(comment.body ?? ''));
   if (paused(issue) || !issue.labels.some(label => label.name === 'ready') || repo.default_branch !== snapshot.defaultBranch || (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha !== snapshot.sourceRevision || taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, snapshot.owner))) !== snapshot.taskDigest || !report || report.user?.login !== 'github-actions[bot]' || report.user.type !== 'Bot' || report.body !== snapshot.reportBody || later) throw Error('Epic parent authority or refinement changed');
   return true;
+}
+
+export async function authenticateEpicChild({ api, repository, owner, child, load, readArtifact }) {
+  if (!Number.isSafeInteger(child) || child < 1) throw Error('Invalid epic child');
+  const issue = await api(`issues/${child}`), marker = readEpicMarker(issue.body);
+  if (issue.number !== child || !Number.isSafeInteger(issue.id) || issue.id < 1 || issue.state !== 'open' || issue.pull_request || issue.user?.login !== 'github-actions[bot]' || issue.user.type !== 'Bot' || !marker || marker.kind !== 'child' || marker.repository !== repository || marker.parent === child) throw Error('Epic child identity is not trusted');
+  const snapshot = await prepareNativeEpic(api, repository, owner, marker.parent, load);
+  const slice = snapshot.plan.slices.find(item => item.id === marker.slice);
+  const expected = slice && epicCorrelation({ repository, parent: marker.parent, slice: slice.id, planDigest: epicPlanDigest(snapshot.plan), base: `lighthouse/epic-${marker.parent}`, dependencies: slice.dependencies });
+  if (!expected || !isDeepStrictEqual(marker, expected) || issue.title !== slice.title || issue.body !== epicChildBody(marker.parent, slice, expected)) throw Error('Epic child no longer matches the current plan');
+  const parent = await api(`issues/${child}/parent`);
+  if (parent?.number !== marker.parent) throw Error('Epic child parent link changed');
+  await readEpicChildReceipt({ api, repository, owner, correlation: expected, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, resource: { id: issue.id, number: child }, ...(readArtifact ? { readArtifact } : {}) });
+  await authorizeNativeEpic(api, snapshot);
+  return { parent: marker.parent, slice: marker.slice, planDigest: marker.planDigest, base: marker.base, sourceRevision: snapshot.sourceRevision };
 }
 
 export async function findEpicCandidates(api, correlation) {

@@ -29,6 +29,22 @@ function parseEntry(comment, repository, parent) {
   return value;
 }
 
+// The marker identifies a candidate; only the owner-triggered run and its retained artifact authenticate it.
+export async function readEpicChildReceipt({ api, repository, owner, correlation, sourceRevision, defaultBranch, resource, readArtifact = readActionsJson }) {
+  if (!isDeepStrictEqual(correlation, epicCorrelation(correlation)) || correlation.kind !== 'child' || correlation.repository !== repository || !sha(sourceRevision) || !defaultBranch || !positive(resource?.id) || !positive(resource?.number)) throw Error('Invalid epic child admission');
+  const parent = correlation.parent, key = keyFor(correlation);
+  const comments = await issueComments(api, parent);
+  const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
+  if (candidates.length !== 1) throw Error('Epic child journal is missing or ambiguous');
+  const { comment, entry } = candidates[0], receipt = entry.receipt;
+  if (entry.revision !== sourceRevision || receipt.state !== 'linked' || !isDeepStrictEqual(receipt.correlation, correlation) || !isDeepStrictEqual(receipt.resource, resource)) throw Error('Epic child receipt does not match the current identity');
+  const origin = await api(`actions/runs/${entry.runId}/attempts/${entry.attempt}`);
+  if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== sourceRevision || origin.head_branch !== defaultBranch || origin.repository?.full_name !== repository) throw Error('Epic child journal origin is not trusted');
+  const stored = await readArtifact(api, repository, entry.runId, artifactName(parent, entry.attempt), 'journal.json');
+  if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt })) throw Error('Epic child journal artifact is missing or differs from its comment');
+  return receipt;
+}
+
 export async function createEpicJournal({ api, repository, owner, parent, sourceRevision, defaultBranch, run, path, authorize, readArtifact = readActionsJson }) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || typeof owner !== 'string' || !positive(parent) || !sha(sourceRevision) || !defaultBranch || !positive(run?.id) || !Number.isSafeInteger(run?.run_attempt) || run.run_attempt < 1 || run.status !== 'in_progress' || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.head_sha !== sourceRevision || run.head_branch !== defaultBranch || run.repository?.full_name !== repository || typeof authorize !== 'function' || typeof path !== 'string') throw Error('Epic journal requires an authenticated owner workflow');
   parent = Number(parent);

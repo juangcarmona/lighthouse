@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createEpicJournal } from '../packages/sdlc/src/epic-journal.mjs';
+import { createEpicJournal, readEpicChildReceipt } from '../packages/sdlc/src/epic-journal.mjs';
 import { epicCorrelation } from '../packages/sdlc/src/epic-github.mjs';
 
 const repository = 'owner/repo', owner = 'owner', parent = 146, revision = 'a'.repeat(40), planDigest = 'b'.repeat(64);
@@ -26,8 +26,28 @@ async function fixture(t) {
   const readArtifact = async (_api, _repo, id) => artifacts.get(String(id));
   const open = id => createEpicJournal({ api, repository, owner, parent, sourceRevision: revision, defaultBranch: 'main', run: run(id), path: join(dir, `${id}.json`), authorize: async () => authorized, readArtifact });
   const finish = async id => { origins.set(String(id), { ...run(id), status: 'completed' }); artifacts.set(String(id), JSON.parse(await readFile(join(dir, `${id}.json`), 'utf8'))); };
-  return { api, comments, origins, artifacts, open, finish, authorize: value => { authorized = value; }, lose: value => { loseResponse = value; } };
+  return { api, comments, origins, artifacts, readArtifact, open, finish, authorize: value => { authorized = value; }, lose: value => { loseResponse = value; } };
 }
+
+test('child admission requires a linked receipt backed by the authentic retained journal', async t => {
+  const f = await fixture(t), journal = await f.open(100), resource = { id: 123, number: 9 };
+  await journal.readReceipt(key);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'created', correlation, resource });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'linked', correlation, resource });
+  await f.finish(100);
+  const args = { api: f.api, repository, owner, correlation, sourceRevision: revision, defaultBranch: 'main', resource, readArtifact: f.readArtifact };
+  assert.equal((await readEpicChildReceipt(args)).state, 'linked');
+  await assert.rejects(readEpicChildReceipt({ ...args, resource: { id: 124, number: 9 } }), /does not match/);
+  f.comments.push({ ...f.comments[0], id: 2 });
+  await assert.rejects(readEpicChildReceipt(args), /missing or ambiguous/);
+  f.comments.pop();
+  f.origins.get('100').actor.login = 'other';
+  await assert.rejects(readEpicChildReceipt(args), /origin is not trusted/);
+  f.origins.get('100').actor.login = owner;
+  f.artifacts.get('100').entries[key].receipt.state = 'created';
+  await assert.rejects(readEpicChildReceipt(args), /artifact is missing or differs/);
+});
 
 test('journal binds each transition to a retained authenticated workflow artifact', async t => {
   const f = await fixture(t), first = await f.open(100);

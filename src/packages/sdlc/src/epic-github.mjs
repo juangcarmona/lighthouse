@@ -27,6 +27,10 @@ export function readEpicMarker(body) {
   } catch { return null; }
 }
 
+export function epicChildBody(parent, slice, correlation) {
+  return `Parent issue: #${parent}${slice.scope.length ? `\n\nScope:\n${slice.scope.map(item => `- ${item}`).join('\n')}` : ''}\n\nAcceptance evidence:\n${slice.acceptance.map(item => `- ${item}`).join('\n')}\n\n${epicMarker(correlation)}`;
+}
+
 // The credentialed host supplies a durable journal, serialized parent lease,
 // current authorization check and receipt authentication. This adapter grants none.
 export async function reconcileEpicChildren(plan, context, host) {
@@ -64,7 +68,7 @@ export async function reconcileEpicChildren(plan, context, host) {
           await host.writeReceipt(key, intent);
           // Persist intent before POST. A lost response must never trigger another POST.
           await host.beforeWrite(correlation);
-          resource = await host.api('issues', 'POST', { title: slice.title, body: `Parent issue: #${parent}${slice.scope.length ? `\n\nScope:\n${slice.scope.map(item => `- ${item}`).join('\n')}` : ''}\n\nAcceptance evidence:\n${slice.acceptance.map(item => `- ${item}`).join('\n')}\n\n${epicMarker(correlation)}` });
+          resource = await host.api('issues', 'POST', { title: slice.title, body: epicChildBody(parent, slice, correlation) });
           if (!positive(resource?.id) || !positive(resource?.number)) throw Error('Create response lacks native resource identity');
           receipt = { ...intent, state: 'created', resource: { id: resource.id, number: resource.number } };
           await host.writeReceipt(key, receipt);
