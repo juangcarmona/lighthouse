@@ -525,6 +525,25 @@ test('maintenance restores a failed read-only publication after its label was wr
   assert.equal(f.comments.length, count);
 });
 
+test('maintenance does not restore a handoff if the workflow revision changes during reconciliation', async () => {
+  const f = fixture();
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
+  f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'failure';
+  f.issue.labels = [{ name: 'ready' }];
+  const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'unknown' };
+  f.comment.body = dispatchReceiptBody(repository, receipt);
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'The refinement is complete.' } };
+  const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+  let reads = 0;
+  const api = async (path, ...args) => path === 'commits/main' && ++reads === 4 ? { sha: 'b'.repeat(40) } : f.api(path, ...args);
+  const result = await prepareRecovery(api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.equal(result.observations[0].code, 'handoff-unconfirmed');
+  assert.equal(f.comments.some(comment => comment.body.includes('previous handoff was restored')), false);
+  assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'unknown');
+});
+
 test('maintenance restores a failed read-only publication for a question without claiming completion', async () => {
   const f = fixture();
   f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
