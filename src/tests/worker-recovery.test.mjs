@@ -625,6 +625,34 @@ test('maintenance restores a failed read-only publication for a question without
   assert.equal(f.comments.length, count);
 });
 
+test('maintenance restores an operational blocker without inventing a status label or retry', async () => {
+  for (const interrupted of [false, true]) {
+    const f = fixture();
+    f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+    f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
+    f.run.conclusion = interrupted ? 'failure' : 'success';
+    f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = interrupted ? 'failure' : 'success';
+    f.issue.labels = interrupted ? [{ name: 'refine' }] : [];
+    const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: interrupted ? 'unknown' : 'blocked' };
+    f.comment.body = dispatchReceiptBody(repository, receipt);
+    const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+    const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'blocked', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Workflow maintainer: restore the required tool.' }, effect: { type: 'issue-comment', body: 'The required tool is unavailable.' } };
+    const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+    const api = async (path, method, body) => {
+      if (path === 'issues/7/labels/refine' && method === 'DELETE') { f.issue.labels = []; return; }
+      return f.api(path, method, body);
+    };
+    await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+    assert.match(f.comments.at(-1).body, /restore the required tool/);
+    assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'blocked');
+    assert.deepEqual(f.issue.labels, []);
+    assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false);
+    const count = f.comments.length;
+    await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+    assert.equal(f.comments.length, count);
+  }
+});
+
 test('maintenance restores a triage question using the installed workflow step name', async () => {
   const f = fixture();
   f.request.stage = 'triage'; f.request.id = dispatchId(repository, '100', 'triage');
