@@ -1,5 +1,33 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.16.3
+
+### Patch Changes
+
+- 135754e: # Unattended proposal artifacts
+
+  Require the unattended proposal to include its design and report the missing artifact when a plan is incomplete.
+
+- 05042ac: # Documentation-only proposals
+
+  Allow OpenSpec proposals without spec-level behavior changes to retain the provider's explicit `skip_specs` declaration through validation and feedback.
+
+- 0877156: # Unrelated pull request reviews
+
+  Ignore reviews of pull requests that are not Lighthouse delivery branches.
+
+- 8e74f22: # Unattended review context
+
+  Provide the reviewer with the authorized planning scope and the required format for findings.
+
+- 95db8fb: # Unattended source location
+
+  Tell unattended workers where the host mounts the source repository.
+
+- 1ddc072: # Unattended stage identity
+
+  Clarify how unattended workers preserve the host-supplied stage identity and distinguish later review from current-stage blockers.
+
 ## 0.16.2
 
 ### Patch Changes
