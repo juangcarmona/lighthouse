@@ -231,7 +231,7 @@ async function main(command) {
       await checkDispatchClaim(api, repo, issueNumber, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, env.GITHUB_RUN_ID);
       const current = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository: repo, root: process.cwd() });
       if (!current || current.head !== fresh.head || current.approval.reviewKey !== fresh.approval.reviewKey) throw Error('Product approval changed before apply publication');
-    });
+    }, applyRequest);
     await writeFile(join(dir, 'published'), JSON.stringify({ receipt: published.receipt, checkpoint: published.checkpoint }));
     await finishDispatch(api, repo, issueNumber, dispatch.commentId, env.GITHUB_RUN_ID, 'passed');
     try { await signalProductApplyContinuation(api, issueNumber, env.GITHUB_RUN_ID, published.checkpoint); }

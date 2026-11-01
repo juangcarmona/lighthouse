@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { validateProductChangeFiles, validateProductCheckpoint, validateProductWorkspace, loadProductBridge, productReviewBinding, parseProductDecision, verifyProductDecision, authorizeProductApply, createProductApplyReceipt, productModelDigest, productModelDirectory } from './product-change.mjs';
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
@@ -282,12 +283,26 @@ export async function observeUpdatedProductPull(api, number, expectedHead, wait 
   throw Error('Product PR head update could not be confirmed; reconcile publication before retrying');
 }
 
-export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite) {
+export async function advanceProductRef(api, branch, head) {
+  try {
+    await api(`git/refs/heads/${branch}`, 'PATCH', { sha: head, force: false });
+  } catch (error) {
+    const current = await api(`git/ref/heads/${branch}`, 'GET', undefined, true).catch(() => null);
+    if (current?.object?.sha !== head) throw error;
+  }
+}
+
+export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite, applyRequest) {
   const approvalInfo = dispatch.request.productApproval;
   if (dispatch.request.worker !== 'apply-product-change' || !approvalInfo || !result || result.head !== approvalInfo.head) throw Error('Product apply result does not match its authenticated dispatch');
   const files = validateProductApplyFiles(result.files, approvalInfo.changeName, result.modelRoot);
   const fresh = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository, root: process.cwd() });
-  if (!fresh || fresh.head !== approvalInfo.head || fresh.pullRequest !== approvalInfo.pullRequest || fresh.approval.reviewKey !== approvalInfo.reviewKey || fresh.checkpoint.changeId !== result.receipt.changeId) throw Error('Product approval or reviewed branch changed before publication');
+  if (!fresh || fresh.head !== approvalInfo.head || fresh.pullRequest !== approvalInfo.pullRequest || fresh.approval.reviewKey !== approvalInfo.reviewKey || fresh.checkpoint.changeId !== result.receipt?.changeId) throw Error('Product approval or reviewed branch changed before publication');
+  const approvalFields = value => { const { observedAt, ...rest } = value ?? {}; return rest; };
+  if (!applyRequest || applyRequest.repository !== repository || applyRequest.owner !== owner || applyRequest.issue !== fresh.issue || applyRequest.pullRequest !== fresh.pullRequest || applyRequest.head !== fresh.head || applyRequest.changeName !== fresh.changeName || !isDeepStrictEqual(applyRequest.checkpoint, fresh.checkpoint) || !isDeepStrictEqual(applyRequest.binding, fresh.binding) || !isDeepStrictEqual(approvalFields(applyRequest.approval), approvalFields(fresh.approval))) throw Error('Product apply request no longer matches authenticated approval');
+  const intent = authorizeProductApply({ checkpoint: applyRequest.checkpoint, approval: applyRequest.approval, currentBinding: applyRequest.binding, currentIdentity: applyRequest.checkpoint.identity });
+  const expectedReceipt = createProductApplyReceipt({ intent, approval: applyRequest.approval, checkpoint: applyRequest.checkpoint, headAfter: fresh.head, resultingModelDigest: result.resultingModelDigest, validated: true, appliedAt: result.receipt?.appliedAt });
+  if (result.providerOutcome !== 'applied' || !isDeepStrictEqual(result.receipt, expectedReceipt)) throw Error('Product apply receipt does not match authenticated provider output');
   if (result.receipt.resultingModelDigest !== result.resultingModelDigest || result.receipt.baselineDigest !== fresh.checkpoint.baselineDigest || result.receipt.proposalDigest !== fresh.checkpoint.proposalDigest) throw Error('Product apply receipt does not match the approved candidate');
   const projected = await productModelDigestFromApi(api, fresh.head, files);
   if (projected.modelRoot !== result.modelRoot || projected.digest !== result.resultingModelDigest) throw Error('Published files do not reproduce the provider-validated product model');
@@ -296,13 +311,15 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   const commit = await api(`git/commits/${fresh.head}`);
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => file.deleted ? { path: file.path, mode: '100644', type: 'blob', sha: null } : { path: file.path, mode: '100644', type: 'blob', content: file.content }) });
   const created = await api('git/commits', 'POST', { message: `docs: apply product change ${fresh.checkpoint.changeId}`, tree: tree.sha, parents: [fresh.head] });
+  if (!/^[a-f0-9]{40}$/.test(created?.sha ?? '')) throw Error('Created product commit has no valid identity');
   await beforeWrite(fresh);
-  await api(`git/refs/heads/${pr.head.ref}`, 'PATCH', { sha: created.sha, force: false });
+  await advanceProductRef(api, pr.head.ref, created.sha);
   const updated = await observeUpdatedProductPull(api, fresh.pullRequest, created.sha);
   const receipt = { ...result.receipt, headAfter: updated.head.sha };
   let prBody = updated.body ?? '';
   const checkpoint = { ...fresh.checkpoint, state: 'applied', identity: { ...fresh.checkpoint.identity, head: updated.head.sha }, effectIds: [...new Set([...fresh.checkpoint.effectIds, `apply:${receipt.intentId}:${updated.head.sha}`])].slice(0, 32) };
-  validateProductCheckpoint(checkpoint);
+  const checkpointErrors = validateProductCheckpoint(checkpoint);
+  if (checkpointErrors.length) throw Error(checkpointErrors.join('; '));
   prBody = prBody.replace(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
   await api(`pulls/${fresh.pullRequest}`, 'PATCH', { body: prBody });
   const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations, parent: checkpoint.parent });

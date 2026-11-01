@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles, observeUpdatedProductPull } from '../packages/sdlc/src/product-change-actions.mjs';
+import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles, observeUpdatedProductPull, advanceProductRef } from '../packages/sdlc/src/product-change-actions.mjs';
 import { productModelDigest } from '../packages/sdlc/src/product-change.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
 import { productApplyRequest, restoreProductChangePolicy } from '../packages/sdlc/src/issue-actions.mjs';
@@ -22,6 +22,20 @@ test('product apply waits for GitHub to expose the new PR head before recording 
   assert.equal(calls, 3);
   await assert.rejects(observeUpdatedProductPull(async () => ({ state: 'open', head: { sha: 'old' } }), 7, 'new', async () => {}), /could not be confirmed/);
   await assert.rejects(observeUpdatedProductPull(async () => ({ state: 'closed', head: { sha: 'new' } }), 7, 'new', async () => {}), /closed/);
+});
+
+test('a lost ref-update response is accepted only when the exact new commit is observed', async () => {
+  for (const observed of ['new', 'old', null]) {
+    let writes = 0;
+    const api = async (path, method) => {
+      if (method === 'PATCH') { writes++; throw Error('response lost'); }
+      assert.equal(path, 'git/ref/heads/lighthouse/example');
+      return observed === null ? null : { object: { sha: observed } };
+    };
+    if (observed === 'new') await assert.doesNotReject(advanceProductRef(api, 'lighthouse/example', 'new'));
+    else await assert.rejects(advanceProductRef(api, 'lighthouse/example', 'new'), /response lost/);
+    assert.equal(writes, 1);
+  }
 });
 
 test('product apply publication collects newly added model files as well as the applied manifest', async () => {
