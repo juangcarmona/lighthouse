@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('epic routing is opt-in and authenticates bot children before selecting a parent lease', async () => {
   const route = { run: true, stage: 'triage' }, parent = { parent: 146 }, calls = [];
@@ -57,6 +57,15 @@ test('product outcomes must match the authenticated idea or feedback entry', () 
   assert.doesNotThrow(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'feedback' }));
   assert.throws(() => checkProductEntry({ entry: 'idea' }, { productEntry: 'feedback' }), /different authorized entry/);
   assert.throws(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'idea' }), /different authorized entry/);
+});
+
+test('product prerequisite handoff states whether preparation can start', () => {
+  assert.equal(productGapNextAction({ gap: null }), null);
+  const gap = { summary: 'Product intent needs a decision' };
+  assert.match(productGapNextAction({ gap, enabled: true, dispatched: true }).action, /None/);
+  assert.match(productGapNextAction({ gap, enabled: false, dispatched: true }).action, /install and enable/);
+  assert.match(productGapNextAction({ gap, enabled: true, dispatched: false }).action, /request authorized/);
+  assert.match(productGapNextAction({ gap, enabled: true, dispatched: true, paused: true }).action, /remove the future label/);
 });
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
