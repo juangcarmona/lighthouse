@@ -1,8 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { authorizedCiCallback, draftIntentMarker, implementationPrProof, isCurrentPullRequestEvent, pendingDraftIntent, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
+test('scheduled, event and repository CI reconciliation share one non-cancelling queue', async () => {
+  const router = await readFile(new URL('../packages/sdlc/workflows/lighthouse-sdlc-router.yml', import.meta.url), 'utf8');
+  const installed = await readFile(new URL('../../.github/workflows/lighthouse-sdlc-router.yml', import.meta.url), 'utf8');
+  const ci = await readFile(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  for (const [workflow, job] of [[router, 'pr-state'], [installed, 'pr-state'], [ci, 'reconcile-implementation-pr']]) {
+    const section = workflow.split(`  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+    assert.match(section, /concurrency:\n      group: lighthouse-pr-state\n      cancel-in-progress: false\n      queue: max/);
+  }
+});
 const pr = draft => ({
   number: 34, state: 'open', draft, merged: false,
   user: { login: 'github-actions[bot]', type: 'Bot' },

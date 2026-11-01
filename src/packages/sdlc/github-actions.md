@@ -89,6 +89,8 @@ For example, a question says “Owner: May the assets be reused? Reply here” a
 
 Passed proposal reports and unrelated issue comments do not grant continuation. Owner feedback on an implementation PR updates that PR; approval requests integration when completion is enabled. Reservations and existing proposal PRs prevent duplicate work. Changed source, edited earlier intent, unavailable artifacts or withdrawn readiness fail admission rather than reusing stale approval. The owner can request fresh refinement when those inputs change. Direct GitHub replies remain supported independently of any future external-client comment or receipt contract.
 
+The installed PR-state job serializes scheduled scans and event-driven reconciliation through the repository-wide `lighthouse-pr-state` Actions concurrency group. An adopter that invokes `pr-state-actions.mjs` from a CI callback must use the same group with cancellation disabled and queued runs; otherwise the callback can race the router when publishing a handoff. This queue does not coordinate writers outside these jobs.
+
 The [router](workflows/lighthouse-sdlc-router.yml) and [event handler](src/issue-actions.mjs) define installed routes. The [implementation skill](skills/implement/SKILL.md) defines planning and coding within one execution.
 
 The `apply-review` worker is installed with proposal support. It also handles implementation feedback when implementation is installed, preserving its `implement` result. Verified feedback has a stable dispatch identity across repeated events. Approval retains its separate integration route.
