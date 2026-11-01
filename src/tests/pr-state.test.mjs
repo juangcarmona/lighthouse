@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authorizedCiCallback, implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
+import { authorizedCiCallback, implementationPrProof, isCurrentPullRequestEvent, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
 const pr = draft => ({
@@ -28,6 +28,17 @@ const fixture = (draft, passed = true) => {
   const setDraft = async (_, value) => { changed.push(value); candidate.draft = value; };
   return { issue, candidate, api, setDraft, changed };
 };
+
+test('delayed PR events cannot project a state that has since changed', () => {
+  assert.equal(isCurrentPullRequestEvent('converted_to_draft', pr(false)), false);
+  assert.equal(isCurrentPullRequestEvent('ready_for_review', pr(true)), false);
+  assert.equal(isCurrentPullRequestEvent('closed', pr(false)), false);
+  assert.equal(isCurrentPullRequestEvent('reopened', { ...pr(false), state: 'closed' }), false);
+  assert.equal(isCurrentPullRequestEvent('converted_to_draft', pr(true)), true);
+  assert.equal(isCurrentPullRequestEvent('ready_for_review', pr(false)), true);
+  assert.equal(isCurrentPullRequestEvent('closed', { ...pr(false), state: 'closed' }), true);
+  assert.equal(isCurrentPullRequestEvent('reopened', pr(false)), true);
+});
 
 test('a complete draft becomes reviewable only after required CI passes', async () => {
   const state = fixture(true);

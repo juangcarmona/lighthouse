@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { authorizedCiCallback, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { authorizedCiCallback, isCurrentPullRequestEvent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 import { handoff } from './handoff.mjs';
 import { productProposalProof } from './product-change.mjs';
 
@@ -64,7 +64,7 @@ async function main() {
   for (const number of candidates) {
     if (!Number.isSafeInteger(number)) continue;
     const pr = await api(`pulls/${number}`);
-    if (env.GITHUB_EVENT_NAME === 'pull_request' && pr.head.sha !== event.pull_request.head.sha) continue;
+    if (env.GITHUB_EVENT_NAME === 'pull_request' && (pr.head.sha !== event.pull_request.head.sha || !isCurrentPullRequestEvent(event.action, pr))) continue;
     if (env.GITHUB_EVENT_NAME === 'workflow_run' && pr.head.sha !== event.workflow_run.head_sha) continue;
     if (ciCallback && pr.head.sha !== env.GITHUB_SHA) continue;
     if (pr.base.ref !== metadata.default_branch) continue;
