@@ -63,10 +63,11 @@ export async function loadProposalFiles(api, review) {
   if (changed.length >= 100 || changed.some(f => !f.filename.startsWith(`${root}/`) || f.status === 'removed' || f.status === 'renamed')) throw Error('Proposal PR includes changes outside the proposal');
   const files = [];
   for (const f of changed) {
-    if (f.filename === `${root}/.openspec.yaml`) continue;
     const value = await api(`contents/${f.filename}?ref=${review.head}`);
     if (value.type !== 'file' || value.encoding !== 'base64' || value.size > 96000) throw Error('Unsupported proposal file');
-    files.push({ path: f.filename, content: Buffer.from(value.content, 'base64').toString('utf8') });
+    const content = Buffer.from(value.content, 'base64').toString('utf8');
+    if (f.filename === `${root}/.openspec.yaml`) { if (/^skip_specs:\s*true\s*$/m.test(content)) files.push({ path: f.filename, content: 'skip_specs: true\n' }); continue; }
+    files.push({ path: f.filename, content });
   }
   return validateProposalFiles(files, review.issue);
 }

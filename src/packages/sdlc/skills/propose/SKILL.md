@@ -10,7 +10,7 @@ Describe the smallest implementable solution for a Ready item.
 ## Steps
 
 1. Read the Ready evidence and inspect the current product and architecture authorities.
-2. Create or update the OpenSpec change artifacts through the installed OpenSpec workflow.
+2. Create or update the OpenSpec change artifacts through the installed OpenSpec workflow. For a change without spec-level behavior, return `.openspec.yaml` containing exactly `skip_specs: true` instead of a specification; the host adds it to provider-owned metadata.
 3. Describe the solution, interfaces, data effects, test impact, slices, risks and Definition of Done.
 4. Write a concise change overview preserving facts, links, commands, frontmatter and code. Use Humanizer when installed; otherwise review the prose directly for unsupported claims, repetition and unclear decisions, and record that method in the result output. A missing optional prose helper does not block an otherwise complete proposal.
 5. Return a stage result with `stage: propose`, `gate: planned`, the change artifacts as output, evidence entries and separate `missingEvidence`, `unavailableChecks` and `pendingReview` arrays.

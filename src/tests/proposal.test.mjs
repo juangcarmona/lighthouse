@@ -24,6 +24,23 @@ test('proposal boundaries reject traversal, executable/config files, duplicates,
   assert.throws(() => validateProposalFiles(files, 19));
 });
 
+test('documentation-only proposals use the provider skip flag without accepting arbitrary metadata', async () => {
+  const docsOnly = [...files.slice(0, 3), { path: `${root}/.openspec.yaml`, content: 'skip_specs: true\n' }];
+  assert.equal(validateProposalFiles(docsOnly, 18), docsOnly);
+  for (const bad of ['skip_specs: false', 'skip_specs: true\nschema: other', 'skip_specs: true\nskip_specs: true']) {
+    assert.throws(() => validateProposalFiles([...docsOnly.slice(0, 3), { path: `${root}/.openspec.yaml`, content: bad }], 18));
+  }
+  assert.throws(() => validateProposalFiles(files.slice(0, 3), 18));
+  assert.throws(() => validateProposalFiles([...files, docsOnly[3]], 18));
+  const cli = resolve('node_modules/@fission-ai/openspec/bin/openspec.js');
+  const provider = (cwd, args) => execFileSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8', env: { ...process.env, OPENSPEC_TELEMETRY: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const result = await prepareProposal(18, docsOnly, provider);
+  const metadata = result.filter(file => file.path === `${root}/.openspec.yaml`);
+  assert.equal(metadata.length, 1);
+  assert.match(metadata[0].content, /^schema: spec-driven$/m);
+  assert.match(metadata[0].content, /^skip_specs: true$/m);
+});
+
 test('a proposal needs an explicit owner request; an unrelated answer never starts proposal execution', () => {
   const issue = { number: 18, state: 'open', labels: [{ name: 'ready' }] };
   const event = { action: 'labeled', issue, label: { name: 'propose' } };

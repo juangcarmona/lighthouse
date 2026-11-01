@@ -12,18 +12,21 @@ export const proposalRoot = issue => `openspec/changes/${changeName(issue)}`;
 
 export function validateProposalFiles(files, issue) {
   const root = proposalRoot(issue), seen = new Set();
-  if (!Array.isArray(files) || files.length < 4 || files.length > 24) throw Error('Proposal needs 4-24 bounded Markdown files');
+  if (!Array.isArray(files) || files.length < 4 || files.length > 24) throw Error('Proposal needs 4-24 bounded files');
   let bytes = 0;
   for (const file of files) {
     if (!file || Object.keys(file).sort().join(',') !== 'content,path' || typeof file.path !== 'string' || typeof file.content !== 'string') throw Error('Invalid proposal file');
     const relative = file.path.slice(root.length + 1);
-    if (!file.path.startsWith(`${root}/`) || !/^(proposal\.md|design\.md|tasks\.md|specs\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/spec\.md)$/.test(relative)) throw Error('Proposal write outside authorized Markdown paths');
+    if (!file.path.startsWith(`${root}/`) || !/^(\.openspec\.yaml|proposal\.md|design\.md|tasks\.md|specs\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/spec\.md)$/.test(relative)) throw Error('Proposal write outside authorized Markdown paths');
+    if (relative === '.openspec.yaml' && file.content.trim() !== 'skip_specs: true') throw Error('Proposal metadata may only declare skip_specs: true');
     if (seen.has(file.path) || !file.content.trim() || file.content.includes('\0')) throw Error('Duplicate or empty proposal file');
     seen.add(file.path); bytes += Buffer.byteLength(file.content);
     if (bytes > 96000) throw Error('Proposal exceeds 96000 bytes');
   }
   for (const name of ['proposal.md', 'design.md', 'tasks.md']) if (!seen.has(`${root}/${name}`)) throw Error(`Missing ${name}`);
-  if (![...seen].some(path => path.startsWith(`${root}/specs/`))) throw Error('Missing specification');
+  const hasSpec = [...seen].some(path => path.startsWith(`${root}/specs/`));
+  const skipsSpecs = seen.has(`${root}/.openspec.yaml`);
+  if (hasSpec === skipsSpecs) throw Error('Proposal needs specifications or an explicit docs-only skip_specs declaration');
   const tasks = files.find(file => file.path === `${root}/tasks.md`).content;
   if (!/^- \[ \] /m.test(tasks) || /^\s*[-*] \[[xX]\]/m.test(tasks)) throw Error('Proposal tasks must be pending implementation');
   return files;
@@ -46,12 +49,16 @@ export async function prepareProposal(issue, files, provider = openspec) {
       }
       return { provider: '@fission-ai/openspec@1.15.0', schema: 'spec-driven', root: proposalRoot(issue), instructions };
     }
-    for (const file of files) { const path = join(dir, file.path); await mkdir(dirname(path), { recursive: true }); await writeFile(path, file.content); }
+    const metadata = `${proposalRoot(issue)}/.openspec.yaml`;
+    for (const file of files) {
+      const path = join(dir, file.path);
+      if (file.path === metadata) { await writeFile(path, `${(await readFile(path, 'utf8')).trimEnd()}\nskip_specs: true\n`); continue; }
+      await mkdir(dirname(path), { recursive: true }); await writeFile(path, file.content);
+    }
     await provider(dir, ['validate', name, '--strict', '--no-interactive']);
     const status = JSON.parse(await provider(dir, ['status', '--change', name, '--json']));
     if (!status.isPlanningComplete) throw Error('OpenSpec planning artifacts are incomplete');
-    const metadata = `${proposalRoot(issue)}/.openspec.yaml`;
-    return [...files, { path: metadata, content: await readFile(join(dir, metadata), 'utf8') }];
+    return [...files.filter(file => file.path !== metadata), { path: metadata, content: await readFile(join(dir, metadata), 'utf8') }];
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
 
