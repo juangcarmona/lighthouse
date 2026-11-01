@@ -37,6 +37,6 @@
 
 ## Workflow follow-up
 
-- Resume implementation only after the Product Change prerequisite is satisfied.
+- Complete and validate the remaining implementation and evidence before integrating the candidate.
 - Review plan and code together; implementation completion does not authorize merge or deployment.
 - Archive only after review and current citation verification.

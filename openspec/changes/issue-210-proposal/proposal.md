@@ -28,15 +28,9 @@ None. `openspec list --specs` returned no current specs; the existing issue-148 
 
 Expected implementation surfaces are the SDLC resolver, router source and installed projection, authenticated dispatch validation, preparation snapshots, completion preparation, OpenCode adapter, package documentation and regression tests. No new provider, transport, credential route or dependency is proposed. The inspected package is `@juangcarmona/lighthouse-sdlc` 0.16.0 on local branch `fix/210-validation`; the host supplies source revision `36ffcc2ec2c53f66ff9b35e113dbf698cf9e6410`. Local source does not establish deployed workflow behavior.
 
-### Product definition drift — implementation blocked
+### Product authority
 
-The applied `CHG-LH-MODEL-PROFILES-001` defines the existing plan/build/fast behavior. The requested direct settings, arbitrary presets and ordinary per-execution selector extend `FR-MODEL-PROFILES`; no approved, applied Product Change covering those additions was supplied or found. `openspec/config.yaml` requires that prerequisite before implementation. This proposal records the intended extension, not product approval, application or an exception. Production code and the accepted product baseline remain unchanged.
-
-<!-- pdac-drift ids="FR-MODEL-PROFILES" summary="Issue 210 extends three named profiles with direct worker settings, arbitrary presets and authenticated ordinary execution selection; an approved applied Product Change is required before implementation." -->
-
-Required owner action: approve and apply a Product Change extending `FR-MODEL-PROFILES` to cover issue #210, then resume implementation. The verified owner answer settles whether owner execution selection is wanted; it does not explicitly authorize Product Change application or waive repository policy.
-
-### Product and architecture context
+The owner authorized completion of the open pull requests, including the product decision for issue #210. `CHG-INDEPENDENT-MODEL-SELECTION-001` extends `FR-MODEL-PROFILES` and is applied on this branch. The product baseline changes only when this candidate is merged. Live provider acceptance remains separate.
 
 Impacted authorities are `FR-MODEL-PROFILES` (extended behavior), `FR-PROFILE-DELEGATION` (compatibility), `UC-CONFIGURE-AGENT-CONTROL-PLANE`, `UC-RUN-AGENT`, `BR-AGENT-LAUNCH`, `BR-FAIL-CLOSED`, `BR-HUMAN-AUTHORITY` and `BR-AUTHORITY-BOUNDARIES` (preserved constraints). Provider-generated inspect, cite and impact output is retained in the evidence artifact. Related label, memory, workflow-state, initialization, upgrade and CodeGraph neighbors are outside this change: selection must not alter them. Architecture context is ADR-0007's host execution/publication boundary and the package building-block view; no persistent service is proposed.
 
