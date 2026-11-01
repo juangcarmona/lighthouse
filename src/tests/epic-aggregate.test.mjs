@@ -111,10 +111,32 @@ test('aggregate readiness binds the current main base, head and checks', async (
     if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
     return original(path, method, body);
   };
-  const ready = () => readyEpicAggregate({ ...f.args, setDraft: async () => { pr.draft = false; } });
+  const ready = () => readyEpicAggregate({ ...f.args, setDraft: async () => {
+    const aggregate = [...f.entries.values()].find(receipt => receipt.correlation.kind === 'aggregate');
+    assert.deepEqual(aggregate.readiness, { head: second, base: source, candidate });
+    pr.draft = false;
+  } });
   assert.deepEqual(await ready(), { status: 'ready', pullRequest: 30, head: second, base: source, parent: 'open' });
+  const aggregate = [...f.entries.values()].find(receipt => receipt.correlation.kind === 'aggregate');
+  assert.deepEqual(aggregate.readiness, { head: second, base: source, candidate });
   pr.merge_commit_sha = '6'.repeat(40);
   await assert.rejects(ready(), /Aggregate checks do not bind/);
+});
+
+test('aggregate remains draft if recording readiness fails', async () => {
+  const f = fixture();
+  await f.run();
+  const pr = f.pulls[0], candidate = '5'.repeat(40), original = f.args.api;
+  Object.assign(pr, { draft: true, mergeable: true, merge_commit_sha: candidate });
+  f.args.api = async (path, method, body) => {
+    if (path === 'pulls/30') return pr;
+    if (path === 'git/ref/heads/main') return { ref: 'refs/heads/main', object: { sha: source } };
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
+    return original(path, method, body);
+  };
+  f.args.journal.writeReceipt = async () => { throw Error('journal unavailable'); };
+  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { pr.draft = false; } }), /journal unavailable/);
+  assert.equal(pr.draft, true);
 });
 
 test('aggregate readiness reports uncertainty if main changes during publication', async () => {

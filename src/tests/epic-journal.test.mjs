@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createEpicJournal, readEpicChildReceipt, readEpicResourceReceipt } from '../packages/sdlc/src/epic-journal.mjs';
+import { createEpicJournal, readEpicAggregateReceipt, readEpicChildReceipt, readEpicResourceReceipt } from '../packages/sdlc/src/epic-journal.mjs';
 import { epicCorrelation, epicJournalKey } from '../packages/sdlc/src/epic-github.mjs';
 
 const repository = 'owner/repo', owner = 'owner', parent = 146, revision = 'a'.repeat(40), planDigest = 'b'.repeat(64);
@@ -103,6 +103,29 @@ test('merge intent binds the exact reviewed head and base through acceptance', a
   await journal.writeReceipt(key, { schemaVersion: 1, state: 'accepted', correlation: prCorrelation, resource, publication, merge: { ...merge, commit: 'f'.repeat(40) } });
   await f.finish(100);
   assert.equal((await (await f.open(101)).readReceipt(key)).state, 'accepted');
+});
+
+test('aggregate readiness is retained with the authenticated journal and rejects malformed bindings', async t => {
+  const f = await fixture(t), journal = await f.open(100);
+  const aggregate = epicCorrelation({ ...correlation, slice: 'aggregate', dependencies: ['a'], kind: 'aggregate' });
+  const aggregateKey = epicJournalKey(aggregate), resource = { id: 88, number: 7 };
+  const readiness = { head: 'c'.repeat(40), base: revision, candidate: 'd'.repeat(40) };
+  await journal.readReceipt(key);
+  await assert.rejects(journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation, readiness }), /readiness receipt/);
+  await journal.readReceipt(aggregateKey);
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'intent', correlation: aggregate });
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'created', correlation: aggregate, resource });
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'linked', correlation: aggregate, resource });
+  await assert.rejects(journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'linked', correlation: aggregate, resource, readiness: { ...readiness, base: 'bad' } }), /readiness receipt/);
+  await assert.rejects(journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'linked', correlation: aggregate, resource, readiness: { ...readiness, extra: true } }), /readiness receipt/);
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'linked', correlation: aggregate, resource, readiness });
+  await f.finish(100);
+  const retained = await readEpicResourceReceipt({ api: f.api, repository, owner, correlation: aggregate, sourceRevision: revision, defaultBranch: 'main', resource, readArtifact: f.readArtifact });
+  assert.deepEqual(retained.readiness, readiness);
+  const input = { api: f.api, repository, owner, correlation: aggregate, defaultBranch: 'main', resource, readArtifact: f.readArtifact };
+  assert.deepEqual(await readEpicAggregateReceipt(input), { sourceRevision: revision, receipt: retained });
+  f.origins.get('100').head_sha = 'e'.repeat(40);
+  await assert.rejects(readEpicAggregateReceipt(input), /origin is not trusted/);
 });
 
 test('uncertain or forged journal writes never authorize another transition', async t => {

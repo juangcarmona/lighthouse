@@ -19,7 +19,9 @@ function checkedReceipt(key, receipt, repository, parent) {
   if (needsPublication && (!publication || !positive(publication.run) || !Number.isSafeInteger(publication.attempt) || publication.attempt < 1 || !sha(publication.head) || Object.keys(publication).sort().join(',') !== 'attempt,head,run') || !needsPublication && publication !== undefined) throw Error('Epic publication receipt is invalid');
   const merge = receipt.merge, merging = ['merging', 'accepted'].includes(receipt.state);
   if (merging && (receipt.correlation.kind !== 'pull-request' || !merge || !sha(merge.head) || merge.head !== publication.head || !sha(merge.base) || !sha(merge.candidate) || !Number.isSafeInteger(merge.review) || merge.review < 1 || receipt.state === 'accepted' && !sha(merge.commit) || Object.keys(merge).sort().join(',') !== (receipt.state === 'accepted' ? 'base,candidate,commit,head,review' : 'base,candidate,head,review')) || !merging && merge !== undefined) throw Error('Epic merge receipt is invalid');
-  const expected = ['correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
+  const readiness = receipt.readiness;
+  if (readiness !== undefined && (receipt.correlation.kind !== 'aggregate' || receipt.state !== 'linked' || !readiness || !sha(readiness.head) || !sha(readiness.base) || !sha(readiness.candidate) || Object.keys(readiness).sort().join(',') !== 'base,candidate,head')) throw Error('Epic aggregate readiness receipt is invalid');
+  const expected = ['correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(readiness ? ['readiness'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
   if (Object.keys(receipt).sort().join(',') !== expected) throw Error('Epic receipt has unexpected fields');
   return receipt;
 }
@@ -53,6 +55,18 @@ export async function readEpicResourceReceipt({ api, repository, owner, correlat
 export async function readEpicChildReceipt(input) {
   if (input.correlation?.kind !== 'child' || !input.resource) throw Error('Invalid epic child admission');
   return readEpicResourceReceipt(input);
+}
+
+export async function readEpicAggregateReceipt(input) {
+  if (input.correlation?.kind !== 'aggregate' || !input.resource) throw Error('Invalid epic aggregate admission');
+  const { api, repository, correlation } = input;
+  const comments = await issueComments(api, correlation.parent);
+  const matches = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => parseEntry(c, repository, correlation.parent)).filter(entry => entry.key === keyFor(correlation));
+  if (matches.length !== 1) throw Error('Epic aggregate journal is missing or ambiguous');
+  const sourceRevision = matches[0].revision;
+  const receipt = await readEpicResourceReceipt({ ...input, sourceRevision });
+  if (!receipt.readiness) throw Error('Epic aggregate has no readiness evidence');
+  return { sourceRevision, receipt };
 }
 
 export async function createEpicJournal({ api, repository, owner, parent, sourceRevision, defaultBranch, run, path, authorize, readArtifact = readActionsJson }) {
