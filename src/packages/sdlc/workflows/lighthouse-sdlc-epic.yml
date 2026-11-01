@@ -12,7 +12,7 @@ on:
         required: true
         default: reconcile
         type: choice
-        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate, ready-aggregate]
+        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate, ready-aggregate, accept-aggregate]
       child:
         description: Child issue number for PR registration or acceptance
         required: false
@@ -70,7 +70,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/epic-native.mjs
       - name: Preserve the epic journal
-        if: always()
+        if: always() && inputs.action != 'accept-aggregate'
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-epic-journal-${{ inputs.issue }}-${{ github.run_attempt }}

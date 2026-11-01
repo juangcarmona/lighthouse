@@ -7,7 +7,7 @@ import { loadRefinement } from './proposal.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { assessDecomposition, epicPlanDigest } from './epic.mjs';
 import { reconcileEpicChildren, readEpicMarker, epicMarker, epicCorrelation, epicChildBody, epicJournalKey } from './epic-github.mjs';
-import { createEpicJournal, readEpicChildReceipt, readEpicResourceReceipt } from './epic-journal.mjs';
+import { createEpicJournal, readEpicAggregateReceipt, readEpicChildReceipt, readEpicResourceReceipt } from './epic-journal.mjs';
 import { isDeepStrictEqual } from 'node:util';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
@@ -22,11 +22,12 @@ import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mj
 const isOwnerAnswer = (comment, owner) => comment.user?.login === owner && !comment.body?.includes('<!-- lighthouse-run:') && !comment.body?.includes('<!-- lighthouse-actions:');
 const paused = issue => issue.state !== 'open' || issue.pull_request || issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info', 'waiting-review', 'execution-failed', 'triage', 'refine', 'propose', 'implement'].includes(label.name));
 
-export async function prepareNativeEpic(api, repository, owner, issueNumber, load = loadRefinement) {
+export async function prepareNativeEpic(api, repository, owner, issueNumber, load = loadRefinement, historicalRevision) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || typeof owner !== 'string' || !Number.isSafeInteger(issueNumber) || issueNumber < 1) throw Error('Invalid epic identity');
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber), repo = await api('');
   if (paused(issue) || !issue.labels.some(label => label.name === 'ready')) throw Error('Epic parent is not ready or is paused');
-  const sourceRevision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
+  const sourceRevision = historicalRevision ?? (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
+  if (!/^[a-f0-9]{40}$/.test(sourceRevision ?? '')) throw Error('Epic source revision is invalid');
   const current = { owner, issue: issueNumber, sourceRevision, taskDigest: taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, owner))) };
   const evidence = await load(api, repository, comments, current);
   if (evidence.request?.issue !== issueNumber || evidence.request.stage !== 'refine' || evidence.request.sourceRevision !== sourceRevision || evidence.request.taskDigest !== current.taskDigest || validateStageEnvelope(evidence.envelope, evidence.request).length) throw Error('Epic refinement result is invalid or stale');
@@ -39,26 +40,27 @@ export async function prepareNativeEpic(api, repository, owner, issueNumber, loa
   return { issue: issueNumber, repository, owner, sourceRevision, defaultBranch: repo.default_branch, taskDigest: current.taskDigest, reportId: report.id, reportBody: report.body, plan: assessment.plan };
 }
 
-export async function authorizeNativeEpic(api, snapshot) {
+export async function authorizeNativeEpic(api, snapshot, expectedHead = snapshot.sourceRevision) {
   const issue = await api(`issues/${snapshot.issue}`), comments = await issueComments(api, snapshot.issue), repo = await api('');
   const report = comments.find(comment => comment.id === snapshot.reportId);
   const later = comments.some(comment => Number(comment.id) > Number(snapshot.reportId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && /<!-- lighthouse-(?:stage:refine:|dispatch:)/.test(comment.body ?? ''));
-  if (paused(issue) || !issue.labels.some(label => label.name === 'ready') || repo.default_branch !== snapshot.defaultBranch || (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha !== snapshot.sourceRevision || taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, snapshot.owner))) !== snapshot.taskDigest || !report || report.user?.login !== 'github-actions[bot]' || report.user.type !== 'Bot' || report.body !== snapshot.reportBody || later) throw Error('Epic parent authority or refinement changed');
+  if (paused(issue) || !issue.labels.some(label => label.name === 'ready') || repo.default_branch !== snapshot.defaultBranch || (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha !== expectedHead || taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, snapshot.owner))) !== snapshot.taskDigest || !report || report.user?.login !== 'github-actions[bot]' || report.user.type !== 'Bot' || report.body !== snapshot.reportBody || later) throw Error('Epic parent authority or refinement changed');
   return true;
 }
 
-export async function authenticateEpicChild({ api, repository, owner, child, load, readArtifact, allowClosed = false }) {
+export async function authenticateEpicChild({ api, repository, owner, child, load, readArtifact, allowClosed = false, historicalSnapshot, expectedHead }) {
   if (!Number.isSafeInteger(child) || child < 1) throw Error('Invalid epic child');
   const issue = await api(`issues/${child}`), marker = readEpicMarker(issue.body);
   if (issue.number !== child || !Number.isSafeInteger(issue.id) || issue.id < 1 || issue.state !== 'open' && !(allowClosed && issue.state === 'closed') || issue.pull_request || issue.user?.login !== 'github-actions[bot]' || issue.user.type !== 'Bot' || !marker || marker.kind !== 'child' || marker.repository !== repository || marker.parent === child) throw Error('Epic child identity is not trusted');
-  const snapshot = await prepareNativeEpic(api, repository, owner, marker.parent, load);
+  const snapshot = historicalSnapshot ?? await prepareNativeEpic(api, repository, owner, marker.parent, load);
+  if (snapshot.issue !== marker.parent || snapshot.repository !== repository || snapshot.owner !== owner) throw Error('Epic child snapshot identity changed');
   const slice = snapshot.plan.slices.find(item => item.id === marker.slice);
   const expected = slice && epicCorrelation({ repository, parent: marker.parent, slice: slice.id, planDigest: epicPlanDigest(snapshot.plan), base: `lighthouse/epic-${marker.parent}`, dependencies: slice.dependencies });
   if (!expected || !isDeepStrictEqual(marker, expected) || issue.title !== slice.title || issue.body !== epicChildBody(marker.parent, slice, expected)) throw Error('Epic child no longer matches the current plan');
   const parent = await api(`issues/${child}/parent`);
   if (parent?.number !== marker.parent) throw Error('Epic child parent link changed');
   await readEpicChildReceipt({ api, repository, owner, correlation: expected, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, resource: { id: issue.id, number: child }, ...(readArtifact ? { readArtifact } : {}) });
-  await authorizeNativeEpic(api, snapshot);
+  await authorizeNativeEpic(api, snapshot, expectedHead);
   return { parent: marker.parent, slice: marker.slice, planDigest: marker.planDigest, base: marker.base, sourceRevision: snapshot.sourceRevision };
 }
 
@@ -349,6 +351,10 @@ export async function readyEpicAggregate({ api, repository, owner, snapshot, jou
     return { pr, head: published.head, base: base.object.sha, candidate: pr.merge_commit_sha };
   };
   const first = await observe();
+  const correlation = epicCorrelation({ repository, parent: snapshot.issue, slice: 'aggregate', planDigest: epicPlanDigest(snapshot.plan), base: `lighthouse/epic-${snapshot.issue}`, dependencies: snapshot.plan.slices.map(slice => slice.id), kind: 'aggregate' });
+  const key = epicJournalKey(correlation), receipt = await journal.readReceipt(key);
+  if (receipt?.state !== 'linked' || receipt.resource?.id !== first.pr.id || receipt.resource?.number !== first.pr.number || !isDeepStrictEqual(receipt.correlation, correlation)) throw Error('Aggregate readiness journal changed');
+  await journal.writeReceipt(key, { ...receipt, readiness: { head: first.head, base: first.base, candidate: first.candidate } });
   if (first.pr.draft) {
     try { await setDraft(first.pr, false); }
     catch (error) { if ((await api(`pulls/${first.pr.number}`)).draft) throw error; }
@@ -356,6 +362,55 @@ export async function readyEpicAggregate({ api, repository, owner, snapshot, jou
   const fresh = await observe();
   if (fresh.pr.draft || fresh.head !== first.head || fresh.base !== first.base || fresh.candidate !== first.candidate) throw Error('Aggregate readiness outcome is uncertain');
   return { status: 'ready', pullRequest: fresh.pr.number, head: fresh.head, base: fresh.base, parent: 'open' };
+}
+
+export async function acceptEpicAggregate({ api, repository, owner, issue, run, load, loadPolicy, readArtifact }) {
+  const repo = await api(''), branch = `lighthouse/epic-${issue}`;
+  const head = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
+  if (!/^[a-f0-9]{40}$/.test(head ?? '') || run.status !== 'in_progress' || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.head_sha !== head || run.head_branch !== repo.default_branch || run.repository?.full_name !== repository) throw Error('Epic acceptance requires an authenticated owner workflow');
+  await checkEpicLeaseConfiguration(api, head);
+  const pulls = await api(`pulls?state=all&head=${encodeURIComponent(`${owner}:${branch}`)}&base=${encodeURIComponent(repo.default_branch)}&per_page=100`);
+  if (!Array.isArray(pulls) || pulls.length !== 1) throw Error('Aggregate PR inventory is missing or ambiguous');
+  const pr = await api(`pulls/${pulls[0].number}`), correlation = readEpicMarker(pr.body);
+  if (!correlation || correlation.kind !== 'aggregate' || correlation.repository !== repository || correlation.parent !== issue || correlation.base !== branch || correlation.slice !== 'aggregate' || !Number.isSafeInteger(pr.id) || !Number.isSafeInteger(pr.number)) throw Error('Aggregate PR identity is invalid');
+  const { sourceRevision, receipt } = await readEpicAggregateReceipt({ api, repository, owner, correlation, defaultBranch: repo.default_branch, resource: { id: pr.id, number: pr.number }, ...(readArtifact ? { readArtifact } : {}) });
+  const snapshot = await prepareNativeEpic(api, repository, owner, issue, load, sourceRevision);
+  const expected = epicCorrelation({ repository, parent: issue, slice: 'aggregate', planDigest: epicPlanDigest(snapshot.plan), base: branch, dependencies: snapshot.plan.slices.map(slice => slice.id), kind: 'aggregate' });
+  if (!isDeepStrictEqual(correlation, expected)) throw Error('Aggregate plan changed');
+  const expectedBody = `Aggregate changes for #${issue}.\n\nRefs #${issue}.\n\nReview and merge remain separate decisions.\n\n${epicMarker(expected)}`;
+  const journal = { readReceipt: async key => {
+    const match = snapshot.plan.slices.map(slice => epicCorrelation({ repository, parent: issue, slice: slice.id, planDigest: expected.planDigest, base: branch, dependencies: slice.dependencies, kind: 'pull-request' })).find(item => epicJournalKey(item) === key);
+    if (!match) throw Error('Unknown epic receipt');
+    return readEpicResourceReceipt({ api, repository, owner, correlation: match, sourceRevision, defaultBranch: repo.default_branch, allowedStates: ['accepted'], ...(readArtifact ? { readArtifact } : {}) });
+  } };
+  const verify = async () => {
+    await authorizeNativeEpic(api, snapshot, head);
+    const currentReceipt = await readEpicAggregateReceipt({ api, repository, owner, correlation, defaultBranch: repo.default_branch, resource: { id: pr.id, number: pr.number }, ...(readArtifact ? { readArtifact } : {}) });
+    if (currentReceipt.sourceRevision !== sourceRevision || !isDeepStrictEqual(currentReceipt.receipt, receipt)) throw Error('Aggregate readiness evidence changed');
+    const fresh = await api(`pulls/${pr.number}`), binding = receipt.readiness;
+    if (fresh.id !== pr.id || !fresh.merged || fresh.state !== 'closed' || fresh.user?.login !== 'github-actions[bot]' || fresh.user.type !== 'Bot' || fresh.head?.ref !== branch || fresh.head.sha !== binding.head || fresh.head.repo?.full_name !== repository || fresh.base?.ref !== repo.default_branch || fresh.base.repo?.full_name !== repository || fresh.body !== expectedBody || !/^[a-f0-9]{40}$/.test(fresh.merge_commit_sha ?? '')) throw Error('Aggregate merge differs from readiness evidence');
+    const commit = await api(`git/commits/${fresh.merge_commit_sha}`), candidate = await api(`git/commits/${binding.candidate}`);
+    if (!Array.isArray(commit.parents) || ![1, 2].includes(commit.parents.length) || commit.parents[0].sha !== binding.base || commit.parents.length === 2 && commit.parents[1].sha !== binding.head || !/^[a-f0-9]{40}$/.test(commit.tree?.sha ?? '') || commit.tree.sha !== candidate?.tree?.sha || candidate.parents?.length !== 2 || candidate.parents[0].sha !== binding.base || candidate.parents[1].sha !== binding.head) throw Error('Aggregate merge commit differs from its checked candidate');
+    const reviews = await list(api, `pulls/${pr.number}/reviews`);
+    const latest = reviews.filter(review => review.user?.login === owner && review.user.type === 'User' && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)).sort((a, b) => b.id - a.id)[0];
+    if (latest?.state !== 'APPROVED' || latest.commit_id !== binding.head) throw Error('Aggregate owner approval is missing or revoked');
+    if (!await verifyEpicChecks(api, { repository, sourceRevision: head, base: repo.default_branch, candidate: binding.candidate, loadPolicy })) throw Error('Aggregate checks are no longer valid');
+    const compare = await api(`compare/${fresh.merge_commit_sha}...${head}`);
+    if (!['identical', 'ahead'].includes(compare.status)) throw Error('Aggregate merge is absent from current main history');
+    await verifyEpicBranchHistory(api, snapshot, journal, binding.head, true, loadPolicy);
+    for (const slice of snapshot.plan.slices) {
+      const childCorrelation = epicCorrelation({ repository, parent: issue, slice: slice.id, planDigest: expected.planDigest, base: branch, dependencies: slice.dependencies });
+      const children = await findEpicCandidates(api, childCorrelation);
+      if (children.length !== 1 || children[0].state !== 'closed') throw Error('Epic child completion is missing or ambiguous');
+      await authenticateEpicChild({ api, repository, owner, child: children[0].number, readArtifact, allowClosed: true, historicalSnapshot: snapshot, expectedHead: head });
+    }
+    await authorizeNativeEpic(api, snapshot, head);
+  };
+  await verify();
+  await verify();
+  try { await api(`issues/${issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' }); }
+  catch (error) { if ((await api(`issues/${issue}`)).state !== 'closed') throw error; }
+  return { status: 'accepted', pullRequest: pr.number, parent: 'closed' };
 }
 
 export async function ensureEpicBase(api, snapshot, authorize, verifyAdvanced = async () => false) {
@@ -397,6 +452,7 @@ export async function runNativeEpic({ api, repository, owner, issue, run, journa
 
 export async function runEpicAction({ api, repository, owner, issue, run, journalPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
   if (action === 'reconcile') return runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load, loadPolicy });
+  if (action === 'accept-aggregate') return acceptEpicAggregate({ api, repository, owner, issue, run, load, loadPolicy, readArtifact });
   if (!['register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
   const snapshot = await prepareNativeEpic(api, repository, owner, issue, load);
   await checkEpicLeaseConfiguration(api, snapshot.sourceRevision);

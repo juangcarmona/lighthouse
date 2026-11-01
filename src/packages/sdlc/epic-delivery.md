@@ -22,7 +22,7 @@ All accepted children make the aggregate `publication-eligible`; the parent stil
 
 The native epic workflow is not installed or enabled. The implementation includes authenticated child admission, epic-targeted candidates, owner-authorized internal acceptance and draft aggregate publication, but automatic child dispatch, review recovery and complete native acceptance remain unfinished. The current `github-decompose --apply` legacy helper is not this lifecycle and does not provide retry-safe native sub-issue orchestration. Do not use it as a substitute.
 
-Native admission currently requires the default branch to remain at the authenticated refinement revision. A change to that branch stops the epic; post-merge acceptance and recovery against an advanced default branch are not yet connected.
+Native child delivery requires the default branch to remain at the authenticated refinement revision. Aggregate acceptance can inspect an advanced default branch after merge: it requires retained readiness evidence, accepted child history, passing checks, owner approval and the merged commit in the current branch. Missing or expired evidence stops acceptance and leaves the parent open. This path has not yet been validated end to end in an installed native workflow.
 
 ## GitHub reconciliation adapter
 

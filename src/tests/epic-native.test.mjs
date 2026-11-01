@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, authenticateEpicPullRequest, reconcileEpicPullRequest, inspectEpicDependencies, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic, runEpicAction } from '../packages/sdlc/src/epic-native.mjs';
-import { epicCorrelation, epicJournalKey, readEpicMarker } from '../packages/sdlc/src/epic-github.mjs';
+import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, authenticateEpicPullRequest, reconcileEpicPullRequest, inspectEpicDependencies, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic, runEpicAction, acceptEpicAggregate } from '../packages/sdlc/src/epic-native.mjs';
+import { epicCorrelation, epicJournalKey, epicMarker, readEpicMarker } from '../packages/sdlc/src/epic-github.mjs';
+import { epicPlanDigest } from '../packages/sdlc/src/epic.mjs';
 import { createEpicJournal } from '../packages/sdlc/src/epic-journal.mjs';
 import { dispatchId, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { changesDigest } from '../packages/sdlc/src/implementation.mjs';
@@ -57,6 +58,81 @@ async function fixture(t) {
   const actor = { login: owner }, run = { id: 500, run_attempt: 1, status: 'in_progress', path: '.github/workflows/lighthouse-sdlc-epic.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
   return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; }, setWorker: value => { worker = value; }, setBranch: value => { branch = value; } };
 }
+
+test('aggregate acceptance verifies retained history and refuses a revoked owner approval', async t => {
+  const f = await fixture(t), bot = { login: 'github-actions[bot]', type: 'Bot' };
+  await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  const snapshot = await prepareNativeEpic(f.api, repository, owner, issue, f.load);
+  const artifacts = new Map([['500', JSON.parse(await readFile(f.path, 'utf8'))]]);
+  const readArtifact = async (_api, _repo, id) => artifacts.get(String(id));
+  const origin = async (path, ...rest) => path.startsWith('actions/runs/') ? { ...f.run, id: Number(path.split('/')[2]), status: 'completed' } : f.api(path, ...rest);
+  const path = `${f.path}.aggregate`, journal = await createEpicJournal({ api: origin, repository, owner, parent: issue, sourceRevision: sha, defaultBranch: 'main', run: { ...f.run, id: 501 }, path, authorize: async () => true, readArtifact });
+  const branch = `lighthouse/epic-${issue}`, planDigest = epicPlanDigest(snapshot.plan), childPrs = new Map(), commits = new Map(), reviews = new Map();
+  const merged = ['b'.repeat(40), 'c'.repeat(40)], candidate = ['d'.repeat(40), 'e'.repeat(40)], childHeads = ['1'.repeat(40), '2'.repeat(40)], tree = ['3'.repeat(40), '4'.repeat(40)];
+  for (const [index, slice] of snapshot.plan.slices.entries()) {
+    f.issues[index].state = 'closed';
+    const correlation = epicCorrelation({ repository, parent: issue, slice: slice.id, planDigest, base: branch, dependencies: slice.dependencies, kind: 'pull-request' });
+    const key = epicJournalKey(correlation), resource = { id: 900 + index, number: 90 + index }, publication = { run: '500', attempt: 1, head: childHeads[index] };
+    const merge = { head: childHeads[index], base: index ? merged[index - 1] : sha, candidate: candidate[index], review: 200 + index, commit: merged[index] };
+    await journal.readReceipt(key);
+    await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
+    await journal.writeReceipt(key, { schemaVersion: 1, state: 'created', correlation, resource, publication });
+    await journal.writeReceipt(key, { schemaVersion: 1, state: 'linked', correlation, resource, publication });
+    await journal.writeReceipt(key, { schemaVersion: 1, state: 'merging', correlation, resource, publication, merge: { head: merge.head, base: merge.base, candidate: merge.candidate, review: merge.review } });
+    await journal.writeReceipt(key, { schemaVersion: 1, state: 'accepted', correlation, resource, publication, merge });
+    childPrs.set(resource.number, { ...resource, merged: true, user: bot, merged_by: bot, head: { sha: merge.head, repo: { full_name: repository } }, base: { ref: branch, repo: { full_name: repository } }, merge_commit_sha: merge.commit });
+    commits.set(merge.commit, { parents: [{ sha: merge.base }], tree: { sha: tree[index] } });
+    commits.set(merge.candidate, { tree: { sha: tree[index] } });
+    reviews.set(resource.number, [{ id: merge.review, user: { login: owner, type: 'User' }, state: 'APPROVED', commit_id: merge.head }]);
+  }
+  const aggregate = epicCorrelation({ repository, parent: issue, slice: 'aggregate', planDigest, base: branch, dependencies: snapshot.plan.slices.map(slice => slice.id), kind: 'aggregate' });
+  const aggregateKey = epicJournalKey(aggregate), resource = { id: 999, number: 99 }, aggregateCandidate = '5'.repeat(40), final = '6'.repeat(40), aggregateTree = '7'.repeat(40);
+  await journal.readReceipt(aggregateKey);
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'intent', correlation: aggregate });
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'created', correlation: aggregate, resource });
+  await journal.writeReceipt(aggregateKey, { schemaVersion: 1, state: 'linked', correlation: aggregate, resource, readiness: { head: merged[1], base: sha, candidate: aggregateCandidate } });
+  artifacts.set('501', JSON.parse(await readFile(path, 'utf8')));
+  const pr = { ...resource, state: 'closed', merged: true, user: bot, body: `Aggregate changes for #146.\n\nRefs #146.\n\nReview and merge remain separate decisions.\n\n${epicMarker(aggregate)}`, head: { ref: branch, sha: merged[1], repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, merge_commit_sha: final };
+  commits.set(final, { parents: [{ sha }], tree: { sha: aggregateTree } });
+  commits.set(aggregateCandidate, { parents: [{ sha }, { sha: merged[1] }], tree: { sha: aggregateTree } });
+  reviews.set(99, [{ id: 300, user: { login: owner, type: 'User' }, state: 'APPROVED', commit_id: merged[1] }]);
+  let comparison = 'identical', afterCompare = () => {};
+  const api = async (path, method = 'GET', body) => {
+    if (path === 'commits/main') return { sha: final };
+    if (path.startsWith('contents/') && path.endsWith(`?ref=${final}`)) return f.api(path.replace(final, sha));
+    if (path.startsWith('pulls?')) return [pr];
+    if (/^pulls\/\d+$/.test(path)) return Number(path.split('/')[1]) === 99 ? pr : childPrs.get(Number(path.split('/')[1]));
+    const review = path.match(/^pulls\/(\d+)\/reviews\?/); if (review) return reviews.get(Number(review[1]));
+    if (path.startsWith('git/commits/')) return commits.get(path.split('/').at(-1));
+    const check = path.match(/^commits\/([a-f0-9]{40})\/check-runs\?/); if (check) return { check_runs: [{ id: 1, name: 'ci', head_sha: check[1], status: 'completed', conclusion: 'success', app: { id: 42 } }] };
+    if (/^commits\/[a-f0-9]{40}\/statuses\?/.test(path)) return [];
+    if (path.startsWith('compare/')) { afterCompare(); return { status: comparison }; }
+    if (path === `issues/${issue}` && method === 'PATCH') { Object.assign(f.parent, body); return f.parent; }
+    if (/^issues\/20[01]$/.test(path)) return f.issues.find(child => child.number === Number(path.split('/')[1]));
+    return origin(path, method, body);
+  };
+  const args = { api, repository, owner, issue, run: { ...f.run, id: 502, head_sha: final }, load: f.load, readArtifact, loadPolicy: async () => ({ checks: [{ context: 'ci', app: 42 }] }) };
+  artifacts.get('501').entries[aggregateKey].receipt.readiness.head = '9'.repeat(40);
+  await assert.rejects(acceptEpicAggregate(args), /artifact is missing or differs/);
+  artifacts.get('501').entries[aggregateKey].receipt.readiness.head = merged[1];
+  reviews.get(99).push({ id: 301, user: { login: owner, type: 'User' }, state: 'CHANGES_REQUESTED', commit_id: merged[1] });
+  await assert.rejects(acceptEpicAggregate(args), /approval is missing or revoked/);
+  assert.equal(f.parent.state, 'open');
+  reviews.get(99).pop();
+  comparison = 'diverged';
+  await assert.rejects(acceptEpicAggregate(args), /absent from current main history/);
+  comparison = 'identical';
+  commits.get(final).tree.sha = '8'.repeat(40);
+  await assert.rejects(acceptEpicAggregate(args), /differs from its checked candidate/);
+  commits.get(final).tree.sha = aggregateTree;
+  assert.equal(f.parent.state, 'open');
+  afterCompare = () => { reviews.get(99).push({ id: 302, user: { login: owner, type: 'User' }, state: 'CHANGES_REQUESTED', commit_id: merged[1] }); afterCompare = () => {}; };
+  await assert.rejects(acceptEpicAggregate(args), /approval is missing or revoked/);
+  assert.equal(f.parent.state, 'open');
+  reviews.get(99).pop();
+  assert.deepEqual(await acceptEpicAggregate(args), { status: 'accepted', pullRequest: 99, parent: 'closed' });
+  assert.equal(f.parent.state, 'closed');
+});
 
 test('native host creates bounded children and links the authenticated dependency graph', async t => {
   const f = await fixture(t);
