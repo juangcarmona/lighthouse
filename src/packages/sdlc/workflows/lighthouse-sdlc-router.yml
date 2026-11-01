@@ -34,7 +34,7 @@ on:
         required: true
         default: stage
         type: choice
-        options: [stage, product-change, resume-product]
+        options: [stage, product-change, resume-product, resume-aligned]
       model_selection:
         description: Optional JSON model selection for this execution
         required: false

@@ -16,7 +16,7 @@ export async function signalRefinementContinuation(api, request, envelope) {
 
 // Signal only after publication and cleanup; the router authenticates the completed run.
 export async function signalProductGap(api, request, envelope) {
-  if (!request.dispatch || !request.productChangeEnabled || !['triage', 'refine', 'propose', 'implement'].includes(request.stage) || envelope.result?.status !== 'blocked' || !envelope.result.output?.productGap) return false;
+  if (!request.dispatch || request.productAlignment || !request.productChangeEnabled || !['triage', 'refine', 'propose', 'implement'].includes(request.stage) || envelope.result?.status !== 'blocked' || !envelope.result.output?.productGap) return false;
   if (validateStageEnvelope(envelope, request).length) throw Error('Invalid product prerequisite result');
   const repository = await api('');
   await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: request.stage, workflow: 'product-change', after_run: String(request.workflowRunId) } });
@@ -27,6 +27,14 @@ export async function signalProductApplyContinuation(api, issue, runId, checkpoi
   if (!checkpoint.parent) return false;
   const repository = await api('');
   await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(issue), stage: checkpoint.parent.stage, workflow: 'resume-product', after_run: String(runId) } });
+  return true;
+}
+
+export async function signalProductAlignment(api, request, envelope) {
+  if (request.worker !== 'product-change' || !request.dispatch || !request.productParent || request.productParent.pullRequest || request.productParent.review || request.replyTo || envelope.result?.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned') return false;
+  if (validateStageEnvelope(envelope, request).length) throw Error('Invalid product alignment result');
+  const repository = await api('');
+  await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: request.productParent.stage, workflow: 'resume-aligned', after_run: String(request.workflowRunId) } });
   return true;
 }
 
@@ -144,6 +152,32 @@ export async function verifyProductParent(api, repository, owner, parent, issue,
   const intent = createHash('sha256').update(JSON.stringify({ title: issue.title, body: issue.body, comments: answers.map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) })).digest('hex');
   if (intent !== expectedDigest) throw Error('Product parent owner intent changed');
   return true;
+}
+
+export async function productAlignmentAfterRun(api, repository, owner, event, readArtifact = readActionsJson) {
+  if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;
+  const run = await api(`actions/runs/${event.workflow_run.id}`);
+  if (run.path !== stagePath('product-change') || run.status !== 'completed' || run.conclusion !== 'success' || run.head_sha !== event.workflow_run.head_sha) return null;
+  const artifacts = await api(`actions/runs/${run.id}/artifacts?per_page=100`);
+  if (artifacts.total_count > 100) throw Error('Product alignment artifacts exceed bounds');
+  const inputs = artifacts.artifacts.filter(a => /^lighthouse-input-[1-9][0-9]*-[1-9][0-9]*$/.test(a.name) && a.name.endsWith(`-${run.run_attempt}`) && !a.expired);
+  if (inputs.length !== 1) return null;
+  const snapshot = await readArtifact(api, repository, run.id, inputs[0].name, 'request.json');
+  if (snapshot.worker !== 'product-change' || !snapshot.dispatch || !snapshot.productParent || snapshot.replyTo || inputs[0].name !== `lighthouse-input-${snapshot.issue}-${run.run_attempt}` || String(snapshot.workflowRunId) !== String(run.id)) return null;
+  const envelope = await readArtifact(api, repository, run.id, `lighthouse-result-${snapshot.issue}-${run.run_attempt}`, 'envelope.json');
+  if (validateStageEnvelope(envelope, snapshot).length) throw Error('Invalid product alignment result');
+  if (envelope.result.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned' || envelope.result.output.productChange.entry !== 'parent-handoff') return null;
+  const origin = await loadDispatch(api, repository, owner, snapshot.issue, snapshot.dispatch.commentId, run, readArtifact);
+  if (origin.request.worker !== 'product-change' || origin.request.id !== snapshot.dispatch.requestId || origin.request.stage !== snapshot.stage || origin.request.sourceRevision !== snapshot.sourceRevision || origin.request.workflowRevision !== snapshot.workflowRevision || JSON.stringify(origin.request.productParent) !== JSON.stringify(snapshot.productParent) || origin.request.taskDigest !== snapshot.taskDigest) throw Error('Product alignment authority changed');
+  await checkDispatchClaim(api, repository, snapshot.issue, snapshot.dispatch, run.id);
+  const parent = snapshot.productParent;
+  if (parent.pullRequest || parent.review) return null;
+  const reports = await issueComments(api, snapshot.issue);
+  if (reports.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(`<!-- lighthouse-actions:${snapshot.runId} -->`) && c.body.includes(`<!-- lighthouse-stage:${snapshot.stage}:passed -->`)).length !== 1) throw Error('Product alignment publication is unavailable or ambiguous');
+  const repo = await api(''), baseRevision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha, issue = await api(`issues/${snapshot.issue}`);
+  await verifyProductParent(api, repository, owner, parent, issue, reports, baseRevision, readArtifact);
+  if (issue.state !== 'open' || issue.labels?.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) throw Error('Product alignment continuation is paused');
+  return { issue: snapshot.issue, stage: parent.stage, parent, alignmentRun: { runId: String(run.id), attempt: run.run_attempt }, baseRevision };
 }
 
 // A product apply is usable by a parent only when its original approval, provider
