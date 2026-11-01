@@ -78,6 +78,7 @@ test('unattended implementation keeps its assessment identity and rejects invent
   assert.deepEqual(validateStageEnvelope(envelope, request), []);
   assert.ok(validateStageEnvelope({ ...envelope, result: { ...envelope.result, gate: 'pending-review' } }, request).length);
   assert.match(context.contract.rules, /Copy result\.runId, result\.stage and result\.gate exactly/);
+  assert.match(context.contract.rules, /repository is mounted at \/workspace/);
 });
 
 test('independent review binds separate execution and model to the candidate', () => {
