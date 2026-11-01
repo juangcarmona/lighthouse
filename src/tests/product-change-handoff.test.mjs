@@ -43,3 +43,12 @@ test('product candidate publication can authenticate its parent Actions run', as
     assert.match(section ?? '', /\n\s+actions: read\n/, file);
   }
 });
+
+test('product apply preparation can claim its authenticated dispatch', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const file of ['../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.md', '../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.lock.yml', '../../.github/workflows/lighthouse-sdlc-apply-product-change.md', '../../.github/workflows/lighthouse-sdlc-apply-product-change.lock.yml']) {
+    const workflow = await readFile(new URL(file, import.meta.url), 'utf8');
+    const section = workflow.split('name: Recheck product approval')[1]?.split('\n    env:')[0];
+    assert.match(section ?? '', /\n\s+issues: write\n/, file);
+  }
+});
