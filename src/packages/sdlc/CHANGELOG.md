@@ -1,5 +1,23 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.0
+
+### Minor Changes
+
+- 328ff3a: # Epic delivery contracts
+
+  Add confirmed oversized-refinement validation, opt-in shared epic-branch planning and host-observation eligibility contracts. Native epic orchestration is not enabled.
+
+- 503dd24: # Actionable workflow handoffs
+
+  Report workflow handoffs and execution failures with explicit actions and preserve chronological outcomes.
+
+### Patch Changes
+
+- 249a044: # Product prerequisite handoff
+
+  Route authenticated product prerequisites through the optional Product Change workflow and preserve their parent authorization across product decisions and continuation.
+
 ## 0.17.1
 
 ### Patch Changes
