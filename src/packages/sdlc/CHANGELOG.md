@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.4
+
+### Patch Changes
+
+- fa4730a: # Blocked handoff recovery
+
+  Restore a missing operational blocker when no status label is appropriate, without retrying the work.
+
 ## 0.18.3
 
 ### Patch Changes
