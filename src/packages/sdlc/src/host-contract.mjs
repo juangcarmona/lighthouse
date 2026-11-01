@@ -72,6 +72,11 @@ export function validateStageEnvelope(value, request) {
       const decomposition = assessDecomposition(result.output);
       errors.push(...decomposition.errors);
       if (decomposition.status === 'blocked') errors.push('no safe split requires an owner decision before refinement passes');
+      if (decomposition.status === 'planned' && Number.isSafeInteger(request.issue) && request.issue > 0) {
+        const parent = decomposition.plan.parent;
+        const idNumber = parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
+        if ((!idNumber && parent.number === undefined) || idNumber && idNumber !== String(request.issue) || parent.number !== undefined && parent.number !== request.issue) errors.push('decomposition plan must identify the current parent issue');
+      }
     }
   }
   if (request.stage === 'propose' && request.worker !== 'product-change' && result.status === 'passed') {

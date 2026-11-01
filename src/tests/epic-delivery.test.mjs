@@ -33,6 +33,16 @@ test('no safe split retains the explanation and question and cannot pass readine
   assert.ok(validateStageEnvelope({ schemaVersion: 1, result, effect: { type: 'issue-comment', body: 'Split requires a decision.' } }, { stage: 'refine', runId: 'run' }).some(error => /safe split/.test(error)));
 });
 
+test('a planned decomposition must identify the current GitHub parent', () => {
+  const output = { estimate: estimate(13), decomposition: input() };
+  const result = { schemaVersion: 1, runId: 'run', stage: 'refine', gate: 'ready', status: 'passed', output, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Review the plan.' };
+  const envelope = { schemaVersion: 1, result, effect: { type: 'issue-comment', body: 'The plan is ready.' } };
+  assert.deepEqual(validateStageEnvelope(envelope, { issue: 146, stage: 'refine', runId: 'run' }), []);
+  assert.ok(validateStageEnvelope(envelope, { issue: 147, stage: 'refine', runId: 'run' }).some(error => /current parent/.test(error)));
+  output.decomposition.parent.number = 147;
+  assert.ok(validateStageEnvelope(envelope, { issue: 146, stage: 'refine', runId: 'run' }).some(error => /current parent/.test(error)));
+});
+
 test('malformed arrays never throw or accidentally become valid', () => {
   for (const field of ['dependencies', 'acceptance', 'scope', 'labels']) {
     for (const value of [null, {}, 3, 'abc', [null]]) {
