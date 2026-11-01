@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.17.0
+
+### Minor Changes
+
+- cd232b1: # Independent worker models
+
+  Allow independent operator-bounded model and reasoning settings per worker and authenticated execution.
+
 ## 0.16.3
 
 ### Patch Changes
