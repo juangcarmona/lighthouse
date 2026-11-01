@@ -10,7 +10,8 @@ export function pendingQuestion(value) {
   return value.trim();
 }
 
-export function visibleNextAction(value) {
+export function visibleNextAction(value, { checksFailed = false } = {}) {
+  if (checksFailed) return 'Workflow maintainer: inspect the failed host checks in the linked execution and correct the candidate before retrying.';
   if (typeof value !== 'string' || !value.trim() || value.length > 4000) return 'The workflow maintainer must inspect the recorded result for the next action.';
   return value.trim().replace(/<!--(?=\s*lighthouse-)/gi, '&lt;!--');
 }

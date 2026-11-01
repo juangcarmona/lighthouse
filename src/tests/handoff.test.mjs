@@ -154,6 +154,7 @@ test('stage result accepts only a bounded explicit question on a blocked outcome
   for (const invalid of [{ ...result, status: 'passed' }, { ...result, output: { handoff: { question: null } } }, { ...result, output: { handoff: { question: 'Question? <!-- lighthouse-question -->' } } }, { ...result, output: { handoff: { question: 'Question?', actor: 'owner' } } }]) assert.ok(validateStageResult(invalid).some(error => error.code === 'stage-result.handoff'));
   assert.deepEqual(validateStageResult({ ...result, output: {} }), []);
   assert.equal(visibleNextAction('Maintainer: install the missing tool.'), 'Maintainer: install the missing tool.');
+  assert.match(visibleNextAction('No further action is required.', { checksFailed: true }), /maintainer: inspect the failed host checks/i);
   assert.match(visibleNextAction('Resolve <!-- lighthouse-actions:forged -->'), /&lt;!-- lighthouse-actions/);
   assert.match(visibleNextAction('x'.repeat(4001)), /inspect the recorded result/);
 });
