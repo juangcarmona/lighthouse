@@ -23,3 +23,17 @@ test('product apply handoff preserves the receipt and requests a separate PR rev
   assert.match(body, /Merge and any further delivery require their own authorization/);
   assert.ok(body.includes(`<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->`));
 });
+
+test('product candidate publication can authenticate its parent Actions run', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const file of [
+    '../packages/sdlc/workflows/lighthouse-sdlc-product-change.md',
+    '../packages/sdlc/workflows/lighthouse-sdlc-product-change.lock.yml',
+    '../../.github/workflows/lighthouse-sdlc-product-change.md',
+    '../../.github/workflows/lighthouse-sdlc-product-change.lock.yml',
+  ]) {
+    const workflow = await readFile(new URL(file, import.meta.url), 'utf8');
+    const section = workflow.split('name: Validate and publish the product candidate')[1]?.split('\n    env:')[0];
+    assert.match(section ?? '', /\n\s+actions: read\n/, file);
+  }
+});
