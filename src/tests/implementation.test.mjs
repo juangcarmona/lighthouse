@@ -97,6 +97,42 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
 });
 
+test('an epic child targets the recorded shared base and stops if it advances', async () => {
+  for (const changedAt of [0, 1, 2, 3]) {
+    const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
+    const calls = []; let reads = 0;
+    const api = async (path, method, body) => {
+      calls.push({ path, method, body });
+      if (path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: ++reads === changedAt ? 'c'.repeat(40) : epic.baseSha } };
+      return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
+    };
+    const publish = () => createImplementationPullRequest(api, { ...request, epic }, [change], 'Child candidate', '', true, async () => calls.push({ path: 'authorize' }));
+    if (changedAt) {
+      await assert.rejects(publish(), /Epic base changed/);
+      assert.equal(calls.some(call => call.path === 'pulls'), false);
+      if (changedAt < 3) assert.equal(calls.some(call => call.path === 'git/refs'), false);
+    } else {
+      await publish();
+      assert.equal(calls.find(call => call.path === 'pulls').body.base, epic.base);
+      assert.equal(calls.filter(call => call.path === 'authorize').length, 2);
+    }
+  }
+});
+
+test('epic publication rejects an invalid base and revoked authority', async () => {
+  const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
+  const calls = []; let authorizations = 0;
+  const api = async (path, method, body) => {
+    calls.push({ path, method, body });
+    if (path.startsWith('git/ref/heads/')) return { object: { sha: epic.baseSha } };
+    return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
+  };
+  await assert.rejects(createImplementationPullRequest(api, { ...request, epic: { ...epic, base: 'main' } }, [change], '', '', true, async () => {}), /Invalid epic/);
+  assert.equal(calls.length, 0);
+  await assert.rejects(createImplementationPullRequest(api, { ...request, epic }, [change], '', '', true, async () => { if (++authorizations === 2) throw Error('revoked'); }), /revoked/);
+  assert.equal(calls.some(call => call.path === 'pulls'), false);
+});
+
 test('implementation shell progress identifies the command without dumping its output', async () => {
   const { formatOpenCodeEvent } = await import('../packages/sdlc/src/opencode-progress.mjs');
   const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'shell', state: { status: 'completed', input: { command: 'npm run build' }, output: 'raw protocol and payload' } } }));

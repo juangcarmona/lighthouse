@@ -137,6 +137,12 @@ export function validateCheckReceipt(receipt, request, changes) {
 export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite) {
   validateChanges(changes, snapshot.implementation.policy);
   if (!changes.length) throw Error('No implementation changes to publish');
+  const epic = snapshot.epic;
+  if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || epic.baseSha !== snapshot.sourceRevision || snapshot.implementationReview)) throw Error('Invalid epic publication base');
+  const checkEpicBase = async () => {
+    if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');
+  };
+  await checkEpicBase();
   const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
   for (const file of changes) {
     const sha = file.content === null ? null : (await api('git/blobs', 'POST', { content: file.content, encoding: 'base64' })).sha;
@@ -145,6 +151,7 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
   const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
+  await checkEpicBase();
   const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
   if (snapshot.implementationReview) {
     await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
@@ -156,5 +163,6 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   }
   const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
-  return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: snapshot.defaultBranch, draft, body: description(snapshot.runId) });
+  if (epic) { await beforeWrite(); await checkEpicBase(); }
+  return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: epic?.base ?? snapshot.defaultBranch, draft, body: description(snapshot.runId) });
 }
