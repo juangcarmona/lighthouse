@@ -13,16 +13,16 @@
 
 ## 2. Configuration resolution and compatibility
 
-- [ ] 2.1 Implement version 2 complete direct selectors and optional safe named presets, retaining version 1 semantics; document examples with at least four combinations and test same-model/different-effort and different-model/same-effort cases.
+- [x] 2.1 Implement version 2 complete direct selectors and optional safe named presets, retaining version 1 semantics; document examples with at least four combinations and test same-model/different-effort and different-model/same-effort cases.
 - [ ] 2.2 Implement the documented precedence and operator execution opt-in/capability checks; test every precedence boundary, malformed/partial settings, unknown models/efforts, unavailable tools, extra credential/tier/limit keys and fail-closed behavior.
-- [ ] 2.3 Document migration, downgrade and opt-out; test exact legacy forwarding, disabling opt-in, version 1 delegated tasks and historical receipt compatibility.
+- [x] 2.3 Document migration, downgrade and opt-out; test exact legacy forwarding, disabling opt-in, version 1 delegated tasks and historical receipt compatibility.
 
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 
 ## 3. Authenticated dispatch and execution evidence
 
-- [ ] 3.1 Add the manual-router selector to source and installed projection, bind it to the existing authenticated dispatch artifact and carry it through ordinary/completion snapshots; test tampering, non-owner actors, comments/issues, replay, continuation and conflicting host selectors without weakening lifecycle admission.
-- [ ] 3.2 Pass the exact resolved settings into the adapter and retain additive requested/resolved/provenance evidence with unverified provider fields; document the contract and test two ordinary workers with different models/efforts, prelaunch denial, one-launch provider failure, unchanged resource/authentication/billing/tier settings and unknown costs remaining null.
+- [x] 3.1 Add the manual-router selector to source and installed projection, bind it to the existing authenticated dispatch artifact and carry it through ordinary/completion snapshots; test tampering, non-owner actors, comments/issues, replay, continuation and conflicting host selectors without weakening lifecycle admission.
+- [x] 3.2 Pass the exact resolved settings into the adapter and retain additive requested/resolved/provenance evidence with unverified provider fields; document the contract and test two ordinary workers with different models/efforts, prelaunch denial, one-launch provider failure, unchanged resource/authentication/billing/tier settings and unknown costs remaining null.
 
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
 <!-- pdac:cite id="UC-RUN-AGENT" digest="sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e" -->

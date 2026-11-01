@@ -127,3 +127,10 @@ test('execution receipts preserve the requested selector without claiming provid
   assert.equal(receipt.providerReported.status, 'unverified');
   assert.equal(receipt.billing.actualCost, null);
 });
+
+test('disabling version 2 profiles restores the exact legacy model without accepting a selector', () => {
+  const project = { schemaVersion: 2, workers: { refine: { model: 'openai/test-sol', reasoningEffort: 'high' } } };
+  const disabled = { model: 'legacy/model#custom', modelProfiles: { schemaVersion: 2, enabled: false } };
+  assert.equal(resolve({ project, operator: disabled }).engineModel, 'legacy/model#custom');
+  assert.throws(() => resolve({ project, operator: disabled, executionSelection: { profile: 'plan' } }), /opt-in/);
+});

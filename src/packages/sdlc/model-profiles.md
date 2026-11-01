@@ -21,6 +21,21 @@ Create `.lighthouse/models.json` in the consuming repository after verifying ide
 
 Schema version 1 supports the profile names `plan`, `build` and `fast`. Schema version 2 also supports other lowercase names and direct `{ "model": "openai/model", "reasoningEffort": "high" }` assignments for workers and defaults. Models must be OpenAI provider-qualified identifiers without an embedded variant. Effort is independent: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, but only values explicitly permitted for that model by the operator can run. The resolver rejects unknown configuration keys, providers, profile names, effort values and unsupported tier or transport fields. It never chooses an alternative on failure.
 
+A version 2 project can configure four independent combinations, subject to operator capabilities:
+
+```json
+{
+  "schemaVersion": 2,
+  "workers": {
+    "triage": { "model": "openai/verified-model-a", "reasoningEffort": "medium" },
+    "refine": { "model": "openai/verified-model-a", "reasoningEffort": "high" },
+    "implement": { "model": "openai/verified-model-b", "reasoningEffort": "high" },
+    "review": "review-preset"
+  },
+  "profiles": { "review-preset": { "model": "openai/verified-model-b", "reasoningEffort": "medium" } }
+}
+```
+
 ## Operator opt-in and precedence
 
 Merge these fields into the existing operator engine configuration. Retain `image`, `implementationImage`, `uid`, `authVolume`, `lock` and the current `model`. Do not copy provider credentials into project files or evidence.
@@ -43,7 +58,7 @@ Merge these fields into the existing operator engine configuration. Retain `imag
 
 Selection precedence, highest first:
 
-1. A delegated task's explicit profile; this still requires operator opt-in and capability permission.
+1. A direct manual execution selection, when the operator permits it, or a delegated task's explicit profile. These selectors cannot be combined.
 2. Operator worker assignment.
 3. Project worker assignment.
 4. Operator default profile.
