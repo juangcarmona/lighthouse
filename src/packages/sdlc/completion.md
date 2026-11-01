@@ -41,6 +41,8 @@ Actions shows authorization, OpenCode progress, validation, publication and clea
 
 Publication preserves previous bundles and unrelated files, rejects path escapes, links, credential-shaped payloads and excessive content, and updates the branch without force. Concurrent updates are rebased through a bounded retry. Identical bundle retries return the existing receipt; different content at the same identity is a conflict. This is a bounded pattern check, not a claim that arbitrary private content is safe to publish.
 
+For an authenticated unattended fast-forward integration, review can reconstruct the original planning-review binding from the retained run artifact and its proposal, refinement, policy and reviewer result. When these match, the host includes the verified record in review context and retains `planning-review.json` with the report. Configured model names do not prove provider-reported settings. Missing, expired or unverifiable artifacts remain unavailable rather than passing silently.
+
 A merge receipt is uploaded even if later dispatch or publication fails. An uncertain merge response is reconciled against GitHub before any further mutation. A fresh invocation on an already merged PR records the observed merge instead of repeating it. Artifact retention is 30 days; confirmed process-branch reports remain available under the adopter's retention policy. Earlier screenshots stay in their existing evidence location; this slice does not automatically migrate all binary artifacts to permanent storage.
 
 ## Related work

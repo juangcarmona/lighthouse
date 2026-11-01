@@ -80,6 +80,15 @@ test('retained report indexes the exact record bytes and keeps source and eviden
   assert.match(files['report.md'], new RegExp(head));
   for (const artifact of JSON.parse(files['evidence-record.json']).artifacts) assert.equal(artifact.sha256, createHash('sha256').update(files[artifact.path]).digest('hex'));
 });
+test('a verified planning review is retained and indexed with the final review', () => {
+  const planning = { binding: 'a'.repeat(64), verdict: 'accept', providerSettings: 'unverified' };
+  const files = completionBundle({ ...request, stage: 'review', priorPlanningReview: planning }, envelope, { state: 'merged', sha: merged });
+  assert.deepEqual(JSON.parse(files['planning-review.json']), planning);
+  assert.match(files['report.md'], /## Prior planning review\n\n/);
+  const record = JSON.parse(files['evidence-record.json']);
+  const item = record.artifacts.find(artifact => artifact.path === 'planning-review.json');
+  assert.equal(item.sha256, createHash('sha256').update(files['planning-review.json']).digest('hex'));
+});
 function store({ conflictOnce = false, loseResponse = false, symlink = false } = {}) {
   let tip = 'original', serial = 0, attempts = 0;
   const trees = new Map([['original', new Map()]]), blobs = new Map(), commits = new Map();
