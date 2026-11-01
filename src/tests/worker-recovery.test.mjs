@@ -299,3 +299,45 @@ test('product apply finalizer authenticates and deduplicates its failure handoff
   assert.equal(f.comments.length, count);
   assert.equal(prComments.length, 1);
 });
+
+test('maintenance restores a failed read-only publication after its label was written', async () => {
+  const f = fixture();
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
+  f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'failure';
+  f.issue.labels = [{ name: 'ready' }];
+  const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'unknown' };
+  f.comment.body = dispatchReceiptBody(repository, receipt);
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'The refinement is complete.' } };
+  const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+  const first = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+  assert.equal(first.request, undefined);
+  assert.match(f.comments.at(-1).body, /previous handoff was restored/);
+  assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'completed');
+  assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false);
+  const count = f.comments.length;
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+  assert.equal(f.comments.length, count);
+});
+
+test('maintenance restores a failed read-only publication for a question without claiming completion', async () => {
+  const f = fixture();
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
+  f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'failure';
+  f.issue.labels = [{ name: 'needs-info' }];
+  const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'unknown' };
+  f.comment.body = dispatchReceiptBody(repository, receipt);
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'blocked', output: { handoff: { question: 'May this continue?' } }, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'The refinement is complete.' } };
+  const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+  const first = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+  assert.equal(first.request, undefined);
+  assert.match(f.comments.at(-1).body, /May this continue/);
+  assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'waiting');
+  assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false);
+  const count = f.comments.length;
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+  assert.equal(f.comments.length, count);
+});

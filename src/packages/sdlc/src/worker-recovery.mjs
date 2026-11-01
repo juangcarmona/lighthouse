@@ -1,5 +1,5 @@
 import { digest, validateStageEnvelope } from './host-contract.mjs';
-import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
+import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
 import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
@@ -79,17 +79,22 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const event = dispatch.request.event;
   const answered = dispatch.request.eventName === 'issue_comment' && event?.action === 'created' && event.issue?.number === issue.number && !event.issue.pull_request && event.comment?.user?.login === owner && event.comment.user.type === 'User' && typeof event.comment.body === 'string' && !!event.comment.body.trim() && !dispatch.request.feedbackKey;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation, answerRetained: answered } : null;
-  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop, run, revision, workflowRevision };
+  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
 }
 
 // Restore only a completed, read-only stage whose authority and label still match.
 export async function reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact = readActionsJson) {
-  const { dispatch, run, revision, workflowRevision } = observation;
+  const { dispatch, run, jobs = [], revision, workflowRevision } = observation;
   if (!dispatch || !run) return 'not-applicable';
-  if (run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || !['triage', 'refine'].includes(dispatch.request.stage) || dispatch.request.worker || !['completed', 'waiting'].includes(dispatch.receipt.status)) return 'not-applicable';
+  const publication = jobs.find(j => j.name === 'Validate, publish and release');
+  const publish = publication?.steps?.find(s => s.name === 'Recheck authority and publish the validated result');
+  const failedPublication = run.conclusion === 'failure' && jobs.find(j => j.name === 'agent')?.conclusion === 'success' && publish?.conclusion === 'failure';
+  const interrupted = failedPublication && ['running', 'unknown'].includes(dispatch.receipt.status);
+  const completed = (run.conclusion === 'success' || failedPublication) && ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status);
+  if (run.status !== 'completed' || (!completed && !interrupted) || run.run_attempt !== 1 || !['triage', 'refine'].includes(dispatch.request.stage) || dispatch.request.worker) return 'not-applicable';
   const id = digest(`${repository}:${issue.number}:${dispatch.request.stage}:${run.id}:${run.run_attempt}`);
   const marker = `<!-- lighthouse-actions:${id} -->`;
-  if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker))) return 'present';
+  if (!interrupted && comments.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker))) return 'present';
   if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => ['agent-working', 'human-working', dispatch.request.stage].includes(l.name)) || dispatch.request.sourceRevision !== revision || dispatch.request.workflowRevision !== workflowRevision || dispatch.request.taskDigest !== intent(issue, comments, owner)) return 'uncertain';
   let snapshot, envelope;
   try {
@@ -100,7 +105,8 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   const result = envelope.result;
   if (!['passed', 'blocked'].includes(result.status)) return 'uncertain';
   const question = result.status === 'blocked' ? pendingQuestion(result.output?.handoff?.question) : null;
-  if ((dispatch.receipt.status === 'waiting') !== !!question || (dispatch.receipt.status === 'completed') !== (result.status === 'passed')) return 'uncertain';
+  const expectedStatus = result.status === 'passed' ? 'completed' : question ? 'waiting' : 'blocked';
+  if (!interrupted && dispatch.receipt.status !== expectedStatus) return 'uncertain';
   const projection = resultHandoffState({ status: result.status, stage: snapshot.stage, question });
   if (!projection.label || !issue.labels.some(l => l.name === projection.label) || issue.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label)) return 'uncertain';
   let action = question ? `Owner: ${question} Reply here.` : 'None.';
@@ -110,9 +116,20 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
     action = !snapshot.autoImplement ? 'Owner: review the refinement and request the next authorized stage through the configured workflow.' : paused ? 'Owner: remove the future label when implementation may resume.' : 'None.';
     next = !snapshot.autoImplement ? 'No automatic continuation is configured for this refinement.' : paused ? 'The workflow will recheck the authorized implementation request.' : 'The workflow will request implementation under the configured continuation policy; the owner can pause it with the future label.';
   } else if (result.status === 'blocked' && !question) action = visibleNextAction(result.nextAction);
+  if (interrupted && snapshot.autoImplement && result.status === 'passed') { action = 'Owner: inspect the restored result and request the next authorized stage.'; next = 'The interrupted execution did not confirm an automatic continuation.'; }
   const body = handoff({ status: projection.status, stage: snapshot.stage, happened: `A previous handoff was restored from retained execution evidence.\n\n${envelope.effect.body}`, action, next, details: `Outcome: ${result.status}\n\n[Workflow run](https://github.com/${repository}/actions/runs/${run.id}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n<!-- lighthouse-stage:${snapshot.stage}:${result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}` });
   await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
+  const fresh = await api(`issues/${issue.number}`), freshComments = await issueComments(api, issue.number);
+  const currentRepo = await api(''), currentRevision = (await api(`commits/${encodeURIComponent(currentRepo.default_branch)}`)).sha;
+  if (currentRevision !== revision || fresh.state !== 'open' || fresh.user?.login !== owner || fresh.pull_request || fresh.labels.some(l => ['agent-working', 'human-working', dispatch.request.stage].includes(l.name)) || !fresh.labels.some(l => l.name === projection.label) || fresh.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label) || intent(fresh, freshComments, owner) !== dispatch.request.taskDigest) return 'uncertain';
+  if (freshComments.some(c => c.user?.login === 'github-actions[bot]' && Number(c.id) > Number(dispatch.commentId) && c.body?.includes('<!-- lighthouse-dispatch:'))) return 'uncertain';
+  if (freshComments.some(c => c.user?.login === 'github-actions[bot]' && c.body?.includes(marker))) {
+    if (interrupted) await finishDispatch(api, repository, issue.number, dispatch.commentId, run.id, question ? 'question' : result.status);
+    return 'present';
+  }
+  await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
   await api(`issues/${issue.number}/comments`, 'POST', { body });
+  if (interrupted) await finishDispatch(api, repository, issue.number, dispatch.commentId, run.id, question ? 'question' : result.status);
   return 'restored';
 }
 
@@ -173,13 +190,17 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
   const currentRoot = entries.at(-1)?.receipt.recovery?.rootId ?? entries.at(-1)?.receipt.id;
   for (const { comment } of latest.values()) {
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
-    const { dispatch, stop, run, revision, workflowRevision, ...publicObservation } = observation;
+    const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
     if (observation.rootId === currentRoot) {
       const reconciliation = await reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact);
+      if (reconciliation === 'restored' || reconciliation === 'present') {
+        observation.stop = null;
+        if (run?.conclusion === 'failure') Object.assign(publicObservation, { state: 'reconciled', code: 'handoff-restored', nextAction: 'Follow the restored handoff.' });
+      }
       if (reconciliation === 'uncertain') Object.assign(publicObservation, { state: 'uncertain', code: 'handoff-unconfirmed', nextAction: 'Inspect the retained result and current issue state before restoring its handoff.' });
     }
     observations.push(publicObservation);
-    if (stop && observation.rootId === currentRoot) await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, ...stop, sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } });
+    if (observation.stop && observation.rootId === currentRoot) await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, ...observation.stop, sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } });
     if (observation.state !== 'retryable' || enabled !== true || observation.rootId !== currentRoot) continue;
     const attempt = observation.attempt + 1;
     const request = { ...dispatch.request, id: recoveryId(repository, observation.rootId, attempt), routerRunId: String(parent.id), routerAttempt: parent.run_attempt, routerRevision: parent.head_sha, routerRef: parent.head_branch, routerEventName: parent.event, recovery: { rootId: observation.rootId, previousComment: comment.id, attempt } };
