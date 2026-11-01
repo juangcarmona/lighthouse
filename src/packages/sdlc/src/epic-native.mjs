@@ -140,8 +140,7 @@ export async function checkEpicCapacity({ api, repository, owner, child, current
     if (!Array.isArray(candidates) || candidates.length !== 1) throw Error('Epic child inventory is incomplete or ambiguous');
     const issue = await api(`issues/${candidates[0].number}`);
     if (issue.id !== candidates[0].id || issue.user?.login !== 'github-actions[bot]' || issue.user.type !== 'Bot' || !isDeepStrictEqual(readEpicMarker(issue.body), correlation)) throw Error('Epic child inventory changed');
-    if (issue.state === 'closed') continue;
-    if (issue.state !== 'open' || issue.pull_request) throw Error('Epic child state is uncertain');
+    if (!['open', 'closed'].includes(issue.state) || issue.pull_request) throw Error('Epic child state is uncertain');
     const comments = await issueComments(api, issue.number);
     const active = comments.filter(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:')).map(comment => readDispatchReceipt(comment, repository, issue.number)).some(receipt => receipt.stage === 'implement' && receipt.id !== excludeRequest && ['requested', 'running', 'unknown'].includes(receipt.status));
     if (active || issue.number !== child && issue.labels.some(label => label.name === 'agent-working')) occupied++;
