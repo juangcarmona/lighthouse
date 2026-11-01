@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof } from './product-change.mjs';
+import { checkAlignedImplementationPullRequest } from './proposal-review.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
@@ -154,6 +155,16 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   await beforeWrite();
   await checkEpicBase();
   const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
+  if (snapshot.productAlignment?.parent.pullRequest) {
+    const prior = snapshot.productAlignment.parent.pullRequest;
+    const current = await api(`pulls/${prior.number}`);
+    checkAlignedImplementationPullRequest(current, snapshot.repository, snapshot.productAlignment);
+    await api(`git/refs/heads/${prior.branch}`, 'PATCH', { sha: created.sha, force: false });
+    const proof = productImplementationProof(current);
+    const preserved = proof ? current.body.replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/, `<!-- lighthouse-product-implementation:${JSON.stringify({ ...proof, runId: snapshot.runId, head: created.sha })} -->`) : current.body;
+    await api(`pulls/${prior.number}`, 'PATCH', { body: `${preserved}\n\n${body.trim()}\n\n[Implementation evidence](${runUrl}).` });
+    return { number: prior.number, html_url: current.html_url, head: { sha: created.sha, ref: prior.branch } };
+  }
   if (snapshot.productResume) {
     const resume = snapshot.productResume;
     const current = await api(`pulls/${resume.pullRequest}`);

@@ -65,6 +65,10 @@ test('aligned parent continuation authenticates the result, publication and unch
   const calls = [];
   await signalProductAlignment(async (path, method, body) => { if (path === '') return { default_branch: 'main' }; calls.push({ path, method, body }); }, snapshot, envelope);
   assert.equal(calls[0].body.inputs.workflow, 'resume-aligned');
+  const draftParent = { ...parent, stage: 'implement', pullRequest: { number: 34, head: revision('c'), branch: 'lighthouse/implement-18-cccccccccccc' } };
+  assert.equal(await signalProductAlignment(async (path, method, body) => { if (!path) return { default_branch: 'main' }; calls.push({ path, method, body }); }, { ...snapshot, productParent: draftParent }, envelope), true);
+  assert.equal(calls.at(-1).body.inputs.stage, 'implement');
+  assert.equal(await signalProductAlignment(api, { ...snapshot, productParent: { ...draftParent, review: { number: 34 } } }, envelope), false);
   const repeated = { ...parentSnapshot, productChangeEnabled: true, productAlignment: alignment };
   assert.equal(await signalProductGap(api, repeated, result(repeated.runId, 'refine', 'blocked', { productGap: gap })), false);
 });

@@ -97,6 +97,33 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
 });
 
+test('aligned implementation resumes the authenticated draft PR and rejects changed state', async () => {
+  const repository = 'owner/repo', branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+  const alignment = { defaultBranch: 'main', parent: { issue: 18, stage: 'implement', pullRequest: { number: 34, branch, head: request.sourceRevision } } };
+  const original = { number: 34, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: request.sourceRevision, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, html_url: 'https://example.test/pr/34', body: `Original evidence.\n<!-- lighthouse-implementation:${request.runId} -->` };
+  for (const variant of ['valid', 'head', 'base', 'draft']) {
+    const pr = structuredClone(original), calls = [];
+    if (variant === 'head') pr.head.sha = 'c'.repeat(40);
+    if (variant === 'base') pr.base.ref = 'other';
+    if (variant === 'draft') pr.draft = false;
+    const api = async (path, method, body) => {
+      calls.push({ path, method, body });
+      if (path === 'pulls/34' && method !== 'PATCH') return pr;
+      return { sha: 'created', tree: { sha: 'tree' } };
+    };
+    const publish = () => createImplementationPullRequest(api, { ...request, repository, productAlignment: alignment }, [change], 'Continued.', 'https://example.test/run', true, async () => {});
+    if (variant !== 'valid') {
+      await assert.rejects(publish(), /changed|eligible/);
+      assert.equal(calls.some(call => call.path.startsWith('git/refs/')), false);
+    } else {
+      assert.equal((await publish()).number, 34);
+      assert.deepEqual(calls.find(call => call.path === `git/refs/heads/${branch}`).body, { sha: 'created', force: false });
+      assert.match(calls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body, /Original evidence/);
+      assert.equal(calls.some(call => call.path === 'pulls'), false);
+    }
+  }
+});
+
 test('an epic child targets the recorded shared base and stops if it advances', async () => {
   for (const changedAt of [0, 1, 2, 3]) {
     const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
