@@ -1,8 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewText, productApplyHandoff } from '../packages/sdlc/src/product-change-actions.mjs';
+import { reviewText, productApplyHandoff, checkProductDryRun } from '../packages/sdlc/src/product-change-actions.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
 import { productApplyRequest } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('refused product dry-runs report bounded diagnostic codes and remain blocked', () => {
+  assert.throws(() => checkProductDryRun({ outcome: 'refused', plan: { diagnostics: [{ severity: 'error', code: 'PRODUCT027' }] } }, 'CHG-1'), /PRODUCT027/);
+  assert.throws(() => checkProductDryRun({ outcome: 'dry-run', plan: { changeId: 'CHG-2' } }, 'CHG-1'), /does not match/);
+  assert.doesNotThrow(() => checkProductDryRun({ outcome: 'dry-run', plan: { changeId: 'CHG-1' } }, 'CHG-1'));
+});
 
 test('product apply preparation binds the current issue, decision and dispatch', () => {
   const current = { issue: 7, pullRequest: 8, head: 'head', changeName: 'example', approval: { reviewKey: 'key' }, binding: {}, checkpoint: {} };

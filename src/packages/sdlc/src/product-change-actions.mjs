@@ -175,6 +175,13 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   return { pullRequest: pr, binding, checkpoint, body, repositoryDefaultBranch: repositoryInfo.default_branch };
 }
 
+export function checkProductDryRun(preview, changeId) {
+  if (preview.outcome !== 'dry-run' || preview.plan?.changeId && preview.plan.changeId !== changeId) {
+    const codes = (preview.plan?.diagnostics ?? []).filter(item => item.severity === 'error' && /^[A-Z][A-Z0-9]{0,31}$/.test(item.code ?? '')).map(item => item.code).slice(0, 10);
+    throw Error(`ProductShape dry-run does not match the reviewed change${codes.length ? `: ${[...new Set(codes)].join(', ')}` : ''}`);
+  }
+}
+
 export async function applyApprovedProductChange({ root, changeName, checkpoint, approval, currentBinding, currentIdentity, bridge, headAfter, resultingModelDigest, reportBeforeWrite, publish }) {
   const intent = authorizeProductApply({ checkpoint, approval, currentBinding, currentIdentity });
   const provider = bridge ?? await loadProductBridge();
@@ -184,7 +191,7 @@ export async function applyApprovedProductChange({ root, changeName, checkpoint,
   await writeFile(manifest, original.replace(/^status:\s*draft\s*$/m, 'status: approved'));
   await validateProductWorkspace(root, changeName, provider);
   const preview = await provider.applyOpenSpecProductChange(root, changeName, { dryRun: true });
-  if (preview.outcome !== 'dry-run' || preview.plan?.changeId && preview.plan.changeId !== checkpoint.changeId) throw Error('ProductShape dry-run does not match the reviewed change');
+  checkProductDryRun(preview, checkpoint.changeId);
   const applied = await provider.applyOpenSpecProductChange(root, changeName, { reportBeforeWrite });
   if (applied.outcome !== 'applied' || applied.change?.id !== checkpoint.changeId) throw Error('ProductShape apply was refused or returned a different change');
   if ((applied.resultingModel?.diagnostics ?? []).some(item => item.severity === 'error')) throw Error('ProductShape resulting model has validation errors');
