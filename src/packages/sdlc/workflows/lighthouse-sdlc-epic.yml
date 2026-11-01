@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
   queue: max
 permissions:
-  contents: read
+  contents: write
   actions: read
   issues: write
   pull-requests: read

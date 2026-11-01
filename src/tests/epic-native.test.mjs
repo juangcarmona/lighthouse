@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, checkEpicLeaseConfiguration, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
+import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
 
 const repository = 'owner/repo', owner = 'owner', issue = 146, sha = 'a'.repeat(40);
 const estimate = { points: 13, status: 'confirmed', confidence: 'medium', rationale: { scope: 'Several outcomes', dependencies: 'Dependent slices', verification: 'Independent tests' }, uncertainty: ['Host evidence'] };
@@ -22,6 +22,7 @@ async function fixture(t) {
   const bot = { login: 'github-actions[bot]', type: 'Bot' };
   const report = { id: 1, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/${issue}`, html_url: 'https://example.test/report', body: '<!-- lighthouse-stage:refine:passed -->' };
   const comments = [report], issues = [], parents = new Map(), dependencies = new Map(), calls = [];
+  let branch;
   let router = 'jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n';
   const workflow = 'name: epic\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n';
   let worker = 'name: worker\nconcurrency:\n  cancel-in-progress: false\n  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}\n  queue: max\n';
@@ -29,6 +30,8 @@ async function fixture(t) {
     calls.push({ path, method, body });
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha };
+    if (path === 'git/ref/heads/lighthouse/epic-146') return branch ?? null;
+    if (path === 'git/refs' && method === 'POST') { branch = { ref: body.ref, object: { sha: body.sha } }; return branch; }
     if (path === `contents/.github/workflows/lighthouse-sdlc-router.yml?ref=${sha}` || path === `contents/.github/workflows/lighthouse-sdlc-epic.yml?ref=${sha}`) { const content = path.includes('router') ? router : workflow; return { type: 'file', encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') }; }
     if (/^contents\/\.github\/workflows\/lighthouse-sdlc-(?:triage|refine|implement)\.lock\.yml\?ref=/.test(path)) return { type: 'file', encoding: 'base64', size: Buffer.byteLength(worker), content: Buffer.from(worker).toString('base64') };
     if (path === `issues/${issue}`) return parent;
@@ -46,7 +49,7 @@ async function fixture(t) {
   };
   const load = async (_api, _repo, _comments, current) => ({ request: { ...request, taskDigest: current.taskDigest }, envelope, report: report.html_url });
   const actor = { login: owner }, run = { id: 500, run_attempt: 1, status: 'in_progress', path: '.github/workflows/lighthouse-sdlc-epic.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
-  return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; }, setWorker: value => { worker = value; } };
+  return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; }, setWorker: value => { worker = value; }, setBranch: value => { branch = value; } };
 }
 
 test('native host creates bounded children and links the authenticated dependency graph', async t => {
@@ -57,9 +60,23 @@ test('native host creates bounded children and links the authenticated dependenc
   assert.equal(f.issues.length, 2);
   assert.match(f.issues[0].body, /First bounded scope/);
   assert.equal(f.parents.get(200).number, issue);
+  assert.equal(f.calls.filter(call => call.path === 'git/refs' && call.method === 'POST').length, 1);
   assert.deepEqual(f.dependencies.get(201), [{ id: 1000 }]);
   const journal = JSON.parse(await readFile(f.path, 'utf8'));
   assert.equal(Object.values(journal.entries).every(entry => entry.receipt.state === 'linked'), true);
+});
+
+test('epic branch creation is create-only and reconciles a lost response at the exact base', async t => {
+  const f = await fixture(t), snapshot = await prepareNativeEpic(f.api, repository, owner, issue, f.load);
+  await assert.rejects(ensureEpicBase(f.api, snapshot, async () => false), /authorization changed/);
+  assert.equal(f.calls.some(call => call.path === 'git/refs' && call.method === 'POST'), false);
+  let lost = true;
+  const api = async (...args) => { const result = await f.api(...args); if (args[0] === 'git/refs' && lost) { lost = false; throw Error('response lost'); } return result; };
+  assert.equal(await ensureEpicBase(api, snapshot, () => authorizeNativeEpic(api, snapshot)), 'lighthouse/epic-146');
+  assert.equal(await ensureEpicBase(api, snapshot, () => authorizeNativeEpic(api, snapshot)), 'lighthouse/epic-146');
+  assert.equal(f.calls.filter(call => call.path === 'git/refs' && call.method === 'POST').length, 1);
+  f.setBranch({ ref: 'refs/heads/lighthouse/epic-146', object: { sha: 'b'.repeat(40) } });
+  await assert.rejects(ensureEpicBase(api, snapshot, () => authorizeNativeEpic(api, snapshot)), /unverified revision/);
 });
 
 test('native host blocks changed owner intent, pause and later refinement', async t => {

@@ -88,11 +88,32 @@ export async function checkEpicLeaseConfiguration(api, revision) {
   }
 }
 
+export async function ensureEpicBase(api, snapshot, authorize) {
+  const branch = `lighthouse/epic-${snapshot.issue}`;
+  const read = () => api(`git/ref/heads/${branch}`, 'GET', undefined, true);
+  const current = await read();
+  if (current) {
+    if (current.ref !== `refs/heads/${branch}` || current.object?.sha !== snapshot.sourceRevision) throw Error('Epic branch already exists at an unverified revision');
+    return branch;
+  }
+  if (await authorize() !== true) throw Error('Epic branch authorization changed');
+  try {
+    const created = await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: snapshot.sourceRevision });
+    if (created.ref === `refs/heads/${branch}` && created.object?.sha === snapshot.sourceRevision) return branch;
+  } catch (error) {
+    const observed = await read();
+    if (observed?.ref === `refs/heads/${branch}` && observed.object?.sha === snapshot.sourceRevision) return branch;
+    throw error;
+  }
+  throw Error('Epic branch creation could not be confirmed');
+}
+
 export async function runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load }) {
   const snapshot = await prepareNativeEpic(api, repository, owner, issue, load);
   await checkEpicLeaseConfiguration(api, snapshot.sourceRevision);
   const authorize = () => authorizeNativeEpic(api, snapshot);
   const journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, run, path: journalPath, authorize, ...(readArtifact ? { readArtifact } : {}) });
+  await ensureEpicBase(api, snapshot, authorize);
   const host = {
     ...journal,
     withLease: async (key, fn) => { if (key !== `${repository}:${issue}`) throw Error('Epic lease identity changed'); return fn(); },
