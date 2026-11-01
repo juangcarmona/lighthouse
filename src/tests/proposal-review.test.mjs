@@ -33,6 +33,9 @@ test('feedback reloads the provider skip flag without exposing mutable schema me
   };
   const files = await loadProposalFiles(api, { number: 60, issue: 47, head });
   assert.equal(files.find(file => file.path.endsWith('/.openspec.yaml')).content, 'skip_specs: true\n');
+  const productApi = async path => path === 'pulls/60/files?per_page=100' ? [...await api(path), { filename: 'docs/product/model/change.md', status: 'added' }] : api(path);
+  const productFiles = await loadProposalFiles(productApi, { number: 60, issue: 47, head, productProposal: true });
+  assert.deepEqual(productFiles, files);
 });
 
 test('publication updates the same branch non-forcibly and rejects a concurrent writer', async () => {
