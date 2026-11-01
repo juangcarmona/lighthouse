@@ -116,3 +116,20 @@ test('aggregate readiness binds the current main base, head and checks', async (
   pr.merge_commit_sha = '6'.repeat(40);
   await assert.rejects(ready(), /Aggregate checks do not bind/);
 });
+
+test('aggregate readiness reports uncertainty if main changes during publication', async () => {
+  const f = fixture();
+  await f.run();
+  const pr = f.pulls[0], candidate = '5'.repeat(40), nextBase = '6'.repeat(40);
+  Object.assign(pr, { draft: true, mergeable: true, merge_commit_sha: candidate });
+  const original = f.args.api;
+  let main = source;
+  f.args.api = async (path, method, body) => {
+    if (path === 'pulls/30') return pr;
+    if (path === 'git/ref/heads/main') return { ref: 'refs/heads/main', object: { sha: main } };
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
+    return original(path, method, body);
+  };
+  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { pr.draft = false; main = nextBase; } }), /Aggregate checks do not bind/);
+  assert.equal(pr.draft, false);
+});
