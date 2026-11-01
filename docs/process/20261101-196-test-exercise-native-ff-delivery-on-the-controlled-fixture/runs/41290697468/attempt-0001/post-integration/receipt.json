@@ -1,0 +1,115 @@
+{
+  "state": "merged",
+  "sha": "064832a9c919fe72dd8f1407e629d2565a5254cd",
+  "recovered": false,
+  "acceptedHead": "85cd5b37af4e0645d41b19026d83f77f88711232",
+  "authorization": {
+    "issue": 196,
+    "pr": 238,
+    "head": "85cd5b37af4e0645d41b19026d83f77f88711232",
+    "merge": true,
+    "unattended": {
+      "route": "ff",
+      "owner": "juangcarmona",
+      "policyDigest": "29389857aa68b2b90bf7957b23922723429997776b470cc0843b30f4b91ded88",
+      "review": {
+        "binding": "b13c88c79ce0f1bfd95beca65d836c0fc17e26a9a6ff6d1d42a7d722c9c82fad",
+        "result": {
+          "schemaVersion": 1,
+          "runId": "a8be471d5a784d1c5d8904c3ff1ea9d02fcb6f339cdda70fde6a52bdffd14c8c",
+          "stage": "integrate",
+          "status": "passed",
+          "gate": "done",
+          "evidence": [
+            {
+              "id": "candidate-scope-and-diff",
+              "status": "passed",
+              "source": "context.review.details changes and originalFiles; /workspace/src/tests/fixtures/unattended/README.md and authorized planning root",
+              "reason": "The README contains the requested controlled acceptance fixture phrase; the only implementation file is the README with the specified word correction, and all four planning artifacts are within the authorized planning root."
+            },
+            {
+              "id": "npm-ci",
+              "status": "passed",
+              "source": "Executed host check receipt for npm ci --ignore-scripts",
+              "reason": "Exit code 0."
+            },
+            {
+              "id": "repository-verify",
+              "status": "passed",
+              "source": "Executed host check receipt for env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify",
+              "reason": "Exit code 0; verify completed with 301 passing, 0 failing and 6 skipped tests, and the remaining verification steps succeeded."
+            },
+            {
+              "id": "fixture-regression",
+              "status": "passed",
+              "source": "Executed host check receipt for node --test src/tests/fixtures/unattended/regression.test.mjs",
+              "reason": "Exit code 0; all three tests passed."
+            },
+            {
+              "id": "openspec-validation",
+              "status": "passed",
+              "source": "Executed host check receipt for strict OpenSpec validation of issue-196-proposal",
+              "reason": "Exit code 0; the provider reported the change valid with skip_specs enabled and zero spec deltas accepted."
+            }
+          ],
+          "missingEvidence": [],
+          "unavailableChecks": [],
+          "pendingReview": [],
+          "nextAction": "Return the accepted candidate assessment to the trusted host for its subsequent publication and host-owned gates; this review does not authorize merge or release.",
+          "output": {
+            "review": {
+              "binding": "b13c88c79ce0f1bfd95beca65d836c0fc17e26a9a6ff6d1d42a7d722c9c82fad",
+              "verdict": "accept",
+              "findings": []
+            }
+          }
+        },
+        "model": {
+          "requested": {
+            "profile": "fast",
+            "model": "openai/gpt-6-luna",
+            "reasoningEffort": "high"
+          },
+          "resolved": {
+            "mode": "profile",
+            "profile": "fast",
+            "model": "openai/gpt-6-luna",
+            "reasoningEffort": "high",
+            "engineModel": "openai/gpt-6-luna#high",
+            "source": "task.profile",
+            "fields": {
+              "model": "project",
+              "reasoningEffort": "project"
+            },
+            "capabilityEvidence": "operator-configuration-only"
+          },
+          "providerReported": {
+            "model": null,
+            "reasoningEffort": null,
+            "status": "unverified",
+            "reason": "The current adapter has no authenticated provider-settings receipt"
+          },
+          "billing": {
+            "route": "unchanged",
+            "actualCost": null,
+            "estimatedApiEquivalentCost": null,
+            "subscriptionUsage": null
+          }
+        },
+        "execution": {
+          "status": "passed",
+          "exitCode": 0,
+          "signal": null,
+          "resources": {
+            "pidsLimit": 128,
+            "pidsPeak": 29,
+            "pidsDenied": 0,
+            "memoryPeakBytes": 356614144,
+            "oomKills": 0
+          }
+        }
+      }
+    }
+  },
+  "postMerge": []
+}
