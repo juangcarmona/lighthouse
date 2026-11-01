@@ -21,9 +21,10 @@ test('product apply publication collects newly added model files as well as the 
     git('init', '-q'); git('add', '.'); git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'baseline');
     const head = git('rev-parse', 'HEAD');
     await writeFile(join(root, manifest), 'status: applied\n');
+    await writeFile(join(root, model, 'existing.md'), 'Updated requirement.\n');
     await writeFile(join(root, model, 'new.md'), 'A new requirement.\n');
     const result = await collectProductApplyFiles(root, 'example', head);
-    assert.deepEqual(result.files.map(file => file.path), [`${model}/new.md`, manifest]);
+    assert.deepEqual(result.files.map(file => file.path), [`${model}/existing.md`, `${model}/new.md`, manifest]);
     const api = async path => {
       if (path.startsWith('git/trees/')) return { tree: [{ path: `${model}/existing.md`, type: 'blob', mode: '100644', size: 22, sha: 'existing' }] };
       if (path.startsWith('contents/')) return null;
