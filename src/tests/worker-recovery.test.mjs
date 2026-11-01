@@ -260,6 +260,43 @@ test('maintenance reports uncertain publication without retrying or duplicating 
   assert.equal(f.comments.length, count);
 });
 
+test('maintenance records only a uniquely authenticated pre-admission failure without retrying', async () => {
+  for (const mode of ['safe', 'receipt-interrupted', 'agent-started', 'jobs-incomplete', 'active', 'ambiguous', 'reserved', 'paused']) {
+    const f = fixture();
+    f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
+    f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
+    if (mode === 'active') f.run.status = 'in_progress';
+    f.comment.body = dispatchReceiptBody(repository, { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'requested', workerRunId: null });
+    f.jobs.splice(0, f.jobs.length, { name: 'Authorize and reserve issue', conclusion: 'failure' }, { name: 'agent', conclusion: mode === 'agent-started' ? 'success' : 'skipped' }, { name: 'Validate, publish and release', conclusion: 'skipped' });
+    if (mode === 'reserved') f.issue.labels = [{ name: 'agent-working' }];
+    if (mode === 'paused') f.issue.labels = [{ name: 'future' }];
+    let patches = 0;
+    const api = async (path, method, body) => {
+      if (path.includes('/runs?event=workflow_dispatch')) return { total_count: mode === 'ambiguous' ? 101 : 1, workflow_runs: [{ id: 200, display_title: 'refine #7 · request 30' }] };
+      if (mode === 'jobs-incomplete' && path.endsWith('/jobs?per_page=100')) return { total_count: 4, jobs: f.jobs };
+      if (mode === 'receipt-interrupted' && path === 'issues/comments/30' && method === 'PATCH' && ++patches === 2) throw Error('receipt update interrupted');
+      return f.api(path, method, body);
+    };
+    if (mode === 'receipt-interrupted') await assert.rejects(prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact), /receipt update interrupted/);
+    const result = await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+    const receipt = readDispatchReceipt(f.comment, repository, 7);
+    assert.equal(result.request, undefined);
+    assert.equal(f.calls.some(call => call.path.endsWith('/dispatches')), false);
+    if (mode === 'safe' || mode === 'receipt-interrupted') {
+      assert.equal(receipt.workerRunId, '200');
+      assert.equal(receipt.status, 'failed');
+      assert.equal(result.observations[0].code, 'preparation-failed');
+      assert.match(f.comments.at(-1).body, /Preparation failed before the agent started/);
+      const count = f.comments.length;
+      await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+      assert.equal(f.comments.length, count);
+    } else {
+      assert.equal(receipt.workerRunId, null, mode);
+      assert.equal(result.observations[0].code, 'dispatch-unconfirmed', mode);
+    }
+  }
+});
+
 test('maintenance reports failed product apply without authorizing a retry', async () => {
   const f = fixture();
   f.request.stage = 'propose'; f.request.worker = 'apply-product-change';

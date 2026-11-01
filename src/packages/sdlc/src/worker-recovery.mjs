@@ -1,5 +1,5 @@
 import { digest, validateStageEnvelope } from './host-contract.mjs';
-import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
+import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
 import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
@@ -80,6 +80,29 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const answered = dispatch.request.eventName === 'issue_comment' && event?.action === 'created' && event.issue?.number === issue.number && !event.issue.pull_request && event.comment?.user?.login === owner && event.comment.user.type === 'User' && typeof event.comment.body === 'string' && !!event.comment.body.trim() && !dispatch.request.feedbackKey;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation, answerRetained: answered } : null;
   return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
+}
+
+// A uniquely authenticated preparation failure can be recorded as failed only
+// when the agent and publisher were skipped. It never authorizes a new dispatch.
+export async function reconcilePreparationFailure(api, repository, owner, issueNumber, commentId, runId, readArtifact = readActionsJson) {
+  const run = await api(`actions/runs/${runId}`);
+  if (run.status !== 'completed' || !['failure', 'timed_out'].includes(run.conclusion) || run.run_attempt !== 1) return false;
+  const dispatch = await loadDispatch(api, repository, owner, issueNumber, commentId, run, readArtifact);
+  if (dispatch.receipt.workerRunId && String(dispatch.receipt.workerRunId) !== String(run.id) || !['requested', 'running', 'unknown', 'failed'].includes(dispatch.receipt.status) || dispatch.request.worker || !['triage', 'refine'].includes(dispatch.request.stage)) return false;
+  const inventory = await api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
+  if (!Array.isArray(inventory.jobs) || inventory.total_count !== inventory.jobs.length || inventory.total_count > 100) return false;
+  const prepare = inventory.jobs.find(job => job.name === 'Authorize and reserve issue');
+  const agent = inventory.jobs.find(job => job.name === 'agent');
+  const publish = inventory.jobs.find(job => job.name === 'Validate, publish and release');
+  if (!['failure', 'timed_out'].includes(prepare?.conclusion) || agent?.conclusion !== 'skipped' || publish?.conclusion !== 'skipped') return false;
+  const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber), repo = await api('');
+  const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
+  const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
+  if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name)) || dispatch.request.sourceRevision !== revision || dispatch.request.workflowRevision !== workflowRevision || intent(issue, comments, owner) !== dispatch.request.taskDigest || comments.some(comment => Number(comment.id) > Number(commentId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:'))) return false;
+  if (!dispatch.receipt.workerRunId && !await claimDispatch(api, repository, dispatch, run.id)) return false;
+  await finishDispatch(api, repository, issueNumber, commentId, run.id, 'failed');
+  await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, run: String(run.id), attempt: String(run.run_attempt), sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, observation: 'preparation-failure' });
+  return true;
 }
 
 // Restore only a completed, read-only stage whose authority and label still match.
@@ -201,6 +224,8 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
     if (observation.rootId === currentRoot) {
+      const preparationRun = observation.observedRunId ?? run?.id;
+      if (preparationRun && await reconcilePreparationFailure(api, repository, owner, issueNumber, comment.id, preparationRun, readArtifact)) { observation.stop = null; Object.assign(publicObservation, { state: 'reconciled', code: 'preparation-failed', nextAction: 'Inspect the confirmed failed execution before requesting new work.' }); }
       const reconciliation = await reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact);
       if (reconciliation === 'restored' || reconciliation === 'present') {
         observation.stop = null;
