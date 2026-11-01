@@ -39,6 +39,11 @@ test('product apply publication collects newly added model files as well as the 
     assert.doesNotThrow(() => validateProductApplyFiles(withDeletion.files, 'example'));
     assert.equal((await productModelDigestFromApi(api, head, withDeletion.files)).digest, await productModelDigest(root));
     assert.throws(() => validateProductApplyFiles([{ path: manifest, deleted: true }], 'example'), /Unsafe/);
+    await mkdir(join(root, '.lighthouse-harness'), { recursive: true });
+    await writeFile(join(root, '.lighthouse-harness', 'host.mjs'), 'host');
+    await assert.doesNotReject(collectProductApplyFiles(root, 'example', head));
+    await writeFile(join(root, 'unexpected.txt'), 'not a product artifact');
+    await assert.rejects(collectProductApplyFiles(root, 'example', head), /outside/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

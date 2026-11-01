@@ -217,8 +217,8 @@ export async function collectProductApplyFiles(root, changeName, baseRevision) {
   const prefix = `openspec/changes/${changeName}/product-change/change.md`;
   const modelRoot = await productModelDirectory(root);
   const options = { cwd: root, encoding: 'utf8', maxBuffer: 128000 };
-  const changed = execFileSync('git', ['diff', '--name-only', '-z', '--no-renames', baseRevision, '--', modelRoot, prefix], options).split('\0').filter(Boolean);
-  const added = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z', '--', modelRoot], options).split('\0').filter(Boolean);
+  const changed = execFileSync('git', ['diff', '--name-only', '-z', '--no-renames', baseRevision, '--'], options).split('\0').filter(Boolean);
+  const added = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z', '--', '.', ':(exclude).lighthouse-harness', ':(exclude).lighthouse-harness/**'], options).split('\0').filter(Boolean);
   const paths = [...new Set([...changed, ...added])].sort();
   if (!paths.includes(prefix) || paths.length > 520 || paths.some(path => path !== prefix && !path.startsWith(`${modelRoot}/`))) throw Error('Trusted apply wrote outside the Product Change manifest and accepted model');
   const files = [];
