@@ -122,6 +122,13 @@ export function continuationHistory(continuation, answer) {
 export function checkProductEntry(product, snapshot) {
   if (!product || product.entry !== (snapshot.productEntry ?? 'idea')) throw Error('Product Change worker returned an outcome for a different authorized entry');
 }
+
+export function productGapNextAction({ gap, enabled, dispatched, paused }) {
+  if (!gap) return null;
+  if (paused) return { action: 'Owner: remove the future label when work may resume.', next: dispatched ? 'Then replay this run through the router using this issue, stage and run ID as after_run.' : 'Then request a new authorized stage execution.' };
+  if (enabled && dispatched) return { action: 'None. Wait for the Product Change preparation outcome.', next: 'The workflow will authenticate this prerequisite and check whether product preparation is authorized; implementation remains stopped.' };
+  return { action: enabled ? 'Workflow maintainer: request a new authorized stage execution in the router.' : 'Workflow maintainer: install and enable the Product Change workflow.', next: 'Request a new authorized stage execution in the router; implementation remains stopped until the product prerequisite is approved and applied.' };
+}
 export function productApplyRequest({ dispatch, current, issueNumber, issue, repository, owner }) {
   if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');
   const requested = dispatch.request.productApproval;
@@ -762,8 +769,9 @@ async function main(command) {
     const projection = resultHandoffState({ status: value.result.status, stage: snapshot.stage, question, reviewTarget, draft: !!prStateProof });
     const isReview = projection.review;
     const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : visibleNextAction(value.result.nextAction) : refinementAction?.action ?? 'None.';
-    const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
+    const productGap = value.result.status === 'blocked' && snapshot.worker !== 'product-change' ? productGapNextAction({ gap: value.result.output?.productGap, enabled: snapshot.productChangeEnabled === true, dispatched: !!snapshot.dispatch, paused: publicationIssue.labels.some(label => label.name === 'future') }) : null;
+    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction) : refinementAction?.action ?? 'None.';
+    const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
     const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
