@@ -11,7 +11,8 @@ import { taskDigest } from './issue-actions.mjs';
 import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } from './completion.mjs';
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
-import { setPullRequestDraft } from './pr-state.mjs';
+import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
+import { handoff, pendingQuestion } from './handoff.mjs';
 
 const harness = fileURLToPath(new URL('../', import.meta.url));
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
@@ -60,7 +61,9 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const issue = await api('issues/' + issueNumber);
   if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) throw Error('Issue is closed, reserved, paused or requires owner admission');
   const comments = () => list(api, 'issues/' + issueNumber + '/comments');
-  const ownerAnswers = owners(await comments(), owner);
+  const initialComments = await comments();
+  const initialCommentId = Math.max(0, ...initialComments.map(comment => Number.isSafeInteger(comment.id) ? comment.id : 0));
+  const ownerAnswers = owners(initialComments, owner);
   const intent = taskDigest(issue, ownerAnswers);
   const issueContext = { ...issue, ownerAnswers };
   const runId = unattendedDigest({ repository, issue: issueNumber, route, run: env.GITHUB_RUN_ID });
@@ -99,7 +102,23 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       await assertUnattendedPullRequest(api, await comments(), current, owner);
     }
   };
-  const notify = body => api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  const newerAttempt = async () => {
+    const latest = (await comments()).filter(c => c.id > initialCommentId && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended|dispatch|actions|stop):/.test(c.body ?? '')).at(-1);
+    return !!latest && !latest.body.includes(marker);
+  };
+  const notify = async body => {
+    if (await newerAttempt()) throw Error('A newer workflow attempt has taken over');
+    return api('issues/' + issueNumber + '/comments', 'POST', { body: body + '\n\n[Execution](' + runUrl + ').\n\n' + marker });
+  };
+  const releaseReservation = async () => {
+    if (await newerAttempt()) { reserved = false; return 'stale'; }
+    if (!reserved) return 'released';
+    const fresh = await api('issues/' + issueNumber);
+    if (fresh.labels.some(label => label.name === 'human-working')) { reserved = false; return 'held'; }
+    if (fresh.labels.some(label => label.name === 'agent-working')) await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true);
+    reserved = false;
+    return 'released';
+  };
   const publicationApi = async (path, method, ...args) => {
     if (method === 'POST' && ['git/refs', 'pulls'].includes(path)) {
       await recheck();
@@ -121,6 +140,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       prompt: text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal });
     if (result.runtime.execution?.status !== 'passed') throw Error('Host cannot verify completed model execution');
     if (worker === 'independent-review' && result.runtime.model !== reviewer.model || stage === 'implement' && result.runtime.model !== producer.model) throw Error('Operator model selection changed during delivery');
+    const question = result.envelope.result.status === 'blocked' ? pendingQuestion(result.envelope.result.output?.handoff?.question) : null;
+    if (question) { const error = Error(result.envelope.effect.body); error.question = question; throw error; }
     if (stage !== 'implement' && worker !== 'independent-review' && result.envelope.result.status !== 'passed') throw Error(result.envelope.effect.body);
     return result;
   };
@@ -146,8 +167,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   };
   try {
     await recheck();
-    await notify('Requested · ' + route + '\n\nAuthorized bounded delivery is starting. Your next action: none unless a product decision or blocker is reported.');
     await api('issues/' + issueNumber + '/labels', 'POST', { labels: ['agent-working'] }); reserved = true;
+    await notify(handoff({ status: 'working', stage: route, happened: 'The authorized bounded delivery has started.', action: 'None. Wait for the result or a specific blocker.', next: 'The workflow will publish its actual outcome and any required decision.' }));
     const outcome = await runUnattended({ route, policy, signal: controller.signal, host: {
       recheck,
       refine: async () => {
@@ -205,10 +226,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
         await recheck();
-        await notify('Candidate checks and independent review passed.\n\n<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->');
-        await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true); reserved = false;
+        await projectImplementationPrState(api, issueNumber, true);
+        if (await releaseReservation() !== 'released') throw Error('The execution reservation changed before PR handoff; inspect the current issue and PR.');
+        await notify(handoff({ status: policy.merge ? 'queued' : 'review', stage: route, happened: 'The candidate passed its executed checks and independent review.', action: policy.merge ? 'None. Wait for the required CI and integration check.' : 'Owner: review the linked PR and authorize integration if appropriate.', next: policy.merge ? 'The workflow will recheck the PR head, CI and delegated merge authority.' : 'Integration waits for separate authorization.', link: `[Candidate PR #${published.number}](${published.html_url})`, details: '<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->' }));
         await dispatchDeliveryChecks(dispatchApi, revision, published);
-        await notify('Ready for integration · ' + route + '\n\n[PR #' + published.number + '](' + published.html_url + ') contains the independently reviewed candidate. Required CI and current merge authority are checked before integration.');
         return published;
       },
       integrate: async (candidate, pr) => {
@@ -265,22 +286,28 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           try { await notify(body); }
           catch (error) { notifications.push({ status: 'unavailable', reason: error.message.slice(0, 3000) }); }
         };
-        let postMerge;
+        let postMerge, postMergeError;
         try { postMerge = await postMergeRuns(dispatchApi, observation, result.sha, !controller.signal.aborted); }
         catch (error) {
+          postMergeError = error;
           postMerge = observation.profile.completion.postMergeWorkflows.map(workflow => ({ workflow, revision: result.sha, state: 'missing', status: 'unavailable', reason: error.message.slice(0, 3000) }));
-          await notifyIntegrated('Post-merge verification needs attention. The merge at ' + result.sha + ' and its retained receipt are confirmed; inspect current CI runs before requesting verification again. ' + error.message.slice(0, 3000));
         }
-        await notifyIntegrated('Integrated · ' + route + '\n\n[PR #' + pr.number + '](' + pr.html_url + ') was merged at ' + result.sha + '. Post-merge review follows the existing CI/completion policy. Release and deployment have not been established by this integration result.');
+        await notifyIntegrated(handoff({ status: postMergeError ? 'blocked' : 'completed', stage: route, happened: `PR #${pr.number} was merged at ${result.sha}.${postMergeError ? ' Post-merge verification could not be requested.' : ''}`, action: postMergeError ? 'Workflow maintainer: inspect the execution and current CI before requesting verification again.' : 'None.', next: postMergeError ? 'Post-merge verification remains unconfirmed.' : 'Post-merge review follows the configured CI and completion policy; release and deployment remain separate.', link: `[Merged PR #${pr.number}](${pr.html_url})` }));
         return { ...result, postMerge, notifications };
       },
-      stop: async reason => { await notify('Blocked · ' + route + '\n\n' + reason + '\n\nYour next action: inspect the linked execution logs and retained artifacts, then resolve this blocker before a new request. No automatic retry is scheduled.' + (published ? '\n\n[Candidate PR](' + published.html_url + ')' : '')); },
+      stop: async (reason, _evidence, error) => {
+        const released = await releaseReservation();
+        if (released === 'stale') return;
+        const question = released === 'released' ? pendingQuestion(error?.question) : null;
+        if (question) await api('issues/' + issueNumber + '/labels', 'POST', { labels: ['needs-info'] });
+        await notify(handoff({ status: released === 'held' ? 'unknown' : question ? 'question' : 'blocked', stage: route, happened: String(reason).slice(0, 4000).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-'), action: released === 'held' ? 'Workflow maintainer: inspect the human hold and existing execution reservation before releasing it.' : question ? `Owner: ${question} Reply here.` : 'Workflow maintainer: inspect the execution and retained artifacts, then resolve the blocker.', next: question ? 'The reply is retained. The maintainer must clear needs-info, then the owner can request a new bounded run; the reply does not approve another gate.' : 'No automatic retry is scheduled.', ...(published ? { link: `[Candidate PR #${published.number}](${published.html_url})` } : {}) }));
+      },
     } });
     await writeFile(join(root, 'report.json'), JSON.stringify(outcome, null, 2));
     return outcome;
   } finally {
     clearTimeout(timer); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
-    if (reserved) await api('issues/' + issueNumber + '/labels/agent-working', 'DELETE', undefined, true);
+    if (reserved) await releaseReservation();
   }
 }
 

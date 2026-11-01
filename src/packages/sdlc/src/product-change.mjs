@@ -37,13 +37,15 @@ export function validateProductRequest(value) {
 }
 
 export function validateProductChangeOutput(value) {
-  const fields = ['schemaVersion', 'outcome', 'entry', 'affectedAreas', 'decisions', ...(['changeName', 'changeId', 'files', 'question', 'proposalDigest', 'baselineDigest', 'providerValidation'].filter(key => Object.hasOwn(value ?? {}, key)))];
+  const fields = ['schemaVersion', 'outcome', 'entry', 'affectedAreas', 'decisions', ...(['changeName', 'changeId', 'files', 'question', 'blocker', 'recovery', 'proposalDigest', 'baselineDigest', 'providerValidation'].filter(key => Object.hasOwn(value ?? {}, key)))];
   if (!exact(value, fields)) return ['result.output.productChange has unsupported or missing fields'];
   const errors = [];
   if (value.schemaVersion !== 1 || !['aligned', 'candidate', 'blocked'].includes(value.outcome) || !['idea', 'parent-handoff', 'feedback'].includes(value.entry)) errors.push('result.output.productChange identity is unsupported');
   if (!Array.isArray(value.affectedAreas) || value.affectedAreas.length > 32 || value.affectedAreas.some(item => typeof item !== 'string' || !item.trim() || item.length > 256)) errors.push('result.output.productChange affectedAreas is invalid');
   if (!Array.isArray(value.decisions) || value.decisions.length > 32 || value.decisions.some(item => typeof item !== 'string' || !item.trim() || item.length > 1000)) errors.push('result.output.productChange decisions is invalid');
-  if (value.question !== undefined && (typeof value.question !== 'string' || value.question.length > 4000)) errors.push('result.output.productChange question exceeds its bound');
+  if (value.question !== undefined && (typeof value.question !== 'string' || !value.question.trim() || value.question.length > 4000 || /<!--\s*lighthouse-/i.test(value.question))) errors.push('result.output.productChange question is invalid');
+  if (value.blocker !== undefined && (typeof value.blocker !== 'string' || !value.blocker.trim() || value.blocker.length > 4000 || /<!--\s*lighthouse-/i.test(value.blocker))) errors.push('result.output.productChange blocker is invalid');
+  if (value.recovery !== undefined && (typeof value.recovery !== 'string' || !value.recovery.trim() || value.recovery.length > 4000 || /<!--\s*lighthouse-/i.test(value.recovery))) errors.push('result.output.productChange recovery is invalid');
   if (value.changeName !== undefined && !namePattern.test(value.changeName)) errors.push('result.output.productChange changeName is invalid');
   if (value.changeId !== undefined && !/^CHG-[A-Z0-9-]+$/.test(value.changeId)) errors.push('result.output.productChange changeId is invalid');
   if (value.proposalDigest !== undefined && !hashPattern.test(value.proposalDigest)) errors.push('result.output.productChange proposalDigest is invalid');
@@ -57,7 +59,11 @@ export function validateProductChangeOutput(value) {
     if (!exact(value.providerValidation, ['status', 'diagnosticCount']) || value.providerValidation.status !== 'passed' || !Number.isSafeInteger(value.providerValidation.diagnosticCount) || value.providerValidation.diagnosticCount < 0) errors.push('candidate Product Change needs successful provider overlay validation');
   }
   if (value.outcome === 'aligned' && (value.files !== undefined || value.changeName !== undefined || value.changeId !== undefined)) errors.push('aligned Product Change output cannot include a delta');
-  if (value.outcome === 'blocked' && (!value.question?.trim() || value.files !== undefined)) errors.push('blocked Product Change output needs one decision question and no candidate files');
+  const hasQuestion = typeof value.question === 'string' && !!value.question.trim();
+  const hasBlocker = typeof value.blocker === 'string' && !!value.blocker.trim();
+  const hasRecovery = typeof value.recovery === 'string' && !!value.recovery.trim();
+  if (value.outcome === 'blocked' && ((!hasQuestion && !hasBlocker) || (value.question !== undefined && (value.blocker !== undefined || value.recovery !== undefined)) || (hasBlocker && !hasRecovery) || value.files !== undefined)) errors.push('blocked Product Change output needs either one decision question or one technical blocker with recovery and no candidate files');
+  if (value.outcome !== 'blocked' && (value.blocker !== undefined || value.recovery !== undefined)) errors.push('only a blocked Product Change can include a technical blocker or recovery');
   if (value.files !== undefined && value.outcome !== 'candidate') errors.push('only a candidate Product Change can include files');
   return errors;
 }

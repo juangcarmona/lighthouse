@@ -168,7 +168,7 @@ test('protection observations require owner visibility and a stable provider tim
 test('finalization declares future host effects instead of requiring final labels before review', async () => {
   const { completionEffects } = await import('../packages/sdlc/src/completion.mjs');
   assert.deepEqual(completionEffects('review', 'passed'), { add: [], remove: ['waiting-review', 'ready', 'pr-draft', 'pr-ready', 'integrate', 'review'], closeIssue: true });
-  assert.deepEqual(completionEffects('review', 'blocked'), { add: ['waiting-review'], remove: [], closeIssue: false });
+  assert.deepEqual(completionEffects('review', 'blocked'), { add: [], remove: [], closeIssue: false });
   assert.equal(completionEffects('integrate', 'passed').closeIssue, false);
 });
 test('pending checks remain unavailable with an explicit pending state, not failed', async () => {

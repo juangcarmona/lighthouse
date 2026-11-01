@@ -130,10 +130,11 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
   publish:
     name: Validate and publish the product candidate
-    needs: [prepare, agent]
+    needs: [prepare, pre_activation, activation, agent]
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
@@ -183,6 +184,10 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_PRE_ACTIVATION_RESULT: ${{ needs.pre_activation.result }}
+          LIGHTHOUSE_ACTIVATION_RESULT: ${{ needs.activation.result }}
+          LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
+          LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs cleanup
 ---
 

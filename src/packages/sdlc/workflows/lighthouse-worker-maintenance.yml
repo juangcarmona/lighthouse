@@ -36,6 +36,43 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/worker-maintenance.mjs scan
+  observe:
+    needs: scan
+    if: needs.scan.outputs.issues != '[]'
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        issue: ${{ fromJSON(needs.scan.outputs.issues) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+    env:
+      LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Observe workers without changing issue state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs observe
+      - name: Preserve observations
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-observation-${{ matrix.issue }}
+          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/observations.json
+          retention-days: 14
+          if-no-files-found: error
   reconcile:
     needs: scan
     if: needs.scan.outputs.issues != '[]'
@@ -45,7 +82,7 @@ jobs:
       matrix:
         issue: ${{ fromJSON(needs.scan.outputs.issues) }}
     concurrency:
-      group: lighthouse-dispatch-${{ matrix.issue }}
+      group: lighthouse-issue-${{ matrix.issue }}
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04
@@ -119,6 +156,38 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           pattern: lighthouse-maintenance-*
+          path: ${{ runner.temp }}/worker-observations
+      - name: Reconcile and update worker error reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs report
+  report-stalled:
+    needs: [scan, observe]
+    if: always() && needs.scan.result == 'success' && needs.scan.outputs.issues != '[]' && vars.LIGHTHOUSE_REPORT_INDEX_ISSUE != ''
+    concurrency:
+      group: lighthouse-worker-reports
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    env:
+      LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
+      LIGHTHOUSE_OBSERVED_ISSUES: ${{ needs.scan.outputs.issues }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: lighthouse-observation-*
           path: ${{ runner.temp }}/worker-observations
       - name: Reconcile and update worker error reports
         env:

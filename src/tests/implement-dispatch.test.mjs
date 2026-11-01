@@ -140,11 +140,11 @@ test('all installed stages dispatch independently and cannot impersonate a diffe
     assert.equal(f.calls.find(c => c.path.endsWith('/dispatches')).path, `actions/workflows/lighthouse-sdlc-${stage}.lock.yml/dispatches`);
     const dispatch = await loadDispatch(f.api, repo, owner, issue, 30, f.worker, f.readArtifact);
     assert.equal(await claimDispatch(f.api, repo, dispatch, '200'), true);
-    for (const outcome of ['blocked', 'passed', undefined]) {
+    for (const outcome of ['blocked', 'question', 'passed', 'cancelled', undefined]) {
       await finishDispatch(f.api, repo, issue, 30, '201', outcome);
       assert.equal(readDispatchReceipt(f.comment, repo, issue).status, 'running');
       await finishDispatch(f.api, repo, issue, 30, '200', outcome);
-      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : 'failed');
+      assert.equal(readDispatchReceipt(f.comment, repo, issue).status, outcome === 'passed' ? 'completed' : outcome === 'question' ? 'waiting' : outcome === 'blocked' ? 'blocked' : outcome === 'cancelled' ? 'cancelled' : 'unknown');
       f.comment.body = dispatchReceiptBody(repo, { ...readDispatchReceipt(f.comment, repo, issue), status: 'running' });
     }
     await assert.rejects(loadDispatch(f.api, repo, owner, issue, 30, { ...f.worker, path: stagePath(stage === 'refine' ? 'propose' : 'refine') }, f.readArtifact), /worker identity/);

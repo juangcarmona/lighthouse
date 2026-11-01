@@ -1,6 +1,7 @@
 import stageContract from '../stages.json' with { type: 'json' };
 import resultSchema from '../schemas/stage-result.schema.json' with { type: 'json' };
 import { validateProductChangeOutput } from './product-change.mjs';
+import { pendingQuestion } from './handoff.mjs';
 
 export const STAGES = Object.freeze(['triage', 'refine', 'propose', 'implement', 'integrate', 'review']);
 export const GATES = Object.freeze(['triaged', 'ready', 'planned', 'done']);
@@ -41,6 +42,11 @@ export function validateStageResult(value) {
   if (value.input !== undefined && !isRecord(value.input)) errors.push(issue('stage-result.input', 'input must be an object when present', 'input'));
   if (value.output !== undefined && !isRecord(value.output)) errors.push(issue('stage-result.output', 'output must be an object when present', 'output'));
   else if (isRecord(value.output) && value.output.productChange !== undefined) errors.push(...validateProductChangeOutput(value.output.productChange).map(message => issue('stage-result.product-change', message, 'output.productChange')));
+  if (isRecord(value.output) && value.output.handoff !== undefined) {
+    const handoff = value.output.handoff;
+    if (!isRecord(handoff) || Object.keys(handoff).length !== 1 || typeof handoff.question !== 'string' || value.status !== 'blocked') errors.push(issue('stage-result.handoff', 'a handoff question requires a blocked result and no other handoff fields', 'output.handoff'));
+    else try { pendingQuestion(handoff.question); } catch { errors.push(issue('stage-result.handoff', 'handoff question must be bounded, non-empty and free of reserved markers', 'output.handoff.question')); }
+  }
   return errors;
 }
 

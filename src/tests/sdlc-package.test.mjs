@@ -137,7 +137,8 @@ test('the capability catalog is versioned, validates independently and projects 
   assert.equal(declaration.capabilities[0].provider, 'github');
   assert.equal(declaration.capabilities[0].adapter, 'github-labels');
   assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'size-m').color, '80C2FF');
-  assert.equal(catalog.capabilities[0].version, '2');
+  assert.equal(catalog.capabilities[0].version, '3');
+  assert.equal(declaration.capabilities[0].configuration.labels.find((label) => label.name === 'execution-failed').role, 'state');
   assert.deepEqual(declaration.capabilities[0].configuration.transitions, []);
 });
 
@@ -335,6 +336,19 @@ test('triage rejects ambiguous classifications and reports missing evidence', ()
   assert.equal(report.canApply, false);
   assert.ok(report.errors.some((item) => item.code === 'classification.ambiguous'));
   assert.deepEqual(report.missingEvidence, ['size', 'urgency', 'impact', 'risk', 'blast-radius']);
+});
+
+test('triage preserves the native proposal gate while review is pending', () => {
+  const input = triageInput();
+  input.currentLabels = ['ready', 'waiting-review', 'unrelated'];
+  input.configuration.labels.push({ name: 'ready', role: 'state' }, { name: 'waiting-review', role: 'state' });
+  const report = buildTriageReport(input);
+  assert.equal(report.status, 'blocked');
+  assert.equal(report.canApply, false);
+  assert.deepEqual(report.labels.proposed, [...input.currentLabels].sort());
+  assert.ok(report.warnings.some(item => item.code === 'state.review-pending'));
+  input.currentLabels.push('triage');
+  assert.ok(buildTriageReport(input).errors.some(item => item.code === 'state.ambiguous'));
 });
 
 test('triage keeps unavailable checks and pending judgement separate from missing evidence', () => {

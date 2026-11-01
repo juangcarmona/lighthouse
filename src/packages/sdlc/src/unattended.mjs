@@ -155,7 +155,7 @@ export async function runUnattended({ route, policy, host, signal }) {
     evidence.push({ kind: 'integration', result: integrated });
     return { status: 'passed', published, integrated, evidence, durationMs: Date.now() - started, nextAction: 'Follow existing post-merge review and release policy' };
   } catch (error) {
-    await host.stop(error.message, evidence);
+    await host.stop(error.message, evidence, error);
     return { status: 'blocked', evidence, reason: error.message, nextAction: 'Inspect execution evidence and resolve the identified blocker' };
   }
 }

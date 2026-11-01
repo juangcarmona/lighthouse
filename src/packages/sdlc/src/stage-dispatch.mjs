@@ -1,5 +1,6 @@
 import { digest } from './host-contract.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
+import { handoff } from './handoff.mjs';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
 export const stages = ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'];
@@ -7,7 +8,7 @@ export const workers = [...stages, 'apply-review', 'product-change', 'apply-prod
 export const workerFor = request => request.worker ?? request.stage ?? 'implement';
 export const stagePath = stage => { if (!workers.includes(stage)) throw Error('Unknown dispatch worker'); return `.github/workflows/lighthouse-sdlc-${stage}.lock.yml`; };
 export const implementPath = stagePath('implement');
-export const statusText = (stage, status) => `${({ requested: '📥 Requested', running: '▶️ Execution admitted', completed: '✅ Completed', waiting: '⏸️ Waiting for your response', failed: '❌ Failed or cancelled' })[status]} · ${stage}`;
+export const statusText = (stage, status) => `${({ requested: 'Requested', running: 'Queued', completed: 'Stage completed', waiting: 'Waiting for your answer', blocked: 'Blocked', failed: 'Execution failed', cancelled: 'Cancelled', unknown: 'Execution status unknown' })[status] ?? 'Execution status unknown'} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
 export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'implement' && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
@@ -28,10 +29,22 @@ export function readDispatchReceipt(comment, repository, issue) {
 
 export function dispatchReceiptBody(repository, receipt) {
   const root = `https://github.com/${repository}/actions/runs/`;
-  const heading = statusText(workerFor(receipt), receipt.status ?? (receipt.workerRunId ? 'running' : 'requested'));
-  const status = receipt.workerRunId ? `[Execution](${root}${receipt.workerRunId}). Open the execution for its current status and result.` : 'Execution requested; execution is not yet confirmed. Do not resend while confirmation is pending.';
-  const recovery = receipt.recovery ? `\n\nRetry ${receipt.recovery.attempt}/2 · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
-  return `${heading}\n\n${status}${recovery}\n\n[Dispatch origin](${root}${receipt.routerRunId})\n\n<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->`;
+  const status = receipt.status ?? (receipt.workerRunId ? 'running' : 'requested');
+  const states = {
+    requested: ['requested', 'The request is recorded; execution is not confirmed.', 'None. Wait for admission.', 'The workflow will report the outcome when the request is processed.'],
+    running: ['queued', 'The worker admitted the request; agent execution is not yet confirmed.', 'None. Wait for the result.', 'The workflow will publish a result or an actionable stop.'],
+    completed: ['completed', 'The stage published a validated result.', 'Follow the latest stage handoff.', 'The configured continuation applies only when authorized.'],
+    waiting: ['blocked', 'The stage published a blocked result.', 'Follow the latest stage handoff.', 'Continuation depends on the recorded blocker and authorization.'],
+    blocked: ['blocked', 'The stage published a blocker without a pending owner question.', 'The workflow maintainer should follow the latest stage handoff.', 'Work remains stopped until the blocker is resolved and continuation is authorized.'],
+    failed: ['failed', 'This attempt did not publish a validated result.', 'The workflow maintainer should inspect the execution and recovery policy.', 'Any retry requires the configured authorization.'],
+    cancelled: ['cancelled', 'This attempt was cancelled before a validated result was published.', 'The workflow maintainer should inspect the execution.', 'Any restart requires the configured authorization.'],
+    unknown: ['unknown', 'Publication of a validated result could not be confirmed.', 'The workflow maintainer should inspect the execution.', 'Reconcile the outcome before requesting another attempt.'],
+  };
+  const item = states[status];
+  if (!item) throw Error('Unknown dispatch status');
+  const recovery = receipt.recovery ? `\nRetry ${receipt.recovery.attempt}/2 · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
+  const details = `[Dispatch origin](${root}${receipt.routerRunId})${receipt.workerRunId ? ` · [Execution](${root}${receipt.workerRunId})` : ''}${recovery}\n\n<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->`;
+  return handoff({ status: item[0], stage: workerFor(receipt), happened: item[1], action: item[2], next: item[3], details });
 }
 
 export async function issueComments(api, issue) {
@@ -160,7 +173,7 @@ export async function finishDispatch(api, repository, issue, commentId, workerId
   if (!positive(commentId)) return;
   const receipt = readDispatchReceipt(await api(`issues/comments/${commentId}`), repository, issue);
   if (String(receipt.workerRunId) !== String(workerId)) return;
-  receipt.status = outcome === 'passed' ? 'completed' : outcome === 'blocked' ? 'waiting' : 'failed';
+  receipt.status = outcome === 'passed' ? 'completed' : outcome === 'question' ? 'waiting' : outcome === 'blocked' ? 'blocked' : outcome === 'failed' ? 'failed' : outcome === 'cancelled' ? 'cancelled' : 'unknown';
   await api(`issues/comments/${commentId}`, 'PATCH', { body: dispatchReceiptBody(repository, receipt) });
 }
 

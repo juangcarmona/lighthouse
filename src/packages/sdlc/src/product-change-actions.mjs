@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { validateProductChangeFiles, validateProductCheckpoint, validateProductWorkspace, loadProductBridge, productReviewBinding, parseProductDecision, verifyProductDecision, authorizeProductApply, createProductApplyReceipt, productModelDigest, productModelDirectory } from './product-change.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
+import { handoff } from './handoff.mjs';
 
 const marker = '<!-- lighthouse-product-change:';
 export async function validateProductCandidate(root, changeName, files, bridge) {
@@ -80,13 +81,13 @@ export async function productModelDigestFromApi(api, revision) {
   return { digest: createHash('sha256').update(rows.join('')).digest('hex'), modelRoot };
 }
 
-function reviewText({ repository, snapshot, head, changeId, changeName, files, candidate, validation, runUrl, approvalKey }) {
+export function reviewText({ repository, snapshot, head, changeId, changeName, files, candidate, validation, runUrl, approvalKey, prUrl }) {
   const manifest = files.find(file => file.path.endsWith('/product-change/change.md'))?.content ?? '';
   const sections = [...manifest.matchAll(/^## (.+?)\n([\s\S]*?)(?=^## |\s*$)/gm)].map(match => `### ${match[1]}\n${match[2].trim()}`).join('\n\n');
   const artifacts = files.filter(file => file.path.includes('/proposed/')).map(file => `- [${file.path}](https://github.com/${repository}/blob/${head}/${file.path})`).join('\n');
   const areas = candidate.affectedAreas?.map(area => `- ${area}`).join('\n') || '- See the change manifest.';
   const decisions = candidate.decisions?.map(decision => `- ${decision}`).join('\n') || '- Review the proposed behavior in the change manifest.';
-  return `## Product decision: ${changeId}\n\nThis product proposal was prepared for [issue #${snapshot.issue}](https://github.com/${repository}/issues/${snapshot.issue}). Review the problem, proposed outcome and affected product areas before deciding.\n\n### Affected product areas\n${areas}\n\n### Decisions and trade-offs\n${decisions}\n\n### Product Change\n${sections}\n\n### Proposed artifacts\n${artifacts || 'No artifact links were produced.'}\n\nValidation: ProductShape overlay and OpenSpec strict validation passed (${validation.provider}, ${validation.openSpec}). [Review the branch diff](https://github.com/${repository}/compare/${snapshot.defaultBranch}...${head}).\n\n### Decide\nApprove this exact product delta with:\n\n\`/product-change approve ${changeName} ${approvalKey}\`\n\nTo request a revision, use this as the first line of a new comment and add the requested change on the next line:\n\n/product-change request-changes ${changeName} ${approvalKey}\nDescribe the change\n\nApproval authorizes trusted ProductShape apply. This idea entry does not grant implementation permission. PR merge, release and deployment remain separate decisions. [Preparation run](${runUrl}).`;
+  return handoff({ status: 'review', stage: snapshot.stage, happened: `Product decision: ${changeId} was prepared for [issue #${snapshot.issue}](https://github.com/${repository}/issues/${snapshot.issue}).\n\n### Affected product areas\n${areas}\n\n### Decisions and trade-offs\n${decisions}\n\n### Product Change\n${sections}\n\n### Proposed artifacts\n${artifacts || 'No artifact links were produced.'}\n\nValidation: ProductShape overlay and OpenSpec strict validation passed (${validation.provider}, ${validation.openSpec}).`, action: `Owner: review the proposal on this PR. Approve this exact product delta in a new comment with \`/product-change approve ${changeName} ${approvalKey}\`. To request a revision, put \`/product-change request-changes ${changeName} ${approvalKey}\` on the first line of a new comment and describe the change on the next line.`, next: 'Approval starts trusted ProductShape apply. Implementation, PR merge, release and deployment require their own authorization.', link: `[Review the branch diff](https://github.com/${repository}/compare/${snapshot.defaultBranch}...${head}) · [Product Change PR](${prUrl})`, details: `[Preparation run](${runUrl})` }).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-');
 }
 
 export async function publishProductChangePullRequest(api, repository, snapshot, candidate, { validation, runUrl, beforeWrite }) {
@@ -138,7 +139,7 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   };
   const checkpointErrors = validateProductCheckpoint(checkpoint);
   if (checkpointErrors.length) throw Error(checkpointErrors.join('; '));
-  const body = reviewText({ repository, snapshot, head: pr.head.sha, changeId: candidate.changeId, changeName: candidate.changeName, files: candidate.files, candidate, validation, runUrl, approvalKey: binding.key });
+  const body = reviewText({ repository, snapshot, head: pr.head.sha, changeId: candidate.changeId, changeName: candidate.changeName, files: candidate.files, candidate, validation, runUrl, approvalKey: binding.key, prUrl: pr.html_url });
   const reviewMarker = `${marker}review:${JSON.stringify(binding)} -->`;
   const checkpointMarker = `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`;
   let prBody = pr.body ?? '';
@@ -149,15 +150,6 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
     ? prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, checkpointMarker)
     : `${prBody}\n${checkpointMarker}`;
   await api(`pulls/${pr.number}`, 'PATCH', { body: prBody });
-  const previous = await api(`issues/${pr.number}/comments?per_page=100`);
-  const notice = previous.find(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`Product decision: ${candidate.changeId}`));
-  if (notice) await api(`issues/comments/${notice.id}`, 'PATCH', { body });
-  else await api(`issues/${pr.number}/comments`, 'POST', { body });
-  const issueComments = await api(`issues/${snapshot.issue}/comments?per_page=100`);
-  const issueNotice = issueComments.find(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-product-change-link:${candidate.proposalDigest} -->`));
-  const issueBody = `A draft Product Change is ready in [PR #${pr.number}](${pr.html_url}). Review the proposed behavior, affected product areas, decisions, trade-offs and validation evidence there. Approve the identified product proposal or request changes in that PR. Approval starts trusted ProductShape apply; this idea entry does not start implementation. PR merge remains separate.\n\n<!-- lighthouse-product-change-link:${candidate.proposalDigest} -->`;
-  if (issueNotice) await api(`issues/comments/${issueNotice.id}`, 'PATCH', { body: issueBody });
-  else await api(`issues/${snapshot.issue}/comments`, 'POST', { body: issueBody });
   return { pullRequest: pr, binding, checkpoint, body, repositoryDefaultBranch: repositoryInfo.default_branch };
 }
 
@@ -226,6 +218,10 @@ export function validateProductApplyFiles(files, changeName, modelRoot = 'docs/p
 
 const safeRelative = path => !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(part => !part || part === '.' || part === '..');
 
+export function productApplyHandoff({ stage, receipt, pullRequest, url, affectedCitations }) {
+  return handoff({ status: 'completed', stage, happened: `Product Change ${receipt.changeId} was applied to the provider-validated model on PR #${pullRequest}.\n\nAffected citations:\n${(affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}`, action: 'Owner: review the applied model and affected citations on the linked PR.', next: 'Merge and any further delivery require their own authorization.', link: `[Review PR #${pullRequest}](${url})`, details: `<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->` });
+}
+
 export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite) {
   const approvalInfo = dispatch.request.productApproval;
   if (dispatch.request.worker !== 'apply-product-change' || !approvalInfo || !result || result.head !== approvalInfo.head) throw Error('Product apply result does not match its authenticated dispatch');
@@ -247,11 +243,10 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   validateProductCheckpoint(checkpoint);
   prBody = prBody.replace(/<!-- lighthouse-product-change-checkpoint:\{[^\n]*\} -->/g, `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`);
   await api(`pulls/${fresh.pullRequest}`, 'PATCH', { body: prBody });
-  const issueBody = `Product Change ${receipt.changeId} was applied to [PR #${fresh.pullRequest}](${updated.html_url}). The issue branch contains the provider-validated product model. Merge is still separate.\n\nAffected citations:\n${(result.affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}\n\n<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->`;
+  const issueBody = productApplyHandoff({ stage: dispatch.request.stage, receipt, pullRequest: fresh.pullRequest, url: updated.html_url, affectedCitations: result.affectedCitations });
   const comments = await api(`issues/${fresh.issue}/comments?per_page=100`);
   const prior = comments.find(comment => comment.user?.login === 'github-actions[bot]' && [...(comment.body ?? '').matchAll(/<!-- lighthouse-product-apply:(\{[^\n]*\}) -->/g)].some(match => JSON.parse(match[1]).intentId === receipt.intentId));
-  if (prior) await api(`issues/comments/${prior.id}`, 'PATCH', { body: issueBody });
-  else await api(`issues/${fresh.issue}/comments`, 'POST', { body: issueBody });
+  if (!prior) await api(`issues/${fresh.issue}/comments`, 'POST', { body: issueBody });
   return { pullRequest: updated, receipt, checkpoint };
 }
 

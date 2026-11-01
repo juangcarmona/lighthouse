@@ -7,7 +7,7 @@
       "id": "labels",
       "provider": "github",
       "adapter": "github-labels",
-      "version": "2",
+      "version": "3",
       "title": "Lighthouse tracker labels",
       "selection": "selected-by-default",
       "configuration": {
@@ -18,6 +18,7 @@
           { "name": "implement", "role": "command", "color": "1F6FEB", "description": "Owner request to plan and implement this issue in one PR." },
           { "name": "propose", "role": "command", "color": "A371F7", "description": "Owner request for a separate proposal PR from current refinement evidence." },
           { "name": "future", "role": "overlay", "color": "8B949E", "description": "Pause implementation; triage, refinement and proposal remain available." },
+          { "name": "execution-failed", "role": "state", "color": "CF222E", "description": "A worker attempt failed; inspect its latest outcome and recovery action." },
           { "name": "waiting-review", "role": "state", "color": "D29922", "description": "Inspect the result or PR for feedback or a pending decision." },
           { "name": "wip", "role": "state", "color": "D29922", "description": "Work item is actively in progress." },
           { "name": "agent-working", "role": "overlay", "color": "D29922", "description": "An agent holds the host reservation; wait before editing." },

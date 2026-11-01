@@ -609,7 +609,7 @@ test('a new label capability version requests adoption review without resetting 
     assert.equal(run(dir, 'init').status, 0);
     const path = join(dir, '.lighthouse/upgrade.json');
     const state = JSON.parse(await readFile(path, 'utf8'));
-    state.adoption.labels.version = '1';
+    state.adoption.labels.version = '2';
     state.adoption.labels.status = 'adopted';
     state.adoption['github-profile'].status = 'declined';
     await writeFile(path, JSON.stringify(state));
@@ -617,7 +617,7 @@ test('a new label capability version requests adoption review without resetting 
     const preview = run(dir, 'upgrade', ['--format', 'json']);
     assert.equal(preview.status, 0, preview.stderr);
     const adoption = JSON.parse(preview.stdout).adoption.capabilities;
-    assert.equal(adoption.labels.version, '2');
+    assert.equal(adoption.labels.version, '3');
     assert.equal(adoption.labels.status, 'pending-adoption');
     assert.equal(adoption['github-profile'].status, 'declined');
     assert.equal(await readFile(path, 'utf8'), before);
