@@ -70,7 +70,8 @@ async function main() {
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
-  const limits = executionLimits(config, request.stage === 'implement');
+  const implementing = request.stage === 'implement' && request.worker !== 'product-change';
+  const limits = executionLimits(config, implementing);
   let projectModels = null;
   try {
     const directory = join(env.GITHUB_WORKSPACE, '.lighthouse'), directoryStat = await lstat(directory);
@@ -81,8 +82,8 @@ async function main() {
   }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage, ...(request.modelSelection ? { executionSelection: request.modelSelection } : {}), ...(env.LIGHTHOUSE_MODEL_PROFILE ? { profile: env.LIGHTHOUSE_MODEL_PROFILE } : {}) });
-  const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
-  if (request.stage === 'implement') {
+  const selected = implementing ? selectEnvironment(config, request.implementation?.environment) : null;
+  if (implementing) {
     if (selected) config.implementationImage = selected.image;
     if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage ?? '')) throw Error('Operator must provision and pin an implementation image');
     config.image = config.implementationImage;
@@ -92,7 +93,6 @@ async function main() {
   await chmod(dir, 0o755);
   const source = join(dir, 'source'), output = join(dir, 'output');
   await mkdir(source); await mkdir(output); await chmod(output, 0o777);
-  const implementing = request.stage === 'implement';
   const name = `lighthouse-engine-${request.runId}`;
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
   let child, timer, heartbeat, slot, baseline, trackedSource, runtime, cancelled = false, stopReason = null;
