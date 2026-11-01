@@ -22,6 +22,8 @@ All accepted children make the aggregate `publication-eligible`; the parent stil
 
 The native epic workflow is not installed or enabled. The implementation includes authenticated child admission, epic-targeted candidates, owner-authorized internal acceptance and draft aggregate publication, but automatic child dispatch, review recovery and complete native acceptance remain unfinished. The current `github-decompose --apply` legacy helper is not this lifecycle and does not provide retry-safe native sub-issue orchestration. Do not use it as a substitute.
 
+Native admission currently requires the default branch to remain at the authenticated refinement revision. A change to that branch stops the epic; post-merge acceptance and recovery against an advanced default branch are not yet connected.
+
 ## GitHub reconciliation adapter
 
 `@juangcarmona/lighthouse-sdlc/epic-github` exports `epicCorrelation`, `epicMarker`, `readEpicMarker` and `reconcileEpicChildren(plan, { repository, parent, base }, host)`. Comments carry version 1 parent, slice, plan digest, dependencies, base and resource kind. Parsing verifies structure only, not authority. Resource kinds support child, pull-request and aggregate correlations, but only child creation is reconciled by this adapter.
