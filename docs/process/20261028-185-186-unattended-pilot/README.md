@@ -20,7 +20,7 @@ The [fifth attempt](https://github.com/juangcarmona/lighthouse/actions/runs/4078
 
 The controlled product-edit scope is `src/tests/fixtures/unattended/`; FF also writes its own required OpenSpec proposal. The regression runner and assertion-failure signal are project-owned. Owner dispatch and the explicit fixture-only merge policy are separate from the disabled policy template shipped to adopters.
 
-- Hotfix: [issue #197](https://github.com/juangcarmona/lighthouse/issues/197), [native run](https://github.com/juangcarmona/lighthouse/actions/runs/40787092437), [PR #202](https://github.com/juangcarmona/lighthouse/pull/202). Assessment, independent planning/candidate review, RED/GREEN, host checks, separately dispatched CI and readiness reconciliation passed. GitHub reports the PR workflows as awaiting maintainer approval and keeps the PR blocked. The [hosting snapshot](native-hotfix-hosting-snapshot.json) records the exact head, scope and pending runs. The finite CI/mergeability wait expired; the [final native receipt](native-hotfix-hosting-stop.json) retains accepted candidate review and the safe stop, bound to the uploaded artifact digest. No merge or automatic retry occurred.
+- Hotfix: [issue #197](https://github.com/juangcarmona/lighthouse/issues/197), [native run](https://github.com/juangcarmona/lighthouse/actions/runs/40787092437), [PR #202](https://github.com/juangcarmona/lighthouse/pull/202). Assessment, independent planning/candidate review, RED/GREEN and host checks passed. The native run stopped when its bounded wait for CI or mergeability expired; its [receipt](native-hotfix-hosting-stop.json) records the safe stop. The owner later merged PR #202 separately at `7cc78a8a1ab2b136f8994f48b4838ef341baaf38`. The retained native RED test bytes match the candidate and merged test. The [post-integration review](https://github.com/juangcarmona/lighthouse/issues/197#issuecomment-6488777256) remained blocked because it did not receive the historical evidence. Issue #197 stays closed; a complete unattended integration and accepted post-integration review are not established.
 - Fast-forward: [issue #196](https://github.com/juangcarmona/lighthouse/issues/196), positive trace pending.
 
 ## Pilot limits
@@ -29,4 +29,4 @@ This controlled fixture does not establish production deployment, smoke-check su
 
 ## Release
 
-Changesets proposes Lighthouse 0.12.0 and SDLC 0.16.0. Publication remains pending native acceptance and the existing protected `npm-publish` environment decision. Merge, registry publication and deployment are separate observed outcomes.
+The npm registry reports Lighthouse 0.12.3 and SDLC 0.16.2. Later changes are tracked by the current version PR. Merge, registry publication, native acceptance and deployment are separate observed outcomes.
