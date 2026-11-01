@@ -12,7 +12,7 @@ export const proposalRoot = issue => `openspec/changes/${changeName(issue)}`;
 
 export function validateProposalFiles(files, issue) {
   const root = proposalRoot(issue), seen = new Set();
-  if (!Array.isArray(files) || files.length < 4 || files.length > 24) throw Error('Proposal needs 4-24 bounded files');
+  if (!Array.isArray(files) || files.length > 24) throw Error('Proposal needs at most 24 bounded files');
   let bytes = 0;
   for (const file of files) {
     if (!file || Object.keys(file).sort().join(',') !== 'content,path' || typeof file.path !== 'string' || typeof file.content !== 'string') throw Error('Invalid proposal file');

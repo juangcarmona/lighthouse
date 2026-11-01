@@ -27,6 +27,7 @@ test('proposal boundaries reject traversal, executable/config files, duplicates,
 test('documentation-only proposals use the provider skip flag without accepting arbitrary metadata', async () => {
   const docsOnly = [...files.slice(0, 3), { path: `${root}/.openspec.yaml`, content: 'skip_specs: true\n' }];
   assert.equal(validateProposalFiles(docsOnly, 18), docsOnly);
+  assert.throws(() => validateProposalFiles(docsOnly.filter(file => !file.path.endsWith('/design.md')), 18), /Missing design\.md/);
   for (const bad of ['skip_specs: false', 'skip_specs: true\nschema: other', 'skip_specs: true\nskip_specs: true']) {
     assert.throws(() => validateProposalFiles([...docsOnly.slice(0, 3), { path: `${root}/.openspec.yaml`, content: bad }], 18));
   }
