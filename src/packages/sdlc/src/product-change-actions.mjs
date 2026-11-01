@@ -272,6 +272,16 @@ export function productApplyHandoff({ stage, receipt, pullRequest, url, affected
   return handoff({ status: 'completed', stage, happened: `Product Change ${receipt.changeId} was applied to the provider-validated model on PR #${pullRequest}.\n\nAffected citations:\n${(affectedCitations ?? []).map(item => `- \`${item.document ?? item.file ?? item.id ?? 'consumer'}\`: ${item.status ?? 'refresh required'}`).join('\n') || '- None reported.'}`, action: 'Owner: review the applied model and affected citations on the linked PR.', next: parent ? 'The workflow will recheck the existing parent authorization before requesting its continuation. Merge remains separate.' : 'Merge and any further delivery require their own authorization.', link: `[Review PR #${pullRequest}](${url})`, details: `<!-- lighthouse-product-apply:${JSON.stringify(receipt)} -->` });
 }
 
+export async function observeUpdatedProductPull(api, number, expectedHead, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const pr = await api(`pulls/${number}`);
+    if (pr.state !== 'open' || pr.merged) throw Error('Product PR closed while confirming the applied head');
+    if (pr.head?.sha === expectedHead) return pr;
+    if (attempt < 19) await wait(1000);
+  }
+  throw Error('Product PR head update could not be confirmed; reconcile publication before retrying');
+}
+
 export async function publishProductApply(api, repository, owner, dispatch, result, beforeWrite) {
   const approvalInfo = dispatch.request.productApproval;
   if (dispatch.request.worker !== 'apply-product-change' || !approvalInfo || !result || result.head !== approvalInfo.head) throw Error('Product apply result does not match its authenticated dispatch');
@@ -288,7 +298,7 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   const created = await api('git/commits', 'POST', { message: `docs: apply product change ${fresh.checkpoint.changeId}`, tree: tree.sha, parents: [fresh.head] });
   await beforeWrite(fresh);
   await api(`git/refs/heads/${pr.head.ref}`, 'PATCH', { sha: created.sha, force: false });
-  const updated = await api(`pulls/${fresh.pullRequest}`);
+  const updated = await observeUpdatedProductPull(api, fresh.pullRequest, created.sha);
   const receipt = { ...result.receipt, headAfter: updated.head.sha };
   let prBody = updated.body ?? '';
   const checkpoint = { ...fresh.checkpoint, state: 'applied', identity: { ...fresh.checkpoint.identity, head: updated.head.sha }, effectIds: [...new Set([...fresh.checkpoint.effectIds, `apply:${receipt.intentId}:${updated.head.sha}`])].slice(0, 32) };

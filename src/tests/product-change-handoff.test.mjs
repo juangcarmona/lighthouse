@@ -1,9 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles } from '../packages/sdlc/src/product-change-actions.mjs';
+import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles, observeUpdatedProductPull } from '../packages/sdlc/src/product-change-actions.mjs';
 import { productModelDigest } from '../packages/sdlc/src/product-change.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
 import { productApplyRequest } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('product apply waits for GitHub to expose the new PR head before recording the checkpoint', async () => {
+  let calls = 0;
+  const api = async () => ({ state: 'open', merged: false, head: { sha: ++calls < 3 ? 'old' : 'new' } });
+  assert.equal((await observeUpdatedProductPull(api, 7, 'new', async () => {})).head.sha, 'new');
+  assert.equal(calls, 3);
+  await assert.rejects(observeUpdatedProductPull(async () => ({ state: 'open', head: { sha: 'old' } }), 7, 'new', async () => {}), /could not be confirmed/);
+  await assert.rejects(observeUpdatedProductPull(async () => ({ state: 'closed', head: { sha: 'new' } }), 7, 'new', async () => {}), /closed/);
+});
 
 test('product apply publication collects newly added model files as well as the applied manifest', async () => {
   const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
