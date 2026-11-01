@@ -12,7 +12,7 @@ Let operators select work-specific OpenAI settings while preserving legacy behav
 
 Workers SHALL resolve plan, build and fast profiles from project defaults and worker assignments with explicit operator overrides. Model and reasoning SHALL be independent. Legacy single-model operation SHALL remain unchanged until operator opt-in.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 
 #### Scenario: Worker overrides
 
@@ -28,7 +28,7 @@ Workers SHALL resolve plan, build and fast profiles from project defaults and wo
 
 Selections MUST use host-permitted OpenAI settings and tools, fail without fallback and preserve authentication, billing, tier and authority. Fast MUST NOT enable premium processing.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
 
 #### Scenario: Unavailable capability
@@ -45,7 +45,7 @@ Selections MUST use host-permitted OpenAI settings and tools, fail without fallb
 
 Receipts MUST distinguish requested, configuration-derived and provider-reported settings. Unexposed usage, billing and settings MUST remain unknown. Candidate adoption MUST require repeatable accepted-task evidence and account economics, separating estimated API-equivalent and actual cost.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 
 #### Scenario: Missing provider fields
 

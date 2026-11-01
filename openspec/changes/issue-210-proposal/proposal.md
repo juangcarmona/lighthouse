@@ -34,7 +34,7 @@ The owner authorized completion of the open pull requests, including the product
 
 Impacted authorities are `FR-MODEL-PROFILES` (extended behavior), `FR-PROFILE-DELEGATION` (compatibility), `UC-CONFIGURE-AGENT-CONTROL-PLANE`, `UC-RUN-AGENT`, `BR-AGENT-LAUNCH`, `BR-FAIL-CLOSED`, `BR-HUMAN-AUTHORITY` and `BR-AUTHORITY-BOUNDARIES` (preserved constraints). Provider-generated inspect, cite and impact output is retained in the evidence artifact. Related label, memory, workflow-state, initialization, upgrade and CodeGraph neighbors are outside this change: selection must not alter them. Architecture context is ADR-0007's host execution/publication boundary and the package building-block view; no persistent service is proposed.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 <!-- pdac:cite id="UC-CONFIGURE-AGENT-CONTROL-PLANE" digest="sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571" -->
 <!-- pdac:cite id="UC-RUN-AGENT" digest="sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e" -->

@@ -20,7 +20,7 @@ See proposal.md for motivation. The adapter forwards `config.model` to `ENGINE_M
 4. Delegation is an exported executor invoked by a trusted host with launch and wave-verification callbacks, not an implicit model tool. Validate the existing launch contract and the parent's tools and paths. Require finite limits and a fresh child context/identity. Canonical relative file paths or directory prefixes only; unknown globs are rejected. Directory containment counts as conflict. Preflight the whole graph and every profile before launching. Greedy stable waves respect a host limit. Failed tasks or failed wave verification block dependants; independent work can continue. No model field can enlarge permissions.
 5. Live evaluation is a documented operator procedure rather than sandbox model calls. Sol Medium versus Terra and Luna lightweight acceptance remain unverified until identical-revision results, usage and account terms exist. GPT-5.6 is a comparator only when relevant to the account.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
