@@ -402,6 +402,25 @@ test('maintenance reports uncertain publication without retrying or duplicating 
   assert.equal(f.comments.length, count);
 });
 
+test('maintenance reports failed cleanup without changing a published stage result', async () => {
+  const f = fixture();
+  f.receipt.status = 'completed';
+  f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  f.issue.labels = [{ name: 'agent-working' }];
+  f.jobs[1].conclusion = 'success';
+  f.jobs[2].steps = [
+    { name: 'Recheck authority and publish the validated result', conclusion: 'success' },
+    { name: 'Release the issue reservation', conclusion: 'failure' },
+  ];
+  const result = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(result.request, undefined);
+  assert.match(f.comments.at(-1).body, /validated result was published, but reservation cleanup did not complete/);
+  assert.match(f.comments.at(-1).body, /inspect the remaining agent-working reservation/);
+  assert.equal(f.issue.labels[0].name, 'agent-working');
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(f.comments.filter(c => c.body.includes('<!-- lighthouse-stop:200:1 -->')).length, 1);
+});
+
 test('maintenance records only a uniquely authenticated pre-admission failure without retrying', async () => {
   for (const mode of ['safe', 'receipt-interrupted', 'agent-started', 'jobs-incomplete', 'active', 'ambiguous', 'reserved', 'paused']) {
     const f = fixture();

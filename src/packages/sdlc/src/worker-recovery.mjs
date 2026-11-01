@@ -64,11 +64,13 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const agent = jobs.jobs.find(job => job.name === 'agent');
   const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
   const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
+  const cleanup = publishJob?.steps?.find(step => step.name === 'Release the issue reservation');
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
   const unpublished = publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
   const notStarted = !agent || agent.conclusion === 'skipped';
   const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
-  const observation = ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
+  const observation = publish?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(cleanup?.conclusion) ? 'cleanup-failure'
+    : ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
     : workerFor(dispatch.request) === 'apply-product-change' ? productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
     : agent?.conclusion === 'success' && (!publishJob || ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publish?.conclusion) || ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publishJob.conclusion)) ? 'publication-unknown'
     : ['failure', 'timed_out'].includes(prepare?.conclusion) && notStarted ? 'preparation-failure'
@@ -286,7 +288,7 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
       if (preparationRun && await reconcilePreparationFailure(api, repository, owner, issueNumber, comment.id, preparationRun, readArtifact)) { observation.stop = null; Object.assign(publicObservation, { state: 'reconciled', code: 'preparation-failed', nextAction: 'Inspect the confirmed failed execution before requesting new work.' }); }
       const reconciliation = await reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact);
       if (reconciliation === 'restored' || reconciliation === 'present') {
-        observation.stop = null;
+        if (observation.stop?.observation !== 'cleanup-failure') observation.stop = null;
         if (run?.conclusion === 'failure') Object.assign(publicObservation, { state: 'reconciled', code: 'handoff-restored', nextAction: 'Follow the restored handoff.' });
       }
       if (reconciliation === 'uncertain') Object.assign(publicObservation, { state: 'uncertain', code: 'handoff-unconfirmed', nextAction: 'Inspect the retained result and current issue state before restoring its handoff.' });
