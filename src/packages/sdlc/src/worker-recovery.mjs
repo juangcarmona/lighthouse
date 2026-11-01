@@ -98,6 +98,47 @@ export async function observeRecovery(api, repository, owner, issueNumber, now =
   return observations;
 }
 
+async function reservationEvent(api, issue) {
+  let latest;
+  for (let page = 1; page <= 10; page++) {
+    const events = await api(`issues/${issue}/events?per_page=100&page=${page}`);
+    if (!Array.isArray(events)) throw Error('Issue event inventory unavailable');
+    for (const event of events) if (['labeled', 'unlabeled'].includes(event.event) && event.label?.name === 'agent-working') latest = event;
+    if (events.length < 100) return latest;
+  }
+  throw Error('Issue event history exceeds recovery bounds');
+}
+
+// Release only a retained reservation from a completed, unpublished read-only worker.
+export async function reconcileAbandonedReservation(api, repository, owner, issue, comments, observation, readArtifact = readActionsJson) {
+  const { dispatch, run, jobs, revision, workflowRevision } = observation;
+  if (!dispatch || !run || !['triage', 'refine'].includes(dispatch.request.stage) || workerFor(dispatch.request) !== dispatch.request.stage || run.status !== 'completed' || run.run_attempt !== 1 || !['failure', 'cancelled', 'timed_out'].includes(run.conclusion)) return false;
+  if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || !issue.labels.some(l => l.name === 'agent-working') || issue.labels.some(l => ['human-working', 'future'].includes(l.name)) || dispatch.request.sourceRevision !== revision || dispatch.request.workflowRevision !== workflowRevision || dispatch.request.taskDigest !== intent(issue, comments, owner)) return false;
+  if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(`<!-- lighthouse-stop:${run.id}:${run.run_attempt} -->`))) return false;
+  const prepare = jobs.find(job => job.name === 'Authorize and reserve issue');
+  const agent = jobs.find(job => job.name === 'agent');
+  const publish = jobs.find(job => job.name === 'Validate, publish and release');
+  const step = publish?.steps?.find(item => item.name === 'Recheck authority and publish the validated result');
+  if (prepare?.conclusion !== 'success' || !['failure', 'timed_out', 'cancelled', 'skipped'].includes(agent?.conclusion) || !(publish?.conclusion === 'skipped' || step?.conclusion === 'skipped')) return false;
+  let snapshot;
+  try { snapshot = await readArtifact(api, repository, run.id, `lighthouse-input-${issue.number}-${run.run_attempt}`, 'request.json'); } catch { return false; }
+  if (snapshot?.runId !== digest(`${repository}:${issue.number}:${dispatch.request.stage}:${run.id}:${run.run_attempt}`) || snapshot.issue !== issue.number || snapshot.stage !== dispatch.request.stage || String(snapshot.workflowRunId) !== String(run.id) || snapshot.sourceRevision !== revision || snapshot.workflowRevision !== workflowRevision || snapshot.taskDigest !== dispatch.request.taskDigest || snapshot.dispatch?.commentId !== dispatch.commentId || snapshot.dispatch?.requestId !== dispatch.request.id || snapshot.dispatch?.digest !== dispatch.receipt.digest) return false;
+  const event = await reservationEvent(api, issue.number);
+  const start = Date.parse(run.run_started_at), end = Date.parse(run.updated_at), at = Date.parse(event?.created_at);
+  if (!Number.isSafeInteger(event?.id) || event.id < 1 || !Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(at) || at < start || at > end || event.event !== 'labeled' || event.actor?.login !== 'github-actions[bot]' || event.actor.type !== 'Bot') return false;
+  const claim = { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest };
+  await checkDispatchClaim(api, repository, issue.number, claim, run.id);
+  const fresh = await api(`issues/${issue.number}`), current = await issueComments(api, issue.number), repo = await api('');
+  if (fresh.state !== 'open' || fresh.pull_request || fresh.user?.login !== owner || !fresh.labels.some(l => l.name === 'agent-working') || fresh.labels.some(l => ['human-working', 'future'].includes(l.name)) || intent(fresh, current, owner) !== dispatch.request.taskDigest || (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha !== revision || (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha !== workflowRevision) return false;
+  if (current.some(c => Number(c.id) > Number(dispatch.commentId) && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-dispatch:'))) return false;
+  if (current.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(`<!-- lighthouse-stop:${run.id}:${run.run_attempt} -->`))) return false;
+  if ((await reservationEvent(api, issue.number))?.id !== event.id) return false;
+  await checkDispatchClaim(api, repository, issue.number, claim, run.id);
+  await api(`issues/${issue.number}/labels/agent-working`, 'DELETE');
+  issue.labels = fresh.labels.filter(l => l.name !== 'agent-working');
+  return true;
+}
+
 // A uniquely authenticated preparation failure can be recorded as failed only
 // when the agent and publisher were skipped. It never authorizes a new dispatch.
 export async function reconcilePreparationFailure(api, repository, owner, issueNumber, commentId, runId, readArtifact = readActionsJson) {
@@ -240,6 +281,7 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
     if (observation.rootId === currentRoot) {
+      if (await reconcileAbandonedReservation(api, repository, owner, issue, comments, observation, readArtifact)) Object.assign(publicObservation, { state: 'reconciled', code: 'reservation-released', nextAction: 'Follow the retained outcome before requesting further work.' });
       const preparationRun = observation.observedRunId ?? run?.id;
       if (preparationRun && await reconcilePreparationFailure(api, repository, owner, issueNumber, comment.id, preparationRun, readArtifact)) { observation.stop = null; Object.assign(publicObservation, { state: 'reconciled', code: 'preparation-failed', nextAction: 'Inspect the confirmed failed execution before requesting new work.' }); }
       const reconciliation = await reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact);

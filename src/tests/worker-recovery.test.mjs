@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 import { dispatchId, dispatchReceiptBody, readDispatchReceipt, loadDispatch, sendDispatch } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { recoveryDecision, prepareRecovery, observeRecovery, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
+import { recoveryDecision, prepareRecovery, observeRecovery, observeDispatch, reconcileAbandonedReservation, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
 import { ownerIssues } from '../packages/sdlc/src/worker-maintenance.mjs';
 import { reportProductApplyStop } from '../packages/sdlc/src/issue-actions.mjs';
 
@@ -62,6 +62,82 @@ test('recovery rejects an incomplete job inventory before it can infer a safe re
   const incomplete = async (path, ...rest) => path.endsWith('/jobs?per_page=100') ? { total_count: f.jobs.length + 1, jobs: f.jobs } : f.api(path, ...rest);
   await assert.rejects(prepareRecovery(incomplete, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact), /job inventory is incomplete/);
   assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});
+
+test('abandoned reservation cleanup requires matching execution evidence and an unchanged bot label event', async () => {
+  for (const scenario of ['valid', 'human-label', 'newer-dispatch', 'unknown-publication', 'missing-snapshot', 'owner-hold', 'event-changed', 'missing-event-id', 'agent-succeeded', 'existing-notice']) {
+    const f = fixture();
+    f.issue.labels = [{ name: 'agent-working' }];
+    f.run.run_started_at = '2020-01-01T00:00:00Z'; f.run.updated_at = '2020-01-01T00:10:00Z';
+    const event = { id: 80, event: 'labeled', label: { name: 'agent-working' }, actor: { login: 'github-actions[bot]', type: 'Bot' }, created_at: '2020-01-01T00:05:00Z' };
+    if (scenario === 'human-label') event.actor = { login: owner, type: 'User' };
+    if (scenario === 'missing-event-id') delete event.id;
+    if (scenario === 'unknown-publication') f.jobs[2].steps[0].conclusion = 'failure';
+    if (scenario === 'agent-succeeded') f.jobs[1].conclusion = 'success';
+    if (scenario === 'owner-hold') f.issue.labels.push({ name: 'human-working' });
+    if (scenario === 'existing-notice') f.comments.push({ ...f.comment, id: 31, body: '<!-- lighthouse-stop:200:1 -->' });
+    if (scenario === 'newer-dispatch') {
+      const next = { ...f.receipt, id: dispatchId(repository, '101'), routerRunId: '101' };
+      f.comments.push({ ...f.comment, id: 31, body: dispatchReceiptBody(repository, next) });
+    }
+    const snapshot = { runId: digest(`${repository}:7:implement:200:1`), issue: 7, stage: 'implement', workflowRunId: '200', sourceRevision: sha, workflowRevision: sha, taskDigest: f.request.taskDigest, dispatch: { commentId: 30, requestId: f.request.id, digest: f.receipt.digest } };
+    // This recovery only handles read-only stages; use the corresponding authenticated triage identity.
+    f.request.stage = 'triage'; f.request.id = dispatchId(repository, '100', 'triage'); f.receipt.stage = 'triage'; f.receipt.id = f.request.id; f.receipt.digest = digest(JSON.stringify(f.request));
+    f.run.path = '.github/workflows/lighthouse-sdlc-triage.lock.yml'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
+    snapshot.runId = digest(`${repository}:7:triage:200:1`); snapshot.stage = 'triage'; snapshot.dispatch.requestId = f.request.id; snapshot.dispatch.digest = f.receipt.digest;
+    let removed = false, eventReads = 0;
+    const api = async (path, method = 'GET', body) => {
+      if (path.startsWith('issues/7/events?')) { eventReads++; return scenario === 'event-changed' && eventReads > 1 ? [event, { ...event, id: 81, actor: { login: owner, type: 'User' } }] : [event]; }
+      if (path === 'issues/7/labels/agent-working' && method === 'DELETE') { removed = true; return; }
+      return f.api(path, method, body);
+    };
+    const readArtifact = async (apiArg, repoArg, runId, name, file) => name === 'lighthouse-input-7-1' ? scenario === 'missing-snapshot' ? Promise.reject(Error('expired')) : snapshot : f.readArtifact(apiArg, repoArg, runId, name, file);
+    const observation = await observeDispatch(api, repository, owner, f.comment, f.issue, f.comments, Date.now(), readArtifact);
+    const released = await reconcileAbandonedReservation(api, repository, owner, f.issue, f.comments, observation, readArtifact);
+    assert.equal(released, scenario === 'valid', scenario);
+    assert.equal(removed, scenario === 'valid', scenario);
+  }
+});
+
+test('maintenance releases an authenticated abandoned reservation and publishes its failure without retrying', async () => {
+  const f = fixture(); f.issue.labels = [{ name: 'agent-working' }];
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine'); f.receipt.stage = 'refine'; f.receipt.id = f.request.id; f.receipt.digest = digest(JSON.stringify(f.request));
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  f.run.run_started_at = '2020-01-01T00:00:00Z'; f.run.updated_at = '2020-01-01T00:10:00Z';
+  const event = { id: 80, event: 'labeled', label: { name: 'agent-working' }, actor: { login: 'github-actions[bot]', type: 'Bot' }, created_at: '2020-01-01T00:05:00Z' };
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', sourceRevision: sha, workflowRevision: sha, taskDigest: f.request.taskDigest, dispatch: { commentId: 30, requestId: f.request.id, digest: f.receipt.digest } };
+  const api = async (path, method = 'GET', body) => {
+    if (path.startsWith('issues/7/events?')) return [event];
+    if (path === 'issues/7/labels/agent-working' && method === 'DELETE') return;
+    return f.api(path, method, body);
+  };
+  const readArtifact = async (apiArg, repoArg, runId, name, file) => name === 'lighthouse-input-7-1' ? snapshot : f.readArtifact(apiArg, repoArg, runId, name, file);
+  const result = await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
+  assert.equal(result.observations[0].code, 'reservation-released');
+  assert.equal(result.request, undefined);
+  assert.equal(f.issue.labels.some(label => label.name === 'agent-working'), false);
+  assert.match(f.comments.at(-1).body, /agent execution failed/);
+});
+
+test('maintenance restores the failure notice if publication fails after releasing the reservation', async () => {
+  const f = fixture(); f.issue.labels = [{ name: 'agent-working' }];
+  f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine'); f.receipt.stage = 'refine'; f.receipt.id = f.request.id; f.receipt.digest = digest(JSON.stringify(f.request));
+  f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  f.run.run_started_at = '2020-01-01T00:00:00Z'; f.run.updated_at = '2020-01-01T00:10:00Z';
+  const event = { id: 80, event: 'labeled', label: { name: 'agent-working' }, actor: { login: 'github-actions[bot]', type: 'Bot' }, created_at: '2020-01-01T00:05:00Z' };
+  const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', sourceRevision: sha, workflowRevision: sha, taskDigest: f.request.taskDigest, dispatch: { commentId: 30, requestId: f.request.id, digest: f.receipt.digest } };
+  let fail = true;
+  const api = async (path, method = 'GET', body) => {
+    if (path.startsWith('issues/7/events?')) return [event];
+    if (path === 'issues/7/labels/agent-working' && method === 'DELETE') return;
+    if (path === 'issues/7/comments' && method === 'POST' && fail) { fail = false; throw Error('comment interrupted'); }
+    return f.api(path, method, body);
+  };
+  const readArtifact = async (apiArg, repoArg, runId, name, file) => name === 'lighthouse-input-7-1' ? snapshot : f.readArtifact(apiArg, repoArg, runId, name, file);
+  await assert.rejects(prepareRecovery(api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact), /comment interrupted/);
+  assert.equal(f.issue.labels.length, 0);
+  await prepareRecovery(api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.equal(f.comments.filter(comment => comment.body.includes('<!-- lighthouse-stop:200:1 -->')).length, 1);
 });
 
 test('dispatch and reconciliation share the worker lease while reporting remains independent', async () => {
