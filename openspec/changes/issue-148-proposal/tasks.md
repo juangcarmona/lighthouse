@@ -13,7 +13,7 @@
 - [x] 2.2 Document repeatable evaluation cases and reporting fields; verify the protocol covers planning, implementation, review, lightweight tasks and account-specific economics without fabricated results.
 - [x] 2.3 Obtain live two-worker provider model/effort receipts and candidate comparisons on identical starting revisions; report accepted outcomes, retries, human corrections, time and exposed usage. External runner evidence is required. See `evaluation.md`; provider-internal settings and account usage are explicitly unverified.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 
 ## 3. Delivery 2 — delegated tasks
 
