@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authorizedCiCallback, implementationPrProof, isCurrentPullRequestEvent, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
+import { authorizedCiCallback, draftIntentMarker, implementationPrProof, isCurrentPullRequestEvent, pendingDraftIntent, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
 const pr = draft => ({
@@ -58,6 +58,23 @@ test('manual readiness of an incomplete or stale-head candidate returns to draft
     assert.deepEqual(state.changed, [true]);
     assert.deepEqual(state.issue.labels.map(label => label.name), ['pr-draft']);
   }
+});
+
+test('an interrupted draft handoff is recoverable and a replay sees its outcome', async () => {
+  const state = fixture(false), comments = [comment(false)];
+  const bot = { login: 'github-actions[bot]', type: 'Bot' }, marker = draftIntentMarker(state.candidate, run);
+  await assert.rejects(reconcileImplementationPr(state.api, repo, state.candidate, state.issue, comments, [{ context: 'repository', app: 15368 }], state.setDraft, { beforeDraft: async () => { throw Error('intent unavailable'); } }), /intent unavailable/);
+  assert.deepEqual(state.changed, []);
+  await reconcileImplementationPr(state.api, repo, state.candidate, state.issue, comments, [{ context: 'repository', app: 15368 }], state.setDraft, { beforeDraft: async () => { comments.push({ user: bot, body: marker }); } });
+  assert.equal(state.candidate.draft, true);
+  const outcome = pendingDraftIntent(comments, state.candidate);
+  assert.match(outcome, /lighthouse-pr-draft-outcome/);
+  const current = await reconcileImplementationPr(state.api, repo, state.candidate, state.issue, comments, [{ context: 'repository', app: 15368 }], state.setDraft);
+  assert.equal(current.reason, 'Implementation is incomplete');
+  comments.push({ user: bot, body: outcome });
+  assert.equal(pendingDraftIntent(comments, state.candidate), null);
+  assert.equal(pendingDraftIntent([{ user: { login: 'other', type: 'User' }, body: marker }], state.candidate), null);
+  assert.equal(pendingDraftIntent(comments.slice(0, -1), { ...state.candidate, head: { ...state.candidate.head, sha: 'c'.repeat(40) } }), null);
 });
 
 test('a passing candidate stays draft until CI passes, and a foreign PR is rejected', async () => {

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { authorizedCiCallback, isCurrentPullRequestEvent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
+import { authorizedCiCallback, draftIntentMarker, isCurrentPullRequestEvent, pendingDraftIntent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 import { handoff } from './handoff.mjs';
 import { productProposalProof } from './product-change.mjs';
 
@@ -113,8 +113,19 @@ async function main() {
     }
     const hold = comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`));
     const auto = (['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) || ciCallback) && !hold;
-    const result = await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto });
-    if (event.action === 'ready_for_review' && result.status === 'draft') await api(`issues/${target.issue}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} remains a draft: ${result.reason}.`, action: 'The PR owner should resolve the stated blocker.', next: 'The workflow rechecks readiness when the relevant checks or PR state change.', link: `[Open PR](${pr.html_url})` }) });
+    await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto, beforeDraft: async () => {
+      const marker = draftIntentMarker(pr, env.GITHUB_RUN_ID);
+      if (!(await commentsFor(api, target.issue)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) await api(`issues/${target.issue}/comments`, 'POST', { body: marker });
+    } });
+    const fresh = await api(`pulls/${number}`);
+    if (fresh.state !== 'open' || !fresh.draft || fresh.head.sha !== pr.head.sha) continue;
+    const currentComments = await commentsFor(api, target.issue), notice = pendingDraftIntent(currentComments, fresh);
+    if (!notice) continue;
+    const currentIssue = await api(`issues/${target.issue}`);
+    if (currentIssue.state !== 'open') continue;
+    const current = await reconcileImplementationPr(api, repo, fresh, currentIssue, currentComments, requiredChecks(profile), (currentPr, draft) => setPullRequestDraft(env.GH_TOKEN, currentPr, draft));
+    const confirmed = await api(`pulls/${number}`);
+    if (current.status === 'draft' && current.reason !== 'PR is a draft' && confirmed.state === 'open' && confirmed.draft && confirmed.head.sha === fresh.head.sha && confirmed.head.ref === fresh.head.ref && confirmed.base.ref === fresh.base.ref && confirmed.body === fresh.body && !(await commentsFor(api, target.issue)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(notice))) await api(`issues/${target.issue}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'implement', happened: `PR #${pr.number} remains a draft: ${current.reason}.`, action: 'The PR owner should resolve the stated blocker.', next: 'The workflow rechecks readiness when the relevant checks or PR state change.', link: `[Open PR](${pr.html_url})`, details: notice }) });
   }
 }
 main().catch(error => { console.error(`::error::${error.message}`); process.exitCode = 1; });
