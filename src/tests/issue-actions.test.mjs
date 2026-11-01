@@ -66,6 +66,10 @@ test('product prerequisite handoff states whether preparation can start', () => 
   assert.match(productGapNextAction({ gap, enabled: false, dispatched: true }).action, /install and enable/);
   assert.match(productGapNextAction({ gap, enabled: true, dispatched: false }).action, /request a new authorized stage/);
   assert.match(productGapNextAction({ gap, enabled: true, dispatched: true, paused: true }).action, /remove the future label/);
+  const pausedWithoutWorkflow = productGapNextAction({ gap, enabled: false, dispatched: true, paused: true });
+  assert.match(pausedWithoutWorkflow.action, /remove the future label/);
+  assert.match(pausedWithoutWorkflow.next, /install and enable.*new authorized stage execution/);
+  assert.doesNotMatch(pausedWithoutWorkflow.next, /replay/);
 });
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
