@@ -166,6 +166,9 @@ export async function checkEpicAuthority(epic, authenticate) {
   if (!epic) return;
   if (!isDeepStrictEqual(await authenticate(), epic)) throw Error('Epic parent authority changed');
 }
+export function checkEpicTriageBinding(epic, triage) {
+  if (epic && !isDeepStrictEqual(triage?.request?.epic, epic)) throw Error('Child triage does not match the current authenticated epic plan');
+}
 async function main(command) {
   const env = { ...process.env }, repo = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo ?? '')) throw Error('Invalid repository');
@@ -449,6 +452,7 @@ async function main(command) {
         triage = await loadStageReport(api, repo, report, { owner, issue: issueNumber });
         const errors = validateStageEnvelope(triage.envelope, triage.request);
         if (errors.length || triage.request.stage !== 'triage' || triage.envelope.result.status !== 'passed' || triage.request.sourceRevision !== (productResume?.baseRevision ?? (epicImplementation || alignedPr ? baseRevision : revision.sha)) || triage.request.originalRequest !== (issue.body ?? '')) throw Error('Triage evidence is invalid or stale; request triage again');
+        if (stage === 'refine') checkEpicTriageBinding(dispatch?.request.epic, triage);
       }
     }
     if (stage === 'implement' && !productWorker) {
