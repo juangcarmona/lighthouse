@@ -154,7 +154,7 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   if (request.productAlignment) {
     const run = await api(`actions/runs/${request.productAlignment.alignmentRun.runId}`);
     const observed = await (await import('./stage-transition.mjs')).productAlignmentAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } }, readArtifact);
-    if (JSON.stringify(observed) !== JSON.stringify(request.productAlignment) || observed.baseRevision !== request.sourceRevision || observed.parent.taskDigest !== request.taskDigest || observed.stage !== request.stage) throw Error('Product alignment or parent authorization changed');
+    if (JSON.stringify(observed) !== JSON.stringify(request.productAlignment) || observed.baseRevision !== request.sourceRevision || (observed.parent.feedback?.taskDigest ?? observed.parent.taskDigest) !== request.taskDigest || observed.stage !== request.stage) throw Error('Product alignment or parent authorization changed');
   }
   if (request.productResume) {
     const apply = await api(`actions/runs/${request.productResume.applyRun.runId}`);
