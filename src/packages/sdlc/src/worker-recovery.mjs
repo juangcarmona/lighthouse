@@ -93,7 +93,7 @@ export async function observeRecovery(api, repository, owner, issueNumber, now =
   const observations = [];
   for (const { comment } of latest.values()) {
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...observation } = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
-    if (observation.state === 'stalled') observations.push(observation);
+    if (observation.state === 'stalled' || observation.code === 'dispatch-unconfirmed') observations.push(observation);
   }
   return observations;
 }

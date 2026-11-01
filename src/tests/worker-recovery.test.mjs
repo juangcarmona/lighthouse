@@ -48,6 +48,15 @@ test('read-only observation reports a stalled worker without waiting for or chan
   assert.equal(observations[0].dispatch, undefined);
 });
 
+test('read-only observation preserves an unconfirmed dispatch for operator inspection', async () => {
+  const f = fixture();
+  f.receipt.workerRunId = null;
+  f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  const observations = await observeRecovery(f.api, repository, owner, 7, Date.now(), f.readArtifact);
+  assert.equal(observations[0].code, 'dispatch-unconfirmed');
+  assert.equal(f.calls.every(call => call.method === 'GET'), true);
+});
+
 test('dispatch and reconciliation share the worker lease while reporting remains independent', async () => {
   const { readFile } = await import('node:fs/promises');
   const workflowRoot = new URL('../packages/sdlc/workflows/', import.meta.url);
