@@ -103,7 +103,7 @@ export async function productModelDigestFromApi(api, revision) {
 
 export function reviewText({ repository, snapshot, head, changeId, changeName, files, candidate, validation, runUrl, approvalKey, prUrl }) {
   const manifest = files.find(file => file.path.endsWith('/product-change/change.md'))?.content ?? '';
-  const sections = [...manifest.matchAll(/^## (.+?)\n([\s\S]*?)(?=^## |\s*$)/gm)].map(match => `### ${match[1]}\n${match[2].trim()}`).join('\n\n');
+  const sections = [...manifest.matchAll(/^## (.+?)\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)].map(match => `### ${match[1]}\n${match[2].trim()}`).join('\n\n');
   const artifacts = files.filter(file => file.path.includes('/proposed/')).map(file => `- [${file.path}](https://github.com/${repository}/blob/${head}/${file.path})`).join('\n');
   const areas = candidate.affectedAreas?.map(area => `- ${area}`).join('\n') || '- See the change manifest.';
   const decisions = candidate.decisions?.map(decision => `- ${decision}`).join('\n') || '- Review the proposed behavior in the change manifest.';

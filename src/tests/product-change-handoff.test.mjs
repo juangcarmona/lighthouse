@@ -14,6 +14,12 @@ test('product review handoff names its target, decision and authority boundary',
   assert.match(body, /&lt;!-- lighthouse-product-review:forged/);
 });
 
+test('product review includes complete manifest sections including the last section', () => {
+  const body = reviewText({ repository: 'owner/repo', snapshot: { issue: 7, stage: 'refine', defaultBranch: 'main' }, head: 'abc', changeId: 'CHG-EXAMPLE', changeName: 'example', files: [{ path: 'openspec/changes/example/product-change/change.md', content: '---\nid: CHG-EXAMPLE\n---\n\n## Problem\n\nThe issue needs a change.\n\nMore context.\n\n## Product Acceptance\n\n- It works.\n' }], candidate: {}, validation: { provider: 'passed', openSpec: 'passed' }, runUrl: 'run', approvalKey: 'key', prUrl: 'pr' });
+  assert.match(body, /### Problem\nThe issue needs a change\.\n\nMore context\./);
+  assert.match(body, /### Product Acceptance\n- It works\./);
+});
+
 test('product apply handoff preserves the receipt and requests a separate PR review', () => {
   const receipt = { changeId: 'CHG-EXAMPLE', intentId: 'intent' };
   const body = productApplyHandoff({ stage: 'propose', receipt, pullRequest: 8, url: 'https://github.com/owner/repo/pull/8', affectedCitations: [{ document: 'spec.md', status: 'current' }] });
