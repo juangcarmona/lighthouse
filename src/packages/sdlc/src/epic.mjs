@@ -51,9 +51,11 @@ export function assessEpic(plan, observation) {
     if (!child) return { ...result, state: 'uncreated' };
     if (child.authenticated !== true) return { ...result, state: 'uncertain', reason: 'child identity is not authenticated' };
     if (!['ready', 'running', 'accepted', 'cancelled', 'uncertain', 'blocked'].includes(child.state)) return { ...result, state: 'uncertain', reason: 'child state is closed or unrecognized' };
-    if (['cancelled', 'uncertain', 'blocked'].includes(child.state)) return { ...result, state: child.state };
+    if (['cancelled', 'uncertain'].includes(child.state)) return { ...result, state: child.state };
     if (child.state === 'running') return { ...result, state: 'running' };
+    if (child.questions !== undefined && (!Array.isArray(child.questions) || child.questions.some(question => !text(question)))) return { ...result, state: 'uncertain', reason: 'child questions are malformed' };
     if (child.questions?.length) return { ...result, state: 'waiting-answer', questions: child.questions };
+    if (child.state === 'blocked') return { ...result, state: 'blocked' };
     if (accepted(child)) return { ...result, state: 'accepted' };
     if (child.state === 'accepted') return { ...result, state: 'uncertain', reason: 'accepted outcome lacks merge and decision evidence' };
     if (child.triage !== 'passed') return { ...result, state: 'needs-triage' };

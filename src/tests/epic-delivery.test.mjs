@@ -101,6 +101,12 @@ test('children retain separate intake, questions and authorization', () => {
   assert.equal(states(obs)[0], 'needs-refinement');
   obs.children[0].questions = ['Which observable outcome?'];
   assert.equal(states(obs)[0], 'waiting-answer');
+  obs.children[0].state = 'blocked';
+  assert.equal(states(obs)[0], 'waiting-answer');
+  assert.deepEqual(assessEpic(plan(), obs).children[0].questions, ['Which observable outcome?']);
+  obs.children[0].state = 'ready';
+  obs.children[0].questions = 'not an array';
+  assert.equal(states(obs)[0], 'uncertain');
   delete obs.children[0].questions; obs.children[0].refinement = 'passed'; obs.children[0].authorized.implement = false;
   assert.equal(states(obs)[0], 'waiting-implementation-authorization');
 });
