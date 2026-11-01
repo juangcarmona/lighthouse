@@ -343,28 +343,34 @@ test('maintenance restores a failed read-only publication for a question without
 });
 
 test('maintenance completes an interrupted read-only label transition before publishing its handoff', async () => {
-  for (const alreadyWritten of [false, true]) {
+  for (const alreadyWritten of [false, true, 'competing']) {
     const f = fixture();
     f.request.stage = 'refine'; f.request.id = dispatchId(repository, '100', 'refine');
     f.run.path = '.github/workflows/lighthouse-sdlc-refine.lock.yml';
     f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'failure';
-    f.issue.labels = [{ name: 'refine' }, ...(alreadyWritten ? [{ name: 'ready' }] : [])];
+    f.issue.labels = [{ name: 'refine' }, ...(alreadyWritten === true ? [{ name: 'ready' }] : []), ...(alreadyWritten === 'competing' ? [{ name: 'implement' }] : [])];
     const receipt = { ...f.receipt, stage: 'refine', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'unknown' };
     f.comment.body = dispatchReceiptBody(repository, receipt);
     const snapshot = { runId: digest(`${repository}:7:refine:200:1`), issue: 7, stage: 'refine', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'The refinement is complete.' } };
     const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
     const operations = [];
-    let failRemove = !alreadyWritten;
+    let failRemove = alreadyWritten === false;
     const api = async (path, method = 'GET', body) => {
       if (path === 'issues/7/labels' && method === 'POST') { operations.push('add'); f.issue.labels.push({ name: body.labels[0] }); return; }
       if (path === 'issues/7/labels/refine' && method === 'DELETE') { if (failRemove) { failRemove = false; throw Error('label removal interrupted'); } operations.push('remove'); f.issue.labels = f.issue.labels.filter(label => label.name !== 'refine'); return; }
       if (path === 'issues/7/comments' && method === 'POST') operations.push('comment');
       return f.api(path, method, body);
     };
-    if (!alreadyWritten) await assert.rejects(prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact), /label removal interrupted/);
+    if (alreadyWritten === false) await assert.rejects(prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact), /label removal interrupted/);
     const result = await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
     assert.equal(result.request, undefined);
+    if (alreadyWritten === 'competing') {
+      assert.equal(operations.includes('add') || operations.includes('remove'), false);
+      assert.doesNotMatch(f.comments.at(-1).body, /previous handoff was restored/);
+      assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'unknown');
+      continue;
+    }
     assert.deepEqual(operations, alreadyWritten ? ['remove', 'comment'] : ['add', 'remove', 'comment']);
     assert.deepEqual(f.issue.labels.map(label => label.name), ['ready']);
     assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'completed');
