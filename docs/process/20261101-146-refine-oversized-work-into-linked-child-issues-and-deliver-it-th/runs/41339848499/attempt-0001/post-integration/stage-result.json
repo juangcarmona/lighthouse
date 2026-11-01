@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "runId": "c4debd419a0d52cc3c1bd706839d1f63e3b1ae11dad2ce1b38651faa75c742d7",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "evidence": [
+    {
+      "id": "github-check:124946346395",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41339514798/job/124946346395",
+      "reason": "Host-authenticated required repository check succeeded at the accepted PR head. This establishes CI success, not full work-item acceptance."
+    },
+    {
+      "id": "github-check:124946916786",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41339706358/job/124946916786",
+      "reason": "Host-authenticated required repository check succeeded at merged revision 0923153ebf487ff6a4f78d495a5f73359c423230; the supplied ci.yml post-merge run also passed at that revision."
+    },
+    {
+      "id": "host-observed-integration",
+      "status": "passed",
+      "source": "/input/context.json#/completion",
+      "reason": "Host observes PR #206 closed and merged by juangcarmona at the checked revision. This independent observation proves the merge occurred, not that the complete epic lifecycle was accepted."
+    },
+    {
+      "id": "work-item-native-acceptance",
+      "status": "unavailable",
+      "source": "openspec/changes/issue-146-proposal/tasks.md:18-32",
+      "reason": "Tasks 3.1-3.3 remain unchecked. Retained narrative describes controlled runs with simulated refinement, not a complete authenticated native delivery and final aggregate acceptance. No failed required check is asserted."
+    },
+    {
+      "id": "advanced-default-recovery",
+      "status": "unavailable",
+      "source": "src/packages/sdlc/epic-delivery.md:21-25",
+      "reason": "Guidance explicitly leaves recovery and post-merge acceptance against an advanced default branch unconnected; epic-native.mjs:25-46 requires the refinement source revision to remain current. No correction or acceptance proof is supplied."
+    },
+    {
+      "id": "retained-integration-history",
+      "status": "unavailable",
+      "source": "/input/context.json#/priorIntegration",
+      "reason": "Null: no matching host-verified protected-branch integration receipt/report was supplied. Historical authorization and publication continuity cannot be reconstructed from the observed merge alone."
+    },
+    {
+      "id": "affected-guidance-inspection",
+      "status": "passed",
+      "source": "src/packages/sdlc/README.md:73-75",
+      "reason": "Inspected root guidance, SDLC README, epic delivery guide, refinement skill, completion policy, product rule, OpenSpec design/tasks, installed workflow sources and relevant implementation/tests. These distinguish planning from live orchestration and preserve owner authority. No additional conflicting guidance was established."
+    },
+    {
+      "id": "blocked-finalization-plan",
+      "status": "passed",
+      "source": "/input/context.json#/completion/finalization",
+      "reason": "The declared blocked transition keeps open issue #146 open, adds waiting-review, removes no labels and preserves closed/merged PR #206 labels. Reservation release belongs to host cleanup; effects have not yet occurred."
+    }
+  ],
+  "missingEvidence": [
+    "Authenticated end-to-end native lifecycle evidence covering real refinement, child-specific intake and authorized delivery, dependency/capacity handling, interruption reconciliation, aggregate publication and final acceptance (OpenSpec tasks 3.1-3.3).",
+    "Evidence for supported recovery and final acceptance after the default branch advances; the delivered source and guidance explicitly leave this unfinished.",
+    "Matching retained integration receipt and commit-pinned report, including historical owner authorization, or an explicit documented disposition of that historical continuity gap. Host-observed manual merge is recorded separately."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "juangcarmona should retain #146 as the follow-up record, complete and review the remaining native lifecycle work with authenticated acceptance evidence, and resolve the historical receipt gap before requesting another closure review. This result starts no work or new stage.",
+  "output": {
+    "summary": "PR #206 is merged and required post-merge CI passed, but #146 is not complete. The delivered planning contracts and opt-in native building blocks are distinct from accepted end-to-end epic delivery.",
+    "identity": {
+      "provenance": "Host-supplied identity and observations; no independent GitHub or git authentication was attempted.",
+      "repository": "juangcarmona/lighthouse",
+      "issue": 146,
+      "pr": 206,
+      "head": "b68d476ee9ec92bd701eff35c3fe849b61e1bf36",
+      "mergedRevision": "0923153ebf487ff6a4f78d495a5f73359c423230",
+      "checkedRevision": "0923153ebf487ff6a4f78d495a5f73359c423230",
+      "currentRevision": "0923153ebf487ff6a4f78d495a5f73359c423230",
+      "intent": "3a22f144a9118646ecffec5df16a04957326fb60581153d42e35ea3d356a873f",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "2aec33236f59b24e25806fdd6f585566f02eb99c09b97f46f0e6d36398aacd41",
+      "files": "04e32808941bcd5e68b8499a504ff6ba647a5eb59227a4bd34b7a6e90688a743",
+      "requestId": "648eb37b8ecebb6202a60f2af1721e4b8cffe147f01980211a580de8a75c7330",
+      "currentDispatchMergeAuthorized": false
+    },
+    "acceptanceAssessment": [
+      {
+        "requirement": "Confirmed estimate strictly greater than eight triggers useful decomposition; no safe split blocks.",
+        "assessment": "Implemented contract with boundary and invalid-input test coverage visible in source; no claim of a new local test run.",
+        "evidence": [
+          "src/packages/sdlc/src/epic.mjs:10-18",
+          "src/tests/epic-delivery.test.mjs:21-43",
+          "src/packages/sdlc/skills/refine/SKILL.md:14-17"
+        ]
+      },
+      {
+        "requirement": "Planning does not launch oversized parent implementation.",
+        "assessment": "Continuation paths explicitly stop for a planned decomposition.",
+        "evidence": [
+          "src/packages/sdlc/src/stage-transition.mjs:8-14",
+          "src/packages/sdlc/src/stage-transition.mjs:47-53"
+        ]
+      },
+      {
+        "requirement": "Native child relationships, independent intake, dependencies, capacity and authenticated retry-safe delivery.",
+        "assessment": "Partial implementation and fixture coverage; controlled creation/replay narratives are limited to simulated refinement. Complete installed native orchestration is not established.",
+        "evidence": [
+          "src/packages/sdlc/src/epic.mjs:54-85",
+          "src/tests/epic-native.test.mjs:61-119",
+          "openspec/changes/issue-146-proposal/tasks.md:18-32",
+          "src/packages/sdlc/epic-delivery.md:21-35"
+        ]
+      },
+      {
+        "requirement": "Fresh integration evidence after base changes.",
+        "assessment": "Eligibility and readiness enforce current evidence, but default-branch advancement recovery remains unfinished. A fail-closed stop is not successful recovery.",
+        "evidence": [
+          "src/packages/sdlc/src/epic.mjs:73-78",
+          "src/packages/sdlc/src/epic-native.mjs:25-46",
+          "src/packages/sdlc/epic-delivery.md:25"
+        ]
+      },
+      {
+        "requirement": "One aggregate PR, explicit owner merge decisions and parent lifetime through final acceptance.",
+        "assessment": "Draft publication/readiness helpers and fixture tests exist; final aggregate acceptance is unfinished. The merge of implementation PR #206 does not itself demonstrate a completed child-to-aggregate lifecycle.",
+        "evidence": [
+          "src/packages/sdlc/src/epic-native.mjs:295-359",
+          "src/tests/epic-aggregate.test.mjs:48-65",
+          "openspec/changes/issue-146-proposal/tasks.md:20-24",
+          "docs/product/model/business-rules/br-decomposition.md:14-18"
+        ]
+      }
+    ],
+    "findings": [
+      {
+        "id": "R146-1",
+        "classification": "accepted",
+        "kind": "incomplete-delivery-and-acceptance-gap",
+        "finding": "Native orchestration and final aggregate acceptance remain unfinished; the work item cannot close on planning and fixtures alone.",
+        "decisionBasis": "Accepted as a substantiated review finding, not as owner acceptance of reduced scope. No owner-approved completion waiver was supplied.",
+        "owner": "juangcarmona (SDLC delivery maintainer)",
+        "followUp": "https://github.com/juangcarmona/lighthouse/issues/146; openspec/changes/issue-146-proposal/tasks.md tasks 3.1-3.3",
+        "evidence": [
+          "PR #206 delivery summary",
+          "src/packages/sdlc/epic-delivery.md:21-35",
+          "openspec/changes/issue-146-proposal/design.md:23-30"
+        ],
+        "disposition": "Keep open and retain missing verification; no new issue or stage is started."
+      },
+      {
+        "id": "R146-2",
+        "classification": "accepted",
+        "kind": "known-source-capability-limitation",
+        "finding": "Native admission requires the default branch to remain at the refinement revision, leaving advanced-default recovery and post-merge aggregate acceptance unconnected.",
+        "decisionBasis": "Documented unfinished source behavior, not a newly reproduced regression or failed GitHub check. Do not weaken freshness checks to work around it.",
+        "owner": "juangcarmona (native epic adapter maintainer)",
+        "followUp": "https://github.com/juangcarmona/lighthouse/issues/146; tasks 3.2-3.3",
+        "evidence": [
+          "src/packages/sdlc/src/epic-native.mjs:25-46",
+          "src/packages/sdlc/epic-delivery.md:25",
+          "PR #206 delivery summary"
+        ],
+        "disposition": "Retain as incomplete functionality requiring a separately reviewed recovery design and regression proof."
+      },
+      {
+        "id": "R146-3",
+        "classification": "accepted",
+        "kind": "historical-process-evidence-gap",
+        "finding": "The matching protected-branch integration record was not supplied; priorIntegration and priorPlanningReview are null.",
+        "decisionBasis": "The host independently observes a maintainer merge. Missing retained history does not establish an unauthorized merge; no unattended planning review is inferred to have been required.",
+        "owner": "juangcarmona (delivery evidence owner)",
+        "followUp": "https://github.com/juangcarmona/lighthouse/issues/146; src/packages/sdlc/completion.md:36-46",
+        "disposition": "Retain integration continuity as missing and seek the matching record or an explicit historical-gap disposition. Do not fabricate a receipt or replay a merge."
+      },
+      {
+        "id": "R146-4",
+        "classification": "rejected",
+        "kind": "closure-inference",
+        "finding": "A merged implementation PR plus green required CI is insufficient to mark all of #146 complete.",
+        "decisionBasis": "The PR summary explicitly says #146 stays open, native tasks are unchecked, and the product rule requires aggregate acceptance.",
+        "owner": "juangcarmona (work-item owner)",
+        "followUp": "https://github.com/juangcarmona/lighthouse/issues/146",
+        "disposition": "Use the supplied blocked finalization policy, not the passed closeIssue transition."
+      }
+    ],
+    "sourceDefects": {
+      "newDefectEstablished": false,
+      "scope": "No additional source regression was established by this targeted inspection. Known unfinished capabilities are recorded separately from process evidence gaps; this is not an exhaustive code audit or fresh runtime verification."
+    },
+    "guidanceReview": {
+      "conclusion": "No stale or conflicting guidance was established in the inspected affected contracts. Product intent is broader than delivered capability, but the package guide and OpenSpec tasks disclose that boundary.",
+      "references": [
+        "AGENTS.md:5-19",
+        "src/packages/sdlc/README.md:5-7,73-75",
+        "src/packages/sdlc/skills/refine/SKILL.md:14-21",
+        "src/packages/sdlc/epic-delivery.md:3-25",
+        "src/packages/sdlc/completion.md:26-36",
+        "docs/product/changes/completed/chg-epic-delivery-146/change.md:42-44",
+        "openspec/changes/issue-146-proposal/design.md:30-34"
+      ],
+      "deploymentBoundary": "Source package version is 0.17.1. Installed refine workflow pins harness 806223d06302628d25791e42e35b609ca6e1d32c; installed router pins 0877156e956b2a221d1bb55db91a73b7164d3228. Templates use a replacement pin. These facts do not establish installation of the merged library code or a deployment defect. The native epic workflow is absent from the installed .github/workflows listing, consistent with documented opt-in incompleteness. Repository-variable values were not supplied; no additional deployment claim is made.",
+      "productBoundary": "An applied Product Change records intent, not delivered implementation or deployment; its completed directory is not proof that all native tasks passed.",
+      "changesMade": false
+    },
+    "verificationLimits": {
+      "localExecution": "Source and test assertions were inspected read-only. No tests, workflow compilation or external service calls were executed in this review. Required CI and post-merge success are host-authenticated observations.",
+      "implementationClaims": "467 tests and 6 skips, workflow compilation, installation and actionlint success are claims in the PR summary, not separately supplied detailed receipts. The independent repository check result is cited without inventing its per-test output.",
+      "controlledRuns": "Creation, replay and lost-response narratives in tasks.md are bounded historical evidence, not authenticated observedChecks for the accepted revision. Intentional failure in an uncertainty scenario is not a failed required product check.",
+      "authority": "This dispatch has merge:false. No merge, label change, issue closure, permission change, installation or follow-up dispatch is requested by this review."
+    },
+    "optionalCheckObservations": [
+      {
+        "evidenceId": "github-check:124947288464",
+        "name": "Publish public engineering site",
+        "revision": "0923153ebf487ff6a4f78d495a5f73359c423230",
+        "status": "unavailable",
+        "state": "pending",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41339706327/job/124947288464",
+        "blocking": false,
+        "reason": "Not an adopted required merge check or explicit acceptance requirement for this work item."
+      },
+      {
+        "evidenceId": "github-check:124947200990",
+        "name": "Exercise a clean consumer",
+        "revision": "0923153ebf487ff6a4f78d495a5f73359c423230",
+        "status": "unavailable",
+        "state": "pending",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41339706410/job/124947200990",
+        "blocking": false,
+        "reason": "Additional observation, not a configured merge gate; pending does not mean failed and is not the closure blocker."
+      }
+    ],
+    "finalization": {
+      "policyReference": "src/packages/sdlc/completion.md:36 and host completion.finalization",
+      "observedIssue": {
+        "state": "open",
+        "labels": []
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [
+          "waiting-review"
+        ],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "executor": "Trusted publisher after current-stage validation and fresh authority/check/reservation rechecks",
+      "reservation": "Host releases agent-working during cleanup for every outcome; it need not already be released for this result.",
+      "appliedByReviewAgent": false
+    },
+    "retrospective": "## What went well\n- Required repository CI passed for the accepted head and merged revision; the host confirms the actual merge and successful post-merge ci.yml run (github-check:124946346395, github-check:124946916786).\n- Planning, authority and delivery are kept distinct. Boundary tests cover 8 versus 13 points, continuation stops on a planned split, and aggregate fixtures preserve the parent (epic-delivery.test.mjs:21-43; stage-transition.mjs:8-14,47-53; epic-aggregate.test.mjs:48-65).\n- PR #206, the package guide and unchecked tasks explicitly disclose partial delivery instead of presenting simulated refinement as full acceptance.\n\n## What went wrong\n- The requested live child-to-aggregate outcome is unfinished: tasks 3.1-3.3 remain open, the native workflow is uninstalled, and final aggregate acceptance is not demonstrated (tasks.md:18-32; epic-delivery.md:21-25). These are capability and verification gaps, not evidence of a failed required CI check.\n- Default-branch advancement stops native admission; recovery and post-merge acceptance remain unconnected (epic-native.mjs:25-46).\n- Historical integration continuity is unavailable: priorIntegration is null. The independent maintainer-merge observation remains valid; no unauthorized-merge finding is established. No additional source defect or guidance conflict was established.\n\n## Start doing\n- Owner: juangcarmona / SDLC maintainers. Retain a requirement-to-evidence checklist on #146 distinguishing deterministic fixtures, controlled native writes, installed behavior and final acceptance. Include actual child-specific intake and final aggregate outcome before closure.\n- Owner: juangcarmona / evidence maintainer. Retain the matching commit-pinned integration report or explicitly document why historical manual integration lacks one; never reconstruct approval from a green check.\n\n## Stop doing\n- Do not equate the merge of a partial implementation with completion of the parent outcome. This review rejects that inference; it does not claim a prior worker made it.\n- Do not treat deliberate uncertainty stops, replay attempts or fixtures from this one issue as recurrent production failures across work items. No cross-item recurrence, attention-time or cost measurement is established.\n\n## Improvement candidates\n1. **Acceptance-to-closure guard — owner: juangcarmona / completion maintainer.** Observed gap: merged #206 leaves native tasks and aggregate acceptance unfinished, while the generic passed finalization would close #146. Evidence: PR delivery summary, tasks.md:20-24, completion.finalization.onPassed. Smallest useful guard: a reviewed regression fixture ensuring review remains blocked and closeIssue stays false when explicit work-item acceptance evidence is absent, even with merged=true and passing required CI. Reproduce first with this partial-delivery context and assert the expected blocked/open outcome; then test a separate complete-evidence case and current-policy publication. This is a proposal, not a demonstrated bug in the existing validator or an adopted new gate.\n2. **Advanced-default recovery proof — owner: juangcarmona / native adapter maintainer.** Observed limitation: admission binds refinement to the current default SHA, leaving later recovery/finalization incomplete (epic-native.mjs:25-46; epic-delivery.md:25). Smallest useful guard: a focused regression scenario for an authorized epic whose default branch advances, preserving receipts and refusing stale effects until freshly authorized evidence exists. Before any correction, reproduce the documented stop with a controlled fixture; after separately reviewing the recovery design, prove refreshed authorization, no duplicate resources and correct final parent lifetime. Retain a native acceptance run before enabling the workflow; do not remove freshness checks.\n3. **Integration-history continuity — owner: juangcarmona / evidence maintainer.** Observed gap: no matching priorIntegration record was supplied. Smallest useful guard: a reviewed context/report regression case distinguishing a host-observed manual merge from an available protected integration receipt. Reproduce using merged=true plus priorIntegration=null and assert that historical evidence stays explicitly missing without alleging unauthorized integration; then verify that a genuine matching host-authenticated receipt resolves only that gap. Any policy exception needs its own owner review.\n\nAll candidates remain proposals on #146, not opened issues, approved policy changes or initiated work. Each requires separate review and regression proof; the present review changes no permissions."
+  }
+}

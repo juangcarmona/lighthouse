@@ -1,0 +1,24 @@
+## What went well
+- Required repository CI passed for the accepted head and merged revision; the host confirms the actual merge and successful post-merge ci.yml run (github-check:124946346395, github-check:124946916786).
+- Planning, authority and delivery are kept distinct. Boundary tests cover 8 versus 13 points, continuation stops on a planned split, and aggregate fixtures preserve the parent (epic-delivery.test.mjs:21-43; stage-transition.mjs:8-14,47-53; epic-aggregate.test.mjs:48-65).
+- PR #206, the package guide and unchecked tasks explicitly disclose partial delivery instead of presenting simulated refinement as full acceptance.
+
+## What went wrong
+- The requested live child-to-aggregate outcome is unfinished: tasks 3.1-3.3 remain open, the native workflow is uninstalled, and final aggregate acceptance is not demonstrated (tasks.md:18-32; epic-delivery.md:21-25). These are capability and verification gaps, not evidence of a failed required CI check.
+- Default-branch advancement stops native admission; recovery and post-merge acceptance remain unconnected (epic-native.mjs:25-46).
+- Historical integration continuity is unavailable: priorIntegration is null. The independent maintainer-merge observation remains valid; no unauthorized-merge finding is established. No additional source defect or guidance conflict was established.
+
+## Start doing
+- Owner: juangcarmona / SDLC maintainers. Retain a requirement-to-evidence checklist on #146 distinguishing deterministic fixtures, controlled native writes, installed behavior and final acceptance. Include actual child-specific intake and final aggregate outcome before closure.
+- Owner: juangcarmona / evidence maintainer. Retain the matching commit-pinned integration report or explicitly document why historical manual integration lacks one; never reconstruct approval from a green check.
+
+## Stop doing
+- Do not equate the merge of a partial implementation with completion of the parent outcome. This review rejects that inference; it does not claim a prior worker made it.
+- Do not treat deliberate uncertainty stops, replay attempts or fixtures from this one issue as recurrent production failures across work items. No cross-item recurrence, attention-time or cost measurement is established.
+
+## Improvement candidates
+1. **Acceptance-to-closure guard — owner: juangcarmona / completion maintainer.** Observed gap: merged #206 leaves native tasks and aggregate acceptance unfinished, while the generic passed finalization would close #146. Evidence: PR delivery summary, tasks.md:20-24, completion.finalization.onPassed. Smallest useful guard: a reviewed regression fixture ensuring review remains blocked and closeIssue stays false when explicit work-item acceptance evidence is absent, even with merged=true and passing required CI. Reproduce first with this partial-delivery context and assert the expected blocked/open outcome; then test a separate complete-evidence case and current-policy publication. This is a proposal, not a demonstrated bug in the existing validator or an adopted new gate.
+2. **Advanced-default recovery proof — owner: juangcarmona / native adapter maintainer.** Observed limitation: admission binds refinement to the current default SHA, leaving later recovery/finalization incomplete (epic-native.mjs:25-46; epic-delivery.md:25). Smallest useful guard: a focused regression scenario for an authorized epic whose default branch advances, preserving receipts and refusing stale effects until freshly authorized evidence exists. Before any correction, reproduce the documented stop with a controlled fixture; after separately reviewing the recovery design, prove refreshed authorization, no duplicate resources and correct final parent lifetime. Retain a native acceptance run before enabling the workflow; do not remove freshness checks.
+3. **Integration-history continuity — owner: juangcarmona / evidence maintainer.** Observed gap: no matching priorIntegration record was supplied. Smallest useful guard: a reviewed context/report regression case distinguishing a host-observed manual merge from an available protected integration receipt. Reproduce using merged=true plus priorIntegration=null and assert that historical evidence stays explicitly missing without alleging unauthorized integration; then verify that a genuine matching host-authenticated receipt resolves only that gap. Any policy exception needs its own owner review.
+
+All candidates remain proposals on #146, not opened issues, approved policy changes or initiated work. Each requires separate review and regression proof; the present review changes no permissions.
