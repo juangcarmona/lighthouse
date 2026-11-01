@@ -125,9 +125,9 @@ export function checkProductEntry(product, snapshot) {
 
 export function productGapNextAction({ gap, enabled, dispatched, paused }) {
   if (!gap) return null;
-  if (paused) return { action: 'Owner: remove the future label when work may resume.', next: 'The product prerequisite remains paused until the hold is cleared.' };
+  if (paused) return { action: 'Owner: remove the future label when work may resume.', next: dispatched ? 'Then replay this run through the router using this issue, stage and run ID as after_run.' : 'Then request a new authorized stage execution.' };
   if (enabled && dispatched) return { action: 'None. Wait for the Product Change preparation outcome.', next: 'The workflow will authenticate this prerequisite and check whether product preparation is authorized; implementation remains stopped.' };
-  return { action: enabled ? 'Workflow maintainer: inspect the recorded issue and request authorized Product Change preparation.' : 'Workflow maintainer: install and enable the Product Change workflow, then request the prerequisite again.', next: 'Implementation remains stopped until the product prerequisite is prepared, approved and applied.' };
+  return { action: enabled ? 'Workflow maintainer: request a new authorized stage execution in the router.' : 'Workflow maintainer: install and enable the Product Change workflow.', next: 'Request a new authorized stage execution in the router; implementation remains stopped until the product prerequisite is approved and applied.' };
 }
 export function productApplyRequest({ dispatch, current, issueNumber, issue, repository, owner }) {
   if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');

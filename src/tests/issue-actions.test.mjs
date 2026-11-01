@@ -64,7 +64,7 @@ test('product prerequisite handoff states whether preparation can start', () => 
   const gap = { summary: 'Product intent needs a decision' };
   assert.match(productGapNextAction({ gap, enabled: true, dispatched: true }).action, /None/);
   assert.match(productGapNextAction({ gap, enabled: false, dispatched: true }).action, /install and enable/);
-  assert.match(productGapNextAction({ gap, enabled: true, dispatched: false }).action, /request authorized/);
+  assert.match(productGapNextAction({ gap, enabled: true, dispatched: false }).action, /request a new authorized stage/);
   assert.match(productGapNextAction({ gap, enabled: true, dispatched: true, paused: true }).action, /remove the future label/);
 });
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
