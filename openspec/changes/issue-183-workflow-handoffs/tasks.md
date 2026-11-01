@@ -5,7 +5,7 @@
 ## 1. Product and publication contract
 
 - [x] 1.1 Apply the approved Product Change to the issue branch and validate the resulting definition.
-- [ ] 1.2 Define shared handoff, attempt identity and bounded reconciliation using trusted observations.
+- [x] 1.2 Define shared handoff, attempt identity and bounded reconciliation using trusted observations. The [controlled lease test](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41321328753) confirms independent observation and serialized reconciliation; implementation and acceptance work remains below.
 - [x] 1.3 Declare and verify `execution-failed` adoption and compatibility with existing label consumers.
 
 <!-- pdac:cite id="FR-WORKFLOW-HANDOFFS" digest="sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a" -->
