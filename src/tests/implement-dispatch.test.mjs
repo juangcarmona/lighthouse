@@ -264,3 +264,19 @@ test('PR event identity is preserved separately from the trusted dispatchable wo
   assert.throws(() => verifyDispatchOrigin(request, receipt, { ...parent, head_sha: f.worker.head_sha }, f.worker, repo, owner, issue), /authorized router/);
   assert.throws(() => verifyDispatchOrigin(request, receipt, parent, { ...f.worker, head_branch: 'feature' }, repo, owner, issue), /worker identity/);
 });
+
+test('execution model selection is bound to an authenticated direct owner dispatch', async () => {
+  const f = fixture('refine');
+  f.request.event.inputs.model_selection = JSON.stringify({ model: 'openai/example', reasoningEffort: 'high' });
+  f.receipt.digest = digest(JSON.stringify(f.request));
+  const { executionModelSelection } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  verifyDispatchOrigin(f.request, f.receipt, f.parent, f.worker, repo, owner, issue);
+  assert.deepEqual(executionModelSelection(f.request), { model: 'openai/example', reasoningEffort: 'high' });
+  f.parent.actor.login = 'intruder';
+  assert.throws(() => verifyDispatchOrigin(f.request, f.receipt, f.parent, f.worker, repo, owner, issue), /authorized router/);
+  f.parent.actor.login = owner;
+  for (const change of [{ handoff: true }, { recovery: {} }, { worker: 'product-change' }, { eventName: 'issue_comment' }]) {
+    assert.throws(() => executionModelSelection({ ...f.request, ...change }), /direct owner/);
+  }
+  assert.throws(() => executionModelSelection({ ...f.request, event: { inputs: { model_selection: '{' } } }), /JSON/);
+});

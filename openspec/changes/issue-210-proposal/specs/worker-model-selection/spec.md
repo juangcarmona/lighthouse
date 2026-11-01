@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Define independently configurable model and reasoning selection for workers without transferring execution authority away from the operator. This is proposed future behavior, blocked on the Product Change identified in proposal.md; it does not describe completed implementation.
+Define independently configurable model and reasoning selection for workers without transferring execution authority away from the operator. The applied Product Change is identified in proposal.md; implementation and acceptance are tracked separately in tasks.md.
 
 ## ADDED Requirements
 

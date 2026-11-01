@@ -35,6 +35,10 @@ on:
         default: stage
         type: choice
         options: [stage, product-change]
+      model_selection:
+        description: Optional JSON model selection for this execution
+        required: false
+        type: string
       after_run:
         description: Recheck a completed execution through the same continuation rules
         required: false

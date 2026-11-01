@@ -70,6 +70,18 @@ export async function sendDispatch(api, repository, request, commentId) {
   return api(`actions/workflows/lighthouse-sdlc-${workerFor(request)}.lock.yml/dispatches`, 'POST', { ref: request.ref, inputs: { issue: String(request.issue), 'dispatch-request': String(commentId), ...(workerFor(request) === 'apply-product-change' ? { 'pull-request': String(request.productApproval.pullRequest), head: request.productApproval.head } : {}) } });
 }
 
+// Called only for a dispatch whose router identity is authenticated by the host.
+export function executionModelSelection(request) {
+  const input = request?.event?.inputs?.model_selection;
+  if (input === undefined || input === '') return undefined;
+  if (request.eventName !== 'workflow_dispatch' || request.recovery || request.handoff || request.worker || request.event.inputs.after_run || (request.event.inputs.workflow && request.event.inputs.workflow !== 'stage')) throw Error('Model selection requires a direct owner stage dispatch');
+  if (typeof input !== 'string' || Buffer.byteLength(input) > 512) throw Error('Invalid execution model selection');
+  let value;
+  try { value = JSON.parse(input); } catch { throw Error('Invalid execution model selection JSON'); }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('Invalid execution model selection');
+  return value;
+}
+
 export function verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue) {
   const delegatedWorker = workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage) || workerFor(request) === 'product-change' && ['propose', 'implement'].includes(request.stage);
   const applyProductWorker = workerFor(request) === 'apply-product-change' && ['propose', 'implement'].includes(request.stage);
@@ -88,6 +100,7 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const originEvent = recovery ? request.routerEventName : request.eventName;
   const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && Number(request.event.inputs.issue) === issue && request.predecessor?.runId === request.event.inputs.after_run;
   if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
+  executionModelSelection(request);
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
   if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');

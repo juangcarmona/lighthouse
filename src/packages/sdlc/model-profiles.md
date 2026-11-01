@@ -19,7 +19,7 @@ Create `.lighthouse/models.json` in the consuming repository after verifying ide
 }
 ```
 
-The only profile names are `plan`, `build` and `fast`. Models must be OpenAI provider-qualified identifiers without an embedded variant. Effort is independent: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, but only values explicitly permitted for that model by the operator can run. The resolver rejects unknown configuration keys, providers, profile names, effort values and unsupported tier or transport fields. It never chooses an alternative on failure.
+Schema version 1 supports the profile names `plan`, `build` and `fast`. Schema version 2 also supports other lowercase names and direct `{ "model": "openai/model", "reasoningEffort": "high" }` assignments for workers and defaults. Models must be OpenAI provider-qualified identifiers without an embedded variant. Effort is independent: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, but only values explicitly permitted for that model by the operator can run. The resolver rejects unknown configuration keys, providers, profile names, effort values and unsupported tier or transport fields. It never chooses an alternative on failure.
 
 ## Operator opt-in and precedence
 
@@ -99,3 +99,7 @@ For every task/candidate record revision, exact prompt or fixture, model, effort
 Record the account route as operator-confirmed subscription, API or unknown; do not inspect credentials or switch routes. For API evaluations record uncached input, cached input, applicable cache writes, output/reasoning as actually billed, context regime and processing tier. Avoid counting reasoning twice when it is included in billed output. Record dated rate sources and compute API-equivalent estimates separately from actual charges. For subscriptions report only exposed usage; unknown is neither free nor unlimited. Flex and Batch are different transports and neither is implemented here.
 
 Choose the least costly setting that meets the declared bar only when comparable accepted-task and account evidence supports that decision. Otherwise report selection as unresolved. This delivery supplies deterministic configuration and scheduling tests; it does not claim live candidate results or preset acceptance.
+
+## Individual executions
+
+With operator schema version 2 and `allowExecutionSelection: true`, an owner can set the router's optional `model_selection` input to JSON such as `{"profile":"plan"}` or `{"model":"openai/verified-planning-model","reasoningEffort":"high"}`. The choice applies only to that direct manual stage dispatch. Automated continuations, recovery and Product Change workers do not inherit it. Operator capabilities still constrain the selection; an unavailable model or effort fails without fallback. Leave the input empty to use normal worker and default precedence.
