@@ -23,6 +23,10 @@
 
 The native host now supplies an authenticated artifact-backed journal, verifies the shared parent lease and rechecks authority before writes. It creates the epic branch at the authenticated source revision without forcing an existing ref and reconciles a lost response only at that exact revision. Its workflow is deliberately not installed until child delivery and aggregate publication are connected. Task 3.1 remains unchecked until native integration and interruption recovery are demonstrated on GitHub; passing fixtures do not establish live orchestration.
 
+A controlled GitHub test with simulated refinement created [two native children](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/issues/52), their dependency and the epic branch in [the first run](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330128462). [A second run](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330217623) authenticated the retained journal and preserved exactly those resources. This demonstrates native host reconciliation only, not authenticated refinement or end-to-end delivery.
+
+Two controlled runs tested the proposed lease expressions: [the first](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356522) and [the second](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356528) ran their agent jobs concurrently while preparation and publication jobs were serialized. These synthetic runs do not establish child delivery.
+
 ## 4. Candidate verification
 
 - [x] 4.1 Run required install, repository checks, strict OpenSpec validation and citation verification; retain completed receipts, reports and retrospective, accurately recording incomplete work.

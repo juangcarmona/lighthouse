@@ -16,6 +16,8 @@ export function epicMarker(correlation) {
   return `${prefix}${JSON.stringify(checked).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e')} -->`;
 }
 
+export const epicJournalKey = correlation => JSON.stringify([correlation.repository, correlation.parent, correlation.planDigest, correlation.kind, correlation.slice]);
+
 export function readEpicMarker(body) {
   if (typeof body !== 'string' || body.split(prefix).length !== 2) return null;
   const match = body.match(/<!-- lighthouse-epic:([^\n]*?) -->/);
@@ -45,7 +47,7 @@ export async function reconcileEpicChildren(plan, context, host) {
     const outcomes = [];
     for (const id of plan.order) {
       const correlation = expected.get(id), slice = plan.slices.find(item => item.id === id);
-      const key = `${repository}:${parent}:${digest}:${id}`;
+      const key = epicJournalKey(correlation);
       try {
         const unmet = slice.dependencies.filter(dependency => outcomes.find(item => item.id === dependency)?.state !== 'linked');
         if (unmet.length) {

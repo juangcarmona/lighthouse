@@ -25,7 +25,7 @@ async function fixture(t) {
   let branch;
   let router = 'jobs:\n  dispatch:\n    concurrency:\n      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}\n      cancel-in-progress: false\n      queue: max\n';
   const workflow = 'name: epic\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n';
-  let worker = 'name: worker\nconcurrency:\n  cancel-in-progress: false\n  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}\n  queue: max\n';
+  let worker = "name: worker\nconcurrency:\n  cancel-in-progress: false\n  group: ${{ inputs.epic-parent && format('lighthouse-epic-child-{0}', inputs.issue) || format('lighthouse-issue-{0}', inputs.issue) }}\n  queue: max\njobs:\n  prepare:\n    concurrency:\n      cancel-in-progress: false\n      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-prepare-{0}', github.run_id) }}\n      queue: max\n  publish:\n    concurrency:\n      cancel-in-progress: false\n      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-publish-{0}', github.run_id) }}\n      queue: max\n";
   const api = async (path, method = 'GET', body) => {
     calls.push({ path, method, body });
     if (path === '') return { default_branch: 'main' };
@@ -124,6 +124,14 @@ test('native host refuses a router without the shared issue lease', async t => {
 test('native host refuses older workers without the shared parent lease', async t => {
   const f = await fixture(t);
   f.setWorker('name: old worker\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n');
-  await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /worker does not hold the shared parent lease/);
+  await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /worker does not hold the child lease/);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});
+
+test('native host rejects a worker whose publication lacks the parent lease', async t => {
+  const f = await fixture(t);
+  const worker = await f.api(`contents/.github/workflows/lighthouse-sdlc-refine.lock.yml?ref=${sha}`);
+  f.setWorker(Buffer.from(worker.content, 'base64').toString().replace("format('lighthouse-publish-{0}', github.run_id)", "format('unrelated-{0}', github.run_id)"));
+  await assert.rejects(runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load }), /publish does not hold the shared parent lease/);
   assert.equal(f.calls.some(call => call.method !== 'GET'), false);
 });

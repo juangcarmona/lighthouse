@@ -148,7 +148,9 @@ test('dispatch and reconciliation share the worker lease while reporting remains
   const worker = await readFile(new URL('lighthouse-sdlc-refine.lock.yml', workflowRoot), 'utf8');
   assert.match(router, /group: lighthouse-issue-\$\{\{ needs\.route\.outputs\.epic_parent \|\| needs\.route\.outputs\.issue \}\}/);
   assert.match(maintenance, /group: lighthouse-issue-\$\{\{ matrix\.issue \}\}/);
-  assert.match(worker, /group: lighthouse-issue-\$\{\{ inputs\.epic-parent \|\| inputs\.issue \}\}/);
+  assert.match(worker, /lighthouse-epic-child-\{0\}.*lighthouse-issue-\{0\}/);
+  assert.match(worker, /lighthouse-issue-\{0\}.*lighthouse-prepare-\{0\}/);
+  assert.match(worker, /lighthouse-issue-\{0\}.*lighthouse-publish-\{0\}/);
   assert.match(maintenance, /needs: \[scan, observe\]/);
   assert.doesNotMatch(maintenance.slice(maintenance.indexOf('  observe:'), maintenance.indexOf('  reconcile:')), /concurrency:/);
 });

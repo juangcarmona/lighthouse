@@ -84,7 +84,15 @@ export async function checkEpicLeaseConfiguration(api, revision) {
   if (!workflow.includes('\nconcurrency:\n  group: lighthouse-issue-${{ inputs.issue }}\n  cancel-in-progress: false\n  queue: max\n')) throw Error('Epic workflow does not hold the shared issue lease');
   for (const stage of ['triage', 'refine', 'implement']) {
     const worker = await file(`.github/workflows/lighthouse-sdlc-${stage}.lock.yml`);
-    if (!worker.includes('\nconcurrency:\n  cancel-in-progress: false\n  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}\n  queue: max\n')) throw Error(`Epic ${stage} worker does not hold the shared parent lease`);
+    if (!worker.includes("\nconcurrency:\n  cancel-in-progress: false\n  group: ${{ inputs.epic-parent && format('lighthouse-epic-child-{0}', inputs.issue) || format('lighthouse-issue-{0}', inputs.issue) }}\n  queue: max\n")) throw Error(`Epic ${stage} worker does not hold the child lease`);
+    for (const job of ['prepare', 'publish']) {
+      const lines = worker.split('\n'), starts = lines.flatMap((line, index) => line === `  ${job}:` ? [index] : []);
+      if (starts.length !== 1) throw Error(`Epic ${stage} ${job} job is not unique`);
+      let end = starts[0] + 1;
+      while (end < lines.length && !/^  [A-Za-z0-9_-]+:/.test(lines[end])) end++;
+      const block = lines.slice(starts[0], end).join('\n');
+      if (!block.includes(`    concurrency:\n      cancel-in-progress: false\n      group: \${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-${job}-{0}', github.run_id) }}\n      queue: max`)) throw Error(`Epic ${stage} ${job} does not hold the shared parent lease`);
+    }
   }
 }
 

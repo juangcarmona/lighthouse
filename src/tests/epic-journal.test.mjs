@@ -4,11 +4,11 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createEpicJournal, readEpicChildReceipt } from '../packages/sdlc/src/epic-journal.mjs';
-import { epicCorrelation } from '../packages/sdlc/src/epic-github.mjs';
+import { epicCorrelation, epicJournalKey } from '../packages/sdlc/src/epic-github.mjs';
 
 const repository = 'owner/repo', owner = 'owner', parent = 146, revision = 'a'.repeat(40), planDigest = 'b'.repeat(64);
 const correlation = epicCorrelation({ repository, parent, slice: 'a', planDigest, base: 'lighthouse/epic-146', dependencies: [] });
-const key = `${repository}:${parent}:${planDigest}:a`;
+const key = epicJournalKey(correlation);
 const run = id => ({ id, run_attempt: 1, status: 'in_progress', path: '.github/workflows/lighthouse-sdlc-epic.yml', event: 'workflow_dispatch', actor: { login: owner }, triggering_actor: { login: owner }, head_sha: revision, head_branch: 'main', repository: { full_name: repository } });
 
 async function fixture(t) {
@@ -64,6 +64,21 @@ test('journal binds each transition to a retained authenticated workflow artifac
   assert.equal((await (await f.open(102)).readReceipt(key)).state, 'linked');
   f.artifacts.get('101').entries[key].receipt.resource.id = 456;
   await assert.rejects((await f.open(103)).readReceipt(key), /artifact is missing or differs/);
+});
+
+test('a child and its pull request keep distinct authenticated journal entries', async t => {
+  const f = await fixture(t), journal = await f.open(100);
+  const prCorrelation = epicCorrelation({ ...correlation, kind: 'pull-request' });
+  const prKey = epicJournalKey(prCorrelation);
+  assert.notEqual(prKey, epicJournalKey(epicCorrelation({ ...correlation, slice: 'a:pull-request' })));
+  await journal.readReceipt(key);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
+  await journal.readReceipt(prKey);
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'intent', correlation: prCorrelation });
+  await f.finish(100);
+  const next = await f.open(101);
+  assert.deepEqual((await next.readReceipt(key)).correlation, correlation);
+  assert.deepEqual((await next.readReceipt(prKey)).correlation, prCorrelation);
 });
 
 test('uncertain or forged journal writes never authorize another transition', async t => {

@@ -4,7 +4,7 @@ name: implement
 description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
 run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
-  group: lighthouse-issue-${{ inputs.epic-parent || inputs.issue }}
+  group: ${{ inputs.epic-parent && format('lighthouse-epic-child-{0}', inputs.issue) || format('lighthouse-issue-{0}', inputs.issue) }}
   cancel-in-progress: false
   queue: max
   job-discriminator: ${{ github.run_id }}
@@ -112,6 +112,10 @@ post-steps:
       retention-days: 14
 jobs:
   prepare:
+    concurrency:
+      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-prepare-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
     outputs:
       eligible: ${{ steps.prepare.outputs.eligible }}
       source_revision: ${{ steps.prepare.outputs.source_revision }}
@@ -152,6 +156,10 @@ jobs:
           LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
   publish:
+    concurrency:
+      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-publish-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
     name: Validate, publish and release
     needs: [prepare, pre_activation, activation, agent]
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'

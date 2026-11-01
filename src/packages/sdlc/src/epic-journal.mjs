@@ -2,12 +2,12 @@ import { writeFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { issueComments } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { epicCorrelation } from './epic-github.mjs';
+import { epicCorrelation, epicJournalKey } from './epic-github.mjs';
 
 const marker = '<!-- lighthouse-epic-journal:';
 const positive = value => Number.isSafeInteger(Number(value)) && /^[1-9][0-9]*$/.test(String(value));
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
-const keyFor = correlation => `${correlation.repository}:${correlation.parent}:${correlation.planDigest}:${correlation.slice}`;
+const keyFor = epicJournalKey;
 const artifactName = (parent, attempt) => `lighthouse-epic-journal-${parent}-${attempt}`;
 
 function checkedReceipt(key, receipt, repository, parent) {
