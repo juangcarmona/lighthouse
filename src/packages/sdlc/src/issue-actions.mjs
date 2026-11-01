@@ -18,6 +18,10 @@ import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultH
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
+export function restoreProductChangePolicy(env, request) {
+  env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED = String(request.productChangeEnabled === true);
+}
+
 export async function publishRoutingHandoff(api, number, identity, body) {
   const marker = `<!-- lighthouse-routing:${digest(identity)} -->`;
   const prior = await issueComments(api, number);
@@ -179,6 +183,7 @@ async function main(command) {
     env.GITHUB_ACTOR = owner; env.GITHUB_TRIGGERING_ACTOR = owner;
     env.LIGHTHOUSE_IMPLEMENT_HANDOFF = String(dispatch.request.handoff);
     env.LIGHTHOUSE_AUTO_IMPLEMENT = String(dispatch.request.autoImplement === true);
+    restoreProductChangePolicy(env, dispatch.request);
     if (dispatch.request.handoff) {
       const handoffDir = join(env.RUNNER_TEMP, 'refinement-handoff');
       await mkdir(handoffDir, { recursive: true });

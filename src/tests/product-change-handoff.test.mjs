@@ -3,7 +3,17 @@ import assert from 'node:assert/strict';
 import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles, observeUpdatedProductPull } from '../packages/sdlc/src/product-change-actions.mjs';
 import { productModelDigest } from '../packages/sdlc/src/product-change.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
-import { productApplyRequest } from '../packages/sdlc/src/issue-actions.mjs';
+import { productApplyRequest, restoreProductChangePolicy } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('resumed worker restores only the authenticated dispatch product policy', () => {
+  const env = { LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: 'true' };
+  restoreProductChangePolicy(env, { productChangeEnabled: false });
+  assert.equal(env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED, 'false');
+  restoreProductChangePolicy(env, { productChangeEnabled: true });
+  assert.equal(env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED, 'true');
+  restoreProductChangePolicy(env, {});
+  assert.equal(env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED, 'false');
+});
 
 test('product apply waits for GitHub to expose the new PR head before recording the checkpoint', async () => {
   let calls = 0;
