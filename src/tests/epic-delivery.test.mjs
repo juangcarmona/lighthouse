@@ -84,7 +84,7 @@ test('a running child cannot be dispatched again during intake, refinement or PR
     { triage: 'pending' },
     { refinement: 'pending' },
     { questions: ['A previous question?'] },
-    { pr: { head, base: 'lighthouse/epic-146' }, evidence: { head, baseSha: base, checks: 'passed' }, ownerDecision: { head, baseSha: base, approved: true } },
+    { pr: { head, base: 'lighthouse/epic-146', state: 'open', merged: false }, evidence: { head, baseSha: base, checks: 'passed' }, ownerDecision: { head, baseSha: base, approved: true } },
   ]) {
     const obs = observation(); obs.children[0] = { ...child('a'), ...patch, state: 'running' };
     assert.equal(states(obs)[0], 'running');
@@ -126,7 +126,7 @@ test('closed, cancelled, uncertain or unverifiable children cannot satisfy prere
 
 test('head, base, checks and owner decision must all be current', () => {
   const obs = observation();
-  obs.children[0].pr = { head, base: obs.epicBranch };
+  obs.children[0].pr = { head, base: obs.epicBranch, state: 'open', merged: false };
   obs.children[0].evidence = { head, baseSha: base, checks: 'passed' };
   assert.equal(states(obs)[0], 'waiting-owner');
   obs.children[0].ownerDecision = { head, baseSha: base, approved: true };
@@ -139,6 +139,17 @@ test('head, base, checks and owner decision must all be current', () => {
   assert.equal(states(obs)[0], 'needs-revalidation');
   obs.children[0].pr.base = 'main';
   assert.equal(states(obs)[0], 'wrong-base');
+});
+
+test('closed, already merged or unobserved PR state cannot grant merge eligibility', () => {
+  const obs = observation();
+  obs.children[0].pr = { head, base: obs.epicBranch, state: 'open', merged: false };
+  obs.children[0].evidence = { head, baseSha: base, checks: 'passed' };
+  obs.children[0].ownerDecision = { head, baseSha: base, approved: true };
+  for (const patch of [{ state: 'closed' }, { merged: true }, { state: undefined }, { merged: undefined }]) {
+    obs.children[0].pr = { head, base: obs.epicBranch, state: 'open', merged: false, ...patch };
+    assert.equal(states(obs)[0], 'uncertain');
+  }
 });
 
 test('authentication, plan binding and duplicate observations fail closed', () => {

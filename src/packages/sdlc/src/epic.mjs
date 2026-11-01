@@ -63,6 +63,7 @@ export function assessEpic(plan, observation) {
     const waiting = slice.dependencies.filter(dependency => !accepted(byId.get(dependency)));
     if (waiting.length) return { ...result, state: 'waiting-dependencies', waiting };
     if (child.pr) {
+      if (child.pr.state !== 'open' || child.pr.merged !== false) return { ...result, state: 'uncertain', reason: 'child PR is not confirmed open and unmerged' };
       if (child.pr.base !== observation.epicBranch) return { ...result, state: 'wrong-base' };
       if (!sha(child.pr.head) || child.evidence?.head !== child.pr.head || child.evidence?.baseSha !== observation.baseSha || child.evidence?.checks !== 'passed') return { ...result, state: 'needs-revalidation' };
       if (child.ownerDecision?.head !== child.pr.head || child.ownerDecision?.baseSha !== observation.baseSha || child.ownerDecision?.approved !== true) return { ...result, state: 'waiting-owner' };
