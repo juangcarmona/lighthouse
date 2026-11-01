@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "runId": "099b1fcf3969cac903b941d729c865ac0d1652b1544cbde8d88372321e1092d2",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "accepted-delivery-scope",
+      "status": "passed",
+      "source": "/input/context.json completion.files; /workspace/src/tests/fixtures/unattended/README.md:3; openspec/changes/issue-196-proposal/{proposal,design,tasks}.md",
+      "reason": "The requested phrase is present. The host-supplied changed-file inventory contains only the fixture README and four planning artifacts. The retained independent candidate assessment confirms the exact word replacement and authorized planning scope; production code, tests, policy and workflows were not changed by this delivery. No new source defect was established."
+    },
+    {
+      "id": "integration:41290697468:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/87d536faf0f218616bd7df8fb0d431352051d78e/docs/process/20261101-196-test-exercise-native-ff-delivery-on-the-controlled-fixture/runs/41290697468/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained integration evidence binds issue 196, PR 238 and accepted head 85cd5b37af4e0645d41b19026d83f77f88711232 to merge 064832a9c919fe72dd8f1407e629d2565a5254cd under owner-authorized bounded FF delegation. It retains an accepting independent candidate assessment, successful installation, repository verification, three fixture regression tests and strict OpenSpec validation. These are historical receipts, not checks executed by this review."
+    },
+    {
+      "id": "github-check:124804542067",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41291784260/job/124804542067",
+      "reason": "Authenticated repository check from app 15368 succeeded at accepted head 85cd5b37af4e0645d41b19026d83f77f88711232."
+    },
+    {
+      "id": "github-check:124805014844",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41292016004/job/124805014844",
+      "reason": "Authenticated repository check from app 15368 succeeded at merged and checked revision 064832a9c919fe72dd8f1407e629d2565a5254cd. The host also reports the adopted post-merge ci.yml workflow passed in run 41292016004 at this exact revision."
+    },
+    {
+      "id": "independent-planning-review-retention",
+      "status": "unavailable",
+      "source": "/input/context.json priorIntegration.receipt.authorization.unattended.review; /workspace/src/packages/sdlc/unattended.md:24; /workspace/openspec/changes/issue-196-proposal/tasks.md:7",
+      "reason": "The supplied retained review is the post-verification candidate assessment. No separately bound readiness/planning verdict or evidence that it preceded implementation is supplied. Checked task boxes and the successful originating workflow do not replace this explicit verification requirement. This is missing verification, not evidence that planning review failed or was omitted during execution."
+    },
+    {
+      "id": "affected-guidance-and-finalization",
+      "status": "passed",
+      "source": "/workspace/AGENTS.md:5-19; /workspace/src/packages/sdlc/completion.md:30-40; /workspace/.lighthouse/github.json; /workspace/.lighthouse/unattended.json; /input/context.json completion.finalization",
+      "reason": "Repository policy and host finalization agree: a blocked review keeps the issue open and adds waiting-review, preserves PR labels and releases the host reservation during cleanup. The observed pr-draft label is not a requirement for prior cleanup before assessment. Affected guidance findings are classified in the review record; no guidance or permissions were changed."
+    }
+  ],
+  "missingEvidence": [
+    "A host-authenticated retained independent readiness/planning-review acceptance for issue #196's actual provider plan, bound to the authorized source/plan and separate producer/reviewer executions and resolved models, with evidence it preceded implementation. The supplied candidate verdict does not establish this distinct requirement."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Owner juangcarmona and the trusted host should supply the existing bound pre-implementation planning-review receipt from native run 41290697468, then reassess review for issue #196. Do not rerun implementation, repeat integration or close the issue to compensate for missing historical evidence.",
+  "output": {
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 196,
+      "pr": 238,
+      "head": "85cd5b37af4e0645d41b19026d83f77f88711232",
+      "base": "064832a9c919fe72dd8f1407e629d2565a5254cd",
+      "branch": "main",
+      "intent": "6fe6b5d736e8bdd5ca6597144a6a6ceb47540ed8a02b73294b516763942414a8",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "5ebf910dc16ec81a163db29c76260fdc968d6c03e3670c70b9fcf0d91ca780cc",
+      "files": "84f52b775e86d6b45060b427c27194f7bb785a6b40cb3d21723945251a548e90"
+    },
+    "review": {
+      "summary": "The documentation correction and authorized integration are established, and post-merge CI passed. Completion remains blocked only on missing retained independent pre-implementation planning-review evidence. No failed required check or new source defect was established.",
+      "owner": "juangcarmona",
+      "integrationObserved": true,
+      "acceptedHead": "85cd5b37af4e0645d41b19026d83f77f88711232",
+      "integratedRevision": "064832a9c919fe72dd8f1407e629d2565a5254cd",
+      "originalBaseFromHistoricalReport": "37da052a84691adc2a31d47373b587a0d0e3a949",
+      "currentDispatchMergeAuthorization": false,
+      "authority": "The prior host-verified receipt supplies historical merge:true authorization under the owner's bounded delegation and records the actual merge. This review grants no integration, release or policy authority.",
+      "retainedEvidence": {
+        "commit": "87d536faf0f218616bd7df8fb0d431352051d78e",
+        "path": "docs/process/20261101-196-test-exercise-native-ff-delivery-on-the-controlled-fixture/runs/41290697468/attempt-0001/post-integration/evidence-record.json",
+        "recordSha256": "b55948320d0a5766e5505dada261659de858a491123cdee071e572086b047ab1",
+        "workflowRunId": "41290697468",
+        "workflowConclusion": "success",
+        "candidateReviewBinding": "b13c88c79ce0f1bfd95beca65d836c0fc17e26a9a6ff6d1d42a7d722c9c82fad",
+        "candidateReviewFindings": [],
+        "provenance": "Host-supplied authenticated observations and retained evidence; no independent GitHub or git identity verification was performed."
+      },
+      "acceptance": [
+        {
+          "requirement": "README says controlled acceptance fixture",
+          "status": "passed",
+          "evidence": "README.md:3 and retained candidate-scope-and-diff assessment"
+        },
+        {
+          "requirement": "Preserve fixture and production behavior",
+          "status": "passed",
+          "evidence": "Host changed paths and retained exact before/after scope assessment; eligibility and regression files are unchanged in the delivery inventory. Historical fixture regression receipt reports three passes."
+        },
+        {
+          "requirement": "Retain provider planning and independent review",
+          "status": "partially-verified",
+          "evidence": "Four provider artifacts and accepting independent candidate review are retained. The separate pre-implementation readiness/planning-review receipt required by unattended.md:24 and tasks.md:7 is missing from the supplied evidence."
+        },
+        {
+          "requirement": "Retain required repository checks and verify main after integration",
+          "status": "passed",
+          "evidence": "Authenticated repository checks at accepted head and merged revision, plus host-reported post-merge ci.yml success at the merged revision."
+        }
+      ],
+      "findings": [
+        {
+          "id": "F1",
+          "kind": "source-documentation-correction",
+          "classification": "fixed",
+          "owner": "juangcarmona",
+          "finding": "The requested acceptence typo is corrected to acceptance without a behavioral change.",
+          "evidence": "src/tests/fixtures/unattended/README.md:3; retained candidate-scope-and-diff assessment",
+          "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/238",
+          "resolution": "Delivered and integrated; no further source correction identified."
+        },
+        {
+          "id": "F2",
+          "kind": "process-evidence-gap",
+          "classification": "accepted",
+          "owner": "juangcarmona with the trusted delivery host maintainer",
+          "finding": "The retained bundle presented to this review lacks a distinct bound pre-implementation readiness/planning-review verdict.",
+          "evidence": "priorIntegration retains the candidate verdict only; unattended.md:24 and issue-196-proposal/tasks.md:7 require earlier independent planning review.",
+          "followUpReference": "https://github.com/juangcarmona/lighthouse/issues/196",
+          "resolution": "Unresolved current-stage evidence blocker. Accepted means this review recognizes the finding, not that the owner waived it or that the historical review failed. Supply the existing receipt; a retrospective review cannot prove historical ordering."
+        },
+        {
+          "id": "F3",
+          "kind": "historical-guidance-inconsistency",
+          "classification": "accepted",
+          "owner": "juangcarmona",
+          "finding": "The fixture README retains initial-strict-comparison/hotfix wording although eligibility.mjs already uses >= 2 and regression tests cover the boundary.",
+          "evidence": "src/tests/fixtures/unattended/README.md:5; eligibility.mjs:3; regression.test.mjs:5-7; issue-196-proposal/design.md:13,22",
+          "followUpReference": "https://github.com/juangcarmona/lighthouse/issues/196",
+          "resolution": "The owner requested preservation of all other fixture content, and the plan explicitly excludes reconciling this historical wording. It is not a new runtime defect or an unresolved acceptance decision; no cleanup is authorized here."
+        },
+        {
+          "id": "F4",
+          "kind": "process-documentation-drift",
+          "classification": "deferred",
+          "owner": "juangcarmona, repository process-documentation owner",
+          "finding": "The pilot README still describes #196's positive FF trace as pending without pointing to the now-retained integrated trace. Fully accepted post-integration review remains unestablished, so it must not be rewritten as unqualified success.",
+          "evidence": "docs/process/20261028-185-186-unattended-pilot/README.md:24; integration:41290697468:1; current review blocker F2",
+          "followUpReference": "https://github.com/juangcarmona/lighthouse/issues/196",
+          "resolution": "Record a separately reviewed documentation update distinguishing completed integration, passed post-merge checks and blocked completion. This stale summary is not a source-code defect or an additional delivery gate. No issue was opened."
+        }
+      ],
+      "guidanceInspection": {
+        "scope": "Root contributor guidance, fixture README/source/tests, all four changed planning artifacts, OpenSpec configuration, SDLC completion/unattended guidance, adopted GitHub/unattended profiles and the linked pilot summary.",
+        "planningAuthority": "The work item explicitly defines a no-new-product-intent correction. Planning documents declare pdac-scope:none with reasons and skip_specs:true; the retained reviewer reports strict OpenSpec validation passed. No product or architecture change is inferred.",
+        "hostDifference": "The custom adapter's host-owned completion signal is intentional and not package guidance drift. Only the requested envelope is written.",
+        "versionAndPins": "Read-only workspace SDLC package version is 0.16.3; router source pin is 0877156e956b2a221d1bb55db91a73b7164d3228. These inspected files are not independent proof of deployed runtime settings; authenticated delivery observations come from the host."
+      }
+    },
+    "nonBlockingObservations": {
+      "pendingMaintenance": {
+        "status": "pending",
+        "evidenceIds": [
+          "github-check:124805545368",
+          "github-check:124805545173",
+          "github-check:124805541024",
+          "github-check:124805540645",
+          "github-check:124805524840",
+          "github-check:124805524675",
+          "github-check:124805524656",
+          "github-check:124805524427"
+        ],
+        "reason": "Authenticated route/pr-state observations are pending, not failed. Neither completion.policy.checks nor this work item's acceptance makes them required review gates. No recurrence or router defect is inferred from several runs of this issue."
+      },
+      "skippedOptionalJobs": "Skipped reconciliation, adopter-install and dispatch jobs are not evidence that those activities executed successfully and are not promoted to acceptance requirements.",
+      "providerSettings": "Historical provider-served model identity and reasoning settings remain unverified as explicitly recorded; requested/resolved settings are distinct from provider attestation. Unattended guidance permits this known limitation. No cost, elapsed-time savings or attention measurements are established.",
+      "manualAndVisualEvidence": "No manual or visual acceptance requirement applies to this documentation-only correction; none is claimed. No checks were executed inside this review."
+    },
+    "finalization": {
+      "executor": "trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-draft"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [
+          "waiting-review"
+        ],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "onFuturePassedAssessment": "Only after resolving F2 and fresh host validation: remove waiting-review, ready, pr-draft, pr-ready, integrate and review from the issue, close it, and preserve PR labels, as supplied by completion.finalization.onPassed.",
+      "reservation": "Host cleanup releases agent-working for every outcome; no reservation mutation is performed here.",
+      "publication": "This envelope is a proposed review record. Its publication and the terminal completion signal are subsequent trusted-host effects, not actions established by writing this file."
+    },
+    "laterStageChecks": [
+      {
+        "stage": "release/deployment",
+        "status": "not-performed",
+        "reason": "Separate authorization and evidence are required; merge and post-merge CI do not establish registry publication, deployment, smoke checks or rollback execution."
+      }
+    ],
+    "retrospective": "## What went well\n- The exact requested phrase is present, and the retained candidate assessment confirms the one-word correction plus four authorized planning artifacts. No new runtime defect was established (F1; README:3; integration:41290697468:1). Owner: juangcarmona.\n- Independent candidate review, fixture regression evidence and enforced repository checks were retained. The authenticated post-merge repository check passed at the actual integrated revision, rather than merely at the candidate head (github-check:124805014844).\n- The host-verified historical receipt records both bounded owner merge authorization and the actual merge. Current review authorization remains merge:false; release and deployment are separate.\n\n## What went wrong\n- This review did not receive a distinct bound pre-implementation planning-review verdict, despite unattended.md:24 and tasks.md:7 requiring it (F2). This is an evidence-continuity gap, not a failed check or proof the review was skipped. Owner: trusted delivery host maintainer with juangcarmona.\n- The pilot summary still says the #196 positive trace is pending without linking the integrated trace (F4; docs/process/20261028-185-186-unattended-pilot/README.md:24). Completed integration and accepted completion must remain distinct.\n- No new source defect was established. Historical boundary wording remains intentionally unchanged under the accepted scope (F3; design.md:13,22). Provider-served settings, costs and comparative effort remain unknown. Multiple runs do not establish recurrence across work items.\n\n## Start doing\n- Supply existing bound planning-review evidence alongside candidate and integration receipts at completion handoff; first resolve F2 on #196. Owner: trusted delivery host maintainer. This records a proposed improvement, not an approved policy change.\n- When updating the pilot record through a separately reviewed change, link the integrated trace and explicitly preserve the blocked completion status. Owner: repository process-documentation owner.\n\n## Stop doing\n- Do not substitute checked task boxes or a successful workflow conclusion for evidence of the required planning-review verdict and ordering.\n- Do not describe an integrated trace as unqualified end-to-end acceptance, infer cross-ticket recurrence from retries, or repair preserved fixture prose during this bounded review.\n\n## Improvement candidates\n1. **Bound planning-review continuity (F2).** Observed failure: the completion input retains candidate acceptance but lacks the required earlier verdict. Evidence: priorIntegration.receipt.authorization.unattended.review, unattended.md:24 and tasks.md:7. Owner: trusted delivery host maintainer. Smallest useful guard: retain and hand through the existing plan digest, planning-review binding/verdict, producer/reviewer execution and resolved-model identities, and evidence of ordering; do not rerun implementation. Reproduce before correction by presenting this #196 input to review and observing the missing-evidence blocker. A separately reviewed regression should remove, alter or reorder that receipt and remain blocked, then accept a complete matching retained receipt while leaving optional maintenance jobs nonblocking. No guard was implemented or regression-tested here.\n2. **Pilot-summary continuity (F4).** Observed failure: the linked native-acceptance summary still lacks the retained #196 integration trace. Evidence: pilot README:24 versus integration:41290697468:1 and passed post-merge CI. Owner: juangcarmona, process-documentation owner. Smallest useful guard: a narrow documentation-review checklist requiring the trace link and separate integration/completion outcomes when the pilot summary is updated. Reproduce before correction by comparing that line with the pinned integration report; after a separately reviewed update, verify the link and ensure blocked review is not relabeled as complete. No general cross-repository guard or broader permission change is justified by this one work item.\n\nFollow-up references: existing issue #196 for F2/F4, delivered PR #238 for F1, and the accepted design for F3. This stage creates no issue, changes no policy or provider-owned guidance, and starts no next stage."
+  }
+}
