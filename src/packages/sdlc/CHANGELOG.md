@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.3
+
+### Patch Changes
+
+- a20f6dd: # Epic runner capacity
+
+  Keep counting active or reserved work when its child issue is closed.
+
 ## 0.18.2
 
 ### Patch Changes
