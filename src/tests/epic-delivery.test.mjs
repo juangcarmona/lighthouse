@@ -79,6 +79,19 @@ test('capacity includes running children and cancels no existing work', () => {
   assert.equal(assessEpic(plan(), obs).status, 'invalid');
 });
 
+test('a running child cannot be dispatched again during intake, refinement or PR publication', () => {
+  for (const patch of [
+    { triage: 'pending' },
+    { refinement: 'pending' },
+    { questions: ['A previous question?'] },
+    { pr: { head, base: 'lighthouse/epic-146' }, evidence: { head, baseSha: base, checks: 'passed' }, ownerDecision: { head, baseSha: base, approved: true } },
+  ]) {
+    const obs = observation(); obs.children[0] = { ...child('a'), ...patch, state: 'running' };
+    assert.equal(states(obs)[0], 'running');
+    assert.equal(states(obs)[2], 'waiting-dependencies');
+  }
+});
+
 test('children retain separate intake, questions and authorization', () => {
   const obs = observation(); obs.children[0].triage = 'pending';
   assert.equal(states(obs)[0], 'needs-triage');

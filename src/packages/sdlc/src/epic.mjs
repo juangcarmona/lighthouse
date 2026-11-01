@@ -51,6 +51,7 @@ export function assessEpic(plan, observation) {
     if (!child) return { ...result, state: 'uncreated' };
     if (child.authenticated !== true) return { ...result, state: 'uncertain', reason: 'child identity is not authenticated' };
     if (['cancelled', 'uncertain', 'blocked'].includes(child.state)) return { ...result, state: child.state };
+    if (child.state === 'running') return { ...result, state: 'running' };
     if (child.questions?.length) return { ...result, state: 'waiting-answer', questions: child.questions };
     if (accepted(child)) return { ...result, state: 'accepted' };
     if (child.state === 'accepted') return { ...result, state: 'uncertain', reason: 'accepted outcome lacks merge and decision evidence' };
@@ -65,7 +66,6 @@ export function assessEpic(plan, observation) {
       return { ...result, state: 'merge-eligible' };
     }
     if (child.authorized?.implement !== true) return { ...result, state: 'waiting-implementation-authorization' };
-    if (child.state === 'running') return { ...result, state: 'running' };
     if (!slots) return { ...result, state: 'waiting-capacity' };
     slots--;
     return { ...result, state: 'implementation-eligible' };
