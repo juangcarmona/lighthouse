@@ -81,6 +81,27 @@ test('completion publication stops when a later authenticated dispatch takes ove
   await assert.rejects(assertCurrentCompletionAttempt(api, repo, 18, dispatch, '201'), /revoked or changed/);
 });
 
+test('a dispatch arriving during failure label publication prevents the stale outcome comment', async () => {
+  const { publishObservedStop } = await import('../packages/sdlc/src/handoff.mjs');
+  const { dispatchReceiptBody, dispatchId } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const repo = 'owner/repo', digest = 'b'.repeat(64), requestId = dispatchId(repo, '100', 'refine');
+  const receipt = { schemaVersion: 1, stage: 'refine', id: requestId, digest, routerRunId: '100', routerAttempt: 1, workerRunId: '200' };
+  const comment = { id: 30, issue_url: 'https://api.github.com/repos/owner/repo/issues/18', user: { login: 'github-actions[bot]', type: 'Bot' }, body: dispatchReceiptBody(repo, receipt) };
+  const comments = [comment]; let published = false;
+  const api = async (path, method = 'GET') => {
+    if (path === 'issues/comments/30') return comment;
+    if (path.startsWith('issues/18/comments?')) return [...comments];
+    if (path === 'issues/18') return { state: 'open', labels: [] };
+    if (path.startsWith('contents/.lighthouse/reconciliation/labels.json?')) return { encoding: 'base64', content: Buffer.from(JSON.stringify({ verified: true, capability: { id: 'labels', provider: 'github', version: 3 } })).toString('base64') };
+    if (path === 'labels/execution-failed') return { name: 'execution-failed' };
+    if (path === 'issues/18/labels' && method === 'POST') { const next = { ...receipt, id: dispatchId(repo, '101', 'refine'), routerRunId: '101' }; comments.push({ ...comment, id: 31, body: dispatchReceiptBody(repo, next) }); return; }
+    if (path === 'issues/18/comments' && method === 'POST') { published = true; return; }
+    throw Error(path);
+  };
+  assert.equal(await publishObservedStop(api, { repository: repo, issue: 18, stage: 'refine', run: '200', attempt: '1', sourceRevision: 'a'.repeat(40), dispatch: { commentId: 30, requestId, digest }, observation: 'failure' }), false);
+  assert.equal(published, false);
+});
+
 test('interrupted failure publication retries the comment and missing label remains explicit', async () => {
   const { publishObservedStop } = await import('../packages/sdlc/src/handoff.mjs');
   const { dispatchReceiptBody, dispatchId } = await import('../packages/sdlc/src/stage-dispatch.mjs');
