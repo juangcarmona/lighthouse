@@ -681,7 +681,7 @@ async function main(command) {
     const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
     const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
-    let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview;
+    let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview, implementationChecksFailed = false;
     if (snapshot.worker === 'product-change') {
       const product = value.result.output?.productChange;
       checkProductEntry(product, snapshot);
@@ -736,6 +736,7 @@ async function main(command) {
       const changes = validateChanges(JSON.parse(await readFile(join(dir, 'changes.json'), 'utf8')), snapshot.implementation.policy);
       const receipt = JSON.parse(await readFile(join(dir, 'checks.json'), 'utf8'));
       const checksPassed = validateCheckReceipt(receipt, snapshot, changes);
+      implementationChecksFailed = !checksPassed;
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
       if (changes.length) {
         const recheck = async () => {
@@ -786,7 +787,7 @@ async function main(command) {
     const isReview = projection.review;
     const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
     const productGap = value.result.status === 'blocked' && snapshot.worker !== 'product-change' ? snapshot.productAlignment && value.result.output?.productGap ? { action: 'Workflow maintainer: compare the new product gap with the recorded alignment and determine the next authorized action.', next: 'Automatic continuation has stopped; no repeated product handoff was requested.' } : productGapNextAction({ gap: value.result.output?.productGap, enabled: snapshot.productChangeEnabled === true, dispatched: !!snapshot.dispatch, paused: publicationIssue.labels.some(label => label.name === 'future') }) : null;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction) : refinementAction?.action ?? 'None.';
+    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : refinementAction?.action ?? 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
     const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
