@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createEpicJournal, readEpicChildReceipt } from '../packages/sdlc/src/epic-journal.mjs';
+import { createEpicJournal, readEpicChildReceipt, readEpicResourceReceipt } from '../packages/sdlc/src/epic-journal.mjs';
 import { epicCorrelation, epicJournalKey } from '../packages/sdlc/src/epic-github.mjs';
 
 const repository = 'owner/repo', owner = 'owner', parent = 146, revision = 'a'.repeat(40), planDigest = 'b'.repeat(64);
@@ -75,10 +75,34 @@ test('a child and its pull request keep distinct authenticated journal entries',
   await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
   await journal.readReceipt(prKey);
   await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'intent', correlation: prCorrelation });
+  const resource = { id: 88, number: 7 }, publication = { run: '100', attempt: 1, head: revision };
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'created', correlation: prCorrelation, resource, publication });
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'linked', correlation: prCorrelation, resource, publication });
   await f.finish(100);
   const next = await f.open(101);
   assert.deepEqual((await next.readReceipt(key)).correlation, correlation);
   assert.deepEqual((await next.readReceipt(prKey)).correlation, prCorrelation);
+  assert.equal((await readEpicResourceReceipt({ api: f.api, repository, owner, correlation: prCorrelation, sourceRevision: revision, defaultBranch: 'main', resource, readArtifact: f.readArtifact })).state, 'linked');
+  await assert.rejects(readEpicChildReceipt({ correlation: prCorrelation }), /Invalid epic child/);
+  const updated = { ...publication, run: '101', head: 'c'.repeat(40) };
+  await next.writeReceipt(prKey, { schemaVersion: 1, state: 'linked', correlation: prCorrelation, resource, publication: updated });
+  assert.equal((await next.readReceipt(prKey)).publication.head, updated.head);
+});
+
+test('merge intent binds the exact reviewed head and base through acceptance', async t => {
+  const f = await fixture(t), journal = await f.open(100);
+  const prCorrelation = epicCorrelation({ ...correlation, kind: 'pull-request' });
+  const key = epicJournalKey(prCorrelation), resource = { id: 88, number: 7 }, publication = { run: '100', attempt: 1, head: 'c'.repeat(40) };
+  const merge = { head: 'c'.repeat(40), base: revision, candidate: 'd'.repeat(40), review: 9 };
+  await journal.readReceipt(key);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation: prCorrelation });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'created', correlation: prCorrelation, resource, publication });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'linked', correlation: prCorrelation, resource, publication });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'merging', correlation: prCorrelation, resource, publication, merge });
+  await assert.rejects(journal.writeReceipt(key, { schemaVersion: 1, state: 'accepted', correlation: prCorrelation, resource, publication, merge: { ...merge, base: 'e'.repeat(40), commit: 'f'.repeat(40) } }), /identity changed/);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'accepted', correlation: prCorrelation, resource, publication, merge: { ...merge, commit: 'f'.repeat(40) } });
+  await f.finish(100);
+  assert.equal((await (await f.open(101)).readReceipt(key)).state, 'accepted');
 });
 
 test('uncertain or forged journal writes never authorize another transition', async t => {

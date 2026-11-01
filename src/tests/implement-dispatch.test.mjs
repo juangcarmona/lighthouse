@@ -49,6 +49,8 @@ test('child dispatch binds the parent lease to the authenticated request', async
   await sendDispatch(f.api, repo, f.request, 30);
   assert.equal(f.calls.find(call => call.path.endsWith('/dispatches')).body.inputs['epic-parent'], '146');
   assert.equal(epicLeaseParent(f.request), 146);
+  assert.equal(epicLeaseParent({ ...f.request, worker: 'apply-review' }), 146);
+  assert.throws(() => epicLeaseParent({ ...f.request, stage: 'propose', worker: 'apply-review' }), /Invalid epic/);
   assert.doesNotThrow(() => checkEpicWorkerLease(f.request, { 'epic-parent': '146' }));
   assert.throws(() => checkEpicWorkerLease(f.request, { 'epic-parent': '147' }), /does not match/);
   assert.throws(() => checkEpicWorkerLease(f.request, {}), /does not match/);

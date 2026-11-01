@@ -1,6 +1,7 @@
 import { digest } from './host-contract.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
+import { isDeepStrictEqual } from 'node:util';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
 export const stages = ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'];
@@ -11,10 +12,12 @@ export const implementPath = stagePath('implement');
 export const statusText = (stage, status) => `${({ requested: 'Requested', running: 'Queued', completed: 'Stage completed', waiting: 'Waiting for your answer', blocked: 'Blocked', failed: 'Execution failed', cancelled: 'Cancelled', unknown: 'Execution status unknown' })[status] ?? 'Execution status unknown'} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
 export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'implement' && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
+export const isBotEpicTriage = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'triage' && positive(event.inputs?.issue) && positive(event.inputs?.epic_parent) && positive(event.inputs?.epic_run);
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const hash = value => /^[a-f0-9]{64}$/.test(value ?? '');
 export const dispatchId = (repository, runId, stage = 'implement') => digest(`${repository}:${runId}:${stage}`);
-export const receiptId = (repository, receipt) => receipt.recovery ? digest(`${repository}:${receipt.recovery.rootId}:retry:${receipt.recovery.attempt}`) : dispatchId(repository, receipt.feedbackKey ?? receipt.eventRunId ?? receipt.routerRunId, receipt.stage ?? 'implement');
+export const epicTriageKey = (repository, parent, child, planDigest) => digest(`${repository}:epic-triage:${parent}:${child}:${planDigest}`);
+export const receiptId = (repository, receipt) => receipt.recovery ? digest(`${repository}:${receipt.recovery.rootId}:retry:${receipt.recovery.attempt}`) : dispatchId(repository, receipt.epicKey ?? receipt.feedbackKey ?? receipt.eventRunId ?? receipt.routerRunId, receipt.stage ?? 'implement');
 export const dispatchArtifact = request => `lighthouse-dispatch-${request.id}`;
 
 export function readDispatchReceipt(comment, repository, issue) {
@@ -23,7 +26,7 @@ export function readDispatchReceipt(comment, repository, issue) {
   if (matches.length !== 1) throw Error('Missing or ambiguous dispatch receipt');
   const receipt = JSON.parse(matches[0][1]);
   if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2)) throw Error('Invalid recovery receipt');
-  if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
+  if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.epicKey !== undefined && !hash(receipt.epicKey)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
 }
 
@@ -70,7 +73,7 @@ export async function recordDispatch(api, repository, request) {
     const run = await api(`actions/runs/${receipt.workerRunId}`);
     if (run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
-  const receipt = { schemaVersion: 1, stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
+  const receipt = { schemaVersion: 1, stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });
   return { send: true, comment, receipt };
 }
@@ -87,7 +90,7 @@ export async function sendDispatch(api, repository, request, commentId) {
 export function epicLeaseParent(request) {
   if (request.epic === undefined) return null;
   const epic = request.epic;
-  if (!epic || !Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === request.issue || !['triage', 'refine', 'implement'].includes(workerFor(request)) || epic.base !== `lighthouse/epic-${epic.parent}` || !hash(epic.planDigest)) throw Error('Invalid epic dispatch lease');
+  if (!epic || !Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === request.issue || !(['triage', 'refine', 'implement'].includes(workerFor(request)) || workerFor(request) === 'apply-review' && request.stage === 'implement') || epic.base !== `lighthouse/epic-${epic.parent}` || !hash(epic.planDigest)) throw Error('Invalid epic dispatch lease');
   return epic.parent;
 }
 
@@ -125,9 +128,11 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const originPath = recovery ? '.github/workflows/lighthouse-worker-maintenance.yml' : routerPath;
   const originEvent = recovery ? request.routerEventName : request.eventName;
   const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && Number(request.event.inputs.issue) === issue && request.predecessor?.runId === request.event.inputs.after_run;
-  if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
+  const epicTriage = !recovery && isBotEpicTriage(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'triage' && !request.handoff && !request.worker && Number(request.event.inputs.issue) === issue && Number(request.event.inputs.epic_parent) === request.epic?.parent;
+  if (epicTriage ? request.epicKey !== epicTriageKey(repository, request.epic.parent, issue, request.epic.planDigest) || receipt.epicKey !== request.epicKey : request.epicKey !== undefined || receipt.epicKey !== undefined) throw Error('Epic triage identity is invalid');
+  if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && !epicTriage && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
   executionModelSelection(request);
-  const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.after_run;
+  const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.epic_run ?? request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
   if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
 }
@@ -144,6 +149,10 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
     const predecessor = await api(`actions/runs/${request.predecessor.runId}`);
     const next = await (await import('./stage-transition.mjs')).refinementAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: predecessor.id, head_sha: predecessor.head_sha } }, readArtifact);
     if (next?.issue !== issue || JSON.stringify(next.predecessor) !== JSON.stringify(request.predecessor)) throw Error('Bot continuation lacks an authenticated refinement');
+  }
+  if (isBotEpicTriage(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
+    const verified = await (await import('./epic-dispatch.mjs')).verifyEpicTriageOrigin(api, { repository, owner, child: issue, parent: Number(request.event.inputs.epic_parent), runId: request.event.inputs.epic_run }, { readArtifact });
+    if (!isDeepStrictEqual(verified.current, request.epic)) throw Error('Epic triage authority changed');
   }
   const dispatch = { request, receipt, commentId: Number(commentId) };
   if (request.recovery) await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, depth);

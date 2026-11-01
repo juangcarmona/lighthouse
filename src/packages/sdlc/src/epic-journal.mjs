@@ -11,10 +11,15 @@ const keyFor = epicJournalKey;
 const artifactName = (parent, attempt) => `lighthouse-epic-journal-${parent}-${attempt}`;
 
 function checkedReceipt(key, receipt, repository, parent) {
-  if (!receipt || receipt.schemaVersion !== 1 || !['intent', 'created', 'linked', 'cancelled'].includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, epicCorrelation(receipt.correlation)) || receipt.correlation.repository !== repository || receipt.correlation.parent !== parent || keyFor(receipt.correlation) !== key) throw Error('Invalid epic journal receipt');
+  if (!receipt || receipt.schemaVersion !== 1 || !['intent', 'created', 'linked', 'cancelled', 'merging', 'accepted'].includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, epicCorrelation(receipt.correlation)) || receipt.correlation.repository !== repository || receipt.correlation.parent !== parent || keyFor(receipt.correlation) !== key) throw Error('Invalid epic journal receipt');
   const resource = receipt.resource;
-  if (receipt.state === 'intent' && resource !== undefined || ['created', 'linked'].includes(receipt.state) && !resource || resource !== undefined && (!positive(resource.id) || !positive(resource.number) || Object.keys(resource).sort().join(',') !== 'id,number')) throw Error('Epic receipt resource is invalid');
-  const expected = resource === undefined ? 'correlation,schemaVersion,state' : 'correlation,resource,schemaVersion,state';
+  if (receipt.state === 'intent' && resource !== undefined || ['created', 'linked', 'merging', 'accepted'].includes(receipt.state) && !resource || resource !== undefined && (!positive(resource.id) || !positive(resource.number) || Object.keys(resource).sort().join(',') !== 'id,number')) throw Error('Epic receipt resource is invalid');
+  const publication = receipt.publication;
+  const needsPublication = receipt.correlation.kind === 'pull-request' && (['created', 'linked', 'merging', 'accepted'].includes(receipt.state) || receipt.state === 'cancelled' && !!resource);
+  if (needsPublication && (!publication || !positive(publication.run) || !Number.isSafeInteger(publication.attempt) || publication.attempt < 1 || !sha(publication.head) || Object.keys(publication).sort().join(',') !== 'attempt,head,run') || !needsPublication && publication !== undefined) throw Error('Epic publication receipt is invalid');
+  const merge = receipt.merge, merging = ['merging', 'accepted'].includes(receipt.state);
+  if (merging && (receipt.correlation.kind !== 'pull-request' || !merge || !sha(merge.head) || merge.head !== publication.head || !sha(merge.base) || !sha(merge.candidate) || !Number.isSafeInteger(merge.review) || merge.review < 1 || receipt.state === 'accepted' && !sha(merge.commit) || Object.keys(merge).sort().join(',') !== (receipt.state === 'accepted' ? 'base,candidate,commit,head,review' : 'base,candidate,head,review')) || !merging && merge !== undefined) throw Error('Epic merge receipt is invalid');
+  const expected = ['correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
   if (Object.keys(receipt).sort().join(',') !== expected) throw Error('Epic receipt has unexpected fields');
   return receipt;
 }
@@ -30,19 +35,24 @@ function parseEntry(comment, repository, parent) {
 }
 
 // The marker identifies a candidate; only the owner-triggered run and its retained artifact authenticate it.
-export async function readEpicChildReceipt({ api, repository, owner, correlation, sourceRevision, defaultBranch, resource, readArtifact = readActionsJson }) {
-  if (!isDeepStrictEqual(correlation, epicCorrelation(correlation)) || correlation.kind !== 'child' || correlation.repository !== repository || !sha(sourceRevision) || !defaultBranch || !positive(resource?.id) || !positive(resource?.number)) throw Error('Invalid epic child admission');
+export async function readEpicResourceReceipt({ api, repository, owner, correlation, sourceRevision, defaultBranch, resource, allowedStates = ['linked'], readArtifact = readActionsJson }) {
+  if (!isDeepStrictEqual(correlation, epicCorrelation(correlation)) || correlation.repository !== repository || !sha(sourceRevision) || !defaultBranch || resource && (!positive(resource.id) || !positive(resource.number)) || !Array.isArray(allowedStates) || !allowedStates.length || allowedStates.some(state => !['linked', 'accepted'].includes(state))) throw Error('Invalid epic resource admission');
   const parent = correlation.parent, key = keyFor(correlation);
   const comments = await issueComments(api, parent);
   const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
-  if (candidates.length !== 1) throw Error('Epic child journal is missing or ambiguous');
+  if (candidates.length !== 1) throw Error('Epic resource journal is missing or ambiguous');
   const { comment, entry } = candidates[0], receipt = entry.receipt;
-  if (entry.revision !== sourceRevision || receipt.state !== 'linked' || !isDeepStrictEqual(receipt.correlation, correlation) || !isDeepStrictEqual(receipt.resource, resource)) throw Error('Epic child receipt does not match the current identity');
+  if (entry.revision !== sourceRevision || !allowedStates.includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, correlation) || resource && !isDeepStrictEqual(receipt.resource, resource)) throw Error('Epic resource receipt does not match the current identity');
   const origin = await api(`actions/runs/${entry.runId}/attempts/${entry.attempt}`);
-  if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== sourceRevision || origin.head_branch !== defaultBranch || origin.repository?.full_name !== repository) throw Error('Epic child journal origin is not trusted');
+  if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== sourceRevision || origin.head_branch !== defaultBranch || origin.repository?.full_name !== repository) throw Error('Epic resource journal origin is not trusted');
   const stored = await readArtifact(api, repository, entry.runId, artifactName(parent, entry.attempt), 'journal.json');
-  if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt })) throw Error('Epic child journal artifact is missing or differs from its comment');
+  if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt })) throw Error('Epic resource journal artifact is missing or differs from its comment');
   return receipt;
+}
+
+export async function readEpicChildReceipt(input) {
+  if (input.correlation?.kind !== 'child' || !input.resource) throw Error('Invalid epic child admission');
+  return readEpicResourceReceipt(input);
 }
 
 export async function createEpicJournal({ api, repository, owner, parent, sourceRevision, defaultBranch, run, path, authorize, readArtifact = readActionsJson }) {
@@ -74,7 +84,12 @@ export async function createEpicJournal({ api, repository, owner, parent, source
     checkedReceipt(key, receipt, repository, parent);
     if (!loaded.has(key)) throw Error('Epic journal must be read before writing');
     const previous = loaded.get(key);
-    if (previous && (!isDeepStrictEqual(previous.receipt.correlation, receipt.correlation) || previous.receipt.resource && !isDeepStrictEqual(previous.receipt.resource, receipt.resource) || !({ intent: ['created', 'cancelled'], created: ['created', 'linked', 'cancelled'], linked: ['linked', 'cancelled'], cancelled: ['cancelled'] })[previous.receipt.state].includes(receipt.state))) throw Error('Epic journal transition is invalid');
+    if (previous && (!isDeepStrictEqual(previous.receipt.correlation, receipt.correlation) || previous.receipt.resource && !isDeepStrictEqual(previous.receipt.resource, receipt.resource) || !({ intent: ['created', 'cancelled'], created: ['created', 'linked', 'cancelled'], linked: ['linked', 'merging', 'cancelled'], merging: ['merging', 'accepted'], accepted: ['accepted'], cancelled: ['cancelled'] })[previous.receipt.state].includes(receipt.state))) throw Error('Epic journal transition is invalid');
+    if (previous?.receipt.merge) {
+      const { commit: ignored, ...identity } = receipt.merge ?? {};
+      const { commit: previousCommit, ...prior } = previous.receipt.merge;
+      if (!isDeepStrictEqual(identity, prior) || previousCommit && previousCommit !== receipt.merge?.commit || !isDeepStrictEqual(previous.receipt.publication, receipt.publication)) throw Error('Epic merge identity changed');
+    }
     if (!previous && receipt.state !== 'intent') throw Error('Epic journal must start with intent');
     if (await authorize() !== true) throw Error('Epic journal authorization changed');
     const entry = { schemaVersion: 1, repository, parent, revision: sourceRevision, runId: String(run.id), attempt: run.run_attempt, key, receipt };

@@ -195,3 +195,21 @@ test('review feedback updates the existing implementation branch without a force
   assert.equal(calls.some(c => c.path === 'pulls'), false);
   assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.findIndex(c => c.path === 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa'));
 });
+
+test('epic review updates the same PR after rechecking its shared base and authority', async () => {
+  for (const revoked of [false, true]) {
+    const calls = [], epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: 'c'.repeat(40) };
+    const reviewed = { ...request, epic, implementationReview: { number: 34, head: request.sourceRevision, base: epic.base, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
+    const api = async (path, method, body) => {
+      calls.push({ path, method, body });
+      if (path === `git/ref/heads/${epic.base}`) return { object: { sha: epic.baseSha } };
+      if (path === 'pulls/34' && method !== 'PATCH') return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: 'created' }, base: { ref: epic.base } };
+      return { sha: 'created', tree: { sha: 'tree' } };
+    };
+    const publish = () => createImplementationPullRequest(api, reviewed, [change], 'Updated', '', true, async () => calls.push({ path: 'before' }), async () => { calls.push({ path: 'after' }); if (revoked) throw Error('revoked'); });
+    if (revoked) await assert.rejects(publish(), /revoked/); else await publish();
+    assert.equal(calls.filter(call => call.path === 'pulls/34' && call.method === 'PATCH').length, revoked ? 0 : 1);
+    assert.equal(calls.some(call => call.path === 'pulls' && call.method === 'POST'), false);
+    assert.ok(calls.findIndex(call => call.path === 'after') > calls.findIndex(call => call.path.startsWith('git/refs/heads/')));
+  }
+});

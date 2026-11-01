@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { isDeepStrictEqual } from 'node:util';
 
 export const changeName = issue => {
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid proposal issue');
@@ -89,7 +90,8 @@ export async function loadStageReport(api, repo, report, current) {
     if (request.dispatch) {
       if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage) || !report.body.includes(`<!-- lighthouse-stage:${request.stage}:`)) throw Error('Unexpected dispatched stage');
       const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run);
-      if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== request.sourceRevision || dispatch.request.workflowRevision !== request.workflowRevision) throw Error('Dispatched report identity mismatch');
+      const dispatchedRevision = request.epic && request.stage === 'implement' ? request.baseRevision : request.sourceRevision;
+      if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== dispatchedRevision || dispatch.request.workflowRevision !== request.workflowRevision || !isDeepStrictEqual(dispatch.request.epic, request.epic)) throw Error('Dispatched report identity mismatch');
       await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);
     } else if (!['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || run.head_sha !== request.sourceRevision) throw Error('Stage report identity mismatch');
     if (run.status !== 'completed' || run.conclusion !== 'success' || String(run.id) !== String(request.workflowRunId) || request.issue !== current.issue || marker !== request.runId) throw Error('Stage report identity mismatch');

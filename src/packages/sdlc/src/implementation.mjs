@@ -134,11 +134,11 @@ export function validateCheckReceipt(receipt, request, changes) {
   }
   return receipt.serviceCleanup !== false && receipt.checks.every(c => c.exitCode === 0);
 }
-export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite) {
+export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}) {
   validateChanges(changes, snapshot.implementation.policy);
   if (!changes.length) throw Error('No implementation changes to publish');
   const epic = snapshot.epic;
-  if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || epic.baseSha !== snapshot.sourceRevision || snapshot.implementationReview)) throw Error('Invalid epic publication base');
+  if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : epic.baseSha !== snapshot.sourceRevision))) throw Error('Invalid epic publication base');
   const checkEpicBase = async () => {
     if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');
   };
@@ -158,6 +158,11 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     const current = await api(`pulls/${snapshot.implementationReview.number}`);
     const marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
     if (!marker) throw Error('Implementation PR marker missing during update');
+    if (epic) {
+      if (current.head?.sha !== created.sha || current.base?.ref !== epic.base) throw Error('Epic PR changed during its update');
+      await checkEpicBase();
+      await afterRefWrite();
+    }
     await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: description(marker) });
     return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
   }

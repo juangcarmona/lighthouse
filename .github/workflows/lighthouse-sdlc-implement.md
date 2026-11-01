@@ -32,6 +32,7 @@ runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+  LIGHTHOUSE_EPIC_CAPACITY: ${{ vars.LIGHTHOUSE_EPIC_CAPACITY }}
   LIGHTHOUSE_STAGE: implement
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
@@ -201,6 +202,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Preserve the publication receipt
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-implement-publication-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Release the issue reservation
         if: always()
         env:

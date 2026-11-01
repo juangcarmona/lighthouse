@@ -7,6 +7,36 @@ on:
         description: Parent issue with an authenticated decomposition plan
         required: true
         type: string
+      action:
+        description: Reconcile children, register or review a child PR, or publish the aggregate
+        required: true
+        default: reconcile
+        type: choice
+        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate]
+      child:
+        description: Child issue number for PR registration or acceptance
+        required: false
+        type: string
+      run:
+        description: Child implementation run ID for PR registration
+        required: false
+        type: string
+      pull-request:
+        description: Child PR number for acceptance
+        required: false
+        type: string
+      review:
+        description: Owner approval review ID for acceptance
+        required: false
+        type: string
+      head:
+        description: Approved child PR head SHA
+        required: false
+        type: string
+      base:
+        description: Approved current epic branch SHA
+        required: false
+        type: string
 concurrency:
   group: lighthouse-issue-${{ inputs.issue }}
   cancel-in-progress: false
@@ -15,7 +45,9 @@ permissions:
   contents: write
   actions: read
   issues: write
-  pull-requests: read
+  pull-requests: write
+  checks: read
+  statuses: read
 jobs:
   reconcile:
     if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_EPIC_ENABLED == 'true' && github.actor == github.repository_owner

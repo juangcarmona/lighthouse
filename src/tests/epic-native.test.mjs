@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic } from '../packages/sdlc/src/epic-native.mjs';
+import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, authenticateEpicPullRequest, reconcileEpicPullRequest, inspectEpicDependencies, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic, runEpicAction } from '../packages/sdlc/src/epic-native.mjs';
+import { epicCorrelation, epicJournalKey, readEpicMarker } from '../packages/sdlc/src/epic-github.mjs';
+import { createEpicJournal } from '../packages/sdlc/src/epic-journal.mjs';
+import { dispatchId, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { changesDigest } from '../packages/sdlc/src/implementation.mjs';
+import { digest } from '../packages/sdlc/src/host-contract.mjs';
+import { createHash } from 'node:crypto';
 
 const repository = 'owner/repo', owner = 'owner', issue = 146, sha = 'a'.repeat(40);
 const estimate = { points: 13, status: 'confirmed', confidence: 'medium', rationale: { scope: 'Several outcomes', dependencies: 'Dependent slices', verification: 'Independent tests' }, uncertainty: ['Host evidence'] };
@@ -33,7 +39,7 @@ async function fixture(t) {
     if (path === 'git/ref/heads/lighthouse/epic-146') return branch ?? null;
     if (path === 'git/refs' && method === 'POST') { branch = { ref: body.ref, object: { sha: body.sha } }; return branch; }
     if (path === `contents/.github/workflows/lighthouse-sdlc-router.yml?ref=${sha}` || path === `contents/.github/workflows/lighthouse-sdlc-epic.yml?ref=${sha}`) { const content = path.includes('router') ? router : workflow; return { type: 'file', encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') }; }
-    if (/^contents\/\.github\/workflows\/lighthouse-sdlc-(?:triage|refine|implement)\.lock\.yml\?ref=/.test(path)) return { type: 'file', encoding: 'base64', size: Buffer.byteLength(worker), content: Buffer.from(worker).toString('base64') };
+    if (/^contents\/\.github\/workflows\/lighthouse-sdlc-(?:triage|refine|implement|apply-review)\.lock\.yml\?ref=/.test(path)) return { type: 'file', encoding: 'base64', size: Buffer.byteLength(worker), content: Buffer.from(worker).toString('base64') };
     if (path === `issues/${issue}`) return parent;
     if (path.startsWith(`issues/${issue}/comments?`)) return comments;
     if (path === `issues/${issue}/comments` && method === 'POST') { const comment = { id: comments.length + 1, user: bot, issue_url: report.issue_url, body: body.body }; comments.push(comment); return structuredClone(comment); }
@@ -111,6 +117,143 @@ test('child admission binds the current plan, native parent and retained owner w
   f.parents.set(200, { number: issue });
   f.parent.labels.push({ name: 'future' });
   await assert.rejects(authenticateEpicChild(args), /paused/);
+});
+
+test('child PR authentication requires its own retained journal receipt', async t => {
+  const f = await fixture(t);
+  await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  const artifacts = new Map([['500', JSON.parse(await readFile(f.path, 'utf8'))]]);
+  f.issues[0].state = 'open';
+  const readArtifact = async (_api, _repo, id) => artifacts.get(String(id));
+  const api = async (path, ...args) => {
+    if (path === 'issues/200') return f.issues[0];
+    if (/^actions\/runs\/(500|501)\/attempts\/1$/.test(path)) return { ...f.run, id: Number(path.split('/')[2]), status: 'completed' };
+    return f.api(path, ...args);
+  };
+  const childMarker = readEpicMarker(f.issues[0].body);
+  const correlation = epicCorrelation({ ...childMarker, kind: 'pull-request' }), key = epicJournalKey(correlation);
+  const journalPath = `${f.path}.pr`, journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: sha, defaultBranch: 'main', run: { ...f.run, id: 501 }, path: journalPath, authorize: async () => true, readArtifact });
+  await journal.readReceipt(key);
+  const resource = { id: 777, number: 7 }, publication = { run: '500', attempt: 1, head: sha };
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'created', correlation, resource, publication });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'linked', correlation, resource, publication });
+  artifacts.set('501', JSON.parse(await readFile(journalPath, 'utf8')));
+  const marker = 'a'.repeat(64);
+  const pr = { ...resource, state: 'open', merged: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { ref: `lighthouse/implement-200-${marker.slice(0, 12)}`, sha, repo: { full_name: repository } }, base: { ref: 'lighthouse/epic-146', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${marker} -->` };
+  const args = { api, repository, owner, child: 200, pr, load: f.load, readArtifact };
+  assert.equal(await authenticateEpicPullRequest(args), true);
+  await assert.rejects(authenticateEpicPullRequest({ ...args, pr: { ...pr, id: 778 } }), /does not match/);
+  await assert.rejects(authenticateEpicPullRequest({ ...args, pr: { ...pr, head: { ...pr.head, sha: 'b'.repeat(40) } } }), /head lacks a current publication receipt/);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'merging', correlation, resource, publication, merge: { head: sha, base: sha, candidate: sha, review: 9 } });
+  assert.equal(await authenticateEpicPullRequest({ ...args, journal }), true);
+});
+
+test('child PR reconciliation authenticates the dispatch, retained checks and exact published tree', async t => {
+  const f = await fixture(t);
+  await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  const originalJournal = JSON.parse(await readFile(f.path, 'utf8'));
+  f.issues[0].state = 'open';
+  const bot = { login: 'github-actions[bot]', type: 'Bot' }, actor = { login: owner }, base = 'b'.repeat(40), head = 'c'.repeat(40);
+  const epic = { parent: issue, slice: 'a', planDigest: readEpicMarker(f.issues[0].body).planDigest, base: 'lighthouse/epic-146', sourceRevision: sha };
+  const request = { schemaVersion: 1, id: dispatchId(repository, '600', 'implement'), repository, issue: 200, stage: 'implement', routerRunId: '600', routerAttempt: 1, workflowRevision: sha, sourceRevision: sha, ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '200', stage: 'implement' } }, handoff: false, taskDigest: 'd'.repeat(64), epic: { ...epic, baseSha: base } };
+  const receipt = { schemaVersion: 1, stage: 'implement', id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '600', routerAttempt: 1, workerRunId: '700', status: 'completed' };
+  const comment = { id: 900, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/200`, body: dispatchReceiptBody(repository, receipt) };
+  const snapshot = { issue: 200, stage: 'implement', runId: digest(`${repository}:200:implement:700:1`), workflowRunId: '700', workflowRevision: sha, sourceRevision: base, baseRevision: sha, taskDigest: request.taskDigest, epic: { ...epic, baseSha: base }, dispatch: { commentId: 900, requestId: request.id, digest: receipt.digest }, implementation: { policy: { paths: ['src/'], checks: [['npm', 'test']] } } };
+  const changes = [{ path: 'src/a.txt', mode: '100644', content: Buffer.from('new').toString('base64') }];
+  const checks = { runId: snapshot.runId, sourceRevision: base, changesDigest: changesDigest(changes), checks: [{ command: ['npm', 'test'], exitCode: 0 }] };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'test', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Review.' }, effect: { type: 'issue-comment', body: 'Ready.' } };
+  const run = { id: 700, run_attempt: 1, status: 'completed', path: '.github/workflows/lighthouse-sdlc-implement.lock.yml', event: 'workflow_dispatch', actor: bot, triggering_actor: bot, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
+  const router = { id: 600, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
+  const blob = createHash('sha1').update('blob 3\0new').digest('hex');
+  const pr = { id: 777, number: 7, state: 'open', merged: false, user: bot, head: { ref: `lighthouse/implement-200-${snapshot.runId.slice(0, 12)}`, sha: head, repo: { full_name: repository } }, base: { ref: epic.base, repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${snapshot.runId} -->` };
+  let changedBlob = blob;
+  const api = async (path, ...args) => {
+    if (path === 'issues/200') return f.issues[0];
+    if (path === 'issues/comments/900') return comment;
+    if (path === 'actions/runs/500/attempts/1') return { ...f.run, status: 'completed' };
+    if (path === 'actions/runs/600/attempts/1') return router;
+    if (path === 'actions/runs/700') return run;
+    if (path === 'pulls/7') return pr;
+    if (path === `git/commits/${head}`) return { parents: [{ sha: base }] };
+    if (path === `git/trees/${base}?recursive=1`) return { tree: [] };
+    if (path === `git/trees/${head}?recursive=1`) return { tree: [{ path: 'src/a.txt', type: 'blob', mode: '100644', sha: changedBlob }] };
+    return f.api(path, ...args);
+  };
+  const readArtifact = async (_api, _repo, id, _name, file) => {
+    if (String(id) === '500') return originalJournal;
+    if (String(id) === '600') return request;
+    return ({ 'request.json': snapshot, 'envelope.json': envelope, 'changes.json': changes, 'checks.json': checks, 'published-pr.json': { number: 7, head } })[file];
+  };
+  let recorded, writes = 0;
+  const journal = { readReceipt: async () => recorded, writeReceipt: async (_key, value) => { recorded = structuredClone(value); writes++; } };
+  const args = { api, repository, owner, child: 200, runId: 700, journal, authorize: async () => true, load: f.load, readArtifact };
+  assert.deepEqual(await reconcileEpicPullRequest(args), { status: 'linked', pullRequest: 7, head });
+  assert.equal(writes, 3);
+  assert.equal((await reconcileEpicPullRequest(args)).status, 'linked');
+  assert.equal(writes, 3);
+  changedBlob = 'f'.repeat(40);
+  await assert.rejects(reconcileEpicPullRequest(args), /differs from validated content/);
+});
+
+test('owner acceptance merges one authenticated child and leaves the parent open', async t => {
+  const f = await fixture(t);
+  await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });
+  const artifacts = new Map([['500', JSON.parse(await readFile(f.path, 'utf8'))]]), child = f.issues[0];
+  child.state = 'open'; child.labels = [{ name: 'pr-draft' }];
+  const readArtifact = async (_api, _repo, id) => artifacts.get(String(id));
+  const head = 'b'.repeat(40), candidate = 'c'.repeat(40), mergedCommit = 'd'.repeat(40), tree = 'e'.repeat(40), runId = 'a'.repeat(64);
+  const pr = { id: 777, number: 7, state: 'open', merged: false, draft: true, mergeable: true, merge_commit_sha: candidate, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { ref: `lighthouse/implement-200-${runId.slice(0, 12)}`, sha: head, repo: { full_name: repository } }, base: { ref: 'lighthouse/epic-146', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${runId} -->` };
+  const review = { id: 9, user: { login: owner, type: 'User' }, state: 'APPROVED', commit_id: head };
+  let mergeCalls = 0;
+  const api = async (path, method = 'GET', body) => {
+    if (path === 'issues/200') { if (method === 'PATCH') child.state = body.state; return child; }
+    if (path === 'issues/200/labels/pr-draft' && method === 'DELETE') { child.labels = child.labels.filter(label => label.name !== 'pr-draft'); return; }
+    if (path === 'issues/200/labels' && method === 'POST') { child.labels.push(...body.labels.map(name => ({ name }))); return; }
+    if (path === 'issues/201') return f.issues[1];
+    if (/^actions\/runs\/(500|501|502|503)\/attempts\/1$/.test(path)) return { ...f.run, id: Number(path.split('/')[2]), status: 'completed' };
+    if (path === 'pulls/7') return pr;
+    if (path === 'pulls/7/merge' && method === 'PUT') { mergeCalls++; Object.assign(pr, { state: 'closed', merged: true, merge_commit_sha: mergedCommit, merged_by: { login: 'github-actions[bot]', type: 'Bot' } }); f.setBranch({ ref: 'refs/heads/lighthouse/epic-146', object: { sha: mergedCommit } }); return { merged: true, sha: mergedCommit }; }
+    if (path.startsWith('pulls/7/reviews?')) return [review];
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha }, { sha: head }], tree: { sha: tree } };
+    if (path === `git/commits/${mergedCommit}`) return { parents: [{ sha }], tree: { sha: tree } };
+    if (path.startsWith(`commits/${candidate}/check-runs?`)) return { check_runs: [{ id: 1, name: 'ci', head_sha: candidate, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
+    if (path.startsWith(`commits/${candidate}/statuses?`)) return [];
+    if (path === `compare/${mergedCommit}...${mergedCommit}`) return { status: 'identical', merge_base_commit: { sha: mergedCommit } };
+    return f.api(path, method, body);
+  };
+  const correlation = epicCorrelation({ ...readEpicMarker(child.body), kind: 'pull-request' }), key = epicJournalKey(correlation), resource = { id: 777, number: 7 };
+  const registrationPath = `${f.path}.registration`;
+  const journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: sha, defaultBranch: 'main', run: { ...f.run, id: 501 }, path: registrationPath, authorize: async () => true, readArtifact });
+  await journal.readReceipt(key);
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation });
+  const publication = { run: '500', attempt: 1, head };
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'created', correlation, resource, publication });
+  await journal.writeReceipt(key, { schemaVersion: 1, state: 'linked', correlation, resource, publication });
+  artifacts.set('501', JSON.parse(await readFile(registrationPath, 'utf8')));
+  const ready = await runEpicAction({ api, repository, owner, issue, run: { ...f.run, id: 502 }, journalPath: `${f.path}.ready`, action: 'ready-child', child: 200, decision: { pr: 7, head, base: sha }, readArtifact, load: f.load, loadPolicy: async () => ({ checks: [{ context: 'ci', app: 42 }] }), setDraft: async (_pr, value) => { pr.draft = value; } });
+  assert.equal(ready.status, 'ready');
+  assert.equal(pr.draft, false);
+  assert.deepEqual(child.labels.map(label => label.name), ['pr-ready']);
+  const decision = { pr: 7, review: 9, head, base: sha }, acceptancePath = `${f.path}.acceptance`;
+  const args = { api, repository, owner, issue, run: { ...f.run, id: 503 }, journalPath: acceptancePath, action: 'accept-child', child: 200, decision, readArtifact, load: f.load, loadPolicy: async () => ({ checks: [{ context: 'ci', app: 42 }] }) };
+  const result = await runEpicAction(args);
+  assert.equal(result.status, 'accepted');
+  assert.equal(result.commit, mergedCommit);
+  assert.equal(child.state, 'closed');
+  assert.equal(f.parent.state, 'open');
+  assert.equal(mergeCalls, 1);
+  artifacts.set('503', JSON.parse(await readFile(acceptancePath, 'utf8')));
+  f.issues[1].state = 'open';
+  const dependent = await authenticateEpicChild({ api, repository, owner, child: 201, load: f.load, readArtifact });
+  assert.deepEqual(await inspectEpicDependencies({ api, repository, owner, child: 201, current: dependent, load: f.load, readArtifact, loadPolicy: args.loadPolicy }), { baseSha: mergedCommit });
+  const repeated = await runEpicAction({ ...args, run: { ...f.run, id: 504 }, journalPath: `${f.path}.repeat` });
+  assert.equal(repeated.recovered, true);
+  assert.equal(mergeCalls, 1);
+  const reconciled = await runNativeEpic({ api, repository, owner, issue, run: { ...f.run, id: 505 }, journalPath: `${f.path}.advanced`, readArtifact, load: f.load, loadPolicy: args.loadPolicy });
+  assert.equal(reconciled.status, 'reconciled');
+  f.setBranch({ ref: 'refs/heads/lighthouse/epic-146', object: { sha: 'f'.repeat(40) } });
+  await assert.rejects(runNativeEpic({ api, repository, owner, issue, run: { ...f.run, id: 506 }, journalPath: `${f.path}.unexpected`, readArtifact, load: f.load, loadPolicy: args.loadPolicy }), /unverified commit/);
 });
 
 test('native host refuses a router without the shared issue lease', async t => {

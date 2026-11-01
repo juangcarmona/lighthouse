@@ -68,7 +68,7 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 
 ## Epic delivery contracts
 
-[Epic delivery contracts](epic-delivery.md) define the confirmed greater-than-eight decomposition boundary, shared epic-branch planning and dependency/base/owner-decision eligibility. Native child orchestration is not yet connected; these helpers do not dispatch workers or authorize merges.
+[Epic delivery contracts](epic-delivery.md) define the confirmed greater-than-eight decomposition boundary, shared epic-branch planning and dependency/base/owner-decision eligibility. The native epic workflow remains uninstalled while child dispatch, review recovery and aggregate acceptance are completed and verified.
 
 ## References
 
