@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse-sdlc",
-  "version": "0.18.7",
+  "version": "0.18.8",
   "type": "module",
   "description": "Provider-neutral SDLC skills, commands and route contracts for Lighthouse adopters",
   "repository": {
