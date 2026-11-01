@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { validateUnattendedPolicy, admitUnattended, hotfixScope, regressionPlan, assertRegression, assertIndependentReview, runUnattended, unattendedDigest, verifyUnattendedIntegration } from '../packages/sdlc/src/unattended.mjs';
 import { candidateInventory, stageContext, applyCandidate } from '../packages/sdlc/src/unattended-runtime.mjs';
+import { validateStageEnvelope } from '../packages/sdlc/src/host-contract.mjs';
 import { runGithubUnattended } from '../packages/sdlc/src/unattended-actions.mjs';
 import { executionReceipt } from '../packages/sdlc/src/execution-resources.mjs';
 import { loadImplementation } from '../packages/sdlc/src/implementation.mjs';
@@ -68,6 +69,15 @@ test('interrupted assertion output never establishes RED', async () => {
   const genuine = check(1, plan().assertion);
   genuine.checks[0].execution = await executionReceipt('/nonexistent/command-receipt', { code: 1, signal: null });
   assertRegression(genuine, plan(), 'red');
+});
+
+test('unattended implementation keeps its assessment identity and rejects invented gates', () => {
+  const request = { stage: 'implement', runId: 'a'.repeat(64) };
+  const context = stageContext(request, {}), envelope = context.contract.envelope;
+  assert.equal(envelope.result.gate, 'done');
+  assert.deepEqual(validateStageEnvelope(envelope, request), []);
+  assert.ok(validateStageEnvelope({ ...envelope, result: { ...envelope.result, gate: 'pending-review' } }, request).length);
+  assert.match(context.contract.rules, /Copy result\.runId, result\.stage and result\.gate exactly/);
 });
 
 test('independent review binds separate execution and model to the candidate', () => {
