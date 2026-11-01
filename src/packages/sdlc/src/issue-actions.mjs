@@ -159,6 +159,11 @@ async function main(command) {
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && !productApproval && reviewTarget(event, env.GITHUB_EVENT_NAME)) {
     if (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner) throw Error('Review actor is not authorized');
     const pr = await api(`pulls/${reviewTarget(event, env.GITHUB_EVENT_NAME)}`);
+    if (!/^(?:lighthouse\/implement-|lighthouse\/propose-)/.test(pr.head?.ref ?? '')) {
+      if (command !== 'route') throw Error('Unrelated PR cannot authorize a Lighthouse dispatch');
+      await output('stage', ''); await output('worker', ''); await output('run', 'false'); await output('issue', '');
+      await summary('No Lighthouse action for this PR.'); return;
+    }
     const implementation = pr.head?.ref?.startsWith('lighthouse/implement-');
     const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation);
     const reports = await api(`issues/${feedback.number}/comments?per_page=100`);

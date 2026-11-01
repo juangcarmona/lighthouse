@@ -54,6 +54,22 @@ test('publication updates the same branch non-forcibly and rejects a concurrent 
   assert.equal(writes.some(w => w.path.startsWith('git/refs')), false);
 });
 
+test('real router ignores owner approval of an unrelated release PR', async () => {
+  const { mkdtemp, writeFile, readFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const dir = await mkdtemp(join(tmpdir(), 'unrelated-pr-router-'));
+  try {
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'submitted', pull_request: { number: 60 }, review: { id: 7, user: { login: 'owner', type: 'User' }, body: '', state: 'approved' } }));
+    await writeFile(join(dir, 'mock.mjs'), `globalThis.fetch = async (url) => { if (!url.endsWith('/pulls/60')) throw Error('Unexpected API request: ' + url); return { ok: true, status: 200, json: async () => ({ head: { ref: 'changeset-release/main' } }) }; };`);
+    const output = join(dir, 'output');
+    const result = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repo, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_EVENT_NAME: 'pull_request_review', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: output, LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: 'true', RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(await readFile(output, 'utf8'), /run=false/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('real router maps a PR comment to its source issue and reports approvals without execution', async () => {
   const { mkdtemp, writeFile, readFile, rm } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
