@@ -26,6 +26,10 @@ jobs:
   reconcile-implementation-pr:
     needs: repository
     if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')
+    concurrency:
+      group: lighthouse-pr-state
+      cancel-in-progress: false
+      queue: max
     runs-on: ubuntu-24.04
     permissions:
       actions: read

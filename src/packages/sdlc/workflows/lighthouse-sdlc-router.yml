@@ -78,7 +78,7 @@ jobs:
       (github.event_name == 'workflow_run' || github.event_name == 'schedule' ||
        (github.event_name == 'pull_request' && github.actor == github.repository_owner))
     concurrency:
-      group: lighthouse-pr-state-${{ github.event.pull_request.number || github.event.workflow_run.head_sha || 'scheduled' }}
+      group: lighthouse-pr-state
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04
