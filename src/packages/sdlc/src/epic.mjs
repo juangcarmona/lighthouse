@@ -21,7 +21,9 @@ export function assessDecomposition(output) {
 export function epicPlanDigest(plan) {
   const checked = buildDecompositionPlan(plan);
   if (!plan?.valid || !checked.valid) throw Error('A valid decomposition plan is required');
-  const canonical = { schemaVersion: 1, parent: { id: checked.parent.id, title: checked.parent.title }, slices: [...checked.slices].sort((a, b) => a.id.localeCompare(b.id)) };
+  const idNumber = checked.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
+  const number = checked.parent.number ?? idNumber;
+  const canonical = { schemaVersion: 1, parent: { id: checked.parent.id, title: checked.parent.title, ...(number === undefined ? {} : { number: String(number) }) }, slices: [...checked.slices].sort((a, b) => a.id.localeCompare(b.id)) };
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }
 
