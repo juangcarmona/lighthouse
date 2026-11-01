@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.14
+
+### Patch Changes
+
+- 5316471: # Serialize PR reconciliation
+
+  Queue scheduled and event-driven PR state reconciliation together to avoid overlapping handoff publication.
+
 ## 0.18.13
 
 ### Patch Changes
