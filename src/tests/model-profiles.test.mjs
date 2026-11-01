@@ -83,3 +83,39 @@ test('fast never implies premium processing or proven provider access and unknow
   assert.equal(receipt.billing.route, 'unchanged');
   assert.ok(!JSON.stringify(receipt).includes('priority'));
 });
+
+test('version 2 resolves direct worker settings and named presets without a three-profile limit', () => {
+  const selectedProject = { schemaVersion: 2, defaultProfile: 'steady', workers: {
+    triage: { model: 'openai/test-sol', reasoningEffort: 'medium' },
+    refine: { model: 'openai/test-sol', reasoningEffort: 'high' },
+    implement: { model: 'openai/test-luna', reasoningEffort: 'high' },
+    review: 'deep',
+  }, profiles: { steady: { model: 'openai/test-sol', reasoningEffort: 'medium' }, deep: { model: 'openai/test-luna', reasoningEffort: 'medium' } } };
+  const selectedOperator = { ...operator, modelProfiles: { schemaVersion: 2, enabled: true }, modelCapabilities: { ...operator.modelCapabilities, 'openai/test-luna': { available: true, tools: true, reasoningEfforts: ['high', 'medium'] } } };
+  assert.equal(resolve({ project: selectedProject, operator: selectedOperator, worker: 'triage' }).engineModel, 'openai/test-sol#medium');
+  assert.equal(resolve({ project: selectedProject, operator: selectedOperator, worker: 'refine' }).engineModel, 'openai/test-sol#high');
+  assert.equal(resolve({ project: selectedProject, operator: selectedOperator, worker: 'implement' }).engineModel, 'openai/test-luna#high');
+  const review = resolve({ project: selectedProject, operator: selectedOperator, worker: 'review' });
+  assert.equal(review.engineModel, 'openai/test-luna#medium');
+  const overridden = resolve({ project: selectedProject, operator: { ...selectedOperator, modelProfiles: { ...selectedOperator.modelProfiles, profiles: { deep: { model: 'openai/test-sol' } } } }, worker: 'review' });
+  assert.equal(overridden.engineModel, 'openai/test-sol#medium');
+  assert.deepEqual(overridden.fields, { model: 'operator', reasoningEffort: 'project' });
+});
+
+test('execution selection needs version 2 operator opt-in and remains inside capabilities', () => {
+  const selectedOperator = { ...operator, modelProfiles: { schemaVersion: 2, enabled: true, allowExecutionSelection: true, workers: { refine: 'build' } } };
+  const direct = { model: 'openai/test-luna', reasoningEffort: 'high' };
+  const chosen = resolve({ operator: selectedOperator, worker: 'refine', executionSelection: direct });
+  assert.equal(chosen.engineModel, 'openai/test-luna#high'); assert.equal(chosen.source, 'execution');
+  assert.equal(resolve({ operator: selectedOperator, executionSelection: { profile: 'plan' } }).engineModel, 'openai/test-sol#high');
+  for (const bad of [{ model: 'openai/test-sol' }, { profile: 'plan', ...direct }, { ...direct, serviceTier: 'priority' }, { model: 'openai/test-luna', reasoningEffort: 'medium' }, { model: 'anthropic/test', reasoningEffort: 'high' }]) assert.throws(() => resolve({ operator: selectedOperator, executionSelection: bad }));
+  assert.throws(() => resolve({ operator: { ...selectedOperator, modelProfiles: { ...selectedOperator.modelProfiles, allowExecutionSelection: false } }, executionSelection: direct }), /opt-in/);
+  assert.throws(() => resolve({ operator: selectedOperator, executionSelection: direct, profile: 'fast' }), /Conflicting/);
+});
+
+test('version 2 rejects incomplete direct settings and fails closed under version 1 operator', () => {
+  const selectedProject = { schemaVersion: 2, workers: { refine: { model: 'openai/test-sol' } } };
+  assert.throws(() => resolve({ project: selectedProject, operator: { ...operator, modelProfiles: { schemaVersion: 2, enabled: true } } }), /include model and reasoning/);
+  assert.throws(() => resolve({ project: { schemaVersion: 2, defaultProfile: 'anything' } }), /operator version 2/);
+  assert.throws(() => resolve({ operator: { ...operator, modelProfiles: { schemaVersion: 1, enabled: true, allowExecutionSelection: true } } }), /version 2/);
+});
