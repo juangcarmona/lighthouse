@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.6
+
+### Patch Changes
+
+- 19e0f29: # Epic aggregate acceptance
+
+  Retain aggregate readiness evidence and verify the merged outcome before closing an epic parent.
+
 ## 0.18.5
 
 ### Patch Changes
