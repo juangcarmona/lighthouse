@@ -235,12 +235,12 @@ export async function reconcileUnattendedStop(api, repository, owner, issue, com
   if (!last.body.includes(marker)) return 'uncertain';
   const run = await api(`actions/runs/${runId}`);
   if (run?.repository?.full_name !== repository || run.path !== '.github/workflows/lighthouse-sdlc-unattended.yml' || run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.display_title !== `${route} #${issue.number} · ${owner}` || run.run_attempt !== 1) return 'uncertain';
-  if (run.status !== 'completed' || !['failure', 'timed_out', 'cancelled'].includes(run.conclusion)) return 'not-applicable';
+  if (run.status !== 'completed' || !['success', 'failure', 'timed_out', 'cancelled'].includes(run.conclusion)) return 'not-applicable';
   const fresh = await api(`issues/${issue.number}`), latest = await issueComments(api, issue.number);
   const current = latest.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended:|unattended-recovery:|dispatch:|actions:|stop:)/.test(c.body ?? '')).at(-1);
   if (fresh.state !== 'open' || fresh.user?.login !== owner || current?.id !== last.id) return 'uncertain';
   const reservation = fresh.labels.some(l => l.name === 'agent-working') ? ' The agent-working reservation remains; verify ownership before releasing it.' : '';
-  const body = handoff({ status: 'unknown', stage: route, happened: `The unattended execution ended ${run.conclusion}, but its terminal handoff is missing. Publication and integration effects have not been confirmed.`, action: `Workflow maintainer: inspect the execution, artifacts, issue and any candidate PR before resuming.${reservation}`, next: 'Do not retry or release a reservation until the observed effects and current ownership are reconciled.', link: `[Execution](https://github.com/${repository}/actions/runs/${runId})`, details: `<!-- lighthouse-unattended-recovery:${runId}:1 -->` });
+  const body = handoff({ status: run.conclusion === 'success' ? 'unknown' : run.conclusion === 'cancelled' ? 'cancelled' : 'failed', stage: route, happened: `The unattended execution ended ${run.conclusion}, but its terminal handoff is missing. Publication and integration effects have not been confirmed.`, action: `Workflow maintainer: inspect the execution, artifacts, issue and any candidate PR before resuming.${reservation}`, next: 'Do not retry or release a reservation until the observed effects and current ownership are reconciled.', link: `[Execution](https://github.com/${repository}/actions/runs/${runId})`, details: `<!-- lighthouse-unattended-recovery:${runId}:1 -->` });
   await api(`issues/${issue.number}/comments`, 'POST', { body });
   return 'restored';
 }

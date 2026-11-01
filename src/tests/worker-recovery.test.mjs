@@ -183,11 +183,34 @@ test('maintenance reports an interrupted unattended run without releasing its re
   f.comments.splice(0, f.comments.length, { id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
   f.runs.set(runId, { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'cancelled' });
   assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'restored');
+  assert.match(f.comments.at(-1).body, /^## Cancelled · ff/);
   assert.match(f.comments.at(-1).body, /terminal handoff is missing/);
+  assert.match(f.comments.at(-1).body, /Publication and integration effects have not been confirmed/);
   assert.match(f.comments.at(-1).body, /reservation remains/);
   assert.equal(f.issue.labels[0].name, 'agent-working');
   assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'not-applicable');
   assert.equal(f.calls.filter(c => c.path === 'issues/7/comments' && c.method === 'POST').length, 1);
+});
+
+test('maintenance distinguishes a failed unattended run from an unknown publication', async () => {
+  const f = fixture(), runId = '402', route = 'ff';
+  const marker = digest(JSON.stringify({ repository, issue: 7, route, run: runId }));
+  f.comments.splice(0, f.comments.length, { id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
+  f.runs.set(runId, { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'failure' });
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'restored');
+  assert.match(f.comments.at(-1).body, /^## Execution failed · ff/);
+  assert.match(f.comments.at(-1).body, /Publication and integration effects have not been confirmed/);
+});
+
+test('maintenance reports a successful unattended run with a missing terminal handoff as uncertain', async () => {
+  const f = fixture(), runId = '402', route = 'ff';
+  const marker = digest(JSON.stringify({ repository, issue: 7, route, run: runId }));
+  f.comments.splice(0, f.comments.length, { id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
+  f.runs.set(runId, { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'success' });
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'restored');
+  assert.match(f.comments.at(-1).body, /^## Execution status unknown · ff/);
+  assert.match(f.comments.at(-1).body, /execution ended success/);
+  assert.match(f.comments.at(-1).body, /Publication and integration effects have not been confirmed/);
 });
 
 test('unattended recovery rejects spoofed or superseded attempts', async () => {
