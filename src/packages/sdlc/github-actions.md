@@ -103,6 +103,8 @@ Maintenance bounds are 100 open owner issues, 500 scanned issue/PR entries, 1,00
 
 An active or queued execution without an Actions update for two hours is reported as stalled. Maintenance does not cancel it or release its reservation.
 
+For the latest authenticated unattended run, maintenance reports an interrupted failed or cancelled execution whose last handoff still says it is working or queued. The restored notice marks publication effects as unknown and directs the maintainer to inspect them; it does not release a reservation or request a retry.
+
 ### Worker error reports
 
 Create one open issue as the repository owner, without workflow labels, for the worker report index. Set `LIGHTHOUSE_REPORT_INDEX_ISSUE` to its issue number after enabling maintenance. The reporter preserves owner prose and maintains a reserved HTML block with report links and creation intent. Removing the variable disables report publication; recovery remains a separate opt-in.

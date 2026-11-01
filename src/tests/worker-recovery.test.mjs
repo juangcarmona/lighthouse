@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 import { dispatchId, dispatchReceiptBody, readDispatchReceipt, loadDispatch, sendDispatch } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { recoveryDecision, prepareRecovery, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
+import { recoveryDecision, prepareRecovery, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
 import { ownerIssues } from '../packages/sdlc/src/worker-maintenance.mjs';
 import { reportProductApplyStop } from '../packages/sdlc/src/issue-actions.mjs';
 
@@ -57,6 +57,34 @@ test('recovery separates confirmed safe failure from human decisions, effects an
     [{ issue: { ...f.issue, labels: [{ name: 'future' }] } }, 'blocked'],
     [{ request: { ...f.request, stage: 'integrate' } }, 'uncertain'],
   ]) assert.equal(decide(f, patch).state, state, JSON.stringify(patch));
+});
+
+test('maintenance reports an interrupted unattended run without releasing its reservation or duplicating the handoff', async () => {
+  const f = fixture(), runId = '402', route = 'ff';
+  const marker = digest(JSON.stringify({ repository, issue: 7, route, run: runId }));
+  f.issue.labels = [{ name: 'agent-working' }];
+  f.comments.splice(0, f.comments.length, { id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
+  f.runs.set(runId, { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'cancelled' });
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'restored');
+  assert.match(f.comments.at(-1).body, /terminal handoff is missing/);
+  assert.match(f.comments.at(-1).body, /reservation remains/);
+  assert.equal(f.issue.labels[0].name, 'agent-working');
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'not-applicable');
+  assert.equal(f.calls.filter(c => c.path === 'issues/7/comments' && c.method === 'POST').length, 1);
+});
+
+test('unattended recovery rejects spoofed or superseded attempts', async () => {
+  const f = fixture(), runId = '402', route = 'ff';
+  const marker = digest(JSON.stringify({ repository, issue: 7, route, run: runId }));
+  f.comments.splice(0, f.comments.length, { id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
+  const run = { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'failure' };
+  f.runs.set(runId, { ...run, actor: { login: 'attacker' } });
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, f.comments), 'uncertain');
+  f.runs.set(runId, run);
+  const snapshot = [...f.comments];
+  f.comments.push({ id: 41, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-dispatch:new -->' });
+  assert.equal(await reconcileUnattendedStop(f.api, repository, owner, f.issue, snapshot), 'uncertain');
+  assert.equal(f.calls.filter(c => c.path === 'issues/7/comments' && c.method === 'POST').length, 0);
 });
 
 test('retry delay and finite budget are enforced with an explicit next decision', () => {
