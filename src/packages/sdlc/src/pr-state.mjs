@@ -3,6 +3,23 @@ import { checkCommit } from './completion.mjs';
 import { validateProductCheckpoint, productProposalProof } from './product-change.mjs';
 
 const marker = /<!-- lighthouse-pr-state:(\{[^\n]*\}) -->/;
+const draftIntent = /<!-- lighthouse-pr-draft-intent:([1-9][0-9]*):([a-f0-9]{40}):([1-9][0-9]*) -->/;
+
+export const draftIntentMarker = (pr, run) => {
+  if (!Number.isSafeInteger(pr?.number) || pr.number < 1 || !/^[a-f0-9]{40}$/.test(pr.head?.sha ?? '') || !/^[1-9][0-9]*$/.test(String(run ?? ''))) throw Error('Invalid draft handoff identity');
+  return `<!-- lighthouse-pr-draft-intent:${pr.number}:${pr.head.sha}:${run} -->`;
+};
+
+export function pendingDraftIntent(comments, pr) {
+  for (const comment of [...comments].reverse()) {
+    if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot') continue;
+    const match = comment.body?.match(draftIntent);
+    if (!match || Number(match[1]) !== pr.number || match[2] !== pr.head.sha) continue;
+    const done = `<!-- lighthouse-pr-draft-outcome:${match[1]}:${match[2]}:${match[3]} -->`;
+    return comments.some(item => item.user?.login === 'github-actions[bot]' && item.user.type === 'Bot' && item.body?.includes(done)) ? null : done;
+  }
+  return null;
+}
 
 export function isCurrentPullRequestEvent(action, pr) {
   if (action === 'converted_to_draft') return pr?.state === 'open' && pr.draft === true;
@@ -76,7 +93,7 @@ export async function projectImplementationPrState(api, issue, draft) {
   if (!current.labels.some(item => item.name === wanted)) await api(`issues/${issue}/labels`, 'POST', { labels: [wanted] });
 }
 
-export async function reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks, setDraft, { auto = false } = {}) {
+export async function reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks, setDraft, { auto = false, beforeDraft = async () => {} } = {}) {
   const target = checkImplementationPullRequest(pr, repo);
   if (target.issue !== issue.number || issue.state !== 'open') return { status: 'ignored', reason: 'Issue or PR changed' };
   const proof = implementationPrProof(comments, pr);
@@ -90,11 +107,12 @@ export async function reconcileImplementationPr(api, repo, pr, issue, comments, 
     return { status: 'ready', reason: 'Candidate and required checks passed' };
   }
   if (!pr.draft && !complete) {
+    await beforeDraft();
     try { await setDraft(pr, true); }
     catch (error) { if (!(await api(`pulls/${pr.number}`)).draft) throw error; }
     await projectImplementationPrState(api, issue.number, true);
     return { status: 'draft', reason: reserved ? 'Implementation or owner work is still active' : !proof?.complete ? 'Implementation is incomplete' : 'Required checks have not passed' };
   }
   await projectImplementationPrState(api, issue.number, pr.draft);
-  return { status: pr.draft ? 'draft' : 'ready', reason: pr.draft ? 'PR is a draft' : 'Candidate and required checks passed' };
+  return { status: pr.draft ? 'draft' : 'ready', reason: pr.draft && !complete ? reserved ? 'Implementation or owner work is still active' : !proof?.complete ? 'Implementation is incomplete' : 'Required checks have not passed' : pr.draft ? 'PR is a draft' : 'Candidate and required checks passed' };
 }
