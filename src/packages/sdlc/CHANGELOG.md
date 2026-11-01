@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.10
+
+### Patch Changes
+
+- c316705: # Enable product continuation
+
+  Grant the product publisher the Actions permission needed to request an authenticated parent continuation.
+
 ## 0.18.9
 
 ### Patch Changes
