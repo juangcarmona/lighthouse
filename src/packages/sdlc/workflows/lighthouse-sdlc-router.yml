@@ -136,7 +136,7 @@ jobs:
     needs: route
     if: needs.route.outputs.run == 'true'
     concurrency:
-      group: lighthouse-dispatch-${{ needs.route.outputs.issue }}
+      group: lighthouse-issue-${{ needs.route.outputs.issue }}
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04

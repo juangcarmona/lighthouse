@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 import { dispatchId, dispatchReceiptBody, readDispatchReceipt, loadDispatch, sendDispatch } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { recoveryDecision, prepareRecovery, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
+import { recoveryDecision, prepareRecovery, observeRecovery, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
 import { ownerIssues } from '../packages/sdlc/src/worker-maintenance.mjs';
 import { reportProductApplyStop } from '../packages/sdlc/src/issue-actions.mjs';
 
@@ -37,6 +37,29 @@ function fixture() {
   return { issue, request, parent, maintenance, run, receipt, comment, jobs, comments, calls, api, readArtifact, artifacts, runs };
 }
 const decide = (f, overrides = {}) => recoveryDecision({ ...f, owner, revision: sha, workflowRevision: sha, ...overrides });
+
+test('read-only observation reports a stalled worker without waiting for or changing its execution', async () => {
+  const f = fixture();
+  f.run.status = 'in_progress'; f.run.updated_at = '2020-01-01T00:00:00Z';
+  const observations = await observeRecovery(f.api, repository, owner, 7, Date.now(), f.readArtifact);
+  assert.equal(observations[0].state, 'stalled');
+  assert.equal(observations[0].code, 'worker-stalled');
+  assert.equal(f.calls.every(call => call.method === 'GET'), true);
+  assert.equal(observations[0].dispatch, undefined);
+});
+
+test('dispatch and reconciliation share the worker lease while reporting remains independent', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const workflowRoot = new URL('../packages/sdlc/workflows/', import.meta.url);
+  const router = await readFile(new URL('lighthouse-sdlc-router.yml', workflowRoot), 'utf8');
+  const maintenance = await readFile(new URL('lighthouse-worker-maintenance.yml', workflowRoot), 'utf8');
+  const worker = await readFile(new URL('lighthouse-sdlc-refine.lock.yml', workflowRoot), 'utf8');
+  assert.match(router, /group: lighthouse-issue-\$\{\{ needs\.route\.outputs\.issue \}\}/);
+  assert.match(maintenance, /group: lighthouse-issue-\$\{\{ matrix\.issue \}\}/);
+  assert.match(worker, /group: lighthouse-issue-\$\{\{ inputs\.issue \}\}/);
+  assert.match(maintenance, /needs: \[scan, observe\]/);
+  assert.doesNotMatch(maintenance.slice(maintenance.indexOf('  observe:'), maintenance.indexOf('  reconcile:')), /concurrency:/);
+});
 
 test('recovery separates confirmed safe failure from human decisions, effects and cancellation', () => {
   const f = fixture(); assert.equal(decide(f).state, 'retryable');

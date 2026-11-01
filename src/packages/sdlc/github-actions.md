@@ -103,6 +103,8 @@ Maintenance bounds are 100 open owner issues, 500 scanned issue/PR entries, 1,00
 
 An active or queued execution without an Actions update for two hours is reported as stalled. Maintenance does not cancel it or release its reservation.
 
+Read-only observation runs independently of the issue's execution lease, so reporting can inspect a stalled worker. Dispatch and reconciliation wait for that same per-issue lease before changing receipts, labels or handoffs. A separate report records the reconciliation outcome after the lease is available.
+
 For the latest authenticated unattended run, maintenance reports an interrupted failed or cancelled execution whose last handoff still says it is working or queued. The restored notice marks publication effects as unknown and directs the maintainer to inspect them; it does not release a reservation or request a retry.
 
 ### Worker error reports

@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir, appendFile, readdir } from 'node:fs/promise
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch } from './stage-dispatch.mjs';
-import { maintenancePath, prepareRecovery } from './worker-recovery.mjs';
+import { maintenancePath, prepareRecovery, observeRecovery } from './worker-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
@@ -36,7 +36,7 @@ async function main(command) {
     const directories = await readdir(root);
     if (directories.length > 100) throw Error('Observation inventory exceeds bounds');
     for (const directory of directories) {
-      const match = directory.match(/^lighthouse-maintenance-([1-9][0-9]*)$/);
+      const match = directory.match(/^lighthouse-(?:maintenance|observation)-([1-9][0-9]*)$/);
       if (!match) throw Error('Unexpected observation artifact');
       const source = await readFile(join(root, directory, 'observations.json'), 'utf8');
       if (Buffer.byteLength(source) > 256000) throw Error('Observation artifact exceeds bounds');
@@ -60,6 +60,17 @@ async function main(command) {
   const issue = Number(env.LIGHTHOUSE_ISSUE);
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid issue');
   const dir = join(env.RUNNER_TEMP, `lighthouse-maintenance-${env.GITHUB_RUN_ID}-${issue}`);
+  if (command === 'observe') {
+    await mkdir(dir, { recursive: true });
+    try {
+      const observations = await observeRecovery(api, repository, owner, issue);
+      await writeFile(join(dir, 'observations.json'), JSON.stringify(observations));
+    } catch (error) {
+      await writeFile(join(dir, 'observations.json'), JSON.stringify([{ issue, state: 'uncertain', code: 'evidence-unavailable', nextAction: 'Inspect maintenance evidence before requesting another execution.' }]));
+      throw error;
+    }
+    return;
+  }
   if (command === 'send') {
     if (env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true') throw Error('Automatic recovery is disabled');
     await sendDispatch(api, repository, JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8')), env.LIGHTHOUSE_DISPATCH_COMMENT); return;
