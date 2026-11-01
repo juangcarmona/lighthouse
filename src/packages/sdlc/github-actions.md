@@ -109,7 +109,9 @@ An active or queued execution without an Actions update for two hours is reporte
 
 Read-only observation runs independently of the issue's execution lease, so reporting can inspect a stalled worker. Dispatch and reconciliation wait for that same per-issue lease before changing receipts, labels or handoffs. A separate report records the reconciliation outcome after the lease is available.
 
-For the latest authenticated unattended run, maintenance reports an interrupted failed or cancelled execution whose last handoff still says it is working or queued. The restored notice marks publication effects as unknown and directs the maintainer to inspect them; it does not release a reservation or request a retry.
+For the latest authenticated unattended run, maintenance reports a completed execution whose last handoff still says it is working or queued. It identifies confirmed failures and cancellations, and treats publication effects as unknown until inspected. A successful execution without its terminal handoff also receives an uncertain-outcome notice. Maintenance does not release a reservation or request a retry in these cases.
+
+If publication succeeds but reservation cleanup fails, maintenance preserves the published result and asks the maintainer to inspect the reservation before releasing it.
 
 ### Worker error reports
 
