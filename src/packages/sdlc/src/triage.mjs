@@ -223,7 +223,8 @@ export function buildTriageReport(input) {
   validateAssessment(input.assessment, errors);
 
   const state = currentState(currentLabels, configuration);
-  if (state.states.length > 1) addIssue(errors, 'state.ambiguous', `work item has multiple workflow state labels: ${state.states.join(', ')}`, 'currentLabels');
+  const proposalReview = state.states.length === 2 && state.states.includes('ready') && state.states.includes('waiting-review');
+  if (state.states.length > 1 && !proposalReview) addIssue(errors, 'state.ambiguous', `work item has multiple workflow state labels: ${state.states.join(', ')}`, 'currentLabels');
   if (state.states.length === 0) addIssue(errors, 'state.missing', 'work item needs one configured workflow state label', 'currentLabels');
   const assessment = isRecord(input.assessment) ? input.assessment : {};
   if (state.value && typeof assessment.nextState === 'string' && configuration.stateLabels.has(assessment.nextState)) {
@@ -244,11 +245,12 @@ export function buildTriageReport(input) {
   const unavailableChecks = evidence.filter((item) => isRecord(item) && item.status === 'unavailable').map((item) => item.field);
   const pendingReview = evidence.filter((item) => isRecord(item) && item.status === 'pending-review').map((item) => item.field);
   const warnings = [
+    ...(proposalReview ? [issue('state.review-pending', 'A native proposal review retains ready as a revocable gate. Complete or resolve that review before applying generic triage.', 'currentLabels')] : []),
     ...missingEvidence.map((field) => issue('evidence.missing', `${field} has no evidence record`, field)),
     ...unavailableChecks.map((field) => issue('evidence.unavailable', `${field} could not be checked`, field)),
     ...pendingReview.map((field) => issue('evidence.pending-review', `${field} is waiting for judgement`, field)),
   ];
-  const proposed = proposedLabels(currentLabels, assessment, configuration);
+  const proposed = proposalReview ? currentLabels : proposedLabels(currentLabels, assessment, configuration);
   const status = errors.length ? 'invalid' : warnings.length ? 'blocked' : 'ready';
   return {
     schemaVersion: 1,

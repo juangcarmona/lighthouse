@@ -36,6 +36,21 @@ test('candidate publication has no target or credential chosen by the engine and
   assert.deepEqual(validateStageEnvelope({ ...envelope, result: { ...result, status: 'blocked', missingEvidence: ['audience'] } }, request), []);
 });
 
+test('product technical blockers cannot also project an owner question', () => {
+  const productChange = { schemaVersion: 1, outcome: 'blocked', entry: 'feedback', affectedAreas: [], decisions: [], blocker: 'The provider is unavailable.', recovery: 'Install the pinned provider.' };
+  const envelope = { schemaVersion: 1, result: { ...result, stage: 'propose', gate: 'planned', status: 'blocked', output: { productChange } }, effect: { type: 'issue-comment', body: 'The provider is unavailable.' } };
+  const productRequest = { ...request, stage: 'propose', worker: 'product-change' };
+  assert.deepEqual(validateStageEnvelope(envelope, productRequest), []);
+  envelope.result.output.handoff = { question: 'Can you decide?' };
+  assert.ok(validateStageEnvelope(envelope, productRequest).some(error => /cannot also claim an owner question/.test(error)));
+  envelope.result.output.productChange = { ...productChange, blocker: undefined, recovery: undefined, question: 'Which behavior?' };
+  delete envelope.result.output.productChange.blocker;
+  delete envelope.result.output.productChange.recovery;
+  assert.ok(validateStageEnvelope(envelope, productRequest).some(error => /questions do not match/.test(error)));
+  envelope.result.output.handoff.question = 'Which behavior?';
+  assert.deepEqual(validateStageEnvelope(envelope, productRequest), []);
+});
+
 test('packed consumer resolves preflight and result validation with no Lighthouse source tree', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-installed-'));
   try {

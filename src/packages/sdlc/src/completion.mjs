@@ -121,7 +121,7 @@ export async function checkCommit(api, revision, required) {
   });
 }
 export function completionEffects(stage, status) {
-  return stage === 'review' && status === 'passed' ? { add: [], remove: ['waiting-review', 'ready', 'pr-draft', 'pr-ready', 'integrate', 'review'], closeIssue: true } : { add: ['waiting-review'], remove: [], closeIssue: false };
+  return stage === 'review' && status === 'passed' ? { add: [], remove: ['waiting-review', 'ready', 'pr-draft', 'pr-ready', 'integrate', 'review'], closeIssue: true } : { add: [], remove: [], closeIssue: false };
 }
 export async function inspectCompletion(api, repository, owner, input, stage, workflowRunId = null, { observeDraft = false } = {}) {
   const repo = await api(''), current = await api(`commits/${encodeURIComponent(repo.default_branch)}`);

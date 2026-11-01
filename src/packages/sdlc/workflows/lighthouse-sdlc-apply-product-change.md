@@ -176,6 +176,34 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs product-apply-publish
+  finalize:
+    name: Report an interrupted product apply
+    needs: [prepare, apply, publish]
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: read
+    env:
+      LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+      LIGHTHOUSE_PREPARE_RESULT: ${{ needs.prepare.result }}
+      LIGHTHOUSE_APPLY_RESULT: ${{ needs.apply.result }}
+      LIGHTHOUSE_PUBLISH_RESULT: ${{ needs.publish.result }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Publish the authenticated outcome
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs product-apply-cleanup
 ---
 
 # Apply an approved Product Change

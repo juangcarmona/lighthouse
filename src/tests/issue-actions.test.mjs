@@ -4,7 +4,45 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, publishRoutingHandoff } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('routing handoffs are idempotent per authenticated feedback identity', async () => {
+  const comments = [], posts = [];
+  const api = async (path, method = 'GET', payload) => {
+    if (method === 'GET') return comments;
+    posts.push(payload.body);
+    comments.push({ user: { login: 'github-actions[bot]', type: 'Bot' }, body: payload.body });
+  };
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-1', 'Requested'), true);
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-1', 'Already handled'), false);
+  assert.equal(await publishRoutingHandoff(api, 10, 'feedback-2', 'Requested'), true);
+  assert.equal(posts.length, 2);
+});
+
+test('continuation binds the previous question to the authenticated reply', () => {
+  const prior = { request: { runId: 'prior-run' }, envelope: { result: { output: { handoff: { question: 'May these assets be reused?' } } } } };
+  assert.deepEqual(continuationContext(prior, { body: 'Yes, all ten.', html_url: 'https://example.test/reply' }), { question: 'May these assets be reused?', answer: { body: 'Yes, all ten.', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
+  const first = continuationHistory(prior, { body: 'Yes, all ten.', html_url: 'https://example.test/reply' });
+  const second = { request: { runId: 'next-run', answerHistory: first }, envelope: { result: { output: { handoff: { question: 'Which format?' } } } } };
+  assert.deepEqual(continuationHistory(second, { body: 'PDF', html_url: 'https://example.test/reply2' }).map(item => [item.question, item.answer.body]), [['May these assets be reused?', 'Yes, all ten.'], ['Which format?', 'PDF']]);
+  assert.throws(() => continuationHistory({ ...second, request: { ...second.request, answerHistory: Array(17).fill(first[0]) } }, { body: 'PDF', html_url: 'https://example.test/reply2' }), /exceeds|Invalid/);
+  prior.envelope.result.output = {};
+  assert.deepEqual(continuationContext(prior, { body: 'Yes', html_url: 'https://example.test/reply' }), { answer: { body: 'Yes', url: 'https://example.test/reply' }, priorRunId: 'prior-run' });
+});
+
+test('completed refinement names the actual next action for each continuation policy', () => {
+  assert.match(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: false }).action, /Owner: review/);
+  assert.match(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: true }).action, /remove the future label/);
+  assert.equal(refinementNextAction({ stage: 'refine', status: 'passed', autoImplement: true, paused: false }).action, 'None.');
+  assert.equal(refinementNextAction({ stage: 'refine', status: 'blocked', autoImplement: true }), null);
+});
+
+test('product outcomes must match the authenticated idea or feedback entry', () => {
+  assert.doesNotThrow(() => checkProductEntry({ entry: 'idea' }, {}));
+  assert.doesNotThrow(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'feedback' }));
+  assert.throws(() => checkProductEntry({ entry: 'idea' }, { productEntry: 'feedback' }), /different authorized entry/);
+  assert.throws(() => checkProductEntry({ entry: 'feedback' }, { productEntry: 'idea' }), /different authorized entry/);
+});
 const issue = { number: 18, title: 'Migrate', body: 'Preserve content', state: 'open', labels: [] };
 test('independent dispatch rejects issue aliases before claiming outside the issue concurrency group', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-dispatch-input-'));
@@ -49,6 +87,9 @@ test('pending reply ignores stale, empty and spoofed reports and cannot replay a
   assert.equal(pendingReply(event, [report('implement')]).stage, 'implement');
   assert.equal(pendingReply(event, [{ ...report('implement'), body: report('implement').body + '\n[Review the implementation](https://example.test/pr)' }]), null);
   assert.equal(pendingReply(event, [{ ...report(), body: report().body.replace(/<!-- lighthouse-stage:.* -->/, '') }]).stage, 'propose');
+  const operationalBlocker = { ...report(), body: `${report().body}\n<!-- lighthouse-handoff:v1 -->` };
+  assert.equal(pendingReply(event, [operationalBlocker]), null);
+  assert.equal(pendingReply(event, [{ ...operationalBlocker, body: `${operationalBlocker.body}\n<!-- lighthouse-question -->` }]).stage, 'propose');
 });
 test('publication refuses changed answers, changed source, closed issues and human takeover', () => {
   const comments = [{ id: 1, body: 'Authorized', updated_at: 'now' }];
@@ -109,4 +150,11 @@ test('future pauses implementation and its removal resumes an implement-labelled
   event.action = 'unlabeled'; event.label.name = 'future'; event.issue.labels = [{ name: 'implement' }];
   assert.equal(routeIssue(event, 'owner', 'owner', 'issues').stage, 'implement');
   assert.equal(routeIssue(event, 'outsider', 'owner', 'issues').run, false);
+});
+
+test('an explicit question remains answerable when a proposal review is also linked', () => {
+  const question = { ...report('propose'), body: `${report('propose').body}\n<!-- lighthouse-proposal-review:44 -->\n<!-- lighthouse-question -->` };
+  assert.equal(pendingReply({ comment: reply }, [question])?.stage, 'propose');
+  const reviewOnly = { ...question, body: question.body.replace('<!-- lighthouse-question -->', '') };
+  assert.equal(pendingReply({ comment: reply }, [reviewOnly]), null);
 });

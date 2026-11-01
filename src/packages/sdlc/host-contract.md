@@ -41,6 +41,8 @@ Outer evidence and blocker arrays cover the requested stage. Keep unperformed la
 
 The only effect is `{type: "issue-comment", body: "..."}` with 1–16000 characters. The engine cannot select a repository, issue, credential or merge action. The publisher reserves `<!-- lighthouse-run:` markers and derives the destination from admission. It may publish clarification or blocked-stage reports but must never treat those as completed stages.
 
+A blocked result may include `result.output.handoff.question` when an owner answer is required. The question is complete, non-empty, at most 4,000 characters and cannot contain reserved Lighthouse markers. Omit the handoff field for an operational blocker; the host does not infer a human question from free-form prose. Existing stage-specific output remains supported.
+
 Before applying an effect, the host rechecks authority and work-item freshness, persists publication intent and fences the publisher. It retains an immutable receipt or an explicit uncertain outcome. A retry must reconcile that outcome before emitting another effect. A completed stage waits for a verifiable owner decision; the envelope itself grants no approval.
 
 ## Commands

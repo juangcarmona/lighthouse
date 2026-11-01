@@ -50,7 +50,7 @@ async function fixture() {
       return comments;
     }
     if (path === 'issues/1/labels' && method === 'POST') { labels.push(...body.labels); return []; }
-    if (path === 'issues/1/labels/agent-working' && method === 'DELETE') { labels.splice(labels.indexOf('agent-working'), 1); return null; }
+    if (path.startsWith('issues/1/labels/') && method === 'DELETE') { const label = path.slice('issues/1/labels/'.length), index = labels.indexOf(label); if (index >= 0) labels.splice(index, 1); return null; }
     if (path.startsWith('pulls?state=open')) return [];
     if (path === 'git/commits/' + revision) return { tree: { sha: 'tree' } };
     if (path === 'git/blobs' || path === 'git/trees' || path === 'git/commits') return { sha: 'b'.repeat(40) };
@@ -143,6 +143,13 @@ test('a rejected plan reports the actual reviewer findings and does not start im
     const result = await runGithubUnattended(f);
     assert.equal(result.status, 'blocked'); assert.match(result.reason, /Root cause is not justified by source/);
     assert.equal(f.executions.length, 2); assert.ok(!f.writes.some(w => w.path === 'pulls'));
+    const startLabel = f.writes.findIndex(w => w.path === 'issues/1/labels' && w.body.labels.includes('agent-working'));
+    const startComment = f.writes.findIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Working ·'));
+    const endLabel = f.writes.findIndex(w => w.path === 'issues/1/labels/agent-working' && w.method === 'DELETE');
+    const endComment = f.writes.findIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Blocked ·'));
+    assert.ok(startLabel >= 0 && startLabel < startComment && endLabel > startComment && endLabel < endComment);
+    assert.match(f.comments.at(-1).body, /Root cause is not justified by source/);
+    assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
@@ -325,4 +332,80 @@ test('the native host integrates with concurrent readiness and retains its merge
     assert.ok(!f.labels.includes('agent-working'));
   } finally { await rm(f.root, { recursive: true, force: true }); }
   });
+});
+
+test('an unattended stop never clears a newer execution reservation or overwrites its handoff', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      f.comments.push({ id: f.comments.length + 1, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-dispatch:{"newer":true} -->' });
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.missingEvidence = ['New blocker'];
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['The plan needs a decision.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.ok(f.labels.includes('agent-working'));
+    assert.match(f.comments.at(-1).body, /lighthouse-dispatch/);
+    assert.equal(f.writes.some(w => w.path === 'issues/1/labels/agent-working' && w.method === 'DELETE'), false);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('a human hold preserves an uncertain execution reservation and names the recovery action', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      f.labels.push('human-working');
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.missingEvidence = ['Owner hold'];
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Owner intervention is needed.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.ok(f.labels.includes('agent-working'));
+    assert.match(f.comments.at(-1).body, /human hold and existing execution reservation/);
+    assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('an unattended product question is actionable and its answer survives an authorized retry', async () => {
+  const f = await fixture(), execute = f.execute, question = 'Who can enable the option?';
+  let first = true, observedAnswer = false;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (first && options.request.stage === 'triage') {
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.output.handoff = { question };
+      result.envelope.effect.body = 'The product decision is missing.';
+    }
+    if (!first && options.request.stage === 'triage') observedAnswer = options.context.issue.ownerAnswers.some(answer => answer.body === 'The repository owner.');
+    return result;
+  };
+  try {
+    const stopped = await runGithubUnattended(f);
+    assert.equal(stopped.status, 'blocked');
+    assert.ok(f.labels.includes('needs-info'));
+    assert.match(f.comments.at(-1).body, /Owner: Who can enable the option\? Reply here\./);
+    assert.match(f.comments.at(-1).body, /reply does not approve another gate/);
+    const last = f.writes.findLastIndex(w => w.path === 'issues/1/comments' && w.body.body.includes('Waiting for your answer'));
+    const label = f.writes.findLastIndex(w => w.path === 'issues/1/labels' && w.body.labels.includes('needs-info'));
+    assert.ok(label >= 0 && label < last);
+    f.comments.push({ id: f.comments.length + 1, user: { login: 'owner', type: 'User' }, body: 'The repository owner.', updated_at: '2026-10-31T12:00:00Z' });
+    f.labels.splice(f.labels.indexOf('needs-info'), 1);
+    first = false;
+    const oldApi = f.api;
+    f.api = (path, ...args) => oldApi(path === 'actions/runs/124' ? 'actions/runs/123' : path, ...args);
+    f.env.GITHUB_RUN_ID = '124';
+    const retried = await runGithubUnattended(f);
+    assert.equal(retried.status, 'waiting-human', retried.reason);
+    assert.equal(observedAnswer, true);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
 });
