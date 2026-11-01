@@ -1,0 +1,223 @@
+{
+  "binding": "4c8c97f06f9e808643de0275c8685e2ff096124288fb1ce885ac81e5a4a3fc02",
+  "runId": "41290697468",
+  "attempt": "1",
+  "sourceRevision": "37da052a84691adc2a31d47373b587a0d0e3a949",
+  "intent": "6fe6b5d736e8bdd5ca6597144a6a6ceb47540ed8a02b73294b516763942414a8",
+  "policyDigest": "29389857aa68b2b90bf7957b23922723429997776b470cc0843b30f4b91ded88",
+  "details": {
+    "refined": {
+      "eligibility": {
+        "points": 1,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "Issue #196 explicitly requests only acceptence -> acceptance in src/tests/fixtures/unattended/README.md; line 3 contains that exact typo. This is a one-point localized documentation correction, not a label conversion. The adjacent regression caller imports eligibility.mjs directly and tests its inclusive boundary without consuming README text. No runtime, schema, policy or migration change is needed; the isolated edit is reverted by restoring that word. The supplied dependency summary has no blockers and the issue defines the outcome and main target without an unresolved product decision. Existing FF policy admits this fixture directory; provider planning, independent reviews and configured checks remain required later."
+      },
+      "problem": "The controlled unattended-delivery fixture README misspells acceptance in its introductory description.",
+      "affectedUsers": [
+        "Maintainers and reviewers reading the controlled FF/hotfix acceptance fixture documentation."
+      ],
+      "plannedFiles": [
+        "src/tests/fixtures/unattended/README.md"
+      ],
+      "constraints": [
+        "Replace only acceptence with acceptance in the introductory sentence; preserve every other README byte and all fixture behavior.",
+        "Do not alter eligibility.mjs, regression.test.mjs, unattended policy, workflows or production code.",
+        "Retain provider planning, independent planning and candidate review, and required repository checks under the existing fixture-only policy.",
+        "The integration target is main; this assessment does not authorize implementation, merge, release or deployment."
+      ],
+      "acceptanceCriteria": [
+        "The README contains the exact phrase controlled acceptance fixture in place of controlled acceptence fixture.",
+        "The fixture correction diff contains only that word replacement in src/tests/fixtures/unattended/README.md; any separately required provider planning artifacts remain within the host-authorized planning root.",
+        "All other fixture text, source and test bytes remain unchanged, including the existing inclusive boundary behavior.",
+        "Configured implementation checks and independent reviews are retained and must succeed at their respective later gates."
+      ],
+      "outOfScope": [
+        "Repairing or reintroducing the boundary defect described elsewhere in the fixture README.",
+        "Other wording cleanup, new runtime behavior, new tests, policy changes or workflow changes.",
+        "Release and deployment."
+      ],
+      "dependencies": [],
+      "risks": [
+        "Accidental expansion beyond the requested typo; control with an exact diff review and unchanged fixture source/tests."
+      ],
+      "definitionOfReady": {
+        "problemAndAffectedUsersKnown": true,
+        "acceptanceCriteriaTestable": true,
+        "scopeAndConstraintsKnown": true,
+        "dependenciesResolved": true,
+        "productMeaningResolved": true,
+        "verificationDefined": true
+      },
+      "verificationPlan": {
+        "textAndDiff": "Verify the exact corrected phrase and a single word replacement; compare all other fixture bytes against the authorized source.",
+        "configuredCommands": [
+          [
+            "npm",
+            "ci",
+            "--ignore-scripts"
+          ],
+          [
+            "env",
+            "GITHUB_ACTIONS=true",
+            "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+            "npm",
+            "run",
+            "verify"
+          ],
+          [
+            "node",
+            "--test",
+            "src/tests/fixtures/unattended/regression.test.mjs"
+          ]
+        ],
+        "executionStatus": "Not executed in this read-only refinement; implementation and trusted-host checks remain later work."
+      }
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-196-proposal/proposal.md",
+          "content": "# Proposal\n\n<!-- pdac-scope: none reason=\"Issue #196 explicitly classifies this single-word fixture documentation correction as having no new product intent; no product behavior or canonical artifact changes.\" -->\n\n## Why\n\nIssue #196 requests correction of a typo in the controlled unattended-delivery fixture as acceptance work for #185 and PR #190. The correction must not change fixture behavior.\n\n## What Changes\n\n- Replace only `acceptence` with `acceptance` in `src/tests/fixtures/unattended/README.md`, producing `controlled acceptance fixture`.\n- Preserve every other fixture byte, including the boundary-description paragraph, eligibility source and tests.\n\n## Capabilities\n\n### New Capabilities\n\nNone.\n\n### Modified Capabilities\n\nNone. No spec-level behavior changes; `.openspec.yaml` contains `skip_specs: true`. The accepted `openspec/specs/` inventory contains only `.gitkeep`.\n\n## Impact\n\nOne documentation word; no API, runtime, data, dependency, product-model or architecture changes. Provider planning artifacts remain within this change root. Existing FF fixture-only policy, required repository checks and independent planning/candidate reviews remain unchanged; this proposal grants no implementation, merge, release or deployment permission. Integration target: `main`.\n"
+        },
+        {
+          "path": "openspec/changes/issue-196-proposal/design.md",
+          "content": "# Design\n\n<!-- pdac-scope: none reason=\"The owner-defined documentation-only correction in issue #196 requires no product-semantic or architecture decision.\" -->\n\n## Context\n\nSee proposal.md for motivation. The typo is on README line 3. `eligibility.mjs` already uses `>= 2`; existing regression tests import it directly and do not consume README text.\n\n## Goals / Non-Goals\n\n**Goal:** Keep the implementation diff limited to the exact requested word replacement.\n\n**Non-goals:** Reconcile the historical boundary-defect wording, change code or tests, modify delivery policy, or alter product and architecture authorities. Interfaces and stored data are unaffected.\n\n## Decisions\n\nUse a literal word replacement, not paragraph rewriting or Markdown reformatting, to preserve all other bytes. Keep existing tests unchanged rather than adding a test for prose; exact text/byte comparison verifies the correction, while configured checks verify repository compatibility. Use the no-spec marker rather than manufacturing a behavioral requirement.\n\n## Risks / Trade-offs\n\n- Accidental cleanup beyond scope → compare the fixture against the authorized source, allowing only the requested replacement.\n- Historical wording remains imperfect → leave it intact as explicitly required.\n\n## Verification and Definition of Done\n\nThe corrected phrase is present; the README equals its original bytes with only `acceptence` replaced by `acceptance`; every other fixture file is unchanged. All configured commands in tasks.md must pass later, and independent planning review precedes implementation while independent candidate review follows verification. No new tests or visual evidence are needed because runtime and UI are unchanged. The trusted host materializes and validates these provider artifacts.\n\n## Migration Plan\n\nNo migration or deployment is needed. Integration targets `main` only through the existing authorized route. Roll back the fixture correction by reverting its isolated word replacement; release and deployment remain separate.\n"
+        },
+        {
+          "path": "openspec/changes/issue-196-proposal/tasks.md",
+          "content": "# Tasks\n\n<!-- pdac-scope: none reason=\"These tasks implement and verify only the documentation correction explicitly defined by the owner in issue #196, without changing product behavior.\" -->\n\n## 1. Fixture documentation correction\n\n- [ ] 1.1 After the existing independent planning review passes and the host authorizes implementation, replace only `acceptence` with `acceptance` in `src/tests/fixtures/unattended/README.md`; verify `controlled acceptance fixture` is present, the README bytes equal the authorized original with only that replacement, and all other fixture files are byte-identical. Confirm the implementation diff touches no source, tests, policy or workflows; any provider artifacts remain within `openspec/changes/issue-196-proposal/`.\n- [ ] 1.2 Verify the candidate using the configured commands in order: `npm ci --ignore-scripts`, `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify`, and `node --test src/tests/fixtures/unattended/regression.test.mjs`; retain successful results for independent candidate review without weakening required checks.\n\n## Workflow follow-up\n\n- Retain independent candidate review and trusted-host authorization checks before integration into `main` under the existing fixture-only FF policy; this plan does not grant merge permission.\n- Archive only through the provider workflow after applicable reviews and checks; release and deployment remain separately authorized.\n"
+        },
+        {
+          "path": "openspec/changes/issue-196-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-01\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "eligibility": {
+          "points": 1,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "Issue #196 explicitly requests only acceptence -> acceptance in src/tests/fixtures/unattended/README.md; line 3 contains that exact typo. This is a one-point localized documentation correction, not a label conversion. The adjacent regression caller imports eligibility.mjs directly and tests its inclusive boundary without consuming README text. No runtime, schema, policy or migration change is needed; the isolated edit is reverted by restoring that word. The supplied dependency summary has no blockers and the issue defines the outcome and main target without an unresolved product decision. Existing FF policy admits this fixture directory; provider planning, independent reviews and configured checks remain required later."
+        },
+        "problem": "The controlled unattended-delivery fixture README misspells acceptance in its introductory description.",
+        "affectedUsers": [
+          "Maintainers and reviewers reading the controlled FF/hotfix acceptance fixture documentation."
+        ],
+        "plannedFiles": [
+          "src/tests/fixtures/unattended/README.md"
+        ],
+        "constraints": [
+          "Replace only acceptence with acceptance in the introductory sentence; preserve every other README byte and all fixture behavior.",
+          "Do not alter eligibility.mjs, regression.test.mjs, unattended policy, workflows or production code.",
+          "Retain provider planning, independent planning and candidate review, and required repository checks under the existing fixture-only policy.",
+          "The integration target is main; this assessment does not authorize implementation, merge, release or deployment."
+        ],
+        "acceptanceCriteria": [
+          "The README contains the exact phrase controlled acceptance fixture in place of controlled acceptence fixture.",
+          "The fixture correction diff contains only that word replacement in src/tests/fixtures/unattended/README.md; any separately required provider planning artifacts remain within the host-authorized planning root.",
+          "All other fixture text, source and test bytes remain unchanged, including the existing inclusive boundary behavior.",
+          "Configured implementation checks and independent reviews are retained and must succeed at their respective later gates."
+        ],
+        "outOfScope": [
+          "Repairing or reintroducing the boundary defect described elsewhere in the fixture README.",
+          "Other wording cleanup, new runtime behavior, new tests, policy changes or workflow changes.",
+          "Release and deployment."
+        ],
+        "dependencies": [],
+        "risks": [
+          "Accidental expansion beyond the requested typo; control with an exact diff review and unchanged fixture source/tests."
+        ],
+        "definitionOfReady": {
+          "problemAndAffectedUsersKnown": true,
+          "acceptanceCriteriaTestable": true,
+          "scopeAndConstraintsKnown": true,
+          "dependenciesResolved": true,
+          "productMeaningResolved": true,
+          "verificationDefined": true
+        },
+        "verificationPlan": {
+          "textAndDiff": "Verify the exact corrected phrase and a single word replacement; compare all other fixture bytes against the authorized source.",
+          "configuredCommands": [
+            [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            [
+              "node",
+              "--test",
+              "src/tests/fixtures/unattended/regression.test.mjs"
+            ]
+          ],
+          "executionStatus": "Not executed in this read-only refinement; implementation and trusted-host checks remain later work."
+        }
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "7259480032878ef99ff8acfea4de79344e39a768d38cf1c81e98e1532a1ac506",
+    "stage": "integrate",
+    "status": "passed",
+    "gate": "done",
+    "evidence": [
+      {
+        "id": "plan-scope-and-criteria-review",
+        "status": "passed",
+        "source": "context.review.details.refined and original issue #196",
+        "reason": "The plan bounds implementation to the exact README typo and preserves fixture behavior; its criteria are concrete and testable."
+      },
+      {
+        "id": "fixture-scope-and-policy-review",
+        "status": "passed",
+        "source": "/workspace/src/tests/fixtures/unattended/README.md, eligibility.mjs, regression.test.mjs, and .lighthouse/unattended.json",
+        "reason": "The README has the described typo, the existing caller tests eligibility.mjs directly, and unattended policy lists this fixture path."
+      },
+      {
+        "id": "verification-and-rollback-plan-review",
+        "status": "passed",
+        "source": "context.review.details.refined.verificationPlan and plan tasks/design",
+        "reason": "Exact text and byte-scope comparison, configured checks, independent later review, and reverting the isolated word replacement are specified. Planned checks are not represented as executed."
+      }
+    ],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "nextAction": "Proceed to host-authorized implementation; run the configured checks and obtain the required independent candidate review at their later gates. This review does not authorize merge, release, or deployment.",
+    "output": {
+      "review": {
+        "binding": "4c8c97f06f9e808643de0275c8685e2ff096124288fb1ce885ac81e5a4a3fc02",
+        "verdict": "accept",
+        "findings": []
+      },
+      "assessment": "The plan aligns with issue #196's explicit documentation-only request, provides measurable acceptance criteria, limits scope, identifies the relevant risk, and gives a direct rollback. The planned command list matches the issue-specific implementation configuration in .lighthouse/implement.json. Source inspection confirms the README typo and that existing regression tests exercise the unchanged eligibility module. No candidate diff, RED/GREEN result, or CI outcome was assessed or claimed; those remain later-stage requirements. Acceptance applies only to this planning binding and grants no merge authority."
+    }
+  },
+  "proposalRunId": "02b7a412d1c6adf166bc48acfeb4fb8496aedd004f8881e2eb3fde6c50f1f218",
+  "reviewRunId": "7259480032878ef99ff8acfea4de79344e39a768d38cf1c81e98e1532a1ac506",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-41290697468-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/41290697468"
+}

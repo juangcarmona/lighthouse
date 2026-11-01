@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "runId": "6f553c4817d040dc250b5c5e91451a225a4934df58d07b5b61ef15476ee75f8d",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "accepted-scope-and-affected-guidance",
+      "status": "passed",
+      "source": "/workspace/src/tests/fixtures/unattended/README.md:3-7; /workspace/openspec/changes/issue-196-proposal/; /input/context.json completion.files and priorIntegration.receipt.authorization.unattended.review.result",
+      "reason": "The requested phrase is present. Host-supplied changed paths contain only the README and four authorized planning artifacts. The retained independent candidate review assessed the exact word replacement and unchanged fixture behavior. Local inspection confirms the inclusive comparison and three boundary tests; no new execution or independent historical byte comparison is claimed. Remaining historical README wording was explicitly excluded from this correction."
+    },
+    {
+      "id": "retained-independent-planning-review",
+      "status": "passed",
+      "source": "/input/context.json priorPlanningReview; https://github.com/juangcarmona/lighthouse/actions/runs/41290697468",
+      "reason": "Host-verified provider planning and independent acceptance bind the original issue intent to the bounded documentation correction. The four delivered planning artifacts match that scope; tasks are marked complete. The owner-defined absence of new product intent supports the explicit no-product-scope declarations; no Product Change or architecture change is introduced."
+    },
+    {
+      "id": "retained-candidate-review-and-command-evidence",
+      "status": "passed",
+      "source": "/input/context.json priorIntegration.receipt.authorization.unattended.review.result; /workspace/.lighthouse/implement.json:50-76",
+      "reason": "The separate candidate assessment accepted the actual candidate and retained successful host execution evidence for npm ci, repository verify (301 passing, zero failing, six skipped tests), fixture regression (three passing tests), and strict OpenSpec validation. These are historical retained results, not checks executed in this review. Empty GitHub PR reviews do not negate this independently retained review; the effective policy requires zero GitHub approvals."
+    },
+    {
+      "id": "integration:41290697468:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/80c39a3938f1beaa1f6ec8c74faed35fc63ee5f2/docs/process/20261101-196-test-exercise-native-ff-delivery-on-the-controlled-fixture/runs/41290697468/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected-branch evidence records successful authorized integration of PR #238 accepted head 85cd5b37af4e0645d41b19026d83f77f88711232 as merge 064832a9c919fe72dd8f1407e629d2565a5254cd, with explicit historical merge:true authorization. Current authenticated observations independently report the PR merged. The current review dispatch has merge:false and grants no new integration authority."
+    },
+    {
+      "id": "github-check:124804542067",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41291784260/job/124804542067",
+      "reason": "Authenticated repository check from app 15368 succeeded at accepted PR head 85cd5b37af4e0645d41b19026d83f77f88711232."
+    },
+    {
+      "id": "github-check:124805014844",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41292016004/job/124805014844",
+      "reason": "Authenticated required repository check from app 15368 succeeded at actual merged and checked revision 064832a9c919fe72dd8f1407e629d2565a5254cd. Host-authenticated postMerge also records configured ci.yml run 41292016004 passed at this revision. The integration report's earlier empty postMerge array is historical, not a present verification gap."
+    },
+    {
+      "id": "completion-policy-and-instruction-continuity",
+      "status": "passed",
+      "source": "/workspace/AGENTS.md; /workspace/src/packages/sdlc/completion.md:30-36; /workspace/src/packages/sdlc/unattended.md:5-9,20-38; /workspace/src/packages/sdlc/skills/review/SKILL.md; /workspace/openspec/config.yaml; /workspace/.lighthouse/github.json; /input/context.json completion.finalization",
+      "reason": "Affected guidance preserves provider ownership, bounded fixture delegation, independent review, required checks and separate release authority. Repository and harness review skills agree. Documented unverified provider settings are not evidence of authenticated model identity and are not a required acceptance check. Finalization policy matches the completion guide: close the issue and remove delivery labels only after a validated passed review; preserve PR labels and leave reservation cleanup to the host. Current waiting-review/pr-draft issue labels are pending finalization, not a failed transition."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, bound evidence, checks and reservation; publish this review on the adopted evidence branch, then apply the passed finalization policy for issue #196. Do not merge again, change permissions, open follow-up issues or start another stage.",
+  "output": {
+    "assessment": "Accepted delivery satisfies issue #196: the exact README correction is present, implementation scope excludes runtime changes, provider planning and independent reviews are retained, and required repository and configured post-merge checks passed. No unresolved current-stage evidence or decision remains. Confirmed integration is established by the host-verified receipt and current merged observation, not by a green assessment alone. No newly introduced runtime defect was established.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 196,
+      "pr": 238,
+      "acceptedHead": "85cd5b37af4e0645d41b19026d83f77f88711232",
+      "mergedRevision": "064832a9c919fe72dd8f1407e629d2565a5254cd",
+      "checkedRevision": "064832a9c919fe72dd8f1407e629d2565a5254cd",
+      "hostObservedCurrentRevision": "17cabc9171121035a7885aeb80f1401871d4ec61",
+      "intent": "6fe6b5d736e8bdd5ca6597144a6a6ceb47540ed8a02b73294b516763942414a8",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "5ebf910dc16ec81a163db29c76260fdc968d6c03e3670c70b9fcf0d91ca780cc",
+      "files": "84f52b775e86d6b45060b427c27194f7bb785a6b40cb3d21723945251a548e90",
+      "planningReviewBinding": "4c8c97f06f9e808643de0275c8685e2ff096124288fb1ce885ac81e5a4a3fc02",
+      "candidateReviewBinding": "b13c88c79ce0f1bfd95beca65d836c0fc17e26a9a6ff6d1d42a7d722c9c82fad",
+      "integrationRecordSha256": "b55948320d0a5766e5505dada261659de858a491123cdee071e572086b047ab1",
+      "provenance": "Supplied and authenticated by the host; no independent git, GitHub API or provider identity verification was performed by this engine. The newer observed default tip is not substituted for the delivered and checked revision."
+    },
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-documentation-defect",
+        "finding": "The fixture introduction misspelled acceptance; the delivered README now says controlled acceptance fixture.",
+        "owner": "juangcarmona, repository maintainer",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/238",
+        "evidence": "src/tests/fixtures/unattended/README.md:3; retained independent candidate scope review; completion.files",
+        "disposition": "Resolved by the accepted delivery; no further work required."
+      },
+      {
+        "id": "F2",
+        "classification": "accepted",
+        "kind": "pre-existing-documentation-mismatch",
+        "finding": "README line 5 describes an initial strict boundary defect, whereas eligibility.mjs:3 already uses >= 2 and regression.test.mjs:5-6 checks equality. This is historical wording, not evidence of a current runtime boundary defect.",
+        "owner": "juangcarmona, fixture maintainer",
+        "followUpReference": "issue #196 accepted constraints; openspec/changes/issue-196-proposal/design.md:13,22",
+        "evidence": "src/tests/fixtures/unattended/README.md:5; eligibility.mjs:3; regression.test.mjs:5-6; priorPlanningReview.details.refined.outOfScope",
+        "disposition": "Preservation was explicit in the accepted scope. No repair or new guard is authorized here; any later wording change requires separately scoped work."
+      },
+      {
+        "id": "F3",
+        "classification": "deferred",
+        "kind": "delivery-summary-process-gap",
+        "finding": "The host-observed PR description still says independent candidate review and integration are next, although retained evidence proves both completed. This stale summary is not a source-code defect or an unresolved acceptance requirement.",
+        "owner": "juangcarmona / SDLC completion maintainers (proposed follow-up owner)",
+        "followUpReference": "this review F3; https://github.com/juangcarmona/lighthouse/pull/238",
+        "evidence": "completion.pullRequest.body compared with priorIntegration.receipt.state=merged and the retained accepted candidate review",
+        "disposition": "Recorded as a nonblocking improvement candidate only. No issue was opened, PR text changed, implementation started or owner approval inferred."
+      }
+    ],
+    "verificationLimits": {
+      "newChecksExecuted": false,
+      "historicalCheckUse": "Retained executed results and authenticated GitHub observations were assessed; planning text and checked task boxes alone were not treated as execution proof.",
+      "skippedChecks": "Optional observations with state=skipped were not counted as executed acceptance tests or promoted to mandatory gates.",
+      "providerSettings": "Configured producer and reviewer identifiers differ, and separately bound reviews are retained. Provider-reported model/settings identity remains unverified as documented by unattended.md:5; no authenticated model identity, cost or attention-time claim is made.",
+      "historicalManualAcceptance": "No separate manual or visual acceptance is required by this documentation-only work item; none is claimed.",
+      "recurrence": "Only this work item's observations support these findings; neither retries nor the number of CI/router jobs establishes recurrence across work items.",
+      "releaseAndDeployment": "Outside issue #196's scope. No release, deployment, smoke-check or rollback outcome is assessed or authorized by this review."
+    },
+    "finalization": {
+      "executor": "trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "waiting-review",
+          "pr-draft"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedOnPassed": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "Host cleanup releases agent-working for every outcome; no engine label mutation is performed.",
+      "publication": "Host publication to process/retrospectives is subsequent to envelope validation; this engine has not claimed that publication or finalization already occurred."
+    },
+    "retrospective": "## What went well\n- The single-word correction stayed bounded to the fixture README plus four authorized planning artifacts. The retained candidate review assessed the exact diff, and current source contains the requested phrase (F1).\n- Provider planning, separately bound independent planning/candidate reviews, executed host checks and authenticated repository CI were retained. The protected integration receipt confirms the merge; configured post-merge ci.yml passed at the actual merged revision, filling the historical integration invocation's intentionally empty post-merge record.\n\n## What went wrong\n- PR #238's observed description still lists pre-integration next steps after confirmed integration (F3): a delivery-summary process gap, not a runtime defect.\n- The fixture README's historical strict-comparison paragraph does not describe the current inclusive implementation (F2). The accepted plan explicitly required preserving it; this delivery did not introduce it. No other source defect or failed required check was established. Provider-authenticated model settings remain unknown, not failed.\n\n## Start doing\n- SDLC completion maintainers: consider a terminal-state summary for merged deliveries, grounded in the accepted-head and merge receipts rather than rewriting historical evidence (F3). This is a proposal, not an approved change.\n\n## Stop doing\n- Do not present the observed PR body's pre-integration next steps as current delivery state (F3). Continue distinguishing skipped observations, historical missing checks and current authenticated successes; do not infer deployment or merge from an assessment alone.\n\n## Improvement candidates\n- **F3 — stale terminal summary.** Evidence: completion.pullRequest.body still requests candidate review/integration, while priorIntegration retains the accepted review and merged receipt. Proposed owner: juangcarmona / SDLC completion maintainers. Smallest useful guard: a receipt-bound terminal summary alongside the preserved historical PR description. Reproduce first with this observed PR-body/merged-receipt pair and demonstrate the misleading current-next-step output. In separately reviewed work, add regression coverage showing the terminal summary supersedes stale next steps only with a matching confirmed receipt, while unmerged/mismatched receipts retain their blockers and publication failures do not claim completion. Verify that the guard changes neither authorization nor merge/check rules. No correction or regression proof was performed here.\n- **F2 — accepted historical wording:** no new guard is proposed; any clarification belongs to separately authorized fixture documentation work owned by juangcarmona.\n\nOnly one work item is evidenced. Recurrence, attention time and cost are not established. Policy/provider-guidance changes require their own review; this stage records learning without opening issues or starting another stage."
+  }
+}
