@@ -4,7 +4,7 @@ name: implement
 description: Plan and implement an authorized issue in an isolated workspace and deliver a reviewable PR.
 run-name: "implement #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
-  group: lighthouse-issue-${{ inputs.issue }}
+  group: ${{ inputs.epic-parent && format('lighthouse-epic-child-{0}', inputs.issue) || format('lighthouse-issue-{0}', inputs.issue) }}
   cancel-in-progress: false
   queue: max
   job-discriminator: ${{ github.run_id }}
@@ -21,6 +21,10 @@ on:
         description: Authenticated router receipt comment ID
         required: true
         type: string
+      epic-parent:
+        description: Authenticated parent issue for shared epic serialization
+        required: false
+        type: string
   needs: [prepare]
 if: needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
@@ -28,6 +32,7 @@ runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+  LIGHTHOUSE_EPIC_CAPACITY: ${{ vars.LIGHTHOUSE_EPIC_CAPACITY }}
   LIGHTHOUSE_STAGE: implement
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
@@ -108,6 +113,10 @@ post-steps:
       retention-days: 14
 jobs:
   prepare:
+    concurrency:
+      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-prepare-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
     outputs:
       eligible: ${{ steps.prepare.outputs.eligible }}
       source_revision: ${{ steps.prepare.outputs.source_revision }}
@@ -149,6 +158,10 @@ jobs:
           LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
   publish:
+    concurrency:
+      group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-publish-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
     name: Validate, publish and release
     needs: [prepare, pre_activation, activation, agent]
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
@@ -190,6 +203,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Preserve the publication receipt
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-implement-publication-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Release the issue reservation
         if: always()
         env:

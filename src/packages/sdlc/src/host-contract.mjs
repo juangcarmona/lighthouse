@@ -7,6 +7,7 @@ import pkg from '../package.json' with { type: 'json' };
 import { validateProposalFiles } from './proposal.mjs';
 import { routeEvent } from './event-router.mjs';
 import { validateRequestTriage, validateEstimateRevision } from './request-triage.mjs';
+import { assessDecomposition } from './epic.mjs';
 
 export const digest = (text) => createHash('sha256').update(text).digest('hex');
 const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -65,7 +66,19 @@ export function validateStageEnvelope(value, request) {
   if (result.runId !== request.runId || result.stage !== request.stage || result.gate !== declared?.gate) errors.push('result identity or gate does not match admission');
   if (result.status === 'passed') errors.push(...validateStageCompletion(result, { stage: request.stage, runId: request.runId }).map((error) => error.message));
   if (request.worker !== 'product-change' && request.stage === 'triage' && result.status === 'passed' && (request.dispatch || request.originalRequest !== undefined)) errors.push(...validateRequestTriage(result.output, request.originalRequest));
-  if (request.worker !== 'product-change' && request.stage === 'refine' && result.status === 'passed') errors.push(...validateEstimateRevision(result.output, request.triageEstimate));
+  if (request.worker !== 'product-change' && request.stage === 'refine' && result.status === 'passed') {
+    errors.push(...validateEstimateRevision(result.output, request.triageEstimate));
+    if (result.output?.estimate !== undefined) {
+      const decomposition = assessDecomposition(result.output);
+      errors.push(...decomposition.errors);
+      if (decomposition.status === 'blocked') errors.push('no safe split requires an owner decision before refinement passes');
+      if (decomposition.status === 'planned' && Number.isSafeInteger(request.issue) && request.issue > 0) {
+        const parent = decomposition.plan.parent;
+        const idNumber = parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
+        if ((!idNumber && parent.number === undefined) || idNumber && idNumber !== String(request.issue) || parent.number !== undefined && parent.number !== request.issue) errors.push('decomposition plan must identify the current parent issue');
+      }
+    }
+  }
   if (request.stage === 'propose' && request.worker !== 'product-change' && result.status === 'passed') {
     try { validateProposalFiles(result.output?.files, request.issue); } catch (error) { errors.push(error.message); }
   }

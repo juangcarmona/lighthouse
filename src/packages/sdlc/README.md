@@ -70,6 +70,10 @@ Review the preview, then repeat with `--apply`; updating differing existing work
 
 Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops.
 
+## Epic delivery contracts
+
+[Epic delivery contracts](epic-delivery.md) define the confirmed greater-than-eight decomposition boundary, shared epic-branch planning and dependency/base/owner-decision eligibility. The native epic workflow remains uninstalled while child dispatch, review recovery and aggregate acceptance are completed and verified.
+
 ## References
 
 - [Lifecycle stages](stages.json), [gates](gates.json) and [routes](routes.json): provider-neutral contracts. Native worker compositions are described above; an implementation worker includes planning.

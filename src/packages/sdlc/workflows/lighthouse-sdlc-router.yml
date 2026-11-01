@@ -43,6 +43,14 @@ on:
         description: Recheck a completed execution through the same continuation rules
         required: false
         type: string
+      epic_parent:
+        description: Authenticated parent issue for epic triage
+        required: false
+        type: string
+      epic_run:
+        description: Completed epic execution for child triage
+        required: false
+        type: string
       pull_request:
         description: PR number for integrate or review
         required: false
@@ -92,11 +100,38 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/pr-state-actions.mjs
+  epic-triage:
+    if: >-
+      vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_EPIC_ENABLED == 'true' &&
+      github.event_name == 'workflow_run' && github.event.action == 'completed' &&
+      github.event.workflow_run.path == '.github/workflows/lighthouse-sdlc-epic.yml' && github.event.workflow_run.conclusion == 'success'
+    concurrency:
+      group: lighthouse-epic-triage-${{ github.event.workflow_run.id }}
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Dispatch authenticated epic child triage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/epic-dispatch.mjs
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
       (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
-       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && inputs.after_run != '' && (inputs.stage == 'implement' || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product'))) &&
+       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product')) || (inputs.stage == 'triage' && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
         (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
@@ -113,6 +148,7 @@ jobs:
     outputs:
       run: ${{ steps.route.outputs.run }}
       issue: ${{ steps.route.outputs.issue }}
+      epic_parent: ${{ steps.route.outputs.epic_parent }}
       stage: ${{ steps.route.outputs.stage }}
       worker: ${{ steps.route.outputs.worker }}
     steps:
@@ -129,6 +165,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_COMPLETION_ENABLED: true
+          LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
           LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${{ env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED }}
         run: node src/packages/sdlc/src/issue-actions.mjs route
   dispatch:
@@ -136,7 +173,7 @@ jobs:
     needs: route
     if: needs.route.outputs.run == 'true'
     concurrency:
-      group: lighthouse-issue-${{ needs.route.outputs.issue }}
+      group: lighthouse-issue-${{ needs.route.outputs.epic_parent || needs.route.outputs.issue }}
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04
@@ -147,6 +184,9 @@ jobs:
       pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ needs.route.outputs.issue }}
+      LIGHTHOUSE_EPIC_PARENT: ${{ needs.route.outputs.epic_parent }}
+      LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
+      LIGHTHOUSE_EPIC_CAPACITY: ${{ vars.LIGHTHOUSE_EPIC_CAPACITY }}
       LIGHTHOUSE_STAGE: ${{ needs.route.outputs.stage }}
       LIGHTHOUSE_WORKER: ${{ needs.route.outputs.worker }}
     steps:

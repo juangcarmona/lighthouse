@@ -97,6 +97,42 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
 });
 
+test('an epic child targets the recorded shared base and stops if it advances', async () => {
+  for (const changedAt of [0, 1, 2, 3]) {
+    const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
+    const calls = []; let reads = 0;
+    const api = async (path, method, body) => {
+      calls.push({ path, method, body });
+      if (path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: ++reads === changedAt ? 'c'.repeat(40) : epic.baseSha } };
+      return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
+    };
+    const publish = () => createImplementationPullRequest(api, { ...request, epic }, [change], 'Child candidate', '', true, async () => calls.push({ path: 'authorize' }));
+    if (changedAt) {
+      await assert.rejects(publish(), /Epic base changed/);
+      assert.equal(calls.some(call => call.path === 'pulls'), false);
+      if (changedAt < 3) assert.equal(calls.some(call => call.path === 'git/refs'), false);
+    } else {
+      await publish();
+      assert.equal(calls.find(call => call.path === 'pulls').body.base, epic.base);
+      assert.equal(calls.filter(call => call.path === 'authorize').length, 2);
+    }
+  }
+});
+
+test('epic publication rejects an invalid base and revoked authority', async () => {
+  const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
+  const calls = []; let authorizations = 0;
+  const api = async (path, method, body) => {
+    calls.push({ path, method, body });
+    if (path.startsWith('git/ref/heads/')) return { object: { sha: epic.baseSha } };
+    return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
+  };
+  await assert.rejects(createImplementationPullRequest(api, { ...request, epic: { ...epic, base: 'main' } }, [change], '', '', true, async () => {}), /Invalid epic/);
+  assert.equal(calls.length, 0);
+  await assert.rejects(createImplementationPullRequest(api, { ...request, epic }, [change], '', '', true, async () => { if (++authorizations === 2) throw Error('revoked'); }), /revoked/);
+  assert.equal(calls.some(call => call.path === 'pulls'), false);
+});
+
 test('implementation shell progress identifies the command without dumping its output', async () => {
   const { formatOpenCodeEvent } = await import('../packages/sdlc/src/opencode-progress.mjs');
   const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'shell', state: { status: 'completed', input: { command: 'npm run build' }, output: 'raw protocol and payload' } } }));
@@ -158,6 +194,24 @@ test('review feedback updates the existing implementation branch without a force
   assert.doesNotMatch(calls.at(-1).body.body, /Closes #18/);
   assert.equal(calls.some(c => c.path === 'pulls'), false);
   assert.ok(calls.findIndex(c => c.path === 'recheck') < calls.findIndex(c => c.path === 'git/refs/heads/lighthouse/implement-18-aaaaaaaaaaaa'));
+});
+
+test('epic review updates the same PR after rechecking its shared base and authority', async () => {
+  for (const revoked of [false, true]) {
+    const calls = [], epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: 'c'.repeat(40) };
+    const reviewed = { ...request, epic, implementationReview: { number: 34, head: request.sourceRevision, base: epic.base, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
+    const api = async (path, method, body) => {
+      calls.push({ path, method, body });
+      if (path === `git/ref/heads/${epic.base}`) return { object: { sha: epic.baseSha } };
+      if (path === 'pulls/34' && method !== 'PATCH') return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: calls.some(call => call.path.startsWith('git/refs/heads/')) ? 'created' : request.sourceRevision }, base: { ref: epic.base } };
+      return { sha: 'created', tree: { sha: 'tree' } };
+    };
+    const publish = () => createImplementationPullRequest(api, reviewed, [change], 'Updated', '', true, async () => calls.push({ path: 'before' }), async () => { calls.push({ path: 'after' }); if (revoked) throw Error('revoked'); });
+    if (revoked) await assert.rejects(publish(), /revoked/); else await publish();
+    assert.equal(calls.filter(call => call.path === 'pulls/34' && call.method === 'PATCH').length, revoked ? 0 : 1);
+    assert.equal(calls.some(call => call.path === 'pulls' && call.method === 'POST'), false);
+    assert.ok(calls.findIndex(call => call.path === 'after') > calls.findIndex(call => call.path.startsWith('git/refs/heads/')));
+  }
 });
 
 test('an approved product prerequisite resumes on its existing branch and retains review evidence', async () => {

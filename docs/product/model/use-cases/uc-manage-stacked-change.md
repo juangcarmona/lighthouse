@@ -12,31 +12,33 @@ uses-terms: [TERM-STACKED-CHANGE, TERM-WORK-ITEM-SLICE, TERM-LABEL-STATE, TERM-G
 
 ## Goal
 
-Keep ordered child issues and pull requests aligned with their dependencies and evidence.
+Deliver dependent children through one reviewable aggregate outcome while preserving every merge decision.
 
 ## Trigger
 
-`decompose` creates a stacked delivery plan or an existing stack changes order, scope or status.
+An authorized decomposition plan or its child and aggregate state changes.
 
 ## Preconditions
 
-The parent and child work items have valid labels, explicit dependency order and a configured tracker and forge adapter.
+The parent and children have authenticated identities, explicit dependencies, an integration branch and configured repository checks.
 
 ## Main Flow
 
-1. Lighthouse maps each child issue to its change scope and pull request.
-2. The adapter sets each pull request base to the predecessor required by the dependency order.
-3. Lighthouse checks labels, changed paths, verification evidence and merge readiness for the next slice.
-4. After integration, Lighthouse updates the child and parent state and reports the next slice.
+1. Reconcile current native relationships, issue and pull request correlations and retained host evidence.
+2. Run independent eligible children within capacity; wait for accepted prerequisites before dependent work.
+3. Target child pull requests at the shared epic branch and invalidate integration evidence when the base changes.
+4. Require the owner's explicit current-head decision and current checks for each child merge.
+5. Publish one aggregate pull request from the epic branch to the default branch after child outcomes are accepted.
+6. Preserve the parent's open state until the owner accepts the aggregate outcome under existing merge gates.
 
 ## Alternative Flows
 
-A project may flatten the stack when dependencies disappear; Lighthouse revalidates scope and labels before changing the bases.
+An explicitly justified predecessor base can support a concrete dependency. Changed, cancelled, blocked or uncertain work remains visible and cannot satisfy prerequisites.
 
 ## Failure Conditions
 
-A pull request points at the wrong base, a child lacks evidence, labels disagree with the dependency order or a merge would bypass a failed gate.
+Wrong bases, stale checks or approval, unauthenticated metadata, duplicate correlations and unresolved writes stop dependent actions. Retrying reconciles rather than recreates uncertain resources.
 
 ## Postconditions
 
-The stack has an explicit order, each pull request has its own evidence and the parent reports the combined integrated result.
+Each child retains evidence and decision ownership; the parent reports the accepted combined outcome or an actionable blocker.
