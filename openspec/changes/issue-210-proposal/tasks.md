@@ -5,9 +5,9 @@
 ## 1. Product authority and planning
 
 - [x] 1.1 Inspect the existing resolver, dispatch, adapter, operator boundary and product policy; deliver proposal, design, specification and dependency-ordered tasks with the Product Change blocker recorded.
-- [ ] 1.2 Obtain an approved, applied Product Change covering direct settings, arbitrary presets and authenticated ordinary execution selection; verify the recorded authority before production edits and refresh affected citations through the provider CLI.
+- [x] 1.2 Apply the owner-authorized Product Change covering direct settings, arbitrary presets and authenticated ordinary execution selection; verify the product model and refresh affected citations with the provider-emitted digest.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-AUTHORITY-BOUNDARIES" digest="sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d" -->
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
 

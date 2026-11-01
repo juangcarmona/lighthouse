@@ -30,7 +30,7 @@ SDLC adapter, exported host helpers, engine entrypoint, package documentation an
 
 Impacted product artifacts: FR-MODEL-PROFILES and FR-PROFILE-DELEGATION. Existing FR-AGENT-LAUNCH and FR-AGENT-CONTROL-PLANE were inspected and their impact graphs widened to BR-AGENT-LAUNCH, BR-HUMAN-AUTHORITY, BR-SDLC-PACKAGE-BOUNDARY, UC-RUN-AGENT, memory, labels and workflow neighbours. Existing launch and human-authority rules constrain implementation; memory, labels, lifecycle and technical application profiles remain unchanged. Model profiles are not TERM-PROFILE stack profiles.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
 <!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->

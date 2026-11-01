@@ -12,7 +12,7 @@ Define independently configurable model and reasoning selection for workers with
 
 Version 2 SHALL support complete direct worker model/effort settings and optional presets, without a three-combination limit. Invalid settings MUST fail.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="UC-CONFIGURE-AGENT-CONTROL-PLANE" digest="sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571" -->
 
 #### Scenario: More than three combinations
@@ -29,7 +29,7 @@ Version 2 SHALL support complete direct worker model/effort settings and optiona
 
 The system SHALL apply the precedence below and operator preset field overrides. All selections MUST satisfy operator capabilities and unchanged resource limits.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
 
 #### Scenario: Execution overrides a worker default but not policy
@@ -63,7 +63,7 @@ Execution selectors MUST require owner manual dispatch, explicit operator opt-in
 
 The system MUST preserve version 1, legacy, delegation and receipt compatibility. Opt-out MUST restore exact legacy forwarding and reject explicit selectors.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
 
 #### Scenario: Existing installation and delegation
@@ -85,7 +85,7 @@ The system MUST preserve version 1, legacy, delegation and receipt compatibility
 
 The system MUST reject unknown models, unsupported efforts and denied or unavailable operator capabilities before startup. Actual provider failures MUST fail execution without silently selecting another model, effort, provider or processing tier.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-FAIL-CLOSED" digest="sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d" -->
 
 #### Scenario: Operator capability denial
@@ -102,7 +102,7 @@ The system MUST reject unknown models, unsupported efforts and denied or unavail
 
 Evidence MUST separate requested, resolved/provenance and provider-reported or unverified settings. Usage, charges and estimates MUST stay distinct; absent evidence MUST remain unknown.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-FAIL-CLOSED" digest="sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d" -->
 
 #### Scenario: Two ordinary workers retain distinct receipts
@@ -119,7 +119,7 @@ Evidence MUST separate requested, resolved/provenance and provider-reported or u
 
 Model settings MUST NOT change credentials, billing routes, tier, tools or limits, or enable Fast, Flex or Batch processing.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
 
 #### Scenario: Allowed selection leaves controls unchanged

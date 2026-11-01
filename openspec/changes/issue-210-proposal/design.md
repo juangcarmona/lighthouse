@@ -6,7 +6,7 @@
 
 See proposal.md for motivation and the applied Product Change. This is the candidate design; completion and acceptance are tracked in tasks.md. The current resolver accepts schema version 1 and three fixed profile names. The adapter already forwards a resolved model variant and emits unverified provider settings; delegated tasks already select explicit profiles. Ordinary router requests have authenticated, digest-bound artifacts but no model selector.
 
-<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
+<!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71" -->
 <!-- pdac:cite id="UC-CONFIGURE-AGENT-CONTROL-PLANE" digest="sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571" -->
 
 ## Goals / Non-Goals
