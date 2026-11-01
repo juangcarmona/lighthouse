@@ -164,7 +164,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: write
       issues: write
       pull-requests: write
