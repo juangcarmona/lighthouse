@@ -398,18 +398,18 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `delivery.change-failure-rate.v1` | deployments independently linked to production failures / eligible deployments with incident observation coverage |
 | `delivery.failed-deployment-recovery.v1` | confirmed recovery time minus linked production failure start, per failed deployment |
 | `delivery.rollback-frequency.v1` | count authenticated rollback events to the named environment / elapsed weeks |
-| `execution.workflow-executions.v1` | count distinct authenticated workflow executions events or findings in the eligible population; report observed N / eligible M |
-| `execution.worker-executions.v1` | count distinct authenticated worker executions events or findings in the eligible population; report observed N / eligible M |
-| `execution.agent-invocations.v1` | count distinct authenticated agent invocations events or findings in the eligible population; report observed N / eligible M |
+| `execution.workflow-executions.v1` | count distinct authenticated workflow executions in the eligible population; report observation coverage N / M |
+| `execution.worker-executions.v1` | count distinct authenticated worker executions in the eligible population; report observation coverage N / M |
+| `execution.agent-invocations.v1` | count distinct authenticated agent invocations in the eligible population; report observation coverage N / M |
 | `execution.first-attempt-outcome.v1` | group initial attempts by explicitly recorded outcome / all initial attempts |
-| `execution.failed-attempts.v1` | count distinct authenticated failed attempts events or findings in the eligible population; report observed N / eligible M |
-| `execution.retries.v1` | count distinct authenticated retries events or findings in the eligible population; report observed N / eligible M |
+| `execution.failed-attempts.v1` | count distinct authenticated failed attempts in the eligible population; report observation coverage N / M |
+| `execution.retries.v1` | count distinct authenticated retries in the eligible population; report observation coverage N / M |
 | `execution.retry-amplification.v1` | total distinct attempts / distinct initial executions; show failed and missing attempts separately |
-| `execution.correction-rounds.v1` | count distinct authenticated correction rounds events or findings in the eligible population; report observed N / eligible M |
-| `execution.interruptions.v1` | count distinct authenticated interruptions events or findings in the eligible population; report observed N / eligible M |
-| `execution.timeouts.v1` | count distinct authenticated timeouts events or findings in the eligible population; report observed N / eligible M |
-| `execution.cancellations.v1` | count distinct authenticated cancellations events or findings in the eligible population; report observed N / eligible M |
-| `execution.review-failures.v1` | count distinct authenticated review failures events or findings in the eligible population; report observed N / eligible M |
+| `execution.correction-rounds.v1` | count distinct authenticated correction rounds in the eligible population; report observation coverage N / M |
+| `execution.interruptions.v1` | count distinct authenticated interruptions in the eligible population; report observation coverage N / M |
+| `execution.timeouts.v1` | count distinct authenticated timeouts in the eligible population; report observation coverage N / M |
+| `execution.cancellations.v1` | count distinct authenticated cancellations in the eligible population; report observation coverage N / M |
+| `execution.review-failures.v1` | count distinct authenticated review failures in the eligible population; report observation coverage N / M |
 | `execution.workflow-duration.v1` | end timestamp minus start timestamp for each explicitly identified workflow duration interval; censor open intervals |
 | `execution.agent-step-duration.v1` | end timestamp minus start timestamp for each explicitly identified agent step duration interval; censor open intervals |
 | `execution.verification-duration.v1` | end timestamp minus start timestamp for each explicitly identified verification duration interval; censor open intervals |
@@ -419,7 +419,7 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `execution.queue-duration.v1` | execution start minus admission or queue-entry timestamp for the same request |
 | `execution.blocking-duration.v1` | union of explicit blocking intervals per change clipped to window |
 | `execution.incomplete-evidence.v1` | count eligible executions with at least one missing, unavailable or conflicting required item |
-| `execution.provider-failures.v1` | count distinct authenticated provider failures events or findings in the eligible population; report observed N / eligible M |
+| `execution.provider-failures.v1` | count distinct authenticated provider failures in the eligible population; report observation coverage N / M |
 | `execution.model-request-duration.v1` | end timestamp minus start timestamp for each explicitly identified model request duration interval; censor open intervals |
 | `execution.tool-duration.v1` | end timestamp minus start timestamp for each explicitly identified tool duration interval; censor open intervals |
 | `execution.environment-setup-duration.v1` | end timestamp minus start timestamp for each explicitly identified environment setup duration interval; censor open intervals |
@@ -437,7 +437,7 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `model.reasoning-tokens.v1` | sum independently reported reasoning tokens by distinct request; show category N/M and inclusion semantics |
 | `model.cache-read-tokens.v1` | sum independently reported cache read tokens by distinct request; show category N/M and inclusion semantics |
 | `model.cache-write-tokens.v1` | sum independently reported cache write tokens by distinct request; show category N/M and inclusion semantics |
-| `model.request-count.v1` | count distinct authenticated request count events or findings in the eligible population; report observed N / eligible M |
+| `model.request-count.v1` | count distinct authenticated provider requests; report observation coverage N / M |
 | `model.context-size.v1` | report independently measured input context tokens per request, with coverage |
 | `model.context-utilization.v1` | reported context tokens / reported applicable context capacity per request |
 | `model.token-coverage.v1` | invocations with valid measured category / eligible invocations for that category |
@@ -475,58 +475,58 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `economics.hardware-depreciation.v1` | allocated hardware basis / declared useful life multiplied by allocated time; report assumptions |
 | `economics.infrastructure-allocation.v1` | sum documented allocation shares multiplied by eligible infrastructure costs |
 | `economics.capacity-opportunity-cost.v1` | occupied capacity multiplied by explicitly modeled alternative value; report as estimate |
-| `autonomy.automated-pr-creation.v1` | count distinct authenticated automated pr creation events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.independent-review.v1` | count distinct authenticated independent review events or findings in the eligible population; report observed N / eligible M |
+| `autonomy.automated-pr-creation.v1` | count distinct authenticated automated pr creation in the eligible population; report observation coverage N / M |
+| `autonomy.independent-review.v1` | count distinct authenticated independent review in the eligible population; report observation coverage N / M |
 | `autonomy.delegated-integration.v1` | authenticated delegated integrations / eligible observable merged PRs; show unknown classification |
-| `autonomy.human-approved-integration.v1` | count distinct authenticated human approved integration events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.human-merge-after-escalation.v1` | count distinct authenticated human merge after escalation events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.human-merge-without-verdict.v1` | count distinct authenticated human merge without verdict events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.observable-interactions.v1` | count distinct authenticated observable interactions events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.intervention-reasons.v1` | count distinct authenticated intervention reasons events or findings in the eligible population; report observed N / eligible M |
+| `autonomy.human-approved-integration.v1` | count distinct authenticated human approved integration in the eligible population; report observation coverage N / M |
+| `autonomy.human-merge-after-escalation.v1` | count distinct authenticated human merge after escalation in the eligible population; report observation coverage N / M |
+| `autonomy.human-merge-without-verdict.v1` | count authenticated human merges with complete review-history evidence and no trusted verdict; report history coverage N / M |
+| `autonomy.observable-interactions.v1` | count distinct authenticated observable interactions in the eligible population; report observation coverage N / M |
+| `autonomy.intervention-reasons.v1` | count distinct authenticated intervention reasons in the eligible population; report observation coverage N / M |
 | `autonomy.human-wait-time.v1` | union of explicit human-wait intervals for the change, clipped to the observation window |
-| `autonomy.manual-corrections.v1` | count distinct authenticated manual corrections events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.failed-autonomous-continuations.v1` | count distinct authenticated failed autonomous continuations events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.revoked-authorizations.v1` | count distinct authenticated revoked authorizations events or findings in the eligible population; report observed N / eligible M |
+| `autonomy.manual-corrections.v1` | count distinct authenticated manual corrections in the eligible population; report observation coverage N / M |
+| `autonomy.failed-autonomous-continuations.v1` | count distinct authenticated failed autonomous continuations in the eligible population; report observation coverage N / M |
+| `autonomy.revoked-authorizations.v1` | count distinct authenticated revoked authorizations in the eligible population; report observation coverage N / M |
 | `autonomy.autonomous-accepted-delivery.v1` | independently accepted changes with complete evidence of no intervention / eligible accepted changes with complete intervention coverage |
 | `autonomy.interventions-per-accepted-change.v1` | distinct authenticated intervention events / independently accepted changes |
 | `autonomy.measured-attention-time.v1` | sum recorded active human attention intervals, deduplicating overlaps |
-| `autonomy.product-decisions.v1` | count distinct authenticated product decisions events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.architecture-decisions.v1` | count distinct authenticated architecture decisions events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.security-escalations.v1` | count distinct authenticated security escalations events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.policy-scope-changes.v1` | count distinct authenticated policy scope changes events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.avoidable-escalations.v1` | count distinct authenticated avoidable escalations events or findings in the eligible population; report observed N / eligible M |
-| `autonomy.unnecessary-human-gates.v1` | count distinct authenticated unnecessary human gates events or findings in the eligible population; report observed N / eligible M |
+| `autonomy.product-decisions.v1` | count distinct authenticated product decisions in the eligible population; report observation coverage N / M |
+| `autonomy.architecture-decisions.v1` | count distinct authenticated architecture decisions in the eligible population; report observation coverage N / M |
+| `autonomy.security-escalations.v1` | count distinct authenticated security escalations in the eligible population; report observation coverage N / M |
+| `autonomy.policy-scope-changes.v1` | count distinct authenticated policy scope changes in the eligible population; report observation coverage N / M |
+| `autonomy.avoidable-escalations.v1` | count escalations independently assessed as avoidable under an explicit reviewed counterfactual; report assessed N / eligible M |
+| `autonomy.unnecessary-human-gates.v1` | count human gates independently assessed as unnecessary under explicit policy and counterfactual evidence; report assessed N / eligible M |
 | `quality.required-check-coverage.v1` | required applicable checks with authenticated execution / applicable required checks |
-| `quality.executed-checks.v1` | count distinct authenticated executed checks events or findings in the eligible population; report observed N / eligible M |
+| `quality.executed-checks.v1` | count distinct authenticated executed checks in the eligible population; report observation coverage N / M |
 | `quality.check-freshness.v1` | required checks bound to current relevant inputs / required checks with sufficient evidence |
 | `quality.acceptance-criterion-coverage.v1` | declared acceptance criteria with independently verified supporting evidence / applicable declared criteria |
-| `quality.blocking-review-findings.v1` | count distinct authenticated blocking review findings events or findings in the eligible population; report observed N / eligible M |
+| `quality.blocking-review-findings.v1` | count distinct authenticated blocking review findings in the eligible population; report observation coverage N / M |
 | `quality.red-green-evidence.v1` | count changes with an authenticated behavioral RED before repair and GREEN after repair on the bound assertion |
 | `quality.change-quality-delta.v1` | report comparable revision-bound metric value after change minus before change, per metric |
 | `quality.independent-review-effectiveness.v1` | independently confirmed defects detected by review / independently established reviewable defects |
-| `quality.defects-missed-by-tests.v1` | count distinct authenticated defects missed by tests events or findings in the eligible population; report observed N / eligible M |
+| `quality.defects-missed-by-tests.v1` | count independently confirmed defects shown to evade the applicable bound tests; report evaluated N / eligible M |
 | `quality.mutation-effectiveness.v1` | valid non-equivalent mutations killed / valid non-equivalent mutations; report exclusions and timeouts |
 | `quality.line-coverage.v1` | executed instrumented lines / eligible instrumented lines |
 | `quality.branch-coverage.v1` | executed instrumented branches / eligible instrumented branches |
 | `quality.complexity-hotspots.v1` | count measured methods above declared complexity hotspots threshold, with revision, scope and method coverage |
 | `quality.crap-hotspots.v1` | count measured methods above declared crap hotspots threshold, with revision, scope and method coverage |
 | `quality.code-duplication.v1` | detected duplicated eligible lines / scanned eligible lines; report detector settings |
-| `quality.dead-code.v1` | count distinct authenticated dead code events or findings in the eligible population; report observed N / eligible M |
-| `quality.swallowed-exceptions.v1` | count distinct authenticated swallowed exceptions events or findings in the eligible population; report observed N / eligible M |
-| `quality.suspicious-tests.v1` | count distinct authenticated suspicious tests events or findings in the eligible population; report observed N / eligible M |
-| `quality.tests-without-assertions.v1` | count distinct authenticated tests without assertions events or findings in the eligible population; report observed N / eligible M |
-| `quality.skipped-tests.v1` | count distinct authenticated skipped tests events or findings in the eligible population; report observed N / eligible M |
-| `quality.focused-tests.v1` | count distinct authenticated focused tests events or findings in the eligible population; report observed N / eligible M |
-| `quality.snapshot-only-tests.v1` | count distinct authenticated snapshot only tests events or findings in the eligible population; report observed N / eligible M |
-| `quality.mock-only-assertions.v1` | count distinct authenticated mock only assertions events or findings in the eligible population; report observed N / eligible M |
-| `quality.regression-defects.v1` | count distinct authenticated regression defects events or findings in the eligible population; report observed N / eligible M |
-| `quality.escaped-defects.v1` | count distinct authenticated escaped defects events or findings in the eligible population; report observed N / eligible M |
-| `quality.post-merge-rework.v1` | count distinct authenticated post merge rework events or findings in the eligible population; report observed N / eligible M |
-| `quality.defect-linked-reverts.v1` | count distinct authenticated defect linked reverts events or findings in the eligible population; report observed N / eligible M |
+| `quality.dead-code.v1` | count distinct authenticated dead code in the eligible population; report observation coverage N / M |
+| `quality.swallowed-exceptions.v1` | count distinct authenticated swallowed exceptions in the eligible population; report observation coverage N / M |
+| `quality.suspicious-tests.v1` | count distinct authenticated suspicious tests in the eligible population; report observation coverage N / M |
+| `quality.tests-without-assertions.v1` | count distinct authenticated tests without assertions in the eligible population; report observation coverage N / M |
+| `quality.skipped-tests.v1` | count distinct authenticated skipped tests in the eligible population; report observation coverage N / M |
+| `quality.focused-tests.v1` | count distinct authenticated focused tests in the eligible population; report observation coverage N / M |
+| `quality.snapshot-only-tests.v1` | count distinct authenticated snapshot only tests in the eligible population; report observation coverage N / M |
+| `quality.mock-only-assertions.v1` | count distinct authenticated mock only assertions in the eligible population; report observation coverage N / M |
+| `quality.regression-defects.v1` | count distinct authenticated regression defects in the eligible population; report observation coverage N / M |
+| `quality.escaped-defects.v1` | count distinct authenticated escaped defects in the eligible population; report observation coverage N / M |
+| `quality.post-merge-rework.v1` | count distinct authenticated post merge rework in the eligible population; report observation coverage N / M |
+| `quality.defect-linked-reverts.v1` | count distinct authenticated defect linked reverts in the eligible population; report observation coverage N / M |
 | `quality.technical-debt-delta.v1` | after minus before for a named, comparable debt measure; retain tool and scope |
 | `security.secret-scanning.v1` | report current bound scanner execution state and distinct findings by severity; show applicable scan coverage |
-| `security.dependency-vulnerabilities.v1` | count distinct authenticated dependency vulnerabilities events or findings in the eligible population; report observed N / eligible M |
-| `security.iac-vulnerabilities.v1` | count distinct authenticated iac vulnerabilities events or findings in the eligible population; report observed N / eligible M |
+| `security.dependency-vulnerabilities.v1` | count distinct authenticated dependency vulnerabilities in the eligible population; report observation coverage N / M |
+| `security.iac-vulnerabilities.v1` | count distinct authenticated iac vulnerabilities in the eligible population; report observation coverage N / M |
 | `security.sast.v1` | report current bound scanner execution state and distinct findings by severity; show applicable scan coverage |
 | `security.dast.v1` | report current bound scanner execution state and distinct findings by severity; show applicable scan coverage |
 | `security.sbom-completeness.v1` | verified in-scope components present in SBOM / independently inventoried in-scope components |
@@ -535,10 +535,10 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `security.blocking-vs-report-only.v1` | group authenticated scanner results by enforced blocking or report-only policy |
 | `security.stale-or-missing-results.v1` | required results that are stale or absent / required applicable results |
 | `security.changed-risk-exposure.v1` | compare independently reviewed risk exposure before and after the bound change; preserve unknowns |
-| `security.sensitive-file-modifications.v1` | count distinct authenticated sensitive file modifications events or findings in the eligible population; report observed N / eligible M |
-| `security.scope-violations.v1` | count distinct authenticated scope violations events or findings in the eligible population; report observed N / eligible M |
-| `security.authorization-failures.v1` | count distinct authenticated authorization failures events or findings in the eligible population; report observed N / eligible M |
-| `security.credential-boundary-violations.v1` | count distinct authenticated credential boundary violations events or findings in the eligible population; report observed N / eligible M |
+| `security.sensitive-file-modifications.v1` | count distinct authenticated sensitive file modifications in the eligible population; report observation coverage N / M |
+| `security.scope-violations.v1` | count distinct authenticated scope violations in the eligible population; report observation coverage N / M |
+| `security.authorization-failures.v1` | count distinct authenticated authorization failures in the eligible population; report observation coverage N / M |
+| `security.credential-boundary-violations.v1` | count distinct authenticated credential boundary violations in the eligible population; report observation coverage N / M |
 | `security.network-isolation.v1` | report the authenticated source value and observation status per applicable subject |
 | `security.verified-cleanup.v1` | report the authenticated source value and observation status per applicable subject |
 | `lifecycle.state-duration.v1` | end timestamp minus start timestamp for each explicitly identified state duration interval; censor open intervals |
@@ -547,18 +547,18 @@ All expressions below are proposed v1 definitions, not implemented metrics. Appl
 | `lifecycle.integration-wait.v1` | end timestamp minus start timestamp for each explicitly identified integration wait interval; censor open intervals |
 | `lifecycle.technical-blocking.v1` | end timestamp minus start timestamp for each explicitly identified technical blocking interval; censor open intervals |
 | `lifecycle.dependency-blocking.v1` | end timestamp minus start timestamp for each explicitly identified dependency blocking interval; censor open intervals |
-| `lifecycle.reopenings.v1` | count distinct authenticated reopenings events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.repeated-questions.v1` | count distinct authenticated repeated questions events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.incomplete-handoffs.v1` | count distinct authenticated incomplete handoffs events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.failed-dispatches.v1` | count distinct authenticated failed dispatches events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.recovery-attempts.v1` | count distinct authenticated recovery attempts events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.uncertain-publication.v1` | count distinct authenticated uncertain publication events or findings in the eligible population; report observed N / eligible M |
+| `lifecycle.reopenings.v1` | count distinct authenticated reopenings in the eligible population; report observation coverage N / M |
+| `lifecycle.repeated-questions.v1` | count distinct questions independently classified as repeated for the same unresolved decision; report assessed N / eligible M |
+| `lifecycle.incomplete-handoffs.v1` | count distinct authenticated incomplete handoffs in the eligible population; report observation coverage N / M |
+| `lifecycle.failed-dispatches.v1` | count distinct authenticated failed dispatches in the eligible population; report observation coverage N / M |
+| `lifecycle.recovery-attempts.v1` | count distinct authenticated recovery attempts in the eligible population; report observation coverage N / M |
+| `lifecycle.uncertain-publication.v1` | count distinct authenticated uncertain publication in the eligible population; report observation coverage N / M |
 | `lifecycle.estimation-accuracy.v1` | actual recorded value minus comparable prior estimate, per work item and unit |
 | `lifecycle.issue-decomposition.v1` | count linked child work items per parent using verified dependency graph |
 | `lifecycle.parent-child-completion.v1` | accepted required children / declared required children for each parent |
 | `lifecycle.dependency-chain-delay.v1` | sum nonoverlapping intervals explicitly blocked on an unmet linked dependency |
-| `lifecycle.abandoned-implementation.v1` | count distinct authenticated abandoned implementation events or findings in the eligible population; report observed N / eligible M |
-| `lifecycle.accepted-after-revisions.v1` | count distinct authenticated accepted after revisions events or findings in the eligible population; report observed N / eligible M |
+| `lifecycle.abandoned-implementation.v1` | count distinct authenticated abandoned implementation in the eligible population; report observation coverage N / M |
+| `lifecycle.accepted-after-revisions.v1` | count distinct authenticated accepted after revisions in the eligible population; report observation coverage N / M |
 | `adoption.installed-baseline-version.v1` | report the authenticated source value and observation status per applicable subject |
 | `adoption.effective-workflow-version.v1` | report the authenticated source value and observation status per applicable subject |
 | `adoption.available-worker-capabilities.v1` | report the authenticated source value and observation status per applicable subject |
