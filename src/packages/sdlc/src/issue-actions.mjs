@@ -14,6 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
 import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
+import { assessDecomposition } from './epic.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -506,11 +507,12 @@ async function main(command) {
     }
     if (snapshot.proposalReview && value.result.status === 'blocked') await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: `Proposal revision is blocked. ${value.effect.body}\n\n[Execution](${runUrl}). Implementation has not started.` });
     const continuationHint = snapshot.proposalReview ? `\n\nContinue the review in [PR #${snapshot.proposalReview.number}](${snapshot.proposalReview.url}).\n<!-- lighthouse-proposal-review:${snapshot.proposalReview.number} -->` : value.result.status === 'blocked' && ['triage', 'refine', 'propose', 'implement'].includes(snapshot.stage) && !proposalLink ? `\n\nThe owner can reply here to continue ${snapshot.stage}.` : '';
-    const next = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
+    const decompositionPlanned = snapshot.stage === 'refine' && value.result.status === 'passed' && value.result.output?.estimate !== undefined && assessDecomposition(value.result.output).status === 'planned';
+    const next = decompositionPlanned ? '\n\nA decomposition plan is ready for review. Native child orchestration is not enabled; do not start parent implementation automatically.' : snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' ? publicationIssue.labels.some(x => x.name === 'future') ? '\n\n⏸️ Implementation is paused by `future`.' : '\n\nRefinement complete. Implementation is next; use `future` to pause it.' : '';
     const productWorkflowMarker = snapshot.worker === 'product-change' ? `\n<!-- lighthouse-product-workflow:${snapshot.productChangeName} -->` : '';
     const body = `## ${statusText(snapshot.stage, value.result.status === 'blocked' ? 'waiting' : 'completed')}\n\n${snapshot.worker === 'product-change' ? value.effect.body : snapshot.stage === 'propose' && value.result.status === 'passed' ? 'Proposal ready. Review it in the linked PR; comment there to request changes.' : value.effect.body}${proposalLink}${continuationHint}${next}\n\n[Follow progress](${runUrl})\n\n<details><summary>Execution details</summary>\n\nOutcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${productWorkflowMarker}\n</details>`;
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
-    const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
+    const handoff = snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
     const label = snapshot.stage === 'implement' && prStateProof ? 'pr-draft' : ['propose', 'implement'].includes(snapshot.stage) ? 'waiting-review' : value.result.status === 'passed' ? snapshot.stage === 'triage' ? 'triaged' : 'ready' : 'needs-info';
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);
     else await api(`${issuePath}/labels`, 'POST', { labels: [label] });
@@ -521,7 +523,7 @@ async function main(command) {
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
     }
     await writeFile(join(dir, 'published'), report.html_url);
-    await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label}**\n\n${['propose', 'implement'].includes(snapshot.stage) ? 'Review the PR or blocker report; no next stage is authorized.' : label === 'needs-info' ? `The owner can answer the question to resume ${snapshot.stage}.` : snapshot.stage === 'triage' ? 'Triage complete. The owner decides whether to request refinement; no next stage has started.' : handoff ? 'Refinement complete. Implementation follows automatically unless paused with future.' : 'Refinement complete. Implementation is available when the repository enables the implement worker.'}`);
+    await summary(`### Published\n[Issue #${issueNumber}](${report.html_url}) · **${label}**\n\n${['propose', 'implement'].includes(snapshot.stage) ? 'Review the PR or blocker report; no next stage is authorized.' : label === 'needs-info' ? `The owner can answer the question to resume ${snapshot.stage}.` : snapshot.stage === 'triage' ? 'Triage complete. The owner decides whether to request refinement; no next stage has started.' : decompositionPlanned ? 'Review the decomposition plan; native child delivery is not yet connected.' : handoff ? 'Refinement complete. Implementation follows automatically unless paused with future.' : 'Refinement complete. Implementation is available when the repository enables the implement worker.'}`);
     console.log(`Published ${label}: ${report.html_url}`); return;
   }
   if (command === 'cleanup') {

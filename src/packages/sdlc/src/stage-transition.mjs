@@ -1,12 +1,14 @@
 import { readActionsJson } from './actions-artifact.mjs';
 import { loadDispatch, checkDispatchClaim, stagePath, issueComments } from './stage-dispatch.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
+import { assessDecomposition } from './epic.mjs';
 
 // Explicit dispatch also works when GitHub suppresses follow-up token events.
 // This is a wake-up only; the router rechecks the completed run and owner intent.
 export async function signalRefinementContinuation(api, request, envelope) {
   if (request.stage !== 'refine' || !request.dispatch || request.autoImplement !== true || envelope.result?.status !== 'passed' || envelope.result?.gate !== 'ready') return false;
   if (validateStageEnvelope(envelope, request).length) throw Error('Invalid refinement result');
+  if (envelope.result.output?.estimate !== undefined && assessDecomposition(envelope.result.output).status === 'planned') return false;
   const repository = await api('');
   await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: 'implement', after_run: String(request.workflowRunId) } });
   return true;
@@ -28,6 +30,7 @@ export async function refinementAfterRun(api, repository, owner, event, readArti
   await checkDispatchClaim(api, repository, request.issue, request.dispatch, run.id);
   const envelope = await readArtifact(api, repository, run.id, `lighthouse-result-${request.issue}-${run.run_attempt}`, 'envelope.json');
   if (validateStageEnvelope(envelope, request).length) throw Error('Invalid refinement result');
+  if (envelope.result.output?.estimate !== undefined && assessDecomposition(envelope.result.output).status === 'planned') return null;
   if (envelope.result.status !== 'passed' || envelope.result.gate !== 'ready') return null;
   const reports = await issueComments(api, request.issue);
   if (!reports.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(`<!-- lighthouse-actions:${request.runId} -->`) && c.body.includes('<!-- lighthouse-stage:refine:passed -->'))) return null;

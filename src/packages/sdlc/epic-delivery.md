@@ -1,6 +1,6 @@
 # Epic delivery contracts
 
-Refinement re-estimates on the [intake scale](request-triage.md#estimate-contract). A confirmed estimate strictly greater than eight requires decomposition planning; eight does not. Every slice needs its own useful acceptance evidence and explicit acyclic dependencies. When no safe split exists, record the reason and ask the owner. A plan is not live orchestration.
+Refinement re-estimates on the [intake scale](request-triage.md#estimate-contract). A confirmed estimate strictly greater than eight requires decomposition planning; eight does not. Every slice needs its own useful acceptance evidence and explicit acyclic dependencies. When no safe split exists, record the reason and ask the owner. A plan is not live orchestration. Until native child delivery is connected, a passed refinement with a decomposition plan does not automatically dispatch parent implementation.
 
 ## Available interfaces
 

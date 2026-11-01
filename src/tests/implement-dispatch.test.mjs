@@ -181,6 +181,10 @@ test('refinement handoff requires an authenticated successful publication and th
   const readArtifact = async (a, r, run, name, file) => String(run) === '100' ? f.readArtifact(a, r, run, name, file) : file === 'request.json' ? snapshot : envelope;
   const event = { action: 'completed', workflow_run: { id: 200, head_sha: f.worker.head_sha } };
   assert.deepEqual((await refinementAfterRun(api, repo, owner, event, readArtifact)).predecessor, { runId: '200', attempt: 1 });
+  envelope.result.output = { estimate: { points: 13, status: 'confirmed', confidence: 'medium', rationale: { scope: 'Several outcomes', dependencies: 'Related changes', verification: 'Independent checks' }, uncertainty: [] }, decomposition: { schemaVersion: 1, parent: { id: 'GH-18', title: 'Parent' }, slices: [{ id: 'a', title: 'First outcome', acceptance: ['First outcome verified'], dependencies: [] }, { id: 'b', title: 'Second outcome', acceptance: ['Second outcome verified'], dependencies: [] }] } };
+  assert.equal(await signalRefinementContinuation(signalApi, snapshot, envelope), false);
+  assert.equal(await refinementAfterRun(api, repo, owner, event, readArtifact), null);
+  delete envelope.result.output;
   const next = fixture();
   Object.assign(next.request, { routerRunId: '300', eventRunId: '200', id: dispatchId(repo, '200', 'implement'), handoff: true, predecessor: { runId: '200', attempt: 1 }, event: { inputs: { issue: '18', stage: 'implement', after_run: '200' } } });
   Object.assign(next.parent, { id: 300, actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } });
