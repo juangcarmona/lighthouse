@@ -70,7 +70,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
   const observation = ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
     : workerFor(dispatch.request) === 'apply-product-change' ? productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
-    : agent?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(publish?.conclusion) ? 'publication-unknown'
+    : agent?.conclusion === 'success' && (['failure', 'timed_out', 'cancelled', 'skipped'].includes(publish?.conclusion) || ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publishJob?.conclusion)) ? 'publication-unknown'
     : ['failure', 'timed_out'].includes(prepare?.conclusion) && notStarted ? 'preparation-failure'
     : prepare?.conclusion === 'success' && activationFailed && notStarted && unpublished ? 'activation-failure'
     : unpublished && ['failure', 'timed_out'].includes(agent?.conclusion) ? 'failure'
