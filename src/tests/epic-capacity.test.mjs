@@ -23,7 +23,7 @@ function fixture() {
     return match[2] ? comments.get(Number(match[1])) ?? [] : issues.find(issue => issue.number === Number(match[1]));
   };
   const args = { api, repository, owner, child: 10, current, capacity: 2, prepare: async () => ({ sourceRevision, plan }), findCandidates: async (_api, correlation) => issues.filter(issue => issue.body.includes(`\"slice\":\"${correlation.slice}\"`)) };
-  return { issues, requestId, args, run: () => checkEpicCapacity(args) };
+  return { issues, requestId, receipt, comments, args, run: () => checkEpicCapacity(args) };
 }
 
 test('epic capacity counts active implementation requests under the parent lease', async () => {
@@ -49,6 +49,7 @@ test('closing a child does not free capacity while its implementation is active'
   f.issues[1].state = 'closed';
   f.args.capacity = 1;
   await assert.rejects(f.run(), /capacity is occupied/);
-  f.args.excludeRequest = f.requestId;
+  f.receipt.status = 'completed';
+  f.comments.get(11)[0].body = dispatchReceiptBody(repository, f.receipt);
   assert.deepEqual(await f.run(), { occupied: 0, capacity: 1 });
 });
