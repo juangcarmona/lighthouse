@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.1
+
+### Patch Changes
+
+- f4ce2e3: # Unattended outcome recovery
+
+  Report unattended outcomes accurately, surface uncertain publication, and restore triage handoffs or report failed reservation cleanup after publication.
+
+- f1e2883: # Product prerequisite handoff
+
+  Explain when Product Change preparation will run, when it is paused, and how to recover when the workflow is unavailable.
+
 ## 0.18.0
 
 ### Minor Changes
