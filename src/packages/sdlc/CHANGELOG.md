@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.12
+
+### Patch Changes
+
+- ade3c9a: # Existing implementation continuation
+
+  Resume an authenticated implementation on its existing draft PR when accepted product intent already covers the request.
+
 ## 0.18.11
 
 ### Patch Changes
