@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.17.1
+
+### Patch Changes
+
+- f2d326a: # Retain planning review evidence
+
+  Verify and retain the planning review from an authenticated unattended delivery for post-merge review.
+
 ## 0.17.0
 
 ### Minor Changes
