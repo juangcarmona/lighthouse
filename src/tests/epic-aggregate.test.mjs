@@ -133,3 +133,22 @@ test('aggregate readiness reports uncertainty if main changes during publication
   await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { pr.draft = false; main = nextBase; } }), /Aggregate checks do not bind/);
   assert.equal(pr.draft, false);
 });
+
+test('aggregate remains draft when current merge checks fail', async () => {
+  const f = fixture();
+  await f.run();
+  const pr = f.pulls[0], candidate = '5'.repeat(40);
+  Object.assign(pr, { draft: true, mergeable: true, merge_commit_sha: candidate });
+  const original = f.args.api;
+  f.args.api = async (path, method, body) => {
+    if (path === 'pulls/30') return pr;
+    if (path === 'git/ref/heads/main') return { ref: 'refs/heads/main', object: { sha: source } };
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
+    if (path.startsWith(`commits/${candidate}/check-runs?`)) return { check_runs: [{ id: 1, name: 'ci', head_sha: candidate, status: 'completed', conclusion: 'failure', app: { id: 42 } }] };
+    return original(path, method, body);
+  };
+  let changed = false;
+  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { changed = true; } }), /Aggregate checks do not bind/);
+  assert.equal(changed, false);
+  assert.equal(pr.draft, true);
+});
