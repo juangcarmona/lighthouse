@@ -29,6 +29,8 @@ Two controlled runs tested the proposed lease expressions: [the first](https://g
 
 In a separate test, GitHub created a child but the [simulated response was lost](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330356584). The [next attempt](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330471946) stopped on the uncertain receipt and left exactly one matching child. Both runs intentionally failed; the fixture does not establish automatic recovery of that uncertainty.
 
+The current host revision repeated native creation and journal reconciliation in [two runs](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330606435) and [41330699323](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330699323). A further [controlled run](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330897047) authenticated a child against the prior journal. With an intentionally lost create response, [the first run](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330863251) and [its retry](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/actions/runs/41330939789) both stopped, leaving one child and no duplicate. Refinement was simulated in all of these runs.
+
 ## 4. Candidate verification
 
 - [x] 4.1 Run required install, repository checks, strict OpenSpec validation and citation verification; retain completed receipts, reports and retrospective, accurately recording incomplete work.
