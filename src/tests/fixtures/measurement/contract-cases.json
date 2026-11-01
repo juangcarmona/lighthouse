@@ -1,0 +1,667 @@
+{
+  "schemaVersion": 1,
+  "status": "proposed-fixtures-not-implemented",
+  "window": {
+    "start": "2026-01-01T00:00:00Z",
+    "end": "2026-02-01T00:00:00Z"
+  },
+  "cases": [
+    {
+      "id": "workflow-success-is-not-integration",
+      "facts": [
+        {
+          "kind": "workflow",
+          "id": "run-1",
+          "attempt": 1,
+          "conclusion": "success"
+        }
+      ],
+      "expected": {
+        "workflowSuccesses": 1,
+        "acceptedChanges": null,
+        "acceptedChangesStatus": "unavailable"
+      },
+      "metricIds": [
+        "execution.stage-outcome.v1"
+      ]
+    },
+    {
+      "id": "blocked-is-not-passed",
+      "facts": [
+        {
+          "kind": "stage",
+          "id": "stage-1",
+          "runId": "run-1",
+          "status": "blocked",
+          "reason": "technical"
+        }
+      ],
+      "expected": {
+        "blockedStages": 1,
+        "passedStages": 0,
+        "humanWaitSeconds": null
+      },
+      "metricIds": [
+        "execution.stage-outcome.v1",
+        "execution.blocking-reason.v1"
+      ]
+    },
+    {
+      "id": "merged-is-not-deployed",
+      "facts": [
+        {
+          "kind": "merge",
+          "id": "merge-1",
+          "change": "change-1",
+          "revision": "merge-sha"
+        }
+      ],
+      "expected": {
+        "integrations": 1,
+        "deployments": null,
+        "deploymentStatus": "unavailable"
+      },
+      "metricIds": [
+        "evidence.external-unknowns.v1"
+      ]
+    },
+    {
+      "id": "closed-is-not-integrated",
+      "facts": [
+        {
+          "kind": "issue",
+          "id": "issue-1",
+          "state": "closed"
+        }
+      ],
+      "expected": {
+        "integrations": null,
+        "integrationStatus": "unavailable"
+      },
+      "metricIds": [
+        "delivery.issue-to-integration.v1"
+      ]
+    },
+    {
+      "id": "retry-is-one-accepted-change",
+      "facts": [
+        {
+          "kind": "attempt",
+          "id": "attempt-1",
+          "change": "change-1",
+          "outcome": "failed"
+        },
+        {
+          "kind": "attempt",
+          "id": "attempt-2",
+          "change": "change-1",
+          "outcome": "passed"
+        },
+        {
+          "kind": "integration",
+          "id": "integration-1",
+          "change": "change-1",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "attempts": 2,
+        "integratedChanges": 1
+      },
+      "metricIds": [
+        "execution.attempt-outcome.v1"
+      ]
+    },
+    {
+      "id": "missing-is-not-zero",
+      "facts": [
+        {
+          "kind": "eligible-invocation",
+          "id": "invocation-1"
+        },
+        {
+          "kind": "usage-artifact",
+          "id": "usage-1",
+          "invocation": "invocation-1",
+          "state": "expired"
+        }
+      ],
+      "expected": {
+        "inputTokens": null,
+        "inputTokensMeasured": 0,
+        "inputTokensEligible": 1,
+        "status": "unavailable"
+      },
+      "metricIds": [
+        "model.token-usage.v1"
+      ]
+    },
+    {
+      "id": "waiting-is-not-labor",
+      "facts": [
+        {
+          "kind": "human-wait",
+          "id": "wait-1",
+          "start": "2026-01-10T10:00:00Z",
+          "end": "2026-01-10T10:20:00Z"
+        }
+      ],
+      "expected": {
+        "humanWaitSeconds": 1200,
+        "humanActiveSeconds": null
+      },
+      "metricIds": [
+        "execution.blocking-reason.v1",
+        "autonomy.human-wait-time.v1"
+      ]
+    },
+    {
+      "id": "partial-token-coverage",
+      "facts": [
+        {
+          "kind": "usage",
+          "id": "usage-1",
+          "invocation": "invocation-1",
+          "inputTokens": 100,
+          "outputTokens": 20
+        },
+        {
+          "kind": "usage",
+          "id": "usage-2",
+          "invocation": "invocation-2",
+          "inputTokens": 30
+        }
+      ],
+      "expected": {
+        "inputTokens": 130,
+        "inputTokensMeasured": 2,
+        "inputTokensEligible": 2,
+        "outputTokens": 20,
+        "outputTokensMeasured": 1,
+        "outputTokensEligible": 2,
+        "outputStatus": "incomplete"
+      },
+      "metricIds": [
+        "model.token-usage.v1"
+      ]
+    },
+    {
+      "id": "configuration-is-not-provider-or-billing-proof",
+      "facts": [
+        {
+          "kind": "model-selection",
+          "id": "selection-1",
+          "requestedModel": "example/model",
+          "providerReported": null,
+          "actualCharge": null
+        }
+      ],
+      "expected": {
+        "requestedModel": "example/model",
+        "confirmedModel": null,
+        "actualCharge": null,
+        "providerStatus": "unverified",
+        "billingStatus": "unavailable"
+      },
+      "metricIds": [
+        "evidence.external-unknowns.v1"
+      ]
+    },
+    {
+      "id": "reasoning-included-in-output",
+      "facts": [
+        {
+          "kind": "usage",
+          "id": "usage-1",
+          "outputTokens": 100,
+          "reasoningTokens": 40,
+          "reasoningIncludedInOutput": true
+        }
+      ],
+      "expected": {
+        "outputTokens": 100,
+        "reasoningTokens": 40,
+        "billableOutputTokens": 100
+      },
+      "metricIds": [
+        "model.token-usage.v1"
+      ]
+    },
+    {
+      "id": "conflicting-heads",
+      "facts": [
+        {
+          "kind": "authorization",
+          "id": "auth-1",
+          "head": "head-1"
+        },
+        {
+          "kind": "merge",
+          "id": "merge-1",
+          "head": "head-2"
+        }
+      ],
+      "expected": {
+        "delegatedIntegration": null,
+        "status": "conflict"
+      },
+      "metricIds": [
+        "autonomy.delegated-integration.v1"
+      ]
+    },
+    {
+      "id": "skipped-is-not-invocation",
+      "facts": [
+        {
+          "kind": "step",
+          "id": "step-1",
+          "conclusion": "skipped"
+        },
+        {
+          "kind": "collection",
+          "id": "collection-1",
+          "stepsComplete": true
+        }
+      ],
+      "expected": {
+        "invocations": 0,
+        "agentStepDurationSeconds": null
+      },
+      "metricIds": [
+        "execution.agent-step-duration.v1"
+      ]
+    },
+    {
+      "id": "complete-declared-evidence",
+      "facts": [
+        {
+          "kind": "requirement-set",
+          "id": "set-1",
+          "subject": "change-1",
+          "required": [
+            "check-a",
+            "check-b"
+          ]
+        },
+        {
+          "kind": "evidence",
+          "id": "a",
+          "requirement": "check-a",
+          "authenticated": true,
+          "fresh": true
+        },
+        {
+          "kind": "evidence",
+          "id": "b",
+          "requirement": "check-b",
+          "authenticated": true,
+          "fresh": true
+        }
+      ],
+      "expected": {
+        "evidenceNumerator": 2,
+        "evidenceDenominator": 2,
+        "status": "complete"
+      },
+      "metricIds": [
+        "evidence.completeness.v1"
+      ]
+    },
+    {
+      "id": "missing-declared-evidence",
+      "facts": [
+        {
+          "kind": "requirement-set",
+          "id": "set-1",
+          "subject": "change-1",
+          "required": [
+            "check-a",
+            "check-b"
+          ]
+        },
+        {
+          "kind": "evidence",
+          "id": "a",
+          "requirement": "check-a",
+          "authenticated": true,
+          "fresh": true
+        }
+      ],
+      "expected": {
+        "evidenceNumerator": 1,
+        "evidenceDenominator": 2,
+        "status": "incomplete"
+      },
+      "metricIds": [
+        "evidence.completeness.v1"
+      ]
+    },
+    {
+      "id": "issue-pr-and-merge-clocks",
+      "facts": [
+        {
+          "kind": "issue",
+          "id": "issue-1",
+          "createdAt": "2026-01-10T09:00:00Z"
+        },
+        {
+          "kind": "pr",
+          "id": "pr-1",
+          "issue": "issue-1",
+          "createdAt": "2026-01-10T10:00:00Z",
+          "mergedAt": "2026-01-10T12:00:00Z",
+          "linkVerified": true,
+          "mergeVerified": true
+        }
+      ],
+      "expected": {
+        "issueToPrSeconds": 3600,
+        "issueToIntegrationSeconds": 10800,
+        "deploymentStatus": "unavailable"
+      },
+      "metricIds": [
+        "delivery.issue-to-pr.v1",
+        "delivery.issue-to-integration.v1"
+      ]
+    },
+    {
+      "id": "unlinked-pr",
+      "facts": [
+        {
+          "kind": "issue",
+          "id": "issue-1",
+          "createdAt": "2026-01-10T09:00:00Z"
+        },
+        {
+          "kind": "pr",
+          "id": "pr-1",
+          "createdAt": "2026-01-10T10:00:00Z",
+          "linkVerified": false
+        }
+      ],
+      "expected": {
+        "issueToPrSeconds": null,
+        "status": "unverified"
+      },
+      "metricIds": [
+        "delivery.issue-to-pr.v1"
+      ]
+    },
+    {
+      "id": "valid-delegated-integration",
+      "facts": [
+        {
+          "kind": "authorization",
+          "id": "auth-1",
+          "issue": "issue-1",
+          "pr": "pr-1",
+          "head": "head-1",
+          "merge": true,
+          "authenticated": true
+        },
+        {
+          "kind": "merge",
+          "id": "merge-1",
+          "issue": "issue-1",
+          "pr": "pr-1",
+          "head": "head-1",
+          "sha": "merge-1",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "delegatedIntegration": true,
+        "status": "verified"
+      },
+      "metricIds": [
+        "autonomy.delegated-integration.v1"
+      ]
+    },
+    {
+      "id": "bot-merge-is-unclassified",
+      "facts": [
+        {
+          "kind": "merge",
+          "id": "merge-1",
+          "actorType": "bot",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "delegatedIntegration": null,
+        "status": "unavailable"
+      },
+      "metricIds": [
+        "autonomy.delegated-integration.v1"
+      ]
+    },
+    {
+      "id": "explicit-revert-link",
+      "facts": [
+        {
+          "kind": "merge",
+          "id": "original",
+          "authenticated": true
+        },
+        {
+          "kind": "merge",
+          "id": "revert",
+          "authenticated": true
+        },
+        {
+          "kind": "revert-link",
+          "id": "relation",
+          "original": "original",
+          "revert": "revert",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "confirmedReverts": 1,
+        "incidentStatus": "unavailable"
+      },
+      "metricIds": [
+        "delivery.confirmed-reverts.v1"
+      ]
+    },
+    {
+      "id": "unconfirmed-revert",
+      "facts": [
+        {
+          "kind": "issue-label",
+          "id": "label-1",
+          "name": "revert"
+        }
+      ],
+      "expected": {
+        "confirmedReverts": null,
+        "status": "unavailable"
+      },
+      "metricIds": [
+        "delivery.confirmed-reverts.v1"
+      ]
+    },
+    {
+      "id": "distinct-human-interactions",
+      "facts": [
+        {
+          "kind": "human-event",
+          "id": "event-1",
+          "actor": "human-1",
+          "authenticated": true
+        },
+        {
+          "kind": "human-event",
+          "id": "event-2",
+          "actor": "human-1",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "humanInteractions": 2,
+        "humanActiveSeconds": null
+      },
+      "metricIds": [
+        "autonomy.observable-interactions.v1"
+      ]
+    },
+    {
+      "id": "replayed-human-interaction",
+      "facts": [
+        {
+          "kind": "human-event",
+          "id": "event-1",
+          "actor": "human-1",
+          "authenticated": true
+        },
+        {
+          "kind": "human-event",
+          "id": "event-1",
+          "actor": "human-1",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "humanInteractions": 1
+      },
+      "metricIds": [
+        "autonomy.observable-interactions.v1"
+      ]
+    },
+    {
+      "id": "actual-agent-step-duration",
+      "facts": [
+        {
+          "kind": "step",
+          "id": "step-1",
+          "invocation": "invocation-1",
+          "start": "2026-01-10T10:17:17Z",
+          "end": "2026-01-10T10:21:14Z",
+          "conclusion": "success",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "agentStepDurationSeconds": 237,
+        "modelRequestSeconds": null
+      },
+      "metricIds": [
+        "execution.agent-step-duration.v1"
+      ]
+    },
+    {
+      "id": "negative-step-duration",
+      "facts": [
+        {
+          "kind": "step",
+          "id": "step-1",
+          "invocation": "invocation-1",
+          "start": "2026-01-10T10:21:14Z",
+          "end": "2026-01-10T10:17:17Z",
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "agentStepDurationSeconds": null,
+        "status": "conflict"
+      },
+      "metricIds": [
+        "execution.agent-step-duration.v1"
+      ]
+    },
+    {
+      "id": "open-human-wait-censored",
+      "facts": [
+        {
+          "kind": "human-wait",
+          "id": "wait-1",
+          "start": "2026-01-31T23:45:00Z",
+          "end": null
+        }
+      ],
+      "expected": {
+        "observedHumanWaitSeconds": 900,
+        "status": "censored",
+        "humanActiveSeconds": null
+      },
+      "metricIds": [
+        "autonomy.human-wait-time.v1"
+      ]
+    },
+    {
+      "id": "stale-check",
+      "facts": [
+        {
+          "kind": "check",
+          "id": "check-1",
+          "head": "head-1",
+          "outcome": "passed",
+          "authenticated": true
+        },
+        {
+          "kind": "candidate",
+          "id": "candidate-1",
+          "head": "head-2"
+        }
+      ],
+      "expected": {
+        "freshPassingChecks": 0,
+        "status": "stale"
+      },
+      "metricIds": [
+        "evidence.completeness.v1"
+      ]
+    },
+    {
+      "id": "same-identity-conflicting-payloads",
+      "facts": [
+        {
+          "kind": "stage",
+          "id": "stage-1",
+          "status": "passed"
+        },
+        {
+          "kind": "stage",
+          "id": "stage-1",
+          "status": "failed"
+        }
+      ],
+      "expected": {
+        "outcome": null,
+        "status": "conflict"
+      },
+      "metricIds": [
+        "execution.stage-outcome.v1"
+      ]
+    },
+    {
+      "id": "complete-token-categories",
+      "facts": [
+        {
+          "kind": "eligible-invocation",
+          "id": "invocation-1"
+        },
+        {
+          "kind": "usage",
+          "id": "usage-1",
+          "invocation": "invocation-1",
+          "inputTokens": 100,
+          "outputTokens": 20,
+          "authenticated": true
+        }
+      ],
+      "expected": {
+        "inputTokens": 100,
+        "inputTokensMeasured": 1,
+        "inputTokensEligible": 1,
+        "outputTokens": 20,
+        "outputTokensMeasured": 1,
+        "outputTokensEligible": 1,
+        "status": "complete"
+      },
+      "metricIds": [
+        "model.token-usage.v1"
+      ]
+    }
+  ]
+}
