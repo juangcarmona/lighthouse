@@ -34,7 +34,7 @@ on:
         required: true
         default: stage
         type: choice
-        options: [stage, product-change, resume-product]
+        options: [stage, product-change, resume-product, resume-aligned]
       model_selection:
         description: Optional JSON model selection for this execution
         required: false
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 0877156e956b2a221d1bb55db91a73b7164d3228
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -118,7 +118,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 0877156e956b2a221d1bb55db91a73b7164d3228
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -131,7 +131,7 @@ jobs:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
       (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
-       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product')) || (inputs.stage == 'triage' && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
+       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product' || inputs.workflow == 'resume-aligned')) || (inputs.stage == 'triage' && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
         (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
@@ -155,7 +155,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 0877156e956b2a221d1bb55db91a73b7164d3228
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -193,7 +193,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 0877156e956b2a221d1bb55db91a73b7164d3228
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 95db8fba838ef40777cf718c4f63136e5d2c764b
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           path: .lighthouse-harness
           persist-credentials: false
       - name: Load current product source

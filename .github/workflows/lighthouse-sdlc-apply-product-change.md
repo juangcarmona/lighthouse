@@ -29,7 +29,7 @@ on:
         required: true
         type: string
   needs: [prepare]
-if: needs.prepare.outputs.eligible == 'true'
+if: "false"
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 30
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -92,6 +92,30 @@ jobs:
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/product-apply.json
           if-no-files-found: error
           retention-days: 14
+      - name: Check out the approved private source without persisted credentials
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.prepare.outputs.head }}
+          path: product-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preserve the approved source for the credential-free provider
+        if: steps.prepare.outputs.eligible == 'true'
+        env:
+          APPROVED_HEAD: ${{ steps.prepare.outputs.head }}
+        run: |
+          test "$(git -C product-source rev-parse HEAD)" = "$APPROVED_HEAD"
+          if git -C product-source config --local --name-only --get-regexp '^http\..*\.extraheader$' >/dev/null; then exit 1; fi
+          tar -czf "$RUNNER_TEMP/lighthouse-product-source.tar.gz" -C product-source .
+      - name: Upload the approved source
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-product-apply-source-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-product-source.tar.gz
+          if-no-files-found: error
+          retention-days: 14
   apply:
     name: Apply with the pinned ProductShape provider
     needs: [prepare]
@@ -99,20 +123,24 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
-      - uses: actions/checkout@v5
+      - name: Load the approved source without credentials
+        uses: actions/download-artifact@v8
         with:
-          persist-credentials: false
-          ref: ${{ needs.prepare.outputs.head }}
+          name: lighthouse-product-apply-source-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/product-source
+      - name: Restore the approved source
+        run: tar -xzf "$RUNNER_TEMP/product-source/lighthouse-product-source.tar.gz" -C "$GITHUB_WORKSPACE"
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
       - name: Install provider packages without credentials
+        working-directory: .lighthouse-harness
         run: |
           npm ci --ignore-scripts
           npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6
@@ -133,13 +161,20 @@ jobs:
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/affected-citations.json
           if-no-files-found: error
           retention-days: 30
+      - name: Preserve the bounded apply proof
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-product-apply-proof-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/apply-proof.json
+          if-no-files-found: error
+          retention-days: 30
   publish:
     name: Recheck and publish provider output
     needs: [prepare, apply]
     if: always() && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -153,7 +188,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -169,6 +204,12 @@ jobs:
         with:
           name: lighthouse-product-apply-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Load the bounded apply proof
+        if: needs.apply.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-product-apply-proof-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Stop when the provider apply did not complete
         if: needs.apply.result != 'success'
         run: exit 1
@@ -176,6 +217,34 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs product-apply-publish
+  finalize:
+    name: Report an interrupted product apply
+    needs: [prepare, apply, publish]
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
+      LIGHTHOUSE_PREPARE_RESULT: ${{ needs.prepare.result }}
+      LIGHTHOUSE_APPLY_RESULT: ${{ needs.apply.result }}
+      LIGHTHOUSE_PUBLISH_RESULT: ${{ needs.publish.result }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Publish the authenticated outcome
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs product-apply-cleanup
 ---
 
 # Apply an approved Product Change
