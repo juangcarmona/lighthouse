@@ -18,7 +18,7 @@ for (const name of files) {
   if (name === 'lighthouse-sdlc-router.yml') {
     const enabled = ['triage', 'refine', ...(propose ? ['propose'] : []), ...(implement ? ['implement'] : []), ...(completion ? ['integrate', 'review'] : [])];
     content = content.replace('LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review', `LIGHTHOUSE_ENABLED_STAGES: ${enabled.join(',')}`).replace('options: [triage, refine, propose, implement, integrate, review]', `options: [${enabled.join(', ')}]`);
-    content = content.replace('options: [stage, product-change, resume-product]', `options: [stage${productChange ? ', product-change, resume-product' : ''}]`).replace('LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false', `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${productChange}`);
+    content = content.replace('options: [stage, product-change, resume-product, resume-aligned]', `options: [stage${productChange ? ', product-change, resume-product, resume-aligned' : ''}]`).replace('LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false', `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${productChange}`);
     if (!implement) content = content.replace('LIGHTHOUSE_AUTO_IMPLEMENT: true', 'LIGHTHOUSE_AUTO_IMPLEMENT: false');
     if (!completion) content = content.replaceAll('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false');
   }

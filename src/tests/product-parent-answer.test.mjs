@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
-import { dispatchArtifact, dispatchId, dispatchReceiptBody, stagePath } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { productGapAfterRun, verifyProductParent } from '../packages/sdlc/src/stage-transition.mjs';
+import { dispatchArtifact, dispatchId, dispatchReceiptBody, loadDispatch, stagePath } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { productAlignmentAfterRun, productGapAfterRun, signalProductAlignment, signalProductGap, verifyProductParent } from '../packages/sdlc/src/stage-transition.mjs';
 
 const repository = 'owner/repo', owner = 'owner', issue = { number: 18, title: 'Bounded request', body: 'Known scope', state: 'open', labels: [] };
 const sha = digit => digit.repeat(64), revision = digit => digit.repeat(40);
@@ -18,6 +18,56 @@ function execution({ routerId, workerId, stage, worker, eventName, event, task, 
   return { request, receipt, comment, router, run, dispatch: { commentId: comment.id, requestId: request.id, digest: receipt.digest } };
 }
 const result = (runId, stage, status, output) => ({ schemaVersion: 1, result: { schemaVersion: 1, runId, stage, gate: 'ready', status, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Continue the authorized work.', output }, effect: { type: 'issue-comment', body: 'Bounded result.' } });
+
+test('aligned parent continuation authenticates the result, publication and unchanged owner scope', async () => {
+  const base = execution({ routerId: 100, workerId: 200, stage: 'refine', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'refine' } }, task: taskDigest([]) });
+  const gap = { summary: 'The product intent might be missing.', scope: 'The authorized issue.' };
+  const parentSnapshot = { issue: 18, stage: 'refine', runId: sha('c'), workflowRunId: '200', workflowRevision: revision('a'), sourceRevision: revision('b'), taskDigest: taskDigest([]), autoImplement: false, dispatch: base.dispatch };
+  const reports = [{ user: bot, body: `<!-- lighthouse-actions:${parentSnapshot.runId} -->\n<!-- lighthouse-stage:refine:blocked -->` }];
+  const product = execution({ routerId: 150, workerId: 250, stage: 'refine', worker: 'product-change', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', workflow: 'product-change' } }, task: taskDigest([]) });
+  const runs = new Map([[200, base.run], [250, product.run]]), routers = new Map([[100, base.router], [150, product.router]]), comments = new Map([[base.comment.id, base.comment], [product.comment.id, product.comment]]), snapshots = new Map([[200, parentSnapshot]]), envelopes = new Map([[200, result(parentSnapshot.runId, 'refine', 'blocked', { productGap: gap })]]), dispatches = new Map([[100, base.request], [150, product.request]]);
+  const api = async path => {
+    if (path === '') return { default_branch: 'main' };
+    if (path === 'commits/main') return { sha: revision('b') };
+    if (path === 'issues/18') return issue;
+    if (/^actions\/runs\/(200|250)\/artifacts\?/.test(path)) return { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] };
+    if (path.startsWith('issues/18/comments?')) return reports;
+    let match = path.match(/^actions\/runs\/(\d+)\/attempts\/1$/); if (match) return routers.get(Number(match[1]));
+    match = path.match(/^actions\/runs\/(\d+)$/); if (match) return runs.get(Number(match[1]));
+    match = path.match(/^issues\/comments\/(\d+)$/); if (match) return comments.get(Number(match[1]));
+    throw Error(`Unexpected API path: ${path}`);
+  };
+  const readArtifact = async (_api, _repo, run, _name, file) => file === 'dispatch.json' ? dispatches.get(Number(run)) : file === 'request.json' ? snapshots.get(Number(run)) : envelopes.get(Number(run));
+  const parent = await productGapAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: 200, head_sha: revision('a') } }, readArtifact);
+  product.request.productParent = parent; product.receipt.digest = digest(JSON.stringify(product.request)); product.comment.body = dispatchReceiptBody(repository, product.receipt); product.dispatch.digest = product.receipt.digest;
+  const snapshot = { issue: 18, stage: 'refine', worker: 'product-change', runId: sha('d'), workflowRunId: '250', workflowRevision: revision('a'), sourceRevision: revision('b'), taskDigest: taskDigest([]), productParent: parent, dispatch: product.dispatch };
+  const envelope = result(snapshot.runId, 'refine', 'passed', { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: [] } });
+  snapshots.set(250, snapshot); envelopes.set(250, envelope);
+  reports.push({ user: bot, body: `<!-- lighthouse-actions:${snapshot.runId} -->\n<!-- lighthouse-stage:refine:passed -->` });
+  const event = { action: 'completed', workflow_run: { id: 250, head_sha: revision('a') } };
+  const alignment = await productAlignmentAfterRun(api, repository, owner, event, readArtifact);
+  assert.equal(alignment.alignmentRun.runId, '250');
+  const next = execution({ routerId: 300, workerId: 350, stage: 'refine', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'refine', workflow: 'resume-aligned', after_run: '250' } }, task: taskDigest([]), extras: { eventRunId: '250', productAlignment: alignment } });
+  next.router.actor = bot; next.router.triggering_actor = bot; next.request.id = dispatchId(repository, '250', 'refine'); next.receipt.id = next.request.id; next.receipt.eventRunId = '250'; next.receipt.digest = digest(JSON.stringify(next.request)); next.comment.body = dispatchReceiptBody(repository, next.receipt);
+  routers.set(300, next.router); comments.set(next.comment.id, next.comment); dispatches.set(300, next.request);
+  assert.equal((await loadDispatch(api, repository, owner, 18, next.comment.id, next.run, readArtifact)).request.productAlignment.alignmentRun.runId, '250');
+  next.request.productAlignment = { ...alignment, baseRevision: revision('f') }; next.receipt.digest = digest(JSON.stringify(next.request)); next.comment.body = dispatchReceiptBody(repository, next.receipt);
+  await assert.rejects(loadDispatch(api, repository, owner, 18, next.comment.id, next.run, readArtifact), /alignment or parent authorization changed/);
+  reports.pop();
+  await assert.rejects(productAlignmentAfterRun(api, repository, owner, event, readArtifact), /publication is unavailable/);
+  reports.push({ user: bot, body: `<!-- lighthouse-actions:${snapshot.runId} -->\n<!-- lighthouse-stage:refine:passed -->` });
+  issue.labels.push({ name: 'future' });
+  await assert.rejects(productAlignmentAfterRun(api, repository, owner, event, readArtifact), /paused/);
+  issue.labels.pop();
+  issue.title = 'Changed scope';
+  await assert.rejects(productAlignmentAfterRun(api, repository, owner, event, readArtifact), /owner intent changed/);
+  issue.title = 'Bounded request';
+  const calls = [];
+  await signalProductAlignment(async (path, method, body) => { if (path === '') return { default_branch: 'main' }; calls.push({ path, method, body }); }, snapshot, envelope);
+  assert.equal(calls[0].body.inputs.workflow, 'resume-aligned');
+  const repeated = { ...parentSnapshot, productChangeEnabled: true, productAlignment: alignment };
+  assert.equal(await signalProductGap(api, repeated, result(repeated.runId, 'refine', 'blocked', { productGap: gap })), false);
+});
 
 test('an owner answer remains bound to its actual product question and original parent', async () => {
   const base = execution({ routerId: 100, workerId: 200, stage: 'refine', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'refine' } }, task: taskDigest([]) });

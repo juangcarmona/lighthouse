@@ -135,6 +135,7 @@ test('publication refuses changed answers, changed source, closed issues and hum
   assert.throws(() => checkPublication(snapshot, reserved, comments, 'def'), /revision changed/);
   assert.throws(() => checkPublication(snapshot, { ...reserved, state: 'closed' }, comments, 'abc'), /closed/);
   assert.throws(() => checkPublication(snapshot, { ...reserved, labels: [...reserved.labels, { name: 'human-working' }] }, comments, 'abc'), /revoked/);
+  assert.throws(() => checkPublication({ ...snapshot, productAlignment: {} }, { ...reserved, labels: [...reserved.labels, { name: 'future' }] }, comments, 'abc'), /continuation was paused/);
 });
 test('repository metadata endpoint has no trailing slash while subresources retain their separator', () => {
   assert.equal(repositoryApiUrl('owner/repo'), 'https://api.github.com/repos/owner/repo');
