@@ -165,6 +165,8 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
   await reconcileUnattendedStop(api, repository, owner, issue, comments);
   const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.body.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
+  const unattended = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-unattended:')).at(-1);
+  if (unattended && (!entries.length || unattended.id > entries.at(-1).comment.id)) return { observations: [] };
   const latest = new Map();
   for (const entry of entries) latest.set(entry.receipt.recovery?.rootId ?? entry.receipt.id, entry);
   const observations = [];

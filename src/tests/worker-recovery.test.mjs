@@ -87,6 +87,17 @@ test('unattended recovery rejects spoofed or superseded attempts', async () => {
   assert.equal(f.calls.filter(c => c.path === 'issues/7/comments' && c.method === 'POST').length, 0);
 });
 
+test('a newer unattended attempt prevents retrying an older failed worker', async () => {
+  const f = fixture(), runId = '402', route = 'ff';
+  const marker = digest(JSON.stringify({ repository, issue: 7, route, run: runId }));
+  f.comments.push({ id: 40, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `## Working · ff\n\n[Execution](https://github.com/${repository}/actions/runs/${runId}).\n\n<!-- lighthouse-unattended:${marker} -->` });
+  f.runs.set(runId, { ...f.parent, id: Number(runId), path: '.github/workflows/lighthouse-sdlc-unattended.yml', display_title: 'ff #7 · owner', status: 'completed', conclusion: 'failure' });
+  const result = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(result.request, undefined);
+  assert.deepEqual(result.observations, []);
+  assert.equal(f.comments.filter(c => c.body.includes('<!-- lighthouse-dispatch:')).length, 1);
+});
+
 test('retry delay and finite budget are enforced with an explicit next decision', () => {
   const f = fixture(), ended = Date.parse(f.run.updated_at);
   assert.equal(decide(f, { now: ended + retryDelayMs - 1 }).state, 'delayed');
