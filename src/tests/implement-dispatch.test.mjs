@@ -279,4 +279,8 @@ test('execution model selection is bound to an authenticated direct owner dispat
     assert.throws(() => executionModelSelection({ ...f.request, ...change }), /direct owner/);
   }
   assert.throws(() => executionModelSelection({ ...f.request, event: { inputs: { model_selection: '{' } } }), /JSON/);
+  assert.throws(() => executionModelSelection({ ...f.request, event: { inputs: { ...f.request.event.inputs, after_run: '99' } } }), /direct owner/);
+  assert.throws(() => executionModelSelection({ ...f.request, event: { inputs: { ...f.request.event.inputs, workflow: 'product-change' } } }), /direct owner/);
+  f.request.event.inputs.model_selection = JSON.stringify({ profile: 'fast' });
+  assert.throws(() => verifyDispatchOrigin(f.request, f.receipt, f.parent, f.worker, repo, owner, issue), /artifact identity/);
 });
