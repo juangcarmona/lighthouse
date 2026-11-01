@@ -112,6 +112,10 @@ test('closed, cancelled, uncertain or unverifiable children cannot satisfy prere
   }
   const obs = observation(); obs.children[0] = accepted('a'); obs.children[0].acceptance.included = false;
   assert.equal(states(obs)[2], 'waiting-dependencies');
+  for (const state of ['closed', 'unexpected', undefined]) {
+    obs.children[0] = { ...child('a'), state };
+    assert.equal(states(obs)[0], 'uncertain');
+  }
 });
 
 test('head, base, checks and owner decision must all be current', () => {

@@ -50,6 +50,7 @@ export function assessEpic(plan, observation) {
     const result = { id, state: 'blocked', dependencies: [...slice.dependencies] };
     if (!child) return { ...result, state: 'uncreated' };
     if (child.authenticated !== true) return { ...result, state: 'uncertain', reason: 'child identity is not authenticated' };
+    if (!['ready', 'running', 'accepted', 'cancelled', 'uncertain', 'blocked'].includes(child.state)) return { ...result, state: 'uncertain', reason: 'child state is closed or unrecognized' };
     if (['cancelled', 'uncertain', 'blocked'].includes(child.state)) return { ...result, state: child.state };
     if (child.state === 'running') return { ...result, state: 'running' };
     if (child.questions?.length) return { ...result, state: 'waiting-answer', questions: child.questions };
