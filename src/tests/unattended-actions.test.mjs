@@ -67,6 +67,8 @@ async function fixture() {
     if (options.request.stage === 'triage') envelope.result.output = { eligibility, hotfix: plan };
     else if (options.request.worker === 'independent-review') {
       if (options.context.review.purpose === 'candidate') {
+        assert.deepEqual(options.context.review.details.scope, { implementationPaths: policy.paths, planningRoots: [] });
+        assert.match(options.prompt, /findings as an array of plain strings/);
         assert.match(options.context.review.details.red.receipt.checks.find(c => c.exitCode !== 0).log, /ERR_ASSERTION/);
         assert.ok(options.context.review.details.red.tests['tests/edge.test.mjs']);
         assert.match(Buffer.from(options.context.review.details.originalFiles['src/feature/rule.mjs'], 'base64').toString(), /value > 2/);
