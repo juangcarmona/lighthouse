@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.7
+
+### Patch Changes
+
+- 56bf766: # Recover draft handoffs
+
+  Recover the blocked handoff when a PR returns to draft and publication is interrupted.
+
 ## 0.18.6
 
 ### Patch Changes
