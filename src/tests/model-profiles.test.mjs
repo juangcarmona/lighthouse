@@ -119,3 +119,11 @@ test('version 2 rejects incomplete direct settings and fails closed under versio
   assert.throws(() => resolve({ project: { schemaVersion: 2, defaultProfile: 'anything' } }), /operator version 2/);
   assert.throws(() => resolve({ operator: { ...operator, modelProfiles: { schemaVersion: 1, enabled: true, allowExecutionSelection: true } } }), /version 2/);
 });
+
+test('execution receipts preserve the requested selector without claiming provider verification', () => {
+  const selection = { profile: 'plan', model: 'openai/example', reasoningEffort: 'high' };
+  const receipt = modelExecutionReceipt(selection, { profile: 'plan' });
+  assert.deepEqual(receipt.requested.selector, { profile: 'plan' });
+  assert.equal(receipt.providerReported.status, 'unverified');
+  assert.equal(receipt.billing.actualCost, null);
+});
