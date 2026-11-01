@@ -98,3 +98,12 @@ test('stage result rejects undeclared authority and malformed evidence fields', 
     assert.ok(validateStageEnvelope({ ...envelope, result: { ...result, evidence: [{ id: 'issue', status: 'passed', ...change }] } }, request).length);
   }
 });
+
+test('a product prerequisite retains its enclosing stage without completing that stage', () => {
+  const productChange = { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: ['The accepted intent covers the issue.'] };
+  for (const [stage, gate] of [['triage', 'triaged'], ['refine', 'ready'], ['propose', 'planned'], ['implement', 'done']]) {
+    const productRequest = { ...request, stage, worker: 'product-change', originalRequest: 'unrelated intake' };
+    const envelope = { schemaVersion: 1, result: { ...result, stage, gate, output: { productChange } }, effect: { type: 'issue-comment', body: 'Accepted intent covers the prerequisite.' } };
+    assert.deepEqual(validateStageEnvelope(envelope, productRequest), []);
+  }
+});

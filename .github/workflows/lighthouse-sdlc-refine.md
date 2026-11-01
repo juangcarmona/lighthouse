@@ -115,6 +115,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:
@@ -158,6 +159,7 @@ jobs:
       actions: write
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:

@@ -103,3 +103,46 @@ test('publisher rechecks authority before a create-only branch, preserves base t
   assert.equal(calls[4].body.ref, 'refs/heads/lighthouse/propose-18-aaaaaaaaaaaa');
   assert.doesNotMatch(calls[5].body.body, /Closes #18/);
 });
+
+test('a resumed proposal updates its applied product PR without opening another branch', async () => {
+  const repository = 'owner/repo', head = 'a'.repeat(40), after = 'b'.repeat(40), intent = 'c'.repeat(64);
+  const parent = { issue: 18, stage: 'propose', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Issue scope' }, sourceRevision: 'd'.repeat(40), baseRevision: 'd'.repeat(40), taskDigest: 'e'.repeat(64), autoImplement: false };
+  const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity: { repository, issue: 18, parentRunId: '200', authorizationDigest: '1'.repeat(64), policyDigest: '2'.repeat(64), workflowRevision: '3'.repeat(40), head }, requestDigest: '4'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '5'.repeat(64), baselineDigest: '6'.repeat(64), state: 'applied', effectIds: [`apply:${intent}:${head}`], parent };
+  const branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+  const resume = { issue: 18, parent, pullRequest: 34, head, branch, receiptIntent: intent };
+  const productPr = { number: 34, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, html_url: 'https://example.test/pr/34', body: `Product decision retained.\n<!-- lighthouse-product-change:{"changeId":"CHG-EXAMPLE"} -->\n<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->` };
+  const { checkProposal } = await import('../packages/sdlc/src/proposal-review.mjs');
+  const pendingBody = productPr.body.replace('\"state\":\"applied\"', '\"state\":\"waiting-product-decision\"') + `\n<!-- lighthouse-proposal:${'a'.repeat(64)} -->`;
+  assert.throws(() => checkProposal({ ...productPr, head: { ...productPr.head, ref: 'lighthouse/propose-18-aaaaaaaaaaaa' }, body: pendingBody }, repository));
+  const calls = [];
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  const snapshot = { repository, sourceRevision: head, issue: 18, runId: 'a'.repeat(64), title: 'Example', defaultBranch: 'main', productResume: resume };
+  const result = await createProposalPullRequest(api, snapshot, files, 'Engineering proposal.', 'https://example.test/run', async () => {});
+  assert.equal(result.number, 34);
+  assert.deepEqual(calls.find(call => call.path === `git/refs/heads/${branch}`).body, { sha: after, force: false });
+  assert.equal(calls.some(call => call.path === 'pulls' || call.path === 'git/refs'), false);
+  const body = calls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
+  assert.match(body, /Product decision retained/);
+  assert.equal(checkProposal({ ...productPr, head: { ...productPr.head, sha: after }, body }, repository).productProposal, true);
+  const { scheduledImplementationPulls } = await import('../packages/sdlc/src/pr-state.mjs');
+  assert.deepEqual(await scheduledImplementationPulls(async () => [{ ...productPr, head: { ...productPr.head, sha: after }, body }]), []);
+  assert.throws(() => checkProposal({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body }, repository));
+  const { updateProposal } = await import('../packages/sdlc/src/proposal-review.mjs');
+  const current = { ...productPr, head: { ...productPr.head, sha: after }, body };
+  const next = '8'.repeat(40), feedback = { id: 9, body: 'Clarify.', user: { login: 'owner', type: 'User' } }, feedbackDigest = (await import('../packages/sdlc/src/host-contract.mjs')).digest(JSON.stringify(feedback));
+  const review = { ...checkProposal(current, repository), path: 'issues/comments/9', feedbackDigest };
+  const reviewCalls = [];
+  const reviewApi = async (path, method, payload) => {
+    reviewCalls.push({ path, method, body: payload });
+    if (path === 'pulls/34' && method !== 'PATCH') return current;
+    if (path === 'issues/comments/9') return feedback;
+    if (path === 'pulls/34/files?per_page=100') return [...files.map(file => ({ filename: file.path, status: 'added' })), { filename: 'docs/product/model/example.md', status: 'modified' }];
+    if (path.startsWith('contents/')) { const item = files.find(file => path.startsWith(`contents/${file.path}?`)); return { type: 'file', encoding: 'base64', size: item.content.length, content: Buffer.from(item.content).toString('base64') }; }
+    if (path === 'git/commits' && method === 'POST') return { sha: next };
+    return { sha: 'blob', tree: { sha: 'tree' } };
+  };
+  await updateProposal(reviewApi, repository, { issue: 18, runId: '7'.repeat(64), proposalReview: review }, files, async () => {});
+  const revised = reviewCalls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
+  assert.equal(checkProposal({ ...current, head: { ...current.head, sha: next }, body: revised }, repository).productProposal, true);
+  assert.match(revised, /Product decision retained/);
+});

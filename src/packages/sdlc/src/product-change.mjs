@@ -51,12 +51,12 @@ export function validateProductChangeOutput(value) {
   if (value.proposalDigest !== undefined && !hashPattern.test(value.proposalDigest)) errors.push('result.output.productChange proposalDigest is invalid');
   if (value.baselineDigest !== undefined && !hashPattern.test(value.baselineDigest)) errors.push('result.output.productChange baselineDigest is invalid');
   if (value.outcome === 'candidate') {
-    if (!value.changeName || !value.changeId || !value.proposalDigest || !value.baselineDigest || !Array.isArray(value.files)) errors.push('candidate Product Change output needs its change identity, proposal and baseline digests, and files');
+    if (!value.changeName || !value.changeId || !value.baselineDigest || !Array.isArray(value.files)) errors.push('candidate Product Change output needs its change identity, baseline digest, and files');
     else try {
       const checked = validateProductChangeFiles(value.files, { changeName: value.changeName });
-      if (checked.changeId !== value.changeId || checked.digest !== value.proposalDigest) errors.push('candidate Product Change identity or digest does not match its files');
+      if (checked.changeId !== value.changeId || value.proposalDigest !== undefined && checked.digest !== value.proposalDigest) errors.push('candidate Product Change identity or digest does not match its files');
     } catch (error) { errors.push(error.message); }
-    if (!exact(value.providerValidation, ['status', 'diagnosticCount']) || value.providerValidation.status !== 'passed' || !Number.isSafeInteger(value.providerValidation.diagnosticCount) || value.providerValidation.diagnosticCount < 0) errors.push('candidate Product Change needs successful provider overlay validation');
+    if (!exact(value.providerValidation, ['status', 'diagnosticCount']) || !['pending', 'passed'].includes(value.providerValidation.status) || !Number.isSafeInteger(value.providerValidation.diagnosticCount) || value.providerValidation.diagnosticCount < 0 || value.providerValidation.status === 'pending' && value.providerValidation.diagnosticCount !== 0 || value.providerValidation.status === 'passed' && !value.proposalDigest) errors.push('candidate Product Change needs pending host validation or a bound successful provider validation');
   }
   if (value.outcome === 'aligned' && (value.files !== undefined || value.changeName !== undefined || value.changeId !== undefined)) errors.push('aligned Product Change output cannot include a delta');
   const hasQuestion = typeof value.question === 'string' && !!value.question.trim();
@@ -112,7 +112,7 @@ export function validateProductIdentity(value) {
 
 export function validateProductCheckpoint(value) {
   const fields = ['schemaVersion', 'kind', 'identity', 'requestDigest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'state', 'effectIds'];
-  const optional = ['pendingQuestion'];
+  const optional = ['pendingQuestion', 'parent'];
   if (!exact(value, [...fields, ...optional.filter(key => Object.hasOwn(value ?? {}, key))])) return ['Product Change checkpoint has unsupported or missing fields'];
   const errors = [...validateProductIdentity(value.identity)];
   if (value.schemaVersion !== 1 || value.kind !== 'checkpoint') errors.push('Product Change checkpoint identity is unsupported');
@@ -120,6 +120,22 @@ export function validateProductCheckpoint(value) {
   for (const field of ['requestDigest', 'proposalDigest', 'baselineDigest']) if (!hashPattern.test(value[field] ?? '')) errors.push(`${field} must be SHA-256`);
   if (!['preparing', 'waiting-product-decision', 'approved', 'applying', 'applied', 'blocked'].includes(value.state)) errors.push('Product Change checkpoint state is unsupported');
   if (!Array.isArray(value.effectIds) || value.effectIds.length > 32 || value.effectIds.some(item => typeof item !== 'string' || !item.trim() || item.length > 256) || new Set(value.effectIds).size !== value.effectIds.length) errors.push('Product Change checkpoint effectIds are invalid');
+  if (value.parent !== undefined) {
+    const parent = value.parent;
+    if (!exact(parent, ['issue', 'stage', 'predecessor', 'gap', 'sourceRevision', 'baseRevision', 'taskDigest', 'autoImplement', ...(['feedback', 'pullRequest', 'review'].filter(key => Object.hasOwn(parent ?? {}, key)))]) || parent.issue !== value.identity?.issue || !['triage', 'refine', 'propose', 'implement'].includes(parent.stage) || !exact(parent.predecessor, ['runId', 'attempt']) || !/^[1-9][0-9]*$/.test(parent.predecessor.runId ?? '') || !Number.isSafeInteger(parent.predecessor.attempt) || parent.predecessor.attempt < 1 || !exact(parent.gap, ['summary', 'scope']) || !['summary', 'scope'].every(key => typeof parent.gap[key] === 'string' && parent.gap[key].trim() && parent.gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(parent.gap[key])) || !revisionPattern.test(parent.sourceRevision ?? '') || !revisionPattern.test(parent.baseRevision ?? '') || !hashPattern.test(parent.taskDigest ?? '') || typeof parent.autoImplement !== 'boolean') errors.push('Product Change parent checkpoint is invalid');
+  }
+  if (value.parent?.pullRequest !== undefined) {
+    const pr = value.parent.pullRequest;
+    if (!exact(pr, ['number', 'head', 'branch']) || !Number.isSafeInteger(pr.number) || pr.number < 1 || !revisionPattern.test(pr.head ?? '') || typeof pr.branch !== 'string' || !new RegExp(`^lighthouse/(?:implement|propose)-${value.identity?.issue}-[a-f0-9]{12}$`).test(pr.branch)) errors.push('Product Change parent PR evidence is invalid');
+  }
+  if (value.parent?.review !== undefined) {
+    const review = value.parent.review;
+    if (!exact(review, ['number', 'path', 'feedbackDigest', 'threadDigest']) || !Number.isSafeInteger(review.number) || review.number < 1 || review.number !== value.parent.pullRequest?.number || typeof review.path !== 'string' || !/^(?:issues\/comments|pulls\/comments|pulls\/[1-9][0-9]*\/reviews)\/[1-9][0-9]*$/.test(review.path) || !hashPattern.test(review.feedbackDigest ?? '') || !hashPattern.test(review.threadDigest ?? '')) errors.push('Product Change parent review evidence is invalid');
+  }
+  if (value.parent?.feedback !== undefined) {
+    const feedback = value.parent.feedback;
+    if (!exact(feedback, ['runId', 'attempt', 'taskDigest', 'replyTo', 'commentId']) || !/^[1-9][0-9]*$/.test(feedback.runId ?? '') || !Number.isSafeInteger(feedback.attempt) || feedback.attempt < 1 || !hashPattern.test(feedback.taskDigest ?? '') || !hashPattern.test(feedback.replyTo ?? '') || !Number.isSafeInteger(feedback.commentId) || feedback.commentId < 1) errors.push('Product Change parent answer evidence is invalid');
+  }
   if (value.pendingQuestion !== undefined && (typeof value.pendingQuestion !== 'string' || value.pendingQuestion.length > 4000)) errors.push('Product Change checkpoint pendingQuestion exceeds its bound');
   return errors;
 }
@@ -189,14 +205,17 @@ export async function prepareProductChange(root, changeName, files, bridge) {
     openspec(temp, ['new', 'change', changeName, '--schema', 'product-change', '--json']);
     const rootPath = `openspec/changes/${changeName}`;
     if (!files) {
+      const schemaPin = await readFile(join(temp, rootPath, '.openspec.yaml'), 'utf8');
+      if ((schemaPin.match(/^skip_specs:\s*true\s*$/gm) ?? []).length !== 1) throw Error('OpenSpec scaffold must declare skip_specs exactly once');
       const instructions = {};
       for (const artifact of ['intent', 'delta']) {
         const value = JSON.parse(openspec(temp, ['instructions', artifact, '--change', changeName, '--json']));
         instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
       }
-      return { provider: '@fission-ai/openspec@1.15.0', schema: 'product-change', root: rootPath, changeName, instructions };
+      return { provider: '@fission-ai/openspec@1.15.0', schema: 'product-change', root: rootPath, changeName, schemaPin, instructions };
     }
     const summary = validateProductChangeFiles(files, { changeName });
+    const schemaPin = files.find(file => file.path === `${rootPath}/.openspec.yaml`).content;
     for (const file of files) {
       const target = join(temp, file.path);
       await mkdir(dirname(target), { recursive: true });
@@ -209,8 +228,8 @@ export async function prepareProductChange(root, changeName, files, bridge) {
       const value = JSON.parse(openspec(temp, ['instructions', artifact, '--change', changeName, '--json']));
       instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
     }
-    if (bridge && validation) return { ...summary, provider: '@prodshape/integration-openspec', root: rootPath, openSpec: 'passed', diagnostics: validation.diagnostics, instructions, files };
-    return { ...summary, root: rootPath, openSpec: 'passed', provider: 'unavailable', instructions, files };
+    if (bridge && validation) return { ...summary, provider: '@prodshape/integration-openspec', root: rootPath, openSpec: 'passed', diagnostics: validation.diagnostics, schemaPin, instructions, files };
+    return { ...summary, root: rootPath, openSpec: 'passed', provider: 'unavailable', schemaPin, instructions, files };
   } finally { await rm(temp, { recursive: true, force: true }); }
 }
 
@@ -221,12 +240,45 @@ export async function loadProductBridge({ entry = process.env.PRODSHAPE_INTEGRAT
   return bridge;
 }
 
+export async function loadProductCore() {
+  const entry = require.resolve('@prodshape/core');
+  const metadata = JSON.parse(await readFile(join(dirname(dirname(entry)), 'package.json'), 'utf8'));
+  if (metadata.name !== '@prodshape/core' || metadata.version !== '0.25.0') throw Error('Pinned ProductShape core 0.25.0 is unavailable');
+  const core = await import(pathToFileURL(entry).href);
+  for (const name of ['openRepository', 'validateBaseline', 'inspectArtifact', 'analyzeImpact', 'emitCitation']) if (typeof core[name] !== 'function') throw Error(`Pinned ProductShape core does not provide ${name}`);
+  return { ...core, version: metadata.version };
+}
+
+export async function prepareProductEvidence(root, destination, core, { baselineDigest } = {}) {
+  if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed before evidence preparation');
+  const repository = await core.openRepository(resolve(root));
+  const baseline = await core.validateBaseline(repository);
+  const errors = baseline.diagnostics.filter(item => item.severity === 'error');
+  if (errors.length) throw Error(`ProductShape baseline has ${errors.length} blocking diagnostic(s); validate the adopter model before retrying`);
+  const nodes = baseline.graph.nodes;
+  if (!Array.isArray(nodes) || nodes.length > 512) throw Error('ProductShape evidence exceeds the artifact bound');
+  await mkdir(destination, { recursive: true });
+  const index = []; let bytes = 0;
+  for (const node of nodes) {
+    if (!/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) throw Error('ProductShape evidence has an unsafe artifact identity');
+    const report = { inspect: core.inspectArtifact(baseline.graph, node.id), impact: core.analyzeImpact(baseline.graph, node.id), citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }) };
+    const content = JSON.stringify(report, null, 2) + '\n'; bytes += Buffer.byteLength(content);
+    if (Buffer.byteLength(content) > 512 * 1024 || bytes > 16 * 1024 * 1024) throw Error('ProductShape evidence exceeds the byte bound');
+    await writeFile(join(destination, `${node.id}.json`), content, { flag: 'wx' });
+    index.push({ id: node.id, type: node.type, title: node.title, report: `${node.id}.json` });
+  }
+  if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed during evidence preparation');
+  await writeFile(join(destination, 'index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n', { flag: 'wx' });
+  return { artifacts: index.length, bytes };
+}
+
 export function productReviewBinding(input) {
-  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head'];
+  const fields = ['repository', 'issue', 'pullRequest', 'changeName', 'changeId', 'proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest', 'head', ...(Object.hasOwn(input ?? {}, 'parentDigest') ? ['parentDigest'] : [])];
   if (!exact(input, fields)) throw Error('Product review binding has unsupported or missing fields');
   if (typeof input.repository !== 'string' || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(input.repository) || !Number.isSafeInteger(input.issue) || input.issue < 1 || !Number.isSafeInteger(input.pullRequest) || input.pullRequest < 1) throw Error('Product review target is invalid');
   if (!namePattern.test(input.changeName) || !/^CHG-[A-Z0-9-]+$/.test(input.changeId)) throw Error('Product review change identity is invalid');
   for (const field of ['proposalDigest', 'baselineDigest', 'policyDigest', 'authorityDigest']) if (!hashPattern.test(input[field] ?? '')) throw Error(`Product review ${field} is invalid`);
+  if (input.parentDigest !== undefined && !hashPattern.test(input.parentDigest)) throw Error('Product review parent digest is invalid');
   if (!revisionPattern.test(input.head ?? '')) throw Error('Product review head must be a full commit SHA');
   const key = digest(JSON.stringify(input));
   return { ...input, key };
@@ -281,3 +333,26 @@ export function verifyProductChangePath(root, relativePath) {
     return absolute;
   });
 }
+
+export function checkProductResumePullRequest(pr, repository, resume) {
+  if (!resume || pr?.number !== resume.pullRequest || pr.state !== 'open' || pr.merged || !pr.draft || pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository || pr.head.sha !== resume.head || pr.head.ref !== resume.branch) throw Error('Applied product PR changed before parent continuation');
+  const matches = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
+  if (matches.length !== 1) throw Error('Applied product checkpoint is unavailable');
+  const checkpoint = JSON.parse(matches[0][1]);
+  if (validateProductCheckpoint(checkpoint).length || checkpoint.state !== 'applied' || checkpoint.identity.issue !== resume.issue || checkpoint.identity.head !== resume.head || JSON.stringify(checkpoint.parent) !== JSON.stringify(resume.parent) || !checkpoint.effectIds.includes(`apply:${resume.receiptIntent}:${resume.head}`)) throw Error('Applied product checkpoint changed before parent continuation');
+  return checkpoint;
+}
+
+function productDeliveryProof(pr, kind) {
+  const expression = new RegExp(`<!-- lighthouse-product-${kind}:(\\{[^\\n]*\\}) -->`, 'g');
+  const proofs = [...(pr?.body ?? '').matchAll(expression)];
+  const checkpoints = [...(pr?.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
+  if (proofs.length !== 1 || checkpoints.length !== 1) return null;
+  let proof, checkpoint;
+  try { proof = JSON.parse(proofs[0][1]); checkpoint = JSON.parse(checkpoints[0][1]); } catch { return null; }
+  if (!exact(proof, ['schemaVersion', 'issue', 'runId', 'applyIntent', 'head']) || proof.schemaVersion !== 1 || !Number.isSafeInteger(proof.issue) || proof.issue < 1 || !hashPattern.test(proof.runId ?? '') || !hashPattern.test(proof.applyIntent ?? '') || proof.head !== pr.head?.sha || validateProductCheckpoint(checkpoint).length || checkpoint.state !== 'applied' || checkpoint.identity.issue !== proof.issue || !checkpoint.parent || !checkpoint.effectIds.includes(`apply:${proof.applyIntent}:${checkpoint.identity.head}`)) return null;
+  return proof;
+}
+
+export const productImplementationProof = pr => productDeliveryProof(pr, 'implementation');
+export const productProposalProof = pr => productDeliveryProof(pr, 'proposal');

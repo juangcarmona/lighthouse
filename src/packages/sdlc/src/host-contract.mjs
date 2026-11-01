@@ -65,8 +65,8 @@ export function validateStageEnvelope(value, request) {
   const declared = stages.stages.find((stage) => stage.id === request.stage);
   if (result.runId !== request.runId || result.stage !== request.stage || result.gate !== declared?.gate) errors.push('result identity or gate does not match admission');
   if (result.status === 'passed') errors.push(...validateStageCompletion(result, { stage: request.stage, runId: request.runId }).map((error) => error.message));
-  if (request.stage === 'triage' && result.status === 'passed' && (request.dispatch || request.originalRequest !== undefined)) errors.push(...validateRequestTriage(result.output, request.originalRequest));
-  if (request.stage === 'refine' && result.status === 'passed') {
+  if (request.worker !== 'product-change' && request.stage === 'triage' && result.status === 'passed' && (request.dispatch || request.originalRequest !== undefined)) errors.push(...validateRequestTriage(result.output, request.originalRequest));
+  if (request.worker !== 'product-change' && request.stage === 'refine' && result.status === 'passed') {
     errors.push(...validateEstimateRevision(result.output, request.triageEstimate));
     if (result.output?.estimate !== undefined) {
       const decomposition = assessDecomposition(result.output);
@@ -84,7 +84,7 @@ export function validateStageEnvelope(value, request) {
   }
   if (request.worker === 'product-change') {
     const outcome = result.output?.productChange?.outcome;
-    if (!['propose', 'implement'].includes(request.stage) || !['aligned', 'candidate', 'blocked'].includes(outcome)) errors.push('Product Change worker must retain an enclosing delivery stage and a declared product outcome');
+    if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage) || !['aligned', 'candidate', 'blocked'].includes(outcome)) errors.push('Product Change worker must retain an enclosing delivery stage and a declared product outcome');
     if (result.status === 'blocked' && outcome !== 'blocked' || result.status === 'passed' && outcome === 'blocked') errors.push('Product Change outcome and stage status disagree');
     if (result.output?.productChange?.blocker && result.output?.handoff?.question) errors.push('A technical Product Change blocker cannot also claim an owner question');
     const productQuestion = result.output?.productChange?.question, handoffQuestion = result.output?.handoff?.question;
@@ -117,7 +117,7 @@ export async function hostContractMain(args) {
   } else if (command === 'context') {
     if (!['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(request.stage)) throw new Error('Unsupported stage context');
     const productWorker = request.worker === 'product-change';
-    if (productWorker && !['propose', 'implement'].includes(request.stage)) throw new Error('Product Change work must retain its enclosing propose or implement stage');
+    if (productWorker && !['triage', 'refine', 'propose', 'implement'].includes(request.stage)) throw new Error('Product Change work must retain its enclosing delivery stage');
     const skill = await readFile(new URL(productWorker ? '../skills/product-change/SKILL.md' : `../skills/${request.stage}/SKILL.md`, import.meta.url), 'utf8');
     const issue = JSON.parse(await readFile(policyFile, 'utf8'));
     const predecessor = extraFile ? JSON.parse(await readFile(extraFile, 'utf8')) : null;

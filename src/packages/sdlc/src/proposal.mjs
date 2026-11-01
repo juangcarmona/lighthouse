@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
+import { checkProductResumePullRequest } from './product-change.mjs';
 
 export const changeName = issue => {
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid proposal issue');
@@ -113,6 +114,15 @@ export async function createProposalPullRequest(api, snapshot, files, body, runU
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => ({ path: file.path, mode: '100644', type: 'blob', content: file.content })) });
   const created = await api('git/commits', 'POST', { message: `docs: propose issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
+  if (snapshot.productResume) {
+    const resume = snapshot.productResume;
+    const current = await api(`pulls/${resume.pullRequest}`);
+    checkProductResumePullRequest(current, snapshot.repository, resume);
+    await api(`git/refs/heads/${resume.branch}`, 'PATCH', { sha: created.sha, force: false });
+    const proof = { schemaVersion: 1, issue: snapshot.issue, runId: snapshot.runId, applyIntent: resume.receiptIntent, head: created.sha };
+    await api(`pulls/${resume.pullRequest}`, 'PATCH', { body: `${current.body}\n\n${body.trim()}\n\n[Proposal evidence](${runUrl}).\n\n<!-- lighthouse-product-proposal:${JSON.stringify(proof)} -->` });
+    return { number: resume.pullRequest, html_url: current.html_url };
+  }
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
   const pr = await api('pulls', 'POST', { title: `Proposal for #${snapshot.issue}: ${snapshot.title.slice(0, 160)}`, head: branch, base: snapshot.defaultBranch, body: `${body}\n\nRelated to #${snapshot.issue}. Proposal only; implementation requires a separate owner decision.\n\nOpenSpec 1.15.0 strict validation passed. [Execution evidence](${runUrl}).\n\n<!-- lighthouse-proposal:${snapshot.runId} -->` });
   return pr;

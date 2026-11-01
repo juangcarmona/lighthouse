@@ -29,6 +29,7 @@ test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-propose.md
 test -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-triage.lock.yml"
 test -f "$validation_dir/consumer/.github/ISSUE_TEMPLATE/change-request.yml"
 grep -qx '  LIGHTHOUSE_ENABLED_STAGES: triage,refine' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+grep -qx '        options: \[stage\]' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --apply --replace-reviewed --with-implement
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-integrate.md"
 grep -qx '  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
@@ -57,6 +58,7 @@ git -C "$validation_dir/consumer" diff --exit-code
 test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended.yml"
 # Every installed worker uses the same reserved checkout on reinstall and upgrade.
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply --replace-reviewed
+grep -qx '        options: \[stage, product-change, resume-product\]' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply
 if grep -R -E 'path: tools$|tools/src/packages/sdlc/' "$validation_dir/consumer/.github/workflows"; then
   echo 'Worker checkout still collides with adopter tools' >&2

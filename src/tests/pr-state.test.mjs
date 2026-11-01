@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authorizedCiCallback, implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls } from '../packages/sdlc/src/pr-state.mjs';
+import { authorizedCiCallback, implementationPrProof, reconcileImplementationPr, scheduledImplementationPulls, isProductOnlyPullRequest, isStaleProductDecision } from '../packages/sdlc/src/pr-state.mjs';
 
 const repo = 'owner/repo', head = 'a'.repeat(40), run = '123';
 const pr = draft => ({
@@ -85,4 +85,17 @@ test('CI callback accepts only the current configured repository run', () => {
   const run = { id: 123, event: 'workflow_dispatch', head_sha: head, path: '.github/workflows/ci.yml', repository: { full_name: repo } };
   assert.equal(authorizedCiCallback(run, context), true);
   for (const changed of [{ id: 124 }, { event: 'pull_request' }, { head_sha: 'c'.repeat(40) }, { path: '.github/workflows/other.yml' }, { repository: { full_name: 'other/repo' } }]) assert.equal(authorizedCiCallback({ ...run, ...changed }, context), false);
+});
+
+test('product decisions are not projected as implementation PR state', async () => {
+  const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity: { repository: repo, issue: 18, parentRunId: '200', authorizationDigest: '1'.repeat(64), policyDigest: '2'.repeat(64), workflowRevision: '3'.repeat(40), head }, requestDigest: '4'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '5'.repeat(64), baselineDigest: '6'.repeat(64), state: 'waiting-product-decision', effectIds: [`pr:40:${head}`] };
+  const productOnly = { ...pr(true), number: 40, body: `<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->` };
+  const malformedImplementation = { ...productOnly, number: 41, body: `${productOnly.body}\n<!-- lighthouse-product-implementation:{} -->` };
+  assert.equal(isProductOnlyPullRequest(productOnly), true);
+  assert.equal(isStaleProductDecision(productOnly), false);
+  const stale = { ...productOnly, head: { ...productOnly.head, sha: '9'.repeat(40) } };
+  assert.equal(isStaleProductDecision(stale), true);
+  assert.equal(isProductOnlyPullRequest(malformedImplementation), false);
+  assert.equal(isProductOnlyPullRequest({ ...productOnly, body: '<!-- lighthouse-product-change-checkpoint:{} -->' }), false);
+  assert.deepEqual(await scheduledImplementationPulls(async () => [productOnly, malformedImplementation, stale]), [41, 40]);
 });
