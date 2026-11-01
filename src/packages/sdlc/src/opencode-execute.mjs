@@ -64,7 +64,7 @@ async function main() {
     projectModels = JSON.parse(await readFile(path, 'utf8'));
   }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage, ...(env.LIGHTHOUSE_MODEL_PROFILE ? { profile: env.LIGHTHOUSE_MODEL_PROFILE } : {}) });
+  const modelSelection = resolveModelProfile({ project: projectModels, operator: config, worker: env.LIGHTHOUSE_WORKER ?? request.stage, ...(request.modelSelection ? { executionSelection: request.modelSelection } : {}), ...(env.LIGHTHOUSE_MODEL_PROFILE ? { profile: env.LIGHTHOUSE_MODEL_PROFILE } : {}) });
   const selected = request.stage === 'implement' ? selectEnvironment(config, request.implementation?.environment) : null;
   if (request.stage === 'implement') {
     if (selected) config.implementationImage = selected.image;

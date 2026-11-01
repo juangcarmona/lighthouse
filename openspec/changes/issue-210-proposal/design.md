@@ -4,7 +4,7 @@
 
 ## Context
 
-See proposal.md for motivation and the blocking Product Change prerequisite. This is a proposed design, not delivered behavior. The current resolver accepts schema version 1 and three fixed profile names. The adapter already forwards a resolved model variant and emits unverified provider settings; delegated tasks already select explicit profiles. Ordinary router requests have authenticated, digest-bound artifacts but no model selector.
+See proposal.md for motivation and the applied Product Change. This is the candidate design; completion and acceptance are tracked in tasks.md. The current resolver accepts schema version 1 and three fixed profile names. The adapter already forwards a resolved model variant and emits unverified provider settings; delegated tasks already select explicit profiles. Ordinary router requests have authenticated, digest-bound artifacts but no model selector.
 
 <!-- pdac:cite id="FR-MODEL-PROFILES" digest="sha256:a16a1b44c11440550e6e17c4ad55656aaedcdd5dc73384df37d1148bbafddf36" -->
 <!-- pdac:cite id="UC-CONFIGURE-AGENT-CONTROL-PLANE" digest="sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571" -->
@@ -32,7 +32,7 @@ See proposal.md for motivation and the blocking Product Change prerequisite. Thi
 
 ## Risks / Trade-offs
 
-- [Product authority is incomplete] → stop before production edits; obtain an approved, applied Product Change rather than infer approval from an implementation dispatch.
+- [Product authority changes] → recheck the applied Product Change and current owner instructions before extending its scope.
 - [Operator capability inventory can be stale] → label it configuration-only, propagate real provider errors and never fall back.
 - [Execution selection could leak into continuation] → reject it on automated/replay inputs and test fresh selection defaults in the next stage.
 - [Schema extension could alter existing installations] → keep version 1 tests and legacy byte-for-byte forwarding; reject new forms under version 1.
@@ -44,6 +44,6 @@ See proposal.md for motivation and the blocking Product Change prerequisite. Thi
 
 After product approval and implementation, install the updated package and explicitly review router projection updates. Existing version 1 settings need no migration. To adopt direct settings/custom names, change only the relevant configuration to version 2; provision capabilities first and enable execution selection only deliberately. Do not modify credentials or account routes. Keep the existing legacy `model`; disabling profile opt-in restores its exact forwarding and rejects explicit selectors. To downgrade the package, restore version 1 declarations before downgrade; do not silently reinterpret version 2 in an older resolver. Historical receipts need no rewrite.
 
-## Blocking Decision
+## Product decision
 
-Approve and apply a Product Change extending `FR-MODEL-PROFILES` for the requested behavior before implementation. All design choices above remain proposals until that prerequisite is satisfied. No production work or live provider acceptance has been completed.
+The owner authorized this change and its application on the candidate branch. Provider acceptance is still unverified.
