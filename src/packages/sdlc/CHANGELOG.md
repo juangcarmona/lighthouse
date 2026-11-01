@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.8
+
+### Patch Changes
+
+- c9a8130: # Resume aligned product work
+
+  Resume an authenticated parent stage when accepted product intent already covers its request.
+
 ## 0.18.7
 
 ### Patch Changes
