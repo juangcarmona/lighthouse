@@ -16,7 +16,7 @@ import { projectImplementationPrState, reconcileImplementationPr, setPullRequest
 import { prepareProductChange, prepareProductEvidence, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore, checkProductResumePullRequest } from './product-change.mjs';
 import { validateProductCandidate, preparePendingProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 import { assessDecomposition } from './epic.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation, productPublicationMessage, workerStopObservation } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, failedCheckSummary, productApplyObservation, productPublicationMessage, workerStopObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -741,6 +741,7 @@ async function main(command) {
       const receipt = JSON.parse(await readFile(join(dir, 'checks.json'), 'utf8'));
       const checksPassed = validateCheckReceipt(receipt, snapshot, changes);
       implementationChecksFailed = !checksPassed;
+      if (implementationChecksFailed) value.effect.body += `\n\n${failedCheckSummary(receipt.checks)}`;
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
       if (changes.length) {
         const recheck = async () => {

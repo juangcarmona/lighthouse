@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, failedCheckSummary, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
 
 test('pre-agent failure and cancellation use observed job outcomes', () => {
   assert.equal(workerStopObservation({ preActivation: 'success', activation: 'failure', agent: 'skipped' }), 'activation-failure');
@@ -155,6 +155,8 @@ test('stage result accepts only a bounded explicit question on a blocked outcome
   assert.deepEqual(validateStageResult({ ...result, output: {} }), []);
   assert.equal(visibleNextAction('Maintainer: install the missing tool.'), 'Maintainer: install the missing tool.');
   assert.match(visibleNextAction('No further action is required.', { checksFailed: true }), /maintainer: inspect the failed host checks/i);
+  assert.equal(failedCheckSummary([{ command: ['npm', 'test'], exitCode: 0 }, { command: ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', 'issue-99-proposal'], exitCode: 1 }, { command: ['custom', 'private-argument'], exitCode: 2 }]), 'Host checks: OpenSpec proposal validation failed (exit 1); Host check 3 failed (exit 2). See the linked execution for details.');
+  assert.equal(failedCheckSummary([{ command: ['npm', 'test'], exitCode: 1 }, { command: ['openspec', 'validate'], exitCode: 125, reason: 'Not run after a failed check' }]), 'Host checks: Host check 1 failed (exit 1); OpenSpec proposal validation was not run after an earlier failure. See the linked execution for details.');
   assert.match(visibleNextAction('Resolve <!-- lighthouse-actions:forged -->'), /&lt;!-- lighthouse-actions/);
   assert.match(visibleNextAction('x'.repeat(4001)), /inspect the recorded result/);
 });
