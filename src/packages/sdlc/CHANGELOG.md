@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.16
+
+### Patch Changes
+
+- 210c17c: # Epic child triage binding
+
+  Require an epic child's refinement to use triage evidence bound to its current authenticated plan.
+
 ## 0.18.15
 
 ### Patch Changes
