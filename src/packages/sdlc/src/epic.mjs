@@ -39,6 +39,7 @@ export function assessEpic(plan, observation) {
   const explicitNumber = checked.parent?.number;
   if (explicitNumber !== undefined && (!positive(explicitNumber) || idNumber && String(explicitNumber) !== idNumber)) errors.push('parent issue identity is inconsistent');
   const parentNumber = explicitNumber ?? idNumber;
+  if (!parentNumber) errors.push('numeric parent issue identity required');
   if (parentNumber && observation?.epicBranch !== `lighthouse/epic-${parentNumber}`) errors.push('epic branch does not match the parent issue');
   if (!positive(observation?.capacity) || !Array.isArray(observation?.children)) errors.push('positive capacity and child observations required');
   if (plan?.valid && checked.valid && observation?.planDigest !== epicPlanDigest(plan)) errors.push('observation does not match the immutable plan');

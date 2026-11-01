@@ -174,6 +174,8 @@ test('authentication, plan binding and duplicate observations fail closed', () =
   const consistent = plan(); consistent.parent.number = 146;
   assert.equal(epicPlanDigest(consistent), epicPlanDigest(plan()));
   assert.notEqual(epicPlanDigest(inconsistent), epicPlanDigest(plan()));
+  const anonymous = buildDecompositionPlan({ ...input(), parent: { id: 'parent', title: 'Parent' } });
+  assert.equal(assessEpic(anonymous, { ...observation(), planDigest: epicPlanDigest(anonymous) }).status, 'invalid');
 });
 
 test('aggregate eligibility never closes the parent or grants merge authority', () => {
