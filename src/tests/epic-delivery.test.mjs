@@ -135,3 +135,11 @@ test('aggregate eligibility never closes the parent or grants merge authority', 
   obs.children.pop();
   assert.equal(assessEpic(plan(), obs).aggregate, 'waiting-children');
 });
+
+test('legacy nested plans may omit dependencies without changing their branch chain', () => {
+  const plan = buildStackedPlan({ parent: { number: 139, base: 'main' }, slices: [{ id: 'a', title: 'First' }, { id: 'b', title: 'Second', dependencies: null, acceptance: null }] });
+  assert.equal(plan.valid, true);
+  assert.deepEqual(plan.operations.map(item => item.base), ['main', 'feat/139-first']);
+  const epic = buildStackedPlan({ mode: 'epic', parent: { number: 139, base: 'main', integrationBranch: 'lighthouse/epic-139' }, slices: [{ id: 'a', title: 'First' }] });
+  assert.equal(epic.valid, false);
+});

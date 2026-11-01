@@ -28,8 +28,8 @@ export function buildStackedPlan(input) {
     seenBranches.add(branch);
     if (epic && slice.base !== undefined && slice.base !== input.parent.integrationBranch) errors.push(issue('stacked.epic-base', 'epic children must target the shared integration branch', `slices[${index}].base`));
     const strings = value => Array.isArray(value) && value.every(item => typeof item === 'string' && item.trim());
-    if (!strings(slice.dependencies)) errors.push(issue('stacked.dependencies', 'dependencies must be a string array', `slices[${index}].dependencies`));
-    if (slice.acceptance !== undefined && !strings(slice.acceptance)) errors.push(issue('stacked.acceptance', 'acceptance must be a string array', `slices[${index}].acceptance`));
+    if ((epic || slice.dependencies != null) && !strings(slice.dependencies)) errors.push(issue('stacked.dependencies', 'dependencies must be a string array', `slices[${index}].dependencies`));
+    if (slice.acceptance != null && !strings(slice.acceptance)) errors.push(issue('stacked.acceptance', 'acceptance must be a string array', `slices[${index}].acceptance`));
     return { id: slice.id, title: slice.title, branch, base: slice.base ?? null, dependencies: strings(slice.dependencies) ? [...slice.dependencies].sort() : [], acceptance: strings(slice.acceptance) ? [...slice.acceptance] : [] };
   }).filter(Boolean);
   const byId = new Map(slices.map((slice) => [slice.id, slice]));
