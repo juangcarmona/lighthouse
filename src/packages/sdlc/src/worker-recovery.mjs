@@ -7,6 +7,7 @@ export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.
 export const retryLimit = 2;
 export const retryDelayMs = 30 * 60 * 1000;
 export const recoveryId = (repository, rootId, attempt) => digest(`${repository}:${rootId}:retry:${attempt}`);
+const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish'].includes(step.name));
 const identity = r => ({ issue: r.request.issue, worker: workerFor(r.request), runId: String(r.run.id), rootId: r.request.recovery?.rootId ?? r.request.id, attempt: r.request.recovery?.attempt ?? 0 });
 const ownerAnswers = comments => comments.filter(c => c.user?.login === c.owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
 const intent = (issue, comments, owner) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers(comments.map(c => ({ ...c, owner }))).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
@@ -29,9 +30,9 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
   if (!['refine', 'propose', 'implement'].includes(request.stage) || !['failure', 'timed_out'].includes(run.conclusion)) return result('uncertain', 'manual-recovery', 'Inspect the outcome and request a new authorized execution if needed.');
   const preparation = jobs.find(j => j.name === 'Authorize and reserve issue');
   const publication = jobs.find(j => j.name === 'Validate, publish and release');
-  const publishStep = publication?.steps?.find(s => s.name === 'Recheck authority and publish the validated result');
+  const publish = publishStep(publication);
   const failedExecution = jobs.some(j => ['pre_activation', 'activation', 'agent'].includes(j.name) && ['failure', 'timed_out'].includes(j.conclusion));
-  if (preparation?.conclusion !== 'success' || !failedExecution || publishStep?.conclusion !== 'skipped') return result('uncertain', 'publication-uncertain', 'Inspect publication and remote effects before creating another request.');
+  if (preparation?.conclusion !== 'success' || !failedExecution || publish?.conclusion !== 'skipped') return result('uncertain', 'publication-uncertain', 'Inspect publication and remote effects before creating another request.');
   if (base.attempt >= retryLimit) return result('exhausted', 'worker-technical-failure', 'Retry budget exhausted. Inspect the failure and make a new owner decision.');
   const ended = Date.parse(run.updated_at);
   if (!Number.isFinite(ended) || !Number.isFinite(now)) return result('uncertain', 'execution-time-unknown', 'Inspect the execution timestamps.');
@@ -63,8 +64,8 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
   const agent = jobs.jobs.find(job => job.name === 'agent');
   const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
-  const publish = publishJob?.steps?.find(step => step.name === 'Recheck authority and publish the validated result');
-  const cleanup = publishJob?.steps?.find(step => step.name === 'Release the issue reservation');
+  const publish = publishStep(publishJob);
+  const cleanup = publishJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation'].includes(step.name));
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
   const unpublished = publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
   const notStarted = !agent || agent.conclusion === 'skipped';
@@ -169,7 +170,7 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   const { dispatch, run, jobs = [], revision, workflowRevision } = observation;
   if (!dispatch || !run) return 'not-applicable';
   const publication = jobs.find(j => j.name === 'Validate, publish and release');
-  const publish = publication?.steps?.find(s => s.name === 'Recheck authority and publish the validated result');
+  const publish = publishStep(publication);
   const failedPublication = run.conclusion === 'failure' && jobs.find(j => j.name === 'agent')?.conclusion === 'success' && publish?.conclusion === 'failure';
   const interrupted = failedPublication && ['running', 'unknown'].includes(dispatch.receipt.status);
   const completed = (run.conclusion === 'success' || failedPublication) && ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status);

@@ -421,6 +421,19 @@ test('maintenance reports failed cleanup without changing a published stage resu
   assert.equal(f.comments.filter(c => c.body.includes('<!-- lighthouse-stop:200:1 -->')).length, 1);
 });
 
+test('maintenance recognizes triage publication and reservation cleanup step names', async () => {
+  const f = fixture();
+  f.request.stage = 'triage'; f.request.id = dispatchId(repository, '100', 'triage');
+  f.run.path = '.github/workflows/lighthouse-sdlc-triage.lock.yml';
+  f.receipt = { ...f.receipt, stage: 'triage', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'completed' };
+  f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  f.issue.labels = [{ name: 'agent-working' }];
+  f.jobs[1].conclusion = 'success';
+  f.jobs[2].steps = [{ name: 'Recheck authority and publish', conclusion: 'success' }, { name: 'Release reservation', conclusion: 'failure' }];
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
+  assert.match(f.comments.at(-1).body, /validated result was published, but reservation cleanup did not complete/);
+});
+
 test('maintenance records only a uniquely authenticated pre-admission failure without retrying', async () => {
   for (const mode of ['safe', 'receipt-interrupted', 'agent-started', 'jobs-incomplete', 'active', 'ambiguous', 'reserved', 'paused']) {
     const f = fixture();
@@ -609,6 +622,22 @@ test('maintenance restores a failed read-only publication for a question without
   const count = f.comments.length;
   await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
   assert.equal(f.comments.length, count);
+});
+
+test('maintenance restores a triage question using the installed workflow step name', async () => {
+  const f = fixture();
+  f.request.stage = 'triage'; f.request.id = dispatchId(repository, '100', 'triage');
+  f.run.path = '.github/workflows/lighthouse-sdlc-triage.lock.yml';
+  f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0] = { name: 'Recheck authority and publish', conclusion: 'failure' };
+  f.issue.labels = [{ name: 'needs-info' }];
+  const receipt = { ...f.receipt, stage: 'triage', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'unknown' };
+  f.comment.body = dispatchReceiptBody(repository, receipt);
+  const snapshot = { runId: digest(`${repository}:7:triage:200:1`), issue: 7, stage: 'triage', workflowRunId: '200', workflowRevision: sha, sourceRevision: sha, taskDigest: f.request.taskDigest, autoImplement: false, dispatch: { commentId: 30, requestId: f.request.id, digest: receipt.digest } };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'triage', gate: 'triaged', status: 'blocked', output: { handoff: { question: 'May this continue?' } }, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Owner: review.' }, effect: { type: 'issue-comment', body: 'A decision is needed.' } };
+  const readArtifact = async (...args) => args[4] === 'request.json' ? snapshot : args[4] === 'envelope.json' ? envelope : f.readArtifact(...args);
+  await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), readArtifact);
+  assert.match(f.comments.at(-1).body, /May this continue/);
+  assert.equal(readDispatchReceipt(f.comment, repository, 7).status, 'waiting');
 });
 
 test('maintenance completes an interrupted read-only label transition before publishing its handoff', async () => {
