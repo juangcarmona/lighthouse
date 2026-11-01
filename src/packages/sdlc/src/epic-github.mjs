@@ -78,8 +78,14 @@ export async function reconcileEpicChildren(plan, context, host) {
         for (const dependency of slice.dependencies) {
           const prerequisite = outcomes.find(item => item.id === dependency);
           if (prerequisite?.state !== 'linked') throw Error(`Dependency ${dependency} is not reconciled`);
-          const links = await host.api(`issues/${resource.number}/dependencies/blocked_by`);
-          if (!Array.isArray(links)) throw Error('Dependency observations unavailable');
+          const links = [];
+          for (let page = 1; page <= 10; page++) {
+            const batch = await host.api(`issues/${resource.number}/dependencies/blocked_by?per_page=100&page=${page}`);
+            if (!Array.isArray(batch)) throw Error('Dependency observations unavailable');
+            links.push(...batch);
+            if (batch.length < 100) break;
+            if (page === 10) throw Error('Dependency inventory exceeds reconciliation bounds');
+          }
           if (!links.some(item => item.id === prerequisite.resource.id)) {
             await host.beforeWrite(correlation);
             await host.api(`issues/${resource.number}/dependencies/blocked_by`, 'POST', { issue_id: prerequisite.resource.id });

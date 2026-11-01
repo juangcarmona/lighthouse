@@ -32,7 +32,7 @@ function fixture() {
       const number = Number(path.split('/')[1]);
       if (path.endsWith('/parent')) return parents.has(number) ? { number: parents.get(number) } : null;
       if (path.endsWith('/sub_issues') && method === 'POST') { const resource = issues.find(issue => issue.id === body.sub_issue_id); parents.set(resource.number, number); return resource; }
-      if (path.endsWith('/dependencies/blocked_by')) {
+      if (path.includes('/dependencies/blocked_by')) {
         if (method === 'POST') { dependencies.set(number, [...(dependencies.get(number) ?? []), { id: body.issue_id }]); return {}; }
         return dependencies.get(number) ?? [];
       }
@@ -62,6 +62,32 @@ test('creation establishes native parent/dependency links and retry makes no dup
   assert.equal((await reconcileEpicChildren(plan(), context, f.host)).status, 'reconciled');
   assert.equal(f.writes.length, count);
   assert.equal(f.writes.some(write => write.path === 'issues/146'), false);
+});
+
+test('dependency reconciliation reads all pages before deciding a link is missing', async () => {
+  const f = fixture();
+  assert.equal((await reconcileEpicChildren(plan(), context, f.host)).status, 'reconciled');
+  const api = f.host.api;
+  f.host.api = async (path, ...args) => {
+    if (path === 'issues/201/dependencies/blocked_by?per_page=100&page=1') return Array.from({ length: 100 }, (_, id) => ({ id: id + 2000 }));
+    if (path === 'issues/201/dependencies/blocked_by?per_page=100&page=2') return [{ id: 1000 }];
+    return api(path, ...args);
+  };
+  const before = f.writes.length;
+  assert.equal((await reconcileEpicChildren(plan(), context, f.host)).status, 'reconciled');
+  assert.equal(f.writes.length, before);
+});
+
+test('dependency reconciliation stops when its inventory exceeds the safe bound', async () => {
+  const f = fixture();
+  assert.equal((await reconcileEpicChildren(plan(), context, f.host)).status, 'reconciled');
+  const api = f.host.api;
+  f.host.api = async (path, ...args) => path.startsWith('issues/201/dependencies/blocked_by?') ? Array.from({ length: 100 }, (_, id) => ({ id: id + 2000 })) : api(path, ...args);
+  const before = f.writes.length;
+  const result = await reconcileEpicChildren(plan(), context, f.host);
+  assert.equal(result.status, 'blocked');
+  assert.match(result.children.at(-1).reason, /inventory exceeds/);
+  assert.equal(f.writes.length, before);
 });
 
 test('copied and duplicate markers without authenticated receipts cannot be adopted', async () => {

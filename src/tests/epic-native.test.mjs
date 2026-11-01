@@ -38,7 +38,7 @@ async function fixture(t) {
     const parentMatch = path.match(/^issues\/(\d+)\/parent$/);
     if (parentMatch) return parents.get(Number(parentMatch[1])) ?? null;
     if (path === `issues/${issue}/sub_issues` && method === 'POST') { const child = issues.find(item => item.id === body.sub_issue_id); parents.set(child.number, { number: issue }); return {}; }
-    const dependency = path.match(/^issues\/(\d+)\/dependencies\/blocked_by$/);
+    const dependency = path.match(/^issues\/(\d+)\/dependencies\/blocked_by(?:\?.*)?$/);
     if (dependency) { const number = Number(dependency[1]); if (method === 'POST') { dependencies.set(number, [...(dependencies.get(number) ?? []), { id: body.issue_id }]); return {}; } return dependencies.get(number) ?? []; }
     throw Error(`Unexpected ${method} ${path}`);
   };
