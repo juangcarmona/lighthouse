@@ -24,6 +24,10 @@ export function productApplyObservation({ prepare, apply, publish }) {
   return null;
 }
 
+export function productPublicationMessage({ worker, outcome, reviewTarget, agentMessage }) {
+  return worker === 'product-change' && outcome === 'candidate' && reviewTarget ? 'The Product Change candidate passed provider overlay and OpenSpec validation and is ready for your product decision.' : agentMessage;
+}
+
 export function workerStopObservation({ preActivation, activation, agent, publish }) {
   if (agent === 'skipped' && [preActivation, activation].some(value => value === 'failure' || value === 'timed_out')) return 'activation-failure';
   if (agent === 'skipped' && [preActivation, activation].includes('cancelled')) return 'pre-agent-cancelled';

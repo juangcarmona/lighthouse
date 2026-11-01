@@ -144,6 +144,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -188,6 +189,10 @@ jobs:
           LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
           LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Request the verified product prerequisite
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
 ---
 
 # Propose the authorized change

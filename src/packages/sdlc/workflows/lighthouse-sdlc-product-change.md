@@ -1,7 +1,7 @@
 ---
 # Owned by lighthouse-sdlc. Regenerate the lock with gh aw v0.93.2.
 name: product-change
-description: Prepare and publish an authenticated Product Change candidate for an authorized issue idea.
+description: Prepare and publish an authenticated Product Change candidate for an idea or issue prerequisite.
 run-name: "product change #${{ inputs.issue }} · request ${{ inputs.dispatch-request }}"
 concurrency:
   group: lighthouse-issue-${{ inputs.issue }}
@@ -73,6 +73,11 @@ steps:
     with:
       name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+  - name: Load ProductShape inspection evidence
+    uses: actions/download-artifact@v8
+    with:
+      name: lighthouse-product-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/product-evidence
 post-steps:
   - name: Validate the Lighthouse result
     run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs validate
@@ -97,6 +102,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
       LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: "true"
@@ -105,6 +111,12 @@ jobs:
         with:
           repository: juangcarmona/lighthouse
           ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - name: Check out the adopter's current product source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: .lighthouse-product-source
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -117,13 +129,27 @@ jobs:
         id: prepare
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/issue-actions.mjs prepare
+        working-directory: .lighthouse-product-source
+        run: node "$GITHUB_WORKSPACE/src/packages/sdlc/src/issue-actions.mjs" prepare
       - name: Preserve the execution request
         if: steps.prepare.outputs.eligible == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/
+          path: |
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/admission.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/issue.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/context.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/reserved
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve ProductShape inspection evidence
+        if: steps.prepare.outputs.eligible == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-product-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/product-evidence/
           if-no-files-found: error
           retention-days: 14
       - name: Release reservation if preparation failed
@@ -138,6 +164,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: read
       contents: write
       issues: write
       pull-requests: write
@@ -158,6 +185,7 @@ jobs:
         with:
           node-version: 24
       - name: Install the repository and optional product provider
+        working-directory: .lighthouse-harness
         run: |
           npm ci --ignore-scripts
           npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6
@@ -195,6 +223,6 @@ jobs:
 
 Read the authenticated context and follow `/harness/skills/product-change/SKILL.md`. Use the installed ProductShape schema instructions included in `context.productChange`. The issue title and body define the idea and the host's `context.productChange.parent` defines the scope and authorization. Compare it with the accepted product model, then return one of `aligned`, `candidate` or `blocked` in `result.output.productChange`.
 
-For a candidate, return the complete provider-owned change files under `context.productChange.root`, the host-assigned `changeName`, CHG ID, proposal digest, baseline digest and successful provider validation summary. Keep the manifest in draft status. Do not approve, apply, alter the accepted model, publish a branch or continue implementation. The trusted publisher rechecks the exact candidate, validates it against the current accepted model, publishes the PR and requests an explicit product decision. Product approval, apply, implementation, merge and release are separate effects.
+For a candidate, return the complete provider-owned change files under `context.productChange.root`, the host-assigned `changeName`, CHG ID, baseline digest and pending provider validation. Copy `context.productChange.schemaPin` into `.openspec.yaml` and omit the proposal digest; the host calculates it after validation. Keep the manifest in draft status. Do not approve, apply, alter the accepted model, publish a branch or continue implementation. The trusted publisher rechecks the exact candidate, validates it against the current accepted model, publishes the PR and requests an explicit product decision. Product approval, apply, implementation, merge and release are separate effects.
 
-Return the supplied stage result identity and keep the enclosing lifecycle stage as `propose`. A product idea does not grant implementation authority. The host owns all GitHub effects and releases execution resources when the decision request is durable.
+Return the supplied stage result identity and retain its enclosing lifecycle stage. An idea or parent prerequisite grants no new implementation authority. The host owns all GitHub effects and releases execution resources when the decision request is durable.

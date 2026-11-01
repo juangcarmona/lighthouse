@@ -62,7 +62,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-      issues: read
+      issues: write
       pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}

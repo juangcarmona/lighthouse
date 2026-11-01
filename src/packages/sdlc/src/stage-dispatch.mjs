@@ -10,7 +10,7 @@ export const stagePath = stage => { if (!workers.includes(stage)) throw Error('U
 export const implementPath = stagePath('implement');
 export const statusText = (stage, status) => `${({ requested: 'Requested', running: 'Queued', completed: 'Stage completed', waiting: 'Waiting for your answer', blocked: 'Blocked', failed: 'Execution failed', cancelled: 'Cancelled', unknown: 'Execution status unknown' })[status] ?? 'Execution status unknown'} · ${stage}`;
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
-export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && event.inputs?.stage === 'implement' && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
+export const isBotContinuation = (event, eventName, actor, triggeringActor) => eventName === 'workflow_dispatch' && actor === 'github-actions[bot]' && triggeringActor === actor && (event.inputs?.stage === 'implement' && event.inputs?.workflow !== 'product-change' || ['triage', 'refine', 'propose', 'implement'].includes(event.inputs?.stage) && ['product-change', 'resume-product'].includes(event.inputs?.workflow)) && positive(event.inputs?.issue) && positive(event.inputs?.after_run);
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const hash = value => /^[a-f0-9]{64}$/.test(value ?? '');
 export const dispatchId = (repository, runId, stage = 'implement') => digest(`${repository}:${runId}:${stage}`);
@@ -96,13 +96,14 @@ export function executionModelSelection(request) {
 }
 
 export function verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue) {
-  const delegatedWorker = workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage) || workerFor(request) === 'product-change' && ['propose', 'implement'].includes(request.stage);
+  const delegatedWorker = workerFor(request) === 'apply-review' && ['propose', 'implement'].includes(request.stage) || workerFor(request) === 'product-change' && ['triage', 'refine', 'propose', 'implement'].includes(request.stage);
   const applyProductWorker = workerFor(request) === 'apply-product-change' && ['propose', 'implement'].includes(request.stage);
   if (workerFor(request) !== workerFor(receipt) || request.feedbackKey !== receipt.feedbackKey || workerFor(request) !== request.stage && !delegatedWorker && !applyProductWorker) throw Error('Dispatch worker responsibility mismatch');
   if (workerFor(request) === 'product-change') {
     const idea = request.eventName === 'workflow_dispatch' && request.event?.inputs?.workflow === 'product-change';
     const feedback = request.productFeedback && ['answer', 'request-changes'].includes(request.productFeedback.action) && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(request.productFeedback.changeName ?? '') && typeof request.productFeedback.text === 'string' && request.productFeedback.text.trim().length > 0 && request.productFeedback.text.length <= 12000 && ['issue_comment', 'pull_request_review'].includes(request.eventName);
-    if (!idea && !feedback) throw Error('Product Change worker needs an authorized idea selector or authenticated owner feedback');
+    const parent = request.productParent && request.productParent.issue === issue && request.productParent.stage === request.stage && (request.eventName === 'workflow_run' && String(request.productParent.predecessor?.runId) === String(request.event?.workflow_run?.id) || request.eventName === 'workflow_dispatch' && request.event?.inputs?.workflow === 'product-change' && String(request.productParent.predecessor?.runId) === String(request.event.inputs.after_run));
+    if (!idea && !feedback && !parent) throw Error('Product Change worker needs an authorized idea, owner feedback or authenticated parent prerequisite');
   }
   if (workerFor(request) === 'apply-product-change' && (!request.productApproval || request.productApproval.kind !== 'approval' || !hash(request.productApproval.reviewKey))) throw Error('Trusted Product Change apply requires a bound approval');
   if (JSON.stringify(request.recovery) !== JSON.stringify(receipt.recovery)) throw Error('Recovery receipt identity mismatch');
@@ -111,7 +112,7 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const recovery = !!request.recovery;
   const originPath = recovery ? '.github/workflows/lighthouse-worker-maintenance.yml' : routerPath;
   const originEvent = recovery ? request.routerEventName : request.eventName;
-  const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && Number(request.event.inputs.issue) === issue && request.predecessor?.runId === request.event.inputs.after_run;
+  const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && Number(request.event.inputs.issue) === issue && (request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && request.predecessor?.runId === request.event.inputs.after_run || request.worker === 'product-change' && request.productParent?.predecessor?.runId === request.event.inputs.after_run || (!request.worker || request.worker === 'apply-review' && request.productResume?.parent.review) && request.event.inputs.workflow === 'resume-product' && request.productResume?.applyRun?.runId === request.event.inputs.after_run);
   if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
   executionModelSelection(request);
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.after_run;
@@ -127,10 +128,20 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   const parent = await api(`actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt}`);
   const request = await readArtifact(api, repository, receipt.routerRunId, dispatchArtifact(receipt), 'dispatch.json');
   verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue);
-  if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
+  if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && !request.productParent && request.event?.inputs?.workflow !== 'resume-product') {
     const predecessor = await api(`actions/runs/${request.predecessor.runId}`);
     const next = await (await import('./stage-transition.mjs')).refinementAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: predecessor.id, head_sha: predecessor.head_sha } }, readArtifact);
     if (next?.issue !== issue || JSON.stringify(next.predecessor) !== JSON.stringify(request.predecessor)) throw Error('Bot continuation lacks an authenticated refinement');
+  }
+  if (request.productResume) {
+    const apply = await api(`actions/runs/${request.productResume.applyRun.runId}`);
+    const observed = await (await import('./stage-transition.mjs')).productApplyAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: apply.id, head_sha: apply.head_sha } }, readArtifact);
+    if (JSON.stringify(observed) !== JSON.stringify(request.productResume) || observed.baseRevision !== request.sourceRevision || (observed.parent.feedback?.taskDigest ?? observed.parent.taskDigest) !== request.taskDigest) throw Error('Applied product prerequisite or parent authorization changed');
+  }
+  if (request.productParent) {
+    const parentRun = await api(`actions/runs/${request.productParent.predecessor.runId}`);
+    const observed = await (await import('./stage-transition.mjs')).productGapAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: parentRun.id, head_sha: parentRun.head_sha } }, readArtifact);
+    if (JSON.stringify(observed) !== JSON.stringify(request.productParent) || observed.baseRevision !== request.sourceRevision || observed.taskDigest !== request.taskDigest) throw Error('Product prerequisite or parent authorization changed');
   }
   const dispatch = { request, receipt, commentId: Number(commentId) };
   if (request.recovery) await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, depth);
@@ -187,12 +198,12 @@ export async function completedEvent(api, event, env, wait = ms => new Promise(r
   if (!bot && (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== env.GITHUB_REPOSITORY_OWNER || env.GITHUB_TRIGGERING_ACTOR !== env.GITHUB_REPOSITORY_OWNER || !positive(id))) throw Error('Completion replay requires an owner and a run ID, or a verified refinement continuation');
   let run = await api(`actions/runs/${id}`);
   if (bot) {
-    if (run.path !== stagePath('refine')) throw Error('Bot continuation must reference a refinement');
+    if (event.inputs?.workflow === 'resume-product' ? run.path !== stagePath('apply-product-change') : event.inputs?.workflow === 'product-change' ? !['triage', 'refine', 'propose', 'implement', 'apply-review'].some(stage => run.path === stagePath(stage)) : run.path !== stagePath('refine')) throw Error(event.inputs?.workflow === 'resume-product' ? 'Bot continuation must reference a product apply' : event.inputs?.workflow === 'product-change' ? 'Bot continuation must reference a supported parent execution' : 'Bot continuation must reference a refinement');
     // The publisher signals before its own workflow has finished its final jobs.
     for (let attempt = 0; run.status !== 'completed' && attempt < 24; attempt++) {
       await wait(5000); run = await api(`actions/runs/${id}`);
     }
-    if (run.status !== 'completed') throw Error('Refinement completion timed out; replay after the execution completes');
+    if (run.status !== 'completed') throw Error('Parent completion timed out; replay after the execution completes');
   }
   return { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } };
 }

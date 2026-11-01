@@ -85,6 +85,13 @@ test('pending reply ignores stale, empty and spoofed reports and cannot replay a
   assert.equal(pendingReply(event, [{ ...report(), user: { login: 'outsider', type: 'Bot' } }]), null);
   assert.equal(pendingReply(event, [report(), report('propose', 'passed')]), null);
   assert.equal(pendingReply(event, [report('implement')]).stage, 'implement');
+  for (const stage of ['triage', 'refine', 'propose', 'implement']) {
+    const pending = report(stage);
+    pending.body += '\n<!-- lighthouse-product-workflow:example-change -->';
+    assert.equal(pendingReply(event, [pending]).stage, stage);
+    assert.equal(pendingReply(event, [pending]).worker, 'product-change');
+  }
+
   assert.equal(pendingReply(event, [{ ...report('implement'), body: report('implement').body + '\n[Review the implementation](https://example.test/pr)' }]), null);
   assert.equal(pendingReply(event, [{ ...report(), body: report().body.replace(/<!-- lighthouse-stage:.* -->/, '') }]).stage, 'propose');
   const operationalBlocker = { ...report(), body: `${report().body}\n<!-- lighthouse-handoff:v1 -->` };

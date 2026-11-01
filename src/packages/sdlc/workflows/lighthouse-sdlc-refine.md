@@ -107,6 +107,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:
@@ -146,6 +147,7 @@ jobs:
       actions: write
       contents: read
       issues: write
+      pull-requests: read
     env:
       LIGHTHOUSE_ISSUE: ${{ inputs.issue }}
     steps:
@@ -192,6 +194,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs continue-refinement
+      - name: Request the verified product prerequisite
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
 ---
 
 # Refine the authorized issue

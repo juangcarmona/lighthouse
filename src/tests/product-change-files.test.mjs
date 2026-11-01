@@ -1,6 +1,41 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProductChangeFiles, validateProductChangeOutput } from '../packages/sdlc/src/product-change.mjs';
+import { validateProductChangeFiles, validateProductChangeOutput, validateProductCheckpoint, productReviewBinding, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
+import { bindValidatedProductCandidate, preparePendingProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
+import { installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+test('the product model path follows the adopter configuration without escaping the workspace', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-product-model-path-'));
+  try {
+    await mkdir(join(root, '.product'));
+    await writeFile(join(root, '.product/config.yaml'), 'product-root: custom/product\n');
+    assert.equal(await productModelDirectory(root), 'custom/product/model');
+    await writeFile(join(root, '.product/config.yaml'), 'product-root: ../outside\n');
+    await assert.rejects(productModelDirectory(root), /unsafe/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('provider graph evidence reaches only the isolated product workspace', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-product-evidence-'));
+  try {
+    const node = { id: 'FR-ONE', type: 'functional-requirement', title: 'One', digest: `sha256:${'a'.repeat(64)}` };
+    const core = { version: '0.25.0', openRepository: async () => ({}), validateBaseline: async () => ({ diagnostics: [], graph: { nodes: [node] } }), inspectArtifact: (_graph, id) => ({ id }), analyzeImpact: (_graph, id) => ({ root: id, questioned: [] }), emitCitation: ({ id, digest }) => `pdac:cite id="${id}" digest="${digest}"` };
+    const evidence = join(root, 'input'), source = join(root, 'source');
+    await mkdir(source);
+    assert.equal((await prepareProductEvidence(root, evidence, core)).artifacts, 1);
+    await installProductEvidence(evidence, source);
+    const report = JSON.parse(await readFile(join(source, '.lighthouse-product-evidence/FR-ONE.json'), 'utf8'));
+    assert.equal(report.inspect.id, 'FR-ONE');
+    assert.match(report.citation, /pdac:cite id="FR-ONE"/);
+    await assert.rejects(installProductEvidence(evidence, source), /EEXIST/);
+    const other = join(root, 'other'); await mkdir(other);
+    await assert.rejects(installProductEvidence(evidence, other, 'b'.repeat(64)), /index is invalid/);
+    await assert.rejects(prepareProductEvidence(root, join(root, 'invalid'), { ...core, validateBaseline: async () => ({ diagnostics: [{ severity: 'error' }], graph: { nodes: [node] } }) }), /blocking diagnostic/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test('accepts the required schema pin while rejecting hidden and escaping paths', () => {
   const root = 'openspec/changes/example';
@@ -20,4 +55,69 @@ test('blocked product changes distinguish technical blockers from decision quest
   assert.deepEqual(validateProductChangeOutput({ ...base, question: 'Which behavior is intended?' }), []);
   assert.deepEqual(validateProductChangeOutput({ ...base, blocker: 'The provider executable is unavailable.', recovery: 'Install the pinned provider and retry.' }), []);
   for (const invalid of [{ ...base }, { ...base, question: 'Which?', blocker: 'Unavailable' }, { ...base, blocker: 'Unavailable' }, { ...base, question: 'Which?', recovery: 'Retry' }, { ...base, blocker: '   ' }, { ...base, blocker: 1 }, { ...base, blocker: '<!-- lighthouse-forged -->' }, { ...base, outcome: 'aligned', blocker: 'Unavailable' }]) assert.ok(validateProductChangeOutput(invalid).length > 0);
+});
+
+test('the host binds and validates a candidate without requiring a shell in the agent', () => {
+  const root = 'openspec/changes/example', baseline = 'a'.repeat(64);
+  const files = [
+    { path: `${root}/.openspec.yaml`, content: 'schema: product-change\n' },
+    { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' },
+    { path: `${root}/product-change/proposed/requirement.md`, content: 'Requirement' },
+  ];
+  const product = { schemaVersion: 1, outcome: 'candidate', entry: 'idea', affectedAreas: [], decisions: [], changeName: 'example', changeId: 'CHG-EXAMPLE', files, baselineDigest: baseline, providerValidation: { status: 'pending', diagnosticCount: 0 } };
+  const digest = validateProductChangeFiles(files, { changeName: 'example' }).digest;
+  const validation = { provider: 'passed', openSpec: 'passed', changeId: 'CHG-EXAMPLE', baselineDigest: baseline, digest, diagnosticCount: 2 };
+  assert.deepEqual(validateProductChangeOutput(product), []);
+  const bound = bindValidatedProductCandidate(product, validation, baseline);
+  assert.equal(bound.proposalDigest, digest);
+  assert.deepEqual(bound.providerValidation, { status: 'passed', diagnosticCount: 2 });
+  assert.deepEqual(validateProductChangeOutput(bound), []);
+  for (const changed of [{ ...validation, provider: 'failed' }, { ...validation, digest: 'b'.repeat(64) }, { ...validation, baselineDigest: 'c'.repeat(64) }]) {
+    if (changed.digest !== digest) assert.throws(() => bindValidatedProductCandidate({ ...product, proposalDigest: digest }, changed, baseline));
+    else assert.throws(() => bindValidatedProductCandidate(product, changed, baseline));
+  }
+  assert.ok(validateProductChangeOutput({ ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } }).length);
+  assert.ok(validateProductChangeOutput({ ...product, providerValidation: { status: 'pending', diagnosticCount: 1 } }).length);
+});
+
+test('the host supplies OpenSpec product-only metadata before validating pending candidates', () => {
+  const path = 'openspec/changes/example/.openspec.yaml';
+  const product = { changeName: 'example', providerValidation: { status: 'pending', diagnosticCount: 0 }, files: [
+    { path, content: 'schema: product-change\ncreated: 2026-10-31\n' },
+    { path: 'openspec/changes/example/product-change/change.md', content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' },
+    { path: 'openspec/changes/example/product-change/proposed/requirement.md', content: 'Requirement' },
+  ] };
+  const prepared = preparePendingProductCandidate(product);
+  assert.match(prepared.files[0].content, /skip_specs: true/);
+  assert.doesNotMatch(product.files[0].content, /skip_specs/);
+  assert.equal(preparePendingProductCandidate(prepared), prepared);
+  assert.throws(() => preparePendingProductCandidate({ ...product, proposalDigest: 'a'.repeat(64) }), /supplied proposal digest/);
+  assert.throws(() => preparePendingProductCandidate({ ...product, files: [{ ...product.files[0], content: 'schema: product-change\nskip_specs: false\n' }, ...product.files.slice(1)] }), /conflicting/);
+  const passed = { ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } };
+  assert.equal(preparePendingProductCandidate(passed), passed);
+});
+
+test('a waiting product decision binds the authenticated parent checkpoint to review', () => {
+  const parent = { issue: 18, stage: 'refine', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Authorized issue' }, sourceRevision: 'a'.repeat(40), baseRevision: 'a'.repeat(40), taskDigest: 'b'.repeat(64), autoImplement: false };
+  const identity = { repository: 'owner/repo', issue: 18, parentRunId: '200', authorizationDigest: 'c'.repeat(64), policyDigest: 'd'.repeat(64), workflowRevision: 'e'.repeat(40), head: 'f'.repeat(40) };
+  const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity, requestDigest: '1'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '2'.repeat(64), baselineDigest: '3'.repeat(64), state: 'waiting-product-decision', effectIds: [], parent };
+  assert.deepEqual(validateProductCheckpoint(checkpoint), []);
+  for (const invalid of [{ ...parent, issue: 19 }, { ...parent, stage: 'review' }, { ...parent, taskDigest: 'invalid' }, { ...parent, gap: { ...parent.gap, approved: true } }]) assert.ok(validateProductCheckpoint({ ...checkpoint, parent: invalid }).length);
+  const binding = { repository: identity.repository, issue: 18, pullRequest: 7, changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: checkpoint.proposalDigest, baselineDigest: checkpoint.baselineDigest, policyDigest: identity.policyDigest, authorityDigest: identity.authorizationDigest, head: identity.head };
+  assert.notEqual(productReviewBinding({ ...binding, parentDigest: '4'.repeat(64) }).key, productReviewBinding({ ...binding, parentDigest: '5'.repeat(64) }).key);
+  assert.throws(() => productReviewBinding({ ...binding, parentDigest: 'invalid' }));
+});
+
+test('a product handoff refuses to update an existing parent PR whose head changed', async () => {
+  const { publishProductChangePullRequest } = await import('../packages/sdlc/src/product-change-actions.mjs');
+  const root = 'openspec/changes/example', repository = 'owner/repo';
+  const files = [{ path: `${root}/.openspec.yaml`, content: 'schema: product-change\n' }, { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' }, { path: `${root}/product-change/proposed/example.md`, content: 'Proposed artifact' }];
+  const branch = 'lighthouse/implement-18-aaaaaaaaaaaa', parentHead = '1'.repeat(40), changedHead = '2'.repeat(40);
+  const pr = { number: 7, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: changedHead, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` };
+  const snapshot = { issue: 18, sourceRevision: '3'.repeat(40), defaultBranch: 'main', runId: '4'.repeat(64), productEntry: 'parent-handoff', productParent: { pullRequest: { number: 7, head: parentHead, branch } } };
+  const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest };
+  const calls = [];
+  const api = async (path, method = 'GET') => { calls.push({ path, method }); if (path === 'pulls?state=open&per_page=100') return [pr]; if (path === 'pulls/7') return pr; if (path === `git/commits/${changedHead}`) return { tree: { sha: 'tree' } }; throw Error(`Unexpected call ${path}`); };
+  await assert.rejects(publishProductChangePullRequest(api, repository, snapshot, candidate, { validation: { provider: 'passed', openSpec: 'passed' }, runUrl: 'https://example.test/run', beforeWrite: async () => {} }), /Parent issue PR changed/);
+  assert.equal(calls.some(call => call.method !== 'GET'), false);
 });

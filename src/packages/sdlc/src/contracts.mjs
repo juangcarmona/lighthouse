@@ -42,6 +42,10 @@ export function validateStageResult(value) {
   if (value.input !== undefined && !isRecord(value.input)) errors.push(issue('stage-result.input', 'input must be an object when present', 'input'));
   if (value.output !== undefined && !isRecord(value.output)) errors.push(issue('stage-result.output', 'output must be an object when present', 'output'));
   else if (isRecord(value.output) && value.output.productChange !== undefined) errors.push(...validateProductChangeOutput(value.output.productChange).map(message => issue('stage-result.product-change', message, 'output.productChange')));
+  if (isRecord(value.output) && value.output.productGap !== undefined) {
+    const gap = value.output.productGap;
+    if (value.status !== 'blocked' || !['triage', 'refine', 'propose', 'implement'].includes(value.stage) || value.output.handoff !== undefined || value.output.productChange !== undefined || !isRecord(gap) || Object.keys(gap).length !== 2 || !['summary', 'scope'].every(key => typeof gap[key] === 'string' && gap[key].trim() && gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(gap[key]))) errors.push(issue('stage-result.product-gap', 'a product gap requires a blocked result with a bounded summary and scope and no competing handoff', 'output.productGap'));
+  }
   if (isRecord(value.output) && value.output.handoff !== undefined) {
     const handoff = value.output.handoff;
     if (!isRecord(handoff) || Object.keys(handoff).length !== 1 || typeof handoff.question !== 'string' || value.status !== 'blocked') errors.push(issue('stage-result.handoff', 'a handoff question requires a blocked result and no other handoff fields', 'output.handoff'));
