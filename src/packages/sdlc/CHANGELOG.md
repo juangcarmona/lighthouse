@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.9
+
+### Patch Changes
+
+- cb3abc7: # Retain product answers
+
+  Resume an aligned parent request after verifying its owner answer against the original question.
+
 ## 0.18.8
 
 ### Patch Changes
