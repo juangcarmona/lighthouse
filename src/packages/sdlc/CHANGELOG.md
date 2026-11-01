@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.15
+
+### Patch Changes
+
+- 63df90c: # Failed check handoff
+
+  Direct the workflow maintainer to failed host checks when an implementation candidate is blocked.
+
 ## 0.18.14
 
 ### Patch Changes
