@@ -1,8 +1,45 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewText, productApplyHandoff, checkProductDryRun } from '../packages/sdlc/src/product-change-actions.mjs';
+import { reviewText, productApplyHandoff, checkProductDryRun, collectProductApplyFiles, productModelDigestFromApi, validateProductApplyFiles } from '../packages/sdlc/src/product-change-actions.mjs';
+import { productModelDigest } from '../packages/sdlc/src/product-change.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
 import { productApplyRequest } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('product apply publication collects newly added model files as well as the applied manifest', async () => {
+  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
+  const { join } = await import('node:path');
+  const { tmpdir } = await import('node:os');
+  const { execFileSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-apply-files-'));
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  try {
+    const manifest = 'openspec/changes/example/product-change/change.md', model = 'docs/product/model/requirements';
+    await mkdir(join(root, 'openspec/changes/example/product-change'), { recursive: true });
+    await mkdir(join(root, model), { recursive: true });
+    await writeFile(join(root, manifest), 'status: draft\n');
+    await writeFile(join(root, model, 'existing.md'), 'Existing requirement.\n');
+    git('init', '-q'); git('add', '.'); git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'baseline');
+    const head = git('rev-parse', 'HEAD');
+    await writeFile(join(root, manifest), 'status: applied\n');
+    await writeFile(join(root, model, 'new.md'), 'A new requirement.\n');
+    const result = await collectProductApplyFiles(root, 'example', head);
+    assert.deepEqual(result.files.map(file => file.path), [`${model}/new.md`, manifest]);
+    const api = async path => {
+      if (path.startsWith('git/trees/')) return { tree: [{ path: `${model}/existing.md`, type: 'blob', mode: '100644', size: 22, sha: 'existing' }] };
+      if (path.startsWith('contents/')) return null;
+      if (path === 'git/blobs/existing') return { encoding: 'base64', size: 22, content: Buffer.from('Existing requirement.\n').toString('base64') };
+      throw Error(path);
+    };
+    assert.equal((await productModelDigestFromApi(api, head, result.files)).digest, await productModelDigest(root));
+    assert.notEqual((await productModelDigestFromApi(api, head)).digest, await productModelDigest(root));
+    await rm(join(root, model, 'existing.md'));
+    const withDeletion = await collectProductApplyFiles(root, 'example', head);
+    assert.deepEqual(withDeletion.files.find(file => file.path === `${model}/existing.md`), { path: `${model}/existing.md`, deleted: true });
+    assert.doesNotThrow(() => validateProductApplyFiles(withDeletion.files, 'example'));
+    assert.equal((await productModelDigestFromApi(api, head, withDeletion.files)).digest, await productModelDigest(root));
+    assert.throws(() => validateProductApplyFiles([{ path: manifest, deleted: true }], 'example'), /Unsafe/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test('refused product dry-runs report bounded diagnostic codes and remain blocked', () => {
   assert.throws(() => checkProductDryRun({ outcome: 'refused', plan: { diagnostics: [{ severity: 'error', code: 'PRODUCT027' }] } }, 'CHG-1'), /PRODUCT027/);

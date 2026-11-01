@@ -74,7 +74,7 @@ export async function loadProductCandidateFromPullRequest(api, repository, pr, c
   return { files, ...checked };
 }
 
-export async function productModelDigestFromApi(api, revision) {
+export async function productModelDigestFromApi(api, revision, overrides = []) {
   const tree = await api(`git/trees/${revision}?recursive=1`);
   if (tree.truncated || !Array.isArray(tree.tree) || tree.tree.length > 10000) throw Error('Accepted product model tree exceeds the API bound');
   let modelRoot = 'docs/product/model';
@@ -87,18 +87,28 @@ export async function productModelDigestFromApi(api, revision) {
   if (!safeRelative(modelRoot) || modelRoot.split('/').some(part => part.startsWith('.'))) throw Error('ProductShape product-root is unsafe');
   const entries = tree.tree.filter(item => item.path.startsWith(`${modelRoot}/`) && item.type === 'blob').sort((a, b) => a.path.localeCompare(b.path));
   if (!entries.length || entries.length > 512) throw Error('Accepted product model file list is empty or exceeds its bound');
+  const changed = new Map(overrides.filter(file => file.path.startsWith(`${modelRoot}/`)).map(file => [file.path, file.deleted ? null : Buffer.from(file.content, 'utf8')]));
   const rows = [];
   let bytes = 0;
   for (const entry of entries) {
     if (entry.mode !== '100644' && entry.mode !== '100755' || entry.size > 65536) throw Error(`Accepted product model path is not a bounded regular file: ${entry.path}`);
-    const blob = await api(`git/blobs/${entry.sha}`);
-    if (blob.encoding !== 'base64' || blob.size > 65536) throw Error(`Accepted product artifact exceeds its bound: ${entry.path}`);
-    const content = Buffer.from(blob.content, 'base64');
+    if (changed.has(entry.path) && changed.get(entry.path) === null) { changed.delete(entry.path); continue; }
+    const blob = changed.has(entry.path) ? null : await api(`git/blobs/${entry.sha}`);
+    if (blob && (blob.encoding !== 'base64' || blob.size > 65536)) throw Error(`Accepted product artifact exceeds its bound: ${entry.path}`);
+    const content = changed.get(entry.path) ?? Buffer.from(blob.content, 'base64');
+    changed.delete(entry.path);
     bytes += content.length;
     if (bytes > 8 * 1024 * 1024) throw Error('Accepted product model exceeds its aggregate bound');
     rows.push(`${entry.path.slice(`${modelRoot}/`.length)}\0${createHash('sha256').update(content).digest('hex')}\n`);
   }
-  return { digest: createHash('sha256').update(rows.join('')).digest('hex'), modelRoot };
+  for (const [path, content] of changed) {
+    if (content === null) throw Error(`Product apply cannot delete a missing model file: ${path}`);
+    bytes += content.length;
+    if (content.length > 65536 || bytes > 8 * 1024 * 1024) throw Error('Applied product model exceeds its aggregate bound');
+    rows.push(`${path.slice(`${modelRoot}/`.length)}\0${createHash('sha256').update(content).digest('hex')}\n`);
+  }
+  if (rows.length > 512) throw Error('Applied product model file list exceeds its bound');
+  return { digest: createHash('sha256').update(rows.sort((a, b) => a.split('\0')[0].localeCompare(b.split('\0')[0])).join('')).digest('hex'), modelRoot };
 }
 
 export function reviewText({ repository, snapshot, head, changeId, changeName, files, candidate, validation, runUrl, approvalKey, prUrl }) {
@@ -206,13 +216,22 @@ export async function applyApprovedProductChange({ root, changeName, checkpoint,
 export async function collectProductApplyFiles(root, changeName, baseRevision) {
   const prefix = `openspec/changes/${changeName}/product-change/change.md`;
   const modelRoot = await productModelDirectory(root);
-  const paths = execFileSync('git', ['diff', '--name-only', '--no-renames', baseRevision, '--', modelRoot, prefix], { cwd: root, encoding: 'utf8', maxBuffer: 128000 }).trim().split('\n').filter(Boolean).sort();
+  const options = { cwd: root, encoding: 'utf8', maxBuffer: 128000 };
+  const changed = execFileSync('git', ['diff', '--name-only', '-z', '--no-renames', baseRevision, '--', modelRoot, prefix], options).split('\0').filter(Boolean);
+  const added = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z', '--', modelRoot], options).split('\0').filter(Boolean);
+  const paths = [...new Set([...changed, ...added])].sort();
   if (!paths.includes(prefix) || paths.length > 520 || paths.some(path => path !== prefix && !path.startsWith(`${modelRoot}/`))) throw Error('Trusted apply wrote outside the Product Change manifest and accepted model');
   const files = [];
   let bytes = 0;
   for (const path of paths) {
     const absolute = join(root, path);
-    const stat = await import('node:fs/promises').then(fs => fs.lstat(absolute));
+    let stat;
+    try { stat = await import('node:fs/promises').then(fs => fs.lstat(absolute)); }
+    catch (error) {
+      if (error.code !== 'ENOENT' || path === prefix) throw error;
+      files.push({ path, deleted: true });
+      continue;
+    }
     if (!stat.isFile() || stat.isSymbolicLink()) throw Error(`Trusted apply produced a non-regular path: ${path}`);
     if (stat.size > 65536) throw Error(`Trusted apply artifact exceeds its bound: ${path}`);
     const content = await readFile(absolute, 'utf8');
@@ -231,9 +250,11 @@ export function validateProductApplyFiles(files, changeName, modelRoot = 'docs/p
   if (!Array.isArray(files) || !files.length || files.length > 520) throw Error('Product apply output file list is empty or exceeds its bound');
   const seen = new Set(); let bytes = 0;
   for (const file of files) {
-    if (!file || Object.keys(file).sort().join(',') !== 'content,path' || typeof file.path !== 'string' || typeof file.content !== 'string' || seen.has(file.path)) throw Error('Invalid or duplicated Product apply output file');
+    const deletion = file?.deleted === true && Object.keys(file).sort().join(',') === 'deleted,path';
+    if (!file || !deletion && (Object.keys(file).sort().join(',') !== 'content,path' || typeof file.content !== 'string') || typeof file.path !== 'string' || seen.has(file.path)) throw Error('Invalid or duplicated Product apply output file');
     if (file.path !== manifestPath && !file.path.startsWith(`${modelRoot}/`)) throw Error(`Product apply output escaped the accepted model: ${file.path}`);
-    if (!safeRelative(file.path) || file.content.includes('\0')) throw Error(`Unsafe Product apply output: ${file.path}`);
+    if (!safeRelative(file.path) || deletion && file.path === manifestPath || !deletion && file.content.includes('\0')) throw Error(`Unsafe Product apply output: ${file.path}`);
+    if (deletion) { seen.add(file.path); continue; }
     const size = Buffer.byteLength(file.content);
     if (size > 65536) throw Error(`Product apply output exceeds its file bound: ${file.path}`);
     bytes += size;
@@ -258,10 +279,12 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   const fresh = await loadProductApproval(api, { eventName: dispatch.request.eventName, event: dispatch.request.event, owner, repository, root: process.cwd() });
   if (!fresh || fresh.head !== approvalInfo.head || fresh.pullRequest !== approvalInfo.pullRequest || fresh.approval.reviewKey !== approvalInfo.reviewKey || fresh.checkpoint.changeId !== result.receipt.changeId) throw Error('Product approval or reviewed branch changed before publication');
   if (result.receipt.resultingModelDigest !== result.resultingModelDigest || result.receipt.baselineDigest !== fresh.checkpoint.baselineDigest || result.receipt.proposalDigest !== fresh.checkpoint.proposalDigest) throw Error('Product apply receipt does not match the approved candidate');
+  const projected = await productModelDigestFromApi(api, fresh.head, files);
+  if (projected.modelRoot !== result.modelRoot || projected.digest !== result.resultingModelDigest) throw Error('Published files do not reproduce the provider-validated product model');
   const pr = await api(`pulls/${fresh.pullRequest}`);
   if (pr.head.sha !== fresh.head || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repository) throw Error('Product PR head changed before apply publication');
   const commit = await api(`git/commits/${fresh.head}`);
-  const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => ({ path: file.path, mode: '100644', type: 'blob', content: file.content })) });
+  const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => file.deleted ? { path: file.path, mode: '100644', type: 'blob', sha: null } : { path: file.path, mode: '100644', type: 'blob', content: file.content }) });
   const created = await api('git/commits', 'POST', { message: `docs: apply product change ${fresh.checkpoint.changeId}`, tree: tree.sha, parents: [fresh.head] });
   await beforeWrite(fresh);
   await api(`git/refs/heads/${pr.head.ref}`, 'PATCH', { sha: created.sha, force: false });
