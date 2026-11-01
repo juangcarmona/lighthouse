@@ -1,4 +1,4 @@
-import { admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection } from './stage-dispatch.mjs';
+import { admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection, issueComments } from './stage-dispatch.mjs';
 import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,13 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
 import { handoff, pendingQuestion, publishObservedStop, visibleNextAction } from './handoff.mjs';
+
+export async function assertCurrentCompletionAttempt(api, repository, issue, dispatch, run) {
+  if (!dispatch) return;
+  await checkDispatchClaim(api, repository, issue, dispatch, run);
+  const comments = await issueComments(api, issue);
+  if (comments.some(comment => Number(comment.id) > Number(dispatch.commentId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:'))) throw Error('A newer dispatch superseded this completion attempt');
+}
 
 async function main(command) {
   const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
@@ -112,7 +119,7 @@ async function main(command) {
   }
   if (command !== 'publish') throw Error('Unknown completion command');
   const refresh = async () => {
-    if (request.dispatch) await checkDispatchClaim(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID);
+    await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID);
     return inspectCompletion(api, repository, owner, request.authorization, request.stage, env.GITHUB_RUN_ID);
   };
   const verifyEvidence = async current => {
@@ -157,13 +164,14 @@ async function main(command) {
   const body = handoff({ status: question ? 'question' : envelope.result.status === 'blocked' ? 'blocked' : 'completed', stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
   const effects = completionEffects(request.stage, envelope.result.status);
   if (question) effects.add.push('needs-info');
-  for (const label of effects.remove) await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true);
-  if (effects.add.length) await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add });
+  await recheck();
+  for (const label of effects.remove) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true); }
+  if (effects.add.length) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add }); }
   for (const target of new Set([request.issue, request.authorization.pr])) {
     const comments = await list(api, `issues/${target}/comments`);
-    if (!comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) await api(`issues/${target}/comments`, 'POST', { body });
+    if (!comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${target}/comments`, 'POST', { body }); }
   }
-  if (effects.closeIssue) await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
+  if (effects.closeIssue) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}`, 'PATCH', { state: 'closed', state_reason: 'completed' }); }
   await save('published.json', { url: publication.url });
   await summary(`### Retained delivery result\n${receipt.state}\n\n[Permanent report](${publication.url})\n\n${receipt.dispatchError ?? 'Publication confirmed; source and evidence commits are recorded separately.'}`);
 }

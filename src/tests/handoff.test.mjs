@@ -59,6 +59,21 @@ test('confirmed failed execution labels first, publishes once and ignores stale 
   assert.equal(await publishObservedStop(api, input), false);
 });
 
+test('completion publication stops when a later authenticated dispatch takes over', async () => {
+  const { assertCurrentCompletionAttempt } = await import('../packages/sdlc/src/completion-actions.mjs');
+  const { dispatchReceiptBody, dispatchId } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const repo = 'owner/repo', requestId = dispatchId(repo, '100', 'review'), digest = 'b'.repeat(64);
+  const receipt = { schemaVersion: 1, stage: 'review', id: requestId, digest, routerRunId: '100', routerAttempt: 1, workerRunId: '200', status: 'running' };
+  const dispatch = { commentId: 30, requestId, digest };
+  const comments = [{ id: 30, issue_url: 'https://api.github.com/repos/owner/repo/issues/18', user: { login: 'github-actions[bot]', type: 'Bot' }, body: dispatchReceiptBody(repo, receipt) }];
+  const api = async path => path === 'issues/comments/30' ? comments[0] : path.startsWith('issues/18/comments?') ? comments : assert.fail(path);
+  await assert.doesNotReject(assertCurrentCompletionAttempt(api, repo, 18, dispatch, '200'));
+  comments.push({ id: 31, user: { login: 'github-actions[bot]', type: 'Bot' }, body: '<!-- lighthouse-dispatch:newer -->' });
+  await assert.rejects(assertCurrentCompletionAttempt(api, repo, 18, dispatch, '200'), /newer dispatch/);
+  comments.pop();
+  await assert.rejects(assertCurrentCompletionAttempt(api, repo, 18, dispatch, '201'), /revoked or changed/);
+});
+
 test('interrupted failure publication retries the comment and missing label remains explicit', async () => {
   const { publishObservedStop } = await import('../packages/sdlc/src/handoff.mjs');
   const { dispatchReceiptBody, dispatchId } = await import('../packages/sdlc/src/stage-dispatch.mjs');
