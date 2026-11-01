@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.2
+
+### Patch Changes
+
+- 4c89d7e: # Paused product prerequisite recovery
+
+  Explain both recovery steps when a product prerequisite is paused and its workflow is unavailable.
+
 ## 0.18.1
 
 ### Patch Changes
