@@ -16,6 +16,15 @@ export function visibleNextAction(value, { checksFailed = false } = {}) {
   return value.trim().replace(/<!--(?=\s*lighthouse-)/gi, '&lt;!--');
 }
 
+export function failedCheckSummary(checks) {
+  const failed = checks.flatMap((check, index) => {
+    if (check.exitCode === 0) return [];
+    const name = check.command?.includes('openspec') && check.command.includes('validate') ? 'OpenSpec proposal validation' : `Host check ${index + 1}`;
+    return [check.reason === 'Not run after a failed check' ? `${name} was not run after an earlier failure` : `${name} failed (exit ${check.exitCode})`];
+  });
+  return failed.length ? `Host checks: ${failed.join('; ')}. See the linked execution for details.` : '';
+}
+
 export function productApplyObservation({ prepare, apply, publish }) {
   if (prepare === 'failure' || prepare === 'timed_out') return 'provider-preparation-failure';
   if (prepare === 'cancelled') return 'preparation-cancelled';
