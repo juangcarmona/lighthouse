@@ -14,7 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, productModelDigest, loadProductBridge } from './product-change.mjs';
 import { validateProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation, workerStopObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -466,6 +466,7 @@ async function main(command) {
     console.log(`Reserved #${issueNumber}; context includes ${answers.length} owner replies`); return;
   }
   let preparationStop;
+  const workerStop = workerStopObservation({ preActivation: env.LIGHTHOUSE_PRE_ACTIVATION_RESULT, activation: env.LIGHTHOUSE_ACTIVATION_RESULT, agent: env.LIGHTHOUSE_AGENT_RESULT, publish: env.LIGHTHOUSE_PUBLISH_STATUS });
   if (command === 'cleanup' && event.inputs?.['dispatch-request']) {
     let outcome;
     try {
@@ -476,6 +477,8 @@ async function main(command) {
     if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
+    if (!outcome && workerStop === 'activation-failure') outcome = 'failed';
+    if (!outcome && workerStop === 'pre-agent-cancelled') outcome = 'cancelled';
     try { await finishDispatch(api, repo, issueNumber, event.inputs['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
     catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
     if (env.LIGHTHOUSE_PREPARE_FAILED === 'true') {
@@ -654,8 +657,7 @@ async function main(command) {
         if (prior.length >= 100) throw Error('Proposal discussion exceeds bounded publication');
         if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${snapshot.proposalReview.number}/comments`, 'POST', { body: renderHandoff({ status: 'unknown', stage: snapshot.stage, happened: 'The proposal update did not complete. Your feedback remains recorded.', action: 'The workflow maintainer must inspect the execution and the PR before retrying.', next: 'A further update requires an authorized continuation after the actual effects are reconciled.', link: `[Review PR](${snapshot.proposalReview.url})`, details: `[Execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})\n\n${notice}` }) });
       }
-      if (['failure', 'cancelled'].includes(env.LIGHTHOUSE_AGENT_RESULT)) await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT, answerRetained: !!snapshot.replyTo });
-      else if (env.LIGHTHOUSE_AGENT_RESULT === 'success' && env.LIGHTHOUSE_PUBLISH_STATUS === 'failure') await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: 'publication-unknown', answerRetained: !!snapshot.replyTo });
+      if (workerStop) await publishObservedStop(api, { repository: repo, issue: issueNumber, stage: snapshot.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: snapshot.baseRevision ?? snapshot.sourceRevision, dispatch: snapshot.dispatch, observation: workerStop, answerRetained: !!snapshot.replyTo });
       await summary('### Execution incomplete\nNo completed publication. Inspect the failed step; the pending decision remains unfulfilled.');
     }
     if (published && snapshot.stage === 'implement') {

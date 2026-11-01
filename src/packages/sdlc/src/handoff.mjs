@@ -24,6 +24,14 @@ export function productApplyObservation({ prepare, apply, publish }) {
   return null;
 }
 
+export function workerStopObservation({ preActivation, activation, agent, publish }) {
+  if (agent === 'skipped' && [preActivation, activation].some(value => value === 'failure' || value === 'timed_out')) return 'activation-failure';
+  if (agent === 'skipped' && [preActivation, activation].includes('cancelled')) return 'pre-agent-cancelled';
+  if (agent === 'failure' || agent === 'cancelled') return agent;
+  if (agent === 'success' && publish === 'failure') return 'publication-unknown';
+  return null;
+}
+
 export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
   if (!['passed', 'blocked'].includes(status)) throw Error('Unvalidated stage outcome');
   const review = status === 'passed' && reviewTarget === true;

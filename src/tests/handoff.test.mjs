@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
+
+test('pre-agent failure and cancellation use observed job outcomes', () => {
+  assert.equal(workerStopObservation({ preActivation: 'success', activation: 'failure', agent: 'skipped' }), 'activation-failure');
+  assert.equal(workerStopObservation({ preActivation: 'cancelled', activation: 'skipped', agent: 'skipped' }), 'pre-agent-cancelled');
+  assert.equal(workerStopObservation({ activation: 'failure', agent: 'success', publish: 'failure' }), 'publication-unknown');
+  assert.equal(workerStopObservation({ activation: 'skipped', agent: 'skipped' }), null);
+});
 
 test('product apply distinguishes local provider failure from uncertain remote publication', () => {
   assert.equal(productApplyObservation({ prepare: 'failure' }), 'provider-preparation-failure');
