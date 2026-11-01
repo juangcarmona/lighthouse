@@ -1,6 +1,6 @@
 # Unattended delivery fixture
 
-This controlled acceptence fixture exercises the native FF and hotfix compositions. It is not application runtime code.
+This controlled acceptance fixture exercises the native FF and hotfix compositions. It is not application runtime code.
 
 The eligibility rule must accept values equal to or above 2 and reject values below 2. The initial strict comparison deliberately reproduces the boundary defect. A hotfix pilot must add a meaningful regression test before repairing that comparison.
 
