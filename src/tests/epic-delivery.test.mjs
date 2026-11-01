@@ -153,11 +153,14 @@ test('closed, already merged or unobserved PR state cannot grant merge eligibili
 });
 
 test('authentication, plan binding and duplicate observations fail closed', () => {
-  for (const patch of [{ authenticated: false }, { schemaVersion: 2 }, { planDigest: 'copied' }, { children: [child('a'), child('a')] }]) assert.equal(assessEpic(plan(), { ...observation(), ...patch }).status, 'invalid');
+  for (const patch of [{ authenticated: false }, { schemaVersion: 2 }, { planDigest: 'copied' }, { epicBranch: 'lighthouse/epic-147' }, { children: [child('a'), child('a')] }]) assert.equal(assessEpic(plan(), { ...observation(), ...patch }).status, 'invalid');
   const obs = observation(); obs.children[0].authenticated = false;
   assert.equal(states(obs)[0], 'uncertain');
   assert.equal(assessEpic({ valid: true }, obs).status, 'invalid');
   assert.equal(assessEpic(null, null).status, 'invalid');
+  assert.equal(assessEpic({ ...input(), valid: true, parent: { id: 146, title: 'Parent' } }, observation()).status, 'invalid');
+  const inconsistent = plan(); inconsistent.parent.number = 147;
+  assert.equal(assessEpic(inconsistent, { ...observation(), planDigest: epicPlanDigest(inconsistent) }).status, 'invalid');
 });
 
 test('aggregate eligibility never closes the parent or grants merge authority', () => {

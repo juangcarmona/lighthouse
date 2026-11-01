@@ -126,6 +126,8 @@ test('host lease, journal and authentication callbacks and matching parent are m
   const f = fixture();
   await assert.rejects(reconcileEpicChildren(plan(), context, {}), /withLease/);
   await assert.rejects(reconcileEpicChildren(plan(), { ...context, parent: 147 }, f.host), /Parent identity/);
+  const inconsistent = plan(); inconsistent.parent.number = 147;
+  await assert.rejects(reconcileEpicChildren(inconsistent, { ...context, parent: 147, base: 'lighthouse/epic-147' }, f.host), /Parent identity/);
 });
 
 test('a revised plan cannot duplicate an existing stable slice identity', async () => {

@@ -34,7 +34,8 @@ export async function reconcileEpicChildren(plan, context, host) {
   const digest = epicPlanDigest(plan);
   const { repository, parent, base } = context;
   for (const name of ['withLease', 'readReceipt', 'writeReceipt', 'findCandidates', 'authenticate', 'beforeWrite', 'api']) if (typeof host?.[name] !== 'function') throw Error(`Trusted host must provide ${name}`);
-  if (String(parent) !== String(plan.parent.number ?? plan.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1])) throw Error('Parent identity mismatch');
+  const idNumber = plan.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
+  if (plan.parent.number !== undefined && (!positive(plan.parent.number) || idNumber && String(plan.parent.number) !== idNumber) || String(parent) !== String(plan.parent.number ?? idNumber)) throw Error('Parent identity mismatch');
   const expected = new Map(plan.slices.map(slice => [slice.id, epicCorrelation({ repository, parent, slice: slice.id, planDigest: digest, base, dependencies: slice.dependencies })]));
   return host.withLease(`${repository}:${parent}`, async () => {
     const outcomes = [];

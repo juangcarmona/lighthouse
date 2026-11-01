@@ -33,6 +33,11 @@ export function assessEpic(plan, observation) {
   if (!plan?.valid || !checked.valid) errors.push('valid non-empty decomposition plan required');
   if (observation?.schemaVersion !== 1 || observation?.authenticated !== true) errors.push('authenticated version 1 host observation required');
   if (!sha(observation?.baseSha) || !text(observation?.epicBranch) || !text(observation?.defaultBranch) || observation.epicBranch === observation.defaultBranch) errors.push('dedicated epic branch and current base SHA required');
+  const idNumber = typeof checked.parent?.id === 'string' ? checked.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1] : undefined;
+  const explicitNumber = checked.parent?.number;
+  if (explicitNumber !== undefined && (!positive(explicitNumber) || idNumber && String(explicitNumber) !== idNumber)) errors.push('parent issue identity is inconsistent');
+  const parentNumber = explicitNumber ?? idNumber;
+  if (parentNumber && observation?.epicBranch !== `lighthouse/epic-${parentNumber}`) errors.push('epic branch does not match the parent issue');
   if (!positive(observation?.capacity) || !Array.isArray(observation?.children)) errors.push('positive capacity and child observations required');
   if (plan?.valid && checked.valid && observation?.planDigest !== epicPlanDigest(plan)) errors.push('observation does not match the immutable plan');
   const children = Array.isArray(observation?.children) ? observation.children : [];
