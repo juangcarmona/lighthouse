@@ -72,7 +72,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 806223d06302628d25791e42e35b609ca6e1d32c
+      ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -178,7 +178,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -219,6 +219,10 @@ jobs:
           LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
           LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Request the verified product prerequisite
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
 ---
 
 # Apply the owner feedback

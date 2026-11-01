@@ -67,7 +67,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 806223d06302628d25791e42e35b609ca6e1d32c
+      ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -144,6 +144,7 @@ jobs:
     if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
+      actions: write
       contents: write
       issues: write
       pull-requests: write
@@ -153,7 +154,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 806223d06302628d25791e42e35b609ca6e1d32c
+          ref: e83b948710f5396af9f92067f40e5e87fd90dcb3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -188,6 +189,10 @@ jobs:
           LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
           LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Request the verified product prerequisite
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
 ---
 
 # Propose the authorized change
@@ -196,6 +201,6 @@ Execute only `propose` using the trusted context in `/input/context.json` and th
 
 Write brief public progress before source inspection and when you choose an approach or find a blocker. Explain the decision and supporting evidence. Keep tool payloads out of progress messages.
 
-Follow `context.proposal.instructions` from the pinned OpenSpec provider, in order: proposal, specifications and design, then tasks. Return the actual Markdown files in `result.output.files`, each with `path` and `content`, under the authorized `context.proposal.root`. Include a concise proposal, design alternatives and trade-offs, testable specification scenarios, dependency-ordered unchecked tasks, validation and visual evidence plans where applicable. Every refined acceptance criterion needs a corresponding task or specification. Preserve existing product authority. Keep unresolved product decisions explicit rather than inventing approval.
+Follow `context.proposal.instructions` from the pinned OpenSpec provider, in order: proposal, specifications and design, then tasks. Return the actual Markdown files in `result.output.files`, each with `path` and `content`, under the authorized `context.proposal.root`. Include a concise proposal, design alternatives and trade-offs, dependency-ordered unchecked tasks, validation and visual evidence plans where applicable. Include testable specification scenarios for behavior changes; for a change without spec-level behavior, return `.openspec.yaml` containing exactly `skip_specs: true` instead. Every refined acceptance criterion needs a corresponding task or specification. Preserve existing product authority. Keep unresolved product decisions explicit rather than inventing approval.
 
 Write `/output/envelope.json` using the supplied schema and identity. A complete proposal returns `passed` with gate `planned`; it is a candidate for owner review, not approved implementation. Return `blocked` with the precise missing decision when the proposal cannot be completed. The separate publisher checks the file boundary, runs OpenSpec strict validation and opens a proposal PR or updates the existing PR identified by `context.proposalReview`. The engine writes no repository files and has no GitHub credentials. End after the envelope; the trusted adapter records gh-aw completion.
