@@ -74,9 +74,9 @@ export function resolveModelProfile({ project = null, operator, worker, profile,
   return { mode: name ? 'profile' : 'direct', profile: name, ...selected, engineModel: `${selected.model}#${selected.reasoningEffort}`, source, fields: name ? { model: own(override, 'model') ? 'operator' : 'project', reasoningEffort: own(override, 'reasoningEffort') ? 'operator' : 'project' } : { model: directSource, reasoningEffort: directSource }, capabilityEvidence: 'operator-configuration-only' };
 }
 
-export function modelExecutionReceipt(selection) {
+export function modelExecutionReceipt(selection, executionSelection) {
   return {
-    requested: { profile: selection.profile, model: selection.model, reasoningEffort: selection.reasoningEffort },
+    requested: { profile: selection.profile, model: selection.model, reasoningEffort: selection.reasoningEffort, ...(executionSelection ? { selector: executionSelection } : {}) },
     resolved: selection,
     providerReported: { model: null, reasoningEffort: null, status: 'unverified', reason: 'The current adapter has no authenticated provider-settings receipt' },
     billing: { route: 'unchanged', actualCost: null, estimatedApiEquivalentCost: null, subscriptionUsage: null },

@@ -132,7 +132,7 @@ test('oversized diagnostics cannot stop execution or leak partial secrets, and f
 test('profile adapter forwards two worker variants, marks receipts unverified and never falls back', async () => {
   const { mkdir, chmod } = await import('node:fs/promises');
   const { spawnSync } = await import('node:child_process');
-  for (const scenario of ['plan', 'fast', 'apply-review', 'unavailable', 'provider-error']) {
+  for (const scenario of ['plan', 'fast', 'apply-review', 'unavailable', 'provider-error', 'execution', 'denied']) {
     const root = await mkdtemp(join(tmpdir(), 'lighthouse-models-'));
     try {
       const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
@@ -141,11 +141,11 @@ test('profile adapter forwards two worker variants, marks receipts unverified an
       await writeFile(join(work, '.lighthouse/models.json'), JSON.stringify({ schemaVersion: 1, workers: { refine: 'plan', propose: 'plan', review: 'fast', 'apply-review': 'fast' }, profiles: { plan: { model: 'openai/test-sol', reasoningEffort: 'high' }, fast: { model: 'openai/test-luna', reasoningEffort: 'medium' } } }));
       execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', '.']);
       const stage = scenario === 'apply-review' ? 'propose' : scenario === 'fast' ? 'review' : 'refine';
-      const request = { runId: 'd'.repeat(64), stage, issue: 1, sourceRevision: 'e'.repeat(40) };
+      const request = { runId: 'd'.repeat(64), stage, issue: 1, sourceRevision: 'e'.repeat(40), ...(['execution', 'denied'].includes(scenario) ? { modelSelection: { model: 'openai/test-luna', reasoningEffort: 'medium' } } : {}) };
       const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage, gate: stage === 'propose' ? 'planned' : stage === 'refine' ? 'ready' : null, status: scenario === 'apply-review' ? 'blocked' : 'passed', evidence: [{ id: 'fixture', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Fixture only.' } };
       await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Fixture');
       if (scenario === 'unavailable') for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await writeFile(join(runDir, file), 'stale output');
-      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'legacy-unchanged', lock: join(root, 'lock'), modelProfiles: { schemaVersion: 1, enabled: true }, modelCapabilities: { 'openai/test-sol': { available: scenario !== 'unavailable', tools: true, reasoningEfforts: ['high'] }, 'openai/test-luna': { available: true, tools: true, reasoningEfforts: ['medium'] } } }));
+      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'legacy-unchanged', lock: join(root, 'lock'), modelProfiles: { schemaVersion: 2, enabled: true, allowExecutionSelection: scenario === 'execution' }, modelCapabilities: { 'openai/test-sol': { available: scenario !== 'unavailable', tools: true, reasoningEfforts: ['high'] }, 'openai/test-luna': { available: true, tools: true, reasoningEfforts: ['medium'] } } }));
       const callsFile = join(root, 'calls.jsonl'), shim = join(bin, 'docker');
       await writeFile(shim, `#!${process.execPath}
 const fs = require('node:fs'), args = process.argv.slice(2);
@@ -159,20 +159,21 @@ if(mount) {
 `);
       await chmod(shim, 0o755);
       const execution = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion'), LIGHTHOUSE_WORKER: scenario === 'apply-review' ? 'apply-review' : stage } });
-      if (scenario === 'unavailable') {
-        assert.notEqual(execution.status, 0); assert.match(execution.stderr, /unavailable/);
+      if (['unavailable', 'denied'].includes(scenario)) {
+        assert.notEqual(execution.status, 0); assert.match(execution.stderr, scenario === 'denied' ? /opt-in/ : /unavailable/);
         await assert.rejects(readFile(callsFile));
         for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await assert.rejects(readFile(join(runDir, file)));
       } else {
         const calls = (await readFile(callsFile, 'utf8')).trim().split('\n').map(JSON.parse);
         const agents = calls.filter(args => args.some(arg => arg.endsWith(',dst=/output')));
         assert.equal(agents.length, 1);
-        const model = ['fast', 'apply-review'].includes(scenario) ? 'openai/test-luna#medium' : 'openai/test-sol#high';
+        const model = ['fast', 'apply-review', 'execution'].includes(scenario) ? 'openai/test-luna#medium' : 'openai/test-sol#high';
         assert.ok(agents[0].includes(`ENGINE_MODEL=${model}`));
         assert.ok(!agents[0].some(arg => /(?:TIER|API_KEY)=/.test(arg)));
         const receipt = JSON.parse(await readFile(join(runDir, 'runtime.json'), 'utf8'));
         assert.equal(receipt.modelExecution.resolved.engineModel, model);
         assert.equal(receipt.modelExecution.providerReported.status, 'unverified');
+        if (scenario === 'execution') assert.deepEqual(receipt.modelExecution.requested.selector, request.modelSelection);
         if (scenario === 'provider-error') {
           assert.notEqual(execution.status, 0); assert.match(execution.stderr, /no model fallback/);
           await assert.rejects(readFile(join(root, 'completion')));
