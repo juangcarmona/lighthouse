@@ -79,3 +79,17 @@ test('product apply finalizer can publish the failure to the reviewed pull reque
     assert.match(section ?? '', /\n\s+pull-requests: write(?:\n|$)/, file);
   }
 });
+
+test('credential-free product provider receives the verified private checkout without starting an agent', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(new URL('../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.md', import.meta.url), 'utf8');
+  const lock = await readFile(new URL('../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.lock.yml', import.meta.url), 'utf8');
+  assert.match(source, /^if: "false"$/m);
+  assert.match(lock, /if: needs\.pre_activation\.outputs\.activated == 'true' && \(false\)/);
+  assert.match(source, /git -C product-source rev-parse HEAD/);
+  assert.match(source, /name: lighthouse-product-apply-source-\$\{\{ inputs\.issue \}\}-\$\{\{ github\.run_attempt \}\}/);
+  const apply = source.split('  apply:\n')[1].split('  publish:\n')[0];
+  assert.match(apply, /permissions: \{\}/);
+  assert.match(apply, /Restore the approved source/);
+  assert.doesNotMatch(apply, /ref: \$\{\{ needs\.prepare\.outputs\.head \}\}/);
+});
