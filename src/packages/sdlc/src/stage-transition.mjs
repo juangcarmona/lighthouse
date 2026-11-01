@@ -31,7 +31,7 @@ export async function signalProductApplyContinuation(api, issue, runId, checkpoi
 }
 
 export async function signalProductAlignment(api, request, envelope) {
-  if (request.worker !== 'product-change' || !request.dispatch || !request.productParent || request.productParent.pullRequest || request.productParent.review || request.replyTo || envelope.result?.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned') return false;
+  if (request.worker !== 'product-change' || !request.dispatch || !request.productParent || request.productParent.pullRequest || request.productParent.review || envelope.result?.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned') return false;
   if (validateStageEnvelope(envelope, request).length) throw Error('Invalid product alignment result');
   const repository = await api('');
   await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: request.productParent.stage, workflow: 'resume-aligned', after_run: String(request.workflowRunId) } });
@@ -116,7 +116,7 @@ export async function productGapAfterRun(api, repository, owner, event, readArti
 
 // Recheck the original parent and, when present, the authenticated answer to a
 // product question. The answer changes context; it does not approve product intent.
-export async function verifyProductParent(api, repository, owner, parent, issue, reports, currentBase, readArtifact = readActionsJson) {
+export async function verifyProductParent(api, repository, owner, parent, issue, reports, currentBase, readArtifact = readActionsJson, allowAligned = false) {
   const { feedback, ...original } = parent;
   const parentRun = await api(`actions/runs/${original.predecessor.runId}`);
   const observed = await productGapAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: parentRun.id, head_sha: parentRun.head_sha } }, readArtifact);
@@ -127,7 +127,7 @@ export async function verifyProductParent(api, repository, owner, parent, issue,
     if (run.path !== stagePath('product-change') || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== feedback.attempt) throw Error('Product answer execution is unavailable');
     const snapshot = await readArtifact(api, repository, run.id, `lighthouse-input-${issue.number}-${run.run_attempt}`, 'request.json');
     const envelope = await readArtifact(api, repository, run.id, `lighthouse-result-${issue.number}-${run.run_attempt}`, 'envelope.json');
-    if (!snapshot.dispatch || snapshot.issue !== issue.number || String(snapshot.workflowRunId) !== String(run.id) || snapshot.taskDigest !== feedback.taskDigest || snapshot.replyTo !== feedback.replyTo || snapshot.commentId !== feedback.commentId || JSON.stringify(snapshot.productParent) !== JSON.stringify(original) || validateStageEnvelope(envelope, snapshot).length || envelope.result.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'candidate') throw Error('Product answer execution does not bind the parent and candidate');
+    if (!snapshot.dispatch || snapshot.issue !== issue.number || String(snapshot.workflowRunId) !== String(run.id) || snapshot.taskDigest !== feedback.taskDigest || snapshot.replyTo !== feedback.replyTo || snapshot.commentId !== feedback.commentId || JSON.stringify(snapshot.productParent) !== JSON.stringify(original) || validateStageEnvelope(envelope, snapshot).length || envelope.result.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'candidate' && !(allowAligned && envelope.result.output?.productChange?.outcome === 'aligned')) throw Error('Product answer execution does not bind the parent and outcome');
     const origin = await loadDispatch(api, repository, owner, issue.number, snapshot.dispatch.commentId, run, readArtifact);
     await checkDispatchClaim(api, repository, issue.number, snapshot.dispatch, run.id);
     const answer = origin.request.event?.comment;
@@ -163,19 +163,19 @@ export async function productAlignmentAfterRun(api, repository, owner, event, re
   const inputs = artifacts.artifacts.filter(a => /^lighthouse-input-[1-9][0-9]*-[1-9][0-9]*$/.test(a.name) && a.name.endsWith(`-${run.run_attempt}`) && !a.expired);
   if (inputs.length !== 1) return null;
   const snapshot = await readArtifact(api, repository, run.id, inputs[0].name, 'request.json');
-  if (snapshot.worker !== 'product-change' || !snapshot.dispatch || !snapshot.productParent || snapshot.replyTo || inputs[0].name !== `lighthouse-input-${snapshot.issue}-${run.run_attempt}` || String(snapshot.workflowRunId) !== String(run.id)) return null;
+  if (snapshot.worker !== 'product-change' || !snapshot.dispatch || !snapshot.productParent || inputs[0].name !== `lighthouse-input-${snapshot.issue}-${run.run_attempt}` || String(snapshot.workflowRunId) !== String(run.id)) return null;
   const envelope = await readArtifact(api, repository, run.id, `lighthouse-result-${snapshot.issue}-${run.run_attempt}`, 'envelope.json');
   if (validateStageEnvelope(envelope, snapshot).length) throw Error('Invalid product alignment result');
-  if (envelope.result.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned' || envelope.result.output.productChange.entry !== 'parent-handoff') return null;
+  if (envelope.result.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned' || envelope.result.output.productChange.entry !== (snapshot.replyTo ? 'feedback' : 'parent-handoff')) return null;
   const origin = await loadDispatch(api, repository, owner, snapshot.issue, snapshot.dispatch.commentId, run, readArtifact);
-  if (origin.request.worker !== 'product-change' || origin.request.id !== snapshot.dispatch.requestId || origin.request.stage !== snapshot.stage || origin.request.sourceRevision !== snapshot.sourceRevision || origin.request.workflowRevision !== snapshot.workflowRevision || JSON.stringify(origin.request.productParent) !== JSON.stringify(snapshot.productParent) || origin.request.taskDigest !== snapshot.taskDigest) throw Error('Product alignment authority changed');
+  if (origin.request.worker !== 'product-change' || origin.request.id !== snapshot.dispatch.requestId || origin.request.stage !== snapshot.stage || origin.request.sourceRevision !== snapshot.sourceRevision || origin.request.workflowRevision !== snapshot.workflowRevision || !snapshot.replyTo && JSON.stringify(origin.request.productParent) !== JSON.stringify(snapshot.productParent) || origin.request.taskDigest !== snapshot.taskDigest) throw Error('Product alignment authority changed');
   await checkDispatchClaim(api, repository, snapshot.issue, snapshot.dispatch, run.id);
-  const parent = snapshot.productParent;
+  const parent = snapshot.replyTo ? { ...snapshot.productParent, feedback: { runId: String(run.id), attempt: run.run_attempt, taskDigest: snapshot.taskDigest, replyTo: snapshot.replyTo, commentId: snapshot.commentId } } : snapshot.productParent;
   if (parent.pullRequest || parent.review) return null;
   const reports = await issueComments(api, snapshot.issue);
   if (reports.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(`<!-- lighthouse-actions:${snapshot.runId} -->`) && c.body.includes(`<!-- lighthouse-stage:${snapshot.stage}:passed -->`)).length !== 1) throw Error('Product alignment publication is unavailable or ambiguous');
   const repo = await api(''), baseRevision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha, issue = await api(`issues/${snapshot.issue}`);
-  await verifyProductParent(api, repository, owner, parent, issue, reports, baseRevision, readArtifact);
+  await verifyProductParent(api, repository, owner, parent, issue, reports, baseRevision, readArtifact, true);
   if (issue.state !== 'open' || issue.labels?.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) throw Error('Product alignment continuation is paused');
   return { issue: snapshot.issue, stage: parent.stage, parent, alignmentRun: { runId: String(run.id), attempt: run.run_attempt }, baseRevision };
 }

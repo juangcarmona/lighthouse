@@ -83,6 +83,10 @@ test('an owner answer remains bound to its actual product question and original 
   snapshots.set(200, parentSnapshot); envelopes.set(200, parentEnvelope);
   const api = async path => {
     if (path === 'actions/runs/200/artifacts?per_page=100') return { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] };
+    if (path === 'actions/runs/350/artifacts?per_page=100') return { total_count: 1, artifacts: [{ name: 'lighthouse-input-18-1' }] };
+    if (path === '') return { default_branch: 'main' };
+    if (path === 'commits/main') return { sha: revision('b') };
+    if (path === 'issues/18') return issue;
     if (path.startsWith('issues/18/comments?')) return reports;
     let match = path.match(/^actions\/runs\/(\d+)\/attempts\/1$/); if (match) return routers.get(Number(match[1]));
     match = path.match(/^actions\/runs\/(\d+)$/); if (match) return runs.get(Number(match[1]));
@@ -107,6 +111,18 @@ test('an owner answer remains bound to its actual product question and original 
   reports.push({ user: bot, body: `<!-- lighthouse-actions:${answerSnapshot.runId} -->\n<!-- lighthouse-stage:refine:passed -->` });
   const parent = { ...original, feedback: { runId: '350', attempt: 1, taskDigest: answerSnapshot.taskDigest, replyTo: priorSnapshot.runId, commentId: ownerAnswer.id } };
   assert.equal(await verifyProductParent(api, repository, owner, parent, issue, reports, revision('b'), readArtifact), true);
+  const aligned = result(answerSnapshot.runId, 'refine', 'passed', { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'feedback', affectedAreas: [], decisions: [] } });
+  envelopes.set(350, aligned);
+  await assert.rejects(verifyProductParent(api, repository, owner, parent, issue, reports, revision('b'), readArtifact), /parent and outcome/);
+  const observed = await productAlignmentAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: 350, head_sha: revision('a') } }, readArtifact);
+  assert.deepEqual(observed.parent.feedback, parent.feedback);
+  const signalled = [];
+  assert.equal(await signalProductAlignment(async (path, method, body) => { if (!path) return { default_branch: 'main' }; signalled.push(body); }, answerSnapshot, aligned), true);
+  assert.equal(signalled[0].inputs.after_run, '350');
+  reports[2] = { ...ownerAnswer, body: 'Changed after the answer.' };
+  await assert.rejects(productAlignmentAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: 350, head_sha: revision('a') } }, readArtifact), /authenticated owner reply|owner intent changed/);
+  reports[2] = ownerAnswer;
+  envelopes.set(350, result(answerSnapshot.runId, 'refine', 'passed', { productChange: candidate }));
   answerSnapshot.answerHistory[0].question = 'A different question?';
   await assert.rejects(verifyProductParent(api, repository, owner, parent, issue, reports, revision('b'), readArtifact), /pending question/);
   answerSnapshot.answerHistory[0].question = question;
