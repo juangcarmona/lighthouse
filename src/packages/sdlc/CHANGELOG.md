@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.5
+
+### Patch Changes
+
+- e025ec5: # Stale PR handoffs
+
+  Ignore delayed PR events whose open or draft state no longer matches GitHub.
+
 ## 0.18.4
 
 ### Patch Changes
