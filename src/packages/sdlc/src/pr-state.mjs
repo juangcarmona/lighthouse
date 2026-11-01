@@ -4,6 +4,14 @@ import { validateProductCheckpoint, productProposalProof } from './product-chang
 
 const marker = /<!-- lighthouse-pr-state:(\{[^\n]*\}) -->/;
 
+export function isCurrentPullRequestEvent(action, pr) {
+  if (action === 'converted_to_draft') return pr?.state === 'open' && pr.draft === true;
+  if (action === 'ready_for_review') return pr?.state === 'open' && pr.draft === false;
+  if (action === 'closed') return pr?.state === 'closed';
+  if (action === 'reopened') return pr?.state === 'open';
+  return false;
+}
+
 export function productOnlyCheckpoint(pr) {
   if (pr?.body?.includes('<!-- lighthouse-product-implementation:') || productProposalProof(pr)) return null;
   const matches = [...(pr?.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):(\{[^\n]*\}) -->/g)];
