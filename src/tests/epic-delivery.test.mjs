@@ -82,6 +82,15 @@ test('independent children can run concurrently; dependency edges block C', () =
   assert.deepEqual(states(obs), ['accepted', 'implementation-eligible', 'implementation-eligible']);
 });
 
+test('an accepted-looking prerequisite with an unresolved or malformed question cannot unblock dependants', () => {
+  for (const questions of [['Which outcome?'], 'invalid', [null]]) {
+    const obs = observation(); obs.children[0] = { ...accepted('a'), questions };
+    assert.equal(states(obs)[2], 'waiting-dependencies');
+  }
+  const obs = observation(); obs.children[0] = { ...accepted('a'), questions: [] };
+  assert.equal(states(obs)[2], 'implementation-eligible');
+});
+
 test('capacity includes running children and cancels no existing work', () => {
   const obs = observation(); obs.capacity = 1; obs.children[0].state = 'running';
   assert.deepEqual(states(obs), ['running', 'waiting-capacity', 'waiting-dependencies']);

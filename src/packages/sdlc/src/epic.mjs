@@ -51,7 +51,7 @@ export function assessEpic(plan, observation) {
   }
   if (errors.length) return { schemaVersion: 1, status: 'invalid', children: [], aggregate: 'blocked', errors };
   const byId = new Map(children.map(child => [child.id, child]));
-  const accepted = child => child?.authenticated === true && child?.state === 'accepted' && child?.pr?.merged === true && child.pr.base === observation.epicBranch && sha(child.pr.head) && child.acceptance?.head === child.pr.head && sha(child.acceptance?.baseSha) && child.acceptance?.checks === 'passed' && child.acceptance?.ownerDecision === true && child.acceptance?.included === true;
+  const accepted = child => child?.authenticated === true && child?.state === 'accepted' && (child.questions === undefined || Array.isArray(child.questions) && child.questions.length === 0) && child?.pr?.merged === true && child.pr.base === observation.epicBranch && sha(child.pr.head) && child.acceptance?.head === child.pr.head && sha(child.acceptance?.baseSha) && child.acceptance?.checks === 'passed' && child.acceptance?.ownerDecision === true && child.acceptance?.included === true;
   let slots = Math.max(0, observation.capacity - children.filter(child => child?.state === 'running').length);
   const results = checked.order.map(id => {
     const slice = plan.slices.find(item => item.id === id), child = byId.get(id);
