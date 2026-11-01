@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.13
+
+### Patch Changes
+
+- a102db2: # Product worker parent stage
+
+  Keep Product Change workers read-only when their authenticated parent is an implementation stage.
+
 ## 0.18.12
 
 ### Patch Changes
