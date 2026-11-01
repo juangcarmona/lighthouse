@@ -152,3 +152,21 @@ test('credential-free product provider receives the verified private checkout wi
   assert.match(apply, /Restore the approved source/);
   assert.doesNotMatch(apply, /ref: \$\{\{ needs\.prepare\.outputs\.head \}\}/);
 });
+
+test('resumed product parents can read their current PR during preparation and publication', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const base of ['../packages/sdlc/workflows/', '../../.github/workflows/']) {
+    for (const stage of ['triage', 'refine', 'implement']) {
+      for (const suffix of ['.md', '.lock.yml']) {
+        const file = `${base}lighthouse-sdlc-${stage}${suffix}`;
+        const workflow = await readFile(new URL(file, import.meta.url), 'utf8');
+        const prepare = workflow.split('name: Authorize and reserve issue')[1]?.split('\n    env:')[0];
+        assert.match(prepare ?? '', /\n\s+pull-requests: (?:read|write)(?:\n|$)/, file);
+        if (stage !== 'implement') {
+          const publish = workflow.split('name: Validate, publish and release')[1]?.split('\n    env:')[0];
+          assert.match(publish ?? '', /\n\s+pull-requests: (?:read|write)(?:\n|$)/, file);
+        }
+      }
+    }
+  }
+});
