@@ -2,6 +2,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { reviewText, productApplyHandoff } from '../packages/sdlc/src/product-change-actions.mjs';
 import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
+import { productApplyRequest } from '../packages/sdlc/src/issue-actions.mjs';
+
+test('product apply preparation binds the current issue, decision and dispatch', () => {
+  const current = { issue: 7, pullRequest: 8, head: 'head', changeName: 'example', approval: { reviewKey: 'key' }, binding: {}, checkpoint: {} };
+  const dispatch = { commentId: 9, receipt: { digest: 'digest' }, request: { id: 'request', worker: 'apply-product-change', productApproval: { pullRequest: 8, head: 'head', reviewKey: 'key', changeName: 'example' } } };
+  const input = { current, dispatch, issueNumber: 7, issue: { state: 'open', labels: [] }, repository: 'owner/repo', owner: 'owner' };
+  assert.deepEqual(productApplyRequest(input).dispatch, { commentId: 9, requestId: 'request', digest: 'digest' });
+  assert.throws(() => productApplyRequest({ ...input, issueNumber: 6 }), /approval changed/);
+  assert.throws(() => productApplyRequest({ ...input, issue: { state: 'open', labels: [{ name: 'future' }] } }), /blocked/);
+});
 
 test('published product candidate reports host validation instead of stale agent pending text', () => {
   const input = { worker: 'product-change', outcome: 'candidate', reviewTarget: true, agentMessage: 'Validation is pending.' };
@@ -58,5 +68,14 @@ test('product apply preparation can claim its authenticated dispatch', async () 
     const workflow = await readFile(new URL(file, import.meta.url), 'utf8');
     const section = workflow.split('name: Recheck product approval')[1]?.split('\n    env:')[0];
     assert.match(section ?? '', /\n\s+issues: write\n/, file);
+  }
+});
+
+test('product apply finalizer can publish the failure to the reviewed pull request', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const file of ['../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.md', '../packages/sdlc/workflows/lighthouse-sdlc-apply-product-change.lock.yml']) {
+    const workflow = await readFile(new URL(file, import.meta.url), 'utf8');
+    const section = workflow.split('name: Report an interrupted product apply')[1]?.split('\n    env:')[0];
+    assert.match(section ?? '', /\n\s+pull-requests: write(?:\n|$)/, file);
   }
 });
