@@ -98,6 +98,7 @@ jobs:
         with:
           ref: ${{ steps.prepare.outputs.head }}
           path: product-source
+          fetch-depth: 0
           persist-credentials: false
       - name: Preserve the approved source for the credential-free provider
         if: steps.prepare.outputs.eligible == 'true'

@@ -87,6 +87,7 @@ test('credential-free product provider receives the verified private checkout wi
   assert.match(source, /^if: "false"$/m);
   assert.match(lock, /if: needs\.pre_activation\.outputs\.activated == 'true' && \(false\)/);
   assert.match(source, /git -C product-source rev-parse HEAD/);
+  assert.match(source, /path: product-source\n\s+fetch-depth: 0\n\s+persist-credentials: false/);
   assert.match(source, /name: lighthouse-product-apply-source-\$\{\{ inputs\.issue \}\}-\$\{\{ github\.run_attempt \}\}/);
   const apply = source.split('  apply:\n')[1].split('  publish:\n')[0];
   assert.match(apply, /permissions: \{\}/);
