@@ -95,7 +95,8 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   const id = digest(`${repository}:${issue.number}:${dispatch.request.stage}:${run.id}:${run.run_attempt}`);
   const marker = `<!-- lighthouse-actions:${id} -->`;
   if (!interrupted && comments.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker))) return 'present';
-  if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => ['agent-working', 'human-working', dispatch.request.stage].includes(l.name)) || dispatch.request.sourceRevision !== revision || dispatch.request.workflowRevision !== workflowRevision || dispatch.request.taskDigest !== intent(issue, comments, owner)) return 'uncertain';
+  const incompatibleStage = l => ['triage', 'refine', 'propose', 'implement'].includes(l.name) && (!interrupted || l.name !== dispatch.request.stage);
+  if (issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => ['agent-working', 'human-working'].includes(l.name) || incompatibleStage(l)) || dispatch.request.sourceRevision !== revision || dispatch.request.workflowRevision !== workflowRevision || dispatch.request.taskDigest !== intent(issue, comments, owner)) return 'uncertain';
   let snapshot, envelope;
   try {
     snapshot = await readArtifact(api, repository, run.id, `lighthouse-input-${issue.number}-${run.run_attempt}`, 'request.json');
@@ -108,7 +109,7 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   const expectedStatus = result.status === 'passed' ? 'completed' : question ? 'waiting' : 'blocked';
   if (!interrupted && dispatch.receipt.status !== expectedStatus) return 'uncertain';
   const projection = resultHandoffState({ status: result.status, stage: snapshot.stage, question });
-  if (!projection.label || !issue.labels.some(l => l.name === projection.label) || issue.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label)) return 'uncertain';
+  if (!projection.label || (!issue.labels.some(l => l.name === projection.label) && !(interrupted && issue.labels.some(l => l.name === snapshot.stage))) || issue.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label)) return 'uncertain';
   let action = question ? `Owner: ${question} Reply here.` : 'None.';
   let next = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : 'Any continuation follows the configured authorization.';
   if (snapshot.stage === 'refine' && result.status === 'passed') {
@@ -121,8 +122,16 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
   const fresh = await api(`issues/${issue.number}`), freshComments = await issueComments(api, issue.number);
   const currentRepo = await api(''), currentRevision = (await api(`commits/${encodeURIComponent(currentRepo.default_branch)}`)).sha;
-  if (currentRevision !== revision || fresh.state !== 'open' || fresh.user?.login !== owner || fresh.pull_request || fresh.labels.some(l => ['agent-working', 'human-working', dispatch.request.stage].includes(l.name)) || !fresh.labels.some(l => l.name === projection.label) || fresh.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label) || intent(fresh, freshComments, owner) !== dispatch.request.taskDigest) return 'uncertain';
+  if (currentRevision !== revision || fresh.state !== 'open' || fresh.user?.login !== owner || fresh.pull_request || fresh.labels.some(l => ['agent-working', 'human-working'].includes(l.name) || incompatibleStage(l)) || (!fresh.labels.some(l => l.name === projection.label) && !(interrupted && fresh.labels.some(l => l.name === snapshot.stage))) || fresh.labels.some(l => ['ready', 'triaged', 'needs-info', 'waiting-review', 'execution-failed', 'pr-draft', 'pr-ready'].includes(l.name) && l.name !== projection.label) || intent(fresh, freshComments, owner) !== dispatch.request.taskDigest) return 'uncertain';
   if (freshComments.some(c => c.user?.login === 'github-actions[bot]' && Number(c.id) > Number(dispatch.commentId) && c.body?.includes('<!-- lighthouse-dispatch:'))) return 'uncertain';
+  if (interrupted && fresh.labels.some(l => l.name === snapshot.stage)) {
+    if (!fresh.labels.some(l => l.name === projection.label)) {
+      await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
+      await api(`issues/${issue.number}/labels`, 'POST', { labels: [projection.label] });
+    }
+    await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
+    await api(`issues/${issue.number}/labels/${snapshot.stage}`, 'DELETE');
+  }
   if (freshComments.some(c => c.user?.login === 'github-actions[bot]' && c.body?.includes(marker))) {
     if (interrupted) await finishDispatch(api, repository, issue.number, dispatch.commentId, run.id, question ? 'question' : result.status);
     return 'present';
