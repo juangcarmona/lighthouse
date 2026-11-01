@@ -4,4 +4,4 @@
 
 # Epic runner capacity
 
-Keep counting an active implementation when its child issue is closed.
+Keep counting active or reserved work when its child issue is closed.

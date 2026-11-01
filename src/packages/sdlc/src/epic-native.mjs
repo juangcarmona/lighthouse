@@ -143,7 +143,7 @@ export async function checkEpicCapacity({ api, repository, owner, child, current
     if (!['open', 'closed'].includes(issue.state) || issue.pull_request) throw Error('Epic child state is uncertain');
     const comments = await issueComments(api, issue.number);
     const active = comments.filter(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:')).map(comment => readDispatchReceipt(comment, repository, issue.number)).some(receipt => receipt.stage === 'implement' && receipt.id !== excludeRequest && ['requested', 'running', 'unknown'].includes(receipt.status));
-    if (active || issue.state === 'open' && issue.number !== child && issue.labels.some(label => label.name === 'agent-working')) occupied++;
+    if (active || issue.number !== child && issue.labels.some(label => label.name === 'agent-working')) occupied++;
   }
   if (occupied >= capacity) throw Error('Epic runner capacity is occupied');
   return { occupied, capacity };

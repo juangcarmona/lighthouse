@@ -52,4 +52,6 @@ test('closing a child does not free capacity while its implementation is active'
   f.receipt.status = 'completed';
   f.comments.get(11)[0].body = dispatchReceiptBody(repository, f.receipt);
   assert.deepEqual(await f.run(), { occupied: 0, capacity: 1 });
+  f.issues[1].labels.push({ name: 'agent-working' });
+  await assert.rejects(f.run(), /capacity is occupied/);
 });
