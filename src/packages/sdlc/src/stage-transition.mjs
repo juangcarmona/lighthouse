@@ -31,7 +31,7 @@ export async function signalProductApplyContinuation(api, issue, runId, checkpoi
 }
 
 export async function signalProductAlignment(api, request, envelope) {
-  if (request.worker !== 'product-change' || !request.dispatch || !request.productParent || request.productParent.pullRequest || request.productParent.review || envelope.result?.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned') return false;
+  if (request.worker !== 'product-change' || !request.dispatch || !request.productParent || request.productParent.review || request.productParent.pullRequest && request.productParent.stage !== 'implement' || envelope.result?.status !== 'passed' || envelope.result.output?.productChange?.outcome !== 'aligned') return false;
   if (validateStageEnvelope(envelope, request).length) throw Error('Invalid product alignment result');
   const repository = await api('');
   await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: repository.default_branch, inputs: { issue: String(request.issue), stage: request.productParent.stage, workflow: 'resume-aligned', after_run: String(request.workflowRunId) } });
@@ -171,13 +171,15 @@ export async function productAlignmentAfterRun(api, repository, owner, event, re
   if (origin.request.worker !== 'product-change' || origin.request.id !== snapshot.dispatch.requestId || origin.request.stage !== snapshot.stage || origin.request.sourceRevision !== snapshot.sourceRevision || origin.request.workflowRevision !== snapshot.workflowRevision || !snapshot.replyTo && JSON.stringify(origin.request.productParent) !== JSON.stringify(snapshot.productParent) || origin.request.taskDigest !== snapshot.taskDigest) throw Error('Product alignment authority changed');
   await checkDispatchClaim(api, repository, snapshot.issue, snapshot.dispatch, run.id);
   const parent = snapshot.replyTo ? { ...snapshot.productParent, feedback: { runId: String(run.id), attempt: run.run_attempt, taskDigest: snapshot.taskDigest, replyTo: snapshot.replyTo, commentId: snapshot.commentId } } : snapshot.productParent;
-  if (parent.pullRequest || parent.review) return null;
+  if (parent.review || parent.pullRequest && parent.stage !== 'implement') return null;
   const reports = await issueComments(api, snapshot.issue);
   if (reports.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(`<!-- lighthouse-actions:${snapshot.runId} -->`) && c.body.includes(`<!-- lighthouse-stage:${snapshot.stage}:passed -->`)).length !== 1) throw Error('Product alignment publication is unavailable or ambiguous');
   const repo = await api(''), baseRevision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha, issue = await api(`issues/${snapshot.issue}`);
   await verifyProductParent(api, repository, owner, parent, issue, reports, baseRevision, readArtifact, true);
   if (issue.state !== 'open' || issue.labels?.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) throw Error('Product alignment continuation is paused');
-  return { issue: snapshot.issue, stage: parent.stage, parent, alignmentRun: { runId: String(run.id), attempt: run.run_attempt }, baseRevision };
+  const alignment = { issue: snapshot.issue, stage: parent.stage, parent, alignmentRun: { runId: String(run.id), attempt: run.run_attempt }, baseRevision, ...(parent.pullRequest ? { defaultBranch: repo.default_branch } : {}) };
+  if (parent.pullRequest) (await import('./proposal-review.mjs')).checkAlignedImplementationPullRequest(await api(`pulls/${parent.pullRequest.number}`), repository, alignment);
+  return alignment;
 }
 
 // A product apply is usable by a parent only when its original approval, provider

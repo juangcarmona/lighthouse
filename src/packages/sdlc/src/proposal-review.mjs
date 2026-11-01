@@ -31,6 +31,12 @@ export function checkImplementationPullRequest(pr, repo, expected) {
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };
 }
 
+export function checkAlignedImplementationPullRequest(pr, repository, alignment) {
+  const parent = alignment?.parent, expected = parent?.pullRequest;
+  if (parent?.stage !== 'implement' || parent.review || !expected || pr?.number !== expected.number || !pr.draft) throw Error('Aligned implementation PR is not eligible');
+  return checkImplementationPullRequest(pr, repository, { issue: parent.issue, head: expected.head, branch: expected.branch, base: alignment.defaultBranch });
+}
+
 export async function loadProposalReview(api, repo, owner, event, eventName, implementation = false) {
   const number = reviewTarget(event, eventName);
   if (!number) return null;
