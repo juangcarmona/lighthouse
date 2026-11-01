@@ -43,3 +43,12 @@ test('epic capacity fails closed when inventory or reservations are uncertain', 
   f.issues[0].body += ' changed <!-- lighthouse-epic:bad -->';
   await assert.rejects(f.run(), /inventory changed/);
 });
+
+test('closing a child does not free capacity while its implementation is active', async () => {
+  const f = fixture();
+  f.issues[1].state = 'closed';
+  f.args.capacity = 1;
+  await assert.rejects(f.run(), /capacity is occupied/);
+  f.args.excludeRequest = f.requestId;
+  assert.deepEqual(await f.run(), { occupied: 0, capacity: 1 });
+});
