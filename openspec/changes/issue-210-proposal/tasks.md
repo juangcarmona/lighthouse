@@ -14,7 +14,7 @@
 ## 2. Configuration resolution and compatibility
 
 - [x] 2.1 Implement version 2 complete direct selectors and optional safe named presets, retaining version 1 semantics; document examples with at least four combinations and test same-model/different-effort and different-model/same-effort cases.
-- [ ] 2.2 Implement the documented precedence and operator execution opt-in/capability checks; test every precedence boundary, malformed/partial settings, unknown models/efforts, unavailable tools, extra credential/tier/limit keys and fail-closed behavior.
+- [x] 2.2 Implement the documented precedence and operator execution opt-in/capability checks; test every precedence boundary, malformed/partial settings, unknown models/efforts, unavailable tools, extra credential/tier/limit keys and fail-closed behavior.
 - [x] 2.3 Document migration, downgrade and opt-out; test exact legacy forwarding, disabling opt-in, version 1 delegated tasks and historical receipt compatibility.
 
 <!-- pdac:cite id="FR-PROFILE-DELEGATION" digest="sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b" -->
