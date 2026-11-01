@@ -4,6 +4,8 @@ For labels, everyday actions and automatic continuation, start with the [deliver
 
 ## Installation and runtime
 
+GitHub must allow Actions to create pull requests for workers that publish proposals or candidates. GitHub groups that setting with permission for Actions to approve pull requests; enabling it does not grant Lighthouse a product decision or merge authorization. Keep the repository's default workflow permission read-only and grant write access only to the publishing jobs.
+
 The optional router accepts owner-added `triage` and `refine` labels, owner replies to pending questions and owner manual dispatches. It dispatches the compiled gh-aw refinement worker as a separate execution. With `--with-propose`, an owner-added `propose` label or explicit manual stage selection dispatches the proposal worker independently. Actions authorizes the request, reserves the issue, runs OpenCode, validates its result and publishes through a separately credentialed job. SoFa can observe these runs without participating in execution.
 
 Preview installation with `node node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs <repository> <immutable-lighthouse-commit>`. Install gh-aw v0.93.2, then add `--apply` to write and compile the selected sources. Existing different files require review and `--replace-reviewed`. Commit the Markdown, router, shared engine definition, generated lock and action pins together. Set the repository variable `LIGHTHOUSE_AUTOMATION_ENABLED=true` after provisioning the runner and disabling previous routers.
