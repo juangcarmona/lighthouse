@@ -78,6 +78,7 @@ node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-unat
 node -e 'if (JSON.parse(require("fs").readFileSync(process.argv[1])).timeoutSeconds !== 120) process.exit(1)' "$validation_dir/consumer/.lighthouse/unattended.json"
 printf 'self-hosted-runner:\n  labels: [lighthouse-workflow]\n' > "$validation_dir/consumer/.github/actionlint.yaml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+"$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/package/workflows/lighthouse-sdlc-epic.yml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-worker-maintenance.yml"
 "$validation_dir/actionlint" -shellcheck='' -ignore 'unexpected key "queue" for "concurrency" section' -config-file "$validation_dir/consumer/.github/actionlint.yaml" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended.yml"
 # gh-aw 0.93.2 emits new Actions contexts/queue and optional empty outputs that
