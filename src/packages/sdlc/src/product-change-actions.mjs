@@ -346,6 +346,35 @@ export function productApprovalFromGitHub({ eventName, event, owner, repository,
   return verifyProductDecision({ decision, actor, actorType, owner, source, submitted, currentBinding, observedBinding: currentBinding, decisionId });
 }
 
+export function checkCurrentProductDecision({ eventName, event, current, repository, number }) {
+  const original = eventName === 'issue_comment' ? event.comment : event.review;
+  if (!original || !current || !/^[1-9][0-9]*$/.test(String(original.id ?? '')) || String(current.id) !== String(original.id) || current.body !== original.body || current.user?.login !== original.user?.login || current.user?.type !== original.user?.type) throw Error('Product decision was edited, deleted or replaced');
+  if (eventName === 'issue_comment') {
+    if (current.issue_url !== `https://api.github.com/repos/${repository}/issues/${number}` || !original.updated_at || current.updated_at !== original.updated_at) throw Error('Product decision comment changed or belongs to another PR');
+  } else if (current.pull_request_url !== `https://api.github.com/repos/${repository}/pulls/${number}` || !original.submitted_at || current.submitted_at !== original.submitted_at || typeof current.state !== 'string' || typeof original.state !== 'string' || current.state.toUpperCase() !== original.state.toUpperCase() || current.state.toUpperCase() === 'DISMISSED') throw Error('Product decision review changed or was dismissed');
+}
+
+export async function checkNoLaterProductObjection(api, number, owner, decision, originalTime) {
+  const started = Date.parse(originalTime ?? '');
+  if (!Number.isFinite(started)) throw Error('Product decision time is unavailable');
+  const comments = await (await import('./stage-dispatch.mjs')).issueComments(api, number);
+  const reviews = [];
+  for (let page = 1; page <= 10; page++) {
+    const rows = await api(`pulls/${number}/reviews?per_page=100&page=${page}`);
+    if (!Array.isArray(rows)) throw Error('Product review history is unavailable');
+    reviews.push(...rows);
+    if (rows.length < 100) break;
+    if (page === 10) throw Error('Product review history exceeds bounds');
+  }
+  for (const entry of [...comments, ...reviews]) {
+    if (entry.user?.login !== owner || entry.user?.type !== 'User') continue;
+    const next = parseProductDecision(entry.body);
+    if (!next || next.changeName !== decision.changeName || next.reviewKey !== decision.reviewKey || !['request-changes', 'answer'].includes(next.action)) continue;
+    const at = Date.parse(entry.submitted_at ?? entry.created_at ?? '');
+    if (!Number.isFinite(at) || at >= started) throw Error('A later owner decision requires product review before apply');
+  }
+}
+
 export async function loadProductApproval(api, { eventName, event, owner, repository, root }) {
   let body, actor, actorType, source, decisionId;
   if (eventName === 'issue_comment' && event.action === 'created' && event.issue?.pull_request) {
@@ -356,6 +385,10 @@ export async function loadProductApproval(api, { eventName, event, owner, reposi
   const decision = parseProductDecision(body);
   if (!decision || !['approve', 'request-changes', 'answer'].includes(decision.action)) return null;
   const number = event.pull_request?.number ?? event.issue?.number;
+  if (!Number.isSafeInteger(number) || number < 1 || !/^[1-9][0-9]*$/.test(decisionId)) throw Error('Product decision identity is invalid');
+  const decisionPath = eventName === 'issue_comment' ? `issues/comments/${decisionId}` : `pulls/${number}/reviews/${decisionId}`;
+  checkCurrentProductDecision({ eventName, event, current: await api(decisionPath), repository, number });
+  if (decision.action === 'approve') await checkNoLaterProductObjection(api, number, owner, decision, eventName === 'issue_comment' ? event.comment.created_at : event.review.submitted_at);
   const pr = await api(`pulls/${number}`);
   if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository) throw Error('Product approval target is not a current Lighthouse PR');
   const markers = [...(pr.body ?? '').matchAll(/<!-- lighthouse-product-change(?:-review|:review):(\{[^\n]*\}) -->/g)];

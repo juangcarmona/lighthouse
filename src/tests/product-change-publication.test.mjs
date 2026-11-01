@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { publishProductChangePullRequest, loadProductApproval, publishProductApply } from '../packages/sdlc/src/product-change-actions.mjs';
+import { publishProductChangePullRequest, loadProductApproval, publishProductApply, checkCurrentProductDecision } from '../packages/sdlc/src/product-change-actions.mjs';
 import { validateProductChangeFiles, authorizeProductApply, createProductApplyReceipt } from '../packages/sdlc/src/product-change.mjs';
 import { isProductOnlyPullRequest } from '../packages/sdlc/src/pr-state.mjs';
 
@@ -13,7 +13,7 @@ test('product review and approval use the same markers, including legacy publish
   const model = 'Accepted model\n', baselineDigest = hash(`example.md\0${hash(model)}\n`);
   const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest, baselineDigest, affectedAreas: [], decisions: [] };
   const snapshot = { issue, stage: 'propose', title: 'Example', defaultBranch: 'main', sourceRevision: base, runId: 'c'.repeat(64), workflowRunId: '100', workflowRevision: base, authorizationDigest: 'd'.repeat(64), policyDigest: 'e'.repeat(64), taskDigest: 'f'.repeat(64) };
-  let pr, writes = 0, appliedTree;
+  let pr, writes = 0, appliedTree, decisionComment, laterDecisions = [], reviews = [];
   const api = async (path, method = 'GET', body, optional = false) => {
     if (method !== 'GET') writes++;
     if (path === 'pulls?state=open&per_page=100') return [];
@@ -37,6 +37,9 @@ test('product review and approval use the same markers, including legacy publish
     if (path === `contents/.product/config.yaml?ref=${head}` && optional) return null;
     if (path === 'git/blobs/blob') return { encoding: 'base64', size: Buffer.byteLength(model), content: Buffer.from(model).toString('base64') };
     if (path === 'issues/18') return { number: 18, state: 'open', labels: [] };
+    if (path === 'issues/comments/9') return decisionComment;
+    if (path === 'issues/7/comments?per_page=100&page=1') return laterDecisions;
+    if (path === 'pulls/7/reviews?per_page=100&page=1') return reviews;
     if (path === 'issues/18/comments?per_page=100') return [];
     if (path === 'issues/18/comments' && method === 'POST') return {};
     throw Error(`Unexpected request: ${method} ${path}`);
@@ -45,9 +48,20 @@ test('product review and approval use the same markers, including legacy publish
   assert.match(pr.body, /<!-- lighthouse-product-change-review:/);
   assert.match(pr.body, /<!-- lighthouse-product-change-checkpoint:/);
   assert.equal(isProductOnlyPullRequest(pr), true);
-  const event = { action: 'created', issue: { number: 7, pull_request: {} }, comment: { id: 9, user: { login: 'owner', type: 'User' }, body: `/product-change approve example ${published.binding.key}` } };
+  const event = { action: 'created', issue: { number: 7, pull_request: {} }, comment: { id: 9, user: { login: 'owner', type: 'User' }, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', issue_url: 'https://api.github.com/repos/owner/repo/issues/7', body: `/product-change approve example ${published.binding.key}` } };
+  decisionComment = structuredClone(event.comment);
   const before = writes;
   assert.equal((await loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository })).approval.reviewKey, published.binding.key);
+  for (const changed of [{ body: 'Approval withdrawn' }, { updated_at: '2026-01-02T00:00:00Z' }, { user: { login: 'other', type: 'User' } }, { issue_url: 'https://api.github.com/repos/owner/repo/issues/8' }]) {
+    decisionComment = { ...event.comment, ...changed };
+    await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /decision.*(edited|changed)/i);
+  }
+  decisionComment = structuredClone(event.comment);
+  laterDecisions = [{ user: { login: 'owner', type: 'User' }, created_at: '2026-01-02T00:00:00Z', body: `/product-change request-changes example ${published.binding.key}\nPlease revise.` }];
+  await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /later owner decision/);
+  laterDecisions = []; reviews = [{ user: { login: 'owner', type: 'User' }, submitted_at: '2026-01-02T00:00:00Z', body: `/product-change request-changes example ${published.binding.key}\nPlease revise.` }];
+  await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /later owner decision/);
+  reviews = [];
   pr.body = pr.body.replace('lighthouse-product-change-review:', 'lighthouse-product-change:review:').replace('lighthouse-product-change-checkpoint:', 'lighthouse-product-change:checkpoint:');
   assert.equal(isProductOnlyPullRequest(pr), true);
   assert.equal((await loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository })).approval.reviewKey, published.binding.key);
@@ -73,4 +87,12 @@ test('product review and approval use the same markers, including legacy publish
   const applied = await publishProductApply(api, repository, 'owner', dispatch, result, async () => {}, applyRequest);
   assert.equal(applied.checkpoint.state, 'applied');
   assert.ok(appliedTree.some(file => file.path === 'docs/product/model/new.md' && file.content === added));
+});
+
+test('a dismissed or changed product review cannot authorize apply', () => {
+  const review = { id: 9, body: '/product-change approve example key', user: { login: 'owner', type: 'User' }, state: 'APPROVED', submitted_at: '2026-01-01T00:00:00Z', pull_request_url: 'https://api.github.com/repos/owner/repo/pulls/7' };
+  const input = { eventName: 'pull_request_review', event: { review }, current: review, repository: 'owner/repo', number: 7 };
+  assert.doesNotThrow(() => checkCurrentProductDecision(input));
+  assert.doesNotThrow(() => checkCurrentProductDecision({ ...input, event: { review: { ...review, state: 'approved' } } }));
+  for (const patch of [{ state: 'DISMISSED' }, { body: 'withdrawn' }, { pull_request_url: 'https://api.github.com/repos/owner/repo/pulls/8' }]) assert.throws(() => checkCurrentProductDecision({ ...input, current: { ...review, ...patch } }), /decision/i);
 });
