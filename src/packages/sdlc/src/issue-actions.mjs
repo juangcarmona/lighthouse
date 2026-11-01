@@ -14,7 +14,7 @@ import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
 import { prepareProductChange, prepareProductEvidence, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore, checkProductResumePullRequest } from './product-change.mjs';
 import { validateProductCandidate, preparePendingProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, productApplyObservation, productPublicationMessage } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -680,7 +680,8 @@ async function main(command) {
     const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
     const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : visibleNextAction(value.result.nextAction) : refinementAction?.action ?? 'None.';
     const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
-    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened: value.effect.body, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
+    const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
+    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true';
     const label = projection.label;
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);

@@ -24,6 +24,10 @@ export function productApplyObservation({ prepare, apply, publish }) {
   return null;
 }
 
+export function productPublicationMessage({ worker, outcome, reviewTarget, agentMessage }) {
+  return worker === 'product-change' && outcome === 'candidate' && reviewTarget ? 'The Product Change candidate passed provider overlay and OpenSpec validation and is ready for your product decision.' : agentMessage;
+}
+
 export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
   if (!['passed', 'blocked'].includes(status)) throw Error('Unvalidated stage outcome');
   const review = status === 'passed' && reviewTarget === true;

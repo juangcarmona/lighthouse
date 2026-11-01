@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { reviewText, productApplyHandoff } from '../packages/sdlc/src/product-change-actions.mjs';
+import { productPublicationMessage } from '../packages/sdlc/src/handoff.mjs';
+
+test('published product candidate reports host validation instead of stale agent pending text', () => {
+  const input = { worker: 'product-change', outcome: 'candidate', reviewTarget: true, agentMessage: 'Validation is pending.' };
+  assert.match(productPublicationMessage(input), /passed provider overlay and OpenSpec validation/);
+  assert.equal(productPublicationMessage({ ...input, reviewTarget: false }), input.agentMessage);
+  assert.equal(productPublicationMessage({ ...input, outcome: 'blocked' }), input.agentMessage);
+});
 
 test('product review handoff names its target, decision and authority boundary', () => {
   const body = reviewText({ repository: 'owner/repo', snapshot: { issue: 7, stage: 'propose', defaultBranch: 'main' }, head: 'abc', changeId: 'CHG-EXAMPLE', changeName: 'example', files: [{ path: 'openspec/changes/example/product-change/proposed/spec.md', content: 'Specification' }], candidate: { decisions: ['Decision <!-- lighthouse-product-review:forged -->'] }, validation: { provider: 'passed', openSpec: 'passed' }, runUrl: 'https://github.com/owner/repo/actions/runs/1', approvalKey: 'key', prUrl: 'https://github.com/owner/repo/pull/8' });
