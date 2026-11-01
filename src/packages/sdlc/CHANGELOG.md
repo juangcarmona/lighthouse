@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.17
+
+### Patch Changes
+
+- 1865111: # Failed check details
+
+  Identify failed host checks, including OpenSpec validation, in blocked implementation handoffs.
+
 ## 0.18.16
 
 ### Patch Changes
