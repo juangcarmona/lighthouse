@@ -57,7 +57,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const run = await api(`actions/runs/${receipt.workerRunId}`);
   const dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
   const jobs = await api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
-  if (jobs.total_count > 100) throw Error('Execution job inventory exceeds recovery bounds');
+  if (!Array.isArray(jobs.jobs) || !Number.isSafeInteger(jobs.total_count) || jobs.total_count !== jobs.jobs.length || jobs.total_count > 100) throw Error('Execution job inventory is incomplete or exceeds recovery bounds');
   const repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
@@ -218,7 +218,7 @@ export async function verifyRecoveryOrigin(api, repository, owner, dispatch, par
   if (JSON.stringify(originalFields(r)) !== JSON.stringify(originalFields(prior.request))) throw Error('Recovery changed the original authorization');
   if (!revalidate) return;
   const jobs = await api(`actions/runs/${priorRun.id}/attempts/${priorRun.run_attempt}/jobs?per_page=100`);
-  if (jobs.total_count > 100) throw Error('Execution job inventory exceeds recovery bounds');
+  if (!Array.isArray(jobs.jobs) || !Number.isSafeInteger(jobs.total_count) || jobs.total_count !== jobs.jobs.length || jobs.total_count > 100) throw Error('Execution job inventory is incomplete or exceeds recovery bounds');
   const issue = await api(`issues/${r.issue}`), comments = await issueComments(api, r.issue), repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(r.ref)}`)).sha;

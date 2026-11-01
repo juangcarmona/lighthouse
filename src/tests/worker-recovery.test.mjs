@@ -57,6 +57,13 @@ test('read-only observation preserves an unconfirmed dispatch for operator inspe
   assert.equal(f.calls.every(call => call.method === 'GET'), true);
 });
 
+test('recovery rejects an incomplete job inventory before it can infer a safe retry', async () => {
+  const f = fixture();
+  const incomplete = async (path, ...rest) => path.endsWith('/jobs?per_page=100') ? { total_count: f.jobs.length + 1, jobs: f.jobs } : f.api(path, ...rest);
+  await assert.rejects(prepareRecovery(incomplete, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact), /job inventory is incomplete/);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});
+
 test('dispatch and reconciliation share the worker lease while reporting remains independent', async () => {
   const { readFile } = await import('node:fs/promises');
   const workflowRoot = new URL('../packages/sdlc/workflows/', import.meta.url);
