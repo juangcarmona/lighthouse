@@ -15,6 +15,7 @@ export function buildStackedPlan(input) {
   if (!isRecord(input) || !isRecord(input.parent) || !Array.isArray(input.slices)) return { schemaVersion: 1, status: 'invalid', valid: false, canApply: false, errors: [issue('stacked.invalid', 'stacked input needs parent and slices')] };
   const parentRef = input.parent.number ?? input.parent.id;
   const epic = input.mode === 'epic';
+  if (epic && input.slices.length === 0) errors.push(issue('stacked.empty', 'epic mode requires at least one child', 'slices'));
   if (input.mode !== undefined && !['epic', 'nested'].includes(input.mode)) errors.push(issue('stacked.mode', 'mode must be epic or nested', 'mode'));
   if (epic && (typeof input.parent.integrationBranch !== 'string' || !/^lighthouse\/epic-[1-9]\d*$/.test(input.parent.integrationBranch) || input.parent.integrationBranch === (input.parent.base ?? 'main'))) errors.push(issue('stacked.integration-branch', 'epic mode needs a dedicated lighthouse/epic-<issue> integrationBranch', 'parent.integrationBranch'));
   if (parentRef === undefined || parentRef === null || String(parentRef).trim() === '') errors.push(issue('stacked.parent', 'parent needs an id or number', 'parent'));

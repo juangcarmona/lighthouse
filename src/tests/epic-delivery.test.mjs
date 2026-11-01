@@ -142,4 +142,5 @@ test('legacy nested plans may omit dependencies without changing their branch ch
   assert.deepEqual(plan.operations.map(item => item.base), ['main', 'feat/139-first']);
   const epic = buildStackedPlan({ mode: 'epic', parent: { number: 139, base: 'main', integrationBranch: 'lighthouse/epic-139' }, slices: [{ id: 'a', title: 'First' }] });
   assert.equal(epic.valid, false);
+  assert.equal(buildStackedPlan({ mode: 'epic', parent: { number: 139, integrationBranch: 'lighthouse/epic-139' }, slices: [] }).valid, false);
 });
