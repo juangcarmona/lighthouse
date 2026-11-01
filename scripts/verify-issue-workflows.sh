@@ -59,6 +59,7 @@ test ! -f "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-unattended
 # Every installed worker uses the same reserved checkout on reinstall and upgrade.
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply --replace-reviewed
 grep -qx '        options: \[stage, product-change, resume-product, resume-aligned\]' "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
+grep -Fq "|| inputs.workflow == 'resume-aligned'" "$validation_dir/consumer/.github/workflows/lighthouse-sdlc-router.yml"
 node "$installer" "$validation_dir/consumer" "$(git rev-parse HEAD)" --with-completion --with-maintenance --with-product-change --with-unattended --apply
 if grep -R -E 'path: tools$|tools/src/packages/sdlc/' "$validation_dir/consumer/.github/workflows"; then
   echo 'Worker checkout still collides with adopter tools' >&2
