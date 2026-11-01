@@ -82,6 +82,22 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
 }
 
+// Reporting is read-only so it can observe an active worker without acquiring its lease.
+export async function observeRecovery(api, repository, owner, issueNumber, now = Date.now(), readArtifact = readActionsJson) {
+  const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
+  const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
+  const unattended = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-unattended:')).at(-1);
+  if (unattended && (!entries.length || unattended.id > entries.at(-1).comment.id)) return [];
+  const latest = new Map();
+  for (const entry of entries) latest.set(entry.receipt.recovery?.rootId ?? entry.receipt.id, entry);
+  const observations = [];
+  for (const { comment } of latest.values()) {
+    const { dispatch, stop, run, jobs, revision, workflowRevision, ...observation } = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
+    if (observation.state === 'stalled') observations.push(observation);
+  }
+  return observations;
+}
+
 // A uniquely authenticated preparation failure can be recorded as failed only
 // when the agent and publisher were skipped. It never authorizes a new dispatch.
 export async function reconcilePreparationFailure(api, repository, owner, issueNumber, commentId, runId, readArtifact = readActionsJson) {
