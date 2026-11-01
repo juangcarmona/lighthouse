@@ -363,19 +363,20 @@ test('maintenance reports failed preparation without claiming the agent started'
 });
 
 test('maintenance distinguishes timeouts and cancellation before and during publication', async () => {
-  for (const scenario of ['agent-timeout', 'activation-timeout', 'pre-agent-cancelled', 'publication-cancelled', 'publication-skipped']) {
+  for (const scenario of ['agent-timeout', 'activation-timeout', 'pre-agent-cancelled', 'publication-cancelled', 'publication-skipped', 'publication-missing']) {
     const f = fixture();
     if (scenario === 'agent-timeout') f.jobs[1].conclusion = 'timed_out';
     if (scenario === 'activation-timeout') { f.jobs.splice(1, 0, { name: 'activation', conclusion: 'timed_out' }); f.jobs[2].conclusion = 'skipped'; }
     if (scenario === 'pre-agent-cancelled') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'skipped'; }
     if (scenario === 'publication-cancelled') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'success'; f.jobs[2].steps[0].conclusion = 'cancelled'; }
     if (scenario === 'publication-skipped') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'success'; f.jobs[2].conclusion = 'skipped'; f.jobs[2].steps = []; }
+    if (scenario === 'publication-missing') { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'success'; f.jobs.splice(2, 1); }
     await prepareRecovery(f.api, repository, owner, 7, f.maintenance, false, Date.now(), f.readArtifact);
     const body = f.comments.at(-1).body;
     if (scenario === 'agent-timeout') assert.match(body, /agent execution failed/);
     if (scenario === 'activation-timeout') assert.match(body, /environment failed before the agent started/);
     if (scenario === 'pre-agent-cancelled') assert.match(body, /cancelled before the agent started/);
-    if (scenario === 'publication-cancelled' || scenario === 'publication-skipped') assert.match(body, /effects and final result are not confirmed/);
+    if (['publication-cancelled', 'publication-skipped', 'publication-missing'].includes(scenario)) assert.match(body, /effects and final result are not confirmed/);
   }
 });
 
