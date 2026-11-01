@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { buildDecompositionPlan } from '../packages/sdlc/src/decompose.mjs';
 import { epicPlanDigest } from '../packages/sdlc/src/epic.mjs';
 import { epicCorrelation, epicJournalKey } from '../packages/sdlc/src/epic-github.mjs';
-import { publishEpicAggregate } from '../packages/sdlc/src/epic-native.mjs';
+import { publishEpicAggregate, readyEpicAggregate } from '../packages/sdlc/src/epic-native.mjs';
 
 const repository = 'owner/repo', owner = 'owner', source = 'a'.repeat(40), first = 'b'.repeat(40), second = 'c'.repeat(40), tree1 = 'd'.repeat(40), tree2 = 'e'.repeat(40), head1 = '1'.repeat(40), head2 = '2'.repeat(40), candidate1 = '3'.repeat(40), candidate2 = '4'.repeat(40);
 function fixture() {
@@ -97,4 +97,22 @@ test('an edited aggregate body cannot silently add parent-closing keywords', asy
   f.pulls[0].body += '\n\nCloses #146';
   await assert.rejects(f.run(), /receipt or changed/);
   assert.equal(f.pulls.length, 1);
+});
+
+test('aggregate readiness binds the current main base, head and checks', async () => {
+  const f = fixture();
+  await f.run();
+  const pr = f.pulls[0], candidate = '5'.repeat(40);
+  Object.assign(pr, { draft: true, mergeable: true, merge_commit_sha: candidate });
+  const original = f.args.api;
+  f.args.api = async (path, method, body) => {
+    if (path === 'pulls/30') return pr;
+    if (path === 'git/ref/heads/main') return { ref: 'refs/heads/main', object: { sha: source } };
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
+    return original(path, method, body);
+  };
+  const ready = () => readyEpicAggregate({ ...f.args, setDraft: async () => { pr.draft = false; } });
+  assert.deepEqual(await ready(), { status: 'ready', pullRequest: 30, head: second, base: source, parent: 'open' });
+  pr.merge_commit_sha = '6'.repeat(40);
+  await assert.rejects(ready(), /Aggregate checks do not bind/);
 });

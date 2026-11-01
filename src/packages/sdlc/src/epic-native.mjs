@@ -338,6 +338,27 @@ export async function publishEpicAggregate({ api, repository, owner, snapshot, j
   return { status: 'published', pullRequest: pr.number, head, parent: 'open' };
 }
 
+export async function readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft, findCandidates, authenticate }) {
+  if (typeof setDraft !== 'function') throw Error('Aggregate readiness requires a draft updater');
+  const observe = async () => {
+    const published = await publishEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, ...(findCandidates ? { findCandidates } : {}), ...(authenticate ? { authenticate } : {}) });
+    const pr = await api(`pulls/${published.pullRequest}`);
+    const base = await api(`git/ref/heads/${snapshot.defaultBranch}`);
+    if (base.ref !== `refs/heads/${snapshot.defaultBranch}` || !/^[a-f0-9]{40}$/.test(base.object?.sha ?? '') || pr.head?.sha !== published.head || pr.base?.ref !== snapshot.defaultBranch || pr.mergeable !== true || !/^[a-f0-9]{40}$/.test(pr.merge_commit_sha ?? '')) throw Error('Aggregate readiness evidence is unavailable');
+    const candidate = await api(`git/commits/${pr.merge_commit_sha}`);
+    if (!Array.isArray(candidate?.parents) || candidate.parents.length !== 2 || candidate.parents[0].sha !== base.object.sha || candidate.parents[1].sha !== published.head || !await verifyEpicChecks(api, { repository, sourceRevision: snapshot.sourceRevision, base: snapshot.defaultBranch, candidate: pr.merge_commit_sha, loadPolicy }) || await authorize() !== true) throw Error('Aggregate checks do not bind the current head and base');
+    return { pr, head: published.head, base: base.object.sha, candidate: pr.merge_commit_sha };
+  };
+  const first = await observe();
+  if (first.pr.draft) {
+    try { await setDraft(first.pr, false); }
+    catch (error) { if ((await api(`pulls/${first.pr.number}`)).draft) throw error; }
+  }
+  const fresh = await observe();
+  if (fresh.pr.draft || fresh.head !== first.head || fresh.base !== first.base || fresh.candidate !== first.candidate) throw Error('Aggregate readiness outcome is uncertain');
+  return { status: 'ready', pullRequest: fresh.pr.number, head: fresh.head, base: fresh.base, parent: 'open' };
+}
+
 export async function ensureEpicBase(api, snapshot, authorize, verifyAdvanced = async () => false) {
   const branch = `lighthouse/epic-${snapshot.issue}`;
   const read = () => api(`git/ref/heads/${branch}`, 'GET', undefined, true);
@@ -377,12 +398,13 @@ export async function runNativeEpic({ api, repository, owner, issue, run, journa
 
 export async function runEpicAction({ api, repository, owner, issue, run, journalPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
   if (action === 'reconcile') return runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load, loadPolicy });
-  if (!['register-pr', 'ready-child', 'accept-child', 'publish-aggregate'].includes(action) || action !== 'publish-aggregate' && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
+  if (!['register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
   const snapshot = await prepareNativeEpic(api, repository, owner, issue, load);
   await checkEpicLeaseConfiguration(api, snapshot.sourceRevision);
   const authorize = () => authorizeNativeEpic(api, snapshot);
   const journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, run, path: journalPath, authorize, ...(readArtifact ? { readArtifact } : {}) });
   if (action === 'publish-aggregate') return publishEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact });
+  if (action === 'ready-aggregate') return readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft });
   if (action === 'register-pr') {
     const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact });
     if (current.parent !== issue) throw Error('Epic child belongs to another parent');

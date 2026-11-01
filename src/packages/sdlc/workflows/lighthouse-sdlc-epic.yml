@@ -12,7 +12,7 @@ on:
         required: true
         default: reconcile
         type: choice
-        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate]
+        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate, ready-aggregate]
       child:
         description: Child issue number for PR registration or acceptance
         required: false
