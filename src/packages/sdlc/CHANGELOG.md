@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.23
+
+### Patch Changes
+
+- 0ecdb11: # Handoff status guidance
+
+  Describe current handoff statuses and the next actions for questions and reviews.
+
 ## 0.18.22
 
 ### Patch Changes
