@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.19.0
+
+### Minor Changes
+
+- 0202b1e: # Optional CodeGraph worker context
+
+  Offer read-only workers an optional, repository-scoped CodeGraph MCP connection with an isolated index, bounded read tools and an explicit unavailable fallback.
+
 ## 0.18.23
 
 ### Patch Changes
