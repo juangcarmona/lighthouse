@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.21
+
+### Patch Changes
+
+- 74623c0: # Cancelled worker handoff
+
+  Report a cancelled worker when its publication job was never created.
+
 ## 0.18.20
 
 ### Patch Changes
