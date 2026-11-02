@@ -58,7 +58,7 @@ Current queue: return this exact draft for host overlay validation and a product
 
 Policy alternatives examined: per-finding human approval would stop every automatic retention; explicit operator-approved project policy would allow eligible non-sensitive retention without those repeated stops. The verified owner selected the second alternative. Neither alternative grants recall outside declared authority. Disabled shared scope versus disabled project recall are distinct: the request selects project persistence without enabling shared access. Optional-provider absence versus adopter-required memory is explicitly selected by the issue. Provider selection remains delivery design, not an unresolved product decision.
 
-Verbatim owner answer (https://github.com/juangcarmona/lighthouse/issues/272#issuecomment-6571559182):
+Verbatim owner answer (<https://github.com/juangcarmona/lighthouse/issues/272#issuecomment-6571559182>):
 
 > I choose the second option: an explicitly operator-approved project policy may retain eligible, non-sensitive findings without asking a human to approve each learning. Keep this simple and automatic within the repository/project scope. Exclude credentials and sensitive or personal data; retain source/provenance and allow correction or invalidation. Shared cross-project memory remains disabled unless separately enabled. This is my answer to the product-policy question, not approval of a Product Change or implementation.
 
