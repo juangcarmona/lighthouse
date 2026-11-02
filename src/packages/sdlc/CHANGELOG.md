@@ -1,5 +1,11 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.19.1
+
+### Patch Changes
+
+- Reconcile cancelled and interrupted workflow publication through the shared deterministic handoff classifier. Bind replayed results to their envelope, preserve later reservations, and classify technical retries within the existing opt-in two-retry and 30-minute policy.
+
 ## 0.19.0
 
 ### Minor Changes

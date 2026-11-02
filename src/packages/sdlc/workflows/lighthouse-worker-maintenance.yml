@@ -48,6 +48,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      checks: read
       issues: read
       pull-requests: read
     env:
@@ -89,6 +90,7 @@ jobs:
     permissions:
       contents: read
       actions: write
+      checks: read
       issues: write
       pull-requests: read
     env:

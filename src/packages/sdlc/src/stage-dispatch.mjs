@@ -198,6 +198,13 @@ export async function checkDispatchClaim(api, repository, issue, dispatch, worke
   if (receipt.id !== dispatch.requestId || receipt.digest !== dispatch.digest || String(receipt.workerRunId) !== String(workerId)) throw Error('Dispatch admission receipt revoked or changed');
 }
 
+export async function assertCurrentDispatch(api, repository, issue, dispatch, run) {
+  if (!dispatch) return;
+  await checkDispatchClaim(api, repository, issue, dispatch, run);
+  const comments = await issueComments(api, issue);
+  if (comments.some(comment => Number(comment.id) > Number(dispatch.commentId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:'))) throw Error('A newer dispatch superseded this attempt');
+}
+
 
 // Every dispatched worker shares the literal issue concurrency key before this call.
 export async function admitDispatch(api, repository, owner, env, event) {

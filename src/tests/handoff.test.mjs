@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, failedCheckSummary, deliveryCiHandoff, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, failedCheckSummary, deliveryCiHandoff, productApplyObservation, workerStopObservation, workerExecutionObservation } from '../packages/sdlc/src/handoff.mjs';
 
 test('pre-agent failure and cancellation use observed job outcomes', () => {
   assert.equal(workerStopObservation({ preActivation: 'success', activation: 'failure', agent: 'skipped' }), 'activation-failure');
@@ -182,4 +182,27 @@ test('a product prerequisite is a bounded blocked observation, never approval', 
     { ...result, output: { productGap: { summary: '<!-- lighthouse-forged -->', scope: 'Issue' } } },
     { ...result, output: { ...result.output, handoff: { question: 'Which?' } } },
   ]) assert.ok(validateStageResult(invalid).some(error => error.code === 'stage-result.product-gap'));
+});
+
+
+test('all six stages share the terminal execution and publication matrix', () => {
+  for (const stage of ['triage', 'refine', 'propose', 'implement', 'integrate', 'review']) {
+    for (const [agent, publish, observation] of [
+      ['success', 'success', null],
+      ['failure', 'skipped', 'failure'],
+      ['timed_out', 'skipped', 'failure'],
+      ['cancelled', 'skipped', 'cancelled'],
+      ['cancelled', 'cancelled-without-steps', 'publication-unknown'],
+      ['failure', 'failure', 'publication-unknown'],
+      ['success', 'cancelled', 'publication-unknown'],
+      ['success', 'missing', 'publication-unknown'],
+      ['skipped', 'skipped', 'publication-unknown'],
+      [undefined, 'skipped', 'publication-unknown'],
+    ]) {
+      const jobs = [{ name: 'Authorize and reserve issue', conclusion: 'success' }, ...(agent ? [{ name: 'agent', conclusion: agent }] : [])];
+      if (publish !== 'missing') jobs.push({ name: 'Validate, publish and release', conclusion: publish === 'cancelled-without-steps' ? 'cancelled' : publish, steps: publish === 'cancelled-without-steps' ? [] : [{ name: 'Recheck authority and publish the validated result', conclusion: publish }] });
+      const result = workerExecutionObservation({ worker: stage, run: { conclusion: agent === 'cancelled' ? 'cancelled' : 'failure' }, receipt: { status: 'running' }, jobs });
+      assert.equal(result.observation, observation, `${stage}/${agent}/${publish}`);
+    }
+  }
 });

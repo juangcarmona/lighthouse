@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -178,6 +178,11 @@ async function main(command) {
     const r = await fetch(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     if (optional && r.status === 404) return null;
     if (!r.ok) throw Error(`GitHub ${method} ${path}: ${r.status}`);
+    if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
+      const log = await r.text();
+      if (Buffer.byteLength(log) > 4 * 1024 * 1024) throw Error('Job log exceeds recovery bounds');
+      return log;
+    }
     return r.status === 204 ? null : r.json();
   };
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
@@ -664,7 +669,9 @@ async function main(command) {
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
     const publicationIssue = await api(issuePath);
     checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
-    const checkEpic = async () => {
+    const recheckPublication = async () => {
+      await assertCurrentDispatch(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
+      checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
       if (!snapshot.epic) return;
       const { baseSha, ...epic } = snapshot.epic, native = await import('./epic-native.mjs');
       await checkEpicAuthority(epic, () => native.authenticateEpicChild({ api, repository: repo, owner, child: issueNumber }));
@@ -678,7 +685,7 @@ async function main(command) {
         if (observed.baseSha !== baseSha) throw Error('Epic base changed before publication');
       }
     };
-    await checkEpic();
+    await recheckPublication();
     if ((snapshot.productParent || snapshot.productAlignment) && publicationIssue.labels.some(label => label.name === 'future')) throw Error('Product prerequisite was paused before publication');
     const checkFeedback = async () => {
       if (!snapshot.proposalReview) return;
@@ -687,13 +694,19 @@ async function main(command) {
       if (digest(JSON.stringify(await reviewThread(api, snapshot.proposalReview.number, owner))) !== snapshot.proposalReview.threadDigest) throw Error('Proposal discussion changed; use the queued feedback run');
     };
     await checkFeedback();
+    const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
+    const resultMarker = `<!-- lighthouse-result:${digest(JSON.stringify(value))} -->`;
+    const existing = (await comments()).find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(marker));
+    if (existing) {
+      if (!existing.body.includes(resultMarker)) throw Error('Conflicting or unbound published result; reconcile the retained handoff');
+      await writeFile(join(dir, 'published'), existing.html_url);
+      return;
+    }
     if (value.result.output?.productGap && snapshot.proposalReview) {
       await checkReviewCurrent(api, repo, snapshot.proposalReview);
       const pr = await api(`pulls/${snapshot.proposalReview.number}`);
       if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
     }
-    const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
-    const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
     let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview, implementationChecksFailed = false, ciDispatchFailed = false;
     if (snapshot.worker === 'product-change') {
@@ -757,7 +770,7 @@ async function main(command) {
         const recheck = async () => {
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
-          await checkEpic();
+          await recheckPublication();
           if (snapshot.planningReference) {
             checkProposal(await api(`pulls/${snapshot.planningReference.number}`), repo, snapshot.planningReference);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.planningReference.number, owner))) !== snapshot.planningReference.threadDigest) throw Error('Proposal feedback changed');
@@ -780,7 +793,7 @@ async function main(command) {
           if (!snapshot.epic) return;
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
-          await checkEpic();
+          await recheckPublication();
         };
         const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite);
         prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID) })} -->`;
@@ -807,24 +820,27 @@ async function main(command) {
     let whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     if (ciHandoff) { action = action === 'None.' ? ciHandoff.action : `${action} ${ciHandoff.action}`; whatNext = question || value.result.status === 'blocked' ? `${whatNext} ${ciHandoff.next}` : ciHandoff.next; }
     const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
-    const body = renderHandoff({ status: ciHandoff && !question ? 'blocked' : projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
+    const body = renderHandoff({ status: ciHandoff && !question ? 'blocked' : projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${resultMarker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
     const label = projection.label;
-    await checkEpic();
+    await recheckPublication();
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);
     else if (label) await api(`${issuePath}/labels`, 'POST', { labels: [label] });
     const fresh = await api(issuePath);
+    await recheckPublication();
     if (fresh.labels.some(x => x.name === snapshot.stage)) await api(`${issuePath}/labels/${snapshot.stage}`, 'DELETE');
     if (handoff) {
+      await recheckPublication();
       await api(`${issuePath}/labels`, 'POST', { labels: ['implement'] });
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
     }
     if (reviewNotice) {
+      await recheckPublication();
       const prior = await api(`issues/${reviewNotice.pr.number}/comments?per_page=100`);
       if (prior.length >= 100) throw Error('PR discussion exceeds bounded publication');
       if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewNotice.marker))) await api(`issues/${reviewNotice.pr.number}/comments`, 'POST', { body: reviewNotice.body });
     }
-    await checkEpic();
+    await recheckPublication();
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     if (snapshot.proposalReview && value.result.status === 'blocked') {
       const reviewMarker = `<!-- lighthouse-proposal-blocked:${snapshot.runId} -->`;
@@ -839,6 +855,7 @@ async function main(command) {
   if (command === 'cleanup') {
     try { await readFile(join(dir, 'reserved')); } catch { return; }
     const issue = await api(issuePath);
+    await assertCurrentDispatch(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
     if (issue.labels.some(x => x.name === 'agent-working')) await api(`${issuePath}/labels/agent-working`, 'DELETE');
     if (preparationStop) await publishObservedStop(api, preparationStop);
     let published = false;
