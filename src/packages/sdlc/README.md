@@ -32,6 +32,8 @@ When an authorized issue stage identifies a missing product prerequisite, the op
 
 Product Change apply failures are reported on the issue and, while the approved PR head is current, on that PR. If publication may have started, the outcome remains unknown until the maintainer inspects its effects. A failure notice does not authorize a retry.
 
+The `future` overlay pauses delivery, not an explicitly approved Product Change apply. It remains on the issue after apply and blocks parent continuation. To recover an approval rejected before dispatch, the owner can manually run the router with `issue`, `stage: propose`, `workflow: stage`, `pull_request` and `product_decision_comment` identifying the original approval comment. The router requires an unedited owner approval and rechecks its current review binding, baseline and later objections. It never rewrites or creates an approval. A malformed Product Change command reports an invalid-command error instead of entering implementation review.
+
 Product preparation checks out the adopter's current source separately from the harness. The pinned ProductShape core supplies read-only inspection, impact and citation reports for the accepted model; the host validates candidate files in a temporary workspace before publishing them. The adopter does not need a Node project or preinstalled dependencies for this worker.
 
 See [workflow handoffs](handoffs.md) for outcome meanings, publication order, interruption reconciliation and bounded retry evidence.
