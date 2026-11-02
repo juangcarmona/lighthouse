@@ -383,6 +383,22 @@ test('maintenance distinguishes timeouts and cancellation before and during publ
   }
 });
 
+test('product worker recovery observes its own publication job', async () => {
+  for (const scenario of ['cancelled-before-publication', 'cancelled-during-publication', 'published', 'cleanup-failed']) {
+    const f = fixture();
+    f.request.stage = 'propose'; f.request.worker = 'product-change'; f.request.id = dispatchId(repository, '100', 'propose');
+    f.request.event.inputs = { issue: '7', stage: 'propose', workflow: 'product-change' };
+    f.run.path = '.github/workflows/lighthouse-sdlc-product-change.lock.yml';
+    f.run.conclusion = 'cancelled';
+    f.receipt = { ...f.receipt, stage: 'propose', worker: 'product-change', id: f.request.id, digest: digest(JSON.stringify(f.request)), status: 'running' };
+    f.comment.body = dispatchReceiptBody(repository, f.receipt);
+    f.jobs.splice(0, f.jobs.length, { name: 'Authenticate and checkpoint the idea', conclusion: 'success' }, { name: 'agent', conclusion: scenario === 'cancelled-before-publication' ? 'cancelled' : 'success' });
+    if (scenario !== 'cancelled-before-publication') f.jobs.push({ name: 'Validate and publish the product candidate', conclusion: scenario === 'published' ? 'success' : 'cancelled', steps: [{ name: 'Recheck authority and publish the candidate', conclusion: scenario === 'cancelled-during-publication' ? 'cancelled' : 'success' }, ...(scenario === 'cleanup-failed' ? [{ name: 'Release the execution reservation', conclusion: 'failure' }] : [])] });
+    const observed = await observeDispatch(f.api, repository, owner, f.comment, f.issue, f.comments, Date.now(), f.readArtifact);
+    assert.equal(observed.stop?.observation ?? null, scenario === 'cancelled-before-publication' ? 'cancelled' : scenario === 'cancelled-during-publication' ? 'publication-unknown' : scenario === 'cleanup-failed' ? 'cleanup-failure' : null, scenario);
+  }
+});
+
 test('maintenance retains an authenticated issue answer in the recovered failure notice', async () => {
   const f = fixture();
   f.request.eventName = 'issue_comment';
