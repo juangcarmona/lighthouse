@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.20
+
+### Patch Changes
+
+- be63ca5: # Actionable CI dispatch failure
+
+  Explain how to recover when CI cannot start for an implementation draft.
+
 ## 0.18.19
 
 ### Patch Changes
