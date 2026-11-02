@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { checkProductResumePullRequest } from './product-change.mjs';
+import { readZipJson } from './zip-json.mjs';
 
 export const changeName = issue => {
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid proposal issue');
@@ -85,7 +86,7 @@ export async function loadStageReport(api, repo, report, current) {
       const archive = join(dir, `${kind}.zip`);
       const bytes = execFileSync('gh', ['api', `repos/${repo}/actions/artifacts/${artifact.id}/zip`], { maxBuffer: 2 * 1024 * 1024, timeout: 30000 });
       await writeFile(archive, bytes);
-      values[kind] = JSON.parse(execFileSync('python3', ['-c', 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); matches=[i for i in z.infolist() if i.filename==sys.argv[2]]; assert len(matches)==1 and matches[0].file_size<=128000, "Invalid artifact member"; data=z.open(matches[0]).read(128001); assert len(data)<=128000; sys.stdout.buffer.write(data)', archive, file], { encoding: 'utf8', maxBuffer: 128000, timeout: 10000 }));
+      values[kind] = readZipJson(bytes, file);
     }
     const request = values.input;
     if (request.dispatch) {
