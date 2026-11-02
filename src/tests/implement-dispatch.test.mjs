@@ -404,6 +404,9 @@ test('product apply continuation requires provider receipt, parent authority and
   assert.equal(await signalProductApplyContinuation(signalApi, issue, '500', { ...checkpoint, parent: { ...parent, review: { number: 7 } } }), true);
   const resume = await productApplyAfterRun(api, repo, owner, event, readArtifact);
   assert.equal(resume.stage, 'refine'); assert.equal(resume.head, headAfter); assert.equal(resume.parent.autoImplement, false);
+  issueData.labels.push({ name: 'future' });
+  await assert.rejects(productApplyAfterRun(api, repo, owner, event, readArtifact), /Product parent authorization, base or issue changed before continuation/);
+  issueData.labels.pop();
   const next = fixture('refine');
   Object.assign(next.request, { routerRunId: '600', eventRunId: '500', id: dispatchId(repo, '500', 'refine'), eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'refine', workflow: 'resume-product', after_run: '500' } }, productResume: structuredClone(resume), taskDigest: parent.taskDigest, sourceRevision: parent.sourceRevision });
   Object.assign(next.parent, { id: 600, event: 'workflow_dispatch', actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } });
