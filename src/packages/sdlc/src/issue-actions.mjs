@@ -1,5 +1,5 @@
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, epicTriageKey } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -267,9 +267,14 @@ async function main(command) {
   }
   let route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
   const epicTriage = env.LIGHTHOUSE_EPIC_ENABLED === 'true' && isBotEpicTriage(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR);
+  const epicRefinement = env.LIGHTHOUSE_EPIC_ENABLED === 'true' && isBotEpicRefinement(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR);
   if (epicTriage && ['route', 'dispatch-prepare'].includes(command)) {
     await (await import('./epic-dispatch.mjs')).verifyEpicTriageOrigin(api, { repository: repo, owner, child: Number(event.inputs.issue), parent: Number(event.inputs.epic_parent), runId: event.inputs.epic_run });
     route = { run: true, stage: 'triage', issue: Number(event.inputs.issue), reason: 'Authenticated epic child triage' };
+  }
+  if (epicRefinement && ['route', 'dispatch-prepare'].includes(command)) {
+    await (await import('./epic-dispatch.mjs')).verifyEpicRefinementOrigin(api, { repository: repo, owner, child: Number(event.inputs.issue), parent: Number(event.inputs.epic_parent), runId: event.inputs.epic_run });
+    route = { run: true, stage: 'refine', issue: Number(event.inputs.issue), reason: 'Explicitly authorized epic child refinement' };
   }
   if (dispatch?.request.worker === 'product-change') route = { run: true, stage: dispatch.request.stage, worker: 'product-change', issue: dispatch.request.issue, reason: 'Authenticated Product Change dispatch' };
   let productApproval;
@@ -338,7 +343,7 @@ async function main(command) {
   if (['route', 'dispatch-prepare'].includes(command)) epicContext = await resolveEpicRouting(api, repo, owner, issueNumber, route, env.LIGHTHOUSE_EPIC_ENABLED, async args => (await import('./epic-native.mjs')).authenticateEpicChild(args));
   if (epicContext && route.stage === 'integrate') route = { ...route, run: false, reason: implementationReview?.approved ? `Epic child approval recorded. Run the epic accept-child action for parent #${epicContext.parent}, child #${issueNumber}, PR #${implementationReview.number}, review ${implementationReview.id}, head ${implementationReview.head} and the current epic base SHA` : `Use the epic accept-child action for parent #${epicContext.parent} and child #${issueNumber}` };
   if (command === 'dispatch-prepare') {
-    if (!after && !epicTriage && (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner)) throw Error('Dispatch actor is not authorized');
+    if (!after && !epicTriage && !epicRefinement && (env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner)) throw Error('Dispatch actor is not authorized');
     const stage = route.stage, handoff = !!route.predecessor, queue = !!(proposalReview || implementationReview);
     if ((env.LIGHTHOUSE_EPIC_PARENT ?? '') !== (epicContext ? String(epicContext.parent) : '')) throw Error('Epic parent changed after routing');
     if (epicContext && stage === 'implement') {
@@ -363,11 +368,11 @@ async function main(command) {
       checkHandoff(prior, result, issue, answers, route.productResume?.head ?? revision, route.predecessor.runId);
     }
     if (stage === 'implement' && issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
-    const eventRunId = epicTriage ? String(event.inputs.epic_run) : after ? String(after.workflow_run.id) : undefined;
+    const eventRunId = epicTriage || epicRefinement ? String(event.inputs.epic_run) : after ? String(after.workflow_run.id) : undefined;
     const feedback = implementationReview ?? proposalReview;
     const worker = route.worker ?? feedbackWorker(feedback);
     const feedbackIdentity = worker === 'apply-review' && route.productResume?.parent.review ? digest(JSON.stringify({ kind: 'product-resume-feedback', applyRun: route.productResume.applyRun, review: route.productResume.parent.review })) : worker === 'apply-review' ? feedbackKey(feedback) : worker === 'product-change' && route.productFeedback ? digest(JSON.stringify({ repository: repo, issue: issueNumber, stage, action: route.productFeedback.action, changeName: route.productFeedback.changeName, sourceCommentId: String(route.productFeedback.sourceCommentId) })) : undefined;
-    const epicIdentity = epicTriage ? epicTriageKey(repo, epicContext.parent, issueNumber, epicContext.planDigest) : undefined;
+    const epicIdentity = epicTriage ? epicTriageKey(repo, epicContext.parent, issueNumber, epicContext.planDigest) : epicRefinement ? epicRefinementKey(repo, epicContext.parent, issueNumber, epicContext.planDigest, event.inputs.epic_run) : undefined;
     const router = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
     // Review events can run on a PR merge ref, which is not a dispatchable branch.
     // Only an explicit owner dispatch selects a workflow branch; native events use main.
@@ -663,6 +668,11 @@ async function main(command) {
       if (!snapshot.epic) return;
       const { baseSha, ...epic } = snapshot.epic, native = await import('./epic-native.mjs');
       await checkEpicAuthority(epic, () => native.authenticateEpicChild({ api, repository: repo, owner, child: issueNumber }));
+      if (snapshot.stage === 'refine' && snapshot.dispatch) {
+        const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+        const origin = await loadDispatch(api, repo, owner, issueNumber, snapshot.dispatch.commentId, worker);
+        if (origin.request.id !== snapshot.dispatch.requestId || origin.request.taskDigest !== snapshot.taskDigest || !isDeepStrictEqual(origin.request.epic, epic)) throw Error('Epic refinement authorization changed before publication');
+      }
       if (snapshot.stage === 'implement') {
         const observed = await native.inspectEpicDependencies({ api, repository: repo, owner, child: issueNumber, current: epic });
         if (observed.baseSha !== baseSha) throw Error('Epic base changed before publication');
