@@ -9,6 +9,17 @@ export function codegraphSelection(config, implementing) {
   return { status: 'pending' };
 }
 
+export function configureCodegraphWorker(workerConfig) {
+  if (!Array.isArray(workerConfig.policies) || !Array.isArray(workerConfig.permissions)) throw Error('OpenCode image has no policy or permissions');
+  workerConfig.mcp = { servers: { codegraph: { type: 'local', command: ['node', '/codegraph/codegraph-client.mjs'], codemode: false } } };
+  workerConfig.policies.push({ action: 'integration.use', resource: 'mcp:codegraph', effect: 'allow' });
+  for (const tool of ['codegraph_symbol_search', 'codegraph_get_ai_context']) {
+    workerConfig.policies.push({ action: 'tool.use', resource: `codegraph_${tool}:*`, effect: 'allow' });
+    workerConfig.permissions.push({ action: `codegraph_${tool}`, resource: '*', effect: 'allow' });
+  }
+  return workerConfig;
+}
+
 export async function startCodegraph({ config, source, harness, dir, name, docker }) {
   const state = join(dir, 'codegraph');
   await mkdir(state); await chmod(state, 0o777);
@@ -29,10 +40,7 @@ export async function startCodegraph({ config, source, harness, dir, name, docke
     '--mount', `type=bind,src=${state},dst=/codegraph`, '--entrypoint', 'node', config.image, '/sidecar.mjs'];
   try {
     const workerConfig = JSON.parse(execFileSync('docker', ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
-    if (!Array.isArray(workerConfig.policies)) throw Error('OpenCode image has no policy');
-    workerConfig.mcp = { servers: { codegraph: { type: 'local', command: ['node', '/codegraph/codegraph-client.mjs'], codemode: false } } };
-    workerConfig.policies.push({ action: 'integration.use', resource: 'mcp:codegraph', effect: 'allow' });
-    for (const tool of ['codegraph_symbol_search', 'codegraph_get_ai_context']) workerConfig.policies.push({ action: 'tool.use', resource: `codegraph_${tool}:*`, effect: 'allow' });
+    configureCodegraphWorker(workerConfig);
     const workerConfigPath = join(state, 'worker-opencode.json');
     await writeFile(workerConfigPath, JSON.stringify(workerConfig)); await chmod(workerConfigPath, 0o444);
     docker(args);
