@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateProductChangeFiles, validateProductChangeOutput, validateProductCheckpoint, productReviewBinding, productModelDirectory, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
-import { bindValidatedProductCandidate, preparePendingProductCandidate } from '../packages/sdlc/src/product-change-actions.mjs';
+import { bindValidatedProductCandidate, preparePendingProductCandidate, loadProductCandidateFromPullRequest } from '../packages/sdlc/src/product-change-actions.mjs';
 import { installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -95,6 +95,32 @@ test('the host supplies OpenSpec product-only metadata before validating pending
   assert.throws(() => preparePendingProductCandidate({ ...product, files: [{ ...product.files[0], content: 'schema: product-change\nskip_specs: false\n' }, ...product.files.slice(1)] }), /conflicting/);
   const passed = { ...product, providerValidation: { status: 'passed', diagnosticCount: 0 } };
   assert.equal(preparePendingProductCandidate(passed), passed);
+});
+
+test('recovery retains candidate bytes and normalizes source links before digest binding', async () => {
+  const root = 'openspec/changes/example';
+  const files = [
+    { path: `${root}/.openspec.yaml`, content: 'schema: product-change\nskip_specs: true\n' },
+    { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' },
+    { path: `${root}/product-change/proposed/example.md`, content: 'Requirement\n' },
+    { path: `${root}/proposal.md`, content: 'Source: https://github.com/owner/repo/issues/18#issuecomment-1\n' }
+  ];
+  const repository = 'owner/repo';
+  const pr = { number: 7, state: 'open', user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: 'a'.repeat(40), repo: { full_name: repository } }, base: { repo: { full_name: repository } } };
+  const api = async path => path.startsWith('pulls/') ? files.map(file => ({ filename: file.path, status: 'added' })) : (() => {
+    const file = files.find(file => path.startsWith(`contents/${file.path}?`));
+    return { type: 'file', encoding: 'base64', size: Buffer.byteLength(file.content), content: Buffer.from(file.content).toString('base64') };
+  })();
+  const loaded = await loadProductCandidateFromPullRequest(api, repository, pr, 'example');
+  assert.deepEqual(loaded.files, files);
+  const pending = { changeName: 'example', files: loaded.files, providerValidation: { status: 'pending', diagnosticCount: 0 } };
+  const normalized = preparePendingProductCandidate(pending);
+  assert.equal(normalized.files[3].content, 'Source: <https://github.com/owner/repo/issues/18#issuecomment-1>\n');
+  assert.deepEqual(normalized.files.slice(0, 3), files.slice(0, 3));
+  assert.equal(preparePendingProductCandidate(normalized), normalized);
+  const alternate = preparePendingProductCandidate({ ...pending, files: files.map(file => file.path.endsWith('/proposal.md') ? { ...file, content: 'Verbatim owner answer (https://github.com/owner/repo/issues/18#issuecomment-1):\n' } : file) });
+  assert.equal(alternate.files[3].content, 'Verbatim owner answer (<https://github.com/owner/repo/issues/18#issuecomment-1>):\n');
+  assert.notEqual(validateProductChangeFiles(normalized.files, { changeName: 'example' }).digest, loaded.digest);
 });
 
 test('a waiting product decision binds the authenticated parent checkpoint to review', () => {
