@@ -61,6 +61,7 @@
     "./epic-github": "./src/epic-github.mjs",
     "./github": "./src/github.mjs",
     "./memory": "./src/memory.mjs",
+    "./memory-sqlite": "./src/memory-sqlite.mjs",
     "./routes": "./src/routes.mjs",
     "./reconcile": "./src/reconcile.mjs",
     "./capabilities": "./src/capabilities.mjs",
