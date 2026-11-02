@@ -17,7 +17,15 @@ const source = resolve('source');
 const bridge = await import(pathToFileURL(createRequire(import.meta.url).resolve('@prodshape/integration-openspec')).href);
 let advanced;
 const api = async (path, method = 'GET', body, optional = false) => {
-  const response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  let response;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json', connection: 'close' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+      break;
+    } catch (error) {
+      if (method !== 'GET' || attempt === 2) throw error;
+    }
+  }
   if (optional && response.status === 404) return null;
   if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
   const result = response.status === 204 ? null : await response.json();

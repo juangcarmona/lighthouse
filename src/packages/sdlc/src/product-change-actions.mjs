@@ -186,6 +186,7 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   const reviewMarker = `${marker}review:${JSON.stringify(binding)} -->`;
   const checkpointMarker = `${marker}checkpoint:${JSON.stringify(checkpoint)} -->`;
   let prBody = pr.body ?? '';
+  prBody = prBody.replace(/<!-- lighthouse-product-change:\{[^\n]*\} -->/g, `<!-- lighthouse-product-change:${JSON.stringify({ schemaVersion: 1, issue: snapshot.issue, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest })} -->`);
   prBody = /<!-- lighthouse-product-change(?:-review|:review):/.test(prBody)
     ? prBody.replace(/<!-- lighthouse-product-change(?:-review|:review):\{[^\n]*\} -->/g, reviewMarker)
     : `${prBody}\n\n${reviewMarker}`;
