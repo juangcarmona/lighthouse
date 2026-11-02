@@ -7,7 +7,7 @@ export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.
 export const retryLimit = 2;
 export const retryDelayMs = 30 * 60 * 1000;
 export const recoveryId = (repository, rootId, attempt) => digest(`${repository}:${rootId}:retry:${attempt}`);
-const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish'].includes(step.name));
+const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish', 'Recheck authority and publish the candidate'].includes(step.name));
 const identity = r => ({ issue: r.request.issue, worker: workerFor(r.request), runId: String(r.run.id), rootId: r.request.recovery?.rootId ?? r.request.id, attempt: r.request.recovery?.attempt ?? 0 });
 const ownerAnswers = comments => comments.filter(c => c.user?.login === c.owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
 const intent = (issue, comments, owner) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers(comments.map(c => ({ ...c, owner }))).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
@@ -63,11 +63,11 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
   const agent = jobs.jobs.find(job => job.name === 'agent');
-  const publishJob = jobs.jobs.find(job => job.name === 'Validate, publish and release');
+  const publishJob = jobs.jobs.find(job => job.name === (workerFor(dispatch.request) === 'product-change' ? 'Validate and publish the product candidate' : 'Validate, publish and release'));
   const publish = publishStep(publishJob);
-  const cleanup = publishJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation'].includes(step.name));
+  const cleanup = publishJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation', 'Release the execution reservation'].includes(step.name));
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
-  const unpublished = !publishJob && workerFor(dispatch.request) !== 'product-change' || publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
+  const unpublished = !publishJob || publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
   const notStarted = !agent || agent.conclusion === 'skipped';
   const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
   const observation = publish?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(cleanup?.conclusion) ? 'cleanup-failure'
