@@ -118,6 +118,8 @@ test('recovery retains candidate bytes and normalizes source links before digest
   assert.equal(normalized.files[3].content, 'Source: <https://github.com/owner/repo/issues/18#issuecomment-1>\n');
   assert.deepEqual(normalized.files.slice(0, 3), files.slice(0, 3));
   assert.equal(preparePendingProductCandidate(normalized), normalized);
+  const alternate = preparePendingProductCandidate({ ...pending, files: files.map(file => file.path.endsWith('/proposal.md') ? { ...file, content: 'Verbatim owner answer (https://github.com/owner/repo/issues/18#issuecomment-1):\n' } : file) });
+  assert.equal(alternate.files[3].content, 'Verbatim owner answer (<https://github.com/owner/repo/issues/18#issuecomment-1>):\n');
   assert.notEqual(validateProductChangeFiles(normalized.files, { changeName: 'example' }).digest, loaded.digest);
 });
 

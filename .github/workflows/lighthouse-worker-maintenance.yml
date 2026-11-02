@@ -48,6 +48,9 @@ jobs:
       - run: npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6
       - run: npm ci --ignore-scripts
         working-directory: source
+      - run: npx --no-install puppeteer browsers install chrome
+        working-directory: source
+      - run: node --test src/tests/product-change-files.test.mjs src/tests/product-change-publication.test.mjs
       - name: Revalidate editorial repair and republish for a new product decision
         env:
           GH_TOKEN: ${{ github.token }}

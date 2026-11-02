@@ -22,7 +22,9 @@ export function preparePendingProductCandidate(product) {
   const files = product.files.map(file => {
     let content = file.content;
     if (file.path === path && !flags.length) content = `${content.trimEnd()}\nskip_specs: true\n`;
-    if (file.path === `openspec/changes/${product.changeName}/proposal.md`) content = content.replace(/^(Source:[\t ]+)(https?:\/\/[^\s<>]+)[\t ]*$/gm, '$1<$2>');
+    if (file.path === `openspec/changes/${product.changeName}/proposal.md`) content = content
+      .replace(/^(Source:[\t ]+)(https?:\/\/[^\s<>]+)[\t ]*$/gm, '$1<$2>')
+      .replace(/^(Verbatim (?:verified )?owner answer \()(https?:\/\/[^\s<>]+)(\):)[\t ]*$/gm, '$1<$2>$3');
     if (content === file.content) return file;
     changed = true;
     return { ...file, content };
