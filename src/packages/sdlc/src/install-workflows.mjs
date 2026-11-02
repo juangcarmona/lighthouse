@@ -5,6 +5,8 @@ import { execFileSync } from 'node:child_process';
 const [target, revision, ...flags] = process.argv.slice(2);
 if (!target || !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended]');
 const apply = flags.includes('--apply'), replace = flags.includes('--replace-reviewed');
+const compilerCommand = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ?? 'gh';
+const compilerArgs = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ? [] : ['aw'];
 const productChange = flags.includes('--with-product-change');
 const unattended = flags.includes('--with-unattended');
 const completion = flags.includes('--with-completion') || unattended;
@@ -43,9 +45,9 @@ else {
   console.log(`${apply ? 'Write' : 'Would write'} ${formPath}`);
 }
 if (apply) {
-  const compiler = execFileSync('gh', ['aw', '--version'], { encoding: 'utf8' }).trim();
+  const compiler = execFileSync(compilerCommand, [...compilerArgs, '--version'], { encoding: 'utf8' }).trim();
   if (!/\bv?0\.93\.2\b/.test(compiler)) throw Error(`gh-aw v0.93.2 is required; found ${compiler}`);
   for (const { path, content } of planned) { await mkdir(dirname(path), { recursive: true }); await writeFile(path, content); }
-  for (const stage of ['triage', ...(completion ? ['refine', 'propose', 'implement', 'integrate', 'review', 'apply-review'] : implement ? ['refine', 'propose', 'implement', 'apply-review'] : propose ? ['refine', 'propose', 'apply-review'] : ['refine']), ...(productChange ? ['product-change', 'apply-product-change'] : [])]) execFileSync('gh', ['aw', 'compile', `lighthouse-sdlc-${stage}`], { cwd: root, stdio: 'inherit' });
+  for (const stage of ['triage', ...(completion ? ['refine', 'propose', 'implement', 'integrate', 'review', 'apply-review'] : implement ? ['refine', 'propose', 'implement', 'apply-review'] : propose ? ['refine', 'propose', 'apply-review'] : ['refine']), ...(productChange ? ['product-change', 'apply-product-change'] : [])]) execFileSync(compilerCommand, [...compilerArgs, 'compile', `lighthouse-sdlc-${stage}`], { cwd: root, stdio: 'inherit' });
 }
 console.log(`Enabled workers: triage, ${completion ? 'refine, propose, implement, integrate, review, apply-review' : implement ? 'refine, propose, implement, apply-review' : propose ? 'refine, propose, apply-review' : 'refine'}${productChange ? ', product-change' : ''}. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.`);

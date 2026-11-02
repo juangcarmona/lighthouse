@@ -133,7 +133,7 @@ export function productApplyRequest({ dispatch, current, issueNumber, issue, rep
   if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');
   const requested = dispatch.request.productApproval;
   if (!current || current.issue !== issueNumber || current.pullRequest !== requested.pullRequest || current.head !== requested.head || current.approval.reviewKey !== requested.reviewKey || current.changeName !== requested.changeName) throw Error('Product approval changed before trusted apply admission');
-  if (issue.state !== 'open' || issue.labels?.some(label => ['future', 'human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
+  if (issue.state !== 'open' || issue.labels?.some(label => ['human-working', 'agent-working'].includes(label.name))) throw Error('Product apply is blocked by the current issue state or reservation');
   return { approval: current.approval, binding: current.binding, checkpoint: current.checkpoint, issue: current.issue, pullRequest: current.pullRequest, head: current.head, changeName: current.changeName, repository, owner, sourceRevision: current.head, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } };
 }
 export async function loadProductApplyDispatch(api, repository, owner, env, event, applyRequest, readArtifact = readActionsJson) {
@@ -283,7 +283,7 @@ async function main(command) {
   }
   if (dispatch?.request.worker === 'product-change') route = { run: true, stage: dispatch.request.stage, worker: 'product-change', issue: dispatch.request.issue, reason: 'Authenticated Product Change dispatch' };
   let productApproval;
-  if (['route', 'dispatch-prepare'].includes(command) && env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' && ['issue_comment', 'pull_request_review'].includes(env.GITHUB_EVENT_NAME)) {
+  if (['route', 'dispatch-prepare'].includes(command) && env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' && (['issue_comment', 'pull_request_review'].includes(env.GITHUB_EVENT_NAME) || env.GITHUB_EVENT_NAME === 'workflow_dispatch' && event.inputs?.product_decision_comment)) {
     productApproval = await loadProductApproval(api, { eventName: env.GITHUB_EVENT_NAME, event, owner, repository: repo, root: process.cwd() });
     if (productApproval?.approval) route = { run: true, stage: 'propose', worker: 'apply-product-change', issue: productApproval.issue, productApproval, reason: 'Explicit current Product Change approval' };
     else if (productApproval?.feedback) route = { run: true, stage: 'propose', worker: 'product-change', issue: productApproval.issue, productFeedback: productApproval.feedback, productReview: productApproval, reason: 'Owner requested a Product Change revision' };

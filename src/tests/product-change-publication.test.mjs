@@ -13,7 +13,7 @@ test('product review and approval use the same markers, including legacy publish
   const model = 'Accepted model\n', baselineDigest = hash(`example.md\0${hash(model)}\n`);
   const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest, baselineDigest, affectedAreas: [], decisions: [] };
   const snapshot = { issue, stage: 'propose', title: 'Example', defaultBranch: 'main', sourceRevision: base, runId: 'c'.repeat(64), workflowRunId: '100', workflowRevision: base, authorizationDigest: 'd'.repeat(64), policyDigest: 'e'.repeat(64), taskDigest: 'f'.repeat(64) };
-  let pr, writes = 0, appliedTree, decisionComment, laterDecisions = [], reviews = [];
+  let pr, writes = 0, appliedTree, decisionComment, laterDecisions = [], reviews = [], issueLabels = [{ name: 'future' }];
   const api = async (path, method = 'GET', body, optional = false) => {
     if (method !== 'GET') writes++;
     if (path === 'pulls?state=open&per_page=100') return [];
@@ -36,7 +36,7 @@ test('product review and approval use the same markers, including legacy publish
     if (path === `contents/.product/config.yaml?ref=${base}` && optional) return null;
     if (path === `contents/.product/config.yaml?ref=${head}` && optional) return null;
     if (path === 'git/blobs/blob') return { encoding: 'base64', size: Buffer.byteLength(model), content: Buffer.from(model).toString('base64') };
-    if (path === 'issues/18') return { number: 18, state: 'open', labels: [] };
+    if (path === 'issues/18') return { number: 18, state: 'open', labels: issueLabels };
     if (path === 'issues/comments/9') return decisionComment;
     if (path === 'issues/7/comments?per_page=100&page=1') return laterDecisions;
     if (path === 'pulls/7/reviews?per_page=100&page=1') return reviews;
@@ -52,12 +52,26 @@ test('product review and approval use the same markers, including legacy publish
   decisionComment = structuredClone(event.comment);
   const before = writes;
   assert.equal((await loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository })).approval.reviewKey, published.binding.key);
+  const replay = { eventName: 'workflow_dispatch', event: { inputs: { pull_request: '7', product_decision_comment: '9' } }, owner: 'owner', repository };
+  assert.equal((await loadProductApproval(api, replay)).approval.decisionId, '9');
+  for (const name of ['human-working', 'agent-working']) {
+    issueLabels = [{ name }];
+    await assert.rejects(loadProductApproval(api, replay), /blocked/);
+  }
+  issueLabels = [{ name: 'future' }];
+  decisionComment = { ...event.comment, updated_at: '2026-01-02T00:00:00Z' };
+  await assert.rejects(loadProductApproval(api, replay), /unedited/);
+  decisionComment = { ...event.comment, issue_url: 'https://api.github.com/repos/owner/repo/issues/8' };
+  await assert.rejects(loadProductApproval(api, replay), /unedited/);
+  decisionComment = structuredClone(event.comment);
+  await assert.rejects(loadProductApproval(api, { ...replay, eventName: 'issue_comment', event: { ...event, comment: { ...event.comment, body: event.comment.body.slice(0, -2) } } }), /all 64 review-key characters/);
   for (const changed of [{ body: 'Approval withdrawn' }, { updated_at: '2026-01-02T00:00:00Z' }, { user: { login: 'other', type: 'User' } }, { issue_url: 'https://api.github.com/repos/owner/repo/issues/8' }]) {
     decisionComment = { ...event.comment, ...changed };
     await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /decision.*(edited|changed)/i);
   }
   decisionComment = structuredClone(event.comment);
   laterDecisions = [{ user: { login: 'owner', type: 'User' }, created_at: '2026-01-02T00:00:00Z', body: `/product-change request-changes example ${published.binding.key}\nPlease revise.` }];
+  await assert.rejects(loadProductApproval(api, replay), /later owner decision/);
   await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /later owner decision/);
   laterDecisions = []; reviews = [{ user: { login: 'owner', type: 'User' }, submitted_at: '2026-01-02T00:00:00Z', body: `/product-change request-changes example ${published.binding.key}\nPlease revise.` }];
   await assert.rejects(loadProductApproval(api, { eventName: 'issue_comment', event, owner: 'owner', repository }), /later owner decision/);
