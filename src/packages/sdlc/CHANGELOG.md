@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.18
+
+### Patch Changes
+
+- 017c710: # Authorized epic child refinement
+
+  Record and recheck explicit owner authorization before dispatching refinement for an authenticated, triaged epic child.
+
 ## 0.18.17
 
 ### Patch Changes
