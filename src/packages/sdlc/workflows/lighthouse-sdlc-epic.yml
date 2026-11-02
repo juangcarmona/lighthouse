@@ -12,7 +12,7 @@ on:
         required: true
         default: reconcile
         type: choice
-        options: [reconcile, register-pr, ready-child, accept-child, publish-aggregate, ready-aggregate, accept-aggregate]
+        options: [reconcile, refine-child, register-pr, ready-child, accept-child, publish-aggregate, ready-aggregate, accept-aggregate]
       child:
         description: Child issue number for PR registration or acceptance
         required: false
@@ -75,5 +75,13 @@ jobs:
         with:
           name: lighthouse-epic-journal-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-epic-${{ github.run_id }}-${{ inputs.issue }}/journal.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve child refinement authorization
+        if: success() && inputs.action == 'refine-child'
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-epic-refinement-${{ inputs.issue }}-${{ inputs.child }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-epic-${{ github.run_id }}-${{ inputs.issue }}/refinement.json
           if-no-files-found: error
           retention-days: 14

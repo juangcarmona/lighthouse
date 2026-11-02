@@ -5,8 +5,28 @@ import { readActionsJson } from './actions-artifact.mjs';
 import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
 import { epicJournalKey } from './epic-github.mjs';
 import { authenticateEpicChild } from './epic-native.mjs';
+import { observeEpicRefinement } from './epic-refinement.mjs';
+import { isDeepStrictEqual } from 'node:util';
 
 const positive = value => /^[1-9][0-9]*$/.test(String(value));
+export async function verifyEpicRefinementOrigin(api, { repository, owner, child, parent, runId }, { readArtifact = readActionsJson, observe = observeEpicRefinement } = {}) {
+  if (![child, parent, runId].every(positive)) throw Error('Invalid epic refinement origin');
+  const run = await api(`actions/runs/${runId}`), repo = await api('');
+  if (String(run.id) !== String(runId) || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || run.head_branch !== repo.default_branch || run.head_sha !== (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha) throw Error('Epic refinement origin is not an authenticated current owner execution');
+  const artifact = await readArtifact(api, repository, run.id, `lighthouse-epic-refinement-${parent}-${child}-1`, 'refinement.json');
+  const current = await observe({ api, repository, owner, child: Number(child), allowWorking: true, readArtifact });
+  const expected = { schemaVersion: 1, repository, parent: Number(parent), runId: String(run.id), attempt: 1, revision: run.head_sha, observation: current };
+  if (current.epic.parent !== Number(parent) || current.epic.sourceRevision !== run.head_sha || !isDeepStrictEqual(artifact, expected)) throw Error('Epic refinement authorization or triage changed');
+  return { run, current };
+}
+
+export async function dispatchEpicRefinement(api, { repository, owner, runId, parent, child }, options = {}) {
+  const verified = await verifyEpicRefinementOrigin(api, { repository, owner, child, parent, runId }, options);
+  const issue = await api(`issues/${child}`);
+  if (issue.state !== 'open' || issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info', 'waiting-review', 'execution-failed'].includes(label.name))) return { status: 'paused', parent, child };
+  await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: verified.run.head_branch, inputs: { issue: String(child), stage: 'refine', workflow: 'stage', epic_parent: String(parent), epic_run: String(runId) } });
+  return { status: 'dispatched', parent, child };
+}
 export async function verifyEpicTriageOrigin(api, { repository, owner, child, parent, runId }, { readArtifact = readActionsJson, authenticate = authenticateEpicChild } = {}) {
   if (![child, parent, runId].every(positive)) throw Error('Invalid epic triage origin');
   const run = await api(`actions/runs/${runId}`), repo = await api('');
@@ -20,11 +40,19 @@ export async function verifyEpicTriageOrigin(api, { repository, owner, child, pa
   return { run, journal, current };
 }
 
-export async function dispatchEpicTriage(api, { repository, owner, runId }, { readArtifact = readActionsJson, authenticate = authenticateEpicChild } = {}) {
+export async function dispatchEpicTriage(api, { repository, owner, runId }, { readArtifact = readActionsJson, authenticate = authenticateEpicChild, observe = observeEpicRefinement } = {}) {
   if (!positive(runId)) throw Error('Invalid epic execution');
   const run = await api(`actions/runs/${runId}`), inventory = await api(`actions/runs/${runId}/artifacts?per_page=100`);
   if (!Array.isArray(inventory.artifacts) || inventory.total_count !== inventory.artifacts.length || inventory.total_count > 100) throw Error('Epic artifact inventory is incomplete');
   const names = inventory.artifacts.filter(item => !item.expired).map(item => item.name).filter(name => /^lighthouse-epic-journal-[1-9][0-9]*-1$/.test(name));
+  const refinementArtifacts = inventory.artifacts.filter(item => /^lighthouse-epic-refinement-[1-9][0-9]*-[1-9][0-9]*-1$/.test(item.name));
+  if (refinementArtifacts.some(item => item.expired)) throw Error('Epic refinement authorization expired');
+  const refinements = refinementArtifacts.map(item => item.name);
+  if (refinements.length > 1) throw Error('Epic refinement authorization is ambiguous');
+  if (refinements.length === 1) {
+    const [, parent, child] = refinements[0].match(/^lighthouse-epic-refinement-([1-9][0-9]*)-([1-9][0-9]*)-1$/);
+    return dispatchEpicRefinement(api, { repository, owner, runId, parent: Number(parent), child: Number(child) }, { readArtifact, observe });
+  }
   if (names.length !== 1) throw Error('Epic execution journal is missing or ambiguous');
   const parent = Number(names[0].match(/^lighthouse-epic-journal-([1-9][0-9]*)-1$/)[1]);
   const journal = await readArtifact(api, repository, runId, names[0], 'journal.json');

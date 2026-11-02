@@ -59,6 +59,17 @@ async function fixture(t) {
   return { parent, comments, issues, parents, dependencies, calls, api, load, run, path: join(dir, 'journal.json'), setRouter: value => { router = value; }, setWorker: value => { worker = value; }, setBranch: value => { branch = value; } };
 }
 
+test('owner epic action retains child refinement authority without dispatching it directly', async t => {
+  const f = await fixture(t), path = `${f.path}.refinement`;
+  const observation = { child: 200, epic: { parent: issue, slice: 'a', planDigest: 'b'.repeat(64), base: 'lighthouse/epic-146', sourceRevision: sha }, taskDigest: 'c'.repeat(64), triage: { runId: '300', attempt: 1, reportId: 51, runIdentity: 'd'.repeat(64) } };
+  const args = { api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, authorizationPath: path, action: 'refine-child', child: 200, load: f.load, observeRefinement: async () => observation };
+  assert.deepEqual(await runEpicAction(args), { status: 'authorized', child: 200, parent: issue });
+  assert.deepEqual(JSON.parse(await readFile(path, 'utf8')), { schemaVersion: 1, repository, parent: issue, runId: '500', attempt: 1, revision: sha, observation });
+  assert.equal(f.calls.some(call => call.path.includes('/dispatches')), false);
+  await assert.rejects(runEpicAction({ ...args, run: { ...f.run, actor: { login: 'other' } } }), /authenticated owner workflow/);
+  await assert.rejects(runEpicAction({ ...args, observeRefinement: async () => ({ ...observation, epic: { ...observation.epic, parent: 147 } }) }), /different parent/);
+});
+
 test('aggregate acceptance verifies retained history and refuses a revoked owner approval', async t => {
   const f = await fixture(t), bot = { login: 'github-actions[bot]', type: 'Bot' };
   await runNativeEpic({ api: f.api, repository, owner, issue, run: f.run, journalPath: f.path, load: f.load });

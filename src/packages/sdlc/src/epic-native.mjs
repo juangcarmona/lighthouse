@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
@@ -450,14 +450,23 @@ export async function runNativeEpic({ api, repository, owner, issue, run, journa
   return reconcileEpicChildren(snapshot.plan, { repository, parent: issue, base: `lighthouse/epic-${issue}` }, host);
 }
 
-export async function runEpicAction({ api, repository, owner, issue, run, journalPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
+export async function runEpicAction({ api, repository, owner, issue, run, journalPath, authorizationPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, observeRefinement, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
   if (action === 'reconcile') return runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load, loadPolicy });
   if (action === 'accept-aggregate') return acceptEpicAggregate({ api, repository, owner, issue, run, load, loadPolicy, readArtifact });
-  if (!['register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
+  if (!['refine-child', 'register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
   const snapshot = await prepareNativeEpic(api, repository, owner, issue, load);
   await checkEpicLeaseConfiguration(api, snapshot.sourceRevision);
   const authorize = () => authorizeNativeEpic(api, snapshot);
   const journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, run, path: journalPath, authorize, ...(readArtifact ? { readArtifact } : {}) });
+  if (action === 'refine-child') {
+    if (!authorizationPath) throw Error('Epic refinement authorization artifact is required');
+    const observe = observeRefinement ?? (await import('./epic-refinement.mjs')).observeEpicRefinement;
+    const observation = await observe({ api, repository, owner, child, ...(readArtifact ? { readArtifact } : {}) });
+    if (observation.epic.parent !== issue || observation.epic.sourceRevision !== snapshot.sourceRevision) throw Error('Epic refinement targets a different parent or source');
+    await authorize();
+    await writeFile(authorizationPath, JSON.stringify({ schemaVersion: 1, repository, parent: issue, runId: String(run.id), attempt: run.run_attempt, revision: snapshot.sourceRevision, observation }));
+    return { status: 'authorized', child, parent: issue };
+  }
   if (action === 'publish-aggregate') return publishEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact });
   if (action === 'ready-aggregate') return readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft });
   if (action === 'register-pr') {
@@ -511,10 +520,10 @@ async function main() {
   const inputs = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')).inputs ?? {};
   const positive = value => /^[1-9][0-9]*$/.test(value ?? '') && Number.isSafeInteger(Number(value));
   const action = inputs.action || 'reconcile';
-  if (['register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
-  const result = await runEpicAction({ api, repository, owner, issue, run, journalPath: join(dir, 'journal.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
+  if (['refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
+  const result = await runEpicAction({ api, repository, owner, issue, run, journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
   console.log(JSON.stringify(result));
-  if (!['reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');
+  if (!['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch(error => { console.error(error.message); process.exitCode = 1; });

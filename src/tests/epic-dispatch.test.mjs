@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dispatchEpicTriage, verifyEpicTriageOrigin } from '../packages/sdlc/src/epic-dispatch.mjs';
+import { dispatchEpicTriage, verifyEpicTriageOrigin, dispatchEpicRefinement, verifyEpicRefinementOrigin } from '../packages/sdlc/src/epic-dispatch.mjs';
 import { epicCorrelation, epicJournalKey } from '../packages/sdlc/src/epic-github.mjs';
-import { dispatchId, dispatchReceiptBody, epicTriageKey, isBotEpicTriage, verifyDispatchOrigin } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { dispatchId, dispatchReceiptBody, epicTriageKey, epicRefinementKey, isBotEpicTriage, isBotEpicRefinement, verifyDispatchOrigin } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 
 const repository = 'owner/repo', owner = 'owner', revision = 'a'.repeat(40), planDigest = 'b'.repeat(64), bot = { login: 'github-actions[bot]', type: 'Bot' };
@@ -68,4 +68,43 @@ test('bot triage dispatch binds a stable identity to parent, child and plan', ()
   assert.throws(() => verifyDispatchOrigin({ ...request, epicKey: 'd'.repeat(64) }, receipt, parent, worker, repository, owner, 10));
   assert.equal(epicTriageKey(repository, 146, 10, planDigest), key);
   assert.notEqual(epicTriageKey(repository, 146, 11, planDigest), key);
+});
+
+test('owner authorization dispatches the current epic child refinement and rejects stale authority', async () => {
+  const f = fixture(), current = { child: 10, epic: await f.authenticate({ child: 10 }), taskDigest: 'd'.repeat(64), triage: { runId: '300', attempt: 1, reportId: 12, runIdentity: 'e'.repeat(64) } };
+  const artifact = { schemaVersion: 1, repository, parent: 146, runId: '500', attempt: 1, revision, observation: current };
+  const opts = { readArtifact: async () => artifact, observe: async () => current };
+  assert.equal((await verifyEpicRefinementOrigin(f.api, { repository, owner, child: 10, parent: 146, runId: 500 }, opts)).current.child, 10);
+  assert.equal((await dispatchEpicRefinement(f.api, { repository, owner, child: 10, parent: 146, runId: 500 }, opts)).status, 'dispatched');
+  assert.equal(f.posts.at(-1).inputs.stage, 'refine');
+  f.issues.get(10).labels.push({ name: 'future' });
+  assert.equal((await dispatchEpicRefinement(f.api, { repository, owner, child: 10, parent: 146, runId: 500 }, opts)).status, 'paused');
+  f.issues.get(10).labels.pop();
+  artifact.observation = { ...current, taskDigest: 'f'.repeat(64) };
+  await assert.rejects(verifyEpicRefinementOrigin(f.api, { repository, owner, child: 10, parent: 146, runId: 500 }, opts), /authorization or triage changed/);
+  artifact.observation = current; f.run.actor.login = 'outsider';
+  await assert.rejects(verifyEpicRefinementOrigin(f.api, { repository, owner, child: 10, parent: 146, runId: 500 }, opts), /owner execution/);
+});
+
+test('completed epic run selects its retained refinement authorization instead of child triage', async () => {
+  const f = fixture(), current = { child: 10, epic: await f.authenticate({ child: 10 }), taskDigest: 'd'.repeat(64), triage: { runId: '300', attempt: 1, reportId: 12, runIdentity: 'e'.repeat(64) } };
+  const artifact = { schemaVersion: 1, repository, parent: 146, runId: '500', attempt: 1, revision, observation: current };
+  const api = async (path, method, body) => path === 'actions/runs/500/artifacts?per_page=100' ? { total_count: 2, artifacts: [{ name: 'lighthouse-epic-journal-146-1', expired: false }, { name: 'lighthouse-epic-refinement-146-10-1', expired: false }] } : f.api(path, method, body);
+  const result = await dispatchEpicTriage(api, { repository, owner, runId: 500 }, { readArtifact: async () => artifact, observe: async () => current });
+  assert.equal(result.status, 'dispatched');
+  assert.deepEqual(f.posts.map(post => [post.inputs.issue, post.inputs.stage]), [['10', 'refine']]);
+});
+
+test('bot epic refinement is bound to one owner authorization execution', () => {
+  const epic = { parent: 146, slice: 'a', planDigest, base: 'lighthouse/epic-146', sourceRevision: revision };
+  const event = { inputs: { issue: '10', stage: 'refine', workflow: 'stage', epic_parent: '146', epic_run: '500' } };
+  const key = epicRefinementKey(repository, 146, 10, planDigest, '500');
+  const request = { schemaVersion: 1, id: dispatchId(repository, key, 'refine'), epicKey: key, epic, repository, issue: 10, stage: 'refine', routerRunId: '700', routerAttempt: 1, workflowRevision: revision, sourceRevision: revision, taskDigest: 'c'.repeat(64), ref: 'main', eventName: 'workflow_dispatch', event, handoff: false, eventRunId: '500' };
+  const receipt = { schemaVersion: 1, stage: 'refine', epicKey: key, id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '700', routerAttempt: 1, eventRunId: '500', workerRunId: null };
+  const parent = { id: 700, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor: bot, triggering_actor: bot, head_sha: revision, head_branch: 'main', repository: { full_name: repository } };
+  const worker = { path: '.github/workflows/lighthouse-sdlc-refine.lock.yml', event: 'workflow_dispatch', actor: bot, triggering_actor: bot, head_sha: revision, head_branch: 'main', repository: { full_name: repository } };
+  assert.equal(isBotEpicRefinement(event, 'workflow_dispatch', bot.login, bot.login), true);
+  assert.doesNotThrow(() => verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, 10));
+  assert.throws(() => verifyDispatchOrigin({ ...request, epicKey: 'd'.repeat(64) }, receipt, parent, worker, repository, owner, 10));
+  assert.notEqual(key, epicRefinementKey(repository, 146, 10, planDigest, '501'));
 });

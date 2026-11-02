@@ -131,7 +131,7 @@ jobs:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
       (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
-       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product' || inputs.workflow == 'resume-aligned')) || (inputs.stage == 'triage' && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
+       (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product' || inputs.workflow == 'resume-aligned')) || ((inputs.stage == 'triage' || (inputs.stage == 'refine' && inputs.workflow == 'stage')) && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
         (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
