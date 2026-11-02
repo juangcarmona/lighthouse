@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.22
+
+### Patch Changes
+
+- b02222a: # Product Change recovery
+
+  Inspect the Product Change publication job when reporting interrupted work.
+
 ## 0.18.21
 
 ### Patch Changes
