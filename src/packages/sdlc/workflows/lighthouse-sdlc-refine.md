@@ -113,6 +113,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+      checks: read
       contents: read
       issues: write
       pull-requests: read

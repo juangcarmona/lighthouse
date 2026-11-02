@@ -1,4 +1,4 @@
-import { admitDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection, issueComments } from './stage-dispatch.mjs';
+import { admitDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection, issueComments } from './stage-dispatch.mjs';
 import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,14 +8,9 @@ import { completionBundle, publishProcessBundle } from './process-publication.mj
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
-import { handoff, pendingQuestion, publishObservedStop, visibleNextAction, workerStopObservation } from './handoff.mjs';
+import { handoff, pendingQuestion, publishObservedStop, visibleNextAction, workerStopObservation, resultHandoffState } from './handoff.mjs';
 
-export async function assertCurrentCompletionAttempt(api, repository, issue, dispatch, run) {
-  if (!dispatch) return;
-  await checkDispatchClaim(api, repository, issue, dispatch, run);
-  const comments = await issueComments(api, issue);
-  if (comments.some(comment => Number(comment.id) > Number(dispatch.commentId) && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes('<!-- lighthouse-dispatch:'))) throw Error('A newer dispatch superseded this completion attempt');
-}
+export const assertCurrentCompletionAttempt = assertCurrentDispatch;
 
 async function main(command) {
   const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
@@ -101,6 +96,7 @@ async function main(command) {
     }
     if (!await access(join(dir, 'reserved')).then(() => true, () => false)) { if (preparationStop) await publishObservedStop(api, preparationStop); return; }
     const request = await load('request.json');
+    await assertCurrentDispatch(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID);
     await api(`issues/${request.issue}/labels/agent-working`, 'DELETE', undefined, true);
     if (preparationStop) await publishObservedStop(api, preparationStop);
     else if (['failed', 'cancelled'].includes(outcome)) await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: workerStop });
@@ -162,7 +158,8 @@ async function main(command) {
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
   const proposedQuestion = envelope.result.output?.handoff?.question;
   const question = envelope.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
-  const body = handoff({ status: question ? 'question' : envelope.result.status === 'blocked' ? 'blocked' : 'completed', stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
+  const projection = resultHandoffState({ status: envelope.result.status, stage: request.stage, question });
+  const body = handoff({ status: projection.status, stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
   const effects = completionEffects(request.stage, envelope.result.status);
   if (question) effects.add.push('needs-info');
   await recheck();

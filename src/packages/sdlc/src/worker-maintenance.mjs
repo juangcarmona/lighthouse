@@ -25,6 +25,11 @@ async function main(command) {
     const response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     if (optional && response.status === 404) return null;
     if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
+    if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
+      const log = await response.text();
+      if (Buffer.byteLength(log) > 4 * 1024 * 1024) throw Error('Job log exceeds recovery bounds');
+      return log;
+    }
     return response.status === 204 ? null : response.json();
   };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };

@@ -1,20 +1,65 @@
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
-import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation } from './handoff.mjs';
+import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerExecutionObservation, publishStep } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
 export const retryLimit = 2;
 export const retryDelayMs = 30 * 60 * 1000;
+export const shortRunMs = 5 * 60 * 1000;
 export const recoveryId = (repository, rootId, attempt) => digest(`${repository}:${rootId}:retry:${attempt}`);
-const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish', 'Recheck authority and publish the candidate'].includes(step.name));
 const identity = r => ({ issue: r.request.issue, worker: workerFor(r.request), runId: String(r.run.id), rootId: r.request.recovery?.rootId ?? r.request.id, attempt: r.request.recovery?.attempt ?? 0 });
 const ownerAnswers = comments => comments.filter(c => c.user?.login === c.owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
 const intent = (issue, comments, owner) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers(comments.map(c => ({ ...c, owner }))).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
 
-export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, now = Date.now() }) {
-  const base = identity({ request, run });
-  const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, nextAction, ...extra });
+export function classifyTechnicalFailure({ run, jobs, evidence = {} }) {
+  const agent = jobs.find(job => job.name === 'agent');
+  if (run.conclusion === 'cancelled' || agent?.conclusion === 'cancelled') return 'cancelled';
+  if (!['failure', 'timed_out'].includes(run.conclusion)) return 'none';
+  if (evidence.result === 'present' || evidence.result === 'invalid') return 'substantive-failure';
+  if (evidence.result === 'unknown') return 'evidence-unavailable';
+  if (['out-of-memory', 'process-limit', 'aborted', 'cancelled'].includes(evidence.execution?.status)) return 'substantive-failure';
+  const failed = agent?.conclusion === 'skipped' ? jobs.find(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion)) : agent;
+  const started = Date.parse(failed?.started_at), ended = Date.parse(failed?.completed_at);
+  if (!Number.isFinite(started) || !Number.isFinite(ended) || ended < started) return 'duration-unknown';
+  if (!['failure', 'timed_out'].includes(failed?.conclusion)) return 'substantive-failure';
+  if (evidence.annotations?.some(message => /^(?:Process completed with exit code 143\.?|The runner has received a shutdown signal\.?|Lost communication with the server\.?|The runner .+ (?:was|has been) (?:deleted|terminated)\.?)$/i.test(message.trim()))) return 'runner-shutdown';
+  // The adapter prefixes every model/tool line; quoted diagnostics cannot impersonate its engine error.
+  const lines = (evidence.log ?? '').replace(/\x1b\[[0-9;]*m/g, '').split('\n').map(line => line.replace(/^\S+Z /, ''));
+  const last = lines.filter(line => /^\[(?:Engine error|OpenCode|Tool|Tool error)\] /.test(line)).at(-1);
+  if (/^\[Engine error\] (?:stream (?:closed|disconnected|terminated)(?: before (?:completion|response))?|socket hang up|connection reset|ECONNRESET)\.?$/i.test(last ?? '')) return 'cut-off';
+  return ended - started < shortRunMs ? 'short-run' : 'substantive-failure';
+}
+
+export async function readFailureEvidence(api, repository, request, run, jobs, readArtifact = readActionsJson) {
+  const evidence = {};
+  const prefix = request.stage === 'implement' ? 'lighthouse-implement-result' : 'lighthouse-result';
+  try {
+    const value = await readArtifact(api, repository, run.id, `${prefix}-${request.issue}-${run.run_attempt}`, 'envelope.json', true);
+    evidence.result = value == null ? 'absent' : 'present';
+  } catch { evidence.result = 'unknown'; }
+  try { evidence.execution = (await readArtifact(api, repository, run.id, `${prefix}-${request.issue}-${run.run_attempt}`, 'runtime.json', true))?.execution; } catch {}
+  const agent = jobs.find(job => job.name === 'agent');
+  if (!agent?.id) return evidence;
+  const prefixUrl = `https://api.github.com/repos/${repository}/check-runs/`;
+  const check = agent.check_run_url?.startsWith(prefixUrl) ? agent.check_run_url.slice(prefixUrl.length) : null;
+  try {
+    if (/^[1-9][0-9]*$/.test(check ?? '')) {
+      const annotations = await api(`check-runs/${check}/annotations?per_page=100`);
+      if (Array.isArray(annotations) && annotations.length < 100) evidence.annotations = annotations.map(a => a.message).filter(m => typeof m === 'string');
+    }
+  } catch { /* Missing diagnostics never establish an infrastructure cause. */ }
+  try {
+    const log = await api(`actions/jobs/${agent.id}/logs`);
+    if (typeof log === 'string' && Buffer.byteLength(log) <= 4 * 1024 * 1024) evidence.log = log;
+  } catch {}
+  return evidence;
+}
+
+export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now = Date.now() }) {
+  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome };
+  const cause = classifyTechnicalFailure({ run, jobs, evidence });
+  const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, cause, nextAction, ...extra });
   if (run.status !== 'completed') {
     const updated = Date.parse(run.updated_at);
     if (Number.isFinite(updated) && now - updated >= 2 * 60 * 60 * 1000) return result('stalled', 'worker-stalled', 'Inspect the runner and current execution; maintenance never cancels or duplicates active work.');
@@ -33,6 +78,7 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
   const publish = publishStep(publication);
   const failedExecution = jobs.some(j => ['pre_activation', 'activation', 'agent'].includes(j.name) && ['failure', 'timed_out'].includes(j.conclusion));
   if (preparation?.conclusion !== 'success' || !failedExecution || publish?.conclusion !== 'skipped') return result('uncertain', 'publication-uncertain', 'Inspect publication and remote effects before creating another request.');
+  if (!['short-run', 'runner-shutdown', 'cut-off'].includes(cause)) return result(cause === 'substantive-failure' ? 'blocked' : 'uncertain', cause, 'Inspect the retained failure; no confirmed recoverable technical interruption was established.');
   if (base.attempt >= retryLimit) return result('exhausted', 'worker-technical-failure', 'Retry budget exhausted. Inspect the failure and make a new owner decision.');
   const ended = Date.parse(run.updated_at);
   if (!Number.isFinite(ended) || !Number.isFinite(now)) return result('uncertain', 'execution-time-unknown', 'Inspect the execution timestamps.');
@@ -53,7 +99,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
       await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
       observedRunId = String(run.id);
     }
-    return { issue: issue.number, worker: workerFor(receipt), rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
+    return { issue: issue.number, worker: workerFor(receipt), outcome: 'requested', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
   }
   const run = await api(`actions/runs/${receipt.workerRunId}`);
   const dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
@@ -62,27 +108,15 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
-  const agent = jobs.jobs.find(job => job.name === 'agent');
-  const publishJob = jobs.jobs.find(job => job.name === (workerFor(dispatch.request) === 'product-change' ? 'Validate and publish the product candidate' : 'Validate, publish and release'));
-  const publish = publishStep(publishJob);
-  const cleanup = publishJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation', 'Release the execution reservation'].includes(step.name));
-  const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
-  const unpublished = !publishJob || publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
-  const notStarted = !agent || agent.conclusion === 'skipped';
-  const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
-  const observation = publish?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(cleanup?.conclusion) ? 'cleanup-failure'
-    : ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null
-    : workerFor(dispatch.request) === 'apply-product-change' ? productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
-    : agent?.conclusion === 'success' && (!publishJob || ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publish?.conclusion) || ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publishJob.conclusion)) ? 'publication-unknown'
-    : ['failure', 'timed_out'].includes(prepare?.conclusion) && notStarted ? 'preparation-failure'
-    : prepare?.conclusion === 'success' && activationFailed && notStarted && unpublished ? 'activation-failure'
-    : unpublished && ['failure', 'timed_out'].includes(agent?.conclusion) ? 'failure'
-    : unpublished && agent?.conclusion === 'cancelled' ? 'cancelled'
-    : run.conclusion === 'cancelled' && notStarted && (unpublished || !publishJob) ? 'pre-agent-cancelled' : null;
+  const execution = workerExecutionObservation({ run, jobs: jobs.jobs, receipt, worker: workerFor(dispatch.request) });
+  const observation = workerFor(dispatch.request) === 'apply-product-change'
+    ? ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null : productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
+    : execution.observation;
+  const evidence = run.status === 'completed' && ['failure', 'timed_out'].includes(run.conclusion) ? await readFailureEvidence(api, repository, dispatch.request, run, jobs.jobs, readArtifact) : undefined;
   const event = dispatch.request.event;
   const answered = dispatch.request.eventName === 'issue_comment' && event?.action === 'created' && event.issue?.number === issue.number && !event.issue.pull_request && event.comment?.user?.login === owner && event.comment.user.type === 'User' && typeof event.comment.body === 'string' && !!event.comment.body.trim() && !dispatch.request.feedbackKey;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation, answerRetained: answered } : null;
-  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
+  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
 }
 
 // Reporting is read-only so it can observe an active worker without acquiring its lease.
@@ -171,9 +205,9 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
   if (!dispatch || !run) return 'not-applicable';
   const publication = jobs.find(j => j.name === 'Validate, publish and release');
   const publish = publishStep(publication);
-  const failedPublication = run.conclusion === 'failure' && jobs.find(j => j.name === 'agent')?.conclusion === 'success' && publish?.conclusion === 'failure';
-  const interrupted = failedPublication && ['running', 'unknown'].includes(dispatch.receipt.status);
-  const completed = (run.conclusion === 'success' || failedPublication) && ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status);
+  const publicationObserved = ['failure', 'timed_out', 'cancelled', 'success'].includes(run.conclusion) && jobs.find(j => j.name === 'agent')?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled', 'success'].includes(publish?.conclusion);
+  const interrupted = publicationObserved && ['running', 'unknown'].includes(dispatch.receipt.status);
+  const completed = (run.conclusion === 'success' || publicationObserved) && ['completed', 'waiting', 'blocked'].includes(dispatch.receipt.status);
   if (run.status !== 'completed' || (!completed && !interrupted) || run.run_attempt !== 1 || !['triage', 'refine'].includes(dispatch.request.stage) || dispatch.request.worker) return 'not-applicable';
   const id = digest(`${repository}:${issue.number}:${dispatch.request.stage}:${run.id}:${run.run_attempt}`);
   const marker = `<!-- lighthouse-actions:${id} -->`;
@@ -201,7 +235,7 @@ export async function reconcilePublishedStage(api, repository, owner, issue, com
     next = !snapshot.autoImplement ? 'No automatic continuation is configured for this refinement.' : paused ? 'The workflow will recheck the authorized implementation request.' : 'The workflow will request implementation under the configured continuation policy; the owner can pause it with the future label.';
   } else if (result.status === 'blocked' && !question) action = visibleNextAction(result.nextAction);
   if (interrupted && snapshot.autoImplement && result.status === 'passed') { action = 'Owner: inspect the restored result and request the next authorized stage.'; next = 'The interrupted execution did not confirm an automatic continuation.'; }
-  const body = handoff({ status: projection.status, stage: snapshot.stage, happened: `A previous handoff was restored from retained execution evidence.\n\n${envelope.effect.body}`, action, next, details: `Outcome: ${result.status}\n\n[Workflow run](https://github.com/${repository}/actions/runs/${run.id}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n<!-- lighthouse-stage:${snapshot.stage}:${result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}` });
+  const body = handoff({ status: projection.status, stage: snapshot.stage, happened: `A previous handoff was restored from retained execution evidence.\n\n${envelope.effect.body}`, action, next, details: `Outcome: ${result.status}\n\n[Workflow run](https://github.com/${repository}/actions/runs/${run.id}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-result:${digest(JSON.stringify(envelope))} -->\n<!-- lighthouse-handoff:v1 -->\n<!-- lighthouse-stage:${snapshot.stage}:${result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}` });
   await checkDispatchClaim(api, repository, issue.number, { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, run.id);
   const fresh = await api(`issues/${issue.number}`), freshComments = await issueComments(api, issue.number);
   const currentRepo = await api(''), currentRevision = (await api(`commits/${encodeURIComponent(currentRepo.default_branch)}`)).sha;
@@ -266,7 +300,8 @@ export async function verifyRecoveryOrigin(api, repository, owner, dispatch, par
   const issue = await api(`issues/${r.issue}`), comments = await issueComments(api, r.issue), repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(r.ref)}`)).sha;
-  const decision = recoveryDecision({ ...prior, run: priorRun, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision });
+  const evidence = await readFailureEvidence(api, repository, prior.request, priorRun, jobs.jobs, readArtifact);
+  const decision = recoveryDecision({ ...prior, run: priorRun, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, evidence });
   if (decision.state !== 'retryable') throw Error(`Recovery no longer authorized: ${decision.code}`);
 }
 
@@ -295,8 +330,12 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
       if (reconciliation === 'uncertain') Object.assign(publicObservation, { state: 'uncertain', code: 'handoff-unconfirmed', nextAction: 'Inspect the retained result and current issue state before restoring its handoff.' });
     }
     observations.push(publicObservation);
-    if (observation.stop && observation.rootId === currentRoot) await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, ...observation.stop, sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } });
-    if (observation.state !== 'retryable' || enabled !== true || observation.rootId !== currentRoot) continue;
+    if (observation.stop && observation.rootId === currentRoot) await publishObservedStop(api, { repository, issue: issueNumber, stage: dispatch.request.stage, ...observation.stop, recovery: publicObservation, sourceRevision: dispatch.request.sourceRevision, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest } });
+    if (publicObservation.state !== 'retryable' || enabled !== true || observation.rootId !== currentRoot) continue;
+    const freshIssue = await api(`issues/${issueNumber}`), freshComments = await issueComments(api, issueNumber);
+    if (freshComments.some(c => Number(c.id) > Number(comment.id) && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-dispatch:'))) continue;
+    const freshObservation = await observeDispatch(api, repository, owner, comment, freshIssue, freshComments, now, readArtifact);
+    if (freshObservation.state !== 'retryable') continue;
     const attempt = observation.attempt + 1;
     const request = { ...dispatch.request, id: recoveryId(repository, observation.rootId, attempt), routerRunId: String(parent.id), routerAttempt: parent.run_attempt, routerRevision: parent.head_sha, routerRef: parent.head_branch, routerEventName: parent.event, recovery: { rootId: observation.rootId, previousComment: comment.id, attempt } };
     const recorded = await recordDispatch(api, repository, request);

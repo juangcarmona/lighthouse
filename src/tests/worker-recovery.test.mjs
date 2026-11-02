@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 import { dispatchId, dispatchReceiptBody, readDispatchReceipt, loadDispatch, sendDispatch } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { recoveryDecision, prepareRecovery, observeRecovery, observeDispatch, reconcileAbandonedReservation, reconcileUnattendedStop, verifyRecoveryOrigin, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
+import { recoveryDecision, prepareRecovery, observeRecovery, observeDispatch, reconcileAbandonedReservation, reconcileUnattendedStop, verifyRecoveryOrigin, classifyTechnicalFailure, readFailureEvidence, retryDelayMs, recoveryId, maintenancePath } from '../packages/sdlc/src/worker-recovery.mjs';
 import { ownerIssues } from '../packages/sdlc/src/worker-maintenance.mjs';
 import { loadProductApplyDispatch, reportProductApplyStop } from '../packages/sdlc/src/issue-actions.mjs';
 
@@ -16,7 +16,7 @@ function fixture() {
   const run = { ...parent, id: 200, path: '.github/workflows/lighthouse-sdlc-implement.lock.yml', status: 'completed', conclusion: 'failure', updated_at: new Date(Date.now() - retryDelayMs - 60000).toISOString(), actor: bot, triggering_actor: bot };
   const receipt = { schemaVersion: 1, stage: request.stage, id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '100', routerAttempt: 1, workerRunId: '200', status: 'failed' };
   const comment = { id: 30, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/7`, body: dispatchReceiptBody(repository, receipt) };
-  const jobs = [{ name: 'Authorize and reserve issue', conclusion: 'success' }, { name: 'agent', conclusion: 'failure' }, { name: 'Validate, publish and release', conclusion: 'failure', steps: [{ name: 'Recheck authority and publish the validated result', conclusion: 'skipped' }] }];
+  const jobs = [{ name: 'Authorize and reserve issue', conclusion: 'success' }, { name: 'agent', conclusion: 'failure', started_at: '2020-01-01T00:00:00Z', completed_at: '2020-01-01T00:02:00Z' }, { name: 'Validate, publish and release', conclusion: 'failure', steps: [{ name: 'Recheck authority and publish the validated result', conclusion: 'skipped' }] }];
   const comments = [comment], calls = [], artifacts = new Map([['100', request]]), runs = new Map([['100', parent], ['200', run], ['300', maintenance]]);
   const api = async (path, method = 'GET', body) => {
     calls.push({ path, method, body });
@@ -502,6 +502,12 @@ test('maintenance reports failed product apply without authorizing a retry', asy
   assert.equal(result.request, undefined);
   assert.match(f.comments.at(-1).body, /Product Change provider failed before publication/);
   assert.doesNotMatch(f.comments.at(-1).body, /agent execution failed/);
+  for (const status of ['completed', 'waiting', 'blocked']) {
+    const receipt = readDispatchReceipt(f.comment, repository, 7);
+    f.comment.body = dispatchReceiptBody(repository, { ...receipt, status });
+    const observed = await observeDispatch(f.api, repository, owner, f.comment, f.issue, f.comments, Date.now(), f.readArtifact);
+    assert.equal(observed.stop, null, status);
+  }
 });
 
 test('product apply finalizer authenticates and deduplicates its failure handoff', async () => {
@@ -747,4 +753,96 @@ test('maintenance restores a failed read-only publication idempotently after the
   const count = f.comments.length;
   await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), readArtifact);
   assert.equal(f.comments.length, count);
+});
+
+
+test('cancelled agent and cancelled publisher without recorded steps produce one uncertain terminal notice', async () => {
+  const f = fixture();
+  f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'cancelled';
+  f.jobs[2].conclusion = 'cancelled'; f.jobs[2].steps = [];
+  const observed = await observeDispatch(f.api, repository, owner, f.comment, f.issue, f.comments, Date.now(), f.readArtifact);
+  assert.equal(observed.stop?.observation, 'publication-unknown');
+  for (let replay = 0; replay < 2; replay++) await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.equal(f.comments.length, 2);
+  assert.match(f.comments[1].body, /effects and final result are not confirmed/);
+  assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false);
+});
+
+test('recovery classifies duration and technical evidence before delay and budget', () => {
+  for (const [name, modify, state, cause] of [
+    ['short', () => {}, 'retryable', 'short-run'],
+    ['long substantive failure', f => { f.jobs[1].completed_at = '2020-01-01T00:20:00Z'; }, 'blocked', 'substantive-failure'],
+    ['unknown duration', f => { delete f.jobs[1].started_at; }, 'uncertain', 'duration-unknown'],
+    ['cancelled', f => { f.run.conclusion = 'cancelled'; f.jobs[1].conclusion = 'cancelled'; }, 'uncertain', 'cancelled'],
+    ['reversed duration', f => { f.jobs[1].completed_at = '2019-01-01T00:00:00Z'; }, 'uncertain', 'duration-unknown'],
+  ]) {
+    const f = fixture(); modify(f);
+    const result = decide(f);
+    assert.equal(result.state, state, name);
+    assert.equal(result.cause, cause, name);
+  }
+});
+
+
+test('technical causes share the existing two-retry budget and exact thirty-minute delay', () => {
+  const now = Date.parse('2026-11-02T06:00:00Z');
+  for (const [cause, evidence] of [
+    ['short-run', { result: 'absent' }],
+    ['runner-shutdown', { result: 'absent', annotations: ['Process completed with exit code 143.'] }],
+    ['cut-off', { result: 'absent', log: '2026-11-02T05:00:00Z [Engine error] stream disconnected before response' }],
+  ]) for (const attempt of [0, 1, 2]) for (const elapsed of [retryDelayMs - 1, retryDelayMs]) {
+    const f = fixture();
+    if (cause !== 'short-run') f.jobs[1].completed_at = '2020-01-01T00:20:00Z';
+    if (attempt) f.request.recovery = { rootId: f.request.id, previousComment: 20, attempt };
+    f.run.updated_at = new Date(now - elapsed).toISOString();
+    const decision = decide(f, { evidence, now });
+    assert.equal(decision.cause, cause);
+    assert.equal(decision.state, attempt === 2 ? 'exhausted' : elapsed < retryDelayMs ? 'delayed' : 'retryable');
+    if (attempt !== 2) assert.equal(decision.retryAt, new Date(now - elapsed + retryDelayMs).toISOString());
+    assert.equal(classifyTechnicalFailure({ ...f, evidence: { ...evidence, result: 'present' } }), 'substantive-failure');
+    assert.equal(classifyTechnicalFailure({ ...f, evidence: { ...evidence, result: 'unknown' } }), 'evidence-unavailable');
+    delete f.jobs[1].started_at;
+    assert.equal(classifyTechnicalFailure({ ...f, evidence }), 'duration-unknown');
+  }
+});
+
+test('technical diagnostics authenticate the check URL, distinguish check/job IDs and ignore quoted or resumed errors', async () => {
+  const f = fixture();
+  Object.assign(f.jobs[1], { id: 900, check_run_url: 'https://api.github.com/repos/owner/repo/check-runs/901', completed_at: '2020-01-01T00:20:00Z' });
+  const calls = [];
+  const api = async path => {
+    calls.push(path);
+    if (path === 'check-runs/901/annotations?per_page=100') return [{ message: 'The runner has received a shutdown signal.' }];
+    if (path === 'actions/jobs/900/logs') return '[Engine error] stream closed before completion';
+    throw Error(path);
+  };
+  const evidence = await readFailureEvidence(api, repository, f.request, f.run, f.jobs, async () => null);
+  assert.deepEqual(calls, ['check-runs/901/annotations?per_page=100', 'actions/jobs/900/logs']);
+  assert.equal(classifyTechnicalFailure({ ...f, evidence }), 'runner-shutdown');
+  assert.equal(classifyTechnicalFailure({ ...f, evidence: { ...evidence, annotations: [] } }), 'cut-off');
+  for (const log of ['[OpenCode] [Engine error] stream closed before completion', '[Tool error] [Engine error] stream closed before completion', '[Engine error] stream closed before completion\n[OpenCode] Work continued.']) assert.equal(classifyTechnicalFailure({ ...f, evidence: { result: 'absent', log } }), 'substantive-failure', log);
+  for (const status of ['out-of-memory', 'process-limit', 'aborted', 'cancelled']) assert.equal(classifyTechnicalFailure({ ...f, evidence: { ...evidence, execution: { status } } }), 'substantive-failure', status);
+  calls.length = 0;
+  f.jobs[1].check_run_url = 'https://api.github.com/repos/other/repo/check-runs/901';
+  await readFailureEvidence(api, repository, f.request, f.run, f.jobs, async () => null);
+  assert.deepEqual(calls, ['actions/jobs/900/logs']);
+});
+
+test('retry recording rechecks authority and later reservations after publishing the failed attempt', async () => {
+  for (const change of ['intent', 'human-reservation', 'newer-attempt']) {
+    const f = fixture();
+    const api = async (path, method, body) => {
+      const result = await f.api(path, method, body);
+      if (path === 'issues/7/comments' && method === 'POST') {
+        if (change === 'intent') f.issue.body = 'Owner changed the scope';
+        if (change === 'human-reservation') f.issue.labels.push({ name: 'human-working' });
+        if (change === 'newer-attempt') f.comments.push({ ...f.comment, id: 80, body: dispatchReceiptBody(repository, { ...f.receipt, id: dispatchId(repository, '400'), routerRunId: '400' }) });
+      }
+      return result;
+    };
+    const result = await prepareRecovery(api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+    assert.equal(result.request, undefined, change);
+    assert.equal(f.comments.filter(c => c.body.includes('<!-- lighthouse-stop:200:1 -->')).length, 1, change);
+    assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false, change);
+  }
 });

@@ -42,13 +42,42 @@ export function productPublicationMessage({ worker, outcome, reviewTarget, agent
   return worker === 'product-change' && outcome === 'candidate' && reviewTarget ? 'The Product Change candidate passed provider overlay and OpenSpec validation and is ready for your product decision.' : agentMessage;
 }
 
-export function workerStopObservation({ preActivation, activation, agent, publish }) {
-  if (agent === 'skipped' && [preActivation, activation].some(value => value === 'failure' || value === 'timed_out')) return 'activation-failure';
-  if (agent === 'skipped' && [preActivation, activation].includes('cancelled')) return 'pre-agent-cancelled';
+export function workerStopObservation({ prepare, preActivation, activation, agent, publish, run, publication = 'unpublished', cleanup, receipt }) {
+  if (publication === 'published' && ['failure', 'timed_out', 'cancelled'].includes(cleanup)) return 'cleanup-failure';
+  if (['completed', 'waiting', 'blocked'].includes(receipt) || publication === 'published') return null;
+  // Missing step records cannot establish that a publisher applied no effects.
+  if (publication === 'unknown') return 'publication-unknown';
+  const notStarted = !agent || agent === 'skipped';
+  if (notStarted && ['failure', 'timed_out'].includes(prepare)) return 'preparation-failure';
+  if (notStarted && [preActivation, activation].some(value => value === 'failure' || value === 'timed_out')) return 'activation-failure';
+  if (notStarted && [prepare, preActivation, activation, run].includes('cancelled')) return 'pre-agent-cancelled';
   if (agent === 'failure' || agent === 'timed_out') return 'failure';
   if (agent === 'cancelled') return 'cancelled';
   if (agent === 'success' && ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publish)) return 'publication-unknown';
+  if (notStarted && ['failure', 'timed_out', 'success'].includes(run)) return 'publication-unknown';
   return null;
+}
+
+export const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish', 'Recheck authority and publish the candidate'].includes(step.name));
+
+export function workerExecutionObservation({ run, jobs, receipt, worker }) {
+  if (!run) return { outcome: receipt.workerRunId ? 'queued' : 'requested', publication: 'unknown', observation: null };
+  const publicationJob = jobs.find(job => job.name === (worker === 'product-change' ? 'Validate and publish the product candidate' : 'Validate, publish and release'));
+  const publish = publishStep(publicationJob);
+  const publication = publish?.conclusion === 'success' ? 'published' : !publicationJob || publish?.conclusion === 'skipped' || publicationJob.conclusion === 'skipped' ? 'unpublished' : 'unknown';
+  const cleanup = publicationJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation', 'Release the execution reservation'].includes(step.name));
+  const conclusion = name => jobs.find(job => job.name === name)?.conclusion;
+  const observation = workerStopObservation({ prepare: conclusion('Authorize and reserve issue') ?? conclusion('Verify accepted commit, checks and evidence protection') ?? conclusion('Authenticate and checkpoint the idea'), preActivation: conclusion('pre_activation'), activation: conclusion('activation'), agent: conclusion('agent'), publish: publish?.conclusion ?? publicationJob?.conclusion ?? 'skipped', run: run.conclusion, publication, cleanup: cleanup?.conclusion, receipt: receipt.status });
+  const outcome = ['queued', 'waiting', 'pending', 'requested'].includes(run.status) ? 'queued'
+    : run.status === 'in_progress' ? 'active'
+    : run.status !== 'completed' ? 'unknown'
+    : receipt.status === 'waiting' ? 'question'
+    : receipt.status === 'blocked' ? 'blocked'
+    : observation === 'publication-unknown' || observation === 'cleanup-failure' ? 'unknown'
+    : observation?.includes('cancelled') ? 'cancelled'
+    : observation?.includes('failure') ? 'technical-failure'
+    : receipt.status === 'completed' || publication === 'published' ? 'completed' : 'unknown';
+  return { outcome, publication, observation };
 }
 
 export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
@@ -68,7 +97,7 @@ export function handoff({ status, stage, happened, action, next, link, details }
 }
 
 // A newer authenticated dispatch owns current status, even if an older cleanup finishes late.
-export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false, preparationReason }) {
+export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false, preparationReason, recovery }) {
   if (!['failure', 'cancelled', 'pre-agent-cancelled', 'preparation-failure', 'provider-preparation-failure', 'preparation-cancelled', 'activation-failure', 'provider-failure', 'provider-cancelled', 'publication-unknown', 'cleanup-failure'].includes(observation) || !dispatch?.commentId) return false;
   const { checkDispatchClaim, issueComments, readDispatchReceipt } = await import('./stage-dispatch.mjs');
   await checkDispatchClaim(api, repository, issue, dispatch, run);
@@ -98,7 +127,8 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   const gap = ['failure', 'preparation-failure', 'provider-preparation-failure', 'activation-failure', 'provider-failure'].includes(observation) && !available ? ' The execution-failed label is not adopted or available; the maintainer must review label capability adoption.' : '';
   const reservation = item.labels.some(l => l.name === 'agent-working') ? ' The maintainer must also inspect the remaining agent-working reservation and release it only after verifying that no newer worker owns it.' : '';
   const action = (missingChecks ? 'The repository maintainer must configure checks in .lighthouse/implement.json or add npm run verify before requesting implementation again.' : observation === 'publication-unknown' ? 'The workflow maintainer must inspect the linked execution and compare the issue and any linked PR with its publication steps.' : 'The workflow maintainer must inspect the failed or cancelled execution and the configured recovery policy.') + reservation;
-  const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : 'Recovery follows the configured policy and requires its existing authorization.', link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: marker });
+  const recoveryNext = recovery?.state === 'exhausted' ? 'The two-retry budget is exhausted; the owner must inspect the failure and make a new decision.' : recovery?.state === 'retryable' || recovery?.state === 'delayed' ? `The ${recovery.cause} observation is eligible for bounded recovery after ${recovery.retryAt}, only when recovery is enabled and authority still matches.` : 'Recovery follows the configured policy and requires its existing authorization.';
+  const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : recoveryNext, link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: `${marker}${recovery?.cause ? `\nRecovery observation: ${recovery.cause}.` : ''}` });
   await checkDispatchClaim(api, repository, issue, dispatch, run);
   const current = await issueComments(api, issue);
   for (const comment of current) {

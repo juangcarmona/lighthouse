@@ -12,14 +12,18 @@
 
 ## 2. Lifecycle delivery
 
-- [ ] 2.1 Apply consistent actionable handoffs and label-first publication across stage and PR adapters.
-- [ ] 2.2 Preserve questions and accepted answers across continuation and authorized retry.
-- [ ] 2.3 Publish host-observed terminal outcomes without synthetic agent results, and protect against stale or duplicate attempts.
-- [ ] 2.4 Reconcile interrupted publication and cleanup under existing authorization and retry policies.
-- [ ] 2.5 Update workflow sources, regenerate locks, update package documentation and cover adopter upgrades.
+- [x] 2.1 Apply consistent actionable handoffs and label-first publication across stage and PR adapters.
+- [x] 2.2 Preserve questions and accepted answers across continuation and authorized retry.
+- [x] 2.3 Publish host-observed terminal outcomes without synthetic agent results, and protect against stale or duplicate attempts.
+- [x] 2.4 Reconcile interrupted publication and cleanup under existing authorization and retry policies.
+- [x] 2.5 Update workflow sources, regenerate locks, update package documentation and cover adopter upgrades.
+
+The [handoff guide](../../../src/packages/sdlc/handoffs.md) documents the shared classifier, trusted publisher, reconciliation and unchanged two-retry/30-minute recovery policy. Production-command and API-double tests cover publication order, lost responses, changed authority, later reservations and cancelled publication without step records.
 
 ## 3. Acceptance
 
-- [ ] 3.1 Test the full question, answer, resume and failure sequence, review delivery, cancellation, stale and duplicate events, and partial publication.
+- [x] 3.1 Test the full question, answer, resume and failure sequence, review delivery, cancellation, stale and duplicate events, and partial publication.
 - [x] 3.2 Run repository and provider projection verification.
 - [x] 3.3 Review and record a controlled GitHub conversation showing the required chronological handoffs and labels. Evidence: [question, answer and controlled failure](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/issues/1) and [question, answer and successful continuation](https://github.com/juangcarmona/lighthouse-p0-acceptance-20261031/issues/9); both fixtures are private to the owner.
+
+The deterministic acceptance matrix exercises the production code locally; CI verifies the package and installed workflow projections separately. These checks do not claim a new real cancellation or model/provider execution.

@@ -34,6 +34,8 @@ Product Change apply failures are reported on the issue and, while the approved 
 
 Product preparation checks out the adopter's current source separately from the harness. The pinned ProductShape core supplies read-only inspection, impact and citation reports for the accepted model; the host validates candidate files in a temporary workspace before publishing them. The adopter does not need a Node project or preinstalled dependencies for this worker.
 
+See [workflow handoffs](handoffs.md) for outcome meanings, publication order, interruption reconciliation and bounded retry evidence.
+
 ## Label catalog
 
 [capabilities.json](capabilities.json) contains the exact names, roles, colors and descriptions. A matching label name does not prove Lighthouse created it. Existing labels and custom descriptions are preserved by reconciliation.
