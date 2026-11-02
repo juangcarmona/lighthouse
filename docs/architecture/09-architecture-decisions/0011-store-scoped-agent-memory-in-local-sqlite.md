@@ -33,5 +33,7 @@ We will provide an optional host-side SQLite adapter for the existing memory ses
 
 - [Issue #272](https://github.com/juangcarmona/lighthouse/issues/272)
 - [Implementation PR #315](https://github.com/juangcarmona/lighthouse/pull/315)
-- [Scoped memory contract and host integration](../../../src/packages/sdlc/commands/memory.md)
+- [Scoped memory session](../../../src/packages/sdlc/src/memory.mjs)
+- [SQLite provider adapter](../../../src/packages/sdlc/src/memory-sqlite.mjs)
+- [Package host integration guide](../../../src/packages/sdlc/README.md#references)
 - [ADR-0007: host execution boundary](0007-host-execution-boundary.md)

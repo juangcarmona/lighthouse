@@ -38,7 +38,7 @@ The .NET profile includes an Aspire AppHost as reference source for adopters, bu
 
 Production hosting, persistence, secrets, telemetry, scaling and recovery remain adopter-owned deployment decisions.
 
-When an adopter enables the optional memory provider, its host provisions a private local SQLite database outside worker and disposable checkout roots. The host supplies the configured path and access grants; workers do not receive the database path or handle. This optional library adapter is not provisioned by Lighthouse or the installed GitHub workflow. See [ADR-0011](../09-architecture-decisions/0011-store-scoped-agent-memory-in-local-sqlite.md) and the [memory host guide](../../../src/packages/sdlc/commands/memory.md).
+When an adopter enables the optional memory provider, its host provisions a private local SQLite database outside worker and disposable checkout roots. The host supplies the configured path and access grants; workers do not receive the database path or handle. This optional library adapter is not provisioned by Lighthouse or the installed GitHub workflow. See [ADR-0011](../09-architecture-decisions/0011-store-scoped-agent-memory-in-local-sqlite.md) and the [SQLite adapter](../../../src/packages/sdlc/src/memory-sqlite.mjs).
 
 ## Building block mapping
 
