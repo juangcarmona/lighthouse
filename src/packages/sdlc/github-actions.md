@@ -44,7 +44,7 @@ The router decides the stage and dispatches it. Every installed stage (`triage`,
 
 Each stage request is stable across router reruns. Automatic continuation also keys on the completed source run, preventing duplicate completion events from launching the next stage twice. Dispatch jobs serialize receipt creation; workers serialize execution by issue and claim each request once. Owner PR feedback can wait behind a confirmed active worker and reads the current bounded discussion when admitted. Unconfirmed sends block further requests for the issue until inspected. Routine reruns never reclaim an already claimed request.
 
-Issue receipts show `📥 Requested`, `▶️ Execution admitted`, `⏸️ Waiting for your response`, `✅ Completed` or `❌ Failed or cancelled`, with the phase and execution link. These are the last host observations; open Actions for current queue, cancellation and job status. Result comments retain their validated outcome separately. A lost response or interrupted cleanup can leave an older receipt status, so the display never grants permission to continue.
+Issue receipts record the host's last observation of a dispatch. A request can be recorded or queued before the agent starts; a completed dispatch is distinct from its validated stage result and any human decision. Result comments provide the outcome and next action. A lost response or interrupted cleanup can leave an older receipt status, so the display never grants permission to continue.
 
 Successful refinement explicitly wakes the router after publication and reservation release when implementation is installed. This avoids depending solely on GitHub's follow-up events for work dispatched with `GITHUB_TOKEN`. The router waits up to two minutes for the refinement execution to finish and verifies its original owner request, installed continuation policy and published result. The next worker rechecks that evidence, current owner intent and `future` before executing. Native completion events and the explicit wake-up share one dispatch identity, so they cannot start implementation twice. Owner replies resume the blocked stage; proposal review and completion keep their existing approval checks. Integration still requires an explicit owner merge decision for the accepted head. Review retains its integration origin with the protected evidence record, without depending on temporary request artifacts to authenticate that historical record.
 
@@ -83,9 +83,20 @@ The optional [GitHub completion adapter](completion.md) handles PR approval, CI 
 
 An explicit unanswered question uses `needs-info` and repeats the question in the issue. An owner reply requests continuation of that same stage. The router reads current issue state, acknowledges receipt with a reaction and verifies the latest trusted blocked report before admitting work. Preparation validates its run and artifacts, binds the reply to the previous input and adds a source-linked acknowledgement. The worker checks the answer; the acknowledgement does not assert that the answer resolved the question. Proposal replies retain the passed refinement evidence and include owner answers; they do not approve implementation or merge. Published reports name the stage explicitly.
 
-A handoff names the observed status and stage, what happened, the responsible person's next action, and what triggers the next step. A review points to its actual result. An operational blocker names the maintainer's action instead of asking an invented question. Requested or admitted execution is not evidence that the agent started.
+A handoff names the observed status and stage, what happened, the responsible person's next action, and what triggers the next step. It links the result when one exists and keeps execution details available separately. A review points to its actual result. An operational blocker names the maintainer's action instead of asking an invented question. Requested or admitted execution is not evidence that the agent started.
 
-For example, a question says “Owner: May the assets be reused? Reply here” and explains that the answer will be checked. If the resumed agent then fails before publication, the host posts a later failure notice with the execution link and the maintainer's recovery action. A completed proposal instead links its PR and asks the owner to record a decision there.
+| Status | Meaning |
+| --- | --- |
+| Requested / queued | The request is recorded or admitted; agent execution is not confirmed. |
+| Working | The stage is actively processing the request. |
+| Waiting for your answer | A stated question needs an answer in the named location. |
+| Ready for your review | A linked result needs the stated decision. |
+| Blocked | An identified condition prevents progress; the named person must address it. |
+| Execution failed / cancelled | The attempt stopped; follow the stated recovery or restart action. |
+| Stage completed | A stage result was published; follow its handoff and any applicable decision gate. |
+| Execution status unknown | The observed evidence does not establish the outcome; a maintainer must reconcile it. |
+
+For example, `Waiting for your answer · refine` says “Owner: May the assets be reused? Reply here” and explains that the answer will be checked before continuation. If the resumed agent fails before publication, a later `Execution failed · refine` notice links the execution and gives the maintainer a recovery action. A `Ready for your review · propose` handoff instead links the actual proposal PR, asks the owner to approve or request changes there, and states that continuation waits for that decision.
 
 Passed proposal reports and unrelated issue comments do not grant continuation. Owner feedback on an implementation PR updates that PR; approval requests integration when completion is enabled. Reservations and existing proposal PRs prevent duplicate work. Changed source, edited earlier intent, unavailable artifacts or withdrawn readiness fail admission rather than reusing stale approval. The owner can request fresh refinement when those inputs change. Direct GitHub replies remain supported independently of any future external-client comment or receipt contract.
 
