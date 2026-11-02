@@ -6,6 +6,9 @@ test('pre-agent failure and cancellation use observed job outcomes', () => {
   assert.equal(workerStopObservation({ preActivation: 'success', activation: 'failure', agent: 'skipped' }), 'activation-failure');
   assert.equal(workerStopObservation({ preActivation: 'cancelled', activation: 'skipped', agent: 'skipped' }), 'pre-agent-cancelled');
   assert.equal(workerStopObservation({ activation: 'failure', agent: 'success', publish: 'failure' }), 'publication-unknown');
+  for (const publish of ['failure', 'timed_out', 'cancelled', 'skipped']) assert.equal(workerStopObservation({ agent: 'success', publish }), 'publication-unknown');
+  assert.equal(workerStopObservation({ agent: 'timed_out' }), 'failure');
+  assert.equal(workerStopObservation({ agent: 'success', publish: 'success' }), null);
   assert.equal(workerStopObservation({ activation: 'skipped', agent: 'skipped' }), null);
 });
 
