@@ -67,7 +67,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const publish = publishStep(publishJob);
   const cleanup = publishJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation'].includes(step.name));
   const prepare = jobs.jobs.find(job => job.name === 'Authorize and reserve issue');
-  const unpublished = publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
+  const unpublished = !publishJob && workerFor(dispatch.request) !== 'product-change' || publish?.conclusion === 'skipped' || publishJob?.conclusion === 'skipped';
   const notStarted = !agent || agent.conclusion === 'skipped';
   const activationFailed = jobs.jobs.some(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion));
   const observation = publish?.conclusion === 'success' && ['failure', 'timed_out', 'cancelled'].includes(cleanup?.conclusion) ? 'cleanup-failure'
