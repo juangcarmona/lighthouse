@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.18.19
+
+### Patch Changes
+
+- 60a165e: # Interrupted terminal publication
+
+  Report uncertain publication after an interrupted terminal stage.
+
 ## 0.18.18
 
 ### Patch Changes
