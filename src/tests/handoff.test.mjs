@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, failedCheckSummary, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
+import { handoff, pendingQuestion, resultHandoffState, visibleNextAction, failedCheckSummary, deliveryCiHandoff, productApplyObservation, workerStopObservation } from '../packages/sdlc/src/handoff.mjs';
 
 test('pre-agent failure and cancellation use observed job outcomes', () => {
   assert.equal(workerStopObservation({ preActivation: 'success', activation: 'failure', agent: 'skipped' }), 'activation-failure');
@@ -10,6 +10,13 @@ test('pre-agent failure and cancellation use observed job outcomes', () => {
   assert.equal(workerStopObservation({ agent: 'timed_out' }), 'failure');
   assert.equal(workerStopObservation({ agent: 'success', publish: 'success' }), null);
   assert.equal(workerStopObservation({ activation: 'skipped', agent: 'skipped' }), null);
+});
+
+test('failed CI dispatch gives the maintainer an action without claiming CI ran', () => {
+  const stop = deliveryCiHandoff(true);
+  assert.match(stop.action, /maintainer.*CI workflow.*checks/i);
+  assert.match(stop.next, /until required CI has run and passed/);
+  assert.equal(deliveryCiHandoff(false), null);
 });
 
 test('product apply distinguishes local provider failure from uncertain remote publication', () => {

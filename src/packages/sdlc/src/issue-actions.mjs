@@ -16,7 +16,7 @@ import { projectImplementationPrState, reconcileImplementationPr, setPullRequest
 import { prepareProductChange, prepareProductEvidence, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore, checkProductResumePullRequest } from './product-change.mjs';
 import { validateProductCandidate, preparePendingProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 import { assessDecomposition } from './epic.mjs';
-import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, failedCheckSummary, productApplyObservation, productPublicationMessage, workerStopObservation } from './handoff.mjs';
+import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, failedCheckSummary, deliveryCiHandoff, productApplyObservation, productPublicationMessage, workerStopObservation } from './handoff.mjs';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
@@ -695,7 +695,7 @@ async function main(command) {
     const marker = `<!-- lighthouse-actions:${snapshot.runId} -->`;
     const existing = (await comments()).find(c => c.user.type === 'Bot' && c.body.includes(marker));
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
-    let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview, implementationChecksFailed = false;
+    let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview, implementationChecksFailed = false, ciDispatchFailed = false;
     if (snapshot.worker === 'product-change') {
       const product = value.result.output?.productChange;
       checkProductEntry(product, snapshot);
@@ -786,9 +786,9 @@ async function main(command) {
         prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID) })} -->`;
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
         try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr); }
-        catch (error) { value.effect.body += '\n\nThe PR was saved, but CI could not start. See the run for details.'; await summary(`CI dispatch failed: ${error.message}`); }
-        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: 'queued', stage: snapshot.stage, happened: 'The draft PR was updated with your feedback.', action: 'None. Wait for the required checks.', next: 'The workflow will recheck readiness when the checks finish.', link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
-        proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
+        catch (error) { ciDispatchFailed = true; value.effect.body += '\n\nThe PR was saved, but CI could not start. See the run for details.'; await summary(`CI dispatch failed: ${error.message}`); }
+        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: ciDispatchFailed ? 'blocked' : 'queued', stage: snapshot.stage, happened: 'The draft PR was updated with your feedback.', action: deliveryCiHandoff(ciDispatchFailed)?.action ?? 'None. Wait for the required checks.', next: deliveryCiHandoff(ciDispatchFailed)?.next ?? 'The workflow will recheck readiness when the checks finish.', link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
+        proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${ciDispatchFailed ? 'Required CI must be started before review.' : candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }
     }
@@ -802,10 +802,12 @@ async function main(command) {
     const isReview = projection.review;
     const productRecovery = snapshot.worker === 'product-change' ? value.result.output?.productChange?.recovery : null;
     const productGap = value.result.status === 'blocked' && snapshot.worker !== 'product-change' ? snapshot.productAlignment && value.result.output?.productGap ? { action: 'Workflow maintainer: compare the new product gap with the recorded alignment and determine the next authorized action.', next: 'Automatic continuation has stopped; no repeated product handoff was requested.' } : productGapNextAction({ gap: value.result.output?.productGap, enabled: snapshot.productChangeEnabled === true, dispatched: !!snapshot.dispatch, paused: publicationIssue.labels.some(label => label.name === 'future') }) : null;
-    const action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : refinementAction?.action ?? 'None.';
-    const whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
+    const ciHandoff = deliveryCiHandoff(ciDispatchFailed);
+    let action = question ? `Owner: ${question} Reply here.` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : refinementAction?.action ?? 'None.';
+    let whatNext = question ? `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
+    if (ciHandoff) { action = action === 'None.' ? ciHandoff.action : `${action} ${ciHandoff.action}`; whatNext = question || value.result.status === 'blocked' ? `${whatNext} ${ciHandoff.next}` : ciHandoff.next; }
     const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
-    const body = renderHandoff({ status: projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
+    const body = renderHandoff({ status: ciHandoff && !question ? 'blocked' : projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
     const label = projection.label;
     await checkEpic();

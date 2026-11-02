@@ -25,6 +25,10 @@ export function failedCheckSummary(checks) {
   return failed.length ? `Host checks: ${failed.join('; ')}. See the linked execution for details.` : '';
 }
 
+export function deliveryCiHandoff(failed) {
+  return failed ? { action: 'Workflow maintainer: inspect the linked execution and CI workflow configuration, then start or reconcile the required checks for the draft PR.', next: 'The draft remains blocked until required CI has run and passed.' } : null;
+}
+
 export function productApplyObservation({ prepare, apply, publish }) {
   if (prepare === 'failure' || prepare === 'timed_out') return 'provider-preparation-failure';
   if (prepare === 'cancelled') return 'preparation-cancelled';
