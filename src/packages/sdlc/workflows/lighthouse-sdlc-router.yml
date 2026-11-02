@@ -55,6 +55,10 @@ on:
         description: PR number for integrate or review
         required: false
         type: string
+      product_decision_comment:
+        description: Replay an existing unedited owner Product Change approval comment on pull_request
+        required: false
+        type: string
       head:
         description: Full accepted PR head SHA for integrate or review
         required: false

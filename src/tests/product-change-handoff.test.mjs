@@ -92,7 +92,8 @@ test('product apply preparation binds the current issue, decision and dispatch',
   const input = { current, dispatch, issueNumber: 7, issue: { state: 'open', labels: [] }, repository: 'owner/repo', owner: 'owner' };
   assert.deepEqual(productApplyRequest(input).dispatch, { commentId: 9, requestId: 'request', digest: 'digest' });
   assert.throws(() => productApplyRequest({ ...input, issueNumber: 6 }), /approval changed/);
-  assert.throws(() => productApplyRequest({ ...input, issue: { state: 'open', labels: [{ name: 'future' }] } }), /blocked/);
+  assert.doesNotThrow(() => productApplyRequest({ ...input, issue: { state: 'open', labels: [{ name: 'future' }] } }));
+  for (const name of ['human-working', 'agent-working']) assert.throws(() => productApplyRequest({ ...input, issue: { state: 'open', labels: [{ name }] } }), /blocked/);
 });
 
 test('published product candidate reports host validation instead of stale agent pending text', () => {
