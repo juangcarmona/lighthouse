@@ -56,8 +56,8 @@ export async function readFailureEvidence(api, repository, request, run, jobs, r
   return evidence;
 }
 
-export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, evidence, now = Date.now() }) {
-  const base = identity({ request, run });
+export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now = Date.now() }) {
+  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome };
   const cause = classifyTechnicalFailure({ run, jobs, evidence });
   const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, cause, nextAction, ...extra });
   if (run.status !== 'completed') {
@@ -99,7 +99,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
       await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
       observedRunId = String(run.id);
     }
-    return { issue: issue.number, worker: workerFor(receipt), rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
+    return { issue: issue.number, worker: workerFor(receipt), outcome: 'requested', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
   }
   const run = await api(`actions/runs/${receipt.workerRunId}`);
   const dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
@@ -108,14 +108,15 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
+  const execution = workerExecutionObservation({ run, jobs: jobs.jobs, receipt, worker: workerFor(dispatch.request) });
   const observation = workerFor(dispatch.request) === 'apply-product-change'
     ? ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null : productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
-    : workerExecutionObservation({ run, jobs: jobs.jobs, receipt, worker: workerFor(dispatch.request) }).observation;
+    : execution.observation;
   const evidence = run.status === 'completed' && ['failure', 'timed_out'].includes(run.conclusion) ? await readFailureEvidence(api, repository, dispatch.request, run, jobs.jobs, readArtifact) : undefined;
   const event = dispatch.request.event;
   const answered = dispatch.request.eventName === 'issue_comment' && event?.action === 'created' && event.issue?.number === issue.number && !event.issue.pull_request && event.comment?.user?.login === owner && event.comment.user.type === 'User' && typeof event.comment.body === 'string' && !!event.comment.body.trim() && !dispatch.request.feedbackKey;
   const stop = run.status === 'completed' && observation ? { run: String(run.id), attempt: String(run.run_attempt), observation, answerRetained: answered } : null;
-  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, evidence, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
+  return { ...recoveryDecision({ ...dispatch, run, jobs: jobs.jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now }), dispatch, stop, run, jobs: jobs.jobs, revision, workflowRevision };
 }
 
 // Reporting is read-only so it can observe an active worker without acquiring its lease.

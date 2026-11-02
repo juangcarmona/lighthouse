@@ -206,3 +206,20 @@ test('all six stages share the terminal execution and publication matrix', () =>
     }
   }
 });
+
+
+test('trusted execution observations distinguish requested, queued, active and terminal states in every stage', () => {
+  for (const worker of ['triage', 'refine', 'propose', 'implement', 'integrate', 'review']) for (const [status, receipt, expected] of [
+    [null, {}, 'requested'],
+    [null, { workerRunId: '200' }, 'queued'],
+    ['queued', { status: 'running' }, 'queued'],
+    ['in_progress', { status: 'running' }, 'active'],
+    ['completed', { status: 'waiting' }, 'question'],
+    ['completed', { status: 'blocked' }, 'blocked'],
+    ['completed', { status: 'completed' }, 'completed'],
+    ['completed', { status: 'unknown' }, 'unknown'],
+  ]) {
+    const actual = workerExecutionObservation({ worker, run: status ? { status, conclusion: 'success' } : null, jobs: [], receipt });
+    assert.equal(actual.outcome, expected, `${worker}/${status}/${expected}`);
+  }
+});

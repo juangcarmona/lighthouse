@@ -61,13 +61,23 @@ export function workerStopObservation({ prepare, preActivation, activation, agen
 export const publishStep = job => job?.steps?.find(step => ['Recheck authority and publish the validated result', 'Recheck authority and publish', 'Recheck authority and publish the candidate'].includes(step.name));
 
 export function workerExecutionObservation({ run, jobs, receipt, worker }) {
+  if (!run) return { outcome: receipt.workerRunId ? 'queued' : 'requested', publication: 'unknown', observation: null };
   const publicationJob = jobs.find(job => job.name === (worker === 'product-change' ? 'Validate and publish the product candidate' : 'Validate, publish and release'));
   const publish = publishStep(publicationJob);
   const publication = publish?.conclusion === 'success' ? 'published' : !publicationJob || publish?.conclusion === 'skipped' || publicationJob.conclusion === 'skipped' ? 'unpublished' : 'unknown';
   const cleanup = publicationJob?.steps?.find(step => ['Release the issue reservation', 'Release reservation', 'Release the execution reservation'].includes(step.name));
   const conclusion = name => jobs.find(job => job.name === name)?.conclusion;
   const observation = workerStopObservation({ prepare: conclusion('Authorize and reserve issue') ?? conclusion('Verify accepted commit, checks and evidence protection') ?? conclusion('Authenticate and checkpoint the idea'), preActivation: conclusion('pre_activation'), activation: conclusion('activation'), agent: conclusion('agent'), publish: publish?.conclusion ?? publicationJob?.conclusion ?? 'skipped', run: run.conclusion, publication, cleanup: cleanup?.conclusion, receipt: receipt.status });
-  return { publication, observation };
+  const outcome = ['queued', 'waiting', 'pending', 'requested'].includes(run.status) ? 'queued'
+    : run.status === 'in_progress' ? 'active'
+    : run.status !== 'completed' ? 'unknown'
+    : receipt.status === 'waiting' ? 'question'
+    : receipt.status === 'blocked' ? 'blocked'
+    : observation === 'publication-unknown' || observation === 'cleanup-failure' ? 'unknown'
+    : observation?.includes('cancelled') ? 'cancelled'
+    : observation?.includes('failure') ? 'technical-failure'
+    : receipt.status === 'completed' || publication === 'published' ? 'completed' : 'unknown';
+  return { outcome, publication, observation };
 }
 
 export function resultHandoffState({ status, stage, question, reviewTarget, draft }) {
