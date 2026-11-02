@@ -17,6 +17,6 @@ The tasks implement the accepted scoped-memory policy, not new product authority
 
 ## 3. Complete candidate verification
 
-- [ ] 3.1 Run policy installation, repository verification, strict OpenSpec validation and citation verification; retain terminal receipts and a concise retrospective, updating tasks only for completed work.
+- [x] 3.1 Run policy installation, repository verification, strict OpenSpec validation and citation verification; retain terminal receipts and a concise retrospective, updating tasks only for completed work.
 
-Installation, strict OpenSpec validation, citations, Markdown and local links pass. The public-site check passes with the policy's system-Chromium setting. Full repository verification remains blocked by the unchanged artifact-reader test's missing `python3` prerequisite; its failure is not waived. See the implementation evidence and terminal receipts for the final candidate's results.
+Installation, full repository verification, strict OpenSpec validation and citation verification pass. Repository verification includes the focused memory contracts, the separate-process cross-run exercise, artifact-reader tests, Markdown, local links and the public-site check with the policy's system-Chromium setting. The JavaScript artifact-reader correction removes the former Python prerequisite; no failure is waived. See the implementation evidence and terminal receipts for the final candidate's results.
