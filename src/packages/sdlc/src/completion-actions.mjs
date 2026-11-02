@@ -8,7 +8,7 @@ import { completionBundle, publishProcessBundle } from './process-publication.mj
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
-import { handoff, pendingQuestion, publishObservedStop, visibleNextAction } from './handoff.mjs';
+import { handoff, pendingQuestion, publishObservedStop, visibleNextAction, workerStopObservation } from './handoff.mjs';
 
 export async function assertCurrentCompletionAttempt(api, repository, issue, dispatch, run) {
   if (!dispatch) return;
@@ -75,13 +75,14 @@ async function main(command) {
   if (command === 'cleanup') {
     const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
     let outcome;
+    const workerStop = workerStopObservation({ agent: env.LIGHTHOUSE_AGENT_RESULT, publish: env.LIGHTHOUSE_PUBLISH_STATUS });
     try {
       await load('published.json');
       const result = (await load('envelope.json')).result;
       outcome = result.status === 'blocked' && pendingQuestion(result.output?.handoff?.question) ? 'question' : result.status;
     } catch {}
     if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
-    if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
+    if (!outcome && workerStop === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
     try { await finishDispatch(api, repository, Number(env.LIGHTHOUSE_ISSUE), event.inputs?.['dispatch-request'], env.GITHUB_RUN_ID, outcome); }
     catch (error) { await summary(`Status update unavailable: ${error.message}. Consult the execution.`); }
@@ -102,8 +103,8 @@ async function main(command) {
     const request = await load('request.json');
     await api(`issues/${request.issue}/labels/agent-working`, 'DELETE', undefined, true);
     if (preparationStop) await publishObservedStop(api, preparationStop);
-    else if (['failed', 'cancelled'].includes(outcome)) await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: env.LIGHTHOUSE_AGENT_RESULT });
-    else if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'success' && env.LIGHTHOUSE_PUBLISH_STATUS === 'failure') await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: 'publication-unknown' });
+    else if (['failed', 'cancelled'].includes(outcome)) await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: workerStop });
+    else if (!outcome && workerStop === 'publication-unknown') await publishObservedStop(api, { repository, issue: request.issue, stage: request.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, sourceRevision: request.sourceRevision, dispatch: request.dispatch, observation: 'publication-unknown' });
     await summary('Issue reservation released.'); return;
   }
   const request = await load('request.json'), envelope = await load('envelope.json');

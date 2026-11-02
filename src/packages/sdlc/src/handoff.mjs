@@ -41,8 +41,9 @@ export function productPublicationMessage({ worker, outcome, reviewTarget, agent
 export function workerStopObservation({ preActivation, activation, agent, publish }) {
   if (agent === 'skipped' && [preActivation, activation].some(value => value === 'failure' || value === 'timed_out')) return 'activation-failure';
   if (agent === 'skipped' && [preActivation, activation].includes('cancelled')) return 'pre-agent-cancelled';
-  if (agent === 'failure' || agent === 'cancelled') return agent;
-  if (agent === 'success' && publish === 'failure') return 'publication-unknown';
+  if (agent === 'failure' || agent === 'timed_out') return 'failure';
+  if (agent === 'cancelled') return 'cancelled';
+  if (agent === 'success' && ['failure', 'timed_out', 'cancelled', 'skipped'].includes(publish)) return 'publication-unknown';
   return null;
 }
 

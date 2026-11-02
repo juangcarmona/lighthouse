@@ -603,7 +603,7 @@ async function main(command) {
       outcome = result.status === 'blocked' && pendingQuestion(result.output?.handoff?.question ?? result.output?.productChange?.question) ? 'question' : result.status;
     } catch {}
     if (!outcome && env.LIGHTHOUSE_PREPARE_FAILED === 'true') outcome = 'failed';
-    if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'failure') outcome = 'failed';
+    if (!outcome && workerStop === 'failure') outcome = 'failed';
     if (!outcome && env.LIGHTHOUSE_AGENT_RESULT === 'cancelled') outcome = 'cancelled';
     if (!outcome && workerStop === 'activation-failure') outcome = 'failed';
     if (!outcome && workerStop === 'pre-agent-cancelled') outcome = 'cancelled';
