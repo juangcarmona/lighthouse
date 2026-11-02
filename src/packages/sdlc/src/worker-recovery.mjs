@@ -109,7 +109,7 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
   const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
   const observation = workerFor(dispatch.request) === 'apply-product-change'
-    ? productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
+    ? ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null : productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
     : workerExecutionObservation({ run, jobs: jobs.jobs, receipt, worker: workerFor(dispatch.request) }).observation;
   const evidence = run.status === 'completed' && ['failure', 'timed_out'].includes(run.conclusion) ? await readFailureEvidence(api, repository, dispatch.request, run, jobs.jobs, readArtifact) : undefined;
   const event = dispatch.request.event;

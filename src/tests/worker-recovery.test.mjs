@@ -502,6 +502,12 @@ test('maintenance reports failed product apply without authorizing a retry', asy
   assert.equal(result.request, undefined);
   assert.match(f.comments.at(-1).body, /Product Change provider failed before publication/);
   assert.doesNotMatch(f.comments.at(-1).body, /agent execution failed/);
+  for (const status of ['completed', 'waiting', 'blocked']) {
+    const receipt = readDispatchReceipt(f.comment, repository, 7);
+    f.comment.body = dispatchReceiptBody(repository, { ...receipt, status });
+    const observed = await observeDispatch(f.api, repository, owner, f.comment, f.issue, f.comments, Date.now(), f.readArtifact);
+    assert.equal(observed.stop, null, status);
+  }
 });
 
 test('product apply finalizer authenticates and deduplicates its failure handoff', async () => {
