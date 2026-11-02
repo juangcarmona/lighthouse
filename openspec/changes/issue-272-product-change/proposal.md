@@ -60,7 +60,7 @@ Verbatim verified owner answer:
 
 > I choose the second option: an explicitly operator-approved project policy may retain eligible, non-sensitive findings without asking a human to approve each learning. Keep this simple and automatic within the repository/project scope. Exclude credentials and sensitive or personal data; retain source/provenance and allow correction or invalidation. Shared cross-project memory remains disabled unless separately enabled. This is my answer to the product-policy question, not approval of a Product Change or implementation.
 
-Source: https://github.com/juangcarmona/lighthouse/issues/272#issuecomment-6571559182
+Source: <https://github.com/juangcarmona/lighthouse/issues/272#issuecomment-6571559182>
 
 Ambiguity pass compared per-record approval with policy-authorized retention: the owner selected the latter. Compared project cross-run recall with cross-project shared recall: the issue selects the former and leaves shared recall disabled by default. Compared optional provider failure with mandatory provider failure: ordinary work continues unless the adopter explicitly requires memory. These choices are represented in the delta, not silently combined into broader authority.
 
