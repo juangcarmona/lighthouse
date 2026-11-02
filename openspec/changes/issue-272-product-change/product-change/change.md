@@ -2,7 +2,7 @@
 id: CHG-ISSUE-272
 type: product-change
 title: Persist and selectively recall scoped agent learnings across runs
-status: draft
+status: applied
 base-revision: 'bd39319580c8d1ae3f356d0b24f756f38b9404cd'
 operations:
   add: []
