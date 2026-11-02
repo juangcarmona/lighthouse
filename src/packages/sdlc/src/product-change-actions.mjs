@@ -17,9 +17,17 @@ export function preparePendingProductCandidate(product) {
   const metadata = product.files.find(file => file.path === path);
   const flags = [...metadata.content.matchAll(/^\s*skip_specs\s*:\s*(.*?)\s*$/gm)];
   if (flags.length > 1 || flags.length === 1 && !/^true(?:\s+#.*)?$/.test(flags[0][1])) throw Error('Product Change schema pin has conflicting skip_specs metadata');
-  if (flags.length) return product;
   if (product.proposalDigest !== undefined) throw Error('Cannot normalize a Product Change with a supplied proposal digest');
-  return { ...product, files: product.files.map(file => file.path === path ? { ...file, content: `${file.content.trimEnd()}\nskip_specs: true\n` } : file) };
+  let changed = false;
+  const files = product.files.map(file => {
+    let content = file.content;
+    if (file.path === path && !flags.length) content = `${content.trimEnd()}\nskip_specs: true\n`;
+    if (file.path === `openspec/changes/${product.changeName}/proposal.md`) content = content.replace(/^(Source:[\t ]+)(https?:\/\/[^\s<>]+)[\t ]*$/gm, '$1<$2>');
+    if (content === file.content) return file;
+    changed = true;
+    return { ...file, content };
+  });
+  return changed ? { ...product, files } : product;
 }
 
 export async function validateProductCandidate(root, changeName, files, bridge) {
@@ -72,7 +80,7 @@ export async function loadProductCandidateFromPullRequest(api, repository, pr, c
     files.push({ path: item.filename, content: Buffer.from(value.content, 'base64').toString('utf8') });
   }
   const checked = validateProductChangeFiles(files, { changeName });
-  return { files, ...checked };
+  return { ...checked, files };
 }
 
 export async function productModelDigestFromApi(api, revision, overrides = []) {
