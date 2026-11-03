@@ -1,5 +1,23 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.0
+
+### Minor Changes
+
+- b25bea4: # Scoped agent learnings
+
+  Add opt-in host-side scoped learning sessions and an operator-owned SQLite provider with bounded authorized recall, eligibility checks, versioned correction and invalidation. Keep the validation-only CLI compatible and optional memory unavailable without blocking ordinary work.
+
+### Patch Changes
+
+- b25bea4: # Read workflow artifacts without an additional interpreter
+
+  Use bounded JavaScript ZIP decoding for stage evidence, retaining member uniqueness, JSON validation, CRC checks and decompression limits. Artifact-reader tests create their ZIP fixtures in JavaScript too.
+
+- 028c36b: # Reliable worker evidence
+
+  Check worker prerequisites on legacy images, isolate temporary caches and collect private container evidence after scoped ownership recovery. Preserve bounded candidates and identify failed operational phases without publishing incomplete evidence.
+
 ## 0.19.1
 
 ### Patch Changes
