@@ -276,3 +276,31 @@ test('an approved product prerequisite resumes on its existing branch and retain
   productPr.head.sha = '9'.repeat(40);
   await assert.rejects(createImplementationPullRequest(api, { ...request, repository, productResume: resume }, [change], 'Implemented.', '', true, async () => {}), /changed/);
 });
+
+
+test('verification-only owner correction returns the same PR and never writes Git history', async () => {
+  const repository = 'owner/repo', branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+  const current = { number: 34, state: 'open', merged: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: request.sourceRevision, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${request.runId} -->`, html_url: 'https://example.test/pr/34' };
+  const feedback = { user: { login: 'owner', type: 'User' }, body: 'Revalidate the existing candidate.' };
+  const { digest } = await import('../packages/sdlc/src/host-contract.mjs');
+  const review = { number: 34, issue: 18, head: request.sourceRevision, branch, base: 'main', implementationIdentity: request.runId, path: 'issues/comments/10', feedbackDigest: digest(JSON.stringify(feedback)), approved: false };
+  const snapshot = { ...request, repository, stage: 'implement', worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: review };
+  for (const scenario of ['passed', 'head', 'identity', 'feedback', 'revoked', 'initial']) {
+    const calls = [], pr = structuredClone(current);
+    if (scenario === 'head') pr.head.sha = 'd'.repeat(40);
+    if (scenario === 'identity') pr.body = `<!-- lighthouse-implementation:${'a'.repeat(63)}b -->`;
+    const api = async (path, method = 'GET', body) => {
+      calls.push({ path, method, body });
+      if (path === 'pulls/34') return pr;
+      if (path === review.path) return scenario === 'feedback' ? { ...feedback, body: 'Revoked' } : feedback;
+      throw Error('Unexpected API: ' + path);
+    };
+    const beforeWrite = async () => { if (scenario === 'revoked') throw Error('revoked'); };
+    const publish = () => createImplementationPullRequest(api, scenario === 'initial' ? request : snapshot, [], 'Checked.', '', true, beforeWrite);
+    if (scenario === 'passed') {
+      assert.equal((await publish()).head.sha, current.head.sha);
+      assert.equal((await publish()).number, 34);
+    } else await assert.rejects(publish(), /changed|revoked|No implementation changes/);
+    assert.equal(calls.some(call => call.method !== 'GET'), false, scenario);
+  }
+});

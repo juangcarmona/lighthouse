@@ -4,7 +4,7 @@ import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
-import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
+import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
 import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
@@ -217,7 +217,7 @@ async function main() {
         envelope.result.status = 'blocked';
         envelope.result.pendingReview.push('Repository policy requires owner acceptance of this candidate; engine assertions cannot grant it.');
       }
-      if (!changes.length && envelope.result.status === 'passed') { envelope.result.status = 'blocked'; envelope.result.missingEvidence.push('No implementation changes were returned'); }
+      if (!changes.length && !isVerificationOnlyCorrection(request) && envelope.result.status === 'passed') { envelope.result.status = 'blocked'; envelope.result.missingEvidence.push('No implementation changes were returned'); }
       if (receipt.checks.some(c => c.exitCode !== 0)) {
         envelope.result.status = 'blocked';
         envelope.result.missingEvidence.push('The independent host checks did not all pass; inspect checks.json and host logs.');

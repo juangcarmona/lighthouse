@@ -24,6 +24,8 @@ These actions require installed workers, enabled automation and the repository o
 | Required CI passes for a complete implementation candidate | Current PR head and adopted checks | Mark the PR ready and project `pr-ready`; wait for merge authorization. | [PR state](src/pr-state-actions.mjs) |
 | Approve the implementation PR | Completion installed; owner approval for current head and passing required checks | `integrate` assesses and performs the authorized merge. After successful post-merge CI, `review` records the retrospective and closes the issue if passed. | [Completion](completion.md) |
 
+An owner correction can revalidate an existing implementation PR without editing source. The host runs independent checks, rechecks the current head, intent, policy and feedback, and publishes fresh completion evidence for that same head. Initial implementations still require source changes; failed checks and pending decisions remain blockers.
+
 For design-only work, add `future` before `refine`, then add `propose` after refinement passes. For delivery, request `implement` directly or let successful refinement continue under the installed implementation policy. Planning still happens before code changes. Gates are evidence and decision checks; only gates configured for a human require a human stop.
 
 The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`, `integrate`, `review` and `apply review`. `integrate`, `review` and `apply review` normally start from approved PR, CI or feedback events, not labels with those names. Manual router dispatch is available for recovery. [Triggers](workflows/lighthouse-sdlc-router.yml), [admission](src/issue-actions.mjs) and [continuation](src/stage-transition.mjs) define the executable behavior.

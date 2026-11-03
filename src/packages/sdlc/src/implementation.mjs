@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof } from './product-change.mjs';
-import { checkAlignedImplementationPullRequest } from './proposal-review.mjs';
+import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
@@ -136,15 +136,24 @@ export function validateCheckReceipt(receipt, request, changes) {
   }
   return receipt.serviceCleanup !== false && receipt.checks.every(c => c.exitCode === 0);
 }
+export function isVerificationOnlyCorrection(request) {
+  const review = request.implementationReview;
+  return request.stage === 'implement' && request.worker === 'apply-review' && review?.approved === false && review.issue === request.issue && review.head === request.sourceRevision && /^[a-f0-9]{40}$/.test(review.head ?? '') && /^[a-f0-9]{40}$/.test(request.baseRevision ?? '') && /^[a-f0-9]{64}$/.test(review.implementationIdentity ?? '') && /^[a-f0-9]{64}$/.test(review.feedbackDigest ?? '');
+}
 export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}) {
   validateChanges(changes, snapshot.implementation.policy);
-  if (!changes.length) throw Error('No implementation changes to publish');
+  if (!changes.length && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
   const epic = snapshot.epic;
   if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : epic.baseSha !== snapshot.sourceRevision))) throw Error('Invalid epic publication base');
   const checkEpicBase = async () => {
     if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');
   };
   await checkEpicBase();
+  if (!changes.length) {
+    await beforeWrite();
+    await checkEpicBase();
+    return checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
+  }
   const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
   for (const file of changes) {
     const sha = file.content === null ? null : (await api('git/blobs', 'POST', { content: file.content, encoding: 'base64' })).sha;
