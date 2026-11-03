@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "state": "prepared",
+  "sha": null,
+  "acceptedHead": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+  "authorization": {
+    "issue": 329,
+    "pr": 332,
+    "head": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+    "merge": false,
+    "integrationLabel": {
+      "branch": "lighthouse/implement-329-509e0b67f974",
+      "implementationIdentity": "509e0b67f974a50df7feef8fd6f2de278b5203e05fdde721c741b275e06c05f4",
+      "approvalId": 5754940619
+    }
+  },
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 329,
+    "pr": 332,
+    "head": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+    "base": "3bbcaa8e41259a6fb66ad34f97166de9f67b29be",
+    "branch": "main",
+    "intent": "cbabd6009a6d35275ba102ef51c334dd21fcd8a119fe2fe30b10a372c7e822c8",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "af0aa3671e3bf40ac53805825d7d81ae5f7beaba2e0c81d3a5472e2636e9ab48",
+    "prIntent": "2029b6f694378b3de70a63cf4afb5c3e53b250772009500f1393a967fa2e84cb",
+    "files": "3a027c8666e662b6371ed34ca843514f0673142195a829303b9226d41215b78c"
+  }
+}

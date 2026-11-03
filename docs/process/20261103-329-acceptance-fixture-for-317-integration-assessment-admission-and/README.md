@@ -5,3 +5,5 @@
 - [integrate, run 41665729533, attempt 1](runs/41665729533/attempt-0001/pr-ready/report.md)
 
 - [integrate, run 41668344744, attempt 1](runs/41668344744/attempt-0001/pr-ready/report.md)
+
+- [integrate, run 41669859015, attempt 1](runs/41669859015/attempt-0001/pr-ready/report.md)
