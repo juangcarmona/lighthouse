@@ -6,7 +6,7 @@
 - [x] Implement legacy prerequisite checks, scoped collection ownership, atomic evidence export, scratch settings and phase-aware candidate recovery.
 - [x] Cover positive and negative cases with focused tests and actual Docker UIDs.
 - [x] Update package guidance, managed projections, release note and issue-linked native acceptance workflow.
-- [ ] Run repository verification, provider/citation checks and native Actions acceptance; retain results and publish the reviewable PR.
+- [x] Run repository verification, provider/citation checks and native Actions acceptance; retain results and publish the reviewable PR.
 
 <!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->
 <!-- pdac:cite id="BR-FAIL-CLOSED" digest="sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d" -->
