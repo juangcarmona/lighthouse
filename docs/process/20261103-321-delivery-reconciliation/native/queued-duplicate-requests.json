@@ -1,0 +1,27 @@
+{
+  "requestedAt": "2026-11-03T17:43:57.449895+00:00",
+  "sourceRevision": "a91205ada0776856ea9b835bbb375aef1f2c5863",
+  "activeImplementation": 41686765332,
+  "requests": [
+    {
+      "workflow": "lighthouse-sdlc-router.yml",
+      "ref": "main",
+      "inputs": {
+        "issue": "336",
+        "stage": "implement",
+        "workflow": "stage"
+      }
+    },
+    {
+      "workflow": "lighthouse-sdlc-router.yml",
+      "ref": "main",
+      "inputs": {
+        "issue": "336",
+        "stage": "implement",
+        "workflow": "stage",
+        "after_run": "41685717865"
+      }
+    }
+  ],
+  "authority": "Owner-operated concurrent requests; authenticated router and worker artifacts record admission separately."
+}

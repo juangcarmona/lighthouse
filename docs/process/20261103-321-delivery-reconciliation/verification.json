@@ -31,5 +31,31 @@
     "errors": 0,
     "warnings": 0
   },
-  "nativeAcceptance": "initial cases retained; repeat on corrected source and bot continuation remain pending"
+  "nativeAcceptance": "passed",
+  "postMerge": {
+    "335": {
+      "revision": "8a2376dc05525bf195a986a87109db66e475395c",
+      "repositoryRun": 41680697923,
+      "packageRun": 41680697944,
+      "status": "passed"
+    },
+    "338": {
+      "revision": "a91205ada0776856ea9b835bbb375aef1f2c5863",
+      "repositoryRun": 41684441328,
+      "packageRun": 41684441339,
+      "status": "passed"
+    }
+  },
+  "nativeSource": "a91205ada0776856ea9b835bbb375aef1f2c5863",
+  "nativeHarness": "250ea38013191f8956bc9292835daea5067ab2c6",
+  "nativeImplementation": {
+    "requestId": "48f41f57fa472f55f1012fe4f4e053ec5bc18fc6cf6f95bc65fd9f56b1868689",
+    "workerRunId": "41686765332",
+    "receiptCount": 1,
+    "pullRequest": 339,
+    "head": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+    "independentChecksPassed": 3,
+    "requiredCiRun": 41689382317,
+    "fixtureClosedWithoutMerge": true
+  }
 }
