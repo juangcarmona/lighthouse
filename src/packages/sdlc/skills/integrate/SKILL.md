@@ -23,4 +23,6 @@ The change is ready for its configured merge action, every required check is lin
 
 Use the host-authenticated completion context to bind the assessment to the accepted PR head, base, work-item intent, policy, reviews and changed paths. Explain which required checks passed and which evidence remains missing. Inspect affected instructions and acceptance criteria; tests authored by the implementation are evidence of execution, not independent proof of intended behavior. Report a discrepancy with its source and decision owner.
 
+The owner-added `integrate` label requests preparation for the linked current-head implementation PR after its completion receipt, approval and required checks pass. Its host authorization always has `merge: false`; assess and retain the result without requesting a merge. Missing prerequisites are reported before a worker starts.
+
 The owner dispatch defaults to preparation. Only `merge: true` for the full accepted head authorizes the trusted publisher to request a merge, subject to a fresh authority check and GitHub protection. A successful assessment is not a merge receipt. The publisher retains the actual outcome and requests the configured post-merge workflows; `review` still requires its own entry.

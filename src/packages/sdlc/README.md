@@ -16,6 +16,7 @@ These actions require installed workers, enabled automation and the repository o
 | Add `refine` | Open issue; no active reservation | Define acceptance criteria; publish `ready` or a question. With implementation enabled, continue automatically unless `future` or another blocker pauses it. | [Refinement](workflows/lighthouse-sdlc-refine.md) |
 | Add `propose` | Proposal worker installed; `ready` and current successful refinement evidence; no existing proposal PR | Create a separate OpenSpec proposal PR and set `waiting-review`. No implementation or merge. | [Proposal](workflows/lighthouse-sdlc-propose.md) |
 | Add `implement` | Implementation enabled, current owner authorization and repository checks configured; no `future` | Create the OpenSpec plan, implement and verify in one workspace. Publish plan and code together in a draft PR. A separate proposal PR is optional. | [Implementation](skills/implement/SKILL.md) |
+| Add `integrate` | Completion installed; one current bot implementation PR, complete receipt, owner approval of that head and passing required checks | Assess integration and publish a retained result. The label grants no merge permission. Missing prerequisites are reported on the issue. | [Completion](completion.md) |
 | Add `future` | Issue not yet admitted for implementation | Pause implementation, including continuation after refinement. Triage, refinement and proposal remain available. Removing it resumes a pending `implement` request. | [Event routing](src/issue-actions.mjs) |
 | Answer the issue's pending question | Owner reply to the latest trusted blocked result | Resume that same stage. An unrelated comment grants no new work or approval. | [Reply admission](src/issue-actions.mjs) |
 | Comment or request changes on a proposal/implementation PR | Eligible bot-created PR and current owner feedback | `apply review` updates the same PR and retains its original stage. | [Corrections](workflows/lighthouse-sdlc-apply-review.md) |
@@ -28,7 +29,7 @@ An owner correction can revalidate an existing implementation PR without editing
 
 For design-only work, add `future` before `refine`, then add `propose` after refinement passes. For delivery, request `implement` directly or let successful refinement continue under the installed implementation policy. Planning still happens before code changes. Gates are evidence and decision checks; only gates configured for a human require a human stop.
 
-The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`, `integrate`, `review` and `apply review`. `integrate`, `review` and `apply review` normally start from approved PR, CI or feedback events, not labels with those names. Manual router dispatch is available for recovery. [Triggers](workflows/lighthouse-sdlc-router.yml), [admission](src/issue-actions.mjs) and [continuation](src/stage-transition.mjs) define the executable behavior.
+The eight Actions names are `router`, `triage`, `refine`, `propose`, `implement`, `integrate`, `review` and `apply review`. `integrate` also accepts the owner assessment label; `review` and `apply review` start from the documented completion or feedback events. Manual router dispatch is available for recovery. [Triggers](workflows/lighthouse-sdlc-router.yml), [admission](src/issue-actions.mjs) and [continuation](src/stage-transition.mjs) define the executable behavior.
 
 When an authorized issue stage identifies a missing product prerequisite, the optional Product Change workflow uses the recorded issue scope and retains the parent checkpoint. A product question waits for an owner answer; only a separate approval of the current proposal authorizes provider apply. After apply, the host rechecks the parent, issue, baseline and PR before requesting the original stage on the same branch. A design-only request does not authorize implementation.
 
@@ -46,7 +47,7 @@ See [workflow handoffs](handoffs.md) for outcome meanings, publication order, in
 
 | Category | Labels | Meaning |
 | --- | --- | --- |
-| Requests | `triage`, `refine`, `propose`, `implement` | Owner-added commands consumed by the native router; presence alone is not authorization. |
+| Requests | `triage`, `refine`, `propose`, `implement`, `integrate` | Owner-added commands consumed by the native router; presence alone is not authorization. |
 | Results | `triaged`, `ready`, `needs-info`, `waiting-review`, `execution-failed`, `pr-draft`, `pr-ready` | Read the linked result or PR for outcome, question or required decision. |
 | Overlays | `future`, `agent-working`, `human-working` | Pause implementation, show an agent reservation or reserve work for a human. The host owns the lock. |
 | Compatibility states | `wip`, `review` | Available to configured trackers; adding them does not dispatch a native worker. |
@@ -56,7 +57,7 @@ See [workflow handoffs](handoffs.md) for outcome meanings, publication order, in
 | Risk | `risk-low`, `risk-medium`, `risk-high` | Delivery risk. |
 | Affected surface | `blast-radius-low`, `blast-radius-medium`, `blast-radius-high` | Extent of potentially affected components and consumers. |
 
-Use at most one classification value per dimension. Repository labels such as `bug`, `documentation` or `integrate` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules. Labels capability version 3 adds `execution-failed`; existing adopters review and reconcile the new capability version before depending on it.
+Use at most one classification value per dimension. Repository labels such as `bug` or `documentation` are outside this catalog unless the adopter declares them. `planned` and `done` are gate results, not shipped labels. Labels capability version 2 corrects request roles and removes the obsolete `triage → refine` state-transition example; generic triage CLI callers must declare their own state transitions. Native Actions uses its authenticated result and continuation rules. Labels capability version 3 adds `execution-failed`; version 4 adds the `integrate` assessment request. Existing adopters review and reconcile the new capability version before depending on it. Reconciliation creates missing labels and preserves customized colors and descriptions; the installed guide and router define admission.
 
 During native proposal review, `ready` retains the revocable refinement gate while `waiting-review` points to the proposal. Generic triage reports this pair as a pending review and cannot apply label changes until the review is resolved.
 

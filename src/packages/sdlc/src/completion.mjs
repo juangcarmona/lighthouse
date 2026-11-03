@@ -15,7 +15,11 @@ export function authorizeCompletion(event, env, stage) {
   if (stage === 'review' && merge) throw Error('Review cannot authorize a merge');
   return { issue: Number(input.issue), pr: Number(input.pull_request), head: input.head, merge };
 }
-export async function authorizeCompletionEvent(api, repository, event, env, stage) {
+export async function authorizeCompletionEvent(api, repository, event, env, stage, expectedIntegration = null) {
+  if (env.GITHUB_EVENT_NAME === 'issues') {
+    if (stage !== 'integrate') throw Error('Label requests only integration assessment');
+    return (await import('./integration-request.mjs')).integrationLabelRequest(api, repository, env.GITHUB_REPOSITORY_OWNER, event, env, expectedIntegration);
+  }
   if (env.GITHUB_EVENT_NAME === 'workflow_run') {
     const next = await deliveryAfterChecks(api, repository, env.GITHUB_REPOSITORY_OWNER, event);
     if (!next || next.stage !== stage) throw Error('No current delivery authorization after checks');
@@ -145,6 +149,7 @@ export async function inspectCompletion(api, repository, owner, input, stage, wo
   const checks = await checkCommit(api, checkedRevision, policy.checks);
   const observedChecks = (await Promise.all([...new Set([pr.head.sha, checkedRevision])].map(revision => observeChecks(api, revision, workflowRunId)))).flat();
   const reviews = await list(api, `pulls/${input.pr}/reviews`);
+  if (input.integrationLabel) (await import('./integration-request.mjs')).assertIntegrationLabelCurrent(repository, owner, input, pr, issue, comments, reviews);
   const prAnswers = (await list(api, `issues/${input.pr}/comments`)).filter(c => c.user.login === owner && !/<!-- lighthouse-(?:actions|completion|run):/.test(c.body)).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at, url: c.html_url }));
   const files = await list(api, `pulls/${input.pr}/files`);
   if (files.length !== pr.changed_files) throw Error('Incomplete changed-file inventory');
