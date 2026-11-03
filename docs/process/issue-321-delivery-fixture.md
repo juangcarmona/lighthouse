@@ -1,3 +1,3 @@
 # Delivery reconciliation fixture
 
-This disposable candidate exercises deduplicated delivery and authenticated bot continuation.
+This disposable candidate confirms authorized feedback correction on the same PR.

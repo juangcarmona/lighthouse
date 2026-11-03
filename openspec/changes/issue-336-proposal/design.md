@@ -6,6 +6,8 @@
 
 See `proposal.md` for motivation. The fixture must contain only the owner-specified heading and paragraph. Repository documentation belongs under `docs/`; OpenSpec planning belongs in this change directory.
 
+For this same-PR correction, the final wording in the [owner's review](https://github.com/juangcarmona/lighthouse/pull/339#pullrequestreview-5758505351) supersedes the original issue paragraph. Keep the heading and file format unchanged; no product or design decision remains outstanding.
+
 ## Goals / Non-Goals
 
 **Goals:** Deliver the exact text with a reviewable, completed docs-only plan and verifiable file scope.

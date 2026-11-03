@@ -6,9 +6,11 @@
 
 Issue #336 needs a disposable candidate for the owner's acceptance observations of #321. The candidate supplies only fixed documentation; delivery deduplication and authenticated continuation observations remain owner-orchestrated work.
 
+The [owner's review on PR #339](https://github.com/juangcarmona/lighthouse/pull/339#pullrequestreview-5758505351) supplies the replacement paragraph and resolves both earlier wording questions. This correction updates the existing candidate on the same PR, without rerunning or claiming owner-orchestrated observations.
+
 ## What Changes
 
-- Add `docs/process/issue-321-delivery-fixture.md` with exactly the requested heading and paragraph.
+- Retain the heading in `docs/process/issue-321-delivery-fixture.md` and replace its paragraph with exactly: `This disposable candidate confirms authorized feedback correction on the same PR.`
 - Include this completed docs-only OpenSpec plan in the same implementation PR.
 - Preserve unrelated files and the canonical product and architecture models.
 
