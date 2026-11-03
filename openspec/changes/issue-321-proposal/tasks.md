@@ -6,7 +6,7 @@
 - [x] Resolve the existing implementation candidate before starting another worker.
 - [x] Scope completion subscriptions and verify completed-run subjects without removing bot signals or scheduled reconciliation.
 - [x] Add executable duplicate, denied, stale, uncertain and continuation regressions.
-- [ ] Run repository, Markdown, OpenSpec/citation and workflow compilation/drift checks.
+- [x] Run repository, Markdown, OpenSpec/citation and workflow compilation/drift checks.
 - [ ] Install the source and exercise native duplicate requests and bot continuation; retain receipts and close disposable fixtures without merging.
 
 <!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
