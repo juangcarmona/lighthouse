@@ -31,7 +31,7 @@ export const dispatchIntent = request => digest(JSON.stringify({
   integration: request.integrationRequest, productApproval: request.productApproval,
   productParent: request.productParent, productResume: request.productResume, productAlignment: request.productAlignment,
   productReview: request.productReview, productFeedback: request.productFeedback,
-  model: request.event?.inputs?.model_selection,
+  model: request.event?.inputs?.model_selection || undefined,
 }));
 
 export function readDispatchReceipt(comment, repository, issue) {
@@ -91,7 +91,7 @@ export async function recordDispatch(api, repository, request) {
     const run = await api(`actions/runs/${receipt.workerRunId}`);
     if (request.intent && !request.recovery && receipt.intent === request.intent) {
       if (run.path !== stagePath(workerFor(receipt)) || String(run.id) !== String(receipt.workerRunId) || run.repository?.full_name !== repository || run.head_sha !== request.workflowRevision) throw Error('Dispatch worker identity changed');
-      if (run.status !== 'completed' || receipt.status === 'completed' && run.conclusion === 'success') equivalent = { send: false, comment, receipt, reason: run.status !== 'completed' ? 'Equivalent work already has a queued or running execution.' : 'Equivalent work already completed; follow its retained result.' };
+      if (run.status !== 'completed' || receipt.status === 'completed' && run.conclusion === 'success') equivalent = { send: false, comment, receipt, state: run.status !== 'completed' ? 'queued' : 'completed', reason: run.status !== 'completed' ? 'Equivalent work already has a queued or running execution.' : 'Equivalent work already completed; follow its retained result.' };
       else if (!['blocked', 'waiting', 'failed', 'cancelled'].includes(receipt.status)) throw Error('Previous dispatch outcome is uncertain; reconcile it before requesting another');
     }
     if (equivalent?.receipt === receipt) continue;

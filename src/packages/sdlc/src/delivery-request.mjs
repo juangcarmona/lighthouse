@@ -2,6 +2,20 @@ import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { implementationPrProof } from './pr-state.mjs';
 import { issueComments, loadDispatch, stagePath, workerFor } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
+import { taskDigest } from './issue-actions.mjs';
+import { eligibleIssueAuthor } from './request-triage.mjs';
+
+export async function consumeReconciledLabel(api, owner, request, state) {
+  if (state !== 'completed' || request.eventName !== 'issues' || request.event.action !== 'labeled' || request.event.label?.name !== request.stage) return false;
+  const issue = await api(`issues/${request.issue}`);
+  const comments = await issueComments(api, request.issue);
+  const answers = comments.filter(c => c.user?.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
+  const metadata = await api(''), revision = (await api(`commits/${metadata.default_branch}`)).sha;
+  if (issue.state !== 'open' || !eligibleIssueAuthor(issue, owner, request.stage) || issue.pull_request || issue.labels.some(l => ['human-working', 'agent-working'].includes(l.name)) || taskDigest(issue, answers) !== request.taskDigest || revision !== request.sourceRevision) throw Error('Current authority or intent changed before consuming the reconciled request');
+  if (!issue.labels.some(l => l.name === request.stage)) return false;
+  await api(`issues/${request.issue}/labels/${encodeURIComponent(request.stage)}`, 'DELETE', undefined, true);
+  return true;
+}
 
 // Resolve the existing candidate before recording another implementation request.
 export async function implementationContinuation(api, repository, owner, request, readArtifact = readActionsJson) {

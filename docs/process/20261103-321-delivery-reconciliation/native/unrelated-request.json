@@ -1,0 +1,12 @@
+{
+  "workflow": "lighthouse-sdlc-router.yml",
+  "ref": "main",
+  "inputs": {
+    "issue": "336",
+    "stage": "implement",
+    "workflow": "stage",
+    "after_run": "41680697944"
+  },
+  "requestedAt": "2026-11-03T17:09:13.052505+00:00",
+  "authority": "Owner-operated replay of an unrelated package-workflow completion; runtime classification must decline delivery."
+}

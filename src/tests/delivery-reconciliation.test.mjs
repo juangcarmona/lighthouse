@@ -4,10 +4,11 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { dispatchIntent, dispatchId, recordDispatch, sendDispatch, dispatchReceiptBody, claimDispatch, stagePath } from '../packages/sdlc/src/stage-dispatch.mjs';
-import { implementationContinuation } from '../packages/sdlc/src/delivery-request.mjs';
+import { implementationContinuation, consumeReconciledLabel } from '../packages/sdlc/src/delivery-request.mjs';
 import { completionSource } from '../packages/sdlc/src/delivery-events.mjs';
 import { completionSubscriptions, workflowDisplayName } from '../packages/sdlc/src/workflow-completions.mjs';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
+import { taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
 
 const repository = 'owner/repo', revision = 'a'.repeat(40), source = 'b'.repeat(40), task = 'c'.repeat(64), identity = 'd'.repeat(64), head = 'e'.repeat(40);
 const bot = { login: 'github-actions[bot]', type: 'Bot' };
@@ -65,6 +66,13 @@ test('changed intent cannot overlap active work and edited intent metadata is re
   assert.equal(f.writes.length, 0);
 });
 
+test('an explicitly empty optional model selection is the same default grant as a label request', () => {
+  const f = fixture();
+  const manual = nextRequest(f.request, { event: { inputs: { issue: '18', stage: 'implement', model_selection: '' } } });
+  const label = nextRequest(f.request, { eventName: 'issues', event: { action: 'labeled', label: { name: 'implement' } } });
+  assert.equal(manual.intent, label.intent);
+});
+
 test('a lost dispatch response remains unconfirmed; neither equivalent nor changed events resend it', async () => {
   const f = fixture(); f.receipt.workerRunId = null; f.receipt.status = 'requested'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
   await assert.rejects(sendDispatch(async (...args) => { const result = await f.api(...args); if (args[0].endsWith('/dispatches')) throw Error('Response lost after acceptance'); return result; }, repository, f.request, 30), /Response lost/);
@@ -104,6 +112,32 @@ test('an eligible current candidate is linked before any new worker, and stale o
   f.pr.head.sha = head; f.pr.base.repo.full_name = 'foreign/repo'; assert.equal((await inspect()).status, 'blocked');
   assert.equal(f.writes.length, 0);
   assert.equal(await implementationContinuation(f.api, repository, 'owner', { ...f.request, worker: 'apply-review' }, f.readArtifact), null);
+});
+
+test('completed reuse consumes only the current command label and refuses stale intent or reservations', async () => {
+  const f = fixture(), effects = [];
+  const issue = { number: 18, title: 'Fixture', body: 'Scope', state: 'open', user: { login: 'owner' }, labels: [{ name: 'implement' }, { name: 'custom' }] };
+  const request = { ...f.request, eventName: 'issues', event: { action: 'labeled', label: { name: 'implement' } }, taskDigest: taskDigest(issue, []) };
+  let current = source;
+  const api = async (path, method = 'GET') => {
+    if (path === 'issues/18') return issue;
+    if (path === 'commits/main') return { sha: current };
+    if (method === 'DELETE') { effects.push(path); issue.labels = issue.labels.filter(l => l.name !== 'implement'); return; }
+    return f.api(path, method);
+  };
+  assert.equal(await consumeReconciledLabel(api, 'owner', request, 'completed'), true);
+  assert.deepEqual(issue.labels, [{ name: 'custom' }]);
+  assert.equal(await consumeReconciledLabel(api, 'owner', request, 'completed'), false);
+  issue.user.login = 'external-requester'; issue.labels.unshift({ name: 'implement' }, { name: 'triaged' });
+  assert.equal(await consumeReconciledLabel(api, 'owner', request, 'completed'), true);
+  assert.ok(issue.labels.some(l => l.name === 'triaged'));
+  issue.labels.unshift({ name: 'implement' });
+  for (const state of ['queued', 'blocked', 'unknown']) assert.equal(await consumeReconciledLabel(api, 'owner', request, state), false);
+  issue.body = 'Changed scope'; await assert.rejects(consumeReconciledLabel(api, 'owner', request, 'completed'), /authority or intent changed/);
+  issue.body = 'Scope'; current = head; await assert.rejects(consumeReconciledLabel(api, 'owner', request, 'completed'), /authority or intent changed/);
+  current = source; issue.labels.push({ name: 'human-working' });
+  await assert.rejects(consumeReconciledLabel(api, 'owner', request, 'completed'), /authority or intent changed/);
+  assert.deepEqual(effects, ['issues/18/labels/implement', 'issues/18/labels/implement']);
 });
 
 test('candidate reconciliation uses the authenticated epic base rather than default-branch source', async () => {
