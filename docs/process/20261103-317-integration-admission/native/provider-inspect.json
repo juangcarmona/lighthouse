@@ -1,0 +1,31 @@
+{
+  "id": "FR-CHANGE-EVIDENCE",
+  "type": "functional-requirement",
+  "title": "Report evidence for a foundation-governed change",
+  "status": "draft",
+  "path": "docs/product/model/requirements/functional/fr-change-evidence.md",
+  "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+  "outgoing": [
+    {
+      "from": "FR-CHANGE-EVIDENCE",
+      "kind": "derived-from",
+      "to": "BR-HUMAN-AUTHORITY"
+    },
+    {
+      "from": "FR-CHANGE-EVIDENCE",
+      "kind": "derived-from",
+      "to": "UC-IMPLEMENT-CHANGE"
+    },
+    {
+      "from": "FR-CHANGE-EVIDENCE",
+      "kind": "uses-terms",
+      "to": "TERM-GUARDRAIL"
+    },
+    {
+      "from": "FR-CHANGE-EVIDENCE",
+      "kind": "uses-terms",
+      "to": "TERM-INTEGRATION"
+    }
+  ],
+  "incoming": []
+}

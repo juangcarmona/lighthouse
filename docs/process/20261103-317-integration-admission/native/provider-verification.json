@@ -1,0 +1,71 @@
+{
+  "kind": "owner-operated-provider-verification",
+  "repository": "juangcarmona/lighthouse",
+  "issue": 329,
+  "pullRequest": 332,
+  "sourceRevision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+  "verifiedAt": "2026-11-03T15:51:27.613718+00:00",
+  "provider": {
+    "command": "prodshape",
+    "version": "0.23.0"
+  },
+  "node": "v24.21.0",
+  "commands": [
+    {
+      "argv": [
+        "prodshape",
+        "inspect",
+        "FR-CHANGE-EVIDENCE",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--change",
+        "issue-329-proposal",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "prodshape",
+        "cite",
+        "--id",
+        "FR-CHANGE-EVIDENCE",
+        "--digest",
+        "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "summary": {
+    "totalDocuments": 3,
+    "currentDocuments": 3,
+    "bound": 3,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 3,
+    "current": 3,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  },
+  "emittedPayloadMatchesAllCandidateDocuments": true,
+  "artifactSha256": {
+    "provider-inspect.json": "8f3b95365276be257523684a158ae5effdddba1ac8482a4d7f923329fe5a111a",
+    "provider-citations.json": "6896781dc39b6d80afa8e847b56878341a4f6b72ff848fd70fb7ac6422ee319b",
+    "provider-citation.txt": "b0aae5999f4d9176fcd322616ccc575f213f3fbc7e9fbd83573412bd7a688654"
+  },
+  "authority": "Owner-operated external verification using the installed ProductShape CLI; not a GitHub Actions run or a provider identity/billing attestation."
+}
