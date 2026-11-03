@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "runId": "5ee38575127ce6ece9976239fcd028c83838e91611d2ec0696b4e13adaaa4dc7",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "github-check:125837727006",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612309542/job/125837727006",
+      "reason": "Required repository check from app 15368 succeeded on the accepted PR head 558b132496913fb1e079ac1e2784e3a537979820. ci.yml runs dependency installation and npm run verify; package.json includes the focused memory tests and separate-process exercise in that verification."
+    },
+    {
+      "id": "github-check:125847221045",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41615320272/job/125847221045",
+      "reason": "Required repository check from app 15368 succeeded on the host-observed merged and checked revision b25bea4808f69ff58f2be66b4db4c2efd58aece3. The host also identifies run 41615320272 as successful post-merge ci.yml verification."
+    },
+    {
+      "id": "github-status:57925489291",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/4a17593ae0c09710c54c90c8a6c1294d8e0d4c5a/docs/process/20261103-272-scoped-memory/operator/558b132496913fb1e079ac1e2784e3a537979820/record.json",
+      "reason": "Host-authenticated operator/strict-openspec success for the accepted head satisfies the explicit strict OpenSpec verification requirement; it is additional work-item evidence, not an additional forge merge gate."
+    },
+    {
+      "id": "github-status:57925490675",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/4a17593ae0c09710c54c90c8a6c1294d8e0d4c5a/docs/process/20261103-272-scoped-memory/operator/558b132496913fb1e079ac1e2784e3a537979820/record.json",
+      "reason": "Host-authenticated operator/product-citations success for the accepted head supports the explicit citation verification task. Intended behavior was separately compared with the canonical memory requirement, business rule and applied Product Change."
+    },
+    {
+      "id": "acceptance-and-intent-inspection",
+      "status": "passed",
+      "source": "/workspace/docs/process/20261103-272-scoped-memory/README.md",
+      "reason": "Inspected acceptance mapping, applied CHG-ISSUE-272, FR-AGENT-MEMORY, BR-MEMORY-BOUNDARY, ADR-0011, OpenSpec tasks/specification, memory APIs and focused assertions. Separate processes retain and recall a source-bound finding, invalidate it and observe exclusion and disabled availability. Focused assertions cover project/repository/private-run isolation, expiry, known staleness, correction, explicit grants and optional versus required availability. This is source inspection plus authenticated CI evidence, not a claim of locally executed tests or deployed worker integration."
+    },
+    {
+      "id": "integration-authority-and-finalization",
+      "status": "passed",
+      "source": "/input/context.json",
+      "reason": "Host-supplied owner dispatch authorizes merge:true for PR 315 at the full accepted head. Effective policy requires repository/app 15368 and zero approving reviews. Host observes the PR already closed and merged; mergeable:false is not an unresolved conflict on an open candidate. Finalization preserves issue/PR labels, does not close the issue and releases the reservation through host cleanup."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, cited checks and reservation, then retain this integration assessment with the already-observed merge outcome and release the reservation; do not request another merge or close issue #272 in this stage.",
+  "output": {
+    "integration": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 272,
+      "pullRequest": 315,
+      "binding": {
+        "repository": "juangcarmona/lighthouse",
+        "issue": 272,
+        "pr": 315,
+        "head": "558b132496913fb1e079ac1e2784e3a537979820",
+        "base": "b25bea4808f69ff58f2be66b4db4c2efd58aece3",
+        "branch": "main",
+        "intent": "4e9a18275d69a259951c2265f9bba91f219c7b21906dc4996a9d4c3f0e7d5934",
+        "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+        "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "prIntent": "8d8bc24caad16cb1f8819f65066ff35fcc7270fe673aa21e996dbde260f67cb7",
+        "files": "07a64d3a92e58c0f4ca7773b9e4715932a56d2ac9084325595912025fe7f69a4"
+      },
+      "provenance": {
+        "source": "host-supplied authenticated completion context; not independently authenticated by the engine",
+        "requestId": "04343e051c72207781a49ae8db332f1305f9e622f65f5a51046890b840481ae0",
+        "dispatchDigest": "784cd72aed407363e6699c25717eba46e8c41f54d3442849d08a3e54a869971f",
+        "dispatchCommentId": 6600634752,
+        "workflowRunId": "41615708601",
+        "harnessRevision": "2dac30b12fc801f9a1af6e7710f95ba77f4312f2"
+      },
+      "decision": "passed; record already-observed integration, not a new merge request",
+      "authorization": {
+        "issue": 272,
+        "pr": 315,
+        "head": "558b132496913fb1e079ac1e2784e3a537979820",
+        "merge": true,
+        "limits": "Only the explicit host-authenticated owner dispatch authorizes the named head. The publisher must recheck authority and GitHub protections; this assessment grants no new permission."
+      },
+      "observedOutcome": {
+        "source": "completion.merged, completion.merge, completion.mergeActor and request.postMerge supplied by the host",
+        "pullRequestState": "closed",
+        "merged": true,
+        "mergeRevision": "b25bea4808f69ff58f2be66b4db4c2efd58aece3",
+        "mergeActor": "github-actions[bot]",
+        "checkedRevision": "b25bea4808f69ff58f2be66b4db4c2efd58aece3",
+        "postMerge": {
+          "workflow": "ci.yml",
+          "revision": "b25bea4808f69ff58f2be66b4db4c2efd58aece3",
+          "status": "passed",
+          "runId": 41615320272,
+          "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41615320272"
+        },
+        "qualification": "The supplied base is the current main/merged revision, not evidence of the original pre-merge base. A passed assessment itself is never a merge receipt. No merge, dispatch or GitHub write was performed by this engine."
+      },
+      "policyAssessment": {
+        "source": ".lighthouse/github.json and completion.policy",
+        "requiredChecks": [
+          {
+            "context": "repository",
+            "app": 15368,
+            "status": "passed"
+          }
+        ],
+        "requiredApprovals": 0,
+        "observedReviews": 0,
+        "strictRequiredStatusChecks": true,
+        "unresolvedCurrentStageDecisions": [],
+        "optionalChecks": "Skipped publication, adopter-install and reconciliation observations are not proof of execution and are not required by the effective merge policy. No failed required check is reported."
+      },
+      "dependencyAssessment": {
+        "product": "openspec/changes/issue-272-product-change/product-change/change.md records CHG-ISSUE-272 as applied; canonical FR-AGENT-MEMORY and BR-MEMORY-BOUNDARY express the selected behavior. Their draft frontmatter alone is not treated as product approval. The implementation does not change product-model paths in the supplied changed-file list.",
+        "architecture": "Accepted ADR-0011 records juangcarmona as decider and chooses optional host-side SQLite after evaluating a service and validation-only alternatives.",
+        "neighbours": "The proposal explicitly coordinates #100 and #104 through existing typed-memory and host authority boundaries; it declares no prerequisite delivery order or dependency on completing those broader issues. Parent #270 is contextual, not a declared merge prerequisite.",
+        "tasks": "OpenSpec tasks 1.1, 2.1, 2.2 and 3.1 are checked complete and supported by the retained acceptance mapping, inspected assertions and cited current-head CI/status observations. No independent planning review is configured as a current integration requirement."
+      },
+      "acceptanceAssessment": {
+        "intendedBehaviorSources": [
+          "docs/product/model/requirements/functional/fr-agent-memory.md:8-26",
+          "docs/product/model/business-rules/br-memory-boundary.md:12-18",
+          "openspec/changes/issue-272-product-change/product-change/change.md:19-46",
+          "completion.workItem and host-supplied owner clarification"
+        ],
+        "executionEvidence": "src/tests/memory.test.mjs:164-179 asserts separate-process retain, source-bound recall, invalidation, exclusion and disabled behavior. Lines 33-62, 65-120 and 136-148 cover eligibility, isolation, correction, staleness and availability. The required repository check executes this suite; these implementation-authored assertions were compared with product intent rather than treated as independent specification.",
+        "historicalEvidence": "docs/process/20261103-272-scoped-memory/README.md binds the originating exercise and optional consumer verification to 1631ac91eea720fab8de3b9962c3cda24df0561e and Actions run 41606630148. Those historical receipts are not relabelled as checks of the accepted head; the cited current-head observations provide that verification.",
+        "limits": [
+          "The exercise proves synthetic persistence across separate Node processes, not two production Actions workers using provisioned storage.",
+          "The provider is an opt-in library and is not automatically connected to installed workers or prompt injection; this matches the owner-accepted SQLite direction, ADR-0011 and documented implementation scope.",
+          "Eligibility, relevance, authenticated grants, private storage, backups and deletion remain host/operator responsibilities. The fixture assessor is not a production privacy classifier.",
+          "Shared cross-project persistence is unsupported; expiry excludes recall but is not secure erasure."
+        ]
+      },
+      "synchronization": {
+        "observedIssue": {
+          "state": "open",
+          "labels": [
+            "integrate",
+            "pr-ready"
+          ]
+        },
+        "observedPullRequest": {
+          "state": "closed",
+          "merged": true,
+          "labels": []
+        },
+        "onPassed": {
+          "add": [],
+          "remove": [],
+          "closeIssue": false
+        },
+        "onBlocked": {
+          "add": [],
+          "remove": [],
+          "closeIssue": false
+        },
+        "pullRequestLabels": "preserve",
+        "reservation": "Host added agent-working after the observation; host cleanup releases it for every outcome. It is not required to have been removed before this result.",
+        "assessment": "Matches supplied finalization policy. integrate is an adopter label outside the shipped request catalog; its presence is not authority. PR text references #272. Stale candidate-next-step text is historical process wording, not an instruction to repeat implementation or merge."
+      },
+      "findings": [
+        {
+          "kind": "guidance-drift",
+          "blocking": false,
+          "sources": [
+            "docs/architecture/05-building-block-view/README.md:83-85",
+            "docs/architecture/06-runtime-view/README.md:88",
+            "src/packages/sdlc/README.md:13-29",
+            ".github/workflows/lighthouse-sdlc-router.yml:26-31,74-77"
+          ],
+          "finding": "General architecture prose still describes a refinement-only installed route and later stages as outside it, whereas the delivery guide and installed router enumerate implemented later-stage workers. The new memory-specific architecture and command guidance consistently state the opt-in host boundary.",
+          "owner": "Architecture maintainer",
+          "disposition": "Non-blocking broader documentation discrepancy; reconcile against the installed routes in separately reviewed work. No guidance was rewritten and no policy change or follow-up issue was initiated."
+        },
+        {
+          "kind": "historical-process-gaps",
+          "blocking": false,
+          "source": "docs/process/20261103-272-scoped-memory/README.md:32-38 and supplied PR owner correction records",
+          "finding": "Run 41591961607 failed evidence collection after successful engine execution; run 41606630148 passed independent verification but could not publish a zero-diff correction. These are distinct collection/publication gaps during retries of this issue, not established memory source defects or evidence of cross-issue recurrence.",
+          "owner": "Execution-adapter maintainer",
+          "disposition": "Preserve distinctions in the integration record. Any proposed collection preflight or no-diff recovery guard requires separate review and regression proof; this assessment implements none."
+        }
+      ],
+      "sourceDefects": "No current acceptance-breaking source defect was established by this inspection; this is not a security audit or a claim of exhaustive correctness.",
+      "subsequentStages": [
+        {
+          "stage": "review",
+          "status": "not-performed",
+          "owner": "Trusted completion host and owner-authorized review entry",
+          "note": "Review requires its own entry and matching retained integration evidence. priorIntegration:null means no matching historical receipt was supplied, not that a review passed. This integration result does not perform review, close the issue or initiate another stage."
+        }
+      ]
+    }
+  }
+}
