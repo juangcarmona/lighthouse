@@ -1,0 +1,13 @@
+{
+  "workflow": "lighthouse-sdlc-router.yml",
+  "ref": "main",
+  "inputs": {
+    "issue": "336",
+    "stage": "implement",
+    "workflow": "stage",
+    "after_run": "41684441339"
+  },
+  "sourceRevision": "a91205ada0776856ea9b835bbb375aef1f2c5863",
+  "requestedAt": "2026-11-03T17:31:39.012843+00:00",
+  "authority": "Owner-operated replay; this is input provenance, not a provider-signed dispatch artifact."
+}

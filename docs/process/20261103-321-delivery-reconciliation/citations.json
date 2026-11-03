@@ -1,0 +1,158 @@
+{
+  "schema": "product-definition-as-code/citations-provider/v1alpha1",
+  "provider": "openspec",
+  "integrationVersion": "0.23.0",
+  "root": "openspec",
+  "includeArchived": false,
+  "documents": [
+    {
+      "path": "openspec/changes/issue-321-proposal/proposal.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/design.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/tasks.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    }
+  ],
+  "citations": [
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "totalDocuments": 4,
+    "currentDocuments": 4,
+    "bound": 4,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 12,
+    "current": 12,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}
