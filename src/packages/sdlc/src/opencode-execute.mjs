@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership } from './implementation-runtime.mjs';
+import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
@@ -95,6 +95,11 @@ async function main() {
   const source = join(dir, 'source'), output = join(dir, 'output');
   await mkdir(source); await mkdir(output); await chmod(output, 0o777);
   const name = `lighthouse-engine-${request.runId}`;
+  const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
+  const runtimeReceipt = { package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
+  let phase = 'preflight', evidenceRetained = false;
+  const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
   let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, cancelled = false, stopReason = null;
   const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
@@ -103,7 +108,9 @@ async function main() {
   try {
     console.log('Waiting for the operator host engine slot');
     slot = acquireEngineSlot(config.lock);
-    runtime = await startEnvironment({ selected, name: `${name}-agent`, uid: config.uid });
+    await recordPhase('running');
+    runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid });
+    await recordPhase('passed');
     if (cancelled) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
@@ -128,18 +135,16 @@ async function main() {
     const prompt = join(dir, 'prompt.txt');
     const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
-    const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-    const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
     codegraph = codegraphSelection(config, implementing);
     if (codegraph.status === 'pending') codegraph = await startCodegraph({ config, source, harness, dir, name, docker });
-    const runtimeReceipt = { package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, codegraph: { status: codegraph.status, ...(codegraph.reason ? { reason: codegraph.reason } : {}), ...(codegraph.tools ? { tools: codegraph.tools } : {}) } };
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+    runtimeReceipt.codegraph = { status: codegraph.status, ...(codegraph.reason ? { reason: codegraph.reason } : {}), ...(codegraph.tools ? { tools: codegraph.tools } : {}) };
+    phase = 'execution'; await recordPhase('running');
     const command = imageCommand(config.image);
     const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`, '--mount', `type=bind,src=${codegraph.workerConfigPath},dst=/etc/opencode/opencode.json,readonly`] : []),
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command];
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -179,9 +184,14 @@ async function main() {
       timer = setTimeout(() => cancel('timeout'), implementing ? 1800000 : 600000);
     });
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
-    await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+    await recordPhase(runtimeReceipt.execution.status);
     if (exit.code !== 0 || cancelled || runtimeReceipt.execution.status !== 'passed') throw Error(executionFailure(runtimeReceipt.execution));
     if (engineError) throw Error('OpenCode reported an execution error; no model fallback attempted');
+    phase = 'evidence'; await recordPhase('running');
+    // The worker has exited. Reclaim only this run's tree before reading private output.
+    restoreWorkspaceOwnership(dir, config);
+    runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
+    if (runtimeReceipt.execution.status !== 'passed') { phase = 'execution'; throw Error(executionFailure(runtimeReceipt.execution)); }
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
     const envelope = JSON.parse(await readFile(result, 'utf8'));
@@ -190,7 +200,11 @@ async function main() {
     if (implementing) {
       const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
+      await mkdir(join(runDir, 'evidence'), { recursive: true });
+      await writeFile(join(runDir, 'evidence', 'candidate-envelope.json'), JSON.stringify(envelope));
       await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
+      evidenceRetained = true;
+      await recordPhase('passed'); phase = 'verification'; await recordPhase('running');
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       const checkBaseline = await sourceFiles(candidate);
@@ -198,6 +212,7 @@ async function main() {
       const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected });
       if (collectChanges(checkBaseline, await sourceFiles(candidate, checkBaseline), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
+      await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
       if (request.implementation.policy.reviewRequired) {
         envelope.result.status = 'blocked';
         envelope.result.pendingReview.push('Repository policy requires owner acceptance of this candidate; engine assertions cannot grant it.');
@@ -210,6 +225,8 @@ async function main() {
       }
       if (cancelled) throw Error('Implementation cancelled before publication');
     }
+    if (!implementing) await recordPhase('passed');
+    phase = 'completion'; await recordPhase('running');
     const completion = completionOutput(envelope, request);
     report(progressText('Result', redactLog(envelope.effect.body)));
     report(progressText('Run', `Validated outcome: ${envelope.result.status}. The publisher will recheck authority before updating the issue.`));
@@ -217,15 +234,22 @@ async function main() {
     // gh-aw requires a terminal safe output even when a separate job owns publication.
     await mkdir(dirname(env.GH_AW_SAFE_OUTPUTS), { recursive: true });
     await writeFile(env.GH_AW_SAFE_OUTPUTS, JSON.stringify(completion) + '\n');
+    await recordPhase('passed');
   } catch (error) {
+    error.phase = phase;
+    await recordPhase('failed');
     if (implementing && baseline) {
       try {
         try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
+        restoreWorkspaceOwnership(dir, config);
         const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
         await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
-        await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent'));
-        console.error(progressText('Recovery', 'Retained bounded candidate changes and available evidence. This failed run cannot publish a PR.'));
+        console.error(progressText('Recovery', 'Retained bounded candidate changes. This failed run cannot publish a PR.'));
       } catch (recoveryError) { console.error(progressText('Recovery', redactLog(`Candidate could not be retained: ${recoveryError.message}`))); }
+      if (!evidenceRetained && phase !== 'evidence') {
+        try { await copyEvidence(join(output, 'evidence'), join(runDir, 'evidence', 'agent')); }
+        catch { console.error(progressText('Recovery', 'Additional evidence could not be collected; inspect the retained candidate and failed phase.')); }
+      }
     }
     throw error;
   } finally {
@@ -243,7 +267,7 @@ async function main() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {
   const message = redactLog(error.message);
   console.error(progressText('Engine error', message));
-  try { await writeFile(join(process.env.RUNNER_TEMP, `lighthouse-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`, 'engine-error.json'), JSON.stringify({ schemaVersion: 1, message: message.slice(0, 3000) })); } catch {}
+  try { await writeFile(join(process.env.RUNNER_TEMP, `lighthouse-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`, 'engine-error.json'), JSON.stringify({ schemaVersion: 1, phase: error.phase ?? 'preparation', message: message.slice(0, 3000) })); } catch {}
   if (process.env.GITHUB_STEP_SUMMARY) {
     try { await appendFile(process.env.GITHUB_STEP_SUMMARY, `\n### Execution failed\n\n${message.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}\n\nInspect runtime.json and the retained engine events before retrying.\n`); } catch {}
   }

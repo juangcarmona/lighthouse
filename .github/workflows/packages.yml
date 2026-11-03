@@ -29,6 +29,10 @@ on:
         description: "Adopter ref"
         required: true
         default: "main"
+      worker_runtime_acceptance:
+        description: "Exercise the operator's pinned worker image and evidence boundary"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -84,8 +88,41 @@ jobs:
           LIGHTHOUSE_CONSUMER_ROOT: .tmp/consumer
           LIGHTHOUSE_AUTHORITIES_APPLY: "true"
 
+  worker-runtime:
+    if: github.event_name == 'workflow_dispatch' && inputs.worker_runtime_acceptance && github.actor == github.repository_owner
+    name: Exercise worker runtime boundaries
+    runs-on: [self-hosted, linux, lighthouse-workflow]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Select the operator's pinned implementation image
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const config = JSON.parse(readFileSync(process.env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8'));
+          if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage)) throw Error('Provision and pin the implementation image before runtime acceptance');
+          appendFileSync(process.env.GITHUB_ENV, `LIGHTHOUSE_TEST_IMAGE=${config.implementationImage}\n`);
+          JS
+      - name: Exercise different UIDs, prerequisites and failed evidence collection
+        run: |
+          mkdir -p "$RUNNER_TEMP/worker-runtime-acceptance"
+          node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1
+      - name: Retain acceptance results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: worker-runtime-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/worker-runtime-acceptance/results.log
+          if-no-files-found: error
+          retention-days: 30
+
   adopter:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !inputs.worker_runtime_acceptance
     name: Install CLI in adopter checkout
     runs-on: ubuntu-26.04
     timeout-minutes: 15

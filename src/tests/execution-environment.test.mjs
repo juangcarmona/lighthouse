@@ -74,6 +74,20 @@ test('missing base tools stop preflight before any test service starts', async (
     assert.ok(!f.calls.some(args => args[0] === 'network' || args.includes('-d')));
   }
 });
+
+test('legacy images preflight declared executables without source or credentials', async () => {
+  const f = fixture();
+  await startEnvironment({ image, commands: [['env', 'CI=true', 'npm', 'test'], ['env', '-u', 'IGNORED', 'npm', 'test'], ['/usr/bin/git', '--version'], ['./node_modules/.bin/tool']], name: 'lighthouse-legacy-agent', uid: 20003, run: f.run });
+  assert.ok(f.calls.some(args => args.includes('opencode')));
+  const lookup = f.calls.find(args => args.at(-1) === 'npm');
+  assert.ok(lookup && !lookup.includes('--mount') && lookup.includes('none'));
+  assert.ok(!f.calls.some(args => args.at(-1) === './node_modules/.bin/tool'));
+  assert.ok(f.calls.some(args => args.at(-1) === '/usr/bin/git'));
+  assert.ok(!f.calls.some(args => args.at(-1) === '-u'));
+  const missing = fixture(args => args.at(-1) === 'missing-tool');
+  await assert.rejects(startEnvironment({ image, commands: [['missing-tool']], name: 'lighthouse-legacy-agent', uid: 20003, run: missing.run }), /prerequisite failed: executable missing-tool; rebuild and repin/);
+  assert.ok(!missing.calls.some(args => args.includes('-d')));
+});
 test('incompatible tool versions stop preflight before service provisioning', async () => {
   for (const [tool, version, requirement] of [['node', 'v22.0.0', 'Node.js 24'], ['opencode', 'opencode v2.0.0', 'OpenCode 2.1.0'], ['dotnet', '10.0.101', '.NET SDK 10.0.100']]) {
     const f = fixture();

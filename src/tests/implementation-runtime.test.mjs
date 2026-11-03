@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -16,9 +16,22 @@ test('browser preview evidence fits while byte and file budgets remain bounded',
     assert.equal((await stat(join(root, 'preview/preview.bin'))).size, 40 * 1024 * 1024);
     await truncate(preview, 64 * 1024 * 1024 + 1);
     await assert.rejects(copyEvidence(source, join(root, 'oversized')), /Evidence exceeds 64 MiB/);
+    await assert.rejects(lstat(join(root, 'oversized')), { code: 'ENOENT' });
     await rm(preview);
     await Promise.all(Array.from({ length: 201 }, (_, i) => writeFile(join(source, `report-${i}`), '')));
     await assert.rejects(copyEvidence(source, join(root, 'too-many')), /Evidence exceeds 200 files/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('an unreadable final member never publishes a partial evidence directory', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'evidence-partial-'));
+  try {
+    const source = join(root, 'source'); await mkdir(source);
+    await writeFile(join(source, 'first.log'), 'readable');
+    await writeFile(join(source, 'second.log'), 'required', { mode: 0o000 });
+    await assert.rejects(copyEvidence(source, join(root, 'published')), { code: 'EACCES' });
+    await assert.rejects(lstat(join(root, 'published')), { code: 'ENOENT' });
+    assert.deepEqual((await readdir(root)).sort(), ['source']);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
