@@ -22,6 +22,7 @@ The Lighthouse workspace has a package authoring side and an adopter contract si
 | Repository checks | `src/tests/` and `scripts/` | Verify package, link, adoption and site contracts |
 | Capability adoption boundary | `src/packages/sdlc/src/capabilities.mjs`, `src/packages/sdlc/src/reconcile.mjs` and CLI capability commands | Validate the package catalog, plan provider changes, require authorization and record evidence |
 | Evidence contract boundary | `src/packages/sdlc/src/evidence.mjs`, evidence schemas and CLI verification | Adapt producer results into neutral records and build coverage indexes without owning ProductShape or ArcShape |
+| Scoped memory session and SQLite adapter | `src/packages/sdlc/src/memory.mjs`, `src/packages/sdlc/src/memory-sqlite.mjs` | Authorize bounded memory operations through an injected provider; the optional SQLite adapter persists operator-owned records outside disposable runs |
 | Profile catalog | `src/packages/cli/assets/profiles/` and `src/packages/cli/src/profiles.mjs` | Describe application applicability, owned surfaces and verification layers without adding runtime behavior |
 | Product and architecture sources | `docs/product/` and `docs/architecture/` | Keep ProductShape and ArcShape sources reviewable |
 
@@ -59,6 +60,7 @@ The CLI's important interfaces are the manifest and managed paths in an adopter,
 | CLI to capability provider | reads then explicitly writes | Provider adapter plan, authorization hash and adoption evidence |
 | Agent host to SDLC package | reads and validates | Skills, commands, route/gate descriptors and provider-neutral schemas |
 | Producers to evidence contract | writes locally | Stage, browser and future profile results adapted into evidence records; source payloads remain producer-owned |
+| Agent host to memory session | authorized reads and writes | Host grants, policy checks and provider operations for scoped findings; memory remains subordinate to current product, architecture, code and approval authorities |
 | Evidence index to authorities | reads references | ProductShape and ArcShape identifiers, revisions, paths and hashes; no authority mutation |
 
 ## Dependency direction

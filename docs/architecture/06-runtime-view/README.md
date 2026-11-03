@@ -87,6 +87,8 @@ flowchart LR
 
 The SDLC package implements route, stage, gate, state, decomposition and provider-adapter validators. It also distributes gh-aw workflows that execute an agent in GitHub Actions. Lighthouse has no persistent execution service. The selected router handles owner refinement labels, clarification replies and manual dispatch. Later-stage composition remains outside this implemented route.
 
+The SDLC package also exposes an opt-in host memory session and local SQLite provider. A trusted host authenticates the run, grants project- or run-scoped access, evaluates retention eligibility and freshness, and supplies only relevant authorized findings. SQLite holds versioned records and correction/invalidation history in an operator-provisioned private directory outside disposable execution roots. The installed gh-aw workflow does not currently open this provider or inject recalled findings into worker prompts; this is a library integration contract, not an active workflow path. [ADR-0011](../09-architecture-decisions/0011-store-scoped-agent-memory-in-local-sqlite.md) records the storage choice; the [memory session](../../../src/packages/sdlc/src/memory.mjs) and [SQLite adapter](../../../src/packages/sdlc/src/memory-sqlite.mjs) implement the host API.
+
 ## Verify package and site contracts
 
 ```mermaid

@@ -86,5 +86,6 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 - [Execution environments](execution-environments.md) and [model profiles](model-profiles.md): optional runtime configuration.
 - [External host contract](host-contract.md): legacy host integration; enable only one router for the same events.
 - [Evidence](commands/evidence.md) and [browser evidence](commands/browser-e2e.md): validation contracts. Missing evidence, unavailable checks and pending review remain separate from success.
+- [Scoped memory](commands/memory.md): opt-in host-side SQLite retention and selective recall, independent of worker storage and approval authority.
 
 ProductShape, ArcShape and OpenSpec own their artifacts. Lighthouse supplies delivery contracts and the optional GitHub adapter; the operator supplies runtime and credentials.
