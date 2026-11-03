@@ -1,0 +1,54 @@
+{
+  "codeSource": "8959ae55cb4aab5dfec8f95176531513cf1fd1dc",
+  "nativeDefaultBranch": "0b684bc01c11d1fec619d22e257238c6c35ec7a6",
+  "node": "v24.21.0",
+  "verification": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "tests": {
+      "total": 566,
+      "passed": 559,
+      "failed": 0,
+      "optionalSkipped": 7
+    }
+  },
+  "focused": {
+    "total": 84,
+    "passed": 84,
+    "failed": 0
+  },
+  "compiler": "gh-aw v0.93.2",
+  "actionlint": "1.7.12",
+  "workflowValidation": "package/consumer CI and reviewed installer regeneration passed; adopter maintenance customization retained",
+  "openspec": {
+    "change": "apply-review-worker",
+    "strict": "passed"
+  },
+  "citations": {
+    "totalDocuments": 4,
+    "currentDocuments": 4,
+    "bound": 4,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 4,
+    "current": 4,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  },
+  "native": "passed; see native/verdict.json",
+  "sourcePostMerge": {
+    "revision": "0b684bc01c11d1fec619d22e257238c6c35ec7a6",
+    "repository": 41704612748,
+    "packageConsumer": 41704612659,
+    "conclusion": "success"
+  },
+  "npmPublication": "separate protected release; Version Packages PR #344",
+  "remainingRecovery": {
+    "issue": 142,
+    "fullRerunComment": 6613166336,
+    "legacyProjectionComment": 6614437872
+  }
+}

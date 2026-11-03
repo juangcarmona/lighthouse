@@ -1,0 +1,12 @@
+{
+  "routerRun": 41706236930,
+  "routerAttempt": 1,
+  "routerHarness": "250ea38013191f8956bc9292835daea5067ab2c6",
+  "workerHarness": "8959ae55cb4aab5dfec8f95176531513cf1fd1dc",
+  "workerDefaultBranch": "0b684bc01c11d1fec619d22e257238c6c35ec7a6",
+  "originalRouterLogSha256": "0d2130f91ad9cf5db65922f303044a8f0fef4956d320ec988a9c4ce41b19363d",
+  "selectedCheckoutRecords": [
+    "route\tRun actions/checkout@v5\t2026-11-03T19:45:38.2320373Z   ref: 250ea38013191f8956bc9292835daea5067ab2c6",
+    "\ud83d\udce5 Dispatch selected stage\tRun actions/checkout@v5\t2026-11-03T19:46:00.0886579Z   ref: 250ea38013191f8956bc9292835daea5067ab2c6"
+  ]
+}

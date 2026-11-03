@@ -1,0 +1,95 @@
+✔ only existing bot proposal branches with intact identity can be updated (2.373038ms)
+✔ owner feedback is fetched from source and approvals never request revision (1.11204ms)
+✔ submitted feedback includes every bounded inline request and rejects an older head (0.498678ms)
+✔ bounded correction conversation includes owner comments, inline requests and reviews only (1.029683ms)
+✔ publication rejects feedback edited or revoked after preparation and a changed head (0.574003ms)
+✔ feedback reloads the provider skip flag without exposing mutable schema metadata (1.250124ms)
+✔ publication updates the same branch non-forcibly and rejects a concurrent writer (1.15133ms)
+✖ delayed dispatch of already-handled feedback is a successful no-op (91.877965ms)
+✔ real router ignores owner approval of an unrelated release PR (86.217459ms)
+✔ real router maps a PR comment to its source issue and reports approvals without execution (159.715868ms)
+✖ ambiguous implementation feedback asks on the existing PR without authorizing an initial issue-stage restart (92.309428ms)
+▶ production publisher renews same-head completion, preserves blockers and rejects changed authority
+  ✔ passed (190.992293ms)
+  ✔ failed (212.943041ms)
+  ✔ unavailable (211.707577ms)
+  ✔ pending (197.636547ms)
+  ✔ initial (76.988123ms)
+  ✔ forged-pass (90.785069ms)
+  ✔ stale-receipt (72.727147ms)
+  ✔ head-race (90.374695ms)
+  ✔ intent-race (83.147282ms)
+  ✔ policy-race (108.872733ms)
+  ✔ identity-race (118.295688ms)
+  ✔ feedback-race (122.873765ms)
+  ✔ lost-response (194.11277ms)
+✔ production publisher renews same-head completion, preserves blockers and rejects changed authority (1778.666812ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 23
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1998.027648
+
+✖ failing tests:
+
+test at src/tests/proposal-review.test.mjs:102:1
+✖ delayed dispatch of already-handled feedback is a successful no-op (91.877965ms)
+  AssertionError [ERR_ASSERTION]: ::error::Stage dispatch is not authorized
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/issue-141/src/tests/proposal-review.test.mjs:121:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/tests/verification-publication.test.mjs:78:1
+✖ ambiguous implementation feedback asks on the existing PR without authorizing an initial issue-stage restart (92.309428ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Which exact paragraph.*Reply on PR #8/. Input:
+  
+  '## Waiting for your answer · implement\n' +
+    '\n' +
+    'The replacement wording is missing; no files changed.\n' +
+    '\n' +
+    'Your next action:\n' +
+    'Owner: Which exact paragraph should replace this text? Reply here.\n' +
+    '\n' +
+    'What happens next:\n' +
+    'The answer will be checked against this question before implement continues.\n' +
+    '\n' +
+    '[Implementation PR #8](https://github.com/owner/repo/pull/8) is a draft. Address the blocker in the run before review.\n' +
+    '\n' +
+    '<details><summary>Execution details</summary>\n' +
+    '\n' +
+    'Outcome: blocked\n' +
+    '\n' +
+    '[Workflow run](https://github.com/owner/repo/actions/runs/200) · source `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`\n' +
+    '\n' +
+    '<!-- lighthouse-actions:ef7fb57d76ac9e58d6fdfeeffc191dfe0198ad85f870f3acb6331aa4f8899009 -->\n' +
+    '<!-- lighthouse-result:794fec831232fcb544ef7c85dd3eebc258246ace42f754f95091e2f060cfad53 -->\n' +
+    '<!-- lighthouse-handoff:v1 -->\n' +
+    '<!-- lighthouse-pr-state:{"pr":8,"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","complete":false,"run":200,"implementationIdentity":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"} -->\n' +
+    '<!-- lighthouse-stage:implement:blocked -->\n' +
+    '<!-- lighthouse-question -->\n' +
+    '</details>'
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/issue-141/src/tests/verification-publication.test.mjs:84:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '## Waiting for your answer · implement\n\nThe replacement wording is missing; no files changed.\n\nYour next action:\nOwner: Which exact paragraph should replace this text? Reply here.\n\nWhat happens next:\nThe answer will be checked against this question before implement continues.\n\n[Implementation PR #8](https://github.com/owner/repo/pull/8) is a draft. Address the blocker in the run before review.\n\n<details><summary>Execution details</summary>\n\nOutcome: blocked\n\n[Workflow run](https://github.com/owner/repo/actions/runs/200) · source `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`\n\n<!-- lighthouse-actions:ef7fb57d76ac9e58d6fdfeeffc191dfe0198ad85f870f3acb6331aa4f8899009 -->\n<!-- lighthouse-result:794fec831232fcb544ef7c85dd3eebc258246ace42f754f95091e2f060cfad53 -->\n<!-- lighthouse-handoff:v1 -->\n<!-- lighthouse-pr-state:{"pr":8,"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","complete":false,"run":200,"implementationIdentity":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"} -->\n<!-- lighthouse-stage:implement:blocked -->\n<!-- lighthouse-question -->\n</details>',
+    expected: /Which exact paragraph.*Reply on PR #8/,
+    operator: 'match',
+    diff: 'simple'
+  }

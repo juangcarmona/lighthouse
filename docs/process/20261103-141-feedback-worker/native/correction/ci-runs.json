@@ -1,0 +1,26 @@
+[
+  {
+    "id": 41708495106,
+    "run_attempt": 1,
+    "event": "workflow_dispatch",
+    "path": ".github/workflows/ci.yml",
+    "head_sha": "dff1dc1c34c16d36cc360d8efddb2169f5950b60",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41708495106",
+    "created_at": "2026-11-03T20:00:14Z",
+    "updated_at": "2026-11-03T20:02:09Z"
+  },
+  {
+    "id": 41708501309,
+    "run_attempt": 1,
+    "event": "pull_request",
+    "path": ".github/workflows/ci.yml",
+    "head_sha": "dff1dc1c34c16d36cc360d8efddb2169f5950b60",
+    "status": "completed",
+    "conclusion": "action_required",
+    "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41708501309",
+    "created_at": "2026-11-03T20:00:16Z",
+    "updated_at": "2026-11-03T20:00:16Z"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "before": "fbd6f7751c797fc888bce464442f134b11acee8a",
+  "after": "8959ae55cb4aab5dfec8f95176531513cf1fd1dc",
+  "command": "node --test src/tests/proposal-review.test.mjs src/tests/verification-publication.test.mjs",
+  "red": {
+    "failed": 2
+  },
+  "green": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0
+  },
+  "unchangedTestSha256": {
+    "src/tests/proposal-review.test.mjs": "f331870b3756f715947aa55da4724be6b41bbc8d7414fcd05789b293e4695b3d",
+    "src/tests/verification-publication.test.mjs": "4628d043b31b6264b1f251ec425078e3f80ad0faf178dbe2c06795ca0a870029"
+  },
+  "productionSha256": {
+    "fbd6f7751c797fc888bce464442f134b11acee8a": "8b70d0cd5cbbc12d0b9dffc160d6c69c371feaa1d5b400715aa87dce92b48cd7",
+    "8959ae55cb4aab5dfec8f95176531513cf1fd1dc": "e61c913d325d313b1c16b708c0b62ebfe9878bb7a8355bbe1d0abce2fb09f9e1"
+  },
+  "testRevision": "8959ae55cb4aab5dfec8f95176531513cf1fd1dc",
+  "finalFocusedTests": 84,
+  "additionalCase": "discussion-race in final acceptance"
+}

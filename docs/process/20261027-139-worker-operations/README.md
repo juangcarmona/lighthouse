@@ -1,5 +1,7 @@
 # Worker operations delivery evidence
 
+2026-11-03 update: #144 is merged and [#141 native acceptance is complete](../20261103-141-feedback-worker/README.md). #142 and #143 retain their own remaining acceptance work. The delivery record below describes the original 2026-10-27 implementation.
+
 Epic #139 is delivered in order: #140 catalogue, #141 apply-review, #142 recovery, #143 error reports. Owner authorization covers implementation in this branch; final merge and post-merge review remain pending.
 
 ## Catalogue — issue 140

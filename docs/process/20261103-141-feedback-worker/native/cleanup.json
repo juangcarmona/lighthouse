@@ -1,0 +1,24 @@
+[
+  {
+    "pullRequest": 339,
+    "issue": 336,
+    "prState": "closed",
+    "issueState": "closed",
+    "merged": false,
+    "head": "dff1dc1c34c16d36cc360d8efddb2169f5950b60",
+    "branch": "lighthouse/implement-336-ba1fcd757edd",
+    "branchRetained": true,
+    "labels": []
+  },
+  {
+    "pullRequest": 342,
+    "issue": 341,
+    "prState": "closed",
+    "issueState": "closed",
+    "merged": false,
+    "head": "737962ad6819d889d3e4814c3e55b1b757e60845",
+    "branch": "lighthouse/implement-341-567a627b61d1",
+    "branchRetained": true,
+    "labels": []
+  }
+]

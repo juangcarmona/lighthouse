@@ -1,0 +1,1 @@
+{"state":"cancelled","pid":54,"startTicks":"95619837","exitCode":137,"signal":"SIGKILL","resources":{"pidsLimit":1024,"pidsPeak":49,"pidsDenied":0,"memoryPeakBytes":1405734912,"oomKills":0}}

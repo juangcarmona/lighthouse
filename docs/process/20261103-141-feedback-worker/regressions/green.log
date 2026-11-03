@@ -1,0 +1,34 @@
+✔ only existing bot proposal branches with intact identity can be updated (1.771432ms)
+✔ owner feedback is fetched from source and approvals never request revision (1.110023ms)
+✔ submitted feedback includes every bounded inline request and rejects an older head (0.478781ms)
+✔ bounded correction conversation includes owner comments, inline requests and reviews only (1.038381ms)
+✔ publication rejects feedback edited or revoked after preparation and a changed head (0.5843ms)
+✔ feedback reloads the provider skip flag without exposing mutable schema metadata (1.256716ms)
+✔ publication updates the same branch non-forcibly and rejects a concurrent writer (1.111364ms)
+✔ delayed dispatch of already-handled feedback is a successful no-op (85.376008ms)
+✔ real router ignores owner approval of an unrelated release PR (60.430978ms)
+✔ real router maps a PR comment to its source issue and reports approvals without execution (161.26026ms)
+✔ ambiguous implementation feedback asks on the existing PR without authorizing an initial issue-stage restart (101.991726ms)
+▶ production publisher renews same-head completion, preserves blockers and rejects changed authority
+  ✔ passed (229.096216ms)
+  ✔ failed (214.776789ms)
+  ✔ unavailable (188.588626ms)
+  ✔ pending (171.179904ms)
+  ✔ initial (62.287101ms)
+  ✔ forged-pass (98.463598ms)
+  ✔ stale-receipt (102.609819ms)
+  ✔ head-race (98.750284ms)
+  ✔ intent-race (97.352812ms)
+  ✔ policy-race (85.128455ms)
+  ✔ identity-race (92.752242ms)
+  ✔ feedback-race (99.227353ms)
+  ✔ lost-response (177.422454ms)
+✔ production publisher renews same-head completion, preserves blockers and rejects changed authority (1723.078626ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1945.823547

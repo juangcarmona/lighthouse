@@ -1,0 +1,53 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "issue": 341,
+  "runId": "567a627b61d128b1ed81730e09a048388e28840b29fd8df37a8db14c53be9a76",
+  "stage": "implement",
+  "sourceRevision": "fbd6f7751c797fc888bce464442f134b11acee8a",
+  "workflowRunId": "41698135341",
+  "taskDigest": "370a1aacd089f014e7302e91047402c884c6e9ae27599c93add6f733f91c89fb",
+  "dispatch": {
+    "commentId": 6612715472,
+    "requestId": "bbb3f886c0ae82a5a8c0403f8435f1114700c2601af9c24798f3bc15d4968c15",
+    "digest": "56b0ba58e50b32526d160e54ecccbe2d38181bf571c7949b768852485e5c5d67",
+    "routerRunId": "41698003100",
+    "routerAttempt": 1
+  },
+  "implementation": {
+    "policy": {
+      "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+      "paths": [
+        "*"
+      ],
+      "reviewRequired": false,
+      "checks": [
+        [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        [
+          "env",
+          "GITHUB_ACTIONS=true",
+          "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+          "npm",
+          "run",
+          "verify"
+        ],
+        [
+          "npx",
+          "--yes",
+          "--package=@fission-ai/openspec@1.15.0",
+          "openspec",
+          "validate",
+          "issue-341-proposal",
+          "--strict",
+          "--no-interactive"
+        ]
+      ]
+    },
+    "proposal": {
+      "root": "openspec/changes/issue-341-proposal"
+    }
+  }
+}

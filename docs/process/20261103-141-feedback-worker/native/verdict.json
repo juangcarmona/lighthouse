@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "pullRequest": 339,
+  "branch": "lighthouse/implement-336-ba1fcd757edd",
+  "originalHead": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+  "correctedHead": "dff1dc1c34c16d36cc360d8efddb2169f5950b60",
+  "implementationIdentity": "ba1fcd757eddc1157393c3571614fb6018fcfe5aeae64348d381fc22a67ffd49",
+  "samePr": true,
+  "sameBranch": true,
+  "commits": 2,
+  "boundedConversationEntries": 3,
+  "ambiguity": {
+    "run": 41704824794,
+    "status": "blocked",
+    "sourceEdits": 0,
+    "questionOnPr": true,
+    "issueDirectsToPr": true
+  },
+  "replay": {
+    "run": 41704694067,
+    "attempt": 2,
+    "conclusion": "success",
+    "additionalWorkers": 0,
+    "artifactPreserved": 13265172664
+  },
+  "correction": {
+    "run": 41706369358,
+    "status": "passed",
+    "independentChecksPassed": 3,
+    "requiredCi": 41708495106,
+    "readyForReview": true
+  },
+  "staleHead": {
+    "run": 41706236930,
+    "attempt": 2,
+    "conclusion": "failure",
+    "rejectedBeforeWorker": true,
+    "additionalWorkers": 0,
+    "headPreserved": true
+  },
+  "ownerMergeApprovals": 0,
+  "fullRouterRerunRecovery": {
+    "status": "unresolved",
+    "issue": 142,
+    "comment": 6613166336
+  }
+}
