@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a89fe2bd0d9a40b4917158565f2db545c19940d8
+          ref: 4193310d44b1f68b6e0a87d43050bfe142c4cf7d
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a89fe2bd0d9a40b4917158565f2db545c19940d8
+          ref: 4193310d44b1f68b6e0a87d43050bfe142c4cf7d
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -134,10 +134,10 @@ jobs:
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
-      (github.actor == github.repository_owner || github.event_name == 'workflow_run' ||
+      (github.actor == github.repository_owner || github.event_name == 'workflow_run' || (github.event_name == 'issues' && github.event.action == 'labeled') ||
        (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]' && ((inputs.after_run != '' && ((inputs.stage == 'implement' && inputs.workflow != 'product-change') || inputs.workflow == 'product-change' || inputs.workflow == 'resume-product' || inputs.workflow == 'resume-aligned')) || ((inputs.stage == 'triage' || (inputs.stage == 'refine' && inputs.workflow == 'stage')) && inputs.epic_parent != '' && inputs.epic_run != '')))) &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run' ||
-        (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
+        (github.event_name == 'issues' && (github.event.label.name == 'triage' || github.event.label.name == 'refine' || github.event.label.name == 'propose' || github.event.label.name == 'implement' || github.event.label.name == 'integrate' || (github.event.action == 'unlabeled' && github.event.label.name == 'future'))) ||
        github.event_name == 'issue_comment' || github.event_name == 'pull_request_review' || github.event_name == 'pull_request_review_comment')
     concurrency:
       group: lighthouse-route-${{ github.event_name }}-${{ github.event.comment.id || github.event.review.id || github.run_id }}
@@ -155,11 +155,12 @@ jobs:
       epic_parent: ${{ steps.route.outputs.epic_parent }}
       stage: ${{ steps.route.outputs.stage }}
       worker: ${{ steps.route.outputs.worker }}
+      integration_request: ${{ steps.route.outputs.integration_request }}
     steps:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a89fe2bd0d9a40b4917158565f2db545c19940d8
+          ref: 4193310d44b1f68b6e0a87d43050bfe142c4cf7d
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -187,6 +188,7 @@ jobs:
       issues: write
       pull-requests: read
     env:
+      LIGHTHOUSE_INTEGRATION_REQUEST: ${{ needs.route.outputs.integration_request }}
       LIGHTHOUSE_ISSUE: ${{ needs.route.outputs.issue }}
       LIGHTHOUSE_EPIC_PARENT: ${{ needs.route.outputs.epic_parent }}
       LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
@@ -197,7 +199,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: a89fe2bd0d9a40b4917158565f2db545c19940d8
+          ref: 4193310d44b1f68b6e0a87d43050bfe142c4cf7d
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
