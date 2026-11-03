@@ -137,3 +137,12 @@ test('product decisions are not projected as implementation PR state', async () 
   assert.equal(isProductOnlyPullRequest({ ...productOnly, body: '<!-- lighthouse-product-change-checkpoint:{} -->' }), false);
   assert.deepEqual(await scheduledImplementationPulls(async () => [productOnly, malformedImplementation, stale]), [41, 40]);
 });
+
+
+test('a renewed verification proof remains bound to the original implementation identity', () => {
+  const candidate = pr(true), receipt = comment(true);
+  receipt.body = receipt.body.replace('"complete":true', '"complete":true,"implementationIdentity":"' + 'b'.repeat(64) + '"');
+  assert.equal(implementationPrProof([receipt], candidate).complete, true);
+  candidate.body = candidate.body.replace('b'.repeat(64), 'b'.repeat(63) + 'c');
+  assert.equal(implementationPrProof([receipt], candidate), null);
+});

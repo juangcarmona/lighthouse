@@ -27,8 +27,9 @@ export function checkImplementationPullRequest(pr, repo, expected) {
   const productProof = productImplementationProof(pr);
   const standard = pr.head?.ref?.startsWith('lighthouse/implement-') && !pr.body?.includes('<!-- lighthouse-product-change:') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(match?.[2] ?? 'invalid');
   if (!match || !(standard || productProof?.issue === Number(match[1])) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
-  if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Implementation changed during review');
-  return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url };
+  const implementationIdentity = productProof ? digest(JSON.stringify({ issue: productProof.issue, applyIntent: productProof.applyIntent })) : marker;
+  if (expected && (expected.number !== undefined && pr.number !== expected.number || pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base || expected.implementationIdentity && implementationIdentity !== expected.implementationIdentity)) throw Error('Implementation changed during review');
+  return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, implementationIdentity };
 }
 
 export function checkAlignedImplementationPullRequest(pr, repository, alignment) {
@@ -85,8 +86,10 @@ export async function loadProposalFiles(api, review) {
 }
 
 export async function checkReviewCurrent(api, repo, review, implementation = false) {
-  (implementation ? checkImplementationPullRequest : checkProposal)(await api(`pulls/${review.number}`), repo, review);
+  const pr = await api(`pulls/${review.number}`);
+  (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo, review);
   if (digest(JSON.stringify(await api(review.path))) !== review.feedbackDigest) throw Error('Review feedback changed; no update published');
+  return pr;
 }
 
 export async function updateProposal(api, repo, snapshot, files, beforeWrite) {

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
-import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest } from './implementation.mjs';
+import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection } from './implementation.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
@@ -567,7 +567,7 @@ async function main(command) {
       context.implementation = implementation;
       if (implementationReview) {
         context.review = implementationReview;
-        context.contract.rules += ' Apply the owner feedback in context.review to the existing implementation in /workspace. Preserve unrelated work. The host updates the same PR after verifying its head and review are unchanged.';
+        context.contract.rules += ' Apply the owner feedback in context.review to the existing implementation in /workspace. Preserve unrelated work. The host updates the same PR after verifying its head and review are unchanged. If no source change is needed, preserve the existing candidate and return its assessment; independent host checks can renew its completion evidence without a dummy edit.';
       }
       context.proposal = await prepareProposal(issueNumber);
       if (planningReference) {
@@ -669,7 +669,9 @@ async function main(command) {
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
     const publicationIssue = await api(issuePath);
     checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
+    let recheckVerifiedCandidate = async () => {};
     const recheckPublication = async () => {
+      await recheckVerifiedCandidate();
       await assertCurrentDispatch(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
       checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
       if (!snapshot.epic) return;
@@ -766,11 +768,11 @@ async function main(command) {
       implementationChecksFailed = !checksPassed;
       if (implementationChecksFailed) value.effect.body += `\n\n${failedCheckSummary(receipt.checks)}`;
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
-      if (changes.length) {
-        const recheck = async () => {
+      if (!changes.length && value.result.status === 'passed' && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
+      if (changes.length || isVerificationOnlyCorrection(snapshot)) {
+        const checkAuthority = async () => {
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
-          await recheckPublication();
           if (snapshot.planningReference) {
             checkProposal(await api(`pulls/${snapshot.planningReference.number}`), repo, snapshot.planningReference);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.planningReference.number, owner))) !== snapshot.planningReference.threadDigest) throw Error('Proposal feedback changed');
@@ -787,6 +789,8 @@ async function main(command) {
           }
           if (pulls.length >= 100 || pulls.some(pr => pr.number !== (snapshot.implementationReview?.number ?? snapshot.productResume?.pullRequest ?? snapshot.productAlignment?.parent.pullRequest?.number) && pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Existing implementation PR requires review');
         };
+        if (!changes.length) recheckVerifiedCandidate = checkAuthority;
+        const recheck = async () => { await recheckPublication(); if (changes.length) await checkAuthority(); };
         const candidateComplete = value.result.status === 'passed' && checksPassed;
         const checks = receipt.checks.map(c => `- \`${c.command.join(' ')}\`: exit ${c.exitCode}`).join('\n');
         const afterRefWrite = async () => {
@@ -796,11 +800,12 @@ async function main(command) {
           await recheckPublication();
         };
         const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite);
-        prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID) })} -->`;
+        prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID), ...(!changes.length ? { implementationIdentity: snapshot.implementationReview.implementationIdentity } : {}) })} -->`;
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
         try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr); }
         catch (error) { ciDispatchFailed = true; value.effect.body += '\n\nThe PR was saved, but CI could not start. See the run for details.'; await summary(`CI dispatch failed: ${error.message}`); }
-        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: ciDispatchFailed ? 'blocked' : 'queued', stage: snapshot.stage, happened: 'The draft PR was updated with your feedback.', action: deliveryCiHandoff(ciDispatchFailed)?.action ?? 'None. Wait for the required checks.', next: deliveryCiHandoff(ciDispatchFailed)?.next ?? 'The workflow will recheck readiness when the checks finish.', link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
+        const verificationBlocked = !changes.length && !candidateComplete;
+        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: ciDispatchFailed || verificationBlocked ? 'blocked' : 'queued', stage: snapshot.stage, happened: changes.length ? 'The draft PR was updated with your feedback.' : 'The existing PR was checked without changing its head.', action: deliveryCiHandoff(ciDispatchFailed)?.action ?? (verificationBlocked ? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : 'None. Wait for the required checks.'), next: deliveryCiHandoff(ciDispatchFailed)?.next ?? (verificationBlocked ? 'Resolve the recorded blocker before another authorized correction.' : 'The workflow will recheck readiness when the checks finish.'), link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
         proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${ciDispatchFailed ? 'Required CI must be started before review.' : candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }

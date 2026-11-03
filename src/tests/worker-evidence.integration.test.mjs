@@ -28,13 +28,14 @@ assert.equal(process.env.TMPDIR,'/tmp');
 assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,'1');
 fs.mkdirSync(process.env.XDG_CACHE_HOME,{recursive:true});
 fs.writeFileSync(process.env.XDG_CACHE_HOME+'/scratch','disposable',{mode:0o600});
-fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
+if(!scenario.startsWith('zero-')) fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
 fs.mkdirSync('/output/evidence',{mode:0o700});
 fs.writeFileSync('/output/evidence/a-final.log','retained final evidence',{mode:0o600});
 if(scenario==='unreadable') fs.writeFileSync('/output/evidence/b-final.log','unreadable required evidence',{mode:0o000});
 if(scenario==='symlink') fs.symlinkSync('/input/context.json','/output/evidence/b-link');
 if(scenario==='oversized') {fs.writeFileSync('/output/evidence/b-large','');fs.truncateSync('/output/evidence/b-large',64*1024*1024+1);}
 const envelope={schemaVersion:1,result:{schemaVersion:1,runId:request.runId,stage:'implement',gate:'done',status:'passed',evidence:[{id:'fixture',status:'passed'}],missingEvidence:[],unavailableChecks:[],pendingReview:[],nextAction:'Review the candidate.'},effect:{type:'issue-comment',body:'Deterministic runtime fixture; no model invoked.'}};
+if(scenario==='zero-blocked') { envelope.result.status='blocked'; envelope.result.pendingReview.push('Owner decision remains required.'); }
 fs.writeFileSync('/output/envelope.json',JSON.stringify(envelope),{mode:0o600});
 if(scenario==='engine-failed') process.exit(7);
 console.log(JSON.stringify({type:'text',part:{text:'Private final evidence written.'}}));
@@ -45,14 +46,17 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
     image = (await readFile(join(root, 'image-id'), 'utf8')).trim();
     execFileSync('docker', ['volume', 'create', volume], { stdio: 'pipe' });
     volumeCreated = true;
-    for (const scenario of ['success', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed']) {
+    for (const scenario of ['success', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed', 'zero-initial', 'zero-review', 'zero-check-failed', 'zero-blocked']) {
       await t.test(scenario, async () => {
         const current = join(root, scenario), work = join(current, 'work'), runDir = join(current, 'lighthouse-1-1');
         await mkdir(work, { recursive: true }); await mkdir(runDir);
-        await writeFile(join(work, 'demo.js'), 'export const repaired = false;');
+        const original = scenario.startsWith('zero-') ? 'export const repaired = true;' : 'export const repaired = false;';
+        await writeFile(join(work, 'demo.js'), original);
         execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', 'demo.js']);
         const checks = scenario === 'missing-tool' ? [['lighthouse-missing-executable']] : [['node', '-e', 'const assert=require("node:assert/strict");assert.match(require("node:fs").readFileSync("demo.js","utf8"),/repaired = true/);assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,"1");assert.equal(process.env.TMPDIR,"/tmp");']];
+        if (scenario === 'zero-check-failed') checks[0] = ['node', '-e', 'process.exit(1)'];
         const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
+        if (scenario.startsWith('zero-') && scenario !== 'zero-initial') Object.assign(request, { worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: { issue: request.issue, approved: false, head: request.sourceRevision, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'e'.repeat(64) } });
         await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
         await writeFile(join(runDir, 'context.json'), JSON.stringify({ request, scenario }));
         await writeFile(join(current, 'prompt'), 'Exercise only the deterministic fixture.');
@@ -60,11 +64,16 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         const run = spawnSync(process.execPath, [join(harness, 'src/opencode-execute.mjs')], { encoding: 'utf8', timeout: 60000, env: { ...process.env, LIGHTHOUSE_ENGINE_CONFIG: join(current, 'config'), RUNNER_TEMP: current, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(current, 'prompt'), GH_AW_SAFE_OUTPUTS: join(current, 'completion') } });
         assert.equal(run.error, undefined, run.error?.message);
         const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json')));
-        if (scenario === 'success') {
+        if (scenario === 'success' || scenario.startsWith('zero-')) {
           assert.equal(run.status, 0, run.stdout + run.stderr);
-          assert.deepEqual(runtime.phases, { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: 'passed', completion: 'passed' });
+          assert.deepEqual(runtime.phases, { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: scenario === 'zero-check-failed' ? 'failed' : 'passed', completion: 'passed' });
+          const envelope = JSON.parse(await readFile(join(runDir, 'envelope.json')));
+          assert.equal(envelope.result.status, ['zero-initial', 'zero-check-failed', 'zero-blocked'].includes(scenario) ? 'blocked' : 'passed');
+          if (scenario.startsWith('zero-')) assert.deepEqual(JSON.parse(await readFile(join(runDir, 'changes.json'))), []);
+          if (scenario === 'zero-initial') assert.ok(envelope.result.missingEvidence.includes('No implementation changes were returned'));
+          if (scenario === 'zero-blocked') assert.deepEqual(envelope.result.pendingReview, ['Owner decision remains required.']);
           assert.equal(await readFile(join(runDir, 'evidence/agent/a-final.log'), 'utf8'), 'retained final evidence');
-          assert.equal(JSON.parse(await readFile(join(runDir, 'checks.json'))).checks[0].exitCode, 0);
+          assert.equal(JSON.parse(await readFile(join(runDir, 'checks.json'))).checks[0].exitCode, scenario === 'zero-check-failed' ? 1 : 0);
           assert.equal(JSON.parse(await readFile(join(current, 'completion'))).type, 'noop');
         } else {
           assert.equal(run.status, 1, run.stdout + run.stderr);
@@ -89,7 +98,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
             }
           }
         }
-        assert.equal(await readFile(join(work, 'demo.js'), 'utf8'), 'export const repaired = false;');
+        assert.equal(await readFile(join(work, 'demo.js'), 'utf8'), original);
         assert.equal(execFileSync('docker', ['ps', '-aq', '--filter', `name=^lighthouse-engine-${request.runId}`], { encoding: 'utf8' }).trim(), '');
       });
     }
