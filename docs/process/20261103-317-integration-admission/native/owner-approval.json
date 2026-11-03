@@ -1,0 +1,42 @@
+{
+  "id": 5754940619,
+  "node_id": "PRR_kwDOVRh-RM8AAAABVwVsyw",
+  "user": {
+    "login": "juangcarmona",
+    "id": 2834629,
+    "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2834629?u=4fad3d33d44947dae3d8cb88d7b71bec01d91eea&v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/juangcarmona",
+    "html_url": "https://github.com/juangcarmona",
+    "followers_url": "https://api.github.com/users/juangcarmona/followers",
+    "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+    "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+    "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+    "repos_url": "https://api.github.com/users/juangcarmona/repos",
+    "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "body": "Approve this bounded fixture candidate for the #317 integration-assessment acceptance. Human reservation remains active while this approval event is processed. This disposable PR must not be merged; the later label assessment must retain merge: false.",
+  "state": "APPROVED",
+  "html_url": "https://github.com/juangcarmona/lighthouse/pull/332#pullrequestreview-5754940619",
+  "pull_request_url": "https://api.github.com/repos/juangcarmona/lighthouse/pulls/332",
+  "author_association": "OWNER",
+  "_links": {
+    "html": {
+      "href": "https://github.com/juangcarmona/lighthouse/pull/332#pullrequestreview-5754940619"
+    },
+    "pull_request": {
+      "href": "https://api.github.com/repos/juangcarmona/lighthouse/pulls/332"
+    }
+  },
+  "is_copilot_code_review": false,
+  "copilot_code_review_effort": null,
+  "submitted_at": "2026-11-03T15:31:11Z",
+  "commit_id": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3"
+}

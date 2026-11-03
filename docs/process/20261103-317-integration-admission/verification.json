@@ -1,0 +1,43 @@
+{
+  "scope": "Final declaration correction and retained acceptance; native workflow revisions are recorded separately in README.md",
+  "sourceRevision": "b277761f1b48e9405751a55f10b5da93cfb09fa4",
+  "node": "v24.21.0",
+  "commands": [
+    {
+      "command": "npm run verify",
+      "exitCode": 0,
+      "tests": {
+        "total": 549,
+        "passed": 542,
+        "failed": 0,
+        "skipped": 7
+      }
+    },
+    {
+      "command": "npm run markdownlint",
+      "exitCode": 0
+    },
+    {
+      "command": "npx --no-install openspec validate issue-317-proposal --strict",
+      "exitCode": 0
+    },
+    {
+      "command": "npx --no-install prodshape citations verify --provider openspec --change issue-317-proposal --format json",
+      "exitCode": 0,
+      "summary": {
+        "totalDocuments": 4,
+        "currentDocuments": 4,
+        "bound": 4,
+        "exempt": 0,
+        "unclassified": 0,
+        "totalCitations": 16,
+        "current": 16,
+        "stale": 0,
+        "tampered": 0,
+        "unresolved": 0,
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  ]
+}

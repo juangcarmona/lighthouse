@@ -1,0 +1,6 @@
+{
+  "operation": "POST statuses/46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+  "response": "HTTP 503; write outcome initially uncertain",
+  "reconciliation": "GET candidate statuses returned success status 57956013617 with the intended context and immutable target URL. No POST retry was sent.",
+  "statusId": 57956013617
+}

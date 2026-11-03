@@ -10,5 +10,5 @@
 <!-- pdac:cite id="BR-LABEL-ROLES" digest="sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c" -->
 - [x] Apply the reviewed create-and-preserve labels plan and retain verified adoption.
 <!-- pdac:cite id="FR-WORKFLOW-HANDOFFS" digest="sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a" -->
-- [ ] Verify repository, Markdown, OpenSpec, citations and workflow projections.
-- [ ] Exercise native denied and approved integration requests and real failure-state projection; retain receipts and close disposable fixtures without merging.
+- [x] Verify repository, Markdown, OpenSpec, citations and workflow projections.
+- [x] Exercise native denied and approved integration requests and real failure-state projection; retain receipts and close disposable fixtures without merging.

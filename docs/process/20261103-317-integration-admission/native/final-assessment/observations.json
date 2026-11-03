@@ -1,0 +1,96 @@
+{
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 329,
+    "pr": 332,
+    "head": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+    "base": "3bbcaa8e41259a6fb66ad34f97166de9f67b29be",
+    "branch": "main",
+    "intent": "cbabd6009a6d35275ba102ef51c334dd21fcd8a119fe2fe30b10a372c7e822c8",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "af0aa3671e3bf40ac53805825d7d81ae5f7beaba2e0c81d3a5472e2636e9ab48",
+    "prIntent": "2029b6f694378b3de70a63cf4afb5c3e53b250772009500f1393a967fa2e84cb",
+    "files": "3a027c8666e662b6371ed34ca843514f0673142195a829303b9226d41215b78c"
+  },
+  "observedChecks": [
+    {
+      "evidenceId": "github-check:126017091345",
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "failed",
+      "state": "failure",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664736710/job/126017091345"
+    },
+    {
+      "evidenceId": "github-check:126016914629",
+      "name": "epic-triage",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664736710/job/126016914629"
+    },
+    {
+      "evidenceId": "github-check:126016913697",
+      "name": "pr-state",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664736710/job/126016913697"
+    },
+    {
+      "evidenceId": "github-check:126016912227",
+      "name": "route",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664736710/job/126016912227"
+    },
+    {
+      "evidenceId": "github-check:126015339219",
+      "name": "Cloudflare Pages",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 85455,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/runs/126015339219"
+    },
+    {
+      "evidenceId": "github-check:126015336706",
+      "name": "reconcile-implementation-pr",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664089106/job/126015336706"
+    },
+    {
+      "evidenceId": "github-check:126014639490",
+      "name": "repository",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41664089106/job/126014639490"
+    },
+    {
+      "evidenceId": "github-status:57955106757",
+      "name": "ProductShape citations: owner verification (3/3 current)",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/blob/fe36edca2c4f9f23dd2df845542d7a16acc337a4/docs/process/20261103-317-integration-admission/native/provider-verification.json"
+    },
+    {
+      "evidenceId": "github-status:57956013617",
+      "name": "Independent host verification: install, repository, strict OpenSpec",
+      "revision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/blob/ae2ade966b578e7ba455d5e29410e59086a638ee/docs/process/20261103-317-integration-admission/native/independent-host/verification.json"
+    }
+  ]
+}
