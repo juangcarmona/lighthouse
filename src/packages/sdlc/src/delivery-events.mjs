@@ -1,4 +1,25 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
+import { stagePath } from './stage-dispatch.mjs';
+
+// Display names filter subscriptions only; actual paths, revisions and subjects admit work.
+export async function completionSource(api, repository, event, env = {}) {
+  if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;
+  const run = await api(`actions/runs/${event.workflow_run.id}`);
+  if (run.status !== 'completed' || run.head_sha !== event.workflow_run.head_sha || run.repository?.full_name !== repository) return null;
+  const parent = ['triage', 'refine', 'propose', 'implement', 'apply-review'].some(worker => run.path === stagePath(worker));
+  if (run.conclusion === 'success' && (run.path === stagePath('refine') || env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' && (parent || ['product-change', 'apply-product-change'].some(worker => run.path === stagePath(worker))))) return 'stage';
+  const metadata = await api('');
+  const config = await api(`contents/.lighthouse/github.json?ref=${metadata.default_branch}`, 'GET', undefined, true);
+  if (!config) return null;
+  const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
+  if (!profile.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`) || !['push', 'pull_request', 'workflow_dispatch'].includes(run.event)) return null;
+  const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
+  if (pulls.length >= 100) throw Error('Completion subject lookup exceeds bounds');
+  return pulls.some(pr => {
+    if (pr.base?.ref !== metadata.default_branch || pr.head?.sha !== run.head_sha && pr.merge_commit_sha !== run.head_sha) return false;
+    try { checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository); return true; } catch { return false; }
+  }) ? 'checks' : null;
+}
 
 // CI completion may resume delivery only for a matching bot PR and current owner decision.
 export async function deliveryAfterChecks(api, repository, owner, event) {

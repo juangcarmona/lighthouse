@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { completionSubscriptions } from './workflow-completions.mjs';
 
 const [target, revision, ...flags] = process.argv.slice(2);
 if (!target || !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended]');
@@ -18,6 +19,7 @@ if (unattended) files.push('lighthouse-sdlc-unattended.yml');
 for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
   if (name === 'lighthouse-sdlc-router.yml') {
+    content = content.replace(/^    workflows: \[.*\]$/m, `    workflows: ${JSON.stringify(await completionSubscriptions(root, { implement, propose, productChange }))}`);
     const enabled = ['triage', 'refine', ...(propose ? ['propose'] : []), ...(implement ? ['implement'] : []), ...(completion ? ['integrate', 'review'] : [])];
     content = content.replace('LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review', `LIGHTHOUSE_ENABLED_STAGES: ${enabled.join(',')}`).replace('options: [triage, refine, propose, implement, integrate, review]', `options: [${enabled.join(', ')}]`);
     content = content.replace('options: [stage, product-change, resume-product, resume-aligned]', `options: [stage${productChange ? ', product-change, resume-product, resume-aligned' : ''}]`).replace('LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false', `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${productChange}`);

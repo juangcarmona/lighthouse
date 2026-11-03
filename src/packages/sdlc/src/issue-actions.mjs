@@ -1,8 +1,9 @@
 import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
-import { dispatchId, dispatchArtifact, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
+import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { deliveryAfterChecks, dispatchDeliveryChecks } from './delivery-events.mjs';
+import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource } from './delivery-events.mjs';
+import { implementationContinuation } from './delivery-request.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -292,6 +293,11 @@ async function main(command) {
     else if (productApproval?.feedback) route = { run: true, stage: 'propose', worker: 'product-change', issue: productApproval.issue, productFeedback: productApproval.feedback, productReview: productApproval, reason: 'Owner requested a Product Change revision' };
   }
   const after = ['route', 'dispatch-prepare', 'prepare'].includes(command) ? await completedEvent(api, event, env) : null;
+  if (after && !await completionSource(api, repo, after, env)) {
+    if (command === 'prepare') throw Error('Completion is not a current adopted continuation source');
+    await output('run', 'false'); await output('send', 'false');
+    await summary('No delivery action: unrelated, stale or unsupported workflow completion.'); return;
+  }
   if (after) {
     const productResume = env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' ? await productApplyAfterRun(api, repo, owner, after) : null;
     const productAlignment = !productResume && env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' ? await productAlignmentAfterRun(api, repo, owner, after) : null;
@@ -399,11 +405,31 @@ async function main(command) {
     const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
     const request = { schemaVersion: 1, ...(integrationRequest ? { integrationRequest } : {}), id: dispatchId(repo, epicIdentity ?? feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(epicIdentity ? { epicKey: epicIdentity } : {}), ...(epicContext ? { epic: epicContext } : {}), ...(worker ? { worker, ...(feedbackIdentity ? { feedbackKey: feedbackIdentity } : {}) } : {}), ...(route.productApproval?.approval ? { productApproval: { ...route.productApproval.approval, pullRequest: route.productApproval.pullRequest, head: route.productApproval.head, issue: route.productApproval.issue, changeName: route.productApproval.changeName } } : {}), ...(route.productFeedback ? { productFeedback: route.productFeedback } : {}), ...(route.productParent ? { productParent: route.productParent } : {}), ...(route.productResume ? { productResume: route.productResume } : {}), ...(route.productAlignment ? { productAlignment: route.productAlignment } : {}), ...(route.productReview && !route.productApproval?.approval ? { productReview: { pullRequest: route.productReview.pullRequest, head: route.productReview.head, issue: route.productReview.issue, changeName: route.productReview.changeName, ...(route.productReview.checkpoint?.parent ? { parent: route.productReview.checkpoint.parent } : {}) } } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: !epicContext && stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && (!route.productResume || route.productResume.parent.autoImplement) && (!route.productAlignment || route.productAlignment.parent.autoImplement), productChangeEnabled: env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true', taskDigest: taskDigest(issue, answers) };
     executionModelSelection(request);
-    const recorded = await recordDispatch(api, repo, request);
+    if (['integrate', 'review'].includes(stage)) request.completionAuthorization = await (await import('./completion.mjs')).authorizeCompletionEvent(api, repo, after ?? event, { ...env, ...(after ? { GITHUB_EVENT_NAME: 'workflow_run' } : {}) }, stage, integrationRequest);
+    request.intent = dispatchIntent(request);
+    const existing = await implementationContinuation(api, repo, owner, request);
+    if (existing) {
+      await output('send', 'false');
+      const link = existing.url ? `[Existing PR #${existing.pr}](${existing.url})` : undefined;
+      await publishRoutingHandoff(api, issueNumber, `${repo}:candidate:${request.intent}:${existing.head ?? ''}:${existing.reason}`, renderHandoff({ status: existing.status, stage, happened: existing.reason, action: 'Owner: continue through the existing PR; no second implementation was requested.', next: 'A correction or revalidation requires current authorization on that PR.', link }));
+      await summary(`${existing.reason}${link ? ` ${link}.` : ''} No worker dispatched.`); return;
+    }
+    let recorded;
+    try { recorded = await recordDispatch(api, repo, request); }
+    catch (error) {
+      if (!/unconfirmed|pending or running|outcome is uncertain/.test(error.message)) throw error;
+      await output('send', 'false');
+      await publishRoutingHandoff(api, issueNumber, `${repo}:dispatch-stop:${request.intent}:${error.message}`, renderHandoff({ status: error.message.includes('pending or running') ? 'blocked' : 'unknown', stage, happened: error.message, action: 'Workflow maintainer: reconcile the existing request and execution before retrying.', next: 'No additional worker was dispatched.' }));
+      await summary(error.message); return;
+    }
+    if (!recorded.send) {
+      const state = ['completed', 'blocked', 'failed', 'cancelled'].includes(recorded.receipt.status) ? recorded.receipt.status : recorded.receipt.workerRunId ? 'queued' : 'unknown';
+      await publishRoutingHandoff(api, issueNumber, `${repo}:dispatch-reuse:${request.intent}:${recorded.comment.id}`, renderHandoff({ status: state, stage, happened: recorded.reason, action: 'Follow the linked original request; no duplicate worker was dispatched.', next: 'Further work requires current authorization and reconciled effects.', link: `[Existing request](${recorded.comment.html_url})` }));
+    }
     await output('send', String(recorded.send));
     await output('artifact', dispatchArtifact(request));
     await output('comment', String(recorded.comment.id));
-    await summary(`[Stage request](${recorded.comment.html_url}). ${recorded.send ? 'Recording before dispatch.' : 'Already recorded; no automatic resend.'}`);
+    await summary(`[Stage request](${recorded.comment.html_url}). ${recorded.send ? 'Recording before dispatch.' : recorded.reason}`);
     if (recorded.send) { await mkdir(dir, { recursive: true }); await writeFile(join(dir, 'dispatch.json'), JSON.stringify(request)); }
     return;
   }
