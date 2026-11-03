@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "runId": "6bb5f30b04aab0d41f12e0d4c7710a478c0a4dc4ad4f804087adc1247e6bcd0f",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "host-supplied-delivery-binding",
+      "status": "passed",
+      "source": "/input/context.json#request.authorization",
+      "reason": "The host-supplied owner dispatch explicitly authorizes merge for issue 272, PR 315 and the full accepted head 558b132496913fb1e079ac1e2784e3a537979820. Source/workflow authentication and fresh authority enforcement remain host responsibilities; this is not a merge receipt."
+    },
+    {
+      "id": "github-check:125837727006",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612309542/job/125837727006",
+      "reason": "Authenticated successful repository check from app 15368 on the accepted head; this matches the effective required-check policy."
+    },
+    {
+      "id": "github-check:125836980842",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612306652/job/125836980842",
+      "reason": "A second authenticated successful repository check from app 15368 on the same accepted head. It does not independently establish commands outside the repository workflow."
+    },
+    {
+      "id": "github-check:125838128730",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612309944/job/125838128730",
+      "reason": "Additional successful clean-consumer observation on the accepted head; supporting evidence, not an additional forge merge gate."
+    },
+    {
+      "id": "github-check:125837731775",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612309944/job/125837731775",
+      "reason": "Additional successful package-contents observation on the accepted head."
+    },
+    {
+      "id": "github-check:125837737868",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41612309895/job/125837737868",
+      "reason": "Additional successful public-site build and validation observation on the accepted head; not proof of deployment or strict OpenSpec validation."
+    },
+    {
+      "id": "scoped-memory-intent-and-acceptance-inspection",
+      "status": "passed",
+      "source": "/workspace/docs/process/20261103-272-scoped-memory/README.md",
+      "reason": "Compared issue acceptance with canonical FR-AGENT-MEMORY, BR-MEMORY-BOUNDARY, the applied CHG-ISSUE-272, ADR-0011, the OpenSpec specification, memory implementation and focused tests. The mapped synthetic separate-process exercise and isolation/exclusion/availability contracts address the bounded library outcome; they do not establish an installed-worker deployment."
+    },
+    {
+      "id": "finalization-plan-inspection",
+      "status": "passed",
+      "source": "/input/context.json#completion.finalization",
+      "reason": "The adopted integration plan preserves issue labels integrate/pr-ready and existing PR labels, makes no label additions/removals, leaves the issue open, and delegates reservation cleanup to the host for every outcome. Zero approving reviews are required; no current-stage human review is outstanding."
+    },
+    {
+      "id": "exact-head-strict-openspec-receipt",
+      "status": "unavailable",
+      "source": "/workspace/docs/process/20261103-272-scoped-memory/README.md:7-9",
+      "reason": "The retained strict-validation evidence is explicitly bound to source 1631ac91eea720fab8de3b9962c3cda24df0561e. No authenticated terminal receipt for strict validation of issue-272-proposal at the accepted head is supplied. The current PR description reports success, but the repository workflow executes npm run verify, not a named strict validation of this change. This is missing evidence, not an observed failure."
+    },
+    {
+      "id": "exact-head-openspec-citation-receipt",
+      "status": "unavailable",
+      "source": "/workspace/openspec/changes/issue-272-proposal/tasks.md:20-22",
+      "reason": "Task 3.1 explicitly includes citation verification, and openspec/config.yaml requires verification of OpenSpec consumers. No authenticated current-head command receipt or observation identifying that verification is supplied. Checked task boxes and citation text do not establish execution."
+    }
+  ],
+  "missingEvidence": [
+    "A trusted successful terminal receipt for strict OpenSpec validation of issue-272-proposal bound to accepted head 558b132496913fb1e079ac1e2784e3a537979820, as explicitly requested by the owner and claimed by task 3.1.",
+    "A trusted successful OpenSpec citation-verification receipt bound to accepted head 558b132496913fb1e079ac1e2784e3a537979820, as required by task 3.1 and openspec/config.yaml."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "The delivery maintainer and trusted host must supply or recover the exact-head strict OpenSpec and citation-verification receipts; if absent, execute those verifications through the normal authorized verification workflow and reassess integration. Do not merge on this blocked assessment or repeat unrelated optional checks merely to fill the evidence gap.",
+  "output": {
+    "integration": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 272,
+      "pullRequest": 315,
+      "assessment": "blocked-missing-done-evidence",
+      "binding": {
+        "repository": "juangcarmona/lighthouse",
+        "issue": 272,
+        "pr": 315,
+        "head": "558b132496913fb1e079ac1e2784e3a537979820",
+        "base": "7e4a37fbc4ca12ddcc6216dc9aa2a3616983f8ee",
+        "branch": "main",
+        "intent": "4e9a18275d69a259951c2265f9bba91f219c7b21906dc4996a9d4c3f0e7d5934",
+        "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+        "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "prIntent": "8d8bc24caad16cb1f8819f65066ff35fcc7270fe673aa21e996dbde260f67cb7",
+        "files": "07a64d3a92e58c0f4ca7773b9e4715932a56d2ac9084325595912025fe7f69a4"
+      },
+      "dispatch": {
+        "requestId": "c2033c720dc2e131092209b8a3915ac4b6efbd19eae73d456907ef1fc06a09d9",
+        "digest": "a7e7d5e7d4fe435af8c27f88ff2622089dc418a6117634db748f42ed6bf67f50",
+        "commentId": 6600222027,
+        "workflowRunId": "41612872354",
+        "mergeAuthorized": true,
+        "provenance": "Host-supplied owner workflow_dispatch with merge:true and the full accepted head; not inferred from PR comments or labels."
+      },
+      "forge": {
+        "checkedRevision": "558b132496913fb1e079ac1e2784e3a537979820",
+        "baseBranch": "main",
+        "mergeableObserved": true,
+        "pullRequestStateObserved": "open",
+        "requiredChecks": [
+          {
+            "context": "repository",
+            "app": 15368,
+            "status": "passed",
+            "evidenceIds": [
+              "github-check:125837727006",
+              "github-check:125836980842"
+            ]
+          }
+        ],
+        "requiredApprovals": 0,
+        "observedReviews": [],
+        "configuredMergeAction": "squash via trusted publisher, only after a passed assessment and fresh authority, binding, checks and reservation validation; GitHub enforces current merge rules",
+        "mergeRequestedByAgent": false,
+        "mergedObserved": false,
+        "mergeReceipt": null
+      },
+      "dependencyOrder": {
+        "source": "openspec/changes/issue-272-proposal/proposal.md:30-36",
+        "assessment": "The proposal coordinates with #100 and #104 through existing typed-memory and host boundaries; it declares no prerequisite merge order or stacked base. #270 is the parent, not an asserted completed dependency. This assessment makes no claim that those broader issues are complete."
+      },
+      "finalization": {
+        "executor": "trusted publisher after validation",
+        "observedIssue": {
+          "state": "open",
+          "labels": [
+            "integrate",
+            "pr-ready"
+          ]
+        },
+        "observedPullRequest": {
+          "state": "open",
+          "merged": false,
+          "labels": []
+        },
+        "onPassed": {
+          "add": [],
+          "remove": [],
+          "closeIssue": false
+        },
+        "onBlocked": {
+          "add": [],
+          "remove": [],
+          "closeIssue": false
+        },
+        "pullRequestLabels": "preserve",
+        "reservation": "Host adds and releases agent-working; cleanup applies to every outcome.",
+        "labelDecision": "integrate is an adopter label, not a native request authorization; preserve it under the supplied finalization policy. pr-ready does not waive acceptance evidence."
+      }
+    },
+    "acceptanceAssessment": [
+      {
+        "criterion": "Retain one policy-approved non-sensitive finding and recall it in another authorized execution with its source",
+        "sources": [
+          "docs/product/model/requirements/functional/fr-agent-memory.md:20-26",
+          "src/tests/memory.test.mjs:33-63",
+          "src/tests/memory.test.mjs:164-179",
+          "src/tests/fixtures/memory-run.mjs:6-21"
+        ],
+        "finding": "The test starts separate Node processes against one SQLite store, checks retention and a source-bound project finding from run-1 in run-2. Host grants and full-record eligibility are separate from retention-policy approval. The current repository check runs src/tests/*.test.mjs; the durable report separately identifies its older originating execution.",
+        "limit": "Synthetic host-library exercise, not two deployed Actions workers or an independently proven general privacy classifier."
+      },
+      {
+        "criterion": "Another project cannot retrieve the finding; private run memory remains isolated and recall is bounded/relevant",
+        "sources": [
+          "src/tests/memory.test.mjs:45-63",
+          "src/tests/memory.test.mjs:86-103",
+          "src/packages/sdlc/src/memory-sqlite.mjs:52-58"
+        ],
+        "finding": "Focused contracts assert empty cross-project/repository/private-run results, deny unauthorized or out-of-grant queries, and enforce result limits; SQL selects by project, repository, scope, run and topics. This is not falsely attributed to the separate-process sequence alone."
+      },
+      {
+        "criterion": "Exclude stale/invalidated records and support correction with provenance",
+        "sources": [
+          "src/tests/memory.test.mjs:65-120",
+          "src/tests/memory.test.mjs:176-177",
+          "src/packages/sdlc/src/memory.mjs:99-125"
+        ],
+        "finding": "Contracts cover correction history, stale-version conflicts, expiry, explicit invalidation/staleness and host freshness filtering. The process exercise invalidates in run-2 and observes no records in run-3."
+      },
+      {
+        "criterion": "Disabled or absent optional memory does not prevent ordinary work",
+        "sources": [
+          "src/tests/memory.test.mjs:136-149",
+          "src/tests/memory.test.mjs:178",
+          "src/packages/sdlc/src/memory.mjs:63-70"
+        ],
+        "finding": "Contracts distinguish optional unavailable/nonblocking outcomes from required unavailable/blocking outcomes and confirm disabled memory does not call the provider."
+      }
+    ],
+    "findings": [
+      {
+        "id": "done-receipt-gap",
+        "kind": "process-evidence-gap",
+        "blocking": true,
+        "owner": "Delivery maintainer and trusted verification host",
+        "sources": [
+          "openspec/changes/issue-272-proposal/tasks.md:20-22",
+          "openspec/config.yaml:122-130",
+          "docs/process/20261103-272-scoped-memory/README.md:7-9",
+          ".github/workflows/ci.yml:13-25",
+          "package.json:10-17",
+          "src/tests/proposal.test.mjs:78-88"
+        ],
+        "finding": "The owner explicitly requires strict OpenSpec verification, and task 3.1 also claims citation verification. Historical host checks cover an older SHA; the PR description's current success claim is not a terminal receipt. Repository CI runs npm run verify, while the real-provider proposal test strictly validates a synthetic issue-18 fixture, not this issue-272 change. The supplied check observations do not identify the missing commands at the accepted head.",
+        "resolution": "Recover existing trusted exact-head receipts first; execute missing verification only through the normal authorized workflow if needed. Do not relabel this absence as a failed check or silently waive it."
+      },
+      {
+        "id": "accepted-opt-in-library-boundary",
+        "kind": "owner-accepted-scope-limit",
+        "blocking": false,
+        "owner": "Repository owner; adopter operator for any future host integration",
+        "sources": [
+          "docs/architecture/09-architecture-decisions/0011-store-scoped-agent-memory-in-local-sqlite.md:1-30",
+          "src/packages/sdlc/commands/memory.md:7-15",
+          "docs/process/20261103-272-scoped-memory/README.md:23-30",
+          "https://github.com/juangcarmona/lighthouse/pull/315#issuecomment-6597284673"
+        ],
+        "finding": "The owner accepted the optional local SQLite provider. Automatic worker wiring, provider deployment and prompt injection are explicitly outside this delivery. No production deployment demonstration is invented or promoted into a new gate."
+      },
+      {
+        "id": "architecture-route-description-drift",
+        "kind": "documentation-defect",
+        "blocking": false,
+        "owner": "Architecture documentation maintainer",
+        "sources": [
+          "docs/architecture/05-building-block-view/README.md:83-87",
+          "docs/architecture/06-runtime-view/README.md:88",
+          ".github/workflows/lighthouse-sdlc-router.yml:74-77",
+          "src/packages/sdlc/README.md:18-30"
+        ],
+        "finding": "The building-block view says only the refinement route is selected and other stages are reference assets; the runtime view also retains an earlier limited-route description. The installed router enables implementation and completion stages, documented by the SDLC guide. This is guidance drift, not evidence that scoped-memory source behavior failed.",
+        "resolution": "Maintainer should reconcile current-route prose with the installed router in separately reviewed documentation work. No guidance was rewritten and no follow-up issue or stage was started."
+      },
+      {
+        "id": "historical-recovery-boundary",
+        "kind": "historical-process-gaps",
+        "blocking": false,
+        "owner": "Execution adapter and evidence-publication maintainers",
+        "sources": [
+          "docs/process/20261103-272-scoped-memory/README.md:32-38",
+          "https://github.com/juangcarmona/lighthouse/pull/315#issuecomment-6599338503",
+          "https://github.com/juangcarmona/lighthouse/pull/315#issuecomment-6599787141"
+        ],
+        "finding": "The retained report distinguishes an evidence-copy EACCES after successful engine execution from a later zero-diff publication limitation after successful historical host checks. Neither is reported here as a current source-test failure or a completed delivery. Retries within #272 do not establish recurrence across issues. Any proposed adapter guard needs its own review and regression proof."
+      }
+    ],
+    "authorityAssessment": {
+      "sources": [
+        "docs/product/README.md:5-8",
+        "openspec/changes/issue-272-product-change/product-change/change.md:1-12",
+        "docs/product/model/requirements/functional/fr-agent-memory.md",
+        "docs/product/model/business-rules/br-memory-boundary.md",
+        "docs/architecture/09-architecture-decisions/0011-store-scoped-agent-memory-in-local-sqlite.md"
+      ],
+      "finding": "The existing canonical baseline describes this behavior and the retained Product Change records applied status. The changed-path list contains no new product-model edit. Draft artifact frontmatter is not itself merge or implementation authority; neither product apply nor the policy answer is used as merge permission. Merge permission comes solely from the host-supplied current owner dispatch. No new product decision or authority exception is invented."
+    },
+    "verificationLimits": {
+      "localCommandsExecuted": false,
+      "externalServicesCalled": false,
+      "sourceModified": false,
+      "assessmentMethod": "Read-only intent, guidance, implementation and test inspection combined with host-authenticated GitHub observations. Implementation-authored assertions were compared with canonical intent rather than accepted as independent proof of intended behavior.",
+      "skippedChecksNotClaimedAsExecution": [
+        "Publish public engineering site",
+        "Install CLI in adopter checkout",
+        "the skipped reconcile-implementation-pr observation"
+      ],
+      "historicalEvidenceRevision": "1631ac91eea720fab8de3b9962c3cda24df0561e",
+      "historicalEvidenceRun": "https://github.com/juangcarmona/lighthouse/actions/runs/41606630148",
+      "sourceDefectConclusion": "No scoped-memory implementation defect established by this inspection; current blockers are missing verification receipts."
+    },
+    "laterStageChecks": [
+      {
+        "name": "Actual squash merge and merge receipt",
+        "status": "not-performed",
+        "intendedStage": "integrate publisher after a passed assessment",
+        "owner": "Trusted publisher and GitHub",
+        "reason": "This assessment is blocked; no merge is requested or claimed."
+      },
+      {
+        "name": "ci.yml on the actual merged revision",
+        "status": "not-performed",
+        "intendedStage": "post-merge verification",
+        "owner": "Trusted publisher and GitHub Actions"
+      },
+      {
+        "name": "Retrospective review and issue closure",
+        "status": "not-performed",
+        "intendedStage": "review",
+        "owner": "Separately admitted review worker and trusted publisher",
+        "reason": "No prior integration receipt or post-merge results are supplied, as expected before integration. Their absence is not an extra current-stage blocker."
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "indexId": "evidence-index",
+  "runId": "6bb5f30b04aab0d41f12e0d4c7710a478c0a4dc4ad4f804087adc1247e6bcd0f",
+  "repository": "juangcarmona/lighthouse",
+  "revision": "558b132496913fb1e079ac1e2784e3a537979820",
+  "records": [
+    {
+      "id": "completion:6bb5f30b04aab0d41f12e0d4c7710a478c0a4dc4ad4f804087adc1247e6bcd0f",
+      "path": "evidence-record.json",
+      "sha256": "8637112089f95e763535d8d4379154fc9dc10d0a3aec56bba9bd748881ee4fe1",
+      "kind": "stage-result",
+      "status": "pending-review",
+      "subject": {
+        "type": "issue",
+        "id": "https://github.com/juangcarmona/lighthouse/issues/272"
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "subject": {
+        "type": "issue",
+        "id": "https://github.com/juangcarmona/lighthouse/issues/272"
+      },
+      "status": "incomplete",
+      "evidenceIds": [
+        "completion:6bb5f30b04aab0d41f12e0d4c7710a478c0a4dc4ad4f804087adc1247e6bcd0f"
+      ],
+      "nextAction": "Collect or resolve evidence for issue:https://github.com/juangcarmona/lighthouse/issues/272."
+    }
+  ]
+}
