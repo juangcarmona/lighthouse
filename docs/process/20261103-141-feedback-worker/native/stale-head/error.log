@@ -1,0 +1,13 @@
+route	Route the authorized event	﻿2026-11-03T20:02:34.0548004Z ##[group]Run node src/packages/sdlc/src/issue-actions.mjs route
+route	Route the authorized event	2026-11-03T20:02:34.0548654Z [36;1mnode src/packages/sdlc/src/issue-actions.mjs route[0m
+route	Route the authorized event	2026-11-03T20:02:34.0575323Z shell: /usr/bin/bash -e {0}
+route	Route the authorized event	2026-11-03T20:02:34.0575728Z env:
+route	Route the authorized event	2026-11-03T20:02:34.0576352Z   LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
+route	Route the authorized event	2026-11-03T20:02:34.0577051Z   LIGHTHOUSE_AUTO_IMPLEMENT: true
+route	Route the authorized event	2026-11-03T20:02:34.0577430Z   LIGHTHOUSE_COMPLETION_ENABLED: true
+route	Route the authorized event	2026-11-03T20:02:34.0577817Z   LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: true
+route	Route the authorized event	2026-11-03T20:02:34.0580678Z   GH_TOKEN: ***
+route	Route the authorized event	2026-11-03T20:02:34.0581076Z   LIGHTHOUSE_EPIC_ENABLED: 
+route	Route the authorized event	2026-11-03T20:02:34.0581401Z ##[endgroup]
+route	Route the authorized event	2026-11-03T20:02:35.7429932Z ##[error]Feedback targets an older proposal commit; review the current diff
+route	Route the authorized event	2026-11-03T20:02:37.0041291Z ##[error]Process completed with exit code 1.

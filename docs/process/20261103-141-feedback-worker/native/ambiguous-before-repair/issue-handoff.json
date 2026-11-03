@@ -1,0 +1,27 @@
+{
+  "id": 6613373969,
+  "body": "## Waiting for your answer \u00b7 implement\n\nPR #339 is blocked because the requested replacement wording has not been supplied; no files were changed. What exact paragraph should replace the existing paragraph in `docs/process/issue-321-delivery-fixture.md`?\n\nYour next action:\nOwner: What exact paragraph should replace the existing paragraph in docs/process/issue-321-delivery-fixture.md on PR #339? Reply here.\n\nWhat happens next:\nThe answer will be checked against this question before implement continues.\n\n[Implementation PR #339](https://github.com/juangcarmona/lighthouse/pull/339) is a draft. Address the blocker in the run before review.\n\n<details><summary>Execution details</summary>\n\nOutcome: blocked\n\n[Workflow run](https://github.com/juangcarmona/lighthouse/actions/runs/41701713994) \u00b7 source `d2f14915de27c73a59cdf68ce193e1eabd97cfe7`\n\n<!-- lighthouse-actions:0d94c338368d5c02abb9a9ce8a7f975f46ca9ce5f179e8a3e3e43272012fba5c -->\n<!-- lighthouse-result:1710c7f722a06b4b90521ec6b3c3ec1c8d6164f0262f796298c0fba875786ab5 -->\n<!-- lighthouse-handoff:v1 -->\n<!-- lighthouse-pr-state:{\"pr\":339,\"head\":\"d2f14915de27c73a59cdf68ce193e1eabd97cfe7\",\"complete\":false,\"run\":41701713994,\"implementationIdentity\":\"ba1fcd757eddc1157393c3571614fb6018fcfe5aeae64348d381fc22a67ffd49\"} -->\n<!-- lighthouse-stage:implement:blocked -->\n<!-- lighthouse-question -->\n</details>",
+  "created_at": "2026-11-03T19:24:36Z",
+  "updated_at": "2026-11-03T19:24:36Z",
+  "user": {
+    "login": "github-actions[bot]",
+    "id": 41898282,
+    "node_id": "MDM6Qm90NDE4OTgyODI=",
+    "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+    "html_url": "https://github.com/apps/github-actions",
+    "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+    "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+    "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+    "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+    "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+    "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+    "type": "Bot",
+    "user_view_type": "public",
+    "site_admin": false
+  }
+}

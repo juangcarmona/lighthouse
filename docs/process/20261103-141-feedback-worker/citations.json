@@ -1,0 +1,94 @@
+{
+  "schema": "product-definition-as-code/citations-provider/v1alpha1",
+  "provider": "openspec",
+  "integrationVersion": "0.23.0",
+  "root": "openspec",
+  "includeArchived": false,
+  "documents": [
+    {
+      "path": "openspec/changes/apply-review-worker/proposal.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/design.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/tasks.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/specs/apply-review/spec.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    }
+  ],
+  "citations": [
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/proposal.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/design.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/tasks.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/specs/apply-review/spec.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "totalDocuments": 4,
+    "currentDocuments": 4,
+    "bound": 4,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 4,
+    "current": 4,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

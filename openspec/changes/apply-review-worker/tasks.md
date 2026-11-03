@@ -10,4 +10,4 @@
 - [x] Verify authentication, stale feedback, duplicates and source-linked catalogue.
 - [x] Exercise bounded owner conversation, inline feedback and changed-input rejection in focused regressions.
 - [x] Reproduce and repair wrong-location questions and false failures after delayed handled-feedback dispatch.
-- [ ] Retain installed-adopter acceptance for same-PR correction, ambiguity, replay and changed-head rejection; close the disposable fixture without merging.
+- [x] Retain installed-adopter acceptance for same-PR correction, ambiguity, replay and changed-head rejection; close the disposable fixture without merging.

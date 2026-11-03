@@ -1,0 +1,13 @@
+{
+  "artifact": 13262149434,
+  "artifactUploadTime": "2026-11-03T19:10:13.437Z",
+  "artifactZipSha256": "9972d52667b39b7d1e9ec0540dd8a1977c2d88933ebd0ccf2ef6a7c13881d2b6",
+  "artifactAfterRerunHttpStatus": 404,
+  "preparationError": "Required artifact unavailable, ambiguous or too large",
+  "errorTime": "2026-11-03T19:10:38.476Z",
+  "receiptComment": 6613052821,
+  "claimedWorker": null,
+  "newDuplicateWorkers": 0,
+  "recoveryIssue": 142,
+  "recoveryComment": 6613166336
+}

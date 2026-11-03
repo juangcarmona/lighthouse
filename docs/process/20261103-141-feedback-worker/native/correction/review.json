@@ -1,0 +1,42 @@
+{
+  "id": 5758505351,
+  "node_id": "PRR_kwDOVRh-RM8AAAABVzvRhw",
+  "user": {
+    "login": "juangcarmona",
+    "id": 2834629,
+    "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2834629?u=4fad3d33d44947dae3d8cb88d7b71bec01d91eea&v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/juangcarmona",
+    "html_url": "https://github.com/juangcarmona",
+    "followers_url": "https://api.github.com/users/juangcarmona/followers",
+    "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+    "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+    "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+    "repos_url": "https://api.github.com/users/juangcarmona/repos",
+    "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "body": "This is my complete answer to all replacement-wording questions above. In `docs/process/issue-321-delivery-fixture.md`, retain the heading `# Delivery reconciliation fixture` and replace the paragraph with exactly: `This disposable candidate confirms authorized feedback correction on the same PR.`\n\nThis supersedes the original fixture paragraph and resolves both earlier ambiguity requests. Update the existing completed docs-only OpenSpec plan only as needed to keep it consistent with this bounded textual correction. Preserve all unrelated files. Run the configured checks and let the host independently verify and publish the correction to this same PR and branch. Do not add acceptance instrumentation or claim owner-orchestrated observations. No merge, release or deployment is authorized.",
+  "state": "COMMENTED",
+  "html_url": "https://github.com/juangcarmona/lighthouse/pull/339#pullrequestreview-5758505351",
+  "pull_request_url": "https://api.github.com/repos/juangcarmona/lighthouse/pulls/339",
+  "author_association": "OWNER",
+  "_links": {
+    "html": {
+      "href": "https://github.com/juangcarmona/lighthouse/pull/339#pullrequestreview-5758505351"
+    },
+    "pull_request": {
+      "href": "https://api.github.com/repos/juangcarmona/lighthouse/pulls/339"
+    }
+  },
+  "is_copilot_code_review": false,
+  "copilot_code_review_effort": null,
+  "submitted_at": "2026-11-03T19:45:29Z",
+  "commit_id": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7"
+}

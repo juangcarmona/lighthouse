@@ -1,0 +1,82 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "issue": 336,
+  "runId": "0d94c338368d5c02abb9a9ce8a7f975f46ca9ce5f179e8a3e3e43272012fba5c",
+  "stage": "implement",
+  "worker": "apply-review",
+  "sourceRevision": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+  "baseRevision": "fbd6f7751c797fc888bce464442f134b11acee8a",
+  "workflowRunId": "41701713994",
+  "taskDigest": "256fbe2dc770c9fd381756b4bc6e7eee85f59cc4b6d06d51edb51fddb2db267c",
+  "dispatch": {
+    "commentId": 6613200672,
+    "requestId": "51b852de850c1775769938249c9db072f1a43507822dc776c2ea529fecc34779",
+    "digest": "55917c5764e539f27a185c7f58c5f2b3ec4f5d8447d57f4dd69f3cbe610f6def",
+    "routerRunId": "41701580328",
+    "routerAttempt": 1
+  },
+  "implementationReview": {
+    "number": 339,
+    "issue": 336,
+    "head": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+    "branch": "lighthouse/implement-336-ba1fcd757edd",
+    "base": "main",
+    "url": "https://github.com/juangcarmona/lighthouse/pull/339",
+    "implementationIdentity": "ba1fcd757eddc1157393c3571614fb6018fcfe5aeae64348d381fc22a67ffd49",
+    "kind": "comment",
+    "id": 6613179974,
+    "path": "issues/comments/6613179974",
+    "feedback": "For disposable #141 acceptance, replace the paragraph in `docs/process/issue-321-delivery-fixture.md` with the final wording I have in mind. I have not supplied that wording here or in the issue. Do not infer it from the existing text, invent a replacement, or edit files while this is unresolved. Ask me which exact paragraph to use and report a human blocker. This deliberately ambiguous request grants no merge, release or deployment authority.",
+    "feedbackDigest": "adb7f794fb379dd1983f9c6ff206ea2d190cf308885dd2191663161a12ccc4ee",
+    "receipt": "<!-- lighthouse-review:comment:6613179974:adb7f794fb379dd1983f9c6ff206ea2d190cf308885dd2191663161a12ccc4ee -->",
+    "feedbackUrl": "https://github.com/juangcarmona/lighthouse/pull/339#issuecomment-6613179974",
+    "approved": false,
+    "handled": false,
+    "thread": [
+      {
+        "id": 6613179974,
+        "body": "For disposable #141 acceptance, replace the paragraph in `docs/process/issue-321-delivery-fixture.md` with the final wording I have in mind. I have not supplied that wording here or in the issue. Do not infer it from the existing text, invent a replacement, or edit files while this is unresolved. Ask me which exact paragraph to use and report a human blocker. This deliberately ambiguous request grants no merge, release or deployment authority.",
+        "url": "https://github.com/juangcarmona/lighthouse/pull/339#issuecomment-6613179974",
+        "updated": "2026-11-03T19:15:32Z"
+      }
+    ],
+    "threadDigest": "0b34f4fb8ed01379f654b663d308a157d128926f5adc57a150bab924ebd59ba1"
+  },
+  "implementation": {
+    "policy": {
+      "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+      "paths": [
+        "*"
+      ],
+      "reviewRequired": false,
+      "checks": [
+        [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        [
+          "env",
+          "GITHUB_ACTIONS=true",
+          "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+          "npm",
+          "run",
+          "verify"
+        ],
+        [
+          "npx",
+          "--yes",
+          "--package=@fission-ai/openspec@1.15.0",
+          "openspec",
+          "validate",
+          "issue-336-proposal",
+          "--strict",
+          "--no-interactive"
+        ]
+      ]
+    },
+    "proposal": {
+      "root": "openspec/changes/issue-336-proposal"
+    }
+  }
+}

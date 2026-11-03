@@ -1,0 +1,35 @@
+# Correction retrospective
+
+## What went well
+
+The final owner review supplied exact wording and explicitly resolved both earlier ambiguity requests. The fixture now matches that wording byte for byte. Only the fixture and its proposal, design and tasks changed; metadata, canonical models and unrelated work were preserved.
+
+## What failed
+
+The first dependency installation exceeded the shell's 120-second timeout. Its managed receipt reached `cancelled` with exit code 137 before any retry. A separate attempt with a longer timeout completed with exit code 0. No infrastructure inspection or workaround was needed.
+
+## Start doing
+
+Allow sufficient foreground time for dependency installation and read each terminal receipt before proceeding.
+
+## Stop doing
+
+Do not treat the superseded ambiguity requests as current blockers after the owner has supplied the exact replacement. Do not infer delivery acceptance from this documentation correction.
+
+## Evidenced recurring patterns
+
+Both earlier review comments lacked replacement wording; the final review resolves that single repeated decision gap. No recurring technical failure is established by one cancelled installation.
+
+## Verification
+
+- `install-02`: configured dependency installation completed, exit 0; `install-01` retains the cancelled attempt.
+- `verify-01`: configured repository verification completed, exit 0. Tests: 560 total, 553 passed, 7 skipped, 0 failed. Markdown lint, local links and public-site build/verification passed.
+- `openspec-01`: strict change validation completed, exit 0; docs-only `skip_specs: true` accepted.
+- `citations-01`: architecture links and citations validation completed, exit 0.
+- `inventory-01`: capability inventory completed, exit 0; no specs found, consistent with the retained plan.
+- `scope-01`: exact fixture bytes, four authorized changed files, no untracked candidate files and diff formatting passed, exit 0.
+- `final-markdown-01`: Markdown lint passed after marking the completed tasks, exit 0.
+
+Completed command receipts and separate logs are retained in this evidence tree. No new test or acceptance instrumentation was added. Screenshots are not applicable to a non-visual text fixture. Prose was reviewed directly for repetition and unsupported claims; no Humanizer skill was available in the installed workspace skills.
+
+The host must independently verify the candidate and recheck PR #339's head and discussion before updating the same branch. Owner-orchestrated delivery observations were not performed or claimed. No merge, release or deployment was performed or authorized.

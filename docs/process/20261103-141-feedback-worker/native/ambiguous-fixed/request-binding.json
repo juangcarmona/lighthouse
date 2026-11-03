@@ -1,0 +1,88 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "issue": 336,
+  "runId": "6850d8616f0ff1b2357c7ba979ef42f553ebd9c724e728b300cdd46b67ec83e0",
+  "stage": "implement",
+  "worker": "apply-review",
+  "sourceRevision": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+  "baseRevision": "0b684bc01c11d1fec619d22e257238c6c35ec7a6",
+  "workflowRunId": "41704824794",
+  "taskDigest": "256fbe2dc770c9fd381756b4bc6e7eee85f59cc4b6d06d51edb51fddb2db267c",
+  "dispatch": {
+    "commentId": 6613613980,
+    "requestId": "aecf529c3edda7008c1d62bf2c5140ec5321714891f441c1069921a18a756161",
+    "digest": "1666e3b671629cb45c18a7e73b39f946c36adbacdeeaddf4ac5d95b9adf4bdbb",
+    "routerRunId": "41704694067",
+    "routerAttempt": 1
+  },
+  "implementationReview": {
+    "number": 339,
+    "issue": 336,
+    "head": "d2f14915de27c73a59cdf68ce193e1eabd97cfe7",
+    "branch": "lighthouse/implement-336-ba1fcd757edd",
+    "base": "main",
+    "url": "https://github.com/juangcarmona/lighthouse/pull/339",
+    "implementationIdentity": "ba1fcd757eddc1157393c3571614fb6018fcfe5aeae64348d381fc22a67ffd49",
+    "kind": "comment",
+    "id": 6613597060,
+    "path": "issues/comments/6613597060",
+    "feedback": "Repeat the bounded #141 ambiguity acceptance on the newly installed repair. The final replacement paragraph for `docs/process/issue-321-delivery-fixture.md` is still unspecified; neither earlier request supplied it. Keep all files unchanged, report the missing owner decision, and ask which exact paragraph to use. This is a correction of this existing PR only. No merge, release or deployment is authorized. I will supply the exact wording in a later PR review.",
+    "feedbackDigest": "79371de9c283f2176927e1a46b2b6eb42b32db5848b22f4b3a374eaeb8c167b1",
+    "receipt": "<!-- lighthouse-review:comment:6613597060:79371de9c283f2176927e1a46b2b6eb42b32db5848b22f4b3a374eaeb8c167b1 -->",
+    "feedbackUrl": "https://github.com/juangcarmona/lighthouse/pull/339#issuecomment-6613597060",
+    "approved": false,
+    "handled": false,
+    "thread": [
+      {
+        "id": 6613179974,
+        "body": "For disposable #141 acceptance, replace the paragraph in `docs/process/issue-321-delivery-fixture.md` with the final wording I have in mind. I have not supplied that wording here or in the issue. Do not infer it from the existing text, invent a replacement, or edit files while this is unresolved. Ask me which exact paragraph to use and report a human blocker. This deliberately ambiguous request grants no merge, release or deployment authority.",
+        "url": "https://github.com/juangcarmona/lighthouse/pull/339#issuecomment-6613179974",
+        "updated": "2026-11-03T19:15:32Z"
+      },
+      {
+        "id": 6613597060,
+        "body": "Repeat the bounded #141 ambiguity acceptance on the newly installed repair. The final replacement paragraph for `docs/process/issue-321-delivery-fixture.md` is still unspecified; neither earlier request supplied it. Keep all files unchanged, report the missing owner decision, and ask which exact paragraph to use. This is a correction of this existing PR only. No merge, release or deployment is authorized. I will supply the exact wording in a later PR review.",
+        "url": "https://github.com/juangcarmona/lighthouse/pull/339#issuecomment-6613597060",
+        "updated": "2026-11-03T19:35:31Z"
+      }
+    ],
+    "threadDigest": "4a2c941aff95d46299f276d6b6156b57e29d892aecd7d0cc26b04801ac492270"
+  },
+  "implementation": {
+    "policy": {
+      "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+      "paths": [
+        "*"
+      ],
+      "reviewRequired": false,
+      "checks": [
+        [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        [
+          "env",
+          "GITHUB_ACTIONS=true",
+          "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+          "npm",
+          "run",
+          "verify"
+        ],
+        [
+          "npx",
+          "--yes",
+          "--package=@fission-ai/openspec@1.15.0",
+          "openspec",
+          "validate",
+          "issue-336-proposal",
+          "--strict",
+          "--no-interactive"
+        ]
+      ]
+    },
+    "proposal": {
+      "root": "openspec/changes/issue-336-proposal"
+    }
+  }
+}

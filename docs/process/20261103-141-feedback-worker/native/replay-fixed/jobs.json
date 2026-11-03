@@ -1,0 +1,34 @@
+[
+  {
+    "id": 126157989621,
+    "name": "route",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-11-03T19:37:52Z",
+    "completed_at": "2026-11-03T19:38:13Z"
+  },
+  {
+    "id": 126157991484,
+    "name": "pr-state",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-11-03T19:37:49Z",
+    "completed_at": "2026-11-03T19:35:35Z"
+  },
+  {
+    "id": 126157992184,
+    "name": "epic-triage",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-11-03T19:37:49Z",
+    "completed_at": "2026-11-03T19:35:35Z"
+  },
+  {
+    "id": 126158211732,
+    "name": "\ud83d\udce5 Dispatch selected stage",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-11-03T19:44:37Z",
+    "completed_at": "2026-11-03T19:44:46Z"
+  }
+]

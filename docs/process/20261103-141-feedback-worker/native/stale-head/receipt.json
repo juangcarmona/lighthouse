@@ -1,0 +1,28 @@
+{
+  "id": 6613820085,
+  "body": "## Stage completed \u00b7 apply-review\n\nThe stage published a validated result.\n\nYour next action:\nFollow the latest stage handoff.\n\nWhat happens next:\nThe configured continuation applies only when authorized.\n\n<details><summary>Execution details</summary>\n\n[Dispatch origin](https://github.com/juangcarmona/lighthouse/actions/runs/41706236930) \u00b7 [Execution](https://github.com/juangcarmona/lighthouse/actions/runs/41706369358)\n\n<!-- lighthouse-dispatch:{\"schemaVersion\":1,\"intent\":\"88a2ccb88b0472407a7b866fcb65d7db4e31045f01a92fb6a527fc4768e08989\",\"stage\":\"implement\",\"worker\":\"apply-review\",\"feedbackKey\":\"dcfc2ea5517432842cc8de71f1a296ade4a77c95f36e058be208243d96e8eb3d\",\"status\":\"completed\",\"id\":\"14854a12d55acee7f193cda41b1033d447ab941cf9624e699879363cf129e363\",\"digest\":\"5d08e1e482fc9b14183c55d62d89d0b66340a6ff20be1beef9263d0a5a45cf66\",\"routerRunId\":\"41706236930\",\"routerAttempt\":1,\"workerRunId\":\"41706369358\"} -->\n</details>",
+  "user": {
+    "login": "github-actions[bot]",
+    "id": 41898282,
+    "node_id": "MDM6Qm90NDE4OTgyODI=",
+    "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+    "html_url": "https://github.com/apps/github-actions",
+    "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+    "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+    "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+    "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+    "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+    "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+    "type": "Bot",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "issue_url": "https://api.github.com/repos/juangcarmona/lighthouse/issues/336",
+  "created_at": "2026-11-03T19:46:20Z",
+  "updated_at": "2026-11-03T20:00:26Z"
+}

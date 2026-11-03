@@ -60,6 +60,7 @@ globalThis.fetch = async (url, options) => {
     if (s.scenario === 'policy-race') s.policy.defaults.scope = 'Different scope';
     if (s.scenario === 'identity-race') s.pr.body = s.pr.body.replace(/c{64}/, 'c'.repeat(63) + 'd');
     if (s.scenario === 'feedback-race') s.feedback.body = 'Revoked';
+    if (s.scenario === 'discussion-race') s.prComments.push({ id: 11, user: s.feedback.user, body: 'Another outstanding correction.' });
   }
   else if (path.startsWith('issues/7/labels/') && method === 'DELETE') { s.issue.labels = s.issue.labels.filter(x => x.name !== path.split('/').at(-1)); value = []; }
   else if (['issues/7/comments', 'issues/8/comments'].includes(path) && method === 'POST') {
@@ -93,12 +94,13 @@ test('ambiguous implementation feedback asks on the existing PR without authoriz
 });
 
 test('production publisher renews same-head completion, preserves blockers and rejects changed authority', async t => {
-  for (const scenario of ['passed', 'failed', 'unavailable', 'pending', 'initial', 'forged-pass', 'stale-receipt', 'head-race', 'intent-race', 'policy-race', 'identity-race', 'feedback-race', 'lost-response']) await t.test(scenario, async () => {
+  for (const scenario of ['passed', 'failed', 'unavailable', 'pending', 'initial', 'forged-pass', 'stale-receipt', 'head-race', 'intent-race', 'policy-race', 'identity-race', 'feedback-race', 'discussion-race', 'lost-response']) await t.test(scenario, async () => {
     const f = await fixture(scenario);
     try {
       const result = f.run(), s = await f.state();
       const success = ['passed', 'failed', 'unavailable', 'pending'].includes(scenario);
       assert.equal(result.status, success ? 0 : 1, result.stdout + result.stderr);
+      if (scenario === 'discussion-race') assert.match(result.stderr, /PR feedback changed/);
       assert.equal(s.calls.some(c => c.path.startsWith('git/') || c.path === 'pulls'), false, 'No new commit, branch, PR or history rewrite');
       const proofs = s.comments.filter(c => c.body.includes('lighthouse-pr-state:'));
       if (!success && scenario !== 'lost-response') { assert.equal(proofs.length, 0); return; }
