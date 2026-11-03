@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.3
+
+### Patch Changes
+
+- 236b765: # Delivery request reconciliation
+
+  Reconcile equivalent delivery events with authenticated requests and existing candidates before dispatch. Scope router completion subscriptions to adopted workflows, retain explicit blockers and preserve bot continuation and uncertain-write safeguards.
+
 ## 0.20.2
 
 ### Patch Changes
