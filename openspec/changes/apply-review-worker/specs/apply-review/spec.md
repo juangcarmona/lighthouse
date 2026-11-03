@@ -23,3 +23,9 @@ Authorized feedback SHALL execute once through apply-review, preserving the exis
 
 - **WHEN** the agent cannot resolve the request within its authority
 - **THEN** it reports the human decision and does not claim successful correction.
+- **AND** the existing PR contains the question and accepts the owner's answer through the authorized correction path; the issue directs the owner to that PR.
+
+#### Scenario: Feedback handled while dispatch waits
+
+- **WHEN** feedback has been applied before a delayed dispatch acquires the issue lease
+- **THEN** admission authenticates the handled feedback, reports a successful no-op and dispatches no additional worker.

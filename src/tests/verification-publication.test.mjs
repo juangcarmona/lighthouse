@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
-import { taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
+import { taskDigest, pendingReply } from '../packages/sdlc/src/issue-actions.mjs';
 import { loadImplementation, changesDigest } from '../packages/sdlc/src/implementation.mjs';
 import { reviewThread } from '../packages/sdlc/src/proposal-review.mjs';
 
@@ -22,9 +22,14 @@ async function fixture(scenario) {
   const thread = await reviewThread(async path => path.startsWith('issues/') ? [feedback] : [], 8, 'owner');
   const review = { number: 8, issue: 7, head, branch: pr.head.ref, base: 'main', url: pr.html_url, implementationIdentity: identity, approved: false, path: 'issues/comments/10', feedbackDigest: digest(JSON.stringify(feedback)), threadDigest: digest(JSON.stringify(thread)), receipt: '<!-- lighthouse-review:comment:10:fixture -->' };
   const snapshot = { repository, issue: 7, stage: 'implement', worker: 'apply-review', runId: digest('verification-fixture'), workflowRunId: '200', sourceRevision: head, baseRevision: base, defaultBranch: 'main', taskDigest: taskDigest(issue, []), implementation, implementationReview: review };
-  const blocked = ['failed', 'unavailable', 'pending'].includes(scenario);
+  const blocked = ['failed', 'unavailable', 'pending', 'question'].includes(scenario);
   const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: snapshot.runId, stage: 'implement', gate: 'done', status: blocked ? 'blocked' : 'passed', evidence: [], missingEvidence: scenario === 'failed' ? ['Failed check'] : [], unavailableChecks: scenario === 'unavailable' ? ['Check unavailable'] : [], pendingReview: scenario === 'pending' ? ['Owner acceptance'] : [], nextAction: 'Review the existing candidate.' }, effect: { type: 'issue-comment', body: 'Candidate verified without edits.' } };
   const receipt = { runId: snapshot.runId, sourceRevision: head, changesDigest: changesDigest([]), checks: implementation.policy.checks.map(command => ({ command, exitCode: scenario === 'failed' ? 1 : 0 })) };
+  if (scenario === 'question') {
+    envelope.result.output = { handoff: { question: 'Which exact paragraph should replace this text?' } };
+    envelope.result.pendingReview = ['Replacement wording'];
+    envelope.effect.body = 'The replacement wording is missing; no files changed.';
+  }
   if (scenario === 'forged-pass') receipt.checks[0].exitCode = 1;
   if (scenario === 'initial') { delete snapshot.implementationReview; delete snapshot.worker; }
   if (scenario === 'stale-receipt') receipt.sourceRevision = base;
@@ -69,6 +74,23 @@ globalThis.fetch = async (url, options) => {
   const run = () => spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'publish'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repository, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: '7', LIGHTHOUSE_RUN_DIR: dir, GH_TOKEN: 'fixture' } });
   return { dir, run, head, state: async () => JSON.parse(await readFile(join(dir, 'state.json'))) };
 }
+
+test('ambiguous implementation feedback asks on the existing PR without authorizing an initial issue-stage restart', async () => {
+  const f = await fixture('question');
+  try {
+    const result = f.run(), state = await f.state();
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const report = state.comments.find(c => c.body.includes('lighthouse-actions:'));
+    assert.match(report.body, /Which exact paragraph.*Reply on PR #8/);
+    assert.doesNotMatch(report.body, /<!-- lighthouse-question -->/);
+    assert.equal(pendingReply({ comment: { body: 'The wording.', created_at: '2026-11-03T01:00:00Z' } }, [report]), null);
+    const notice = state.prComments.find(c => c.body.includes('lighthouse-review:'));
+    assert.match(notice.body, /Waiting for your answer/);
+    assert.match(notice.body, /Which exact paragraph.*Reply here/);
+    assert.equal(state.pr.head.sha, f.head);
+    assert.equal(state.calls.some(c => c.path.startsWith('git/') || c.path === 'pulls'), false);
+  } finally { await rm(f.dir, { recursive: true, force: true }); }
+});
 
 test('production publisher renews same-head completion, preserves blockers and rejects changed authority', async t => {
   for (const scenario of ['passed', 'failed', 'unavailable', 'pending', 'initial', 'forged-pass', 'stale-receipt', 'head-race', 'intent-race', 'policy-race', 'identity-race', 'feedback-race', 'lost-response']) await t.test(scenario, async () => {
