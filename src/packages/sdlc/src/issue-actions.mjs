@@ -3,7 +3,7 @@ import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfter
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource } from './delivery-events.mjs';
-import { implementationContinuation } from './delivery-request.mjs';
+import { implementationContinuation, consumeReconciledLabel } from './delivery-request.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -409,6 +409,7 @@ async function main(command) {
     request.intent = dispatchIntent(request);
     const existing = await implementationContinuation(api, repo, owner, request);
     if (existing) {
+      await consumeReconciledLabel(api, owner, request, existing.status);
       await output('send', 'false');
       const link = existing.url ? `[Existing PR #${existing.pr}](${existing.url})` : undefined;
       await publishRoutingHandoff(api, issueNumber, `${repo}:candidate:${request.intent}:${existing.head ?? ''}:${existing.reason}`, renderHandoff({ status: existing.status, stage, happened: existing.reason, action: 'Owner: continue through the existing PR; no second implementation was requested.', next: 'A correction or revalidation requires current authorization on that PR.', link }));
@@ -423,7 +424,8 @@ async function main(command) {
       await summary(error.message); return;
     }
     if (!recorded.send) {
-      const state = ['completed', 'blocked', 'failed', 'cancelled'].includes(recorded.receipt.status) ? recorded.receipt.status : recorded.receipt.workerRunId ? 'queued' : 'unknown';
+      await consumeReconciledLabel(api, owner, request, recorded.state);
+      const state = recorded.state ?? (['completed', 'blocked', 'failed', 'cancelled'].includes(recorded.receipt.status) ? recorded.receipt.status : recorded.receipt.workerRunId ? 'queued' : 'unknown');
       await publishRoutingHandoff(api, issueNumber, `${repo}:dispatch-reuse:${request.intent}:${recorded.comment.id}`, renderHandoff({ status: state, stage, happened: recorded.reason, action: 'Follow the linked original request; no duplicate worker was dispatched.', next: 'Further work requires current authorization and reconciled effects.', link: `[Existing request](${recorded.comment.html_url})` }));
     }
     await output('send', String(recorded.send));
@@ -435,7 +437,7 @@ async function main(command) {
   }
   if (command === 'route') {
     if (route.run && (['product-change', 'apply-product-change'].includes(route.worker) ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED !== 'true' : !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage))) route = { run: false, reason: 'Requested workflow is not installed.' };
-    if (labelRequest) await labelHandoff();
+    if (labelRequest && !route.run) await labelHandoff();
     await output('integration_request', integrationRequest ? JSON.stringify(integrationRequest) : '');
     await output('stage', route.stage ?? ''); await output('worker', route.worker ?? route.stage ?? ''); await output('run', String(route.run)); await output('issue', route.issue ?? ''); await output('epic_parent', epicContext ? String(epicContext.parent) : '');
     const routedDetails = `[Routing execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})`;
