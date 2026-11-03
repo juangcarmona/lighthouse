@@ -13,7 +13,7 @@ on:
   pull_request:
     types: [ready_for_review, converted_to_draft, closed, reopened]
   workflow_run:
-    workflows: ["*"]
+    workflows: ["refine","triage","propose","apply review","implement","product-change","apply-product-change","Lighthouse verification"]
     types: [completed]
   schedule:
     - cron: '*/5 * * * *'
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b277761f1b48e9405751a55f10b5da93cfb09fa4
+          ref: cd2ec49d9577bced70211e958039934cbc61e51f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b277761f1b48e9405751a55f10b5da93cfb09fa4
+          ref: cd2ec49d9577bced70211e958039934cbc61e51f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -160,7 +160,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b277761f1b48e9405751a55f10b5da93cfb09fa4
+          ref: cd2ec49d9577bced70211e958039934cbc61e51f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -199,7 +199,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: b277761f1b48e9405751a55f10b5da93cfb09fa4
+          ref: cd2ec49d9577bced70211e958039934cbc61e51f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

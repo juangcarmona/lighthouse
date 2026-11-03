@@ -22,11 +22,24 @@ export const epicRefinementKey = (repository, parent, child, planDigest, runId) 
 export const receiptId = (repository, receipt) => receipt.recovery ? digest(`${repository}:${receipt.recovery.rootId}:retry:${receipt.recovery.attempt}`) : dispatchId(repository, receipt.epicKey ?? receipt.feedbackKey ?? receipt.eventRunId ?? receipt.routerRunId, receipt.stage ?? 'implement');
 export const dispatchArtifact = request => `lighthouse-dispatch-${request.id}`;
 
+// Event/run IDs authenticate delivery, while this key reconciles equivalent grants.
+export const dispatchIntent = request => digest(JSON.stringify({
+  repository: request.repository, issue: request.issue, stage: request.stage, worker: workerFor(request),
+  task: request.taskDigest, source: request.sourceRevision, workflow: request.workflowRevision,
+  feedback: request.feedbackKey, epic: request.epic, completion: request.completionAuthorization,
+  autoImplement: request.autoImplement, productChangeEnabled: request.productChangeEnabled,
+  integration: request.integrationRequest, productApproval: request.productApproval,
+  productParent: request.productParent, productResume: request.productResume, productAlignment: request.productAlignment,
+  productReview: request.productReview, productFeedback: request.productFeedback,
+  model: request.event?.inputs?.model_selection,
+}));
+
 export function readDispatchReceipt(comment, repository, issue) {
   if (comment?.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || comment.issue_url !== `https://api.github.com/repos/${repository}/issues/${issue}`) throw Error('Untrusted dispatch receipt');
   const matches = [...comment.body.matchAll(/<!-- lighthouse-dispatch:(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Missing or ambiguous dispatch receipt');
   const receipt = JSON.parse(matches[0][1]);
+  if (receipt.intent !== undefined && !hash(receipt.intent)) throw Error('Invalid dispatch intent');
   if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2)) throw Error('Invalid recovery receipt');
   if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.epicKey !== undefined && !hash(receipt.epicKey)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
@@ -65,17 +78,27 @@ export async function issueComments(api, issue) {
 // The router dispatch job serializes receipt creation per issue. Workers acquire
 // the existing issue concurrency group before claiming a receipt.
 export async function recordDispatch(api, repository, request) {
+  if (request.intent !== undefined && request.intent !== dispatchIntent(request)) throw Error('Invalid dispatch intent binding');
   if (Buffer.byteLength(JSON.stringify(request)) > 128000) throw Error('Dispatch request exceeds its artifact bound');
   const comments = await issueComments(api, request.issue);
+  let equivalent;
   for (const comment of comments) {
     if (comment.user?.login !== 'github-actions[bot]' || !comment.body.includes('<!-- lighthouse-dispatch:')) continue;
     const receipt = readDispatchReceipt(comment, repository, request.issue);
-    if (receipt.id === request.id) return { send: false, comment, receipt };
+    if (equivalent && Number(comment.id) > Number(equivalent.comment.id)) equivalent = null;
+    if (receipt.id === request.id) return { send: false, comment, receipt, reason: 'This authenticated request is already recorded; no automatic resend.' };
     if (!receipt.workerRunId) throw Error('An earlier stage dispatch is unconfirmed; reconcile it before requesting another');
     const run = await api(`actions/runs/${receipt.workerRunId}`);
+    if (request.intent && !request.recovery && receipt.intent === request.intent) {
+      if (run.path !== stagePath(workerFor(receipt)) || String(run.id) !== String(receipt.workerRunId) || run.repository?.full_name !== repository || run.head_sha !== request.workflowRevision) throw Error('Dispatch worker identity changed');
+      if (run.status !== 'completed' || receipt.status === 'completed' && run.conclusion === 'success') equivalent = { send: false, comment, receipt, reason: run.status !== 'completed' ? 'Equivalent work already has a queued or running execution.' : 'Equivalent work already completed; follow its retained result.' };
+      else if (!['blocked', 'waiting', 'failed', 'cancelled'].includes(receipt.status)) throw Error('Previous dispatch outcome is uncertain; reconcile it before requesting another');
+    }
+    if (equivalent?.receipt === receipt) continue;
     if (run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
-  const receipt = { schemaVersion: 1, stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
+  if (equivalent) return equivalent;
+  const receipt = { schemaVersion: 1, ...(request.intent ? { intent: request.intent } : {}), stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });
   return { send: true, comment, receipt };
 }
@@ -136,6 +159,7 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const expectedEpicKey = epicTriage ? epicTriageKey(repository, request.epic.parent, issue, request.epic.planDigest) : epicRefinement ? epicRefinementKey(repository, request.epic.parent, issue, request.epic.planDigest, request.event.inputs.epic_run) : undefined;
   if (expectedEpicKey ? request.epicKey !== expectedEpicKey || receipt.epicKey !== expectedEpicKey : request.epicKey !== undefined || receipt.epicKey !== undefined) throw Error('Epic dispatch identity is invalid');
   if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && !epicTriage && !epicRefinement && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
+  if (request.intent !== receipt.intent || request.intent !== undefined && request.intent !== dispatchIntent(request)) throw Error('Dispatch intent binding mismatch');
   executionModelSelection(request);
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.epic_run ?? request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
