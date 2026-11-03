@@ -115,7 +115,7 @@ jobs:
       - name: Exercise different UIDs, prerequisites and failed evidence collection
         run: |
           mkdir -p "$RUNNER_TEMP/worker-runtime-acceptance"
-          if ! node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1; then
+          if ! node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs src/tests/verification-publication.test.mjs src/tests/pr-state.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1; then
             cat "$RUNNER_TEMP/worker-runtime-acceptance/results.log"
             exit 1
           fi
