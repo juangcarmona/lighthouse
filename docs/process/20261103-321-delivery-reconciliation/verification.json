@@ -1,0 +1,35 @@
+{
+  "sourceRevision": "250ea38013191f8956bc9292835daea5067ab2c6",
+  "node": "v24.21.0",
+  "verification": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "tests": {
+      "total": 560,
+      "passed": 553,
+      "failed": 0,
+      "optionalSkipped": 7
+    }
+  },
+  "focusedReconciliation": {
+    "tests": 11,
+    "passed": 11
+  },
+  "workflowCompiler": "gh-aw v0.93.2",
+  "workflowInstallationAndDrift": "passed using scripts/verify-issue-workflows.sh; later source pins regenerated through install-workflows.mjs",
+  "scopedCitations": {
+    "totalDocuments": 4,
+    "currentDocuments": 4,
+    "bound": 4,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 12,
+    "current": 12,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  },
+  "nativeAcceptance": "initial cases retained; repeat on corrected source and bot continuation remain pending"
+}
