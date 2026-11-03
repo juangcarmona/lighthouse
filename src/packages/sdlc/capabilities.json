@@ -7,7 +7,7 @@
       "id": "labels",
       "provider": "github",
       "adapter": "github-labels",
-      "version": "3",
+      "version": "4",
       "title": "Lighthouse tracker labels",
       "selection": "selected-by-default",
       "configuration": {
@@ -17,6 +17,7 @@
           { "name": "refine", "role": "command", "color": "4DA3FF", "description": "Owner request to refine; installed policy may continue to implementation." },
           { "name": "implement", "role": "command", "color": "1F6FEB", "description": "Owner request to plan and implement this issue in one PR." },
           { "name": "propose", "role": "command", "color": "A371F7", "description": "Owner request for a separate proposal PR from current refinement evidence." },
+          { "name": "integrate", "role": "command", "color": "238636", "description": "Owner request to assess the linked PR after current approval and passing checks; never authorizes merge." },
           { "name": "future", "role": "overlay", "color": "8B949E", "description": "Pause implementation; triage, refinement and proposal remain available." },
           { "name": "execution-failed", "role": "state", "color": "CF222E", "description": "A worker attempt failed; inspect its latest outcome and recovery action." },
           { "name": "waiting-review", "role": "state", "color": "D29922", "description": "Inspect the result or PR for feedback or a pending decision." },

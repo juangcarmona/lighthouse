@@ -617,7 +617,7 @@ test('a new label capability version requests adoption review without resetting 
     const preview = run(dir, 'upgrade', ['--format', 'json']);
     assert.equal(preview.status, 0, preview.stderr);
     const adoption = JSON.parse(preview.stdout).adoption.capabilities;
-    assert.equal(adoption.labels.version, '3');
+    assert.equal(adoption.labels.version, '4');
     assert.equal(adoption.labels.status, 'pending-adoption');
     assert.equal(adoption['github-profile'].status, 'declined');
     assert.equal(await readFile(path, 'utf8'), before);

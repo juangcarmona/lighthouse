@@ -38,7 +38,7 @@ async function main(command) {
     }
     const after = await completedEvent(api, event, env);
     if (after) { event = after; env.GITHUB_EVENT_NAME = 'workflow_run'; }
-    const stage = env.LIGHTHOUSE_STAGE, authorization = await authorizeCompletionEvent(api, repository, event, env, stage);
+    const stage = env.LIGHTHOUSE_STAGE, authorization = await authorizeCompletionEvent(api, repository, event, env, stage, dispatch?.request.integrationRequest);
     if (Number(env.LIGHTHOUSE_ISSUE) !== authorization.issue) throw Error('Routed issue mismatch');
     const completion = await inspectCompletion(api, repository, owner, authorization, stage, env.GITHUB_RUN_ID);
     const priorIntegration = stage === 'review' ? await readIntegrationEvidence(api, completion) : null;
@@ -63,6 +63,7 @@ async function main(command) {
     await save('context.json', context);
     await api(`issues/${request.issue}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
+    if (completion.labels.includes('execution-failed')) await api(`issues/${request.issue}/labels/execution-failed`, 'DELETE', undefined, true);
     if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `eligible=true\nrevision=${request.sourceRevision}\n`);
     await summary(`### ${stage} #${request.issue}\nPR #${authorization.pr}, accepted head \`${authorization.head}\`.\n\n${authorization.merge ? 'Owner explicitly authorized merge of this revision, subject to checks.' : 'No merge authorized.'}\n\nRequired checks and evidence protection verified. OpenCode will assess the retained context.`);
     return;
@@ -162,6 +163,7 @@ async function main(command) {
   const body = handoff({ status: projection.status, stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
   const effects = completionEffects(request.stage, envelope.result.status);
   if (question) effects.add.push('needs-info');
+  if (request.authorization.integrationLabel) effects.remove.push('integrate');
   await recheck();
   for (const label of effects.remove) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true); }
   if (effects.add.length) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add }); }

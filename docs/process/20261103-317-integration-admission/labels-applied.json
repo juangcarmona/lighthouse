@@ -1,0 +1,1053 @@
+{
+  "schemaVersion": 1,
+  "status": "ready",
+  "valid": true,
+  "canApply": true,
+  "capability": {
+    "id": "labels",
+    "provider": "github",
+    "version": "4"
+  },
+  "desiredHash": "55e80388e304f56fd98715b1bc3ebee12b13bd3b37e24417a7ef080ab42e1bb5",
+  "observedHash": "222ea9417170805d13629b6eec61a4eb2250516b4cda86790d54cba468307643",
+  "targetHash": "48e3329452d3e4dff680819a2e89b1de98b8511899b7fdce81b5b3c85027e35e",
+  "target": [
+    {
+      "name": "accessibility",
+      "color": "F143AB",
+      "description": "Barrier affecting people with disabilities"
+    },
+    {
+      "name": "agent-working",
+      "color": "D29922",
+      "description": "An agent is working on this issue."
+    },
+    {
+      "name": "agentic-workflows",
+      "color": "EDEDED",
+      "description": null
+    },
+    {
+      "name": "blast-radius-high",
+      "color": "0F766E",
+      "description": "Large affected surface."
+    },
+    {
+      "name": "blast-radius-low",
+      "color": "C7F0E8",
+      "description": "Small affected surface."
+    },
+    {
+      "name": "blast-radius-medium",
+      "color": "4FB3A4",
+      "description": "Medium affected surface."
+    },
+    {
+      "name": "bug",
+      "color": "D73A4A",
+      "description": "Something isn't working"
+    },
+    {
+      "name": "documentation",
+      "color": "0075CA",
+      "description": "Improvements or additions to documentation"
+    },
+    {
+      "name": "duplicate",
+      "color": "CFD3D7",
+      "description": "This issue or pull request already exists"
+    },
+    {
+      "name": "enhancement",
+      "color": "A2EEEF",
+      "description": "New feature or request"
+    },
+    {
+      "name": "execution-failed",
+      "color": "CF222E",
+      "description": "A worker attempt failed; inspect its latest outcome and recovery action."
+    },
+    {
+      "name": "future",
+      "color": "8B949E",
+      "description": "Implementation is paused."
+    },
+    {
+      "name": "good first issue",
+      "color": "7057FF",
+      "description": "Good for newcomers"
+    },
+    {
+      "name": "help wanted",
+      "color": "008672",
+      "description": "Extra attention is needed"
+    },
+    {
+      "name": "human-working",
+      "color": "A371F7",
+      "description": "Reserved for human work; agents must wait."
+    },
+    {
+      "name": "impact-high",
+      "color": "6E40C9",
+      "description": "High impact."
+    },
+    {
+      "name": "impact-low",
+      "color": "E9D5FF",
+      "description": "Low impact."
+    },
+    {
+      "name": "impact-medium",
+      "color": "A371F7",
+      "description": "Medium impact."
+    },
+    {
+      "name": "implement",
+      "color": "1F6FEB",
+      "description": "Plan and implement this issue in one PR."
+    },
+    {
+      "name": "integrate",
+      "color": "238636",
+      "description": "Assess integration after owner approval and passing checks."
+    },
+    {
+      "name": "invalid",
+      "color": "E4E669",
+      "description": "This doesn't seem right"
+    },
+    {
+      "name": "needs-info",
+      "color": "D876E3",
+      "description": "Answer the question on the issue to continue."
+    },
+    {
+      "name": "pr-draft",
+      "color": "EDEDED",
+      "description": null
+    },
+    {
+      "name": "pr-ready",
+      "color": "EDEDED",
+      "description": null
+    },
+    {
+      "name": "propose",
+      "color": "1F6FEB",
+      "description": "Ask the agent to prepare a proposal PR."
+    },
+    {
+      "name": "question",
+      "color": "D876E3",
+      "description": "Further information is requested"
+    },
+    {
+      "name": "ready",
+      "color": "238636",
+      "description": "Refinement passed."
+    },
+    {
+      "name": "refine",
+      "color": "4DA3FF",
+      "description": "Ask the agent to refine this issue."
+    },
+    {
+      "name": "review",
+      "color": "A371F7",
+      "description": "Verify delivery and record the retrospective."
+    },
+    {
+      "name": "risk-high",
+      "color": "CF222E",
+      "description": "High delivery risk."
+    },
+    {
+      "name": "risk-low",
+      "color": "FFEBE9",
+      "description": "Low delivery risk."
+    },
+    {
+      "name": "risk-medium",
+      "color": "F0883E",
+      "description": "Medium delivery risk."
+    },
+    {
+      "name": "size-l",
+      "color": "4DA3FF",
+      "description": "Large work item."
+    },
+    {
+      "name": "size-m",
+      "color": "80C2FF",
+      "description": "Medium work item."
+    },
+    {
+      "name": "size-s",
+      "color": "BFE3FF",
+      "description": "Small work item."
+    },
+    {
+      "name": "size-xl",
+      "color": "1F6FEB",
+      "description": "Extra-large work item."
+    },
+    {
+      "name": "triage",
+      "color": "8B949E",
+      "description": "Work item is being assessed; does not authorize refinement or implementation."
+    },
+    {
+      "name": "triaged",
+      "color": "4FB3A4",
+      "description": "Owner-admitted triage passed; the owner decides whether to refine."
+    },
+    {
+      "name": "urgency-asap",
+      "color": "D29922",
+      "description": "High urgency."
+    },
+    {
+      "name": "urgency-normal",
+      "color": "8B949E",
+      "description": "Normal urgency."
+    },
+    {
+      "name": "urgency-now",
+      "color": "CF222E",
+      "description": "Immediate urgency."
+    },
+    {
+      "name": "waiting-review",
+      "color": "D29922",
+      "description": "A result needs your review."
+    },
+    {
+      "name": "wip",
+      "color": "D29922",
+      "description": "Work item is actively in progress."
+    },
+    {
+      "name": "wontfix",
+      "color": "FFFFFF",
+      "description": "This will not be worked on"
+    }
+  ],
+  "drift": {
+    "status": "none",
+    "expectedHash": null,
+    "observedHash": "222ea9417170805d13629b6eec61a4eb2250516b4cda86790d54cba468307643"
+  },
+  "operationPolicy": {
+    "allowed": [
+      "create",
+      "preserve"
+    ],
+    "blocked": [
+      "modify",
+      "rename",
+      "remove",
+      "ambiguous"
+    ]
+  },
+  "blockedOperations": [
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify",
+    "modify"
+  ],
+  "changes": [
+    {
+      "name": "accessibility",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "accessibility",
+        "color": "F143AB",
+        "description": "Barrier affecting people with disabilities"
+      }
+    },
+    {
+      "name": "agent-working",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "agent-working",
+        "color": "D29922",
+        "description": "An agent is working on this issue."
+      },
+      "desired": {
+        "name": "agent-working",
+        "color": "D29922",
+        "description": "An agent holds the host reservation; wait before editing.",
+        "role": "overlay"
+      }
+    },
+    {
+      "name": "agentic-workflows",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "agentic-workflows",
+        "color": "EDEDED",
+        "description": null
+      }
+    },
+    {
+      "name": "blast-radius-high",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "blast-radius-high",
+        "color": "0F766E",
+        "description": "Large affected surface.",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "high"
+      }
+    },
+    {
+      "name": "blast-radius-low",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "blast-radius-low",
+        "color": "C7F0E8",
+        "description": "Small affected surface.",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "low"
+      }
+    },
+    {
+      "name": "blast-radius-medium",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "blast-radius-medium",
+        "color": "4FB3A4",
+        "description": "Medium affected surface.",
+        "role": "classification",
+        "dimension": "blast-radius",
+        "value": "medium"
+      }
+    },
+    {
+      "name": "bug",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "bug",
+        "color": "D73A4A",
+        "description": "Something isn't working"
+      }
+    },
+    {
+      "name": "documentation",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "documentation",
+        "color": "0075CA",
+        "description": "Improvements or additions to documentation"
+      }
+    },
+    {
+      "name": "duplicate",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "duplicate",
+        "color": "CFD3D7",
+        "description": "This issue or pull request already exists"
+      }
+    },
+    {
+      "name": "enhancement",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "enhancement",
+        "color": "A2EEEF",
+        "description": "New feature or request"
+      }
+    },
+    {
+      "name": "execution-failed",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "execution-failed",
+        "color": "CF222E",
+        "description": "A worker attempt failed; inspect its latest outcome and recovery action.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "future",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "future",
+        "color": "8B949E",
+        "description": "Implementation is paused."
+      },
+      "desired": {
+        "name": "future",
+        "color": "8B949E",
+        "description": "Pause implementation; triage, refinement and proposal remain available.",
+        "role": "overlay"
+      }
+    },
+    {
+      "name": "good first issue",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "good first issue",
+        "color": "7057FF",
+        "description": "Good for newcomers"
+      }
+    },
+    {
+      "name": "help wanted",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "help wanted",
+        "color": "008672",
+        "description": "Extra attention is needed"
+      }
+    },
+    {
+      "name": "human-working",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "human-working",
+        "color": "A371F7",
+        "description": "Reserved for human work; agents must wait."
+      },
+      "desired": {
+        "name": "human-working",
+        "color": "A371F7",
+        "description": "Human reservation: agents must stop and release their work.",
+        "role": "overlay"
+      }
+    },
+    {
+      "name": "impact-high",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "impact-high",
+        "color": "6E40C9",
+        "description": "High impact.",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "high"
+      }
+    },
+    {
+      "name": "impact-low",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "impact-low",
+        "color": "E9D5FF",
+        "description": "Low impact.",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "low"
+      }
+    },
+    {
+      "name": "impact-medium",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "impact-medium",
+        "color": "A371F7",
+        "description": "Medium impact.",
+        "role": "classification",
+        "dimension": "impact",
+        "value": "medium"
+      }
+    },
+    {
+      "name": "implement",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "implement",
+        "color": "1F6FEB",
+        "description": "Plan and implement this issue in one PR."
+      },
+      "desired": {
+        "name": "implement",
+        "color": "1F6FEB",
+        "description": "Owner request to plan and implement this issue in one PR.",
+        "role": "command"
+      }
+    },
+    {
+      "name": "integrate",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "integrate",
+        "color": "238636",
+        "description": "Assess integration after owner approval and passing checks."
+      },
+      "desired": {
+        "name": "integrate",
+        "color": "238636",
+        "description": "Owner request to assess the linked PR after current approval and passing checks; never authorizes merge.",
+        "role": "command"
+      }
+    },
+    {
+      "name": "invalid",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "invalid",
+        "color": "E4E669",
+        "description": "This doesn't seem right"
+      }
+    },
+    {
+      "name": "needs-info",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "needs-info",
+        "color": "D876E3",
+        "description": "Answer the question on the issue to continue."
+      },
+      "desired": {
+        "name": "needs-info",
+        "color": "D876E3",
+        "description": "Triage or refinement needs information; the owner answers the reported question.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "pr-draft",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "pr-draft",
+        "color": "EDEDED",
+        "description": null
+      },
+      "desired": {
+        "name": "pr-draft",
+        "color": "8B949E",
+        "description": "The linked implementation PR is a draft.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "pr-ready",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "pr-ready",
+        "color": "EDEDED",
+        "description": null
+      },
+      "desired": {
+        "name": "pr-ready",
+        "color": "238636",
+        "description": "The linked implementation PR is ready for human review.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "propose",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "propose",
+        "color": "1F6FEB",
+        "description": "Ask the agent to prepare a proposal PR."
+      },
+      "desired": {
+        "name": "propose",
+        "color": "A371F7",
+        "description": "Owner request for a separate proposal PR from current refinement evidence.",
+        "role": "command"
+      }
+    },
+    {
+      "name": "question",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "question",
+        "color": "D876E3",
+        "description": "Further information is requested"
+      }
+    },
+    {
+      "name": "ready",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "ready",
+        "color": "238636",
+        "description": "Refinement passed."
+      },
+      "desired": {
+        "name": "ready",
+        "color": "238636",
+        "description": "Refinement passed; continuation depends on installed policy and future. Never authorizes merge.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "refine",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "refine",
+        "color": "4DA3FF",
+        "description": "Ask the agent to refine this issue."
+      },
+      "desired": {
+        "name": "refine",
+        "color": "4DA3FF",
+        "description": "Owner request to refine; installed policy may continue to implementation.",
+        "role": "command"
+      }
+    },
+    {
+      "name": "review",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "review",
+        "color": "A371F7",
+        "description": "Verify delivery and record the retrospective."
+      },
+      "desired": {
+        "name": "review",
+        "color": "A371F7",
+        "description": "Work item is awaiting review.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "risk-high",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "risk-high",
+        "color": "CF222E",
+        "description": "High delivery risk.",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "high"
+      }
+    },
+    {
+      "name": "risk-low",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "risk-low",
+        "color": "FFEBE9",
+        "description": "Low delivery risk.",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "low"
+      }
+    },
+    {
+      "name": "risk-medium",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "risk-medium",
+        "color": "F0883E",
+        "description": "Medium delivery risk.",
+        "role": "classification",
+        "dimension": "risk",
+        "value": "medium"
+      }
+    },
+    {
+      "name": "size-l",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "size-l",
+        "color": "4DA3FF",
+        "description": "Large work item.",
+        "role": "classification",
+        "dimension": "size",
+        "value": "L"
+      }
+    },
+    {
+      "name": "size-m",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "size-m",
+        "color": "80C2FF",
+        "description": "Medium work item.",
+        "role": "classification",
+        "dimension": "size",
+        "value": "M"
+      }
+    },
+    {
+      "name": "size-s",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "size-s",
+        "color": "BFE3FF",
+        "description": "Small work item.",
+        "role": "classification",
+        "dimension": "size",
+        "value": "S"
+      }
+    },
+    {
+      "name": "size-xl",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "size-xl",
+        "color": "1F6FEB",
+        "description": "Extra-large work item.",
+        "role": "classification",
+        "dimension": "size",
+        "value": "XL"
+      }
+    },
+    {
+      "name": "triage",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "triage",
+        "color": "8B949E",
+        "description": "Work item is being assessed; does not authorize refinement or implementation."
+      },
+      "desired": {
+        "name": "triage",
+        "color": "8B949E",
+        "description": "Owner request to assess this issue; publication stops at triaged.",
+        "role": "command"
+      }
+    },
+    {
+      "name": "triaged",
+      "status": "unchanged",
+      "operation": "preserve",
+      "blockedOperations": [],
+      "existing": {
+        "name": "triaged",
+        "color": "4FB3A4",
+        "description": "Owner-admitted triage passed; the owner decides whether to refine."
+      },
+      "desired": {
+        "name": "triaged",
+        "color": "4FB3A4",
+        "description": "Owner-admitted triage passed; the owner decides whether to refine.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "urgency-asap",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "urgency-asap",
+        "color": "D29922",
+        "description": "High urgency.",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "asap"
+      }
+    },
+    {
+      "name": "urgency-normal",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "urgency-normal",
+        "color": "8B949E",
+        "description": "Normal urgency.",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "normal"
+      }
+    },
+    {
+      "name": "urgency-now",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "urgency-now",
+        "color": "CF222E",
+        "description": "Immediate urgency.",
+        "role": "classification",
+        "dimension": "urgency",
+        "value": "now"
+      }
+    },
+    {
+      "name": "waiting-review",
+      "status": "customized",
+      "operation": "preserve",
+      "blockedOperations": [
+        "modify"
+      ],
+      "existing": {
+        "name": "waiting-review",
+        "color": "D29922",
+        "description": "A result needs your review."
+      },
+      "desired": {
+        "name": "waiting-review",
+        "color": "D29922",
+        "description": "Inspect the result or PR for feedback or a pending decision.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "wip",
+      "status": "missing",
+      "operation": "create",
+      "desired": {
+        "name": "wip",
+        "color": "D29922",
+        "description": "Work item is actively in progress.",
+        "role": "state"
+      }
+    },
+    {
+      "name": "wontfix",
+      "status": "preserved",
+      "operation": "preserve",
+      "existing": {
+        "name": "wontfix",
+        "color": "FFFFFF",
+        "description": "This will not be worked on"
+      }
+    }
+  ],
+  "operations": [
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "blast-radius-high",
+      "color": "0F766E",
+      "description": "Large affected surface."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "blast-radius-low",
+      "color": "C7F0E8",
+      "description": "Small affected surface."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "blast-radius-medium",
+      "color": "4FB3A4",
+      "description": "Medium affected surface."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "execution-failed",
+      "color": "CF222E",
+      "description": "A worker attempt failed; inspect its latest outcome and recovery action."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "impact-high",
+      "color": "6E40C9",
+      "description": "High impact."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "impact-low",
+      "color": "E9D5FF",
+      "description": "Low impact."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "impact-medium",
+      "color": "A371F7",
+      "description": "Medium impact."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "risk-high",
+      "color": "CF222E",
+      "description": "High delivery risk."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "risk-low",
+      "color": "FFEBE9",
+      "description": "Low delivery risk."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "risk-medium",
+      "color": "F0883E",
+      "description": "Medium delivery risk."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "size-l",
+      "color": "4DA3FF",
+      "description": "Large work item."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "size-m",
+      "color": "80C2FF",
+      "description": "Medium work item."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "size-s",
+      "color": "BFE3FF",
+      "description": "Small work item."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "size-xl",
+      "color": "1F6FEB",
+      "description": "Extra-large work item."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "urgency-asap",
+      "color": "D29922",
+      "description": "High urgency."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "urgency-normal",
+      "color": "8B949E",
+      "description": "Normal urgency."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "urgency-now",
+      "color": "CF222E",
+      "description": "Immediate urgency."
+    },
+    {
+      "type": "create-label",
+      "kind": "create",
+      "name": "wip",
+      "color": "D29922",
+      "description": "Work item is actively in progress."
+    }
+  ],
+  "errors": [],
+  "record": {
+    "schemaVersion": 1,
+    "capability": {
+      "id": "labels",
+      "provider": "github",
+      "version": "4"
+    },
+    "desiredHash": "55e80388e304f56fd98715b1bc3ebee12b13bd3b37e24417a7ef080ab42e1bb5",
+    "observedHash": "48e3329452d3e4dff680819a2e89b1de98b8511899b7fdce81b5b3c85027e35e",
+    "targetHash": "48e3329452d3e4dff680819a2e89b1de98b8511899b7fdce81b5b3c85027e35e",
+    "operations": [],
+    "blockedOperations": [
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify",
+      "modify"
+    ],
+    "verified": true
+  },
+  "applied": true
+}

@@ -25,7 +25,7 @@ test('catalog requests match native label routing and preserve existing adopter 
   const catalog = JSON.parse(await readFile(new URL('capabilities.json', packageRoot), 'utf8'));
   const declaration = declarationFromCatalog(catalog);
   const labels = declaration.capabilities[0].configuration.labels;
-  assert.deepEqual(labels.filter(x => x.role === 'command').map(x => x.name).sort(), ['implement', 'propose', 'refine', 'triage']);
+  assert.deepEqual(labels.filter(x => x.role === 'command').map(x => x.name).sort(), ['implement', 'integrate', 'propose', 'refine', 'triage']);
   const issue = { number: 179, state: 'open', labels: [] };
   for (const label of labels) {
     const event = { action: 'labeled', issue, label };
