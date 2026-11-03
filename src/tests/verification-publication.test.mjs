@@ -85,6 +85,8 @@ test('production publisher renews same-head completion, preserves blockers and r
       assert.equal(proof.head, f.head);
       assert.equal(proof.complete, scenario === 'passed' || scenario === 'lost-response');
       assert.equal(proof.run, 200);
+      const notice = s.prComments.find(c => c.body.includes('lighthouse-review:'));
+      assert.match(notice.body, scenario === 'passed' || scenario === 'lost-response' ? /Queued/ : /Blocked/);
       const writes = s.calls.filter(c => c.method !== 'GET').length;
       assert.equal(f.run().status, 0);
       assert.equal((await f.state()).calls.filter(c => c.method !== 'GET').length, writes);
