@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.4
+
+### Patch Changes
+
+- 8959ae5: # Feedback correction handoffs
+
+  Keep correction questions on the existing PR and treat delayed, already-handled feedback as a successful no-op.
+
 ## 0.20.3
 
 ### Patch Changes
