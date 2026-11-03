@@ -4,8 +4,8 @@
 
 - [x] Reproduce the different-UID collection failure and inspect current environment/evidence boundaries.
 - [x] Implement legacy prerequisite checks, scoped collection ownership, atomic evidence export, scratch settings and phase-aware candidate recovery.
-- [ ] Cover positive and negative cases with focused tests and actual Docker UIDs.
-- [ ] Update package guidance, managed projections, release note and issue-linked native acceptance workflow.
+- [x] Cover positive and negative cases with focused tests and actual Docker UIDs.
+- [x] Update package guidance, managed projections, release note and issue-linked native acceptance workflow.
 - [ ] Run repository verification, provider/citation checks and native Actions acceptance; retain results and publish the reviewable PR.
 
 <!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d" -->

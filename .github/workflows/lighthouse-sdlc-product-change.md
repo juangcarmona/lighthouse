@@ -65,7 +65,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 2dac30b12fc801f9a1af6e7710f95ba77f4312f2
+      ref: 028c36b03e7566ac59b242b26595ee0b5298bca4
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized product request
@@ -89,6 +89,7 @@ post-steps:
       path: |
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/engine-error.json
       if-no-files-found: error
       retention-days: 14
 jobs:
@@ -110,7 +111,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 2dac30b12fc801f9a1af6e7710f95ba77f4312f2
+          ref: 028c36b03e7566ac59b242b26595ee0b5298bca4
           persist-credentials: false
       - name: Check out the adopter's current product source
         uses: actions/checkout@v5
@@ -178,7 +179,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 2dac30b12fc801f9a1af6e7710f95ba77f4312f2
+          ref: 028c36b03e7566ac59b242b26595ee0b5298bca4
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
