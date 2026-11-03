@@ -27,3 +27,5 @@ Run installation, build, verification and browser commands sequentially with `no
 When the shell tool backgrounds a command, poll that receipt until `state` is `completed` or `cancelled`. A tool response or a quiet log does not establish command completion. Read `exitCode` before editing the workspace or starting the next command. To interrupt an attempt, run `node /harness/src/managed-command.mjs stop /output/evidence/commands` and wait for its terminal receipt before retrying with a new ID.
 
 Keep browser workers within the container budget. Start and stop a preview server inside the same managed command as its browser check; the wrapper cleans up that command's background children. Store screenshots and reports under `/output/evidence/` so they survive workspace cleanup.
+
+Use `/tmp` for temporary consumers, dependency installs and caches. The host sets scratch/cache variables and disables Node compile caching; `/output/evidence/` contains only bounded final logs, command receipts, screenshots and reports. The host collects that tree after the worker exits. An unreadable or unsafe required member blocks collection and preserves the candidate for recovery.

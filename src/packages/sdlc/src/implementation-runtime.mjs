@@ -1,4 +1,4 @@
-import { chmod, mkdir, writeFile, readdir, lstat, copyFile } from 'node:fs/promises';
+import { chmod, mkdir, writeFile, readdir, lstat, copyFile, mkdtemp, rename, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { changesDigest } from './implementation.mjs';
@@ -39,6 +39,7 @@ export async function prepareImplementationWorkspace(workspace, config, issue) {
 }
 export async function copyEvidence(source, destination) {
   let bytes = 0, count = 0;
+  const files = [];
   async function visit(dir, relative = '') {
     for (const item of await readdir(dir, { withFileTypes: true })) {
       const path = join(dir, item.name), name = join(relative, item.name), stat = await lstat(path);
@@ -48,7 +49,7 @@ export async function copyEvidence(source, destination) {
         bytes += stat.size; count++;
         if (count > 200) throw Error(`Evidence exceeds 200 files (${count} observed)`);
         if (bytes > 64 * 1024 * 1024) throw Error(`Evidence exceeds 64 MiB (${bytes} bytes observed)`);
-        await mkdir(dirname(join(destination, name)), { recursive: true }); await copyFile(path, join(destination, name));
+        files.push({ path, name });
       }
     }
   }
@@ -57,7 +58,19 @@ export async function copyEvidence(source, destination) {
     if (stat.isSymbolicLink() || !stat.isDirectory()) throw Error('Unsafe evidence root');
   } catch (error) { if (error.code === 'ENOENT') return; throw error; }
   await visit(source);
+  await mkdir(dirname(destination), { recursive: true });
+  const staging = await mkdtemp(join(dirname(destination), '.evidence-'));
+  try {
+    for (const { path, name } of files) {
+      await mkdir(dirname(join(staging, name)), { recursive: true });
+      await copyFile(path, join(staging, name));
+    }
+    await rename(staging, destination);
+  } finally { await rm(staging, { recursive: true, force: true }); }
 }
+
+// Scratch belongs to the disposable container, never the retained evidence tree.
+export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
   await prepareImplementationWorkspace(workspace, config, request.issue);
   const limits = executionLimits(config);
@@ -66,7 +79,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
-  const runtime = await startEnvironment({ selected, name: `${name}-validation`, uid: config.uid });
+  const runtime = await startEnvironment({ selected, image: config.image, commands: request.implementation.policy.checks, agent: false, name: `${name}-validation`, uid: config.uid });
   const originalRedact = redact;
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
@@ -76,7 +89,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
       let log = '', pending = '';
-      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/diagnostics', `check-${i + 1}`, '--', ...command];
+      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/diagnostics', `check-${i + 1}`, '--', ...command];
       let reason = null;
       const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });

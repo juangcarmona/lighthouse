@@ -88,6 +88,7 @@ post-steps:
       path: |
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/engine-error.json
       if-no-files-found: error
       retention-days: 14
   - name: Preserve OpenCode diagnostic events

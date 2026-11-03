@@ -1,0 +1,50 @@
+✔ repository declaration rejects unsupported profiles, services and extra control fields (2.215922ms)
+✔ selection is read at source revision and is shared across issues (0.840697ms)
+✔ prerequisites run without source, credentials or Docker mounts; services are run isolated and cleaned (1.008607ms)
+✔ missing SDK stops before any database or agent and hides Docker diagnostics (0.450296ms)
+✔ missing base tools stop preflight before any test service starts (0.539282ms)
+✔ legacy images preflight declared executables without source or credentials (0.506211ms)
+✔ incompatible tool versions stop preflight before service provisioning (0.431584ms)
+✔ an incompatible PostgreSQL version stops execution and cleans the service (0.3038ms)
+✔ service failures and readiness timeout remove attempted containers and networks (1.082078ms)
+✔ agent and validation phases have different networks and fresh database credentials (0.404004ms)
+✔ cleanup failures are explicit and can be retried without exposing connection strings (0.265382ms)
+✔ base profile needs no SDK or service and legacy selection adds no arguments (0.211925ms)
+✔ image build inputs are immutable and both recipes use fixed package and SDK inputs (6.699118ms)
+✔ declared environment check receipts require matching profile and immutable provenance (0.942105ms)
+✔ browser preview evidence fits while byte and file budgets remain bounded (52.683157ms)
+✔ an unreadable final member never publishes a partial evidence directory (5.026581ms)
+✔ evidence rejects symbolic links at the root and inside the collection (2.098807ms)
+✔ candidate Git metadata passes the baseline branch guard without copying repository hooks (43.216732ms)
+✔ workspace preparation rejects links before changing ownership (2.303827ms)
+Host check 1: npm ci --ignore-scripts
+[Check] 
+[Check] added 1 package, and audited 3 packages in 268ms
+[Check] 
+[Check] found 0 vulnerabilities
+Host check 1: passed
+Host check 2: ./node_modules/.bin/workspace-tool
+[Check] workspace tool ran
+Host check 2: passed
+Host check 3: node -e const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["branch","--show-current"],{encoding:"utf8"}).trim(),"fix/53-validation"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote"],{encoding:"utf8"}).trim(),""); assert.equal(require("node:fs").existsSync(".git/hooks"),false);
+Host check 3: passed
+Host check 4: node -e require("node:fs").writeFileSync("/tmp/tool", "#!/bin/sh\nexit 0\n", {mode:0o755}); require("node:child_process").execFileSync("/tmp/tool");
+Host check 4: passed
+✔ container checks install workspace bins and execute temporary tools (4077.763556ms)
+✔ ownership recovery traverses private build directories created by the engine UID (887.478447ms)
+▶ native worker exports private evidence and preserves candidates on collection failures
+  ✔ success (4349.397811ms)
+  ✔ unreadable (3886.29791ms)
+  ✔ symlink (3917.738373ms)
+  ✔ oversized (3952.28384ms)
+  ✔ missing-tool (2199.285313ms)
+  ✔ engine-failed (3690.235814ms)
+✔ native worker exports private evidence and preserves candidates on collection failures (23122.476605ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23251.583177

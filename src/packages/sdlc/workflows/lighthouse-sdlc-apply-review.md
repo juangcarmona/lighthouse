@@ -91,6 +91,7 @@ post-steps:
       path: |
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/engine-error.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/changes.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/checks.json
       if-no-files-found: error

@@ -29,10 +29,11 @@ export function redactEnvironmentLog(runtime, text) {
   return text;
 }
 
-export async function startEnvironment({ selected, name, uid, run = docker, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), warn = message => console.error(message) }) {
-  if (!selected) return { env: [], cleanup() {} };
-  if (!/^lighthouse-[a-z0-9-]{1,180}$/.test(name)) throw Error('Invalid environment run name');
-  const network = selected.postgresImage ? `${name}-network` : null;
+export async function startEnvironment({ selected, image, commands = [], agent = true, name, uid, run = docker, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), warn = message => console.error(message) }) {
+  if (!selected && !image) return { env: [], cleanup() {} };
+  const preflight = selected ?? { profile: 'legacy', image };
+  if (selected && !/^lighthouse-[a-z0-9-]{1,180}$/.test(name)) throw Error('Invalid environment run name');
+  const network = selected?.postgresImage ? `${name}-network` : null;
   const database = `${name}-postgres`;
   let networkAttempted = false, databaseAttempted = false;
   const cleanup = () => {
@@ -45,14 +46,20 @@ export async function startEnvironment({ selected, name, uid, run = docker, slee
   const runtime = { network, env: ['PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium', 'CHROMIUM_PATH=/usr/bin/chromium', 'DOTNET_CLI_HOME=/tmp/dotnet', 'NUGET_PACKAGES=/tmp/nuget-packages', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1', 'DOTNET_NOLOGO=1', 'DOTNET_CLI_TELEMETRY_OPTOUT=1'], cleanup };
   const probe = (label, command) => {
     try {
-      return run(['run', '--rm', '--network', 'none', '--user', `${uid}:${uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=128m', '--env', 'HOME=/tmp', '--env', 'DOTNET_CLI_HOME=/tmp/dotnet', '--env', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1', '--entrypoint', command[0], selected.image, ...command.slice(1)]).trim();
-    } catch { throw Error(`Environment ${selected.profile} prerequisite failed: ${label}; rebuild and repin the selected image`); }
+      return run(['run', '--rm', '--network', 'none', '--user', `${uid}:${uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=128m', '--env', 'HOME=/tmp', '--env', 'DOTNET_CLI_HOME=/tmp/dotnet', '--env', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1', '--entrypoint', command[0], preflight.image, ...command.slice(1)]).trim();
+    } catch { throw Error(`Environment ${preflight.profile} prerequisite failed: ${label}; rebuild and repin the selected image`); }
   };
   try {
     if (!/^v24\./.test(probe('Node.js 24', ['node', '--version']))) throw Error('Environment requires Node.js 24');
-    probe('npm', ['npm', '--version']); probe('Git', ['git', '--version']); probe('Chromium', ['chromium', '--version']);
-    if (probe('OpenCode 2.1.0', ['opencode', '--version']) !== 'opencode v2.1.0') throw Error('Environment requires OpenCode 2.1.0');
-    if (selected.profile === 'dotnet' && probe('.NET SDK 10.0.100', ['dotnet', '--version']) !== '10.0.100') throw Error('Environment requires .NET SDK 10.0.100');
+    if (selected) { probe('npm', ['npm', '--version']); probe('Git', ['git', '--version']); probe('Chromium', ['chromium', '--version']); }
+    if ((selected || agent) && probe('OpenCode 2.1.0', ['opencode', '--version']) !== 'opencode v2.1.0') throw Error('Environment requires OpenCode 2.1.0');
+    if (selected?.profile === 'dotnet' && probe('.NET SDK 10.0.100', ['dotnet', '--version']) !== '10.0.100') throw Error('Environment requires .NET SDK 10.0.100');
+    // Check image executables without running repository commands before their workspace exists.
+    const executables = new Set(commands.flatMap(command => command[0] === 'env' ? ['env', command.slice(1).find(arg => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(arg))] : [command[0]]));
+    for (const executable of executables) {
+      if (!executable || executable.startsWith('-') || executable.includes('/') && !executable.startsWith('/') || /^\/(workspace|harness)\//.test(executable)) continue;
+      probe(`executable ${executable}`, ['node', '-e', 'const fs=require("node:fs"),p=require("node:path"),name=process.argv[1],paths=p.isAbsolute(name)?[name]:(process.env.PATH||"").split(p.delimiter).map(dir=>p.join(dir,name));if(!paths.some(file=>{try{fs.accessSync(file,fs.constants.X_OK);return fs.statSync(file).isFile()}catch{return false}}))process.exit(1)', executable]);
+    }
     if (network) {
       networkAttempted = true; run(['network', 'create', network]);
       const password = randomBytes(24).toString('hex');
@@ -73,6 +80,6 @@ export async function startEnvironment({ selected, name, uid, run = docker, slee
     cleanup();
     // Docker diagnostics can include connection credentials; expose only fixed messages.
     if (/^(Environment |PostgreSQL )/.test(error.message)) throw error;
-    throw Error(`Environment ${selected.profile} provisioning failed before execution; inspect host service availability`);
+    throw Error(`Environment ${preflight.profile} provisioning failed before execution; inspect host service availability`);
   }
 }
