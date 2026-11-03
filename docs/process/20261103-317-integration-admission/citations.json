@@ -1,0 +1,190 @@
+{
+  "schema": "product-definition-as-code/citations-provider/v1alpha1",
+  "provider": "openspec",
+  "integrationVersion": "0.23.0",
+  "root": "openspec",
+  "includeArchived": false,
+  "documents": [
+    {
+      "path": "openspec/changes/issue-317-proposal/proposal.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/design.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/tasks.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    }
+  ],
+  "citations": [
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 6,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 8,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 26,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 27,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "totalDocuments": 4,
+    "currentDocuments": 4,
+    "bound": 4,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 16,
+    "current": 16,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

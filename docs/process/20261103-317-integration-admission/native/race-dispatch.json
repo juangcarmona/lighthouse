@@ -1,0 +1,13 @@
+{
+  "comment": 6607997453,
+  "receipt": {
+    "schemaVersion": 1,
+    "stage": "integrate",
+    "status": "requested",
+    "id": "2a2470e2f2f5d427755c6a29032eb02de50ae69a70896d3f0de2453cf085d45c",
+    "digest": "d04efe505587c8c65033338fb66b0b512b3b555dba3807ac38279fdbe64e729d",
+    "routerRunId": "41665047194",
+    "routerAttempt": 1,
+    "workerRunId": null
+  }
+}

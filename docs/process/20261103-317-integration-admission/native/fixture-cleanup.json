@@ -1,0 +1,16 @@
+{
+  "issue": {
+    "closed_at": "2026-11-03T16:07:33Z",
+    "issue": 329,
+    "labels": [],
+    "state": "closed"
+  },
+  "pullRequest": {
+    "closed_at": "2026-11-03T16:07:31Z",
+    "head": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+    "merged": false,
+    "pr": 332,
+    "state": "closed"
+  },
+  "branchPreserved": true
+}

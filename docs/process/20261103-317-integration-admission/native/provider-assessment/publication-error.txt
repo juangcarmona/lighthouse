@@ -1,0 +1,1 @@
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-03T15:58:44.6124806Z ##[error]GitHub POST issues/332/comments: 502

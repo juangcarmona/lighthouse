@@ -1,0 +1,77 @@
+{
+  "schema": "product-definition-as-code/citations-provider/v1alpha1",
+  "provider": "openspec",
+  "integrationVersion": "0.23.0",
+  "root": "openspec",
+  "includeArchived": false,
+  "documents": [
+    {
+      "path": "openspec/changes/issue-329-proposal/proposal.md",
+      "change": "issue-329-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-329-proposal/design.md",
+      "change": "issue-329-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-329-proposal/tasks.md",
+      "change": "issue-329-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    }
+  ],
+  "citations": [
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-329-proposal/proposal.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-329-proposal/design.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-329-proposal/tasks.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "totalDocuments": 3,
+    "currentDocuments": 3,
+    "bound": 3,
+    "exempt": 0,
+    "unclassified": 0,
+    "totalCitations": 3,
+    "current": 3,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

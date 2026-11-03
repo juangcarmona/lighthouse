@@ -161,9 +161,8 @@ async function main(command) {
   const question = envelope.result.status === 'blocked' ? pendingQuestion(proposedQuestion) : null;
   const projection = resultHandoffState({ status: envelope.result.status, stage: request.stage, question });
   const body = handoff({ status: projection.status, stage: request.stage, happened: envelope.effect.body, action: question ? `Owner: ${question} Reply on the issue.` : envelope.result.status === 'blocked' ? visibleNextAction(envelope.result.nextAction) : 'None.', next: question ? 'The workflow maintainer must check the answer and request an authorized continuation.' : envelope.result.status === 'blocked' ? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : request.stage === 'integrate' && receipt.state === 'merged' ? 'The final review follows after the required CI passes.' : 'Any continuation follows the configured authorization.', link: `[Report and retrospective](${publication.url})`, details: `[Execution](${request.runUrl})\n\n${marker}` });
-  const effects = completionEffects(request.stage, envelope.result.status);
+  const effects = completionEffects(request.stage, envelope.result.status, !!request.authorization.integrationLabel);
   if (question) effects.add.push('needs-info');
-  if (request.authorization.integrationLabel) effects.remove.push('integrate');
   await recheck();
   for (const label of effects.remove) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels/${label}`, 'DELETE', undefined, true); }
   if (effects.add.length) { await assertCurrentCompletionAttempt(api, repository, request.issue, request.dispatch, env.GITHUB_RUN_ID); await api(`issues/${request.issue}/labels`, 'POST', { labels: effects.add }); }

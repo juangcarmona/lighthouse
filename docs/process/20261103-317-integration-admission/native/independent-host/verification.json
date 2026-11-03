@@ -1,0 +1,40 @@
+{
+  "kind": "owner-operated-independent-host-verification",
+  "repository": "juangcarmona/lighthouse",
+  "issue": 329,
+  "pullRequest": 332,
+  "sourceRevision": "46fb22c93b574b67c5619fcb6d6e86e4acd94fc3",
+  "verifiedAt": "2026-11-03T16:00:18.822174+00:00",
+  "node": "v24.21.0",
+  "openspecVersion": "1.15.0",
+  "cleanSourceBeforeAndAfter": true,
+  "commands": [
+    {
+      "command": "npm ci",
+      "exitCode": 0,
+      "receipt": "independent-install.log"
+    },
+    {
+      "command": "npm run verify",
+      "exitCode": 0,
+      "receipt": "independent-verify.log",
+      "tests": {
+        "total": 548,
+        "passed": 541,
+        "failed": 0,
+        "optionalSkipped": 7
+      }
+    },
+    {
+      "command": "npx --no-install openspec validate issue-329-proposal --strict",
+      "exitCode": 0,
+      "receipt": "independent-openspec.log"
+    }
+  ],
+  "artifactSha256": {
+    "independent-install.log": "f01f73a818d9f11a1389136e92061e6ea79cabd42a1fd79dd1d0dbaacb870105",
+    "independent-verify.log": "c0366e02ad0bec6deb990127f0e6611d0f3a9eb69d0be0fb40c790db1e03fec6",
+    "independent-openspec.log": "44213d5ef0022359553acdc12e3102e19b32d42820ce5372df453b907231f1b7"
+  },
+  "authority": "Executed independently by the owner in a clean detached checkout of the published candidate; not an implementation-engine claim or GitHub Actions run. Citation verification is recorded by the separate ProductShape status."
+}

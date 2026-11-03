@@ -1,0 +1,1 @@
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-03T15:34:23.8205474Z ##[error]Dispatched owner intent changed

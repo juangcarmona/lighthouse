@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, checkCommit, evidenceProtection, postMergeRuns, requiredPolicy } from '../packages/sdlc/src/completion.mjs';
+import { completionEffects, authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, checkCommit, evidenceProtection, postMergeRuns, requiredPolicy } from '../packages/sdlc/src/completion.mjs';
 import { validatePublishable, publishProcessBundle, completionBundle } from '../packages/sdlc/src/process-publication.mjs';
 import { validateGithubProfile } from '../packages/sdlc/src/github-profile.mjs';
 const head = 'a'.repeat(40), base = 'b'.repeat(40), merged = 'c'.repeat(40);
@@ -342,4 +342,10 @@ test('rejected merge preflight never attempts or recovers a merge', async () => 
   await assert.rejects(mergeAccepted(api, observation, async () => observation,
     async () => { throw Error('Owner paused delivery'); }), /Owner paused/);
   assert.deepEqual(calls, []);
+});
+
+
+test('label assessment declares the same request consumption for the agent and publisher', () => {
+  for (const status of ['passed', 'blocked']) assert.deepEqual(completionEffects('integrate', status, true), { add: [], remove: ['integrate'], closeIssue: false });
+  assert.deepEqual(completionEffects('integrate', 'passed'), { add: [], remove: [], closeIssue: false });
 });
