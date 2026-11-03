@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.1
+
+### Patch Changes
+
+- 4f31e2b: # Trusted same-PR verification
+
+  Allow authenticated owner corrections to renew completion evidence on an unchanged implementation PR after independent checks pass. Preserve blocked outcomes and reject initial empty implementations.
+
 ## 0.20.0
 
 ### Minor Changes
