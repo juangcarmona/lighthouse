@@ -1,0 +1,22 @@
+## What went well
+- The delivery kept one typed memory contract, separate retention/read authority and explicit opt-in SQLite ownership. The acceptance mapping and inspected tests cover cross-process source-bound recall, project isolation, exclusion and disabled behavior (acceptance README:13–30; memory.test.mjs:33–180).
+- Exact-head verification and the host-verified integration receipt preserve revision boundaries. Post-merge repository CI succeeded on the actual merged revision (integration:41615708601:1; github-check:125847221045). The durable document distinguishes successful verification from publication.
+
+## What went wrong
+- Evidence collection failed after engine success in run 41591961607; a temporary consumer workspace was placed under retained evidence (acceptance README:34; owner comment 6599338503). This is a process failure, not a failing memory check.
+- Run 41606630148 passed independent checks but hit the zero-diff publication limitation (README:7–9,36; owner comment 6599787141).
+- Two general architecture statements remain refinement-only despite later-stage support (building-block view:85; runtime view:88). Their introduction history is unknown. No scoped-memory implementation defect was established. These are attempts within one issue, not demonstrated cross-issue recurrence.
+
+## Start doing
+- Execution adapter maintainer: keep disposable work separate from retained evidence and retain only bounded, collector-readable final reports, as the recorded recovery requires.
+- Delivery maintainer: preserve the distinction between worker completion, independent verification, exact-head publication and actual integration in recovery reports.
+- Architecture maintainer: compare touched workflow overviews with the package guide and installed router while keeping host-specific limits explicit.
+
+## Stop doing
+- Do not infer published completion from engine exit status or green checks alone, or relabel historical results as current-head evidence.
+- Do not present this optional library adapter as deployed worker memory or the fixture eligibility predicate as a general privacy classifier.
+
+## Improvement candidates
+- **C1 — evidence collection (F3). Owner: execution adapter maintainer, juangcarmona.** Observed failure: collector EACCES after successful engine exit in run 41591961607 (README:34; owner comment 6599338503). Smallest useful guard: an explicit final-evidence allowlist plus a collector-readability preflight, with disposable consumer work kept outside the retained tree. Before checking a correction, reproduce the collection failure using a synthetic unreadable disposable artifact in an isolated adapter fixture, not operator storage. Then prove only bounded readable final artifacts are collected and unreadable input reports a collection error rather than successful publication. This guard has not been implemented or regression-proven here.
+- **C2 — verified zero-diff outcome (F4). Owner: SDLC publisher maintainer, juangcarmona.** Observed failure: run 41606630148 verified unchanged source but could not publish its correction (README:7–9,36; owner comment 6599787141). Smallest useful guard: detect an empty candidate diff before invoking changed-candidate publication and report an explicit verification-only outcome, without fabricating a receipt or making cosmetic changes. Reproduce first with a same-head, empty-diff fixture that passes independent checks; after correction, prove honest verification-only reporting and unchanged exact-head completion/approval requirements. Any supported no-change publication route needs its own reviewed policy and regression proof.
+- **C3 — affected-guidance consistency (F5). Owner: architecture documentation maintainer, juangcarmona.** Observed failure: refinement-only statements in building-block view:85 and runtime view:88 conflict with SDLC README:13–29,61–71 and installed router:26–31,74–77. Smallest useful guard: an affected-section consistency review against shipped stage/installer capabilities, not a new universal workflow policy. Reproduce by comparing those statements with the current later-stage entries; after a separately reviewed ArcShape-owned correction, check that default versus opt-in stages and target versus current behavior are explicit and run the existing documentation/architecture checks. No source or provider-owned guidance was changed here.
