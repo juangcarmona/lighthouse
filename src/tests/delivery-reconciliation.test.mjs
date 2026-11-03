@@ -58,6 +58,13 @@ test('different events for the same grant reuse both an active and completed aut
   await assert.rejects(recordDispatch(f.api, repository, manual), /identity changed/);
 });
 
+test('changed intent cannot overlap active work and edited intent metadata is rejected', async () => {
+  const f = fixture(); f.run.status = 'in_progress';
+  await assert.rejects(recordDispatch(f.api, repository, nextRequest(f.request, { taskDigest: 'f'.repeat(64) })), /pending or running/);
+  await assert.rejects(recordDispatch(f.api, repository, { ...nextRequest(f.request), sourceRevision: head }), /Invalid dispatch intent binding/);
+  assert.equal(f.writes.length, 0);
+});
+
 test('a lost dispatch response remains unconfirmed; neither equivalent nor changed events resend it', async () => {
   const f = fixture(); f.receipt.workerRunId = null; f.receipt.status = 'requested'; f.comment.body = dispatchReceiptBody(repository, f.receipt);
   await assert.rejects(sendDispatch(async (...args) => { const result = await f.api(...args); if (args[0].endsWith('/dispatches')) throw Error('Response lost after acceptance'); return result; }, repository, f.request, 30), /Response lost/);
