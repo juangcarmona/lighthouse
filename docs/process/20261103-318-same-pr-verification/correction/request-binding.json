@@ -1,0 +1,81 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "issue": 324,
+  "runId": "c53eb68c3a8c1e9e39aa7b4c5a83454bc096747f23c1bb7156d4a214a5ad9b96",
+  "workflowRunId": "41651165346",
+  "sourceRevision": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+  "baseRevision": "d15adb61e4bbe6183a7f40edde0acd4b0a86fca2",
+  "workflowRevision": "d15adb61e4bbe6183a7f40edde0acd4b0a86fca2",
+  "taskDigest": "3f96070c2af53e47d9a1bae2f750de66f0bdb87bc623ff2bda42ede40d5c0d41",
+  "implementation": {
+    "policy": {
+      "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
+      "paths": [
+        "*"
+      ],
+      "reviewRequired": false,
+      "checks": [
+        [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        [
+          "env",
+          "GITHUB_ACTIONS=true",
+          "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+          "npm",
+          "run",
+          "verify"
+        ],
+        [
+          "npx",
+          "--yes",
+          "--package=@fission-ai/openspec@1.15.0",
+          "openspec",
+          "validate",
+          "issue-324-proposal",
+          "--strict",
+          "--no-interactive"
+        ]
+      ]
+    },
+    "proposal": {
+      "root": "openspec/changes/issue-324-proposal"
+    }
+  },
+  "implementationReview": {
+    "number": 326,
+    "issue": 324,
+    "head": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+    "branch": "lighthouse/implement-324-d1f02d1629b6",
+    "base": "main",
+    "url": "https://github.com/juangcarmona/lighthouse/pull/326",
+    "implementationIdentity": "d1f02d1629b6e8598b673d584834f24222b5bee24919b980d1af18a16677bc14",
+    "kind": "comment",
+    "id": 6606012975,
+    "path": "issues/comments/6606012975",
+    "feedback": "Owner correction for #318 acceptance: revalidate the existing completed candidate at head `32807ba9da9cb0b5469bf9dfef86f2141d6eb061` without source changes.\n\nPreserve every tracked byte, including the fixture and completed OpenSpec plan. There is no requested source correction: do not regenerate planning, create a dummy edit or change Git history. The initial implementation and its independent checks passed in run 41647935705. Those results provide context; the host must run all currently configured independent checks again for this correction before publishing a fresh completion receipt on this same PR and head.\n\nInside the agent, inspect the existing candidate and return its assessment for fresh host validation. Avoid duplicating the dependency installation and full verification that the independent host performs. Do not claim fresh checks before they execute, and preserve any actual blocker or missing decision. This disposable candidate must remain unmerged.",
+    "feedbackDigest": "0b984d37b25f4ca2f00652088d8ff73cb12a4fd705c733b051da5fe011967376",
+    "receipt": "<!-- lighthouse-review:comment:6606012975:0b984d37b25f4ca2f00652088d8ff73cb12a4fd705c733b051da5fe011967376 -->",
+    "feedbackUrl": "https://github.com/juangcarmona/lighthouse/pull/326#issuecomment-6606012975",
+    "approved": false,
+    "handled": false,
+    "thread": [
+      {
+        "id": 6606012975,
+        "body": "Owner correction for #318 acceptance: revalidate the existing completed candidate at head `32807ba9da9cb0b5469bf9dfef86f2141d6eb061` without source changes.\n\nPreserve every tracked byte, including the fixture and completed OpenSpec plan. There is no requested source correction: do not regenerate planning, create a dummy edit or change Git history. The initial implementation and its independent checks passed in run 41647935705. Those results provide context; the host must run all currently configured independent checks again for this correction before publishing a fresh completion receipt on this same PR and head.\n\nInside the agent, inspect the existing candidate and return its assessment for fresh host validation. Avoid duplicating the dependency installation and full verification that the independent host performs. Do not claim fresh checks before they execute, and preserve any actual blocker or missing decision. This disposable candidate must remain unmerged.",
+        "url": "https://github.com/juangcarmona/lighthouse/pull/326#issuecomment-6606012975",
+        "updated": "2026-11-03T14:10:19Z"
+      }
+    ],
+    "threadDigest": "1a31cae2987934be2dfac48589c27e82ffe76f9f83b36c55d98e8c9e788c094a"
+  },
+  "dispatch": {
+    "commentId": 6606027251,
+    "requestId": "2cf2661f98fd99b276e13ab7fb91769090cd097e5b125c92dd1a20869f84ef98",
+    "digest": "d79482d6cf2e8fbe9d673d1f45457cdf139cb10b2f556837ea36a27592b5abcc",
+    "routerRunId": "41651063244",
+    "routerAttempt": 1
+  }
+}

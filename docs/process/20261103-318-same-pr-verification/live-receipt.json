@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-11-03T14:21:19.243Z",
+  "repository": "juangcarmona/lighthouse",
+  "issue": 324,
+  "pullRequest": 326,
+  "initialRun": 41647935705,
+  "correctionRun": 41651165346,
+  "ownerFeedback": 6606012975,
+  "readinessCi": {
+    "run": 41652360744,
+    "conclusion": "success",
+    "head": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061"
+  },
+  "headBefore": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+  "headAfter": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+  "commitCount": 1,
+  "changes": [],
+  "checksPassed": true,
+  "proof": {
+    "pr": 326,
+    "head": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+    "complete": true,
+    "run": 41651165346,
+    "implementationIdentity": "d1f02d1629b6e8598b673d584834f24222b5bee24919b980d1af18a16677bc14"
+  },
+  "stateObserved": "open",
+  "draftObserved": false,
+  "issueLabelsObserved": [
+    "pr-ready"
+  ],
+  "artifactSha256": {
+    "checks.json": "d0f21eb40079d487ba9dcb471ee5efaa6ad073863d0a49f394254524a70c289b",
+    "changes.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "envelope.json": "bafa26dc0b272c1134fa1c1393828c5dec0ecbdc5e97f6aecbe84021708b5e58",
+    "runtime.json": "1d6c2880ce9c5763455dee69c12afcc4525d8f703d533f28871fe5b1acc349c7"
+  },
+  "fixtureCleanup": {
+    "state": "closed",
+    "merged": false,
+    "head": "32807ba9da9cb0b5469bf9dfef86f2141d6eb061",
+    "issueState": "closed",
+    "branch": "retained for audit"
+  }
+}
