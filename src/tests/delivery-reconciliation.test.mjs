@@ -106,6 +106,17 @@ test('an eligible current candidate is linked before any new worker, and stale o
   assert.equal(await implementationContinuation(f.api, repository, 'owner', { ...f.request, worker: 'apply-review' }, f.readArtifact), null);
 });
 
+test('candidate reconciliation uses the authenticated epic base rather than default-branch source', async () => {
+  const f = fixture();
+  f.request.epic = { parent: 12, base: 'lighthouse/epic-12', baseSha: head, planDigest: 'f'.repeat(64) };
+  f.request.intent = dispatchIntent(f.request); f.receipt.intent = f.request.intent;
+  f.receipt.digest = digest(JSON.stringify(f.request));
+  f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  f.snapshot.dispatch.digest = f.receipt.digest; f.snapshot.baseRevision = head;
+  f.pr.base.ref = f.request.epic.base;
+  assert.equal((await implementationContinuation(f.api, repository, 'owner', nextRequest(f.request), f.readArtifact)).status, 'completed');
+});
+
 test('completion classification covers adopted checks, bot continuations, product apply and unrelated subjects', async () => {
   const f = fixture(), event = { action: 'completed', workflow_run: { id: 200, head_sha: revision } };
   let pulls = [f.pr];

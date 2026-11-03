@@ -8,7 +8,10 @@ export async function implementationContinuation(api, repository, owner, request
   if (workerFor(request) !== 'implement' || request.productResume || request.productAlignment) return null;
   const pulls = await api('pulls?state=open&per_page=100');
   if (pulls.length >= 100) throw Error('Implementation candidate lookup exceeds bounds');
-  const candidates = pulls.filter(pr => pr.head?.ref?.startsWith(`lighthouse/implement-${request.issue}-`));
+  const candidates = pulls.filter(pr => {
+    if (pr.head?.ref?.startsWith(`lighthouse/implement-${request.issue}-`)) return true;
+    try { return checkImplementationPullRequest(pr, repository).issue === request.issue; } catch { return false; }
+  });
   if (!candidates.length) return null;
   if (candidates.length !== 1) return { status: 'blocked', reason: 'Multiple implementation PRs exist; resolve the ambiguity before continuing.' };
   const pr = await api(`pulls/${candidates[0].number}`);
@@ -25,7 +28,7 @@ export async function implementationContinuation(api, repository, owner, request
     if (prior.issue !== request.issue || prior.stage !== 'implement' || String(prior.workflowRunId) !== String(run.id) || !prior.dispatch || (prior.implementationReview?.implementationIdentity ?? prior.runId) !== target.implementationIdentity) throw Error('Candidate implementation identity is unavailable or changed');
     const origin = await loadDispatch(api, repository, owner, request.issue, prior.dispatch.commentId, run, readArtifact);
     if (String(origin.receipt.workerRunId) !== String(run.id) || origin.receipt.status !== 'completed' || origin.request.id !== prior.dispatch.requestId || origin.receipt.digest !== prior.dispatch.digest || origin.request.taskDigest !== prior.taskDigest || prior.taskDigest !== request.taskDigest) throw Error('Candidate owner intent changed; request a correction on the existing PR');
-    if ((prior.baseRevision ?? prior.sourceRevision) !== request.sourceRevision) throw Error('Candidate source evidence is stale; revalidate the existing PR against the current base');
+    if ((prior.baseRevision ?? prior.sourceRevision) !== (request.epic?.baseSha ?? request.sourceRevision)) throw Error('Candidate source evidence is stale; revalidate the existing PR against the current base');
     return { ...result, status: proof.complete ? 'completed' : 'blocked', reason: proof.complete ? 'An authenticated current candidate already exists; continue its CI and review.' : 'An authenticated partial candidate already exists; request its correction on this PR.' };
   } catch (error) {
     return { ...result, reason: error.message };
