@@ -78,7 +78,7 @@ test('workspace preparation rejects links before changing ownership', async () =
 });
 
 test('container checks install workspace bins and execute temporary tools', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async () => {
-  const root = await mkdtemp(join(tmpdir(), 'workspace-checks-'));
+  const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'workspace-checks-'));
   const workspace = join(root, 'source');
   const image = process.env.LIGHTHOUSE_TEST_IMAGE;
   const config = { image, uid: 20003 };
@@ -103,7 +103,7 @@ test('container checks install workspace bins and execute temporary tools', { sk
 });
 
 test('ownership recovery traverses private build directories created by the engine UID', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async () => {
-  const root = await mkdtemp(join(tmpdir(), 'workspace-private-'));
+  const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'workspace-private-'));
   const image = process.env.LIGHTHOUSE_TEST_IMAGE;
   try {
     await chmod(root, 0o777);

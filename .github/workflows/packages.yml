@@ -103,21 +103,28 @@ jobs:
       - name: Select the operator's pinned implementation image
         run: |
           node --input-type=module <<'JS'
-          import { readFileSync, appendFileSync } from 'node:fs';
+          import { readFileSync, appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
           const config = JSON.parse(readFileSync(process.env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8'));
           if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage)) throw Error('Provision and pin the implementation image before runtime acceptance');
           appendFileSync(process.env.GITHUB_ENV, `LIGHTHOUSE_TEST_IMAGE=${config.implementationImage}\n`);
+          const directory = join(process.env.RUNNER_TEMP, 'worker-runtime-acceptance');
+          mkdirSync(directory, { recursive: true });
+          writeFileSync(join(directory, 'receipt.json'), JSON.stringify({ sourceRevision: process.env.GITHUB_SHA, run: process.env.GITHUB_RUN_ID, attempt: process.env.GITHUB_RUN_ATTEMPT, implementationImage: config.implementationImage, node: process.version, package: JSON.parse(readFileSync('src/packages/sdlc/package.json', 'utf8')).version, worker: 'deterministic; no model invoked' }, null, 2));
           JS
       - name: Exercise different UIDs, prerequisites and failed evidence collection
         run: |
           mkdir -p "$RUNNER_TEMP/worker-runtime-acceptance"
-          node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1
+          if ! node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1; then
+            cat "$RUNNER_TEMP/worker-runtime-acceptance/results.log"
+            exit 1
+          fi
       - name: Retain acceptance results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: worker-runtime-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/worker-runtime-acceptance/results.log
+          path: ${{ runner.temp }}/worker-runtime-acceptance/
           if-no-files-found: error
           retention-days: 30
 

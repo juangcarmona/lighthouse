@@ -7,7 +7,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { restoreWorkspaceOwnership } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 test('native worker exports private evidence and preserves candidates on collection failures', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE, timeout: 240000 }, async t => {
-  const root = await mkdtemp(join(tmpdir(), 'lighthouse-worker-evidence-'));
+  const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'lighthouse-worker-evidence-'));
   const base = process.env.LIGHTHOUSE_TEST_IMAGE;
   assert.match(base, /^sha256:[a-f0-9]{64}$/);
   const volume = `lighthouse-evidence-test-${process.pid}-${Date.now()}`;
