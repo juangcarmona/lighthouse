@@ -8,13 +8,13 @@ import { restoreWorkspaceOwnership, writableTree } from '../packages/sdlc/src/im
 
 test('real checks cannot hide committed or index-flagged working-tree edits', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE, timeout: 180000 }, async t => {
   const config = { image: process.env.LIGHTHOUSE_TEST_IMAGE, uid: 20003 };
-  const harness = await mkdtemp(join(tmpdir(), 'lighthouse-integrity-harness-'));
+  const harness = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'lighthouse-integrity-harness-'));
   await cp(new URL('../packages/sdlc/', import.meta.url), harness, { recursive: true });
   await writableTree(harness);
   const { runImplementationChecks } = await import(pathToFileURL(join(harness, 'src/implementation-runtime.mjs')));
   try {
   for (const scenario of ['unchanged', 'working-tree', 'assume-unchanged', 'skip-worktree', 'committed']) await t.test(scenario, async () => {
-    const root = await mkdtemp(join(tmpdir(), 'lighthouse-check-tamper-')), workspace = join(root, 'workspace');
+    const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'lighthouse-check-tamper-')), workspace = join(root, 'workspace');
     await mkdir(join(workspace, 'scripts'), { recursive: true });
     await writeFile(join(workspace, 'scripts/verify.mjs'), 'required check bytes');
     const script = `const fs=require('node:fs'),{execFileSync}=require('node:child_process');
