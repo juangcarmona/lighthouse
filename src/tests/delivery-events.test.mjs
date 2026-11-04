@@ -84,3 +84,18 @@ test('CI launch checkpoints distinguish safe pre-send failure, rejection and unc
     }
   }
 });
+
+test('reconciling an earlier uncertain CI request preserves later workflow delays and budgets', async () => {
+  const now = Date.parse('2026-01-01T01:00:00Z'), observedAt = '2026-01-01T00:00:00Z';
+  const previous = ['verify.yml', 'other.yml'].map((workflow, index) => ({ schemaVersion: 1, pr: pr.number, head, branch: pr.head.ref, workflow, attempt: index + 1, state: index ? 'not-sent' : 'unknown', observedAt }));
+  let saved;
+  const api = async (path, method = 'GET') => {
+    assert.equal(method, 'GET');
+    if (path.startsWith('contents/')) return file({ completion: { postMergeWorkflows: ['verify.yml', 'other.yml'] } });
+    if (path === 'pulls/60') return pr;
+    if (path.includes('/runs?')) return { total_count: 0, workflow_runs: [] };
+    throw Error(path);
+  };
+  await assert.rejects(dispatchDeliveryChecks(api, head, pr, { now, previous, checkpoint: async value => { saved = structuredClone(value); } }), /unconfirmed/);
+  assert.deepEqual(saved[1], previous[1]);
+});

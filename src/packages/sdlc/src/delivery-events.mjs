@@ -58,10 +58,13 @@ export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = a
   if (!config) return [];
   const workflows = JSON.parse(Buffer.from(config.content, 'base64').toString()).completion?.postMergeWorkflows ?? [];
   if (!Array.isArray(workflows) || workflows.length > 12 || workflows.some(w => !/^[\w.-]+\.ya?ml$/.test(w))) throw Error('Invalid repository check workflows');
-  const requests = workflows.map(workflow => ({ schemaVersion: 1, pr: pr.number, head: pr.head.sha, branch: pr.head.ref, workflow, attempt: 1, observedAt: new Date(now).toISOString(), state: 'not-sent' }));
+  const requests = workflows.map(workflow => {
+    const prior = previous?.find(item => item.workflow === workflow);
+    if (previous && (!prior || prior.schemaVersion !== 1 || prior.pr !== pr.number || prior.head !== pr.head.sha || prior.branch !== pr.head.ref || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1)) throw Error('CI recovery receipt differs from the retained candidate');
+    return prior ? { ...prior } : { schemaVersion: 1, pr: pr.number, head: pr.head.sha, branch: pr.head.ref, workflow, attempt: 1, observedAt: new Date(now).toISOString(), state: 'not-sent' };
+  });
   for (const workflow of workflows) {
     const prior = previous?.find(item => item.workflow === workflow);
-    if (previous && (!prior || prior.pr !== pr.number || prior.head !== pr.head.sha || prior.branch !== pr.head.ref || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1)) throw Error('CI recovery receipt differs from the retained candidate');
     const request = requests.find(item => item.workflow === workflow);
     request.attempt = prior?.attempt ?? 1;
     try {
