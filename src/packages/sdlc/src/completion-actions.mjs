@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { authorizeCompletionEvent, inspectCompletion, assertFresh, assertChecks, mergeAccepted, postMergeRuns, fingerprint, list, completionEffects, assertCitedChecks } from './completion.mjs';
-import { completionBundle, publishProcessBundle } from './process-publication.mjs';
+import { completionBundle, publishProcessBundle, preflightProcessPublication } from './process-publication.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
@@ -42,6 +42,7 @@ async function main(command) {
     if (Number(env.LIGHTHOUSE_ISSUE) !== authorization.issue) throw Error('Routed issue mismatch');
     const completion = await inspectCompletion(api, repository, owner, authorization, stage, env.GITHUB_RUN_ID);
     const priorIntegration = stage === 'review' ? await readIntegrationEvidence(api, completion) : null;
+    if (stage === 'review' && after && !priorIntegration) throw Error('Automatic review requires authenticated retained integration evidence');
     const priorPlanningReview = priorIntegration ? await readUnattendedPlanningReview(api, completion, priorIntegration) : null;
     if (completion.currentRevision !== (dispatch?.request.sourceRevision ?? env.GITHUB_SHA)) throw Error('Run completion from the current default branch');
     if (dispatch && completion.binding.intent !== dispatch.request.taskDigest) throw Error('Dispatched owner intent changed');
@@ -50,6 +51,7 @@ async function main(command) {
     const postMerge = completion.merged ? await postMergeRuns(api, completion, completion.merge) : [];
     const id = fingerprint({ repository, stage, issue: authorization.issue, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT });
     const request = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(dispatch ? { dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, dispatchOrigin: { request: dispatch.request, receipt: dispatch.receipt } } : {}), runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), harnessRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge };
+    if (stage === 'integrate' && authorization.merge && !completion.merged) await preflightProcessPublication(api, { ...request, completion: { ...completion, merged: true } });
     request.priorIntegration = priorIntegration;
     request.priorPlanningReview = priorPlanningReview;
     if (Buffer.byteLength(JSON.stringify(request)) > 2 * 1024 * 1024) throw Error('Completion context exceeds bounds');
@@ -133,7 +135,7 @@ async function main(command) {
   if (!fresh.labels.includes('agent-working') || fresh.labels.includes('human-working')) throw Error('Reservation revoked');
   let receipt = { schemaVersion: 1, state: fresh.merged ? 'merged' : 'prepared', sha: fresh.merge, acceptedHead: request.authorization.head, authorization: request.authorization, binding: request.completion.binding };
   if (request.stage === 'integrate' && request.authorization.merge && envelope.result.status === 'passed') {
-    const result = await mergeAccepted(api, request.completion, async () => { const current = await refresh(); await verifyEvidence(current); return current; });
+    const result = await mergeAccepted(api, request.completion, async () => { const current = await refresh(); await verifyEvidence(current); return current; }, () => preflightProcessPublication(api, { ...request, completion: { ...fresh, merged: true } }));
     receipt = { ...receipt, ...result };
     // Persist the irreversible outcome before any dispatch or publication can fail.
     await save('integration-receipt.json', receipt);

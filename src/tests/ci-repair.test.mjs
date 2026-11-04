@@ -273,3 +273,24 @@ test('CI evidence ignores unrelated repository metadata while binding the execut
   assert.equal(reviewDigest('ci', { ...state.run, repository: { ...state.run.repository, pushed_at: 'later', description: 'Updated independently' }, pull_requests: [{ title: 'Updated description' }] }), original);
   for (const patch of [{ run_attempt: 2 }, { head_sha: base }, { conclusion: 'success' }, { path: '.github/workflows/other.yml' }, { head_branch: 'other' }, { repository: { full_name: 'fork/repo' } }]) assert.notEqual(reviewDigest('ci', { ...state.run, ...patch }), original);
 });
+
+test('linked technical retries preserve the CI round and admit only their current execution', async () => {
+  const { state, call } = fixture();
+  const { dispatchId } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const { recoveryId } = await import('../packages/sdlc/src/worker-recovery.mjs');
+  const root = dispatchId(repository, 100, 'implement');
+  const add = (id, commentId, recovery, status, repairHead) => {
+    const receipt = { schemaVersion: 1, stage: 'implement', worker: 'apply-review', id, digest: 'e'.repeat(64), routerRunId: String(commentId), routerAttempt: 1, workerRunId: String(commentId + 100), status, ...(recovery ? { recovery } : {}) };
+    state.comments.push({ id: commentId, issue_url: `https://api.github.com/repos/${repository}/issues/47`, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` });
+    state.prior.push({ commentId, receipt, request: { id, ...(recovery ? { recovery } : {}), ciRepair: { pr: 60, identity, head: repairHead, attempt: 1 } } });
+  };
+  add(root, 100, null, 'failed', base);
+  const retry = recoveryId(repository, root, 1);
+  add(retry, 101, { rootId: root, previousComment: 100, attempt: 1 }, 'completed', base);
+  const next = await call();
+  assert.equal(next.ciRepair?.attempt, 2, next.ciRepairStop ?? 'technical retry is not a second correction round');
+  for (const prior of state.prior) prior.request.ciRepair.head = head;
+  state.prior[1].receipt.status = 'running';
+  assert.equal(await call(), null, 'duplicate cannot supersede the active linked retry');
+  assert.equal((await call({ currentDispatch: retry })).ciRepair.attempt, 1, 'linked retry can revalidate its original CI grant');
+});

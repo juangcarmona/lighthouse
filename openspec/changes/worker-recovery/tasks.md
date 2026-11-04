@@ -9,3 +9,13 @@
 - [x] Add opt-in maintenance workflow and installer support.
 - [x] Test uncertainty, delay, budget, stale authority, duplicates and partial publication.
 - [x] Compile workflows and run repository verification.
+
+## Native qualification and reconciliation (#142)
+
+- [x] Keep linked technical retries within their original CI correction round.
+- [x] Retain CI launch state before effects and distinguish rejection from uncertain acknowledgement.
+- [x] Reconcile confirmed candidate and completion publication without repeating source effects.
+- [x] Resume review from retained integration and earlier green CI in either arrival order.
+- [x] Reject stale authority, missing origins, cancellation and unknown effects with a bounded action.
+- [ ] Qualify opt-in installation, disabled mode, bounded native retry and recovered completion; retire acceptance configuration.
+- [ ] Run focused, full, Markdown, provider, workflow and package checks and retain original native evidence.

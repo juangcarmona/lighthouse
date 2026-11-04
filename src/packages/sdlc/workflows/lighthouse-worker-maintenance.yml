@@ -13,6 +13,7 @@ permissions:
 env:
   LIGHTHOUSE_MAINTENANCE_ENABLED: ${{ vars.LIGHTHOUSE_MAINTENANCE_ENABLED }}
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+  LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
   scan:
     if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && github.actor == github.repository_owner
@@ -123,6 +124,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
         run: node src/packages/sdlc/src/worker-maintenance.mjs send
+      - name: Preserve verification recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-recovery-effects-${{ matrix.issue }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/ci-recovery.json
+            ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/completion-recovery.json
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Resume the recovered completion through the router
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs signal-completion
       - name: Preserve observations
         if: always()
         uses: actions/upload-artifact@v7

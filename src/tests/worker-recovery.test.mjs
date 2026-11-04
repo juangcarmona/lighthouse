@@ -282,7 +282,9 @@ test('missing original artifacts and spoofed receipts fail closed', async () => 
   const f = fixture(); f.comment.user = { login: 'outsider', type: 'User' };
   await assert.rejects(loadDispatch(f.api, repository, owner, 7, 30, f.run, f.readArtifact), /Untrusted/);
   f.comment.user = { login: 'github-actions[bot]', type: 'Bot' };
-  await assert.rejects(prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), async () => { throw Error('Expired artifact'); }), /Expired/);
+  const expired = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), async () => { throw Error('Expired artifact'); });
+  assert.equal(expired.observations[0].code, 'dispatch-origin-unavailable');
+  assert.equal(expired.request, undefined);
 });
 
 test('a newer request supersedes older failures and two linked retries exhaust the budget', async () => {
@@ -845,4 +847,27 @@ test('retry recording rechecks authority and later reservations after publishing
     assert.equal(f.comments.filter(c => c.body.includes('<!-- lighthouse-stop:200:1 -->')).length, 1, change);
     assert.equal(f.calls.some(c => c.path.endsWith('/dispatches')), false, change);
   }
+});
+
+test('missing original artifact yields an exact bounded recovery action without a claim or resend', async () => {
+  const f = fixture();
+  const unavailable = async () => { throw Error('Required artifact unavailable, ambiguous or too large'); };
+  const observed = await observeDispatch(f.api, repository, owner, f.comment, f.issue, f.comments, Date.now(), unavailable);
+  assert.equal(observed.code, 'dispatch-origin-unavailable');
+  assert.match(observed.nextAction, new RegExp(f.receipt.digest));
+  assert.match(observed.nextAction, /actions\/runs\/100\/attempts\/1/);
+  assert.match(observed.nextAction, /Never resend/);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+  const result = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), unavailable);
+  assert.equal(result.observations[0].state, 'uncertain');
+  assert.equal(result.request, undefined);
+  assert.equal(f.calls.some(call => call.method !== 'GET'), false);
+});
+
+test('explicit maintenance scope can disable every issue and fails closed on invalid configuration', async () => {
+  const { recoveryIssues } = await import('../packages/sdlc/src/worker-recovery.mjs');
+  assert.equal(recoveryIssues(undefined), null);
+  assert.deepEqual(recoveryIssues('[]'), []);
+  assert.deepEqual(recoveryIssues('[7,8,7]'), [7, 8]);
+  for (const invalid of ['null', '{}', '["7"]', '[0]', '[1.5]', '[true]', 'invalid', JSON.stringify(Array(101).fill(7))]) assert.throws(() => recoveryIssues(invalid));
 });

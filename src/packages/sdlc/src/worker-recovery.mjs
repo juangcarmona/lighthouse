@@ -2,12 +2,20 @@ import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
 import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerExecutionObservation, publishStep } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
+import { reconcileCompletion } from './completion-recovery.mjs';
+import { reconcilePublishedCi } from './publication-recovery.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
 export const retryLimit = 2;
 export const retryDelayMs = 30 * 60 * 1000;
 export const shortRunMs = 5 * 60 * 1000;
 export const recoveryId = (repository, rootId, attempt) => digest(`${repository}:${rootId}:retry:${attempt}`);
+export function recoveryIssues(value) {
+  if (value === undefined || value === '') return null;
+  const issues = JSON.parse(value);
+  if (!Array.isArray(issues) || issues.length > 100 || issues.some(issue => !Number.isSafeInteger(issue) || issue < 1)) throw Error('Maintenance issue scope must be an array of at most 100 positive issue numbers');
+  return [...new Set(issues)];
+}
 const identity = r => ({ issue: r.request.issue, worker: workerFor(r.request), runId: String(r.run.id), rootId: r.request.recovery?.rootId ?? r.request.id, attempt: r.request.recovery?.attempt ?? 0 });
 const ownerAnswers = comments => comments.filter(c => c.user?.login === c.owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
 const intent = (issue, comments, owner) => digest(JSON.stringify({ title: issue.title, body: issue.body, comments: ownerAnswers(comments.map(c => ({ ...c, owner }))).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at })) }));
@@ -89,6 +97,7 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
 
 export async function observeDispatch(api, repository, owner, comment, issue, comments, now = Date.now(), readArtifact = readActionsJson) {
   const receipt = readDispatchReceipt(comment, repository, issue.number);
+  const missingOrigin = () => ({ issue: issue.number, worker: workerFor(receipt), outcome: 'unknown', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-origin-unavailable', nextAction: `Inspect original router https://github.com/${repository}/actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt} and request digest ${receipt.digest}. Restore only retained authenticated bytes with that digest and origin; otherwise preserve the candidate and reconcile effects before a new owner request. Never resend the unconfirmed dispatch.` });
   if (!receipt.workerRunId) {
     // A visible matching run helps the operator reconcile; absence is never permission to resend.
     const found = await api(`actions/workflows/${stagePath(workerFor(receipt)).split('/').at(-1)}/runs?event=workflow_dispatch&per_page=100`);
@@ -96,13 +105,14 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
     let observedRunId;
     if (matches.length === 1 && found.total_count <= 100) {
       const run = await api(`actions/runs/${matches[0].id}`);
-      await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
+      try { await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch { return { ...missingOrigin(), observedRunId: String(run.id) }; }
       observedRunId = String(run.id);
     }
     return { issue: issue.number, worker: workerFor(receipt), outcome: 'requested', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
   }
   const run = await api(`actions/runs/${receipt.workerRunId}`);
-  const dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact);
+  let dispatch;
+  try { dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch { return { ...missingOrigin(), observedRunId: String(run.id) }; }
   const jobs = await api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
   if (!Array.isArray(jobs.jobs) || !Number.isSafeInteger(jobs.total_count) || jobs.total_count !== jobs.jobs.length || jobs.total_count > 100) throw Error('Execution job inventory is incomplete or exceeds recovery bounds');
   const repo = await api('');
@@ -305,7 +315,7 @@ export async function verifyRecoveryOrigin(api, repository, owner, dispatch, par
   if (decision.state !== 'retryable') throw Error(`Recovery no longer authorized: ${decision.code}`);
 }
 
-export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson) {
+export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson, { saveCiRecovery, saveCompletionRecovery } = {}) {
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
   await reconcileUnattendedStop(api, repository, owner, issue, comments);
   const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.body.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
@@ -319,9 +329,14 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
     if (observation.rootId === currentRoot) {
+      const completion = await reconcileCompletion(api, repository, owner, issue, observation, parent, enabled, { readArtifact, save: saveCompletionRecovery });
+      if (completion) Object.assign(publicObservation, completion);
+      if (completion?.state === 'reconciled' && observation.stop?.observation !== 'cleanup-failure') observation.stop = null;
+      const ci = await reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now, { readArtifact, save: saveCiRecovery });
+      if (ci) Object.assign(publicObservation, ci);
       if (await reconcileAbandonedReservation(api, repository, owner, issue, comments, observation, readArtifact)) Object.assign(publicObservation, { state: 'reconciled', code: 'reservation-released', nextAction: 'Follow the retained outcome before requesting further work.' });
       const preparationRun = observation.observedRunId ?? run?.id;
-      if (preparationRun && await reconcilePreparationFailure(api, repository, owner, issueNumber, comment.id, preparationRun, readArtifact)) { observation.stop = null; Object.assign(publicObservation, { state: 'reconciled', code: 'preparation-failed', nextAction: 'Inspect the confirmed failed execution before requesting new work.' }); }
+      if (preparationRun && observation.code !== 'dispatch-origin-unavailable' && await reconcilePreparationFailure(api, repository, owner, issueNumber, comment.id, preparationRun, readArtifact)) { observation.stop = null; Object.assign(publicObservation, { state: 'reconciled', code: 'preparation-failed', nextAction: 'Inspect the confirmed failed execution before requesting new work.' }); }
       const reconciliation = await reconcilePublishedStage(api, repository, owner, issue, comments, observation, readArtifact);
       if (reconciliation === 'restored' || reconciliation === 'present') {
         if (observation.stop?.observation !== 'cleanup-failure') observation.stop = null;

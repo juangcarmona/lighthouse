@@ -40,6 +40,7 @@ test('bot publications dispatch adopted CI for the exact branch and refuse a cha
   const api = async (path, method, body) => {
     if (method === 'POST') { writes.push({ path, body }); return; }
     if (path.startsWith('contents/')) return file(profile);
+    if (path.includes('/runs?')) return { total_count: 0, workflow_runs: [] };
     assert.equal(path, 'pulls/60'); return changed ? { ...pr, head: { ...pr.head, sha: merge } } : pr;
   };
   await dispatchDeliveryChecks(api, head, pr);
@@ -47,4 +48,39 @@ test('bot publications dispatch adopted CI for the exact branch and refuse a cha
   changed = true;
   await assert.rejects(dispatchDeliveryChecks(api, head, pr), /changed/);
   assert.equal(writes.length, 1);
+});
+
+test('CI launch checkpoints distinguish safe pre-send failure, rejection and unconfirmed effects', async () => {
+  const now = Date.parse('2026-01-01T00:00:00Z');
+  for (const mode of ['head-read', 'rejected', 'lost-response']) {
+    let saved, posts = 0, fail = true, visible = false;
+    const api = async (path, method) => {
+      if (path.startsWith('contents/')) return file(profile);
+      if (path === 'pulls/60') {
+        if (mode === 'head-read' && fail) throw Error('Head read unavailable');
+        return pr;
+      }
+      if (path.includes('/runs?')) return { total_count: visible ? 1 : 0, workflow_runs: visible ? [{ id: 123, head_sha: head, head_branch: pr.head.ref, repository: { full_name: repository }, path: '.github/workflows/verify.yml', event: 'workflow_dispatch' }] : [] };
+      if (method === 'POST') { posts++; if (fail) throw Object.assign(Error('CI request failed'), { status: mode === 'rejected' ? 403 : 503 }); return null; }
+      throw Error(path);
+    };
+    const checkpoint = async value => { saved = structuredClone(value); };
+    await assert.rejects(dispatchDeliveryChecks(api, head, pr, { checkpoint, now }));
+    assert.equal(saved[0].state, mode === 'head-read' ? 'not-sent' : mode === 'rejected' ? 'rejected' : 'unknown');
+    const original = structuredClone(saved);
+    fail = false;
+    if (mode === 'lost-response') {
+      await assert.rejects(dispatchDeliveryChecks(api, head, pr, { checkpoint, previous: original, now: now + 3600000 }), /unconfirmed/);
+      assert.equal(posts, 1, 'absence cannot authorize repeating an uncertain POST');
+      visible = true;
+      const result = await dispatchDeliveryChecks(api, head, pr, { checkpoint, previous: original, now: now + 3600000 });
+      assert.equal(result[0].run, 123); assert.equal(posts, 1, 'already-created CI is reconciled without another write');
+    } else {
+      await assert.rejects(dispatchDeliveryChecks(api, head, pr, { checkpoint, previous: original, now: now + 1799999 }), /delay/);
+      const result = await dispatchDeliveryChecks(api, head, pr, { checkpoint, previous: original, now: now + 1800000 });
+      assert.equal(result[0].attempt, 2); assert.equal(result[0].state, 'acknowledged');
+      const exhausted = [{ ...original[0], attempt: 3 }];
+      await assert.rejects(dispatchDeliveryChecks(api, head, pr, { checkpoint, previous: exhausted, now: now + 3600000 }), /exhausted/);
+    }
+  }
 });

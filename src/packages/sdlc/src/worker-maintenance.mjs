@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir, appendFile, readdir } from 'node:fs/promise
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch } from './stage-dispatch.mjs';
-import { maintenancePath, prepareRecovery, observeRecovery } from './worker-recovery.mjs';
+import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } from './worker-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
@@ -24,7 +24,7 @@ async function main(command) {
   const api = async (path, method = 'GET', body, optional = false) => {
     const response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     if (optional && response.status === 404) return null;
-    if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
+    if (!response.ok) throw Object.assign(Error(`GitHub ${method} ${path}: ${response.status}`), { status: response.status });
     if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
       const log = await response.text();
       if (Buffer.byteLength(log) > 4 * 1024 * 1024) throw Error('Job log exceeds recovery bounds');
@@ -36,6 +36,7 @@ async function main(command) {
   const parent = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch'].includes(parent.event) || parent.actor?.login !== owner || parent.triggering_actor?.login !== owner) throw Error('Maintenance is not an authorized execution');
   if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
+  const scope = recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
   if (command === 'report') {
     const root = join(env.RUNNER_TEMP, 'worker-observations'), observations = [], seen = [];
     const directories = await readdir(root);
@@ -59,11 +60,13 @@ async function main(command) {
     const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
     const requested = event.inputs?.issue;
     if (requested && !/^[1-9][0-9]*$/.test(requested)) throw Error('Issue must be a canonical positive integer');
-    const issues = requested ? [Number(requested)] : await ownerIssues(api, owner);
+    if (requested && scope && !scope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
+    const issues = requested ? [Number(requested)] : scope ?? await ownerIssues(api, owner);
     await output('issues', JSON.stringify(issues)); return;
   }
   const issue = Number(env.LIGHTHOUSE_ISSUE);
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid issue');
+  if (scope && !scope.includes(issue)) throw Error('Issue is outside the configured maintenance scope');
   const dir = join(env.RUNNER_TEMP, `lighthouse-maintenance-${env.GITHUB_RUN_ID}-${issue}`);
   if (command === 'observe') {
     await mkdir(dir, { recursive: true });
@@ -76,6 +79,14 @@ async function main(command) {
     }
     return;
   }
+  if (command === 'signal-completion') {
+    if (env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true') return;
+    let proof;
+    try { proof = JSON.parse(await readFile(join(dir, 'completion-recovery.json'), 'utf8')); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
+    if (proof.schemaVersion !== 1 || proof.issue !== issue) throw Error('Recovered completion differs from this issue');
+    await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: parent.head_branch, inputs: { issue: String(issue), stage: 'review', workflow: 'stage', after_run: String(parent.id) } });
+    return;
+  }
   if (command === 'send') {
     if (env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true') throw Error('Automatic recovery is disabled');
     await sendDispatch(api, repository, JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8')), env.LIGHTHOUSE_DISPATCH_COMMENT); return;
@@ -83,7 +94,7 @@ async function main(command) {
   if (command !== 'prepare') throw Error('Unknown maintenance command');
   await mkdir(dir, { recursive: true });
   try {
-    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true');
+    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true', Date.now(), undefined, { saveCiRecovery: value => writeFile(join(dir, 'ci-recovery.json'), JSON.stringify(value)), saveCompletionRecovery: value => writeFile(join(dir, 'completion-recovery.json'), JSON.stringify(value)) });
     await writeFile(join(dir, 'observations.json'), JSON.stringify(result.observations));
     if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, result.observations.map(o => `- Issue #${o.issue}, ${o.worker}: ${o.state}. ${o.nextAction}`).join('\n') + '\n');
     await output('send', String(!!result.request));

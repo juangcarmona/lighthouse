@@ -23,3 +23,22 @@ Maintenance SHALL authenticate the original request and current execution before
 
 - **WHEN** maintenance observes an existing retry receipt or an unconfirmed send
 - **THEN** it does not send that request again.
+
+### Requirement: Reconcile confirmed publication before continuing
+
+Maintenance SHALL distinguish confirmed effects from uncertain requests and SHALL preserve original authority and execution budgets.
+
+#### Scenario: Candidate published but CI launch interrupted
+
+- **WHEN** authenticated candidate publication and current authority match retained CI send state
+- **THEN** maintenance observes existing native CI first and may retry only a confirmed unsent or rejected request within the existing two-retry, 30-minute policy.
+
+#### Scenario: Confirmed integration with missing publication or continuation
+
+- **WHEN** the original passed assessment, confirmed merge receipt, current authority and existing green post-merge CI agree
+- **THEN** maintenance may restore the report and handoff with a native publication proof and admit review once under the original grant without another merge, source edit or CI run.
+
+#### Scenario: Missing original dispatch or uncertain effect
+
+- **WHEN** the original request cannot be authenticated or an effect cannot be confirmed
+- **THEN** maintenance retains a bounded stop and identifies the evidence or operator action required before another request.

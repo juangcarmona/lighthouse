@@ -1,5 +1,6 @@
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { stagePath } from './stage-dispatch.mjs';
+import { retryLimit, retryDelayMs } from './worker-recovery.mjs';
 
 // Display names filter subscriptions only; actual paths, revisions and subjects admit work.
 export async function completionSource(api, repository, event, env = {}) {
@@ -52,14 +53,46 @@ export async function deliveryAfterChecks(api, repository, owner, event) {
   return null;
 }
 
-export async function dispatchDeliveryChecks(api, revision, pr) {
+export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = async () => {}, previous = null, now = Date.now() } = {}) {
   const config = await api(`contents/.lighthouse/github.json?ref=${revision}`, 'GET', undefined, true);
-  if (!config) return;
+  if (!config) return [];
   const workflows = JSON.parse(Buffer.from(config.content, 'base64').toString()).completion?.postMergeWorkflows ?? [];
   if (!Array.isArray(workflows) || workflows.length > 12 || workflows.some(w => !/^[\w.-]+\.ya?ml$/.test(w))) throw Error('Invalid repository check workflows');
+  const requests = workflows.map(workflow => ({ schemaVersion: 1, pr: pr.number, head: pr.head.sha, branch: pr.head.ref, workflow, attempt: 1, observedAt: new Date(now).toISOString(), state: 'not-sent' }));
   for (const workflow of workflows) {
-    const current = await api(`pulls/${pr.number}`);
-    if (current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || current.state !== 'open') throw Error('PR changed before checks could start');
-    await api(`actions/workflows/${workflow}/dispatches`, 'POST', { ref: current.head.ref });
+    const prior = previous?.find(item => item.workflow === workflow);
+    if (previous && (!prior || prior.pr !== pr.number || prior.head !== pr.head.sha || prior.branch !== pr.head.ref || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1)) throw Error('CI recovery receipt differs from the retained candidate');
+    const request = requests.find(item => item.workflow === workflow);
+    request.attempt = prior?.attempt ?? 1;
+    try {
+      const current = await api(`pulls/${pr.number}`);
+      if (current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || current.state !== 'open') throw Error('PR changed before checks could start');
+      const found = await api(`actions/workflows/${workflow}/runs?head_sha=${pr.head.sha}&per_page=100`);
+      if (!Array.isArray(found.workflow_runs) || found.total_count > 100) throw Error('CI request inventory exceeds bounds');
+      const existing = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === pr.head.ref && run.repository?.full_name === current.head.repo?.full_name && run.path === `.github/workflows/${workflow}` && ['push', 'workflow_dispatch'].includes(run.event)).sort((a, b) => b.id - a.id)[0];
+      if (existing) { Object.assign(request, { state: 'observed', run: existing.id }); await checkpoint(requests); continue; }
+      if (prior) {
+        Object.assign(request, prior);
+        if (!['not-sent', 'rejected'].includes(prior.state)) throw Error('CI dispatch acknowledgement is unconfirmed; reconcile the original request before any resend');
+        if (prior.attempt >= retryLimit + 1) throw Error('CI launch retry budget exhausted');
+        if (!Number.isFinite(Date.parse(prior.observedAt)) || now - Date.parse(prior.observedAt) < retryDelayMs) throw Error('CI launch retry delay has not elapsed');
+        Object.assign(request, { attempt: prior.attempt + 1, state: 'not-sent', observedAt: new Date(now).toISOString() });
+        delete request.error;
+      }
+      request.state = 'requested';
+      await checkpoint(requests);
+      try { await api(`actions/workflows/${workflow}/dispatches`, 'POST', { ref: current.head.ref }); }
+      catch (error) {
+        request.state = Number.isSafeInteger(error.status) && error.status >= 400 && error.status < 500 ? 'rejected' : 'unknown';
+        throw error;
+      }
+      request.state = 'acknowledged';
+      await checkpoint(requests);
+    } catch (error) {
+      request.error = { name: error.name, message: error.message, ...(Number.isSafeInteger(error.status) ? { status: error.status } : {}) };
+      await checkpoint(requests);
+      throw error;
+    }
   }
+  return requests;
 }

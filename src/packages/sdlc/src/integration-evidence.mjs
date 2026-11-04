@@ -1,3 +1,4 @@
+import { readActionsJson } from './actions-artifact.mjs';
 import { verifyDispatchOrigin, stagePath } from './stage-dispatch.mjs';
 import { authorizeCompletion } from './completion.mjs';
 import { createHash } from 'node:crypto';
@@ -8,7 +9,7 @@ import { verifyUnattendedIntegration } from './unattended.mjs';
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // Read retained integration evidence, not bot prose or the current review's future publication.
-export async function readIntegrationEvidence(api, completion, pinned = null) {
+export async function readIntegrationEvidence(api, completion, pinned = null, { interruptedRun = null, readArtifact = readActionsJson } = {}) {
   const binding = completion.binding, owner = binding.repository.split('/')[0];
   if (!completion.merged) return null;
   const commit = pinned?.commit ?? (await api(`git/ref/heads/${completion.profile.evidenceBranch}`)).object.sha;
@@ -49,7 +50,8 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
     if (fingerprint(receipt) !== fingerprint(payload.receipt) || receipt.state !== 'merged' || receipt.sha !== completion.merge || receipt.acceptedHead !== binding.head || receipt.authorization?.merge !== true || receipt.authorization.head !== binding.head || receipt.authorization.issue !== binding.issue || receipt.authorization.pr !== binding.pr || result.stage !== 'integrate' || result.status !== 'passed') throw Error('Retained integration receipt does not match the accepted delivery');
     const workflow = payload.workflow;
     if (!/^[1-9][0-9]*$/.test(workflow?.runId ?? '') || !/^[1-9][0-9]*$/.test(workflow?.attempt ?? '')) throw Error('Invalid retained workflow identity');
-    if (!path.includes(`/runs/${workflow.runId}/attempt-${String(workflow.attempt).padStart(4, '0')}/`)) throw Error('Retained workflow identity differs from its path');
+    const publisher = workflow.recovery ?? workflow;
+    if (!path.includes(`/runs/${publisher.runId}/attempt-${String(publisher.attempt).padStart(4, '0')}/`)) throw Error('Retained workflow identity differs from its path');
     const run = await api(`actions/runs/${workflow.runId}`);
     let originEvent, originName;
     if (workflow.dispatchOrigin) {
@@ -75,7 +77,18 @@ export async function readIntegrationEvidence(api, completion, pinned = null) {
     }
     const delegated = await verifyUnattendedIntegration(api, receipt.authorization, run, payload.binding);
     const expectedPath = delegated ? '.github/workflows/lighthouse-sdlc-unattended.yml' : workflow.dispatchOrigin ? stagePath('integrate') : '.github/workflows/lighthouse-sdlc-router.yml';
-    if (run.repository?.full_name !== binding.repository || !(delegated || manual || approved) || run.path !== expectedPath || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || run.conclusion !== 'success') throw Error('Retained integration workflow is not authenticated and successful');
+    let recovered = false;
+    if (workflow.recovery) {
+      const recovery = workflow.recovery;
+      if (!/^[1-9][0-9]*$/.test(recovery.runId ?? '') || !/^[1-9][0-9]*$/.test(recovery.attempt ?? '') || !sha(recovery.revision)) throw Error('Invalid native publication recovery origin');
+      const native = await api(`actions/runs/${recovery.runId}/attempts/${recovery.attempt}`);
+      if (native.repository?.full_name !== binding.repository || native.path !== '.github/workflows/lighthouse-worker-maintenance.yml' || !['schedule', 'workflow_dispatch'].includes(native.event) || native.actor?.login !== owner || native.triggering_actor?.login !== owner || native.head_sha !== recovery.revision || native.status !== 'completed' || !['success', 'failure', 'timed_out'].includes(native.conclusion)) throw Error('Recovered integration publication lacks an authenticated completed maintenance run');
+      const proof = await readArtifact(api, binding.repository, native.id, `lighthouse-recovery-effects-${binding.issue}-${native.run_attempt}`, 'completion-recovery.json');
+      if (proof.schemaVersion !== 1 || proof.issue !== binding.issue || String(proof.originalRun) !== String(run.id) || String(proof.originalAttempt) !== String(workflow.attempt) || proof.recordSha256 !== digest(raw) || proof.receiptDigest !== fingerprint(receipt)) throw Error('Native recovery artifact does not bind the retained integration record');
+      recovered = true;
+    }
+    const interrupted = String(run.id) === String(interruptedRun) && !workflow.recovery && ['failure', 'timed_out'].includes(run.conclusion);
+    if (run.repository?.full_name !== binding.repository || !(delegated || manual || approved) || run.path !== expectedPath || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || !(run.conclusion === 'success' || (recovered || interrupted) && ['failure', 'timed_out'].includes(run.conclusion))) throw Error('Retained integration workflow is not authenticated and successful');
     return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'] };
   }
   if (pinned) throw Error('Previously supplied integration evidence is unavailable or stale');
