@@ -788,7 +788,7 @@ async function main(command) {
         if (product.changeName !== snapshot.productChangeName || product.baselineDigest !== snapshot.baselineDigest) throw Error('Product Change candidate differs from its authenticated preparation context');
         const bridge = await loadProductBridge();
         const prepared = preparePendingProductCandidate(product);
-        await validatePublicationFiles(process.cwd(), prepared.files);
+        await validatePublicationFiles(process.cwd(), prepared.files, { api, policyRevision: snapshot.baseRevision ?? snapshot.sourceRevision, candidateRevision: snapshot.sourceRevision });
         const validation = await validateProductCandidate(process.cwd(), prepared.changeName, prepared.files, bridge);
         const candidate = bindValidatedProductCandidate(prepared, validation, snapshot.baselineDigest);
         const productSnapshot = snapshot.productParent && snapshot.replyTo ? { ...snapshot, productParent: { ...snapshot.productParent, feedback: { runId: String(snapshot.workflowRunId), attempt: Number(env.GITHUB_RUN_ATTEMPT), taskDigest: snapshot.taskDigest, replyTo: snapshot.replyTo, commentId: snapshot.commentId } } } : snapshot;
@@ -818,7 +818,7 @@ async function main(command) {
     }
     if (snapshot.worker !== 'product-change' && snapshot.stage === 'propose' && value.result.status === 'passed') {
       const files = await prepareProposal(issueNumber, value.result.output.files);
-      await validatePublicationFiles(process.cwd(), files);
+      await validatePublicationFiles(process.cwd(), files, { api, policyRevision: snapshot.baseRevision ?? snapshot.sourceRevision, candidateRevision: snapshot.sourceRevision });
       const recheck = async () => {
         const issue = await api(issuePath);
         checkPublication(snapshot, issue, ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
@@ -869,7 +869,7 @@ async function main(command) {
         if (!changes.length) recheckVerifiedCandidate = checkAuthority;
         const recheck = async () => { await recheckPublication(); if (changes.length) await checkAuthority(); };
         if (snapshot.ciRepair) validateCiRepairChanges(changes, snapshot.issue, await productModelDirectory(process.cwd()));
-        await validatePublicationFiles(process.cwd(), changes.map(file => ({ path: file.path, content: file.content === null ? null : Buffer.from(file.content, 'base64').toString('utf8') })));
+        await validatePublicationFiles(process.cwd(), changes.map(file => ({ path: file.path, content: file.content === null ? null : Buffer.from(file.content, 'base64').toString('utf8') })), { api, policyRevision: snapshot.baseRevision ?? snapshot.sourceRevision, candidateRevision: snapshot.sourceRevision });
         const candidateComplete = value.result.status === 'passed' && checksPassed;
         const checks = receipt.checks.map(c => `- \`${c.command.join(' ')}\`: exit ${c.exitCode}`).join('\n');
         const afterRefWrite = async () => {

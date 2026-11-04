@@ -32,3 +32,32 @@ test('publication preserves an adopter without a declared Markdown style command
     await assert.rejects(validatePublicationFiles(root, [{ path: 'proposal.md', content: '[Missing](absent.md)\n' }]), /missing absent/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('publisher uses the admitted repository policy and candidate facts rather than the harness checkout', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'publication-snapshot-'));
+  const policyRevision = 'a'.repeat(40), candidateRevision = 'b'.repeat(40), reads = [];
+  let remoteExists = true;
+  const values = {
+    'package.json': JSON.stringify({ scripts: { markdownlint: 'npx -y markdownlint-cli2@0.23.3' } }),
+    '.markdownlint-cli2.jsonc': JSON.stringify({ config: { default: true, MD013: false, 'trusted-rule': true }, customRules: ['.markdownlint-rules.cjs'], globs: ['**/*.md'] }),
+    '.markdownlint-rules.cjs': "module.exports = [{ names: ['trusted-rule'], description: 'Canonical policy', tags: ['trusted'], function: () => {} }];",
+  };
+  const source = { policyRevision, candidateRevision, api: async path => {
+    reads.push(path);
+    if (path === `contents/remote.md?ref=${candidateRevision}`) return remoteExists ? { type: 'file' } : null;
+    const name = path.match(/^contents\/(.*?)\?ref=/)?.[1];
+    assert.equal(path, `contents/${name}?ref=${policyRevision}`);
+    const content = values[name];
+    return content === undefined ? null : { type: 'file', encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') };
+  } };
+  try {
+    await writeFile(join(root, 'package.json'), JSON.stringify({ scripts: { markdownlint: 'untrusted candidate command' } }));
+    await writeFile(join(root, '.markdownlint-rules.cjs'), "throw Error('Candidate policy must never execute');");
+    await validatePublicationFiles(root, [{ path: 'docs/proposal.md', content: '# Proposal\n\n[Actual candidate target](../remote.md)\n' }], source);
+    assert.ok(reads.includes(`contents/.markdownlint-rules.cjs?ref=${policyRevision}`));
+    remoteExists = false;
+    await writeFile(join(root, 'remote.md'), '# Harness-only target\n');
+    await assert.rejects(validatePublicationFiles(root, [{ path: 'docs/proposal.md', content: '# Proposal\n\n[Missing candidate target](../remote.md)\n' }], source), /missing/);
+    await assert.rejects(validatePublicationFiles(root, [], { ...source, policyRevision: 'main' }), /immutable/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
