@@ -46,7 +46,7 @@ function fixture() {
   };
   const observation = { dispatch, run, jobs: [{ name: 'agent', conclusion: 'success' }] };
   const call = (enabled = true) => reconcileCompletion(api, repository, owner, issue, observation, { id: 300, run_attempt: 1, head_sha: head }, enabled, options);
-  return { request, receipt, envelope, fresh, issue, run, observation, comments, prComments, writes, proofs, call, publications: () => publications, setChecks: value => { checks = value; }, loseHandoffResponse: () => { loseResponse = true; } };
+  return { request, receipt, envelope, fresh, issue, run, observation, comments, prComments, writes, proofs, call, publications: () => publications, setRetained: value => { retained = value; }, setChecks: value => { checks = value; }, loseHandoffResponse: () => { loseResponse = true; } };
 }
 
 test('confirmed merge recovery publishes once and resumes existing CI in either receipt order', async () => {
@@ -111,4 +111,19 @@ test('a claimed recovery event cannot replace native review authority with calle
   const env = { GITHUB_EVENT_NAME: 'workflow_run', GITHUB_REPOSITORY_OWNER: owner };
   await assert.rejects(authorizeCompletionEvent(async () => ({}), repository, event, env, 'integrate'), /review only/);
   await assert.rejects(authorizeCompletionEvent(async () => ({ id: 300, path: '.github/workflows/lighthouse-worker-maintenance.yml', repository: { full_name: repository }, status: 'completed', conclusion: 'success', actor: { login: 'other' } }), repository, event, env, 'review'), /owner maintenance origin/);
+});
+
+
+test('retained integration arriving before CI resumes review once without another publication', async () => {
+  const f = fixture();
+  f.setRetained({ workflow: { conclusion: 'success' }, commit: head, url: 'https://github.com/owner/repo/blob/evidence/report.md', recordSha256: 'c'.repeat(64), receipt: f.receipt });
+  f.setChecks([{ workflow: 'verify.yml', status: 'pending' }]);
+  assert.equal((await f.call()).code, 'post-merge-ci-pending');
+  assert.equal(f.writes.length, 0);
+  f.setChecks([{ workflow: 'verify.yml', status: 'passed', runId: 250 }]);
+  assert.equal((await f.call()).review.ciRun, 250);
+  assert.equal((await f.call()).code, 'completion-restored');
+  assert.equal(f.publications(), 0);
+  assert.equal(f.comments.length, 2); assert.equal(f.prComments.length, 1);
+  assert.equal(f.writes.some(write => /merge|dispatches|git\//.test(write.path)), false);
 });

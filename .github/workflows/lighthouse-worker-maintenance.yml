@@ -141,7 +141,7 @@ jobs:
       actions: write
       checks: read
       issues: write
-      pull-requests: read
+      pull-requests: write
     env:
       LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
     steps:
