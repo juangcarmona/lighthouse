@@ -84,5 +84,44 @@
         "src/tests/fixtures/unattended/regression.test.mjs"
       ]
     ]
+  },
+  "389": {
+    "scope": "Implement only #389: carry trusted native execution and intent identity into existing unattended v2 check evidence. Add meaningful mismatch regressions without weakening existing tests. Use the existing receipt machinery; do not change policy, provider/product meaning or merge authority.",
+    "paths": [
+      "src/packages/sdlc/src/unattended-actions.mjs",
+      "src/tests/unattended-actions.test.mjs",
+      ".changeset/unattended-native-check-binding.md"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "node",
+        "--test",
+        "src/tests/unattended-actions.test.mjs",
+        "src/tests/implementation-evidence.test.mjs"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        "src/tests/unattended-actions.test.mjs",
+        "src/tests/implementation-evidence.test.mjs",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json"
+      ],
+      "corrections": {
+        "src/tests/unattended-actions.test.mjs": "Add regression coverage for authenticated native run/attempt/intent binding and mismatched check identities; preserve all existing assertions and checks."
+      }
+    }
   }
 }
