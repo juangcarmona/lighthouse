@@ -8,6 +8,11 @@ on:
         description: Optional source issue; empty scans open owner issues
         required: false
         type: string
+      fixture_setup:
+        description: Create the disposable issue 362 integration candidate
+        required: false
+        type: boolean
+        default: false
       recovery_pr:
         description: Draft Product Change PR to revalidate and republish after source URL formatting repair
         required: false
@@ -23,6 +28,31 @@ env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
+  fixture-setup:
+    if: github.event_name == 'workflow_dispatch' && inputs.fixture_setup && inputs.issue == '362' && github.actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Create only the issue 362 documentation fixture
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/142-fixture-setup.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lighthouse-142-fixture
+          path: 142-fixture-output
+          if-no-files-found: error
   recover-product-publication:
     if: github.event_name == 'workflow_dispatch' && inputs.recovery_pr != '' && github.actor == github.repository_owner
     concurrency:
@@ -64,7 +94,7 @@ jobs:
           path: recovery-output
           if-no-files-found: error
   scan:
-    if: github.event_name == 'workflow_dispatch' && inputs.issue != '' && inputs.recovery_pr == '' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && github.actor == github.repository_owner
+    if: github.event_name == 'workflow_dispatch' && inputs.issue != '' && !inputs.fixture_setup && inputs.recovery_pr == '' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && github.actor == github.repository_owner
     runs-on: ubuntu-24.04
     permissions:
       contents: read
