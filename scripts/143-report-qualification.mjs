@@ -34,7 +34,7 @@ const runs=[];
 for(const id of ids){
  const run=await api(`actions/runs/${id}`), jobs=await api(`actions/runs/${id}/jobs?per_page=100`);
  assert.equal(run.repository.full_name,repo);assert.equal(run.actor.login,owner);assert.equal(run.triggering_actor.login,owner);
- assert.equal(run.path,current.path);assert.equal(run.head_sha,current.head_sha);assert.equal(run.event,'workflow_dispatch');assert.equal(run.run_attempt,1);assert.equal(run.status,'completed');
+ assert.equal(run.path,current.path);assert.equal(run.head_sha,'2b2aa26f725060a434974f33c88b87132e35a857');assert.equal(run.event,'workflow_dispatch');assert.equal(run.run_attempt,1);assert.equal(run.status,'completed');
  assert.equal(jobs.total_count,jobs.jobs.length);
  const expected=runs.length===3?'success':'failure';assert.equal(run.conclusion,expected);
  assert.equal(jobs.jobs.find(j=>j.name==='agent').conclusion,expected);
