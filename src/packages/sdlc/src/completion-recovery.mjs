@@ -88,5 +88,5 @@ export async function recoveredCompletionEvent(api, repository, owner, run, issu
   const checks = await postMergeRuns(api, current, current.merge);
   if (checks.some(check => check.status !== 'passed') || !checks[0]?.runId) throw Error('Recovered completion has no current passed post-merge CI');
   const ci = await api(`actions/runs/${checks[0].runId}`);
-  return { action: 'completed', workflow_run: ci, completionRecovery: { maintenance: Number(run.id), attempt: run.run_attempt, issue, ci: ci.id, pr: current.binding.pr, head: current.binding.head } };
+  return { action: 'completed', workflow_run: ci, completionAuthorization: { issue, pr: current.binding.pr, head: current.binding.head, merge: false }, completionRecovery: { maintenance: Number(run.id), attempt: run.run_attempt, issue, ci: ci.id, pr: current.binding.pr, head: current.binding.head } };
 }

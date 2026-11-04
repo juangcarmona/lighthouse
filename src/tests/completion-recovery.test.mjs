@@ -104,3 +104,11 @@ test('a confirmed blocked report restores only its handoff after a lost response
   assert.equal(f.publications(), 0); assert.equal(f.proofs.length, 0);
   assert.equal(f.writes.some(write => /merge|dispatches|git\//.test(write.path)), false);
 });
+
+test('a claimed recovery event cannot replace native review authority with caller-supplied authorization', async () => {
+  const { authorizeCompletionEvent } = await import('../packages/sdlc/src/completion.mjs');
+  const event = { action: 'completed', completionRecovery: { maintenance: 300, issue: 42 }, completionAuthorization: { issue: 42, pr: 50, head, merge: true } };
+  const env = { GITHUB_EVENT_NAME: 'workflow_run', GITHUB_REPOSITORY_OWNER: owner };
+  await assert.rejects(authorizeCompletionEvent(async () => ({}), repository, event, env, 'integrate'), /review only/);
+  await assert.rejects(authorizeCompletionEvent(async () => ({ id: 300, path: '.github/workflows/lighthouse-worker-maintenance.yml', repository: { full_name: repository }, status: 'completed', conclusion: 'success', actor: { login: 'other' } }), repository, event, env, 'review'), /owner maintenance origin/);
+});
