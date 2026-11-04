@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "runId": "2698141d188b413175903a5172c0627a0e80d75f7356e149447f42dfbd2a0fca",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "github-check:126552542079",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41823585301/job/126552542079",
+      "reason": "Host-authenticated repository check from app 15368 succeeded for accepted head 719dd761274127f5e3e4658ba26646209ad9f751; this is the configured forge check."
+    },
+    {
+      "id": "github-check:126536578448",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/41818859152/job/126536578448",
+      "reason": "Additional authenticated successful execution of the same required repository check on the same accepted head; not evidence of recovery or recurrence."
+    },
+    {
+      "id": "fixture-scope-and-intent",
+      "status": "passed",
+      "source": "/workspace/docs/process/20261104-recovery-acceptance.md:1-3",
+      "reason": "Direct inspection, independently compared with issue #362 and its supplied owner clarification, confirms a disposable document linking the acceptance issue and expressly introducing no product behavior. The host changed-file list contains only this added path."
+    },
+    {
+      "id": "affected-guidance",
+      "status": "passed",
+      "source": "/workspace/AGENTS.md:5-19; /workspace/docs/README.md; /workspace/src/packages/sdlc/completion.md:26-48",
+      "reason": "Repository documentation belongs under docs; the fixture is concise and does not change package guidance, workflows or implementation. Completion guidance supports exact-head manual owner dispatch, separates assessment from merge, and requires retained receipts and subsequent verification. No affected-guidance drift found."
+    },
+    {
+      "id": "owner-dispatch-and-policy",
+      "status": "passed",
+      "source": "/input/context.json#/request/authorization",
+      "reason": "Host-supplied authorization binds issue 362, PR 364, full accepted head and merge:true. The authenticated effective policy and local github profile require repository/app 15368 and zero approvals. No approval is asserted; GitHub retains enforcement, including any conditional protection."
+    },
+    {
+      "id": "dependency-order-and-finalization",
+      "status": "passed",
+      "source": "/input/context.json#/completion",
+      "reason": "The owner clarification selects PR 364 rather than retired unmerged PR 363. The current fixture and repository check satisfy pre-merge dependencies. Host finalization preserves PR labels, makes no stage-result label additions/removals, leaves the issue open and releases its reservation for every outcome; the observed execution-failed label is not a failed current-head check."
+    },
+    {
+      "id": "implementation-route-prerequisites",
+      "status": "not-applicable",
+      "source": "/workspace/src/packages/sdlc/completion.md:30-34",
+      "reason": "This is the explicit manual owner-dispatch fixture route, not the integrate-label or unattended implementation route. No implementation receipt, planning review or synthesized owner approval is claimed."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, accepted head/base, required checks and reservation; request the authorized squash merge of PR #364 and retain its actual receipt before any controlled publication interruption. Continue the scoped recovery acceptance only from authenticated retained evidence.",
+  "output": {
+    "summary": "PR #364 is ready for its explicitly authorized integration action as a single-document controlled fixture. This assessment does not establish a merge or successful recovery.",
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 362,
+      "pr": 364,
+      "head": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "base": "d143a02ca0ada02bc98e08058c404b13a55339f4",
+      "branch": "main",
+      "intent": "021ab729a8e61edf9284f94e79c97fb00f08d4a2ae85ab7750ac380ef6b127ca",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "aa518f81a974108a9fdc45dc8c7c0fb039d73617c8a62c137eeb56d6b9d8909e",
+      "files": "142fad4806d3d4f8517cfa9b9d1dd73757fbc6c60f8efaf22fe63cfa8fb500e5"
+    },
+    "provenance": {
+      "authority": "Host-authenticated request and completion observations; no independent git or API authentication is claimed.",
+      "requestId": "26379b1e9dd177314c9b5634629f4b04518c054216a2a7a164cbf1b009cfece0",
+      "dispatchDigest": "6ae56e68d08dce5bca208aa9bde5d131352da8acf61316f1a5f106c84d6b2813",
+      "workflowRunId": "41824240623",
+      "attempt": "1",
+      "observedAt": "2026-11-04T11:51:13.813Z",
+      "harnessRevision": "da290f969704ce1a93d58bc8d9da95f1d9045d98",
+      "routerRevision": "cd0052691e306583449571689237b9f8ab982c77",
+      "sourcePackageVersion": "@juangcarmona/lighthouse-sdlc 0.20.4",
+      "sourceRouterPin": "fb02d02c11efdd9d9ac4f503b08569466e2663cb",
+      "deploymentQualification": "The accepted source router's pin is not the host-supplied dispatch revision. Local package and workflow inspection describe the source snapshot, not proof of deployed recovery behavior; execution identity is supplied by the host."
+    },
+    "integration": {
+      "route": "manual owner workflow_dispatch",
+      "authorization": {
+        "issue": 362,
+        "pr": 364,
+        "head": "719dd761274127f5e3e4658ba26646209ad9f751",
+        "merge": true
+      },
+      "sourceBranchProvenance": "Owner clarification identifies codex/142-integration-fixture; accepted head and main base are host-bound.",
+      "requestedAction": "Prepare trusted-publisher squash integration subject to fresh checks and GitHub enforcement.",
+      "observedPullRequestState": "open",
+      "observedMergeable": true,
+      "observedMerged": false,
+      "actualMergeReceipt": null,
+      "priorIntegration": null,
+      "requiredApprovals": 0,
+      "observedReviews": [],
+      "approvalClaim": "None. Explicit owner merge authorization is not a fabricated review approval.",
+      "requiredCheck": {
+        "context": "repository",
+        "app": 15368,
+        "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+        "status": "passed"
+      },
+      "dependencyOrder": [
+        "Completed deterministic fixture setup and current-head repository check precede integration.",
+        "Actual merge confirmation and saved original integration receipt must precede the controlled publisher interruption.",
+        "Scoped recovery must reuse original assessment, grant, receipt and existing post-merge CI before evidence publication, handoff and review.",
+        "Cleanup follows retention of acceptance evidence."
+      ]
+    },
+    "changedPaths": [
+      {
+        "path": "docs/process/20261104-recovery-acceptance.md",
+        "status": "added",
+        "sha": "4a2c6395d66be438590bd6b1ef0b6ba74cb7d7f2",
+        "assessment": "Matches the declared one-document fixture; no runtime, workflow or source behavior is introduced."
+      }
+    ],
+    "findings": [
+      {
+        "kind": "scope",
+        "decision": "Accept documentation fixture readiness, not completion of the end-to-end recovery acceptance.",
+        "source": "Issue #362 body and owner answer 6629780665; fixture lines 1-3",
+        "owner": "Repository owner",
+        "reason": "The work item expressly permits exact-head integration after repository CI and requires later merge/recovery evidence. Requiring that future evidence before merging would invert its declared dependency order."
+      },
+      {
+        "kind": "source-defect",
+        "decision": "No defect identified in the sole changed document.",
+        "source": "/workspace/docs/process/20261104-recovery-acceptance.md",
+        "owner": "Repository maintainer",
+        "reason": "Direct content inspection establishes fixture intent beyond a green check; it does not verify the separate recovery mechanism."
+      },
+      {
+        "kind": "verification-boundary",
+        "decision": "Retain missing future recovery proof explicitly; do not report it as a failed current-stage check.",
+        "source": "/input/context.json#/postMerge; /input/context.json#/priorIntegration",
+        "owner": "Trusted publisher and recovery maintainer",
+        "reason": "Post-merge observations are empty and no prior integration receipt exists. No recovery result, reviewed fault execution, retained failed/recovered artifact pair or cleanup outcome is established in this assessment."
+      },
+      {
+        "kind": "process-history",
+        "decision": "Treat retired PR #363 as fixture setup history, not an independent recurrence or evidence that a guard should be weakened.",
+        "source": "Owner answer 6629780665",
+        "owner": "Repository owner",
+        "reason": "The existing implementation-link guard stopped the previous candidate before agent execution or merge; the owner selected the documented manual route. No policy change or new guard is proposed."
+      }
+    ],
+    "finalizationPlan": {
+      "executor": "trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "execution-failed"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "open",
+        "merged": false,
+        "labels": []
+      },
+      "onPassed": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "onBlocked": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "Host adds agent-working and clears previous execution-failed after the supplied observation; host cleanup releases its reservation for every outcome.",
+      "assessment": "Plan matches the adopted host policy. Final host effects need not have happened before this result; no additional labels or issue closure are requested."
+    },
+    "subsequentVerification": [
+      {
+        "stage": "integration execution",
+        "status": "not-yet-observed",
+        "owner": "Trusted publisher",
+        "requirement": "Confirm the real merge of the accepted PR/head and save the original integration assessment and actual merge receipt before the controlled publication fault. Stop and preserve any blocker."
+      },
+      {
+        "stage": "post-merge verification",
+        "status": "not-yet-observed",
+        "owner": "Trusted publisher",
+        "requirement": "Observe the adopted ci.yml result on the actual merged revision. Recovery must reuse existing CI rather than trigger another CI run."
+      },
+      {
+        "stage": "recovery acceptance",
+        "status": "not-yet-verified",
+        "owner": "Recovery maintainer",
+        "requirement": "Retain failed and recovered native runs, exact revisions and artifacts; complete bounded evidence publication and handoff and request review under the same original grant, without another merge, source change, CI run or owner restart."
+      },
+      {
+        "stage": "review",
+        "status": "not-performed",
+        "owner": "Separately admitted review worker",
+        "requirement": "Assess retained integration/recovery evidence and record a concise evidence-backed retrospective. This integration result neither starts review itself nor changes permissions."
+      },
+      {
+        "stage": "acceptance cleanup",
+        "status": "not-performed",
+        "owner": "Repository owner and fixture maintainer",
+        "requirement": "After evidence retention, remove the temporary fixture document and acceptance configuration through their authorized process."
+      }
+    ],
+    "limitations": [
+      "No commands, tests, external API requests, merges or source edits were performed by this assessment; CI execution evidence is host-authenticated.",
+      "Skipped router and reconciliation jobs are not treated as executed behavioral tests. Optional Cloudflare Pages observations are not additional merge gates.",
+      "This controlled fixture does not establish agent implementation, unattended product delivery for #185 or verified runtime resource absence for #219.",
+      "No recurrence is inferred from multiple runs or retries of this one acceptance issue; no policy change, follow-up issue or guard is proposed."
+    ]
+  }
+}
