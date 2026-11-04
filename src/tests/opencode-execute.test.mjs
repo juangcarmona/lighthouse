@@ -78,7 +78,7 @@ test('engine adapter preserves structured evidence while streaming readable outp
     await fixtureHarness(root);
     await mkdir(join(work, '.lighthouse-harness', 'src', 'packages'), { recursive: true });
     await cp(join(root, 'harness'), join(work, '.lighthouse-harness', 'src', 'packages', 'sdlc'), { recursive: true });
-    const request = { runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) };
+    const request = { repository: 'owner/repo', runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) };
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed', evidence: [{ id: 'scope', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Scope is ready.' } };
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
     await writeFile(join(runDir, 'context.json'), '{}');
@@ -115,6 +115,7 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
     assert.deepEqual(recorded, events);
     assert.equal(JSON.parse(await readFile(join(root, 'safeoutputs', 'outputs.jsonl'))).type, 'noop');
     assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);
+    assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).cleanup.status, 'clean');
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -143,7 +144,7 @@ test('profile adapter forwards two worker variants, marks receipts unverified an
       await writeFile(join(work, '.lighthouse/models.json'), JSON.stringify({ schemaVersion: 1, workers: { refine: 'plan', propose: 'plan', review: 'fast', 'apply-review': 'fast' }, profiles: { plan: { model: 'openai/test-sol', reasoningEffort: 'high' }, fast: { model: 'openai/test-luna', reasoningEffort: 'medium' } } }));
       execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', '.']);
       const stage = scenario === 'apply-review' ? 'propose' : scenario === 'fast' ? 'review' : 'refine';
-      const request = { runId: 'd'.repeat(64), stage, issue: 1, sourceRevision: 'e'.repeat(40), ...(['execution', 'denied'].includes(scenario) ? { modelSelection: { model: 'openai/test-luna', reasoningEffort: 'medium' } } : {}) };
+      const request = { repository: 'owner/repo', runId: 'd'.repeat(64), stage, issue: 1, sourceRevision: 'e'.repeat(40), ...(['execution', 'denied'].includes(scenario) ? { modelSelection: { model: 'openai/test-luna', reasoningEffort: 'medium' } } : {}) };
       const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage, gate: stage === 'propose' ? 'planned' : stage === 'refine' ? 'ready' : null, status: scenario === 'apply-review' ? 'blocked' : 'passed', evidence: [{ id: 'fixture', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Fixture only.' } };
       await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Fixture');
       if (scenario === 'unavailable') for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json']) await writeFile(join(runDir, file), 'stale output');
@@ -196,7 +197,7 @@ test('a product worker from implementation uses the read-only product engine wit
     for (const dir of [work, bin, runDir]) await mkdir(dir);
     execFileSync('git', ['init', '-q', work]);
     await writeFile(join(work, 'README.md'), 'Accepted intent'); execFileSync('git', ['-C', work, 'add', 'README.md']);
-    const request = { runId: 'a'.repeat(64), stage: 'implement', worker: 'product-change', issue: 1, sourceRevision: 'b'.repeat(40), baselineDigest: 'c'.repeat(64) };
+    const request = { repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'implement', worker: 'product-change', issue: 1, sourceRevision: 'b'.repeat(40), baselineDigest: 'c'.repeat(64) };
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'intent', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Continue the parent.', output: { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: [] } } }, effect: { type: 'issue-comment', body: 'Intent already covers the request.' } };
     await mkdir(join(runDir, 'product-evidence'));
     await writeFile(join(runDir, 'product-evidence/index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: '0.25.0', baselineDigest: request.baselineDigest, artifacts: [] }));
@@ -221,7 +222,7 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     for (const dir of [work, bin, runDir]) await mkdir(dir);
     execFileSync('git', ['init', '-q', work]);
     await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
-    const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'] } } };
+    const request = { repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'] } } };
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
@@ -252,7 +253,7 @@ test('declared environment preflights before agent, validates with fresh service
       execFileSync('git', ['init', '-q', work]);
       await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
       const image = `sha256:${'b'.repeat(64)}`, postgresImage = `sha256:${'c'.repeat(64)}`;
-      const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { environment: { schemaVersion: 1, profile: 'dotnet', services: ['postgresql'] }, policy: { paths: ['demo.js'], checks: [['node', '--version']], reviewRequired: false } } };
+      const request = { repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { environment: { schemaVersion: 1, profile: 'dotnet', services: ['postgresql'] }, policy: { paths: ['demo.js'], checks: [['node', '--version']], reviewRequired: false } } };
       const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'test', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner' }, effect: { type: 'issue-comment', body: 'Candidate ready.' } };
       await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
       await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'d'.repeat(64)}`, environments: { dotnet: { image, postgresImage } }, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
