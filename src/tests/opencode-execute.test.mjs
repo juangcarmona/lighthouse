@@ -197,7 +197,7 @@ test('a product worker from implementation uses the read-only product engine wit
     for (const dir of [work, bin, runDir]) await mkdir(dir);
     execFileSync('git', ['init', '-q', work]);
     await writeFile(join(work, 'README.md'), 'Accepted intent'); execFileSync('git', ['-C', work, 'add', 'README.md']);
-    const request = { repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'implement', worker: 'product-change', issue: 1, sourceRevision: 'b'.repeat(40), baselineDigest: 'c'.repeat(64) };
+    const request = { runId: 'a'.repeat(64), stage: 'implement', worker: 'product-change', issue: 1, sourceRevision: 'b'.repeat(40), baselineDigest: 'c'.repeat(64) };
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'intent', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Continue the parent.', output: { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: [] } } }, effect: { type: 'issue-comment', body: 'Intent already covers the request.' } };
     await mkdir(join(runDir, 'product-evidence'));
     await writeFile(join(runDir, 'product-evidence/index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: '0.25.0', baselineDigest: request.baselineDigest, artifacts: [] }));
@@ -206,7 +206,7 @@ test('a product worker from implementation uses the read-only product engine wit
     const shim = join(bin, 'docker');
     await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args[0]==='run'&&!args.includes('cleanup-session')){ if(!args.some(x=>x.endsWith(',dst=/workspace,readonly')))process.exit(2); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.writeFileSync(out+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))}); }\n`);
     await chmod(shim, 0o755);
-    const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_REPOSITORY: 'owner/repo', GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.equal(JSON.parse(await readFile(join(runDir, 'envelope.json'))).result.output.productChange.outcome, 'aligned');
     await assert.rejects(readFile(join(runDir, 'changes.json')));

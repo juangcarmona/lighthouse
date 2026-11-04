@@ -112,7 +112,7 @@ async function main() {
     slot = acquireEngineSlot(config.lock);
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
-    config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
+    config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
     name = `${config.resourceOwner.prefix}-engine`;
     await recordPhase('running');
     runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
