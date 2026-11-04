@@ -116,6 +116,7 @@ export function mergeObservations(repository, previous, observations) {
     if (o.worker !== previous.worker || ![...entries.values()].some(entry => entry.rootId === o.rootId)) continue;
     if ([...entries.values()].some(entry => entry.rootId === o.rootId && entry.issue !== o.context.issue)) throw Error('Report request issue changed');
     const prior = contexts.get(o.rootId);
+    if (prior?.runId && !o.context.runId && o.context.attempt <= prior.attempt) continue;
     if (o.context.code === 'worker-completed' && previous.code === 'ci-launch-failure') continue;
     if (prior?.code === 'worker-completed' && o.context.runId === prior.runId && o.context.code !== prior.code) continue;
     if (prior && (o.context.attempt < prior.attempt || o.context.runId && prior.runId && BigInt(o.context.runId) < BigInt(prior.runId))) continue;
