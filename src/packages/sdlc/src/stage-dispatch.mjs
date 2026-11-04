@@ -249,12 +249,14 @@ export async function admitDispatch(api, repository, owner, env, event) {
   const dispatch = await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], worker);
   checkEpicWorkerLease(dispatch.request, event.inputs);
   if (env.LIGHTHOUSE_WORKER ? workerFor(dispatch.request) !== env.LIGHTHOUSE_WORKER : dispatch.request.stage !== env.LIGHTHOUSE_STAGE) throw Error('Dispatch targets a different stage or worker');
-  if (dispatch.request.recovery) {
+  if (dispatch.request.recovery || dispatch.request.completionRecovery) {
     if (env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true') throw Error('Automatic recovery has been disabled');
     const scope = (await import('./worker-recovery.mjs')).recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
     if (scope && !scope.includes(Number(issue))) throw Error('Recovery is outside the configured maintenance scope');
-    const parent = await api(`actions/runs/${dispatch.receipt.routerRunId}/attempts/${dispatch.receipt.routerAttempt}`);
-    await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readActionsJson, 0, true);
+    if (dispatch.request.recovery) {
+      const parent = await api(`actions/runs/${dispatch.receipt.routerRunId}/attempts/${dispatch.receipt.routerAttempt}`);
+      await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readActionsJson, 0, true);
+    }
   }
   const admitted = await claimDispatch(api, repository, dispatch, env.GITHUB_RUN_ID);
   return { ...dispatch, admitted };
