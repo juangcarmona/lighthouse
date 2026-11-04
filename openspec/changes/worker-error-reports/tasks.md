@@ -14,5 +14,5 @@
 
 - [x] Preserve incident history while reporting current execution, human waits, exhaustion and reconciled effects.
 - [x] Retain safe structured CI launch diagnostics across original publication surfaces.
-- [ ] Qualify installed configuration and the native report lifecycle, including lost responses.
-- [ ] Retain compact acceptance evidence and restore temporary settings.
+- [x] Qualify installed configuration and the native report lifecycle, including lost responses.
+- [x] Retain compact acceptance evidence and restore temporary settings.
