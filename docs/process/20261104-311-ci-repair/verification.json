@@ -98,6 +98,52 @@
     "correctionRouter": 41807932144,
     "correctionWorker": 41808117191,
     "attempt": 2,
-    "status": "in-progress"
+    "status": "verified-after-owner-ci-dispatch",
+    "activeDuplicate": {
+      "router": 41808806165,
+      "conclusion": "success",
+      "dispatch": "skipped",
+      "workerRemained": 41808117191
+    },
+    "correctedHead": "75ffe1af028f3ec5c7b6e548627345a49c1e0f42",
+    "hostCheckExitCodes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "automaticCiStarted": false,
+    "fullyUnattended": false,
+    "ciStartCause": "unknown; underlying error absent from recovered logs/API check output",
+    "remainingOwners": [
+      142,
+      143
+    ],
+    "verificationCi": 41810422785,
+    "verificationCiActor": "juangcarmona",
+    "verificationCiConclusion": "success",
+    "prEventCi": {
+      "run": 41809907720,
+      "conclusion": "action_required",
+      "countedAsPassed": false
+    },
+    "technicalInterventionsAfterFeedback": 1,
+    "faultInjectionReplayCount": 1,
+    "readyBeforeRetirement": true
+  },
+  "cleanup": {
+    "pullRequest": 356,
+    "fixturePr": 354,
+    "fixtureIssue": 353,
+    "fixtureMerged": false,
+    "ciRepairOptInRemoved": true,
+    "fixtureImplementationOverrideRemoved": true,
+    "deliberateCiAssertionRemoved": true,
+    "genericCallbackRetained": true,
+    "otherIssuesActivated": false
+  },
+  "advertisedArtifactDigests": {
+    "compared": 66,
+    "matched": 66
   }
 }

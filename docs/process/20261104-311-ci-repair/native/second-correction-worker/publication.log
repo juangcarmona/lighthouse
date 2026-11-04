@@ -1,0 +1,378 @@
+﻿2026-11-04T09:46:40.1897823Z Current runner version: '2.338.2'
+2026-11-04T09:46:40.1932410Z ##[group]Runner Image Provisioner
+2026-11-04T09:46:40.1934151Z Hosted Compute Agent
+2026-11-04T09:46:40.1935305Z Version: 20261021.618
+2026-11-04T09:46:40.1936470Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-11-04T09:46:40.1938289Z Build Date: 2026-10-21T00:45:21Z
+2026-11-04T09:46:40.1939568Z Worker ID: {529f7e0e-644b-457e-b70d-ee4655de4f71}
+2026-11-04T09:46:40.1941585Z Region: eastus
+2026-11-04T09:46:40.1942653Z Cloud: Azure
+2026-11-04T09:46:40.1943630Z ##[endgroup]
+2026-11-04T09:46:40.1945985Z ##[group]Operating System
+2026-11-04T09:46:40.1947443Z Ubuntu
+2026-11-04T09:46:40.1948577Z 24.04.5
+2026-11-04T09:46:40.1949579Z LTS
+2026-11-04T09:46:40.1950528Z ##[endgroup]
+2026-11-04T09:46:40.1951609Z ##[group]Runner Image
+2026-11-04T09:46:40.1952760Z Image: ubuntu-24.04
+2026-11-04T09:46:40.1953832Z Version: 20261025.353.1
+2026-11-04T09:46:40.1956143Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-04T09:46:40.1959267Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-11-04T09:46:40.1961160Z ##[endgroup]
+2026-11-04T09:46:40.1963794Z ##[group]GITHUB_TOKEN Permissions
+2026-11-04T09:46:40.1967128Z Actions: write
+2026-11-04T09:46:40.1968380Z Contents: write
+2026-11-04T09:46:40.1969328Z Issues: write
+2026-11-04T09:46:40.1970440Z Metadata: read
+2026-11-04T09:46:40.1971399Z PullRequests: write
+2026-11-04T09:46:40.1972490Z ##[endgroup]
+2026-11-04T09:46:40.1975509Z Secret source: Actions
+2026-11-04T09:46:40.1977359Z Cache mode: write
+2026-11-04T09:46:40.1978730Z Prepare workflow directory
+2026-11-04T09:46:40.4031868Z Prepare all required actions
+2026-11-04T09:46:40.4082972Z Getting action download info
+2026-11-04T09:46:40.6009465Z Download action repository 'actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-11-04T09:46:40.7150875Z Download action repository 'actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444' (SHA:a0853c24544627f65ddf259abe73b1d18a591444)
+2026-11-04T09:46:40.8392126Z Download action repository 'actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333' (SHA:9000827ccba6bdab643e8b6fd33ac0654aef8333)
+2026-11-04T09:46:40.9938989Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-11-04T09:46:41.2773643Z Complete job name: Validate, publish and release
+2026-11-04T09:46:41.3747645Z ##[group]Run # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
+2026-11-04T09:46:41.3748802Z [36;1m# Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct[0m
+2026-11-04T09:46:41.3749782Z [36;1m# GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.[0m
+2026-11-04T09:46:41.3750610Z [36;1mGH_HOST="${GITHUB_SERVER_URL#https://}"[0m
+2026-11-04T09:46:41.3751256Z [36;1mGH_HOST="${GH_HOST#http://}"[0m
+2026-11-04T09:46:41.3751881Z [36;1mecho "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"[0m
+2026-11-04T09:46:41.3776060Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-04T09:46:41.3777209Z env:
+2026-11-04T09:46:41.3777673Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:41.3778236Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:41.3778754Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:41.3779282Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:41.3779819Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:41.3780464Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:41.3781875Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:41.3783207Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:41.3783766Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:41.3784364Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:41.3784873Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:41.3785593Z ##[endgroup]
+2026-11-04T09:46:41.5153756Z ##[group]Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+2026-11-04T09:46:41.5154576Z with:
+2026-11-04T09:46:41.5155019Z   persist-credentials: false
+2026-11-04T09:46:41.5155580Z   ref: fb02d02c11efdd9d9ac4f503b08569466e2663cb
+2026-11-04T09:46:41.5156245Z   repository: juangcarmona/lighthouse
+2026-11-04T09:46:41.5160639Z   token: ***
+2026-11-04T09:46:41.5161090Z   ssh-strict: true
+2026-11-04T09:46:41.5161524Z   ssh-user: git
+2026-11-04T09:46:41.5161949Z   clean: true
+2026-11-04T09:46:41.5162395Z   sparse-checkout-cone-mode: true
+2026-11-04T09:46:41.5162915Z   fetch-depth: 1
+2026-11-04T09:46:41.5163345Z   fetch-tags: false
+2026-11-04T09:46:41.5163795Z   show-progress: true
+2026-11-04T09:46:41.5164250Z   lfs: false
+2026-11-04T09:46:41.5164657Z   submodules: false
+2026-11-04T09:46:41.5165092Z   set-safe-directory: true
+2026-11-04T09:46:41.5165599Z   allow-unsafe-pr-checkout: false
+2026-11-04T09:46:41.5166127Z env:
+2026-11-04T09:46:41.5166577Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:41.5167270Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:41.5167774Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:41.5168294Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:41.5168819Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:41.5169407Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:41.5170820Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:41.5172156Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:41.5172697Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:41.5173289Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:41.5173782Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:41.5174239Z   GH_HOST: github.com
+2026-11-04T09:46:41.5174685Z ##[endgroup]
+2026-11-04T09:46:41.7632398Z Syncing repository: juangcarmona/lighthouse
+2026-11-04T09:46:41.7635718Z ##[group]Getting Git version info
+2026-11-04T09:46:41.7638090Z Working directory is '/home/runner/work/lighthouse/lighthouse'
+2026-11-04T09:46:41.7641508Z [command]/usr/bin/git version
+2026-11-04T09:46:41.7721946Z git version 2.56.0
+2026-11-04T09:46:41.7753928Z ##[endgroup]
+2026-11-04T09:46:41.7767421Z Temporarily overriding HOME='/home/runner/work/_temp/f1f29d59-9059-4c3d-a58a-d8f82cf46bf3' before making global git config changes
+2026-11-04T09:46:41.7773441Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T09:46:41.7778945Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:46:41.7848190Z Deleting the contents of '/home/runner/work/lighthouse/lighthouse'
+2026-11-04T09:46:41.7852587Z ##[group]Initializing the repository
+2026-11-04T09:46:41.7858258Z [command]/usr/bin/git init /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:46:41.7966188Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-04T09:46:41.7969685Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-04T09:46:41.7972033Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-04T09:46:41.7973890Z hint: call:
+2026-11-04T09:46:41.7974806Z hint:
+2026-11-04T09:46:41.7975951Z hint: 	git config --global init.defaultBranch <name>
+2026-11-04T09:46:41.7977691Z hint:
+2026-11-04T09:46:41.7979055Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-04T09:46:41.7981333Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-04T09:46:41.7983282Z hint:
+2026-11-04T09:46:41.7984218Z hint: 	git branch -m <name>
+2026-11-04T09:46:41.7985281Z hint:
+2026-11-04T09:46:41.7986721Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-04T09:46:41.8000129Z Initialized empty Git repository in /home/runner/work/lighthouse/lighthouse/.git/
+2026-11-04T09:46:41.8013267Z [command]/usr/bin/git remote add origin https://github.com/juangcarmona/lighthouse
+2026-11-04T09:46:41.8066681Z ##[endgroup]
+2026-11-04T09:46:41.8069870Z ##[group]Disabling automatic garbage collection
+2026-11-04T09:46:41.8073746Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-04T09:46:41.8110418Z ##[endgroup]
+2026-11-04T09:46:41.8112809Z ##[group]Setting up auth
+2026-11-04T09:46:41.8117468Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T09:46:41.8157574Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T09:46:41.8553633Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T09:46:41.8599635Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T09:46:41.8842392Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T09:46:41.8887208Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T09:46:41.9133991Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-04T09:46:41.9184767Z ##[endgroup]
+2026-11-04T09:46:41.9187431Z ##[group]Fetching the repository
+2026-11-04T09:46:41.9198618Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin fb02d02c11efdd9d9ac4f503b08569466e2663cb
+2026-11-04T09:46:42.4056324Z From https://github.com/juangcarmona/lighthouse
+2026-11-04T09:46:42.4057573Z  * branch            fb02d02c11efdd9d9ac4f503b08569466e2663cb -> FETCH_HEAD
+2026-11-04T09:46:42.4062278Z ##[endgroup]
+2026-11-04T09:46:42.4063020Z ##[group]Determining the checkout info
+2026-11-04T09:46:42.4064714Z ##[endgroup]
+2026-11-04T09:46:42.4070996Z [command]/usr/bin/git sparse-checkout disable
+2026-11-04T09:46:42.4131874Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-04T09:46:42.4179065Z ##[group]Checking out the ref
+2026-11-04T09:46:42.4182889Z [command]/usr/bin/git checkout --progress --force fb02d02c11efdd9d9ac4f503b08569466e2663cb
+2026-11-04T09:46:42.5154906Z Note: switching to 'fb02d02c11efdd9d9ac4f503b08569466e2663cb'.
+2026-11-04T09:46:42.5155864Z 
+2026-11-04T09:46:42.5156506Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-04T09:46:42.5158219Z changes and commit them, and you can discard any commits you make in this
+2026-11-04T09:46:42.5159595Z state without impacting any branches by switching back to a branch.
+2026-11-04T09:46:42.5160336Z 
+2026-11-04T09:46:42.5160896Z If you want to create a new branch to retain commits you create, you may
+2026-11-04T09:46:42.5162190Z do so (now or later) by using -c with the switch command. Example:
+2026-11-04T09:46:42.5162962Z 
+2026-11-04T09:46:42.5163346Z   git switch -c <new-branch-name>
+2026-11-04T09:46:42.5163882Z 
+2026-11-04T09:46:42.5164250Z Or undo this operation with:
+2026-11-04T09:46:42.5164727Z 
+2026-11-04T09:46:42.5165250Z   git switch -
+2026-11-04T09:46:42.5165637Z 
+2026-11-04T09:46:42.5166046Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-04T09:46:42.5166555Z 
+2026-11-04T09:46:42.5167274Z HEAD is now at fb02d02 fix: validate publication against admitted repository revisions (#311)
+2026-11-04T09:46:42.5220625Z ##[endgroup]
+2026-11-04T09:46:42.5224273Z [command]/usr/bin/git log -1 --format=%H
+2026-11-04T09:46:42.5258719Z fb02d02c11efdd9d9ac4f503b08569466e2663cb
+2026-11-04T09:46:42.5268700Z ##[group]Removing auth
+2026-11-04T09:46:42.5272455Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T09:46:42.5314002Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T09:46:42.5562241Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T09:46:42.5599860Z http.https://github.com/.extraheader
+2026-11-04T09:46:42.5606060Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-04T09:46:42.5647436Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T09:46:42.5891521Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T09:46:42.5931949Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T09:46:42.6169794Z ##[endgroup]
+2026-11-04T09:46:42.7277416Z ##[group]Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+2026-11-04T09:46:42.7278092Z with:
+2026-11-04T09:46:42.7278475Z   node-version: 24
+2026-11-04T09:46:42.7278871Z   always-auth: false
+2026-11-04T09:46:42.7279269Z   check-latest: false
+2026-11-04T09:46:42.7294457Z   token: ***
+2026-11-04T09:46:42.7294903Z   package-manager-cache: true
+2026-11-04T09:46:42.7295344Z env:
+2026-11-04T09:46:42.7295729Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:42.7296207Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:42.7296661Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:42.7297305Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:42.7297776Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:42.7298303Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:42.7299383Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:42.7300492Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:42.7300973Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:42.7301478Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:42.7301914Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:42.7302320Z   GH_HOST: github.com
+2026-11-04T09:46:42.7302708Z ##[endgroup]
+2026-11-04T09:46:42.8962296Z Found in cache @ /opt/hostedtoolcache/node/24.22.1/x64
+2026-11-04T09:46:42.8968440Z (node:2365) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T09:46:42.8970282Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T09:46:42.8972145Z ##[group]Environment details
+2026-11-04T09:46:43.3322956Z node: v24.22.1
+2026-11-04T09:46:43.3323893Z npm: 11.19.1
+2026-11-04T09:46:43.3324546Z yarn: 1.22.22
+2026-11-04T09:46:43.3325660Z ##[endgroup]
+2026-11-04T09:46:43.4021849Z ##[group]Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+2026-11-04T09:46:43.4022388Z with:
+2026-11-04T09:46:43.4022671Z   name: lighthouse-implement-input-353-1
+2026-11-04T09:46:43.4023082Z   path: /home/runner/work/_temp/lighthouse-41808117191-1
+2026-11-04T09:46:43.4023462Z   merge-multiple: false
+2026-11-04T09:46:43.4023761Z   repository: juangcarmona/lighthouse
+2026-11-04T09:46:43.4024074Z   run-id: 41808117191
+2026-11-04T09:46:43.4024339Z   skip-decompress: false
+2026-11-04T09:46:43.4024614Z   digest-mismatch: error
+2026-11-04T09:46:43.4024874Z env:
+2026-11-04T09:46:43.4025128Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:43.4025470Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:43.4025767Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:43.4026067Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:43.4026377Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:43.4026735Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:43.4027837Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:43.4028915Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:43.4029237Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:43.4029581Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:43.4029870Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:43.4030134Z   GH_HOST: github.com
+2026-11-04T09:46:43.4030389Z ##[endgroup]
+2026-11-04T09:46:43.5514343Z Downloading single artifact
+2026-11-04T09:46:43.6754705Z Preparing to download the following artifacts:
+2026-11-04T09:46:43.6757079Z - lighthouse-implement-input-353-1 (ID: 13311066041, Size: 40685, Expected Digest: sha256:4f5e75261fa1cbce2feb3e90f6441176b772af6d4abff0ab72d7652c7b93c2e9)
+2026-11-04T09:46:43.8334603Z Redirecting to blob download url: https://productionresultssa1.blob.core.windows.net/actions-results/a8b97c93-8cc2-4a2e-9469-72db0851e4ec/workflow-job-run-4dae7d98-de72-5fdd-83a3-68b8f7784609/artifacts/c2b870cbbe6a00711dde973990c65ff7b86e767d018163261fc06f11747bccf9.zip
+2026-11-04T09:46:43.8337956Z Starting download of artifact to: /home/runner/work/_temp/lighthouse-41808117191-1
+2026-11-04T09:46:43.8682327Z (node:2405) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-11-04T09:46:43.8683833Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T09:46:43.8790335Z SHA256 digest of downloaded artifact is 4f5e75261fa1cbce2feb3e90f6441176b772af6d4abff0ab72d7652c7b93c2e9
+2026-11-04T09:46:43.8791183Z Artifact download completed successfully.
+2026-11-04T09:46:43.8791644Z Total of 1 artifact(s) downloaded
+2026-11-04T09:46:43.8798261Z Download artifact has finished successfully
+2026-11-04T09:46:43.9491845Z ##[group]Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+2026-11-04T09:46:43.9492304Z with:
+2026-11-04T09:46:43.9492550Z   name: lighthouse-implement-result-353-1
+2026-11-04T09:46:43.9492948Z   path: /home/runner/work/_temp/lighthouse-41808117191-1
+2026-11-04T09:46:43.9493286Z   merge-multiple: false
+2026-11-04T09:46:43.9493537Z   repository: juangcarmona/lighthouse
+2026-11-04T09:46:43.9493808Z   run-id: 41808117191
+2026-11-04T09:46:43.9494041Z   skip-decompress: false
+2026-11-04T09:46:43.9494277Z   digest-mismatch: error
+2026-11-04T09:46:43.9494494Z env:
+2026-11-04T09:46:43.9494696Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:43.9494974Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:43.9495231Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:43.9495495Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:43.9495761Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:43.9496078Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:43.9497130Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:43.9497920Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:43.9498220Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:43.9498530Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:43.9498790Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:43.9499014Z   GH_HOST: github.com
+2026-11-04T09:46:43.9499229Z ##[endgroup]
+2026-11-04T09:46:44.0903607Z Downloading single artifact
+2026-11-04T09:46:44.1818139Z Preparing to download the following artifacts:
+2026-11-04T09:46:44.1850592Z - lighthouse-implement-result-353-1 (ID: 13311662225, Size: 6055, Expected Digest: sha256:2f98b4a7bf192d8ff2279112986c267649a987c3bbcc44cacb854d4d9b21b3ae)
+2026-11-04T09:46:44.3607755Z Redirecting to blob download url: https://productionresultssa1.blob.core.windows.net/actions-results/a8b97c93-8cc2-4a2e-9469-72db0851e4ec/workflow-job-run-a07e6dba-c368-52ae-b66f-2787b6816508/artifacts/4e4fad07b5da182186ed24ccea5706b86f56b2a571caf633cc3f067338d91dd6.zip
+2026-11-04T09:46:44.3610694Z Starting download of artifact to: /home/runner/work/_temp/lighthouse-41808117191-1
+2026-11-04T09:46:44.3894227Z (node:2418) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-11-04T09:46:44.3896589Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T09:46:44.3968926Z SHA256 digest of downloaded artifact is 2f98b4a7bf192d8ff2279112986c267649a987c3bbcc44cacb854d4d9b21b3ae
+2026-11-04T09:46:44.3970077Z Artifact download completed successfully.
+2026-11-04T09:46:44.3970724Z Total of 1 artifact(s) downloaded
+2026-11-04T09:46:44.3973668Z Download artifact has finished successfully
+2026-11-04T09:46:44.4629611Z ##[group]Run node src/packages/sdlc/src/issue-actions.mjs publish
+2026-11-04T09:46:44.4630143Z [36;1mnode src/packages/sdlc/src/issue-actions.mjs publish[0m
+2026-11-04T09:46:44.4655213Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:46:44.4655493Z env:
+2026-11-04T09:46:44.4655718Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:46:44.4656049Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:46:44.4656321Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:46:44.4656603Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:46:44.4657045Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:46:44.4657382Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:46:44.4658222Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:46:44.4659012Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:46:44.4659313Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:46:44.4659683Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:46:44.4659947Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:46:44.4660186Z   GH_HOST: github.com
+2026-11-04T09:46:44.4662800Z   GH_TOKEN: ***
+2026-11-04T09:46:44.4663032Z ##[endgroup]
+2026-11-04T09:47:25.3402434Z Published pr-draft: https://github.com/juangcarmona/lighthouse/issues/353#issuecomment-6627747364
+2026-11-04T09:47:25.3743365Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-04T09:47:25.3743814Z with:
+2026-11-04T09:47:25.3744033Z   if-no-files-found: ignore
+2026-11-04T09:47:25.3744355Z   name: lighthouse-implement-publication-353-1
+2026-11-04T09:47:25.3744793Z   path: /home/runner/work/_temp/lighthouse-41808117191-1/published-pr.json
+2026-11-04T09:47:25.3745196Z   retention-days: 14
+2026-11-04T09:47:25.3745436Z   compression-level: 6
+2026-11-04T09:47:25.3745672Z   overwrite: false
+2026-11-04T09:47:25.3745903Z   include-hidden-files: false
+2026-11-04T09:47:25.3746151Z   archive: true
+2026-11-04T09:47:25.3746354Z env:
+2026-11-04T09:47:25.3746565Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:47:25.3747184Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:47:25.3747476Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:47:25.3747745Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:47:25.3748017Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:47:25.3748375Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:47:25.3749210Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:47:25.3749980Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:47:25.3750283Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:47:25.3750597Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:47:25.3750854Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:47:25.3751083Z   GH_HOST: github.com
+2026-11-04T09:47:25.3751306Z ##[endgroup]
+2026-11-04T09:47:25.5230337Z With the provided path, there will be 1 file uploaded
+2026-11-04T09:47:25.5236464Z Artifact name is valid!
+2026-11-04T09:47:25.5237471Z Root directory input is valid!
+2026-11-04T09:47:25.7340649Z Uploading artifact: lighthouse-implement-publication-353-1.zip
+2026-11-04T09:47:25.7382909Z Beginning upload of artifact content to blob storage
+2026-11-04T09:47:25.8029620Z Uploaded bytes 212
+2026-11-04T09:47:25.8151855Z Finished uploading artifact content to blob storage!
+2026-11-04T09:47:25.8153240Z SHA256 digest of uploaded artifact is 97326dc3b87c11542ab22247e162d8be3f9030c3629804a7c738ccc169945846
+2026-11-04T09:47:25.8154360Z Finalizing artifact upload
+2026-11-04T09:47:26.2523722Z Artifact lighthouse-implement-publication-353-1 successfully finalized. Artifact ID 13312056327
+2026-11-04T09:47:26.2525880Z Artifact lighthouse-implement-publication-353-1 has been successfully uploaded! Final size is 212 bytes. Artifact ID is 13312056327
+2026-11-04T09:47:26.2528332Z Artifact download URL: https://github.com/juangcarmona/lighthouse/actions/runs/41808117191/artifacts/13312056327
+2026-11-04T09:47:26.2802558Z ##[group]Run node src/packages/sdlc/src/issue-actions.mjs cleanup
+2026-11-04T09:47:26.2803472Z [36;1mnode src/packages/sdlc/src/issue-actions.mjs cleanup[0m
+2026-11-04T09:47:26.2825010Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:47:26.2825276Z env:
+2026-11-04T09:47:26.2825503Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:47:26.2825828Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:47:26.2826112Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:47:26.2826386Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:47:26.2826672Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:47:26.2827187Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:47:26.2828039Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:47:26.2828818Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:47:26.2829107Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:47:26.2829453Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:47:26.2829718Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:47:26.2829944Z   GH_HOST: github.com
+2026-11-04T09:47:26.2832550Z   GH_TOKEN: ***
+2026-11-04T09:47:26.2832799Z   LIGHTHOUSE_AGENT_RESULT: success
+2026-11-04T09:47:26.2833086Z   LIGHTHOUSE_PUBLISH_STATUS: success
+2026-11-04T09:47:26.2833365Z ##[endgroup]
+2026-11-04T09:47:31.1483236Z Execution reservation released
+2026-11-04T09:47:31.1659126Z ##[group]Run node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
+2026-11-04T09:47:31.1659755Z [36;1mnode src/packages/sdlc/src/issue-actions.mjs continue-product-gap[0m
+2026-11-04T09:47:31.1680387Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:47:31.1680659Z env:
+2026-11-04T09:47:31.1680875Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+2026-11-04T09:47:31.1681178Z   LIGHTHOUSE_EPIC_CAPACITY: 
+2026-11-04T09:47:31.1681448Z   LIGHTHOUSE_RECOVERY_ENABLED: 
+2026-11-04T09:47:31.1681728Z   LIGHTHOUSE_WORKER: apply-review
+2026-11-04T09:47:31.1682003Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+2026-11-04T09:47:31.1682339Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-apply-review
+2026-11-04T09:47:31.1683180Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=apply%20review,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41808117191,github.run_id=41808117191,gh-aw.engine.id=opencode
+2026-11-04T09:47:31.1683971Z   OTEL_EXPORTER_OTLP_HEADERS: 
+2026-11-04T09:47:31.1684302Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+2026-11-04T09:47:31.1684617Z   GH_AW_OTLP_IF_MISSING: ignore
+2026-11-04T09:47:31.1684882Z   LIGHTHOUSE_ISSUE: 353
+2026-11-04T09:47:31.1685112Z   GH_HOST: github.com
+2026-11-04T09:47:31.1688186Z   GH_TOKEN: ***
+2026-11-04T09:47:31.1688441Z ##[endgroup]
+2026-11-04T09:47:31.2713006Z Post job cleanup.
+2026-11-04T09:47:31.4076498Z (node:2624) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T09:47:31.4078331Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T09:47:31.4736643Z Post job cleanup.
+2026-11-04T09:47:31.5767907Z [command]/usr/bin/git version
+2026-11-04T09:47:31.5837674Z git version 2.56.0
+2026-11-04T09:47:31.5899409Z Temporarily overriding HOME='/home/runner/work/_temp/2c82050f-66cb-46e0-a05b-586a03e4ee40' before making global git config changes
+2026-11-04T09:47:31.5925000Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T09:47:31.5934286Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:47:31.5959803Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T09:47:31.6000907Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T09:47:31.6293196Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T09:47:31.6343225Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T09:47:31.6624925Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T09:47:31.6675823Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T09:47:31.7103769Z Cleaning up orphan processes
