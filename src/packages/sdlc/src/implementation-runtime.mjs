@@ -2,6 +2,7 @@ import { chmod, mkdir, writeFile, readdir, lstat, copyFile, mkdtemp, rename, rm 
 import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { changesDigest } from './implementation.mjs';
+import { commandEvidenceBinding, retainedCommandOutput } from './implementation-evidence.mjs';
 import { startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { executionLimits, resourceArgs, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { fileURLToPath } from 'node:url';
@@ -71,15 +72,23 @@ export async function copyEvidence(source, destination) {
 
 // Scratch belongs to the disposable container, never the retained evidence tree.
 export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
+// A regular-file stdout prevents providers using process.exit() from truncating pending pipe writes.
+const checkOutputCommand = 'node /harness/src/managed-command.mjs run /diagnostics "$@" > /tmp/lighthouse-check.log 2>&1; check_exit=$?; cat /tmp/lighthouse-check.log || exit 125; exit "$check_exit"';
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
   await prepareImplementationWorkspace(workspace, config, request.issue);
   const limits = executionLimits(config);
   const harness = fileURLToPath(new URL('../', import.meta.url));
   const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), image: config.image, limits, environment: environmentReceipt(selected), checks: [] };
+  if (request.repository && request.workflowRunId && request.attempt && request.taskDigest) {
+    receipt.schemaVersion = 2;
+    receipt.binding = commandEvidenceBinding(request);
+    receipt.candidateTree = execFileSync('git', ['-c', `safe.directory=${workspace}`, '-C', workspace, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
+    receipt.observedAt = new Date().toISOString();
+  }
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
-  const runtime = await startEnvironment({ selected, image: config.image, commands: request.implementation.policy.checks, agent: false, name: `${name}-validation`, uid: config.uid });
+  const runtime = await startEnvironment({ selected, image: config.image, commands: [['sh'], ...request.implementation.policy.checks], agent: false, name: `${name}-validation`, uid: config.uid });
   const originalRedact = redact;
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
@@ -88,8 +97,8 @@ export async function runImplementationChecks({ config, request, changes, worksp
       const remaining = deadline - Date.now();
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
-      let log = '', pending = '';
-      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/diagnostics', `check-${i + 1}`, '--', ...command];
+      let log = '', pending = '', logTruncated = false;
+      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command];
       let reason = null;
       const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -102,19 +111,23 @@ export async function runImplementationChecks({ config, request, changes, worksp
           while ((end = pending.indexOf('\n')) >= 0) {
             const line = redact(pending.slice(0, end)); pending = pending.slice(end + 1);
             if (log.length < 512000) { log += line + '\n'; console.log(`[Check] ${line.slice(0, 1000)}`); }
+            else logTruncated = true;
           }
-          if (pending.length > 65536) pending = '[oversized check log line omitted]\n';
+          if (pending.length > 65536) { pending = '[oversized check log line omitted]\n'; logTruncated = true; }
         };
         for (const stream of [child.stdout, child.stderr]) { stream.setEncoding('utf8'); stream.on('data', consume); }
         const complete = (code, signal = null) => { clearTimeout(timer); clearInterval(cancellation); resolve({ code, signal }); };
         child.on('error', () => complete(127));
         child.on('close', complete);
       });
-      log += redact(pending).slice(0, 65536);
+      const tail = redact(pending);
+      if (tail.length > 65536) logTruncated = true;
+      log += tail.slice(0, 65536);
       await writeFile(join(output, `check-${i + 1}.log`), log);
       const execution = await executionReceipt(join(output, `check-${i + 1}.json`), exit, reason);
       const exitCode = execution.status === 'passed' ? 0 : exit.code || 1;
-      receipt.checks.push({ command, exitCode, execution });
+      const evidencePaths = [...changes.map(file => file.path), ...(request.implementation.proposal?.root ? [request.implementation.proposal.root + '/'] : [])];
+      receipt.checks.push({ command, exitCode, execution, output: retainedCommandOutput(log, logTruncated, evidencePaths) });
       console.log(`Host check ${i + 1}: ${exitCode === 0 ? 'passed' : executionFailure(execution)}`);
       if (exitCode !== 0) {
         for (const skipped of request.implementation.policy.checks.slice(i + 1)) receipt.checks.push({ command: skipped, exitCode: 125, reason: 'Not run after a failed check' });
@@ -123,5 +136,6 @@ export async function runImplementationChecks({ config, request, changes, worksp
     }
   } finally { receipt.serviceCleanup = runtime.cleanup() !== false; }
   if (!receipt.serviceCleanup && receipt.checks.length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Environment cleanup failed; operator cleanup required'; }
+  if (receipt.schemaVersion === 2) receipt.observedAt = new Date().toISOString();
   return receipt;
 }
