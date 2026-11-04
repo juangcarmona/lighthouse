@@ -1,1 +1,1 @@
-Controlled receipt transport acceptance.
+Changed after verification; this head needs a new command receipt.
