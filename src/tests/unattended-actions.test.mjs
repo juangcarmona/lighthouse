@@ -61,6 +61,7 @@ async function fixture() {
     throw Error('Unexpected fixture API: ' + method + ' ' + path);
   };
   const execute = async options => {
+    assert.equal(options.request.repository, 'owner/repo');
     executions.push(options);
     const envelope = stageContext(options.request, issue()).contract.envelope;
     let changes = [], receipt = null;

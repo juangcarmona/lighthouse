@@ -135,7 +135,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   };
   const step = async (stage, worker, text, extra = {}, selectedPolicy = implementation.policy) => {
     await recheck();
-    const request = { runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
+    const request = { repository, runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
       ...(stage === 'implement' ? { implementation: { ...implementation, policy: selectedPolicy } } : {}) };
     const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');

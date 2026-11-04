@@ -36,7 +36,11 @@ The agent and independent checks use different containers, networks and database
 
 NuGet packages and .NET CLI state use writable temporary directories rather than the engine's read-only home. Each independent command has fresh temporary storage: combine restore and test in the consumer's verification command instead of assuming a prior command's NuGet cache survives.
 
-Cancellation first removes workload containers, then removes services. Forced host termination cannot guarantee cleanup: after confirming a run is stopped, the operator must remove its named `lighthouse-engine-<runId>-agent-postgres` and `lighthouse-engine-<runId>-validation-postgres` containers with `docker rm -f -v`, then their corresponding `-network` networks with `docker network rm`. Never prune unrelated resources. Cleanup failures are reported and prevent successful independent validation.
+Cancellation first removes workload containers, then services. The host records repository, native run and attempt ownership before allocating containers or networks, including temporary helpers. It retains journals in `<operator lock path>.resources`; operators must create this private directory and persistently mount it at the same absolute path when the runner is containerized. The journal is never mounted in a workload.
+
+`runtime.json.cleanup` reports an independent inventory after removal: `clean`, `failed` with remaining owned identities, or actionable `unknown`. A successful delete response alone cannot pass. Shared named authentication/cache volumes are preserved. Lost create acknowledgements without an observed resource remain unknown and block further allocation.
+
+Under the existing engine lock, the next invocation reconciles stopped owners from durable journals before admission. An active process, changed PID namespace, missing ownership or unavailable/incomplete runtime inventory blocks admission. A host reboot can establish that an earlier process stopped; this does not grant delivery retry or publication authority. Preserve uncertain journals for operator inspection and never prune unrelated resources.
 
 See the source repository's `src/examples/opencode-engine/ENVIRONMENTS.md` for local build, host installation, update, rollback and clean consumer acceptance instructions. Registry publication and production deployment are not part of this profile.
 

@@ -1,6 +1,7 @@
 import { chmod, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { runOwnedDocker } from './execution-cleanup.mjs';
 
 export function codegraphSelection(config, implementing) {
   if (!config.codegraph || config.codegraph.enabled === false) return { status: 'disabled' };
@@ -39,7 +40,7 @@ export async function startCodegraph({ config, source, harness, dir, name, docke
     '--mount', `type=bind,src=${policy},dst=/codegraph-mcp.mjs,readonly`,
     '--mount', `type=bind,src=${state},dst=/codegraph`, '--entrypoint', 'node', config.image, '/sidecar.mjs'];
   try {
-    const workerConfig = JSON.parse(execFileSync('docker', ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
+    const workerConfig = JSON.parse(runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
     configureCodegraphWorker(workerConfig);
     const workerConfigPath = join(state, 'worker-opencode.json');
     await writeFile(workerConfigPath, JSON.stringify(workerConfig)); await chmod(workerConfigPath, 0o444);
@@ -48,7 +49,7 @@ export async function startCodegraph({ config, source, harness, dir, name, docke
       try {
         const receipt = JSON.parse(await readFile(join(state, 'ready.json'), 'utf8'));
         if (receipt.status === 'available') {
-          const probe = execFileSync('docker', ['run', '--rm', '--network', 'none', '--read-only', '--user', `${config.uid}:${config.uid}`,
+          const probe = runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--read-only', '--user', `${config.uid}:${config.uid}`,
             '--tmpfs', '/tmp:rw,size=64m', '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`,
             '--tmpfs', `/home/engine/.cache:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
             '--tmpfs', `/home/engine/.local/share/opencode:rw,size=64m,uid=${config.uid},gid=${config.uid}`,

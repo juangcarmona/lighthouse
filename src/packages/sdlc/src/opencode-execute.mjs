@@ -12,6 +12,7 @@ import { selectEnvironment, startEnvironment, environmentArgs, environmentReceip
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
 import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
+import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
 
 export function completionOutput(envelope, request) {
@@ -95,22 +96,26 @@ async function main() {
   await chmod(dir, 0o755);
   const source = join(dir, 'source'), output = join(dir, 'output');
   await mkdir(source); await mkdir(output); await chmod(output, 0o777);
-  const name = `lighthouse-engine-${request.runId}`;
+  let name;
   const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
   const runtimeReceipt = { package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
   let phase = 'preflight', evidenceRetained = false;
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
-  const docker = args => execFileSync('docker', args, { stdio: 'ignore', timeout: 30000 });
+  const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
   let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, cancelled = false, stopReason = null;
-  const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; child?.kill('SIGTERM'); try { docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
+  const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
     console.log('Waiting for the operator host engine slot');
     slot = acquireEngineSlot(config.lock);
+    const ownershipDirectory = `${config.lock}.resources`;
+    runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
+    config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
+    name = `${config.resourceOwner.prefix}-engine`;
     await recordPhase('running');
-    runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid });
+    runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
     await recordPhase('passed');
     if (cancelled) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
@@ -141,11 +146,11 @@ async function main() {
     runtimeReceipt.codegraph = { status: codegraph.status, ...(codegraph.reason ? { reason: codegraph.reason } : {}), ...(codegraph.tools ? { tools: codegraph.tools } : {}) };
     phase = 'execution'; await recordPhase('running');
     const command = imageCommand(config.image);
-    const args = ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
+    const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`, '--mount', `type=bind,src=${codegraph.workerConfigPath},dst=/etc/opencode/opencode.json,readonly`] : []),
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command];
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
     const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -181,7 +186,7 @@ async function main() {
         stream.on('data', chunk => { if (!cancelled) lines.write(chunk); });
         stream.on('end', () => { if (!cancelled) lines.end(); });
       }
-      child.on('error', () => ok({ code: 127, signal: null })); child.on('close', (code, signal) => ok({ code, signal }));
+      child.on('error', () => ok({ code: 127, signal: null })); child.on('close', (code, signal) => { if (Number.isInteger(code) && ![125, 126, 127].includes(code)) config.resourceOwner?.completed(args); ok({ code, signal }); });
       timer = setTimeout(() => cancel('timeout'), implementing ? 1800000 : 600000);
     });
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
@@ -242,7 +247,7 @@ async function main() {
     await recordPhase('failed');
     if (implementing && baseline) {
       try {
-        try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
+        try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
         restoreWorkspaceOwnership(dir, config);
         const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
         await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
@@ -256,14 +261,17 @@ async function main() {
     throw error;
   } finally {
     clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
-    try { docker(['rm', '-f', name, `${name}-checks`]); } catch {}
+    try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
     stopCodegraph(codegraph?.sidecar);
     runtime?.cleanup();
-    try { docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
-    if (slot !== undefined) closeSync(slot);
+    try { if (config.resourceOwner) docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     // Read-only stages also create engine-owned command receipt directories.
-    try { restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
-    await rm(dir, { recursive: true, force: true });
+    try { if (config.resourceOwner) restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
+    try {
+      if (config.resourceOwner) { runtimeReceipt.cleanup = config.resourceOwner.cleanup(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); }
+      await rm(dir, { recursive: true, force: true });
+    } finally { if (slot !== undefined) closeSync(slot); }
+    if (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean') throw Object.assign(Error('Execution cleanup is not verified; inspect runtime.json and the operator ownership journal before retrying'), { phase: 'cleanup' });
   }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {

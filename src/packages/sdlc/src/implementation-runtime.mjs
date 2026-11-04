@@ -7,6 +7,7 @@ import { commandEvidenceBinding, retainedCommandOutput } from './implementation-
 import { startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { executionLimits, resourceArgs, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { fileURLToPath } from 'node:url';
+import { ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 
 export async function writableTree(root) {
   await chmod(root, 0o777);
@@ -19,12 +20,12 @@ export async function writableTree(root) {
 }
 export function restoreWorkspaceOwnership(root, config) {
   // Checks can create private directories; CHOWN alone cannot traverse another UID's tree.
-  execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--cap-add', 'DAC_OVERRIDE', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup'], { stdio: 'ignore', timeout: 30000 });
+  runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--cap-add', 'DAC_OVERRIDE', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', config.image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup'], { stdio: 'ignore', timeout: 30000 });
 }
 export async function prepareWorkspace(root, config) {
   await writableTree(root);
   // npm workspaces chmod linked executables; write permission alone is insufficient.
-  execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/workspace`, '--entrypoint', 'chown', config.image, '-R', `${config.uid}:${config.uid}`, '/workspace'], { stdio: 'inherit', timeout: 30000 });
+  runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/workspace`, '--entrypoint', 'chown', config.image, '-R', `${config.uid}:${config.uid}`, '/workspace'], { stdio: 'inherit', timeout: 30000 });
 }
 export async function prepareImplementationWorkspace(workspace, config, issue) {
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Implementation workspace requires a positive issue number');
@@ -90,7 +91,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
-  const runtime = await startEnvironment({ selected, image: config.image, commands: [['sh'], ...request.implementation.policy.checks], agent: false, name: `${name}-validation`, uid: config.uid });
+  const runtime = await startEnvironment({ selected, image: config.image, commands: [['sh'], ...request.implementation.policy.checks], agent: false, name: `${name}-validation`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
   const originalRedact = redact;
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
@@ -100,11 +101,11 @@ export async function runImplementationChecks({ config, request, changes, worksp
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
       let log = '', pending = '', logTruncated = false;
-      const args = ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command];
+      const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command]);
       let reason = null;
       const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
-        const stop = why => { if (reason) return; reason = why; child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); };
+        const stop = why => { if (reason) return; reason = why; try { config.resourceOwner?.observe(); } catch {} child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); };
         const timer = setTimeout(() => stop('timeout'), remaining);
         const cancellation = setInterval(() => { if (cancelled()) stop('cancelled'); }, 100);
         const consume = chunk => {
@@ -118,7 +119,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
           if (pending.length > 65536) { pending = '[oversized check log line omitted]\n'; logTruncated = true; }
         };
         for (const stream of [child.stdout, child.stderr]) { stream.setEncoding('utf8'); stream.on('data', consume); }
-        const complete = (code, signal = null) => { clearTimeout(timer); clearInterval(cancellation); resolve({ code, signal }); };
+        const complete = (code, signal = null) => { clearTimeout(timer); clearInterval(cancellation); if (Number.isInteger(code) && ![125, 126, 127].includes(code)) config.resourceOwner?.completed(args); resolve({ code, signal }); };
         child.on('error', () => complete(127));
         child.on('close', complete);
       });
