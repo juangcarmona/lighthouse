@@ -186,20 +186,7 @@ jobs:
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          cat > "$RUNNER_TEMP/142-after-merge-fault.mjs" <<'JS'
-          import { readFileSync } from 'node:fs';
-          const original = globalThis.fetch;
-          globalThis.fetch = async (url, options = {}) => {
-            if (process.env.LIGHTHOUSE_ISSUE === '362' && options.method === 'POST' && String(url).endsWith('/git/blobs')) {
-              const receipt = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/lighthouse-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}/integration-receipt.json`, 'utf8'));
-              if (receipt.state !== 'merged' || !/^[a-f0-9]{40}$/.test(receipt.sha)) throw Error('Fault injection lacks a confirmed original merge receipt');
-              throw Error('Controlled #142 evidence-publication interruption after confirmed merge');
-            }
-            return original(url, options);
-          };
-          JS
-          node --import "$RUNNER_TEMP/142-after-merge-fault.mjs" src/packages/sdlc/src/completion-actions.mjs publish
+        run: node src/packages/sdlc/src/completion-actions.mjs publish
       - name: Preserve merge and publication receipts
         if: always()
         uses: actions/upload-artifact@v7

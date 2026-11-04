@@ -80,19 +80,6 @@ steps:
     with:
       name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
-  - name: Controlled original-attempt interruption for issue 359
-    if: inputs.issue == '359'
-    env:
-      ACCEPTANCE_REQUEST: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
-    run: |
-      node --input-type=module - <<'JS'
-      import { readFileSync } from 'node:fs';
-      const request = JSON.parse(readFileSync(process.env.ACCEPTANCE_REQUEST, 'utf8'));
-      if (request.issue !== 359) throw Error('Wrong acceptance subject');
-      if (!request.dispatch?.recovery) throw Error('Controlled #142 pre-engine interruption; no provider outage is claimed');
-      console.log('Linked retry: execute the ordinary refinement engine.');
-      JS
-
 post-steps:
   - name: Validate the Lighthouse result
     run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs validate
