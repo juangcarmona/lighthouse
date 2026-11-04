@@ -214,6 +214,7 @@ jobs:
           path: |
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/ci-requests.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/ci-failure.json
           if-no-files-found: ignore
           retention-days: 14
       - name: Release the issue reservation

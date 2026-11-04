@@ -65,7 +65,7 @@ export async function readFailureEvidence(api, repository, request, run, jobs, r
 }
 
 export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now = Date.now() }) {
-  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome };
+  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome, ...(request.completionAuthorization ? { pr: request.completionAuthorization.pr, head: request.completionAuthorization.head } : {}) };
   const cause = classifyTechnicalFailure({ run, jobs, evidence });
   const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, cause, nextAction, ...extra });
   if (run.status !== 'completed') {

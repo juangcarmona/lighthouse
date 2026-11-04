@@ -86,8 +86,61 @@ test('reports reject spoofed ownership and never publish free text or logs', asy
   await assert.rejects(publishReports(f.api, repo, owner, 1, [observation(11)]), /bot-owned/);
   const g = fixture();
   await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), worker: 'secret-worker' }]), /Unknown observed/);
-  await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), runId: '11?token=secret' }]), /Invalid report occurrence/);
+  await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), runId: '11?token=secret' }]), /Invalid report (occurrence|context)/);
   assert.equal(g.issues.length, 1);
+});
+
+test('latest linked execution explains active work and human waits without adding failures or claiming recovery', async () => {
+  const f = fixture();
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  for (const [state, code] of [['active', 'worker-active'], ['waiting-human', 'human-decision'], ['blocked', 'stage-blocked']]) {
+    await publishReports(f.api, repo, owner, 1, [{ ...observation(12), attempt: 1, state, code, pr: 60, head: 'd'.repeat(40), nextAction: 'SECRET' }]);
+    const report = readReport(f.issues[1], repo, 'implement', 'worker-technical-failure');
+    assert.equal(report.entries.length, 1);
+    assert.equal(report.entries[0].runId, '11');
+    assert.equal(report.contexts[0].runId, '12');
+    assert.equal(report.contexts[0].state, state);
+    assert.equal(f.issues[1].state, 'open');
+    assert.match(f.issues[1].body, /PR #60/);
+    assert.doesNotMatch(f.issues[1].body, /SECRET|Recovery confirmed/);
+  }
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', code).contexts[0].state, 'blocked', 'older observations cannot overwrite the latest execution');
+});
+
+test('exhaustion and exact retry delay have concrete actions; uncertain successful publication is not recovery', async () => {
+  const f = fixture(), retryAt = '2026-11-04T13:00:00.000Z';
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(11), state: 'delayed', retryAt }]);
+  assert.match(f.issues[1].body, /wait until 2026-11-04T13:00/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), state: 'exhausted', attempt: 2 }]);
+  assert.match(f.issues[1].body, /Owner: retry budget exhausted/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'uncertain', code: 'ci-start-unconfirmed', outcome: 'completed', pr: 60, head: 'd'.repeat(40) }]);
+  assert.equal(f.issues.length, 3);
+  assert.match(f.issues[2].body, /execution outcome: completed/);
+  assert.doesNotMatch(f.issues[2].body, /Recovery confirmed/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-requested' }]);
+  assert.equal(f.issues[2].state, 'open');
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-observed' }]);
+  assert.equal(f.issues[2].state, 'closed');
+  assert.match(f.issues[2].body, /CI success and delivery acceptance are separate/);
+  assert.equal(f.issues[1].state, 'open', 'CI observation cannot hide an unrelated exhausted execution failure');
+});
+
+test('normal waits create no incidents; legacy reports migrate and invalid context metadata cannot enter reports', async () => {
+  const f = fixture();
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(11), state: 'waiting-human', code: 'human-decision' }]);
+  assert.equal(f.issues.length, 1);
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  const legacy = readReport(f.issues[1], repo, 'implement', code);
+  delete legacy.contexts; legacy.schemaVersion = 1;
+  f.issues[1].body = `<!-- lighthouse-worker-report:${JSON.stringify(legacy)} -->`;
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
+  assert.equal(f.issues[1].state, 'closed');
+  assert.equal(readReport(f.issues[1], repo, 'implement', code).schemaVersion, 2);
+  for (const invalid of [{ pr: '60?SECRET' }, { head: 'SECRET' }, { retryAt: 'SECRET' }, { outcome: 'SECRET' }]) {
+    await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(13), ...invalid }]), /Invalid report context metadata/);
+  }
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [observation(11, 'b'.repeat(64))]), /identity changed/);
 });
 
 test('owner index edits and occurrence overflow stop publication visibly', async () => {

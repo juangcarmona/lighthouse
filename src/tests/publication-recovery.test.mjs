@@ -84,3 +84,10 @@ test('owner review and a forged recovery receipt cannot grant another CI send', 
     assert.equal(f.writes.filter(write => write.path.endsWith('/dispatches')).length, 1);
   }
 });
+
+test('legacy exception messages are never republished in a recovery receipt', async () => {
+  const f = await fixture();
+  f.setRequests([{ schemaVersion: 1, pr: 60, head, branch: f.pr.head.ref, workflow: 'verify.yml', attempt: 1, state: 'unknown', observedAt: '2020-01-01T00:00:00Z', error: { message: 'SECRET response body', name: 'PRIVATE' } }]);
+  assert.equal((await f.call()).code, 'ci-start-unconfirmed');
+  assert.doesNotMatch(JSON.stringify(f.writes), /SECRET|PRIVATE|response body/);
+});
