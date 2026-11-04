@@ -1,0 +1,837 @@
+﻿2026-11-04T09:27:55.8345217Z Current runner version: '2.338.2'
+2026-11-04T09:27:55.8371620Z ##[group]Runner Image Provisioner
+2026-11-04T09:27:55.8372547Z Hosted Compute Agent
+2026-11-04T09:27:55.8373237Z Version: 20261021.618
+2026-11-04T09:27:55.8373905Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-11-04T09:27:55.8374717Z Build Date: 2026-10-21T00:45:21Z
+2026-11-04T09:27:55.8375434Z Worker ID: {bf566f4b-87cb-4da7-bd19-50c14a93a406}
+2026-11-04T09:27:55.8376258Z Region: westus
+2026-11-04T09:27:55.8376871Z Cloud: Azure
+2026-11-04T09:27:55.8377410Z ##[endgroup]
+2026-11-04T09:27:55.8379240Z ##[group]Operating System
+2026-11-04T09:27:55.8379997Z Ubuntu
+2026-11-04T09:27:55.8380563Z 26.04.1
+2026-11-04T09:27:55.8381117Z LTS
+2026-11-04T09:27:55.8381665Z ##[endgroup]
+2026-11-04T09:27:55.8382282Z ##[group]Runner Image
+2026-11-04T09:27:55.8382955Z Image: ubuntu-26.04
+2026-11-04T09:27:55.8383567Z Version: 20261025.179.1
+2026-11-04T09:27:55.8384864Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261025.179/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-04T09:27:55.8386417Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261025.179
+2026-11-04T09:27:55.8387562Z ##[endgroup]
+2026-11-04T09:27:55.8389297Z ##[group]GITHUB_TOKEN Permissions
+2026-11-04T09:27:55.8391279Z Contents: read
+2026-11-04T09:27:55.8391904Z Metadata: read
+2026-11-04T09:27:55.8392546Z ##[endgroup]
+2026-11-04T09:27:55.8394703Z Secret source: Actions
+2026-11-04T09:27:55.8395751Z Cache mode: write
+2026-11-04T09:27:55.8396492Z Prepare workflow directory
+2026-11-04T09:27:55.8743171Z Prepare all required actions
+2026-11-04T09:27:55.8809202Z Getting action download info
+2026-11-04T09:27:56.2140730Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-11-04T09:27:56.3253362Z Download action repository 'actions/setup-node@v5' (SHA:a0853c24544627f65ddf259abe73b1d18a591444)
+2026-11-04T09:27:56.5539103Z Complete job name: repository
+2026-11-04T09:27:56.6420882Z ##[group]Run actions/checkout@v5
+2026-11-04T09:27:56.6421807Z with:
+2026-11-04T09:27:56.6422275Z   repository: juangcarmona/lighthouse
+2026-11-04T09:27:56.6426084Z   token: ***
+2026-11-04T09:27:56.6426524Z   ssh-strict: true
+2026-11-04T09:27:56.6426980Z   ssh-user: git
+2026-11-04T09:27:56.6427430Z   persist-credentials: true
+2026-11-04T09:27:56.6428128Z   clean: true
+2026-11-04T09:27:56.6428585Z   sparse-checkout-cone-mode: true
+2026-11-04T09:27:56.6429116Z   fetch-depth: 1
+2026-11-04T09:27:56.6429546Z   fetch-tags: false
+2026-11-04T09:27:56.6430001Z   show-progress: true
+2026-11-04T09:27:56.6430457Z   lfs: false
+2026-11-04T09:27:56.6430870Z   submodules: false
+2026-11-04T09:27:56.6431324Z   set-safe-directory: true
+2026-11-04T09:27:56.6431839Z   allow-unsafe-pr-checkout: false
+2026-11-04T09:27:56.6432640Z ##[endgroup]
+2026-11-04T09:27:56.9126415Z Syncing repository: juangcarmona/lighthouse
+2026-11-04T09:27:56.9128723Z ##[group]Getting Git version info
+2026-11-04T09:27:56.9129588Z Working directory is '/home/runner/work/lighthouse/lighthouse'
+2026-11-04T09:27:56.9130646Z [command]/usr/bin/git version
+2026-11-04T09:27:56.9164410Z git version 2.56.0
+2026-11-04T09:27:56.9210540Z ##[endgroup]
+2026-11-04T09:27:56.9228330Z Temporarily overriding HOME='/home/runner/work/_temp/f2b125c5-9125-4b72-b59f-996f58d31b76' before making global git config changes
+2026-11-04T09:27:56.9230995Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T09:27:56.9237645Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:27:56.9321953Z Deleting the contents of '/home/runner/work/lighthouse/lighthouse'
+2026-11-04T09:27:56.9327511Z ##[group]Initializing the repository
+2026-11-04T09:27:56.9333166Z [command]/usr/bin/git init /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:27:56.9478965Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-04T09:27:56.9481102Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-04T09:27:56.9483310Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-04T09:27:56.9484799Z hint: call:
+2026-11-04T09:27:56.9485581Z hint:
+2026-11-04T09:27:56.9486511Z hint: 	git config --global init.defaultBranch <name>
+2026-11-04T09:27:56.9488065Z hint:
+2026-11-04T09:27:56.9489209Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-04T09:27:56.9490849Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-04T09:27:56.9492353Z hint:
+2026-11-04T09:27:56.9493258Z hint: 	git branch -m <name>
+2026-11-04T09:27:56.9494141Z hint:
+2026-11-04T09:27:56.9495259Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-04T09:27:56.9497391Z Initialized empty Git repository in /home/runner/work/lighthouse/lighthouse/.git/
+2026-11-04T09:27:56.9515883Z [command]/usr/bin/git remote add origin https://github.com/juangcarmona/lighthouse
+2026-11-04T09:27:56.9584476Z ##[endgroup]
+2026-11-04T09:27:56.9585982Z ##[group]Disabling automatic garbage collection
+2026-11-04T09:27:56.9590041Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-04T09:27:56.9670550Z ##[endgroup]
+2026-11-04T09:27:56.9672008Z ##[group]Setting up auth
+2026-11-04T09:27:56.9673350Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T09:27:56.9718729Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T09:27:57.0185368Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T09:27:57.0222911Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T09:27:57.0500336Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T09:27:57.0536659Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T09:27:57.0817960Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-04T09:27:57.0861332Z ##[endgroup]
+2026-11-04T09:27:57.0862928Z ##[group]Fetching the repository
+2026-11-04T09:27:57.0873815Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +ef2aab5ad310153e6eb009166fd2dbe9d3748468:refs/remotes/origin/lighthouse/implement-353-e40f37678b6b
+2026-11-04T09:27:57.7678889Z From https://github.com/juangcarmona/lighthouse
+2026-11-04T09:27:57.7681805Z  * [new ref]         ef2aab5ad310153e6eb009166fd2dbe9d3748468 -> origin/lighthouse/implement-353-e40f37678b6b
+2026-11-04T09:27:57.7687492Z ##[endgroup]
+2026-11-04T09:27:57.7689386Z ##[group]Determining the checkout info
+2026-11-04T09:27:57.7690785Z ##[endgroup]
+2026-11-04T09:27:57.7695921Z [command]/usr/bin/git sparse-checkout disable
+2026-11-04T09:27:57.7749940Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-04T09:27:57.7783674Z ##[group]Checking out the ref
+2026-11-04T09:27:57.7790222Z [command]/usr/bin/git checkout --progress --force -B lighthouse/implement-353-e40f37678b6b refs/remotes/origin/lighthouse/implement-353-e40f37678b6b
+2026-11-04T09:27:57.8764263Z Switched to a new branch 'lighthouse/implement-353-e40f37678b6b'
+2026-11-04T09:27:57.8768407Z branch 'lighthouse/implement-353-e40f37678b6b' set up to track 'origin/lighthouse/implement-353-e40f37678b6b'.
+2026-11-04T09:27:57.8778508Z ##[endgroup]
+2026-11-04T09:27:57.8825893Z [command]/usr/bin/git log -1 --format=%H
+2026-11-04T09:27:57.8852611Z ef2aab5ad310153e6eb009166fd2dbe9d3748468
+2026-11-04T09:27:57.9273669Z ##[group]Run actions/setup-node@v5
+2026-11-04T09:27:57.9274973Z with:
+2026-11-04T09:27:57.9275877Z   node-version: 24
+2026-11-04T09:27:57.9276875Z   cache: npm
+2026-11-04T09:27:57.9278229Z   always-auth: false
+2026-11-04T09:27:57.9279282Z   check-latest: false
+2026-11-04T09:27:57.9289806Z   token: ***
+2026-11-04T09:27:57.9290814Z   package-manager-cache: true
+2026-11-04T09:27:57.9291975Z ##[endgroup]
+2026-11-04T09:27:58.0886511Z Found in cache @ /opt/hostedtoolcache/node/24.22.1/x64
+2026-11-04T09:27:58.0891047Z (node:2335) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-04T09:27:58.0895521Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-04T09:27:58.0899958Z ##[group]Environment details
+2026-11-04T09:27:58.5294248Z node: v24.22.1
+2026-11-04T09:27:58.5294880Z npm: 11.19.1
+2026-11-04T09:27:58.5295428Z yarn: 1.22.22
+2026-11-04T09:27:58.5297020Z ##[endgroup]
+2026-11-04T09:27:58.5320204Z [command]/opt/hostedtoolcache/node/24.22.1/x64/bin/npm config get cache
+2026-11-04T09:27:58.6552262Z /home/runner/.npm
+2026-11-04T09:27:58.9514535Z Cache hit for: node-cache-Linux-x64-npm-ec52191490a8b0ccb6a12dbe99380a2f1d712cb3b72fe7c676f0d3a730e854b1
+2026-11-04T09:27:58.9630096Z (node:2335) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-04T09:28:00.2498343Z Received 4194304 of 126160537 (3.3%), 4.0 MBs/sec
+2026-11-04T09:28:01.2492395Z Received 121966233 of 126160537 (96.7%), 58.2 MBs/sec
+2026-11-04T09:28:01.3857212Z Received 126160537 of 126160537 (100.0%), 56.3 MBs/sec
+2026-11-04T09:28:01.3858699Z Cache Size: ~120 MB (126160537 B)
+2026-11-04T09:28:01.3893323Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4a71bbff-d708-499f-a772-105bbeaf9102/cache.tzst -P -C /home/runner/work/lighthouse/lighthouse --use-compress-program unzstd
+2026-11-04T09:28:01.6906421Z Cache restored successfully
+2026-11-04T09:28:01.6968266Z Cache restored from key: node-cache-Linux-x64-npm-ec52191490a8b0ccb6a12dbe99380a2f1d712cb3b72fe7c676f0d3a730e854b1
+2026-11-04T09:28:01.7289225Z ##[group]Run npm ci --ignore-scripts
+2026-11-04T09:28:01.7289618Z [36;1mnpm ci --ignore-scripts[0m
+2026-11-04T09:28:01.7330522Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:28:01.7330841Z ##[endgroup]
+2026-11-04T09:28:12.3368628Z 
+2026-11-04T09:28:12.3378229Z added 415 packages, and audited 419 packages in 11s
+2026-11-04T09:28:12.3378927Z 
+2026-11-04T09:28:12.3379338Z 63 packages are looking for funding
+2026-11-04T09:28:12.3379913Z   run `npm fund` for details
+2026-11-04T09:28:12.3415731Z 
+2026-11-04T09:28:12.3416537Z 3 low severity vulnerabilities
+2026-11-04T09:28:12.3416932Z 
+2026-11-04T09:28:12.3417327Z Some issues need review, and may require choosing
+2026-11-04T09:28:12.3418313Z a different dependency.
+2026-11-04T09:28:12.3418617Z 
+2026-11-04T09:28:12.3418880Z Run `npm audit` for details.
+2026-11-04T09:28:12.4201437Z ##[group]Run npx --no-install puppeteer browsers install chrome
+2026-11-04T09:28:12.4201985Z [36;1mnpx --no-install puppeteer browsers install chrome[0m
+2026-11-04T09:28:12.4233705Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:28:12.4233977Z ##[endgroup]
+2026-11-04T09:28:17.4291776Z chrome@156.0.8078.47 /home/runner/.cache/puppeteer/chrome/linux-156.0.8078.47/chrome-linux64/chrome
+2026-11-04T09:28:17.4553439Z ##[group]Run npm run verify
+2026-11-04T09:28:17.4553793Z [36;1mnpm run verify[0m
+2026-11-04T09:28:17.4584832Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:28:17.4585114Z ##[endgroup]
+2026-11-04T09:28:17.5658779Z 
+2026-11-04T09:28:17.5659552Z > @juangcarmona/lighthouse-workspace@0.1.0 verify
+2026-11-04T09:28:17.5660526Z > npm run markdownlint && npm test && node scripts/check-doc-links.mjs && npm run verify:public-site
+2026-11-04T09:28:17.5661082Z 
+2026-11-04T09:28:17.6735468Z 
+2026-11-04T09:28:17.6736637Z > @juangcarmona/lighthouse-workspace@0.1.0 markdownlint
+2026-11-04T09:28:17.6738312Z > npx -y markdownlint-cli2@0.23.3
+2026-11-04T09:28:17.6739154Z 
+2026-11-04T09:28:20.0574302Z markdownlint-cli2 v0.23.3 (markdownlint v0.41.1)
+2026-11-04T09:28:20.0578352Z Finding: **/*.md !**/node_modules/** !**/bin/** !**/obj/** !**/dist/** !**/TestResults/** !playwright-report/** !test-results/** !.agents/** !openspec/schemas/** !docs/product/model/** !docs/product/changes/** !src/dotnet/**/AnalyzerReleases*.md
+2026-11-04T09:28:20.1265194Z Linting: 292 files
+2026-11-04T09:28:21.3418761Z Summary: 0 issues in 0 files
+2026-11-04T09:28:21.5032016Z 
+2026-11-04T09:28:21.6374865Z > @juangcarmona/lighthouse-workspace@0.1.0 test
+2026-11-04T09:28:21.6375769Z > node --test src/tests/*.test.mjs
+2026-11-04T09:28:21.6376138Z 
+2026-11-04T09:28:21.6377520Z ✔ optional recovery evidence distinguishes confirmed absence from incomplete or expired inventories (2.585559ms)
+2026-11-04T09:28:21.6401629Z ✔ production archive reader distinguishes an absent envelope from empty, null and malformed members without another interpreter (5.102969ms)
+2026-11-04T09:28:21.6409795Z ✔ ZIP reader accepts stored, deflated, streaming descriptors and ZIP64 members (7.808344ms)
+2026-11-04T09:28:21.6411729Z ✔ ZIP reader preserves absence semantics and rejects duplicates and invalid JSON (1.083272ms)
+2026-11-04T09:28:21.6413735Z ✔ ZIP reader bounds archives and decompression and verifies integrity (8.54298ms)
+2026-11-04T09:28:21.6720202Z ✔ failed adopted CI uses the authenticated original grant and existing correction worker (6.336793ms)
+2026-11-04T09:28:21.6759485Z ✔ unrelated, stale, fork and unsupported runs never authorize repair (1.324123ms)
+2026-11-04T09:28:21.6761947Z ✔ missing opt-in, revoked intent, scope changes and human decisions cannot authorize source effects (3.414393ms)
+2026-11-04T09:28:21.6793823Z ✔ the two-attempt budget survives changed heads; duplicate and uncertain effects never dispatch again (4.261953ms)
+2026-11-04T09:28:21.6799636Z ✔ lost dispatch acknowledgement, unavailable origin and invalid policy stop before another effect (1.777494ms)
+2026-11-04T09:28:21.6801857Z ✔ CI correction preserves product models and other Product Changes, including configured roots (0.578254ms)
+2026-11-04T09:28:21.6803950Z ✔ an external or unconfirmed current-head edit cannot borrow an older candidate publication (0.726052ms)
+2026-11-04T09:28:21.8080467Z ✔ a queued completion that no longer selects work is a successful dispatch no-op (132.128707ms)
+2026-11-04T09:28:21.8087350Z ✔ a later owner decision resolves an earlier objection without delegating merge (2.709561ms)
+2026-11-04T09:28:21.8089864Z ✔ a current publication from ordinary owner feedback retains the original implementation identity (1.272656ms)
+2026-11-04T09:28:21.8093845Z ✔ CI correction cannot supersede an active ordinary feedback correction (1.221561ms)
+2026-11-04T09:28:21.8120511Z ✔ existing scheduled reconciliation signals the same router, preserving approval waits and latest CI facts (1.537253ms)
+2026-11-04T09:28:21.8150136Z ✔ superseded failures on an unchanged head and current owner draft holds cannot request repair (0.395151ms)
+2026-11-04T09:28:21.8179563Z ✔ bot CI wake-ups use adopted workflow facts and wait for terminal status through the existing continuation path (0.839414ms)
+2026-11-04T09:28:21.8208947Z ✔ CI freshness follows attempt start time, including reruns of older run IDs (0.510447ms)
+2026-11-04T09:28:21.8221575Z ✔ a failed CI dependency explicitly signals before workflow completion without granting correction (0.843883ms)
+2026-11-04T09:28:21.8248081Z ✔ an admitted requester issue retains its authenticated implementation grant for CI repair (0.402965ms)
+2026-11-04T09:28:21.8250116Z ✔ simultaneous CI signals coalesce while the matching dispatch is still awaiting admission (0.813345ms)
+2026-11-04T09:28:21.8282114Z ✔ CodeGraph is optional and never used for editable implementation (1.895314ms)
+2026-11-04T09:28:21.8283553Z ✔ OpenCode admits only the two read-only CodeGraph tools to the model (0.923942ms)
+2026-11-04T09:28:21.8285387Z ✔ CodeGraph transport admits bounded reads for this workspace only (1.528777ms)
+2026-11-04T09:28:21.8365505Z ✔ completion authorization binds an owner dispatch to a full head; merge is opt-in (2.876795ms)
+2026-11-04T09:28:21.8375600Z ✔ freshness rejects changed code, base, intent, policy, review and scope (1.081398ms)
+2026-11-04T09:28:21.8384470Z ✔ required checks fail closed for absent, pending and failed evidence (0.319299ms)
+2026-11-04T09:28:21.8386352Z ✔ the host accepts authenticated current checks, not an unrelated maintenance failure (0.66665ms)
+2026-11-04T09:28:21.8388621Z ✔ live rules must enforce configured checks and merge queues fail closed (0.926898ms)
+2026-11-04T09:28:21.8390710Z ✔ merge rechecks evidence immediately, binds head and reconciles lost responses without retrying (0.714651ms)
+2026-11-04T09:28:21.8392705Z ✔ an unconfirmed merge failure is not retried or reported successful (0.883107ms)
+2026-11-04T09:28:21.8395083Z ✔ post-merge verification rejects mismatched runs and dispatches only at the merged tip (0.647584ms)
+2026-11-04T09:28:21.8397342Z ✔ evidence protection rejects missing rules, inactive protection and bypass actors (0.772809ms)
+2026-11-04T09:28:21.8400750Z ✔ publication rejects path escapes, credential-shaped payloads and unbounded data (2.377358ms)
+2026-11-04T09:28:21.8402891Z ✔ retained report indexes the exact record bytes and keeps source and evidence identities separate (1.943244ms)
+2026-11-04T09:28:21.8404654Z ✔ a verified planning review is retained and indexed with the final review (1.244464ms)
+2026-11-04T09:28:21.8406286Z ✔ concurrent evidence updates preserve other files; exact duplicates do not write (2.463489ms)
+2026-11-04T09:28:21.8408373Z ✔ uncertain evidence writes reconcile the confirmed bundle without duplicate commits (0.570319ms)
+2026-11-04T09:28:21.8410122Z ✔ publisher refuses a symlink index and calls the live authority check before writing (0.553448ms)
+2026-11-04T09:28:21.8412462Z ✔ completion opt-in has a bounded workflow allowlist (0.777899ms)
+2026-11-04T09:28:21.8414281Z ✔ an owner-observed unchanged ruleset can be checked when GitHub redacts bypass actors (0.782126ms)
+2026-11-04T09:28:21.8415959Z ✔ protection observations require owner visibility and a stable provider timestamp (3.300158ms)
+2026-11-04T09:28:21.8417869Z ✔ finalization declares future host effects instead of requiring final labels before review (0.333666ms)
+2026-11-04T09:28:21.8419849Z ✔ pending checks remain unavailable with an explicit pending state, not failed (0.37288ms)
+2026-11-04T09:28:21.8421837Z ✔ additional check observations can support review without silently changing required policy (0.956384ms)
+2026-11-04T09:28:21.8425030Z ✔ current completion jobs cannot become external acceptance evidence or erase required gates (1.872081ms)
+2026-11-04T09:28:21.8427027Z ✔ review receives hashed retained integration authorization and a permanent report (7.035984ms)
+2026-11-04T09:28:21.8434195Z ✔ review rejects tampered artifacts, links, uncertain source runs and wrong authorization (8.179264ms)
+2026-11-04T09:28:21.8436360Z ✔ native owner approval authorizes only the current bot implementation head (1.544126ms)
+2026-11-04T09:28:21.8438132Z ✔ retained native approval is verified against the original owner review (2.898376ms)
+2026-11-04T09:28:21.8439966Z ✔ retained independent integration binds the original owner merge decision without expiring artifacts (4.728127ms)
+2026-11-04T09:28:21.8442078Z ✔ draft observation can await CI but never bypasses the final integration eligibility check (1.849108ms)
+2026-11-04T09:28:21.8443579Z ✔ rejected merge preflight never attempts or recovers a merge (0.233718ms)
+2026-11-04T09:28:21.8445049Z ✔ label assessment declares the same request consumption for the agent and publisher (0.28267ms)
+2026-11-04T09:28:22.0159760Z ✔ creator seeds an independent product and refuses an occupied target (278.208996ms)
+2026-11-04T09:28:22.0199309Z ✔ creator rejects names that cannot be product identifiers (38.342602ms)
+2026-11-04T09:28:22.3500488Z ✔ packaged creator seeds the profile assets and verifier without remote writes (333.740634ms)
+2026-11-04T09:28:22.3679599Z ✔ CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing (3.036123ms)
+2026-11-04T09:28:22.3689818Z ✔ bot publications dispatch adopted CI for the exact branch and refuse a changed head (2.374112ms)
+2026-11-04T09:28:22.3691699Z ✔ different events for the same grant reuse both an active and completed authenticated execution (4.638448ms)
+2026-11-04T09:28:22.3693501Z ✔ changed intent cannot overlap active work and edited intent metadata is rejected (0.822723ms)
+2026-11-04T09:28:22.3695311Z ✔ an explicitly empty optional model selection is the same default grant as a label request (0.436108ms)
+2026-11-04T09:28:22.3697200Z ✔ a lost dispatch response remains unconfirmed; neither equivalent nor changed events resend it (2.665919ms)
+2026-11-04T09:28:22.3699739Z ✔ failed or blocked work can receive a fresh owner request; uncertain outcomes stop instead (2.242585ms)
+2026-11-04T09:28:22.3701606Z ✔ effective scope, source, workflow, feedback, model and merge authority do not collapse into one grant (0.597881ms)
+2026-11-04T09:28:22.3703561Z ✔ an eligible current candidate is linked before any new worker, and stale or missing proof is explicit (5.370872ms)
+2026-11-04T09:28:22.3705504Z ✔ completed reuse consumes only the current command label and refuses stale intent or reservations (1.388484ms)
+2026-11-04T09:28:22.3707356Z ✔ candidate reconciliation uses the authenticated epic base rather than default-branch source (0.799209ms)
+2026-11-04T09:28:22.3709675Z ✔ completion classification covers adopted checks, bot continuations, product apply and unrelated subjects (1.901115ms)
+2026-11-04T09:28:22.3711672Z ✔ installer subscribes only to selected continuations and adopted CI names, preserving custom names (23.033567ms)
+2026-11-04T09:28:22.3713564Z ✔ aggregate publication creates one draft from accepted child history and keeps the parent open (24.151301ms)
+2026-11-04T09:28:22.3715123Z ✔ aggregate creation never repeats an uncertain POST (3.774187ms)
+2026-11-04T09:28:22.3716499Z ✔ aggregate publication stops when an accepted child approval is revoked (0.684374ms)
+2026-11-04T09:28:22.3718379Z ✔ aggregate publication rejects a receipt whose dependency correlation changed (0.61312ms)
+2026-11-04T09:28:22.3720095Z ✔ an aggregate handoff whose response is lost is reconciled without another comment (5.15158ms)
+2026-11-04T09:28:22.3723500Z ✔ an edited aggregate body cannot silently add parent-closing keywords (3.748179ms)
+2026-11-04T09:28:22.3725222Z ✔ aggregate readiness binds the current main base, head and checks (4.824167ms)
+2026-11-04T09:28:22.3726557Z ✔ aggregate remains draft if recording readiness fails (2.974217ms)
+2026-11-04T09:28:22.3728202Z ✔ aggregate readiness reports uncertainty if main changes during publication (5.56755ms)
+2026-11-04T09:28:22.3729632Z ✔ aggregate remains draft when current merge checks fail (3.068475ms)
+2026-11-04T09:28:22.3731190Z ✔ epic capacity counts active implementation requests under the parent lease (20.577759ms)
+2026-11-04T09:28:22.3737140Z ✔ epic capacity fails closed when inventory or reservations are uncertain (1.169463ms)
+2026-11-04T09:28:22.3739059Z ✔ closing a child does not free capacity while its implementation is active (1.811196ms)
+2026-11-04T09:28:22.3740968Z ✔ only a confirmed estimate strictly greater than eight requires decomposition (2.135806ms)
+2026-11-04T09:28:22.3742971Z ✔ no safe split retains the explanation and question and cannot pass readiness (1.07723ms)
+2026-11-04T09:28:22.3744522Z ✔ a planned decomposition must identify the current GitHub parent (1.426756ms)
+2026-11-04T09:28:22.3745910Z ✔ malformed arrays never throw or accidentally become valid (0.684283ms)
+2026-11-04T09:28:22.3747356Z ✔ unknown, self, cyclic and duplicate identities cannot produce operations (0.314109ms)
+2026-11-04T09:28:22.3749335Z ✔ epic mode plans a shared base for independent and dependent children and one aggregate (0.95469ms)
+2026-11-04T09:28:22.3750977Z ✔ epic mode rejects default or predecessor bases and duplicate identities (0.755026ms)
+2026-11-04T09:28:22.3752581Z ✔ independent children can run concurrently; dependency edges block C (9.75402ms)
+2026-11-04T09:28:22.3754409Z ✔ an accepted-looking prerequisite with an unresolved or malformed question cannot unblock dependants (1.198728ms)
+2026-11-04T09:28:22.3756329Z ✔ capacity includes running children and cancels no existing work (3.904222ms)
+2026-11-04T09:28:22.3758170Z ✔ a running child cannot be dispatched again during intake, refinement or PR publication (1.651377ms)
+2026-11-04T09:28:22.3759661Z ✔ children retain separate intake, questions and authorization (0.97595ms)
+2026-11-04T09:28:22.3761164Z ✔ closed, cancelled, uncertain or unverifiable children cannot satisfy prerequisites (1.289939ms)
+2026-11-04T09:28:22.3762579Z ✔ head, base, checks and owner decision must all be current (1.088962ms)
+2026-11-04T09:28:22.3764107Z ✔ closed, already merged or unobserved PR state cannot grant merge eligibility (0.798186ms)
+2026-11-04T09:28:22.3765557Z ✔ authentication, plan binding and duplicate observations fail closed (1.827206ms)
+2026-11-04T09:28:22.3766983Z ✔ aggregate eligibility never closes the parent or grants merge authority (0.433412ms)
+2026-11-04T09:28:22.3768749Z ✔ legacy nested plans may omit dependencies without changing their branch chain (0.481112ms)
+2026-11-04T09:28:22.3770266Z ✔ dependency acceptance requires a retained merge in the current epic history (3.505273ms)
+2026-11-04T09:28:22.3771789Z ✔ dependency admission stops for incomplete, changed or unverified evidence (4.52183ms)
+2026-11-04T09:28:22.3773210Z ✔ completed owner epic execution schedules each eligible child once (5.216593ms)
+2026-11-04T09:28:22.3774632Z ✔ epic triage rejects changed parent execution, journal and child authority (1.625388ms)
+2026-11-04T09:28:22.3776053Z ✔ bot triage dispatch binds a stable identity to parent, child and plan (1.681483ms)
+2026-11-04T09:28:22.3777879Z ✔ owner authorization dispatches the current epic child refinement and rejects stale authority (1.802139ms)
+2026-11-04T09:28:22.3779684Z ✔ completed epic run selects its retained refinement authorization instead of child triage (1.123557ms)
+2026-11-04T09:28:22.3781185Z ✔ bot epic refinement is bound to one owner authorization execution (1.385398ms)
+2026-11-04T09:28:22.3782651Z ✔ versioned correlation round-trips and safely encodes HTML delimiters (15.691168ms)
+2026-11-04T09:28:22.3784272Z ✔ creation establishes native parent/dependency links and retry makes no duplicate writes (4.23895ms)
+2026-11-04T09:28:22.3785888Z ✔ dependency reconciliation reads all pages before deciding a link is missing (1.964714ms)
+2026-11-04T09:28:22.3787390Z ✔ dependency reconciliation stops when its inventory exceeds the safe bound (2.542989ms)
+2026-11-04T09:28:22.3789255Z ✔ copied and duplicate markers without authenticated receipts cannot be adopted (1.41299ms)
+2026-11-04T09:28:22.3790900Z ✔ lost create response leaves intent and never blindly creates again (0.813345ms)
+2026-11-04T09:28:22.3792405Z ✔ lost native-link response reconciles the observed relationship on retry (0.972624ms)
+2026-11-04T09:28:22.3793991Z ✔ edited metadata, changed native parent and revoked authority block continuation (1.928547ms)
+2026-11-04T09:28:22.3795651Z ✔ missing resources and cancelled receipts never produce replacements (1.596805ms)
+2026-11-04T09:28:22.3797240Z ✔ host lease, journal and authentication callbacks and matching parent are mandatory (1.778295ms)
+2026-11-04T09:28:22.3799395Z ✔ a revised plan cannot duplicate an existing stable slice identity (0.85851ms)
+2026-11-04T09:28:22.3800741Z ✔ malformed durable receipt state never permits recreation (0.371987ms)
+2026-11-04T09:28:22.3802221Z ✔ cancelled prerequisites stop dependent creation before any remote write (0.423104ms)
+2026-11-04T09:28:22.3803699Z ✔ epic correlation cannot target another parent branch (0.304201ms)
+2026-11-04T09:28:22.4584946Z ✔ child admission requires a linked receipt backed by the authentic retained journal (19.332875ms)
+2026-11-04T09:28:22.4713582Z ✔ journal binds each transition to a retained authenticated workflow artifact (12.307738ms)
+2026-11-04T09:28:22.4891780Z ✔ a child and its pull request keep distinct authenticated journal entries (16.120896ms)
+2026-11-04T09:28:22.4936966Z ✔ merge intent binds the exact reviewed head and base through acceptance (6.842031ms)
+2026-11-04T09:28:22.5029121Z ✔ aggregate readiness is retained with the authenticated journal and rejects malformed bindings (9.535873ms)
+2026-11-04T09:28:22.5088690Z ✔ uncertain or forged journal writes never authorize another transition (3.928146ms)
+2026-11-04T09:28:22.5116223Z ✔ a copied, duplicate or untrusted workflow journal is rejected (3.530481ms)
+2026-11-04T09:28:22.5218181Z ✔ epic merge observation binds owner review and required checks to exact child head and base (2.819237ms)
+2026-11-04T09:28:22.5229813Z ✔ epic merge observation refuses stale, unauthenticated or incomplete evidence (6.286128ms)
+2026-11-04T09:28:22.5236742Z ✔ epic merge observation notices an owner objection added while checks are read (1.143504ms)
+2026-11-04T09:28:22.5250034Z ✔ epic merge records intent and reconciles a lost response without merging twice (3.068704ms)
+2026-11-04T09:28:22.5251697Z ✔ an uncertain epic merge is never repeated and stale evidence never reaches GitHub (0.75739ms)
+2026-11-04T09:28:22.5253252Z ✔ a merge performed against a different base is left uncertain (0.666991ms)
+2026-11-04T09:28:22.5254705Z ✔ authority revoked after a merge leaves the receipt uncertain (0.583895ms)
+2026-11-04T09:28:22.5319384Z ✔ owner epic action retains child refinement authority without dispatching it directly (21.905158ms)
+2026-11-04T09:28:22.5865480Z ✔ aggregate acceptance verifies retained history and refuses a revoked owner approval (54.505552ms)
+2026-11-04T09:28:22.5932852Z ✔ native host creates bounded children and links the authenticated dependency graph (7.315478ms)
+2026-11-04T09:28:22.5960608Z ✔ epic branch creation is create-only and reconciles a lost response at the exact base (2.016611ms)
+2026-11-04T09:28:22.5975361Z ✔ native host blocks changed owner intent, pause and later refinement (1.91996ms)
+2026-11-04T09:28:22.6051274Z ✔ child admission binds the current plan, native parent and retained owner workflow (7.591879ms)
+2026-11-04T09:28:22.6211855Z ✔ child PR authentication requires its own retained journal receipt (14.218712ms)
+2026-11-04T09:28:22.6347441Z ✔ child PR reconciliation authenticates the dispatch, retained checks and exact published tree (14.471788ms)
+2026-11-04T09:28:22.6673228Z ✔ owner acceptance merges one authenticated child and leaves the parent open (32.94897ms)
+2026-11-04T09:28:22.6755672Z ✔ native host refuses a router without the shared issue lease (7.722901ms)
+2026-11-04T09:28:22.6814860Z ✔ current workflow projections satisfy the native lease checks (5.602839ms)
+2026-11-04T09:28:22.6852074Z ✔ native host refuses older workers without the shared parent lease (3.221541ms)
+2026-11-04T09:28:22.6879180Z ✔ native host rejects a worker whose publication lacks the parent lease (2.448151ms)
+2026-11-04T09:28:22.7026419Z ✔ epic refinement observation binds current owner intent and the authenticated triage to the child plan (10.008298ms)
+2026-11-04T09:28:22.7028964Z ✔ only explicitly admitted engineering labels route; content and working labels grant no authority (1.425082ms)
+2026-11-04T09:28:22.7031301Z ✔ direct refinement has explicit versioned authority and never borrows triage or merge permission (3.031535ms)
+2026-11-04T09:28:22.7076366Z ﹣ real PostgreSQL is fresh between phases and leaves no container or network (1.040041ms) # SKIP
+2026-11-04T09:28:22.7089210Z ﹣ real host checks preserve failure and cancellation and clean services (0.188935ms) # SKIP
+2026-11-04T09:28:22.7249634Z ✔ repository declaration rejects unsupported profiles, services and extra control fields (3.451101ms)
+2026-11-04T09:28:22.7269339Z ✔ selection is read at source revision and is shared across issues (1.576788ms)
+2026-11-04T09:28:22.7300398Z ✔ prerequisites run without source, credentials or Docker mounts; services are run isolated and cleaned (1.525501ms)
+2026-11-04T09:28:22.7310443Z ✔ missing SDK stops before any database or agent and hides Docker diagnostics (0.632246ms)
+2026-11-04T09:28:22.7312208Z ✔ missing base tools stop preflight before any test service starts (0.923793ms)
+2026-11-04T09:28:22.7314368Z ✔ legacy images preflight declared executables without source or credentials (0.898464ms)
+2026-11-04T09:28:22.7317414Z ✔ incompatible tool versions stop preflight before service provisioning (0.734077ms)
+2026-11-04T09:28:22.7327964Z ✔ an incompatible PostgreSQL version stops execution and cleans the service (0.488165ms)
+2026-11-04T09:28:22.7329993Z ✔ service failures and readiness timeout remove attempted containers and networks (2.311063ms)
+2026-11-04T09:28:22.7331886Z ✔ agent and validation phases have different networks and fresh database credentials (0.677871ms)
+2026-11-04T09:28:22.7333786Z ✔ cleanup failures are explicit and can be retried without exposing connection strings (0.448832ms)
+2026-11-04T09:28:22.7335780Z ✔ base profile needs no SDK or service and legacy selection adds no arguments (0.36264ms)
+2026-11-04T09:28:22.7368620Z ✔ image build inputs are immutable and both recipes use fixed package and SDK inputs (17.169136ms)
+2026-11-04T09:28:22.7375732Z ✔ declared environment check receipts require matching profile and immutable provenance (1.295981ms)
+2026-11-04T09:28:22.7865358Z ﹣ real sequential Chromium verification fits the implementation task budget (1.004724ms) # SKIP
+2026-11-04T09:28:22.7877353Z ﹣ real container receipts distinguish process exhaustion, memory kill and abort (0.168426ms) # SKIP
+2026-11-04T09:28:28.0808917Z ✔ CLI discovers opt-in adoption and runs authorized plan/apply/live verify without changing source files (5303.317934ms)
+2026-11-04T09:28:28.0912223Z ✔ plans are read-only, applications preserve unrelated work and retries do not duplicate rules (26.843058ms)
+2026-11-04T09:28:28.0929646Z ✔ bad authorization, forged operations and unknown configuration cannot mutate GitHub (2.097613ms)
+2026-11-04T09:28:28.0934041Z ✔ stale identity and formerly compliant controls stop apply before writes (11.240168ms)
+2026-11-04T09:28:28.0935354Z ✔ provider failures are unavailable rather than compliant and never lead to writes (1.873053ms)
+2026-11-04T09:28:28.0936891Z ✔ a reasoned protection exception remains visible when the provider cannot enforce it (0.744807ms)
+2026-11-04T09:28:28.0944571Z ✔ partial failure reports completed writes and can retry without stored receipts (16.877911ms)
+2026-11-04T09:28:28.0946245Z ✔ stricter existing rules satisfy the minimum and are never replaced (6.015864ms)
+2026-11-04T09:28:28.0959459Z ✔ bypass and wrong check issuers cannot satisfy required protection (4.130356ms)
+2026-11-04T09:28:28.0969878Z ✔ release immutability needs explicit workflow readiness and private repositories remain private (4.036369ms)
+2026-11-04T09:28:28.0971586Z ✔ custom merge policy and contribution policy are explicit reusable choices (4.573676ms)
+2026-11-04T09:28:28.0973141Z ✔ failed resumed stage publishes a fresh outcome after the answer acknowledgement (721.389141ms)
+2026-11-04T09:28:28.0975092Z ✔ production publisher validates output before effects, preserves answers and deduplicates committed responses (2955.032111ms)
+2026-11-04T09:28:28.0976714Z ✔ pre-agent failure and cancellation use observed job outcomes (3.24744ms)
+2026-11-04T09:28:28.0978356Z ✔ failed CI dispatch gives the maintainer an action without claiming CI ran (0.441077ms)
+2026-11-04T09:28:28.0980285Z ✔ product apply distinguishes local provider failure from uncertain remote publication (0.344215ms)
+2026-11-04T09:28:28.0981644Z ✔ handoffs expose the observed outcome, next action and trigger (0.990498ms)
+2026-11-04T09:28:28.0983022Z ✔ blocked work cannot claim a review target and questions take precedence over draft state (1.759189ms)
+2026-11-04T09:28:28.0984576Z ✔ confirmed failed execution labels first, publishes once and ignores stale dispatches (28.674393ms)
+2026-11-04T09:28:28.0986191Z ✔ completion publication stops when a later authenticated dispatch takes over (29.993365ms)
+2026-11-04T09:28:28.0988290Z ✔ a dispatch arriving during failure label publication prevents the stale outcome comment (1.495414ms)
+2026-11-04T09:28:28.0990098Z ✔ interrupted failure publication retries the comment and missing label remains explicit (2.909258ms)
+2026-11-04T09:28:28.0992023Z ✔ stage result accepts only a bounded explicit question on a blocked outcome (1.639494ms)
+2026-11-04T09:28:28.0993510Z ✔ a product prerequisite is a bounded blocked observation, never approval (0.643557ms)
+2026-11-04T09:28:28.0994901Z ✔ all six stages share the terminal execution and publication matrix (1.215229ms)
+2026-11-04T09:28:28.0996583Z ✔ trusted execution observations distinguish requested, queued, active and terminal states in every stage (0.446207ms)
+2026-11-04T09:28:28.0998809Z ✔ host request rejects untrusted identity, version, policy, deadline, commands and source writes (2.905799ms)
+2026-11-04T09:28:28.1000417Z ✔ refine requires predecessor digest and owner decision reference (0.308759ms)
+2026-11-04T09:28:28.1002197Z ✔ candidate publication has no target or credential chosen by the engine and cannot claim unresolved success (1.591114ms)
+2026-11-04T09:28:28.1003817Z ✔ product technical blockers cannot also project an owner question (1.152942ms)
+2026-11-04T09:28:28.1005438Z ✔ packed consumer resolves preflight and result validation with no Lighthouse source tree (1581.249444ms)
+2026-11-04T09:28:28.1007215Z ✔ engine context includes the exact stage-result schema and preserves the requested identity (96.135526ms)
+2026-11-04T09:28:28.1009212Z ✔ stage result rejects undeclared authority and malformed evidence fields (0.818575ms)
+2026-11-04T09:28:28.1010811Z ✔ a product prerequisite retains its enclosing stage without completing that stage (0.576704ms)
+2026-11-04T09:28:28.1012159Z ✔ records intent before dispatch and reuses it across router reruns (3.932727ms)
+2026-11-04T09:28:28.1013559Z ✔ child dispatch binds the parent lease to the authenticated request (1.304841ms)
+2026-11-04T09:28:28.1015148Z ✔ feedback has one independent worker and dispatch identity across duplicate router events (2.811949ms)
+2026-11-04T09:28:28.1016835Z ✔ a lost dispatch response leaves recorded uncertainty, never an automatic resend (1.715456ms)
+2026-11-04T09:28:28.1018714Z ✔ authenticates the original owner event and binds it to this worker revision (1.042062ms)
+2026-11-04T09:28:28.1020427Z ✔ HTML markers are references, not authority: spoofed, moved and edited receipts fail closed (0.666842ms)
+2026-11-04T09:28:28.1021877Z ✔ missing or expired origin evidence prevents admission (0.600138ms)
+2026-11-04T09:28:28.1023288Z ✔ serialized workers claim once; a duplicate and a rerun cannot start another agent (1.184327ms)
+2026-11-04T09:28:28.1025110Z ✔ a different request cannot overlap an active implementation, but a finished run can be followed (0.879479ms)
+2026-11-04T09:28:28.1026886Z ✔ all installed stages dispatch independently and cannot impersonate a different stage (7.026711ms)
+2026-11-04T09:28:28.1028744Z ✔ completed-run replay uses fresh observations and requires the owner (0.507936ms)
+2026-11-04T09:28:28.1030391Z ✔ refinement handoff requires an authenticated successful publication and the installed policy (6.756906ms)
+2026-11-04T09:28:28.1032170Z ✔ bot wake-up waits for refinement completion and rejects other callers and stages (1.027475ms)
+2026-11-04T09:28:28.1034128Z ✔ bot router artifacts cannot authorize arbitrary stages or fabricate refinement authority (1.121419ms)
+2026-11-04T09:28:28.1035834Z ✔ duplicate completion events retain the same request ID across router executions (0.806573ms)
+2026-11-04T09:28:28.1037524Z ✔ owner PR feedback may queue behind a confirmed worker while uncertain dispatch remains blocked (2.365908ms)
+2026-11-04T09:28:28.1039632Z ✔ PR event identity is preserved separately from the trusted dispatchable workflow branch (0.49439ms)
+2026-11-04T09:28:28.1041111Z ✔ execution model selection is bound to an authenticated direct owner dispatch (1.198303ms)
+2026-11-04T09:28:28.1042837Z ✔ product prerequisite observation requires its published authenticated parent and cannot outlive its receipt (5.595826ms)
+2026-11-04T09:28:28.1044644Z ✔ product apply continuation requires provider receipt, parent authority and current PR head (9.362654ms)
+2026-11-04T09:28:28.1046694Z ✔ a product prerequisite discovered while applying PR feedback preserves the actual PR and review authority (2.178499ms)
+2026-11-04T09:28:28.1048698Z ✔ browser preview evidence fits while byte and file budgets remain bounded (89.345579ms)
+2026-11-04T09:28:28.1050206Z ✔ an unreadable final member never publishes a partial evidence directory (5.303971ms)
+2026-11-04T09:28:28.1051669Z ✔ evidence rejects symbolic links at the root and inside the collection (7.03724ms)
+2026-11-04T09:28:28.1053280Z ✔ candidate Git metadata passes the baseline branch guard without copying repository hooks (128.924241ms)
+2026-11-04T09:28:28.1054831Z ✔ workspace preparation rejects links before changing ownership (2.534573ms)
+2026-11-04T09:28:28.1056273Z ﹣ container checks install workspace bins and execute temporary tools (0.264503ms) # SKIP
+2026-11-04T09:28:28.1058192Z ﹣ ownership recovery traverses private build directories created by the engine UID (1.326541ms) # SKIP
+2026-11-04T09:28:28.1059630Z ✔ implement requires an owner event; replies do not advance a stage (2.433485ms)
+2026-11-04T09:28:28.1061191Z ✔ policy and change boundaries reject traversal, control files, changed plans and credential material (2.7158ms)
+2026-11-04T09:28:28.1062964Z ✔ redaction fixtures remain publishable without exempting test files from credential checks (11.448479ms)
+2026-11-04T09:28:28.1064755Z ✔ snapshot captures additions and deletions, excludes build output and rejects symlinks (97.668832ms)
+2026-11-04T09:28:28.1066442Z ✔ an issue uses repository checks without a proposal PR or per-issue configuration (9.224015ms)
+2026-11-04T09:28:28.1068493Z ✔ repository defaults and existing bounded per-issue policies remain usable without merging a proposal (0.576414ms)
+2026-11-04T09:28:28.1070218Z ✔ host checks bind the exact candidate and commands, preserving failures (1.178335ms)
+2026-11-04T09:28:28.1071843Z ✔ publisher rechecks authority before a create-only branch and preserves draft state (6.664476ms)
+2026-11-04T09:28:28.1073548Z ✔ aligned implementation resumes the authenticated draft PR and rejects changed state (8.751143ms)
+2026-11-04T09:28:28.1075005Z ✔ an epic child targets the recorded shared base and stops if it advances (7.10138ms)
+2026-11-04T09:28:28.1076376Z ✔ epic publication rejects an invalid base and revoked authority (0.587334ms)
+2026-11-04T09:28:28.1078183Z ✔ implementation shell progress identifies the command without dumping its output (1.094489ms)
+2026-11-04T09:28:28.1079792Z ✔ patch progress names changed files without exposing the patch contents (5.507822ms)
+2026-11-04T09:28:28.1081514Z ✔ Git-ignored new reports are excluded while newly ignored tracked edits remain subject to scope (74.879253ms)
+2026-11-04T09:28:28.1083200Z ✔ an immutable recovery seed cannot overwrite newer source or expand its write scope (1.908726ms)
+2026-11-04T09:28:28.1084878Z ✔ review feedback updates the existing implementation branch without a force push or second PR (0.84296ms)
+2026-11-04T09:28:28.1086504Z ✔ epic review updates the same PR after rechecking its shared base and authority (1.078219ms)
+2026-11-04T09:28:28.1088424Z ✔ an approved product prerequisite resumes on its existing branch and retains review evidence (5.380735ms)
+2026-11-04T09:28:28.1090605Z ✔ verification-only owner correction returns the same PR and never writes Git history (2.110783ms)
+2026-11-04T09:28:28.1092454Z ✔ the shipped command catalogue matches native admission, including denied and unsupported events (6.508626ms)
+2026-11-04T09:28:28.1094189Z ✔ label assessment binds the eligible current PR and approval without merge authority (6.973881ms)
+2026-11-04T09:28:28.1095850Z ✔ incomplete, ambiguous, changed and unapproved requests name the missing prerequisite (2.502161ms)
+2026-11-04T09:28:28.1097671Z ✔ the installed router publishes missing-prerequisite and denied outcomes once, without dispatch (640.621779ms)
+2026-11-04T09:28:28.1099750Z ✔ epic routing is opt-in and authenticates bot children before selecting a parent lease (9.175585ms)
+2026-11-04T09:28:28.1101832Z ✔ epic child refinement rejects triage from a different parent, slice or plan (0.588366ms)
+2026-11-04T09:28:28.1103179Z ✔ routing handoffs are idempotent per authenticated feedback identity (8.177414ms)
+2026-11-04T09:28:28.1104547Z ✔ continuation binds the previous question to the authenticated reply (0.866274ms)
+2026-11-04T09:28:28.1106138Z ✔ completed refinement names the actual next action for each continuation policy (0.44044ms)
+2026-11-04T09:28:28.1107532Z ✔ product outcomes must match the authenticated idea or feedback entry (0.35955ms)
+2026-11-04T09:28:28.1109171Z ✔ product prerequisite handoff states whether preparation can start (6.115744ms)
+2026-11-04T09:28:28.1110855Z ✔ independent dispatch rejects issue aliases before claiming outside the issue concurrency group (655.45766ms)
+2026-11-04T09:28:28.1112501Z ✔ only the owner can start refinement; reservations and PRs are excluded (0.802356ms)
+2026-11-04T09:28:28.1113934Z ✔ owner replies resume the blocked stage and never approve the next stage (0.989884ms)
+2026-11-04T09:28:28.1115546Z ✔ pending reply ignores stale, empty and spoofed reports and cannot replay after publication (0.457047ms)
+2026-11-04T09:28:28.1117186Z ✔ publication refuses changed answers, changed source, closed issues and human takeover (0.617167ms)
+2026-11-04T09:28:28.1119091Z ✔ repository metadata endpoint has no trailing slash while subresources retain their separator (0.108914ms)
+2026-11-04T09:28:28.1120648Z ✔ decision replies extend input without accepting edited history or stale source (0.659907ms)
+2026-11-04T09:28:28.1122128Z ✔ router refreshes a queued comment event and visibly acknowledges the owner reply (128.588965ms)
+2026-11-04T09:28:28.1123657Z ✔ refine handoff binds the passed result to this issue, run, source and owner answers (2.481413ms)
+2026-11-04T09:28:28.1125303Z ✔ future pauses implementation and its removal resumes an implement-labelled issue (8.254977ms)
+2026-11-04T09:28:28.1126886Z ✔ an explicit question remains answerable when a proposal review is also linked (0.192962ms)
+2026-11-04T09:28:28.4763257Z ✔ init creates a projection and refuses to overwrite product work (516.143539ms)
+2026-11-04T09:28:28.4764968Z ✔ verify reports projection drift and invalid manifests (350.091885ms)
+2026-11-04T09:28:28.4768616Z ✔ manifest cannot advertise unsupported checks or unverified managed files (516.042073ms)
+2026-11-04T09:28:28.6900303Z ✔ greenfield init creates the repository boundaries and a default manifest (212.787945ms)
+2026-11-04T09:28:28.7656259Z ✔ aliases reports the harness and SDLC command contracts without duplicating implementations (76.302768ms)
+2026-11-04T09:28:29.0702373Z ✔ semantic init previews without a reference and applies only after explicit authorization (304.101884ms)
+2026-11-04T09:28:29.2360046Z ✔ semantic init stops on unresolved questions before writing (166.104541ms)
+2026-11-04T09:28:29.3339968Z ✔ semantic init does not require a declared reference to exist (96.63936ms)
+2026-11-04T09:28:29.6217241Z ✔ existing-authority adoption is dry-run by default and does not initialize missing providers (288.339617ms)
+2026-11-04T09:28:42.4583207Z ✔ existing-authority adoption validates providers, records only Lighthouse files and is idempotent (12834.002129ms)
+2026-11-04T09:28:42.8458343Z ✔ profiles exposes applicability and verification layers without making them all mandatory (387.483213ms)
+2026-11-04T09:28:42.8460664Z ✔ profile catalog exposes adoptable metadata and rejects missing or incompatible composition (2.72893ms)
+2026-11-04T09:28:43.4095775Z ✔ visual-theme init projects the UI guide and skill and verifies the token contract (561.719277ms)
+2026-11-04T09:28:43.5990974Z ✔ react web profile projects its guidance and requires the visual contract (189.285759ms)
+2026-11-04T09:28:43.8090183Z ✔ web BFF profile projects its security contract and requires the private web composition (211.856873ms)
+2026-11-04T09:28:43.9952996Z ✔ PWA capability projects its offline contract as an optional React extension (186.005701ms)
+2026-11-04T09:28:44.1680653Z ✔ Expo mobile profile projects native guidance without selecting the React web profile (171.759063ms)
+2026-11-04T09:28:44.4354022Z ✔ MAUI mobile profile projects native guidance and rejects the Expo combination (268.309228ms)
+2026-11-04T09:28:44.5367057Z ✔ visual-theme init reports a brownfield design conflict without overwriting it (101.164398ms)
+2026-11-04T09:28:44.7323121Z ✔ visual-theme validation requires its pinned UI package (194.734976ms)
+2026-11-04T09:28:44.8208937Z ✔ init dry-run reports brownfield conflicts without writing (89.168418ms)
+2026-11-04T09:28:45.1186780Z ✔ reconcile previews and applies missing managed paths without overwriting drift (297.450249ms)
+2026-11-04T09:28:45.4009526Z ✔ upgrade previews and applies a missing owned projection (282.605661ms)
+2026-11-04T09:28:45.5583463Z ✔ foundation initialization and upgrade preserve optional workflow ownership (157.146313ms)
+2026-11-04T09:28:45.7929229Z ✔ upgrade projects the alias map as an SDLC-owned projection (234.677291ms)
+2026-11-04T09:28:46.0870531Z ✔ upgrade discovers pending SDLC capability adoption without writing remote or reconciliation state (294.036835ms)
+2026-11-04T09:28:46.2311432Z ✔ a new label capability version requests adoption review without resetting other capabilities (143.854949ms)
+2026-11-04T09:28:47.9071506Z ✔ capability adoption requires the plan hash, creates only missing labels and is idempotent (1676.065963ms)
+2026-11-04T09:28:48.2448779Z ✔ capability selection and decline are explicit local decisions (337.724643ms)
+2026-11-04T09:28:48.5139043Z ✔ upgrade preserves customized projections and reports missing ownership evidence (268.895095ms)
+2026-11-04T09:28:48.7160156Z ✔ upgrade stops a baseline mismatch for human review (202.168086ms)
+2026-11-04T09:28:48.9364342Z ✔ verify keeps the human output and exposes the existing catalog as JSON (220.328907ms)
+2026-11-04T09:28:49.0830272Z ✔ verify JSON distinguishes managed projection drift (146.443045ms)
+2026-11-04T09:28:49.3062232Z ✔ verify validates evidence indexes and reports drift without blocking delivery (222.068578ms)
+2026-11-04T09:28:49.3063879Z ✔ catalog keeps level and kind independent and records pending human review (0.961781ms)
+2026-11-04T09:28:49.7565412Z ✔ generated guidance follows adopted authorities and scopes the documentation-site gate (450.230705ms)
+2026-11-04T09:28:49.7669679Z ✔ workspace commands exclude overlap, retain exit status and stop their children (547.295219ms)
+2026-11-04T09:28:49.7670692Z ✔ operator limits remain bounded and shared by both container phases (2.248395ms)
+2026-11-04T09:28:49.7672321Z ✔ failure receipts distinguish rejected tasks, OOM, abort, timeout and cancellation without inventing missing evidence (15.537051ms)
+2026-11-04T09:28:49.7674266Z ✔ completed commands terminate their background descendants before releasing the slot (189.590065ms)
+2026-11-04T09:28:49.7676312Z ✔ durable findings build on the existing validation contract and reject unbounded or sensitive payloads (2.46943ms)
+2026-11-04T09:28:49.7678571Z ✔ retention needs project policy, a matching write grant and trusted full-record eligibility (18.757025ms)
+2026-11-04T09:28:49.7680481Z ✔ recall is separately authorized, bounded and isolated by project, repository and private run (9.807659ms)
+2026-11-04T09:28:49.7682570Z ✔ operator corrections retain metadata history, reject stale versions and apply privacy assessment to changes (9.309145ms)
+2026-11-04T09:28:49.7684332Z ✔ independent host connections cannot overwrite another version or another project partition (12.610364ms)
+2026-11-04T09:28:49.7685911Z ✔ invalidated, expired and known-stale records are excluded across provider connections (14.453919ms)
+2026-11-04T09:28:49.7687304Z ✔ grants are snapshotted and worker payloads cannot escalate permissions (11.252067ms)
+2026-11-04T09:28:49.7689072Z ✔ disabled, absent, failed and explicitly required providers return actionable availability outcomes (0.863008ms)
+2026-11-04T09:28:49.7690682Z ✔ SQLite refuses worker-local, symlinked worker-local and non-private storage placement (6.072407ms)
+2026-11-04T09:28:49.7692574Z ✔ small cross-run exercise: independent processes retain, recall, invalidate and disable memory (269.534791ms)
+2026-11-04T09:28:49.7694804Z ℹ Separate Node processes: run-1 retained; run-2 recalled the source-bound project finding and invalidated it; run-3 excluded it and continued with disabled optional memory.
+2026-11-04T09:28:49.7696652Z ✔ two workers select independent model and reasoning with explicit provenance (4.868798ms)
+2026-11-04T09:28:49.7700478Z ✔ inherited constructor worker assignments fall through to the project default (0.366537ms)
+2026-11-04T09:28:49.7701969Z ✔ operator field overrides and worker selection have documented precedence (0.959659ms)
+2026-11-04T09:28:49.7703416Z ✔ legacy is byte-for-byte and project declarations cannot override an unopted operator (0.915456ms)
+2026-11-04T09:28:49.7704843Z ✔ invalid settings and unsupported transport or billing knobs are rejected (1.500123ms)
+2026-11-04T09:28:49.7706060Z ✔ unavailable models, effort or tools fail without any fallback (0.632656ms)
+2026-11-04T09:28:49.7707222Z ✔ max effort is accepted only when the operator declares support (0.796944ms)
+2026-11-04T09:28:49.7709250Z ✔ fast never implies premium processing or proven provider access and unknown is not zero (0.679634ms)
+2026-11-04T09:28:49.7710828Z ✔ version 2 resolves direct worker settings and named presets without a three-profile limit (1.128997ms)
+2026-11-04T09:28:49.7712338Z ✔ execution selection needs version 2 operator opt-in and remains inside capabilities (1.374207ms)
+2026-11-04T09:28:49.7713822Z ✔ version 2 rejects incomplete direct settings and fails closed under version 1 operator (2.110066ms)
+2026-11-04T09:28:49.7715361Z ✔ execution receipts preserve the requested selector without claiming provider verification (0.233478ms)
+2026-11-04T09:28:49.7716906Z ✔ disabling version 2 profiles restores the exact legacy model without accepting a selector (0.314499ms)
+2026-11-04T09:28:49.7720650Z ✔ engine snapshot contains tracked regular files but no checkout credentials or symlink targets (92.112687ms)
+2026-11-04T09:28:49.7722166Z ✔ engine logs retain execution events while removing common credential formats (0.683501ms)
+2026-11-04T09:28:49.7723347Z ✔ host engine lock excludes another execution and releases with its descriptor (13.14299ms)
+2026-11-04T09:28:49.7724956Z ✔ gh-aw completion requires a valid completed envelope and does not imply publication (2.366627ms)
+2026-11-04T09:28:49.7726559Z ✔ engine adapter preserves structured evidence while streaming readable output (1081.917431ms)
+2026-11-04T09:28:49.7728568Z ✔ oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers (2.580578ms)
+2026-11-04T09:28:49.7730156Z ✔ profile adapter forwards two worker variants, marks receipts unverified and never falls back (3912.761906ms)
+2026-11-04T09:28:49.7731180Z ✔ a product worker from implementation uses the read-only product engine without implementation policy (684.399962ms)
+2026-11-04T09:28:49.7732551Z ✔ a failed implementation retains its bounded candidate but cannot emit successful completion (774.133565ms)
+2026-11-04T09:28:49.7733940Z ✔ declared environment preflights before agent, validates with fresh services, and cleans failures (5999.305129ms)
+2026-11-04T09:28:49.7735491Z ✔ public progress is readable and every line is inert in Actions (1.384435ms)
+2026-11-04T09:28:49.7736764Z ✔ tools show the operation and target without copying file contents or patches (0.567043ms)
+2026-11-04T09:28:49.7738441Z ✔ errors remain visible, ordinary engine diagnostics stay in the event artifact (0.804098ms)
+2026-11-04T09:28:49.7740001Z ✔ scheduled, event and repository CI reconciliation share one non-cancelling queue (9.264381ms)
+2026-11-04T09:28:49.7741428Z ✔ delayed PR events cannot project a state that has since changed (0.555882ms)
+2026-11-04T09:28:49.7742808Z ✔ a complete draft becomes reviewable only after required CI passes (2.579536ms)
+2026-11-04T09:28:49.7743653Z ✔ manual readiness of an incomplete or stale-head candidate returns to draft (1.168601ms)
+2026-11-04T09:28:49.7744681Z ✔ an interrupted draft handoff is recoverable and a replay sees its outcome (1.488931ms)
+2026-11-04T09:28:49.7745490Z ✔ a passing candidate stays draft until CI passes, and a foreign PR is rejected (0.557074ms)
+2026-11-04T09:28:49.7746234Z ✔ a running correction keeps the PR draft until its reservation is released (0.786535ms)
+2026-11-04T09:28:49.7746920Z ✔ scheduled reconciliation selects only bot implementation PRs (0.825939ms)
+2026-11-04T09:28:49.7747585Z ✔ CI callback accepts only the current configured repository run (0.455434ms)
+2026-11-04T09:28:49.7748999Z ✔ product decisions are not projected as implementation PR state (1.788674ms)
+2026-11-04T09:28:49.7750386Z ✔ a renewed verification proof remains bound to the original implementation identity (0.310442ms)
+2026-11-04T09:28:49.7751921Z ✔ the product model path follows the adopter configuration without escaping the workspace (13.958162ms)
+2026-11-04T09:28:49.7753304Z ✔ provider graph evidence reaches only the isolated product workspace (10.95016ms)
+2026-11-04T09:28:49.7754633Z ✔ accepts the required schema pin while rejecting hidden and escaping paths (14.441447ms)
+2026-11-04T09:28:49.7755942Z ✔ blocked product changes distinguish technical blockers from decision questions (1.836704ms)
+2026-11-04T09:28:49.7756758Z ✔ the host binds and validates a candidate without requiring a shell in the agent (1.544045ms)
+2026-11-04T09:28:49.7757581Z ✔ the host supplies OpenSpec product-only metadata before validating pending candidates (1.352465ms)
+2026-11-04T09:28:49.7758756Z ✔ recovery retains candidate bytes and normalizes source links before digest binding (1.726096ms)
+2026-11-04T09:28:49.7759558Z ✔ a waiting product decision binds the authenticated parent checkpoint to review (1.518076ms)
+2026-11-04T09:28:49.7760323Z ✔ a product handoff refuses to update an existing parent PR whose head changed (1.964914ms)
+2026-11-04T09:28:49.7761067Z ✔ resumed worker restores only the authenticated dispatch product policy (1.871148ms)
+2026-11-04T09:28:49.7761876Z ✔ product apply waits for GitHub to expose the new PR head before recording the checkpoint (1.353277ms)
+2026-11-04T09:28:49.7762699Z ✔ a lost ref-update response is accepted only when the exact new commit is observed (0.813753ms)
+2026-11-04T09:28:49.7763552Z ✔ product apply publication collects newly added model files as well as the applied manifest (110.172275ms)
+2026-11-04T09:28:49.7764358Z ✔ refused product dry-runs report bounded diagnostic codes and remain blocked (0.59751ms)
+2026-11-04T09:28:49.7765107Z ✔ product apply preparation binds the current issue, decision and dispatch (0.698209ms)
+2026-11-04T09:28:49.7765912Z ✔ published product candidate reports host validation instead of stale agent pending text (0.370334ms)
+2026-11-04T09:28:49.7766684Z ✔ product review handoff names its target, decision and authority boundary (0.787887ms)
+2026-11-04T09:28:49.7767430Z ✔ product review includes complete manifest sections including the last section (0.390082ms)
+2026-11-04T09:28:49.7768587Z ✔ product apply handoff preserves the receipt and requests a separate PR review (0.619753ms)
+2026-11-04T09:28:49.7769402Z ✔ product candidate publication can authenticate and dispatch its parent continuation (6.810789ms)
+2026-11-04T09:28:49.7770332Z ✔ product apply preparation can claim its authenticated dispatch (3.044218ms)
+2026-11-04T09:28:49.7771071Z ✔ product apply finalizer can publish the failure to the reviewed pull request (1.731787ms)
+2026-11-04T09:28:49.7771945Z ✔ credential-free product provider receives the verified private checkout without starting an agent (1.766783ms)
+2026-11-04T09:28:49.7772836Z ✔ resumed product parents can read their current PR during preparation and publication (11.062441ms)
+2026-11-04T09:28:49.7773650Z ✔ product review and approval use the same markers, including legacy published PRs (27.990189ms)
+2026-11-04T09:28:49.7774345Z ✔ a dismissed or changed product review cannot authorize apply (0.458851ms)
+2026-11-04T09:28:49.7775244Z ✔ aligned parent continuation authenticates the result, publication and unchanged owner scope (22.132196ms)
+2026-11-04T09:28:49.7776283Z ✔ an owner answer remains bound to its actual product question and original parent (25.018037ms)
+2026-11-04T09:28:49.7777202Z ✔ a child retains host budgets while narrowing its deadline and cannot replace other limits (6.11183ms)
+2026-11-04T09:28:49.7778364Z ✔ disjoint tasks run in bounded waves and dependants wait for wave verification (26.456075ms)
+2026-11-04T09:28:49.7779210Z ✔ same-file and directory conflicts serialize, and the configured limit holds (4.079258ms)
+2026-11-04T09:28:49.7780201Z ✔ execution and verification failures block dependants transitively while independent work continues (2.184956ms)
+2026-11-04T09:28:49.7781234Z ✔ invalid dependency graphs, scopes, profiles and permissions launch nothing (3.688325ms)
+2026-11-04T09:28:49.7782021Z ✔ cancellation and deadlines stop scheduling and signal the host (1001.363783ms)
+2026-11-04T09:28:49.7782741Z ✔ consumer fixture composes visual-theme, react-web-platform (4.078377ms)
+2026-11-04T09:28:49.7783564Z ✔ consumer fixture composes visual-theme, react-web-platform, dotnet-backend, web-bff (0.801433ms)
+2026-11-04T09:28:49.7784438Z ✔ consumer fixture composes visual-theme, react-web-platform, pwa-capability (4.06938ms)
+2026-11-04T09:28:49.7785189Z ✔ consumer fixture composes mobile-expo, dotnet-backend (1.147621ms)
+2026-11-04T09:28:49.7785839Z ✔ consumer fixture composes mobile-maui, dotnet-backend (1.078391ms)
+2026-11-04T09:28:49.7786679Z ✔ consumer initialization projects the complete private web composition without remote writes (316.853738ms)
+2026-11-04T09:28:49.7787560Z ✔ only existing bot proposal branches with intact identity can be updated (2.628108ms)
+2026-11-04T09:28:49.7788543Z ✔ owner feedback is fetched from source and approvals never request revision (1.676143ms)
+2026-11-04T09:28:49.7789393Z ✔ submitted feedback includes every bounded inline request and rejects an older head (0.797144ms)
+2026-11-04T09:28:49.7790322Z ✔ bounded correction conversation includes owner comments, inline requests and reviews only (1.904651ms)
+2026-11-04T09:28:49.7791234Z ✔ publication rejects feedback edited or revoked after preparation and a changed head (0.90157ms)
+2026-11-04T09:28:49.7792119Z ✔ feedback reloads the provider skip flag without exposing mutable schema metadata (1.865267ms)
+2026-11-04T09:28:49.7793027Z ✔ publication updates the same branch non-forcibly and rejects a concurrent writer (1.719003ms)
+2026-11-04T09:28:49.7793797Z ✔ delayed dispatch of already-handled feedback is a successful no-op (116.678798ms)
+2026-11-04T09:28:49.7794492Z ✔ real router ignores owner approval of an unrelated release PR (95.820904ms)
+2026-11-04T09:28:49.7795908Z ✔ real router maps a PR comment to its source issue and reports approvals without execution (212.258789ms)
+2026-11-04T09:28:49.7797438Z ✔ proposal boundaries reject traversal, executable/config files, duplicates, missing artifacts and completed tasks (3.336446ms)
+2026-11-04T09:28:49.7798915Z ✔ documentation-only proposals use the provider skip flag without accepting arbitrary metadata (900.864092ms)
+2026-11-04T09:28:49.7799869Z ✔ a proposal needs an explicit owner request; an unrelated answer never starts proposal execution (1.030062ms)
+2026-11-04T09:28:49.7800993Z ✔ refinement admission binds successful workflow, issue, source, intent, result and publication marker (1.040581ms)
+2026-11-04T09:28:49.7801902Z ✔ passed proposal envelopes require bounded files while blockers remain publishable (2.726312ms)
+2026-11-04T09:28:49.7802781Z ✔ the real OpenSpec provider scaffolds, instructs and strictly validates proposal artifacts (2975.014023ms)
+2026-11-04T09:28:49.7803698Z ✔ publisher rechecks authority before a create-only branch, preserves base tree and does not merge (1.008816ms)
+2026-11-04T09:28:49.7804559Z ✔ a resumed proposal updates its applied product PR without opening another branch (5.082492ms)
+2026-11-04T09:28:49.7805429Z ✔ authenticated correction reports bind the dispatch base separately from the candidate head (2.870498ms)
+2026-11-04T09:28:49.7806389Z ✔ bot correction dispatch origins retain the original adopted failed CI attempt (1.09606ms)
+2026-11-04T09:28:49.7807235Z ✔ publication validates links against the proposed overlay and existing repository targets (7.886492ms)
+2026-11-04T09:28:49.7808460Z ✔ hook-free publication rejects malformed Markdown using the actual pinned adopted configuration (3978.289573ms)
+2026-11-04T09:28:49.7809453Z ✔ publication preserves an adopter without a declared Markdown style command while still checking links (4.154993ms)
+2026-11-04T09:28:49.7810373Z ✔ approved numeric points require independent explanations, confidence and uncertainty (2.599189ms)
+2026-11-04T09:28:49.7811282Z ✔ native completion preserves exact words and rejects unsupported inferences or blocking questions (2.772213ms)
+2026-11-04T09:28:49.7812136Z ✔ refinement rechecks and retains a supplied initial estimate, even when unchanged (0.781994ms)
+2026-11-04T09:28:49.7812930Z ✔ external requests need owner admission and a triaged issue before later stages (0.805589ms)
+2026-11-04T09:28:49.7813717Z ✔ only matching owner replies resume blocked triage and never start refinement (0.883134ms)
+2026-11-04T09:28:49.7814488Z ✔ a triaged label alone cannot start refinement of an external request (96.532598ms)
+2026-11-04T09:28:49.7815156Z ✔ packaged public form asks only for problem and desired result (10.981742ms)
+2026-11-04T09:28:49.7815808Z ✔ the published triage result label is declared for adopters (2.838037ms)
+2026-11-04T09:28:49.7816512Z ✔ installer preview includes triage, preserves existing form and writes nothing (46.394797ms)
+2026-11-04T09:28:49.7817312Z ✔ native triage source reuses authenticated dispatch and never requests continuation (1.47715ms)
+2026-11-04T09:28:49.7818400Z ✔ external issue preparation and publication retain intent and stop at triaged (290.976456ms)
+2026-11-04T09:28:49.7819140Z ✔ the SDLC artifact contains its contract and lifecycle assets (979.146551ms)
+2026-11-04T09:28:49.7819837Z ✔ the SDLC alias contract is deterministic and fails closed on collisions (5.221218ms)
+2026-11-04T09:28:49.7820816Z ✔ the capability catalog is versioned, validates independently and projects the label declaration (1.923662ms)
+2026-11-04T09:28:49.7821672Z ✔ the catalog fails closed when a future capability has no registered adapter (1.207802ms)
+2026-11-04T09:28:49.7822583Z ✔ browser E2E evidence is deterministic and keeps missing, unavailable and pending states explicit (0.969015ms)
+2026-11-04T09:28:49.7823508Z ✔ evidence adapters preserve existing producer payloads and build deterministic coverage (3.844089ms)
+2026-11-04T09:28:49.7824716Z ✔ evidence coverage distinguishes missing, incomplete and conflicting observations (0.589635ms)
+2026-11-04T09:28:49.7826117Z ✔ evidence CLI builds and validates an index only when output is explicit (175.750809ms)
+2026-11-04T09:28:49.7826847Z ✔ triage produces a deterministic ready report and label projection (9.977103ms)
+2026-11-04T09:28:49.7827590Z ✔ optional numeric estimates preserve legacy classification without conversion (1.186372ms)
+2026-11-04T09:28:49.7828859Z ✔ work overlays survive a triage transition independently of lifecycle state (0.431478ms)
+2026-11-04T09:28:49.7829806Z ✔ triage rejects ambiguous classifications and reports missing evidence (0.595155ms)
+2026-11-04T09:28:49.7830538Z ✔ triage preserves the native proposal gate while review is pending (0.403696ms)
+2026-11-04T09:28:49.7831318Z ✔ triage keeps unavailable checks and pending judgement separate from missing evidence (0.362439ms)
+2026-11-04T09:28:49.7832647Z ✔ triage rejects duplicate evidence statuses for one field (0.260939ms)
+2026-11-04T09:28:49.7833934Z ✔ triage CLI is read-only by default and applies only after an explicit matching request (172.868249ms)
+2026-11-04T09:28:49.7835438Z ✔ label reconciliation preserves existing values, adds only missing labels and is idempotent (3.153897ms)
+2026-11-04T09:28:49.7836456Z ✔ label reconciliation blocks unsupported providers and malformed declarations (0.325369ms)
+2026-11-04T09:28:49.7837459Z ✔ label reconciliation stops on a possible equivalent with a different name (0.399579ms)
+2026-11-04T09:28:49.7838653Z ✔ workflow state replays independently per run and rejects illegal transitions (0.884126ms)
+2026-11-04T09:28:49.7839438Z ✔ decomposition produces a deterministic dependency order and catches cycles (1.258137ms)
+2026-11-04T09:28:49.7840103Z ✔ route plans expose unmet prerequisites before mutation (0.453149ms)
+2026-11-04T09:28:49.7840763Z ✔ stacked plans follow dependency order and isolate pull-request bases (1.118716ms)
+2026-11-04T09:28:49.7841473Z ✔ control-plane validation keeps provider runtime outside the declaration (0.652422ms)
+2026-11-04T09:28:49.7842124Z ✔ memory validation enforces typed run and project scopes (0.366827ms)
+2026-11-04T09:28:49.7842757Z ✔ agent launch validation is bounded by the declared role contract (0.426318ms)
+2026-11-04T09:28:49.7843424Z ✔ stage results require an explicit next action and evidence statuses (0.295975ms)
+2026-11-04T09:28:49.7844101Z ✔ GitHub issue projection is deterministic with a provider fixture (110.497819ms)
+2026-11-04T09:28:49.7844754Z ✔ GitHub label projection is sorted and read-only by default (43.64947ms)
+2026-11-04T09:28:49.7845387Z ✔ GitHub decomposition stays read-only until apply is explicit (0.783668ms)
+2026-11-04T09:28:49.7846079Z ✔ completion binds the result to the dispatched run, stage and declared gate (2.221471ms)
+2026-11-04T09:28:49.7846816Z ✔ unresolved reports remain structurally valid but cannot complete a worker (0.551172ms)
+2026-11-04T09:28:49.7848229Z ✔ the CLI distinguishes report validation from completion and requires host identity (396.559015ms)
+2026-11-04T09:28:49.7850158Z ✔ all bundled routes stop ff before dispatch while individual stages remain available (362.955751ms)
+2026-11-04T09:28:49.7851696Z ✔ the authored worker shell preserves JSON input, including empty defaults (21.903689ms)
+2026-11-04T09:28:49.7852793Z ✔ the UI artifact contains the complete visual contract (1220.548667ms)
+2026-11-04T09:28:49.7854136Z ✔ native adapter connects triage, independent planning, RED, repair, review and one PR (87.955102ms)
+2026-11-04T09:28:49.7855659Z ✔ published unattended candidates remain compatible with existing CI PR reconciliation (68.467451ms)
+2026-11-04T09:28:49.7857179Z ✔ a rejected plan reports the actual reviewer findings and does not start implementation (51.482537ms)
+2026-11-04T09:28:49.7858744Z ✔ planning review rejects the actual producer using the reviewer model (30.945196ms)
+2026-11-04T09:28:49.7860016Z ✔ owner setup precedes the separately recorded regression in RED and GREEN (51.124509ms)
+2026-11-04T09:28:49.7861404Z ✔ pending human answer/review blocks native admission without launching an engine (63.2932ms)
+2026-11-04T09:28:49.7862856Z ✔ human attention added during a run stops continuation and releases its reservation (47.387839ms)
+2026-11-04T09:28:49.7864127Z ✔ a hotfix model cannot substitute its own regression command (48.900314ms)
+2026-11-04T09:28:49.7865207Z ✔ provider deadline is checked before any process starts (1.60607ms)
+2026-11-04T09:28:49.7866067Z [Engine error] Invalid operator engine configuration
+2026-11-04T09:28:49.7867517Z ✔ a real child startup failure retains its precise diagnostic without starting Docker (115.286296ms)
+2026-11-04T09:28:49.7869338Z ✔ delegated integration honors owner draft holds and new PR feedback before promotion or merge (1.136819ms)
+2026-11-04T09:28:49.7871050Z ▶ the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch
+2026-11-04T09:28:49.7872068Z   ✔ success (88.681768ms)
+2026-11-04T09:28:49.7872523Z   ✔ pause (71.22068ms)
+2026-11-04T09:28:49.7872947Z   ✔ cancel (55.258482ms)
+2026-11-04T09:28:49.7873489Z   ✔ pause-before-publication (64.68129ms)
+2026-11-04T09:28:49.7874101Z   ✔ cancel-before-publication (69.610289ms)
+2026-11-04T09:28:49.7874695Z   ✔ post-merge-dispatch-error (60.044585ms)
+2026-11-04T09:28:49.7875324Z   ✔ post-merge-notification-error (67.978565ms)
+2026-11-04T09:28:49.7876080Z   ✔ post-merge-dispatch-and-notification-error (81.181785ms)
+2026-11-04T09:28:49.7878033Z ✔ the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch (561.301534ms)
+2026-11-04T09:28:49.7879632Z ✔ an unattended stop never clears a newer execution reservation or overwrites its handoff (50.040489ms)
+2026-11-04T09:28:49.7881059Z ✔ a human hold preserves an uncertain execution reservation and names the recovery action (42.556445ms)
+2026-11-04T09:28:49.7882497Z ✔ an unattended product question is actionable and its answer survives an authorized retry (69.664412ms)
+2026-11-04T09:28:49.7883983Z ✔ reconstructs an independently reviewed plan from authenticated retained artifacts (3.313384ms)
+2026-11-04T09:28:49.7885482Z ✔ rejects changed plans, producer identity, results, run authority and missing artifacts (3.272439ms)
+2026-11-04T09:28:49.7886959Z ✔ fast-forward admission distinguishes points, risk and explicit five-point opt-in (3.795168ms)
+2026-11-04T09:28:49.7888592Z ✔ hotfix counts complete production churn while retaining test file/module limits (2.182578ms)
+2026-11-04T09:28:49.7889907Z ✔ RED/GREEN receipts require the named assertion and executed command (0.874638ms)
+2026-11-04T09:28:49.7891012Z ✔ interrupted assertion output never establishes RED (10.782803ms)
+2026-11-04T09:28:49.7892287Z ✔ unattended implementation keeps its assessment identity and rejects invented gates (1.489019ms)
+2026-11-04T09:28:49.7893599Z ✔ independent review binds separate execution and model to the candidate (0.483395ms)
+2026-11-04T09:28:49.7894941Z ✔ both compositions complete through current independent evidence and delegated integration (1.847169ms)
+2026-11-04T09:28:49.7896279Z ✔ lack of merge delegation publishes the candidate and retains the human decision (0.321302ms)
+2026-11-04T09:28:49.7897409Z ✔ bounded correction permits repair, then requires fresh review (0.495639ms)
+2026-11-04T09:28:49.7898762Z ✔ failed host checks can be repaired but cannot be overridden by review (0.583273ms)
+2026-11-04T09:28:49.7900183Z ✔ exhausted reviews, changed authority and altered regression assertions stop publication (3.030986ms)
+2026-11-04T09:28:49.7901556Z ✔ cancellation preserves a blocked assessment before any effect (0.262161ms)
+2026-11-04T09:28:49.7903112Z ✔ actual diff measurement includes deletions and exposes ineffective regression tests (83.753469ms)
+2026-11-04T09:28:49.7904407Z ✔ hotfix omits only the provider-added feature-plan check while keeping application checks (1.045999ms)
+2026-11-04T09:28:49.7905289Z ✔ retained delegated integration needs owner workflow identity and unchanged merge policy (0.789299ms)
+2026-11-04T09:28:49.7906117Z ✔ native entry rejects unauthenticated requests before spending an agent budget (4.122753ms)
+2026-11-04T09:28:49.7907057Z ✔ ambiguous implementation feedback asks on the existing PR without authorizing an initial issue-stage restart (148.659249ms)
+2026-11-04T09:28:49.7908314Z ▶ production publisher renews same-head completion, preserves blockers and rejects changed authority
+2026-11-04T09:28:49.7909111Z   ✔ passed (250.559184ms)
+2026-11-04T09:28:49.7909381Z   ✔ failed (255.960599ms)
+2026-11-04T09:28:49.7909662Z   ✔ unavailable (252.588329ms)
+2026-11-04T09:28:49.7909945Z   ✔ pending (249.009459ms)
+2026-11-04T09:28:49.7910207Z   ✔ initial (114.774378ms)
+2026-11-04T09:28:49.7910477Z   ✔ forged-pass (116.34895ms)
+2026-11-04T09:28:49.7910786Z   ✔ stale-receipt (104.719196ms)
+2026-11-04T09:28:49.7911069Z   ✔ head-race (119.690605ms)
+2026-11-04T09:28:49.7911332Z   ✔ intent-race (94.157893ms)
+2026-11-04T09:28:49.7911601Z   ✔ policy-race (94.050955ms)
+2026-11-04T09:28:49.7911895Z   ✔ identity-race (101.430054ms)
+2026-11-04T09:28:49.7912188Z   ✔ feedback-race (96.02775ms)
+2026-11-04T09:28:49.7912486Z   ✔ discussion-race (99.511881ms)
+2026-11-04T09:28:49.7912798Z   ✔ lost-response (192.568385ms)
+2026-11-04T09:28:49.7913506Z ✔ production publisher renews same-head completion, preserves blockers and rejects changed authority (2145.870434ms)
+2026-11-04T09:28:49.7914370Z ✔ every installable worker links its source from the shared accessible route map (7.292949ms)
+2026-11-04T09:28:49.7915248Z ﹣ native worker exports private evidence and preserves candidates on collection failures (0.889416ms) # SKIP
+2026-11-04T09:28:49.7916161Z ✔ read-only observation reports a stalled worker without waiting for or changing its execution (7.719137ms)
+2026-11-04T09:28:49.7917002Z ✔ read-only observation preserves an unconfirmed dispatch for operator inspection (0.778298ms)
+2026-11-04T09:28:49.7918039Z ✔ recovery rejects an incomplete job inventory before it can infer a safe retry (2.681352ms)
+2026-11-04T09:28:49.7918939Z ✔ abandoned reservation cleanup requires matching execution evidence and an unchanged bot label event (10.80123ms)
+2026-11-04T09:28:49.7919915Z ✔ maintenance releases an authenticated abandoned reservation and publishes its failure without retrying (4.25666ms)
+2026-11-04T09:28:49.7920861Z ✔ maintenance restores the failure notice if publication fails after releasing the reservation (4.159821ms)
+2026-11-04T09:28:49.7921737Z ✔ dispatch and reconciliation share the worker lease while reporting remains independent (14.059824ms)
+2026-11-04T09:28:49.7922610Z ✔ recovery separates confirmed safe failure from human decisions, effects and cancellation (1.289996ms)
+2026-11-04T09:28:49.7923578Z ✔ maintenance reports an interrupted unattended run without releasing its reservation or duplicating the handoff (0.685855ms)
+2026-11-04T09:28:49.7924467Z ✔ maintenance distinguishes a failed unattended run from an unknown publication (0.696955ms)
+2026-11-04T09:28:49.7925317Z ✔ maintenance reports a successful unattended run with a missing terminal handoff as uncertain (0.547635ms)
+2026-11-04T09:28:49.7926056Z ✔ unattended recovery rejects spoofed or superseded attempts (0.463939ms)
+2026-11-04T09:28:49.7926718Z ✔ a newer unattended attempt prevents retrying an older failed worker (1.268223ms)
+2026-11-04T09:28:49.7927445Z ✔ retry delay and finite budget are enforced with an explicit next decision (0.273272ms)
+2026-11-04T09:28:49.7928692Z ✔ maintenance records one retry before sending and never resends a lost response (2.008682ms)
+2026-11-04T09:28:49.7929554Z ✔ retry admission authenticates original authority and rechecks freshness before claiming (14.538298ms)
+2026-11-04T09:28:49.7930467Z ✔ missing original artifacts and spoofed receipts fail closed (1.638258ms)
+2026-11-04T09:28:49.7931232Z ✔ a newer request supersedes older failures and two linked retries exhaust the budget (5.004162ms)
+2026-11-04T09:28:49.7932034Z ✔ maintenance scan selects bounded owner issues and excludes bot reports and PRs (0.590415ms)
+2026-11-04T09:28:49.7932823Z ✔ maintenance reconciles a missing terminal handoff before any authorized retry (0.773439ms)
+2026-11-04T09:28:49.7933714Z ✔ maintenance restores a missing authenticated refinement handoff only while its state remains current (2.662326ms)
+2026-11-04T09:28:49.7934559Z ✔ maintenance reports failed preparation without claiming the agent started (0.526887ms)
+2026-11-04T09:28:49.7935353Z ✔ maintenance distinguishes timeouts and cancellation before and during publication (3.359111ms)
+2026-11-04T09:28:49.7936179Z ✔ product worker recovery observes its own publication job (0.835124ms)
+2026-11-04T09:28:49.7936906Z ✔ maintenance retains an authenticated issue answer in the recovered failure notice (0.654165ms)
+2026-11-04T09:28:49.7937973Z ✔ maintenance reports uncertain publication without retrying or duplicating the notice (0.792794ms)
+2026-11-04T09:28:49.7938798Z ✔ maintenance reports failed cleanup without changing a published stage result (0.869749ms)
+2026-11-04T09:28:49.7939568Z ✔ maintenance recognizes triage publication and reservation cleanup step names (0.530694ms)
+2026-11-04T09:28:49.7940414Z ✔ maintenance records only a uniquely authenticated pre-admission failure without retrying (4.454875ms)
+2026-11-04T09:28:49.7941188Z ✔ maintenance reports failed product apply without authorizing a retry (1.705865ms)
+2026-11-04T09:28:49.7941920Z ✔ product apply finalizer authenticates and deduplicates its failure handoff (3.023372ms)
+2026-11-04T09:28:49.7942765Z ✔ product apply publication reuses the authenticated claim and rejects a different decision (0.830114ms)
+2026-11-04T09:28:49.7943622Z ✔ product apply finalizer records an authenticated pre-claim failure without retrying (0.991657ms)
+2026-11-04T09:28:49.7944519Z ✔ product apply finalizer does not claim an unconfirmed request on a rerun or after a newer dispatch (0.572872ms)
+2026-11-04T09:28:49.7945363Z ✔ maintenance restores a failed read-only publication after its label was written (1.447321ms)
+2026-11-04T09:28:49.7946384Z ✔ maintenance does not restore a handoff if the workflow revision changes during reconciliation (0.83314ms)
+2026-11-04T09:28:49.7948154Z ✔ maintenance restores a failed read-only publication for a question without claiming completion (1.009711ms)
+2026-11-04T09:28:49.7949688Z ✔ maintenance restores an operational blocker without inventing a status label or retry (1.525026ms)
+2026-11-04T09:28:49.7951113Z ✔ maintenance restores a triage question using the installed workflow step name (0.777005ms)
+2026-11-04T09:28:49.7952826Z ✔ maintenance completes an interrupted read-only label transition before publishing its handoff (2.360621ms)
+2026-11-04T09:28:49.7954689Z ✔ maintenance restores a failed read-only publication idempotently after the final receipt update fails (1.489159ms)
+2026-11-04T09:28:49.7956615Z ✔ cancelled agent and cancelled publisher without recorded steps produce one uncertain terminal notice (0.815818ms)
+2026-11-04T09:28:49.7958270Z ✔ recovery classifies duration and technical evidence before delay and budget (0.592209ms)
+2026-11-04T09:28:49.7959581Z ✔ technical causes share the existing two-retry budget and exact thirty-minute delay (1.694473ms)
+2026-11-04T09:28:49.7960828Z ✔ technical diagnostics authenticate the check URL, distinguish check/job IDs and ignore quoted or resumed errors (0.780311ms)
+2026-11-04T09:28:49.7961849Z ✔ retry recording rechecks authority and later reservations after publishing the failed attempt (2.620878ms)
+2026-11-04T09:28:49.7963238Z ✔ three failures share one report; repeated maintenance does not increase counts or rewrite (13.396651ms)
+2026-11-04T09:28:49.7964306Z ✔ confirmed same-root recovery closes the report; new failure reopens the same issue (2.460048ms)
+2026-11-04T09:28:49.7965064Z ✔ lost create response is reconciled without another POST (1.413618ms)
+2026-11-04T09:28:49.7965790Z ✔ unconfirmed create with no matching issue requires inspection and never resends (0.920775ms)
+2026-11-04T09:28:49.7966604Z ✔ lost index response before create leaves durable uncertainty, not a duplicate report (1.014319ms)
+2026-11-04T09:28:49.7967373Z ✔ reports reject spoofed ownership and never publish free text or logs (1.094039ms)
+2026-11-04T09:28:49.7968525Z ✔ owner index edits and occurrence overflow stop publication visibly (3.633115ms)
+2026-11-04T09:28:49.7969532Z ✔ manual closure survives a repeated observation; a new occurrence reopens and a lost update is safe (1.523834ms)
+2026-11-04T09:28:49.7970388Z ✔ installed workflow display names are short and retain dispatch filenames (12.239242ms)
+2026-11-04T09:28:49.7971370Z ✔ catalog requests match native label routing and preserve existing adopter labels (20.766102ms)
+2026-11-04T09:28:49.7972136Z ✔ packed delivery instructions resolve without the source repository (809.728514ms)
+2026-11-04T09:28:49.7972586Z ℹ tests 589
+2026-11-04T09:28:49.7972795Z ℹ suites 0
+2026-11-04T09:28:49.7972999Z ℹ pass 582
+2026-11-04T09:28:49.7973198Z ℹ fail 0
+2026-11-04T09:28:49.7973414Z ℹ cancelled 0
+2026-11-04T09:28:49.7973632Z ℹ skipped 7
+2026-11-04T09:28:49.7973839Z ℹ todo 0
+2026-11-04T09:28:49.7974078Z ℹ duration_ms 28237.6483
+2026-11-04T09:28:49.9299409Z Local Markdown links checked in 899 documents.
+2026-11-04T09:28:50.0404592Z 
+2026-11-04T09:28:50.0405313Z > @juangcarmona/lighthouse-workspace@0.1.0 verify:public-site
+2026-11-04T09:28:50.0406087Z > npm run build:public-site && node scripts/verify-public-site.mjs
+2026-11-04T09:28:50.0406460Z 
+2026-11-04T09:28:50.1523162Z 
+2026-11-04T09:28:50.1524140Z > @juangcarmona/lighthouse-workspace@0.1.0 build:public-site
+2026-11-04T09:28:50.1524821Z > node scripts/build-public-site.mjs
+2026-11-04T09:28:50.1525081Z 
+2026-11-04T09:29:15.4416327Z Built Lighthouse public site at /home/runner/work/lighthouse/lighthouse/dist/public-site, including ProductShape and ArcShape snapshots.
+2026-11-04T09:29:15.4955139Z Verified Lighthouse public site: 10 files, package CSS is current, local references resolve.
+2026-11-04T09:29:15.5227148Z ##[group]Run node --input-type=module -e "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; assert.equal(readFileSync('docs/process/acceptance-fixture/ci-repair-311.md', 'utf8').trim(), '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.', 'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"
+2026-11-04T09:29:15.5230248Z [36;1mnode --input-type=module -e "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; assert.equal(readFileSync('docs/process/acceptance-fixture/ci-repair-311.md', 'utf8').trim(), '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.', 'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"[0m
+2026-11-04T09:29:15.5261275Z shell: /usr/bin/bash -e {0}
+2026-11-04T09:29:15.5261579Z ##[endgroup]
+2026-11-04T09:29:15.5596242Z node:internal/modules/run_main:107
+2026-11-04T09:29:15.5596864Z     triggerUncaughtException(
+2026-11-04T09:29:15.5597363Z     ^
+2026-11-04T09:29:15.5597610Z 
+2026-11-04T09:29:15.5599020Z AssertionError [ERR_ASSERTION]: The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.
+2026-11-04T09:29:15.5600097Z + actual - expected
+2026-11-04T09:29:15.5600330Z 
+2026-11-04T09:29:15.5600559Z   '# CI correction acceptance\n' +
+2026-11-04T09:29:15.5601000Z     '\n' +
+2026-11-04T09:29:15.5601561Z +   'The initial candidate awaits its injected CI correction.'
+2026-11-04T09:29:15.5602414Z -   'The current candidate passed its bounded CI correction.'
+2026-11-04T09:29:15.5602886Z 
+2026-11-04T09:29:15.5603228Z     at file:///home/runner/work/lighthouse/lighthouse/[eval1]:1:89
+2026-11-04T09:29:15.5604004Z     at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+2026-11-04T09:29:15.5604719Z     at async node:internal/modules/esm/loader:223:26
+2026-11-04T09:29:15.5605629Z     at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:220:20)
+2026-11-04T09:29:15.5606771Z     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+2026-11-04T09:29:15.5607569Z   generatedMessage: false,
+2026-11-04T09:29:15.5608193Z   code: 'ERR_ASSERTION',
+2026-11-04T09:29:15.5608689Z   actual: '# CI correction acceptance\n' +
+2026-11-04T09:29:15.5609171Z     '\n' +
+2026-11-04T09:29:15.5609689Z     'The initial candidate awaits its injected CI correction.',
+2026-11-04T09:29:15.5610390Z   expected: '# CI correction acceptance\n' +
+2026-11-04T09:29:15.5611224Z     '\n' +
+2026-11-04T09:29:15.5611733Z     'The current candidate passed its bounded CI correction.',
+2026-11-04T09:29:15.5612333Z   operator: 'strictEqual',
+2026-11-04T09:29:15.5612747Z   diff: 'simple'
+2026-11-04T09:29:15.5613089Z }
+2026-11-04T09:29:15.5613272Z 
+2026-11-04T09:29:15.5613416Z Node.js v24.22.1
+2026-11-04T09:29:15.5648620Z ##[error]Process completed with exit code 1.
+2026-11-04T09:29:15.5801341Z Post job cleanup.
+2026-11-04T09:29:15.6717964Z [command]/usr/bin/git version
+2026-11-04T09:29:15.6765312Z git version 2.56.0
+2026-11-04T09:29:15.6806592Z Temporarily overriding HOME='/home/runner/work/_temp/02de063d-f2f7-4d50-8f37-abadb7995d02' before making global git config changes
+2026-11-04T09:29:15.6808394Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-04T09:29:15.6811822Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/lighthouse/lighthouse
+2026-11-04T09:29:15.6858111Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-04T09:29:15.6901828Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-04T09:29:15.7239321Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-04T09:29:15.7274200Z http.https://github.com/.extraheader
+2026-11-04T09:29:15.7326763Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-04T09:29:15.7379671Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-04T09:29:15.7762231Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-04T09:29:15.7806744Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-04T09:29:15.8283334Z Cleaning up orphan processes

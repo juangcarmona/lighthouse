@@ -1,0 +1,10 @@
+# Retrospective
+
+- Went well: The clean workspace and exact initial/final wording kept the fixture small. Planning preceded the fixture, and the exact-byte assertion passed. Repository verification passed with 570 tests passed and seven skipped, plus Markdown, links and public-site checks.
+- Failed: The first dependency installation was cancelled with exit 137 at the shell timeout. A second installation with a longer timeout completed with exit 0. The first OpenSpec validation rejected skip-only metadata because the pinned provider requires a schema; adding `schema: spec-driven` made strict validation pass.
+- Start doing: Include the provider-required schema in documentation-only metadata before local validation, while retaining `skip_specs: true`.
+- Stop doing: Use neither the final paragraph before actual CI nor local green checks as proof of the end-to-end correction route.
+- Evidenced recurring patterns: No recurring failure pattern established in this session. The observed cancellation and metadata error each had a single successful recovery.
+- Preserved findings: Citation verification exits 0 with two stale-citation warnings in the unrelated issue-272 proposal (FR-AGENT-MEMORY and BR-MEMORY-BOUNDARY). No unrelated file was edited.
+- Prose review: Reviewed proposal, design, tasks and public summary directly for repetition, unsupported claims and unclear process language; no Humanizer skill was available among the installed skills.
+- Follow-up boundary: Actual failed CI, automatic correction, passing corrected-head CI, duplicate-event handling and retirement belong to the trusted host and subsequent correction workflow. No visual review or screenshot is required for this text-only fixture.

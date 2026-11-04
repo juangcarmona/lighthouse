@@ -1,0 +1,25 @@
+# Phase-two retrospective
+
+## What went well
+
+The existing plan and first-correction history were preserved. Only the fixture paragraph and the issue's tasks changed. Exact-byte verification and all four configured checks completed with exit code 0.
+
+## What failed
+
+The first dependency installation exceeded the shell's 120-second timeout and has a cancelled receipt with exit code 137. The retry used a longer timeout and completed with exit code 0; no validation commands were changed.
+
+## Start doing
+
+Use a longer foreground timeout for dependency installation and inspect the terminal receipt before starting another command.
+
+## Stop doing
+
+Do not treat the default shell timeout as a suitable installation budget, or local verification as proof of hosted CI behavior.
+
+## Evidenced recurring patterns
+
+The supplied review describes a second intentional CI mismatch following the first correction. Local checks accept this intermediate fixture, but actual CI and the bounded continuation require later host evidence. This run does not establish duplicate suppression, correction-budget consumption or hosted CI success.
+
+## Review method and boundaries
+
+Prose was manually reviewed for repetition and unsupported claims; no Humanizer skill was present in the repository skill inventory. No visual surface changed, so browser screenshots are not applicable. Publication, same-PR identity authentication and correction attempt 2 remain host responsibilities. No merge, release or deployment action was performed.

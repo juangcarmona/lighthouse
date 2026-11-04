@@ -1,0 +1,103 @@
+{
+  "implementationPr": 347,
+  "implementationMerge": "fa2e5d8813245bd6d1a838a97faa366afd1a12da",
+  "nativeSource": "46380c98bd6ddcc5ae5b1e29f92bf9edcb5d96bc",
+  "nativeDefaultBranch": "fa2e5d8813245bd6d1a838a97faa366afd1a12da",
+  "node": "v24.21.0",
+  "compiler": "gh-aw v0.93.2",
+  "actionlint": {
+    "version": "1.7.12",
+    "scope": "changed source YAML",
+    "customRunnerLabels": [
+      "lighthouse-workflow",
+      "ubuntu-26.04"
+    ],
+    "ignoredUnsupportedExtension": "queue concurrency"
+  },
+  "initialVerification": {
+    "total": 575,
+    "passed": 568,
+    "failed": 0,
+    "optionalSkipped": 7
+  },
+  "packageConsumer": "passed in disposable adopter copy",
+  "nativeModel": {
+    "configured": "openai/gpt-6.1-sol",
+    "configuredReasoningEffort": "medium",
+    "providerAuthenticatedIdentity": "unavailable",
+    "billing": "unknown"
+  },
+  "finalInstalledSource": "fb02d02c11efdd9d9ac4f503b08569466e2663cb",
+  "finalNativeDefaultBranch": "71a5b56f2487d916a52fa53996d5f5722abb2c41",
+  "finalSourceVerification": {
+    "total": 591,
+    "passed": 584,
+    "failed": 0,
+    "optionalSkipped": 7,
+    "focusedTotal": 33,
+    "focusedPassed": 33
+  },
+  "schemaVersion": 1,
+  "implementationPrs": [
+    347,
+    350,
+    351,
+    355
+  ],
+  "qualifiedFirstTrace": {
+    "issue": 353,
+    "pullRequest": 354,
+    "mainRevision": "2bcf65aa0f438f60f1da6c8a909d18aa9486c15d",
+    "harnessRevision": "56464d94182e2dc7d238a8101a8b7e9f2ae9f378",
+    "originalRouter": 41795753662,
+    "originalWorker": 41795792650,
+    "originalIdentity": "e40f37678b6b207f77b0f11bc7d2cd5333a35b9a908b0bb939726fc774ec7f58",
+    "failedHead": "1f1fb6f9fa575f02f756a7916e5dda47001718b6",
+    "failedCi": 41797814486,
+    "correctionRouter": 41798021961,
+    "correctionWorker": 41798129891,
+    "correctionAttempt": 1,
+    "correctedHead": "fd6c4b24313f9e21eb8c030b12b04cb5c48ce4b6",
+    "greenCi": 41800220073,
+    "lateReplay": {
+      "router": 41802846190,
+      "dispatch": "skipped",
+      "headUnchanged": true
+    },
+    "ownerInterventionsAfterInitialRequestBeforeGreenCi": 0,
+    "elapsedSeconds": 2226,
+    "failedCiToGreenCiSeconds": 1125,
+    "prEventCi": {
+      "run": 41800223226,
+      "conclusion": "action_required",
+      "countedAsPassed": false
+    }
+  },
+  "finalSourceCi": {
+    "run": 41805296833,
+    "head": "de4e1a2a8695faeb380c0d9870d99cd52b0a4fe4",
+    "conclusion": "success",
+    "packageRun": 41805296840,
+    "packageContents": "success",
+    "cleanConsumer": "success"
+  },
+  "providerVerification": {
+    "productErrors": 0,
+    "productWarnings": 0,
+    "citationErrors": 0,
+    "preExistingCitationWarnings": 2,
+    "openSpec311Strict": "passed"
+  },
+  "publicationStatus": "not established by source merge or native acceptance",
+  "secondQualification": {
+    "ownerFeedback": 6627128987,
+    "feedbackRouter": 41805704492,
+    "feedbackWorker": 41805768697,
+    "failedHead": "ef2aab5ad310153e6eb009166fd2dbe9d3748468",
+    "failedCi": 41807700574,
+    "correctionRouter": 41807932144,
+    "correctionWorker": 41808117191,
+    "attempt": 2,
+    "status": "in-progress"
+  }
+}

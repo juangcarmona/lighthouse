@@ -1,0 +1,5 @@
+
+> @juangcarmona/lighthouse-workspace@0.1.0 verify:package-consumer
+> node scripts/verify-package-consumer.mjs
+
+CLI package installs and verifies against the adopter checkout.

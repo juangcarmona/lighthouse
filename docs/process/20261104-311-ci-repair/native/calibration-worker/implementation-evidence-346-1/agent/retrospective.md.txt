@@ -1,0 +1,7 @@
+# Retrospective
+
+- **What went well:** The narrow write scope was preserved; the exact fixture assertion, all supplied checks and final repository verification passed. Planning preceded the fixture edit.
+- **What failed:** The first dependency install timed out. OpenSpec initially rejected metadata without schema. The repository-required citation check found four existing unclassified documents outside scope.
+- **Start doing:** Include explicit OpenSpec schema metadata when validating skip_specs changes directly, and distinguish supplied checks from additional repository-mandated checks in reports.
+- **Stop doing:** Treating a quiet or timed-out shell invocation as completion; completed receipts are the evidence of exit status. Do not repair unrelated baseline documents without authorization.
+- **Evidenced recurring patterns:** None established by this single run. The timeout and metadata failure each had one successful recovery; the citation failure remains an explicit blocker.

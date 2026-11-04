@@ -1,0 +1,9 @@
+# Retrospective
+
+- What went well: The fixture matches the exact authorized initial bytes. Dependency installation, repository verification and citation verification passed without changing unrelated source.
+- What failed: Initial strict OpenSpec validation rejected metadata containing only `skip_specs: true`; version 1.15.0 also requires a schema name. Adding `schema: spec-driven` resolved the failure; both attempts are retained.
+- Start doing: Validate documentation-only change metadata against the installed provider before the broader checks.
+- Stop doing: Assuming the harness's minimal metadata example is independently valid before host enrichment.
+- Evidenced recurring patterns: No recurring failure is established by this run. The metadata incompatibility was observed once and corrected once.
+- Prose review: Humanizer is not installed in the available skills. Proposal, design, tasks and public summary were reviewed directly for repetition, unsupported claims and unclear wording.
+- Boundaries: No UI or visual behavior changed, so screenshots and visual acceptance are not applicable. Actual failed CI, same-PR bounded correction, corrected-head CI and duplicate suppression remain later hosted acceptance work, not locally proven results.

@@ -1,0 +1,15 @@
+✔ failed adopted CI uses the authenticated original grant and existing correction worker (3.497648ms)
+✔ unrelated, stale, fork and unsupported runs never authorize repair (0.676075ms)
+✔ missing opt-in, revoked intent, scope changes and human decisions cannot authorize source effects (1.065499ms)
+✔ the two-attempt budget survives changed heads; duplicate and uncertain effects never dispatch again (4.194089ms)
+✔ lost dispatch acknowledgement, unavailable origin and invalid policy stop before another effect (1.352689ms)
+✔ CI correction preserves product models and other Product Changes, including configured roots (0.627086ms)
+✔ an external or unconfirmed current-head edit cannot borrow an older candidate publication (0.591958ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.084181

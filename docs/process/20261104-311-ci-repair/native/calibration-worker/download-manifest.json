@@ -1,0 +1,62 @@
+[
+  {
+    "id": 13302165445,
+    "name": "usage",
+    "archiveSha256": "b138619c0773ac298ddd5f04e52c9978a1d93ab28f0a6c9058a53bf04acc8b3d",
+    "bytes": 49933
+  },
+  {
+    "id": 13301826914,
+    "name": "agent",
+    "archiveSha256": "6d5d81d41af85daf7a9a8fdf4f0cbf6427d927aa7c18eaebf9f575e98ed8b6c8",
+    "bytes": 99971
+  },
+  {
+    "id": 13301807023,
+    "name": "agent-output-fallback",
+    "archiveSha256": "266822421279af5e3d8a0303d341058dd42753178b4f159a647a3b9c99111fbd",
+    "bytes": 877
+  },
+  {
+    "id": 13301722408,
+    "name": "lighthouse-implement-publication-346-1",
+    "archiveSha256": "84e4925261fc077f0c9ec595cb2c3336bf9574593ad1b8ac3a94b476af51cc6f",
+    "bytes": 212
+  },
+  {
+    "id": 13301632407,
+    "name": "lighthouse-implement-result-346-1",
+    "archiveSha256": "d801e10ba929ef8d3dbc23212256b5e88b4cd44c649b9d8c799284ad28a25c15",
+    "bytes": 6456
+  },
+  {
+    "id": 13301377881,
+    "name": "opencode-implement-events-346-1",
+    "archiveSha256": "b6f17f799efe043388c4f5e57d53b0ce89c10d8aad14f8afb8c2b05e41268b0a",
+    "bytes": 45844
+  },
+  {
+    "id": 13301377873,
+    "name": "implementation-evidence-346-1",
+    "archiveSha256": "a22b09c0049c440d28769413db90bca2891a1081b57c9ee8f67abef4b325ab70",
+    "bytes": 71847
+  },
+  {
+    "id": 13301316628,
+    "name": "activation",
+    "archiveSha256": "259270d2a5cccfbae0dc63966a595293160a78d1aeb29f4834cded114889d815",
+    "bytes": 500656
+  },
+  {
+    "id": 13300787750,
+    "name": "lighthouse-implement-input-346-1",
+    "archiveSha256": "231902e2b3f1f0fa8e2d15d536713e3a7d7e13d06adc6c275b41ddb0cf31d352",
+    "bytes": 15484
+  },
+  {
+    "id": 13300499430,
+    "name": "info",
+    "archiveSha256": "92fd7d4462026a64f522e2c9811af147bc9dd9a6f4fe48258cce601876641e6d",
+    "bytes": 685
+  }
+]

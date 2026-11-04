@@ -1,0 +1,8 @@
+
+> @juangcarmona/lighthouse-workspace@0.1.0 markdownlint
+> npx -y markdownlint-cli2@0.23.3
+
+markdownlint-cli2 v0.23.3 (markdownlint v0.41.1)
+Finding: **/*.md !**/node_modules/** !**/bin/** !**/obj/** !**/dist/** !**/TestResults/** !playwright-report/** !test-results/** !.agents/** !openspec/schemas/** !docs/product/model/** !docs/product/changes/** !src/dotnet/**/AnalyzerReleases*.md
+Linting: 289 files
+Summary: 0 issues in 0 files

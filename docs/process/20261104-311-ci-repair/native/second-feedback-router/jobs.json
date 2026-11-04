@@ -1,0 +1,243 @@
+{
+  "total_count": 4,
+  "jobs": [
+    {
+      "id": 126492059923,
+      "run_id": 41805704492,
+      "workflow_name": "PR review #354 \u00b7 juangcarmona",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41805704492",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdc4OpEw",
+      "head_sha": "71a5b56f2487d916a52fa53996d5f5722abb2c41",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126492059923",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41805704492/job/126492059923",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-04T09:13:37Z",
+      "started_at": "2026-11-04T09:13:40Z",
+      "completed_at": "2026-11-04T09:13:48Z",
+      "name": "route",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-04T09:13:40Z",
+          "completed_at": "2026-11-04T09:13:41Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-04T09:13:41Z",
+          "completed_at": "2026-11-04T09:13:42Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-04T09:13:42Z",
+          "completed_at": "2026-11-04T09:13:43Z"
+        },
+        {
+          "name": "Route the authorized event",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-04T09:13:43Z",
+          "completed_at": "2026-11-04T09:13:46Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-04T09:13:46Z",
+          "completed_at": "2026-11-04T09:13:46Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-04T09:13:46Z",
+          "completed_at": "2026-11-04T09:13:47Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-04T09:13:47Z",
+          "completed_at": "2026-11-04T09:13:47Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126492059923",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031267,
+      "runner_name": "GitHub Actions 1000031267",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 126492061091,
+      "run_id": 41805704492,
+      "workflow_name": "PR review #354 \u00b7 juangcarmona",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41805704492",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdc4Otow",
+      "head_sha": "71a5b56f2487d916a52fa53996d5f5722abb2c41",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126492061091",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41805704492/job/126492061091",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T09:13:37Z",
+      "started_at": "2026-11-04T09:13:37Z",
+      "completed_at": "2026-11-04T09:13:37Z",
+      "name": "epic-triage",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126492061091",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126492062177,
+      "run_id": 41805704492,
+      "workflow_name": "PR review #354 \u00b7 juangcarmona",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41805704492",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdc4Ox4Q",
+      "head_sha": "71a5b56f2487d916a52fa53996d5f5722abb2c41",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126492062177",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41805704492/job/126492062177",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T09:13:37Z",
+      "started_at": "2026-11-04T09:13:37Z",
+      "completed_at": "2026-11-04T09:13:37Z",
+      "name": "pr-state",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126492062177",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126492155589,
+      "run_id": 41805704492,
+      "workflow_name": "PR review #354 \u00b7 juangcarmona",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41805704492",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdc4UexQ",
+      "head_sha": "71a5b56f2487d916a52fa53996d5f5722abb2c41",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126492155589",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41805704492/job/126492155589",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-04T09:13:49Z",
+      "started_at": "2026-11-04T09:13:52Z",
+      "completed_at": "2026-11-04T09:14:07Z",
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-04T09:13:53Z",
+          "completed_at": "2026-11-04T09:13:54Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-04T09:13:54Z",
+          "completed_at": "2026-11-04T09:13:55Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-04T09:13:55Z",
+          "completed_at": "2026-11-04T09:13:56Z"
+        },
+        {
+          "name": "Record the authorized request",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-04T09:13:56Z",
+          "completed_at": "2026-11-04T09:14:01Z"
+        },
+        {
+          "name": "Preserve the request before dispatch",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-04T09:14:01Z",
+          "completed_at": "2026-11-04T09:14:02Z"
+        },
+        {
+          "name": "Dispatch the independent stage",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-04T09:14:02Z",
+          "completed_at": "2026-11-04T09:14:04Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-04T09:14:04Z",
+          "completed_at": "2026-11-04T09:14:04Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-04T09:14:04Z",
+          "completed_at": "2026-11-04T09:14:04Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-04T09:14:04Z",
+          "completed_at": "2026-11-04T09:14:04Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126492155589",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031268,
+      "runner_name": "GitHub Actions 1000031268",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

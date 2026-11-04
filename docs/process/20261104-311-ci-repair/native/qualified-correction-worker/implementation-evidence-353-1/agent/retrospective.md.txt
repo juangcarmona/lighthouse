@@ -1,0 +1,27 @@
+# Bounded correction retrospective
+
+## What went well
+
+The issue specified the final paragraph exactly, so no new product decision was needed. The existing documentation-only plan remained applicable; its original notes were preserved and the correction was appended. All four configured checks and the exact-byte fixture assertion completed with exit code zero.
+
+## What failed
+
+The supplied earlier CI run reports the deliberately intermediate paragraph rather than the final paragraph. No check failed during this worker's correction. Repository verification reported 582 passing tests and seven skips, not full execution of every test.
+
+## Start doing
+
+Keep exact-byte fixture evidence separate from repository validation and from later hosted acceptance. Use terminal command receipts as completion evidence.
+
+## Stop doing
+
+Do not describe local verification as proof of corrected-head hosted CI, automatic routing or duplicate suppression. Do not change validation to make a disposable fixture pass.
+
+## Evidenced recurring patterns
+
+Both the supplied earlier CI summary and this worker's verification report 582 passing tests, zero failures and seven skips. This single correction does not establish any broader recurring failure pattern.
+
+## Boundaries and prose review
+
+Only the fixture paragraph and its OpenSpec planning documents changed. No tests, workflow, policy, configuration or canonical product requirements changed. Screenshots are not applicable to this Markdown-only fixture. The installed skill inventory contains no Humanizer helper; prose was reviewed directly for repetition, unsupported claims and unclear wording.
+
+Publication, PR freshness checks, corrected-head CI, duplicate-completion acceptance and retirement remain with the trusted host/operator. No merge, release or deployment is authorized.
