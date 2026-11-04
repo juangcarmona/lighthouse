@@ -24,7 +24,7 @@ jobs:
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
       - name: Check the disposable CI correction candidate
-        if: startsWith(github.ref, 'refs/heads/lighthouse/implement-346-')
+        if: startsWith(github.ref, 'refs/heads/lighthouse/implement-348-')
         run: >-
           node --input-type=module -e
           "import { readFileSync } from 'node:fs';
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: 46380c98bd6ddcc5ae5b1e29f92bf9edcb5d96bc
+          ref: e5d3af7d4d9f5dd89344ccddc4ed1ea779a92cf3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
