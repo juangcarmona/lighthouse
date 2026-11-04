@@ -23,6 +23,15 @@ jobs:
       - name: Install Chrome for architecture rendering
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
+      - name: Check the disposable CI correction candidate
+        if: startsWith(github.ref, 'refs/heads/lighthouse/implement-346-')
+        run: >-
+          node --input-type=module -e
+          "import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          assert.equal(readFileSync('docs/process/acceptance-fixture/ci-repair-311.md', 'utf8').trim(),
+          '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.',
+          'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"
   reconcile-implementation-pr:
     needs: repository
     if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')
