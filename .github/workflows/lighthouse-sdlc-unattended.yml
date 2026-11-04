@@ -1,67 +1,54 @@
-# Owned by lighthouse-sdlc. Both routes reuse canonical lifecycle stages.
 name: unattended
-run-name: "${{ inputs.route }} #${{ inputs.issue }} · ${{ github.actor }}"
+run-name: "#101 independent reviewer qualification"
 on:
   workflow_dispatch:
-    inputs:
-      issue:
-        description: Owner-authorized issue
-        required: true
-        type: string
-      route:
-        description: Bounded delivery route
-        required: true
-        type: choice
-        options: [ff, hotfix]
-permissions: {}
-concurrency:
-  group: lighthouse-issue-${{ inputs.issue }}
-  cancel-in-progress: false
-  queue: max
+permissions:
+  contents: read
 jobs:
-  deliver:
-    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && github.actor == github.repository_owner
+  qualify:
+    if: github.actor == github.repository_owner
     runs-on: [self-hosted, linux, lighthouse-workflow]
-    timeout-minutes: 125
-    permissions:
-      actions: write
-      contents: write
-      issues: write
-      pull-requests: write
+    timeout-minutes: 20
     steps:
-      - name: Load the pinned trusted harness
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
-          path: .lighthouse-harness
-          persist-credentials: false
-      - name: Load current product source
-        uses: actions/checkout@v5
-        with:
-          path: product
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - name: Execute the authorized bounded composition
+      - name: Install the source-built package under test
+        run: |
+          set -euo pipefail
+          mkdir -p node_modules/.acceptance-101
+          npm pack ./src/packages/sdlc --pack-destination node_modules/.acceptance-101 --json > node_modules/.acceptance-101/pack.json
+          mkdir -p "$RUNNER_TEMP/acceptance-101"
+          cp node_modules/.acceptance-101/*.tgz node_modules/.acceptance-101/pack.json "$RUNNER_TEMP/acceptance-101/"
+          npm install --prefix node_modules/.acceptance-101 node_modules/.acceptance-101/*.tgz --ignore-scripts
+          echo "LIGHTHOUSE_ACCEPTANCE_HARNESS=$GITHUB_WORKSPACE/node_modules/.acceptance-101/node_modules/@juangcarmona/lighthouse-sdlc" >> "$GITHUB_ENV"
+      - name: Prove actual source tampering detection and read-only review mounts
+        run: |
+          set -euo pipefail
+          export LIGHTHOUSE_TEST_IMAGE=$(node -e 'const c=require(process.env.LIGHTHOUSE_ENGINE_CONFIG);console.log(c.implementationImage)')
+          node --test src/tests/verification-integrity.integration.test.mjs src/tests/worker-evidence.integration.test.mjs
+      - name: Qualify the actual reviewer against weak and corrected tests
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: node .lighthouse-harness/src/packages/sdlc/src/unattended-actions.mjs
-      - name: Retain candidate and execution evidence
+          LIGHTHOUSE_ACCEPTANCE_ISSUE: '101'
+        run: node scripts/acceptance-101-independent-verification.mjs
+      - name: Retain original qualification outputs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: lighthouse-unattended-${{ github.run_id }}-${{ github.run_attempt }}
+          name: independent-verification-101-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/report.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/candidate.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/request.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/envelope.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/checks.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/changes.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/runtime.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/engine-error.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/evidence/**
-          if-no-files-found: warn
-          retention-days: 14
+            ${{ runner.temp }}/acceptance-101/*.tgz
+            ${{ runner.temp }}/acceptance-101/pack.json
+            ${{ runner.temp }}/acceptance-101/**/receipt.json
+            ${{ runner.temp }}/acceptance-101/**/report.json
+            ${{ runner.temp }}/acceptance-101/**/review-context.json
+            ${{ runner.temp }}/acceptance-101/**/request.json
+            ${{ runner.temp }}/acceptance-101/**/envelope.json
+            ${{ runner.temp }}/acceptance-101/**/runtime.json
+            ${{ runner.temp }}/acceptance-101/**/engine-error.json
+            ${{ runner.temp }}/acceptance-101/**/evidence/**
+            ${{ runner.temp }}/acceptance-101/**/host/**
+          retention-days: 30
