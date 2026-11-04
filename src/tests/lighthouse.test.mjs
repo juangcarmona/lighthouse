@@ -56,6 +56,38 @@ test('init creates a projection and refuses to overwrite product work', async ()
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('required repository boundaries survive committing and cloning a fresh initialization', async () => {
+  for (const brownfield of [false, true]) {
+    const dir = await fixture(), clone = `${dir}-clone`, outside = `${dir}-external`;
+    const env = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0' };
+    const git = args => { const result = spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', env }); assert.equal(result.status, 0, result.stderr); };
+    try {
+      git(['init', '--initial-branch=main']);
+      let args = [];
+      if (brownfield) {
+        await mkdir(join(dir, 'infra')); await writeFile(join(dir, 'infra/.gitkeep'), 'Repository-owned marker\n');
+        await mkdir(outside); await symlink(outside, join(dir, 'src'));
+        const planPath = join(dir, 'init.plan.json');
+        await writeFile(planPath, JSON.stringify({ schemaVersion: 1, product: 'fixture', intent: 'Retain the initialized repository through Git.', application: { shape: 'unknown', stacks: [] }, profiles: [], openQuestions: [] }));
+        args = ['--plan-file', planPath];
+      }
+      const preview = run(dir, 'init', [...args, '--dry-run'], { env });
+      assert.equal(preview.status, 0, preview.stderr);
+      if (!brownfield) await assert.rejects(access(join(dir, 'infra/.gitkeep')), { code: 'ENOENT' });
+      const initialized = run(dir, 'init', [...args, ...(brownfield ? ['--apply'] : [])], { env });
+      assert.equal(initialized.status, 0, initialized.stderr);
+      if (brownfield) await assert.rejects(access(join(outside, '.gitkeep')), { code: 'ENOENT' });
+      git(['add', '--all']);
+      git(['-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'chore: initialize the consumer']);
+      git(['clone', '--no-local', dir, clone]);
+      const verified = run(clone, 'verify', [], { env });
+      assert.equal(verified.status, 0, verified.stderr);
+      if (brownfield) assert.equal(await readFile(join(clone, 'infra/.gitkeep'), 'utf8'), 'Repository-owned marker\n');
+      else assert.match(preview.stdout, /infra\/\.gitkeep/);
+    } finally { await rm(dir, { recursive: true, force: true }); await rm(clone, { recursive: true, force: true }); await rm(outside, { recursive: true, force: true }); }
+  }
+});
+
 test('verify reports projection drift and invalid manifests', async () => {
   const dir = await fixture();
   try {
