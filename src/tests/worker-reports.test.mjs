@@ -152,6 +152,8 @@ test('confirming a previously unconfirmed run replaces its request placeholder i
   await publishReports(f.api, repo, owner, 1, [{ ...pending, runId: '11' }]);
   const report = readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed');
   assert.equal(report.entries.length, 1); assert.equal(report.entries[0].key, 'run:11');
+  await publishReports(f.api, repo, owner, 1, [pending]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').entries.length, 1);
   await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
   await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'active', code: 'worker-active' }]);
   assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').contexts[0].code, 'worker-completed');

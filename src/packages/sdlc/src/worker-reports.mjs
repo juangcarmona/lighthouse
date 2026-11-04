@@ -105,6 +105,7 @@ export function mergeObservations(repository, previous, observations) {
   const contexts = new Map((previous.contexts ?? []).map(context => [context.rootId, context]));
   const normalized = observations.map(o => normalizedObservation(repository, o)).filter(Boolean);
   for (const o of normalized) if (o.worker === previous.worker && o.code === previous.code) {
+    if (!o.entry.runId && [...entries.values()].some(entry => entry.rootId === o.rootId && entry.issue === o.entry.issue && entry.attempt === o.entry.attempt && entry.runId)) continue;
     const pending = entries.get(`request:${o.rootId}`);
     if (o.entry.runId && pending && pending.issue === o.entry.issue && pending.attempt === o.entry.attempt) entries.delete(pending.key);
     const prior = entries.get(o.entry.key);
