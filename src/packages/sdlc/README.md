@@ -98,3 +98,20 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 - [Scoped memory](commands/memory.md): opt-in host-side SQLite retention and selective recall, independent of worker storage and approval authority.
 
 ProductShape, ArcShape and OpenSpec own their artifacts. Lighthouse supplies delivery contracts and the optional GitHub adapter; the operator supplies runtime and credentials.
+
+### Bounded CI correction
+
+Automatic CI correction uses the existing `apply-review` worker and updates the existing implementation PR. It is disabled unless the adopted `.lighthouse/github.json` explicitly selects issues:
+
+```json
+{
+  "completion": {
+    "postMergeWorkflows": ["ci.yml"],
+    "ciRepair": { "enabled": true, "maxAttempts": 2, "issues": [47] }
+  }
+}
+```
+
+Only a failed adopted CI workflow on the current same-repository candidate branch can request correction. The original authenticated implementation receipt must still match the issue, owner answers, write scope and check policy. Diagnostic logs are untrusted input. A changed commit does not reset the two-attempt budget for that PR identity; duplicate CI events and unconfirmed dispatch cannot start another worker. Cancellation, unrelated runs, owner objections and unavailable authority require an explicit stop or no action. Operational interruption retry remains separate.
+
+The host validates proposed Markdown and local links before publication, using the adopted style configuration and pinned `markdownlint-cli2` version. ProductShape and OpenSpec retain their validators and ownership. A product proposal needing a repair must be validated and published again through its trusted provider path, with a new current-head review binding and the required renewed owner decision; CI correction never rewrites a stale approval or grants merge authority.

@@ -1,4 +1,4 @@
-import { checkImplementationPullRequest } from './proposal-review.mjs';
+import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { stagePath } from './stage-dispatch.mjs';
 
 // Display names filter subscriptions only; actual paths, revisions and subjects admit work.
@@ -17,7 +17,9 @@ export async function completionSource(api, repository, event, env = {}) {
   if (pulls.length >= 100) throw Error('Completion subject lookup exceeds bounds');
   return pulls.some(pr => {
     if (pr.base?.ref !== metadata.default_branch || pr.head?.sha !== run.head_sha && pr.merge_commit_sha !== run.head_sha) return false;
-    try { checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository); return true; } catch { return false; }
+    try { checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository); return true; } catch {
+      try { checkProposal(pr, repository); return true; } catch { return false; }
+    }
   }) ? 'checks' : null;
 }
 
