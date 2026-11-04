@@ -5,7 +5,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
-import { checkProductResumePullRequest, productImplementationProof } from './product-change.mjs';
+import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -107,9 +107,11 @@ export async function sourceFiles(root, baseline) {
 }
 export function collectChanges(before, after, policy) {
   const changes = [];
+  const modelRoot = productModelDirectoryFromConfig(before.get('.product/config.yaml')?.content.toString('utf8') ?? '');
   for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
     const old = before.get(path), current = after.get(path);
     if (old && current && old.content.equals(current.content) && old.mode === current.mode) continue;
+    if (path === modelRoot || path.startsWith(`${modelRoot}/`)) throw Error(`Implementation cannot change the accepted product model: ${path}; request Product Change approval and provider apply before resuming`);
     changes.push({ path, mode: current?.mode ?? old?.mode ?? '100644', content: current ? current.content.toString('base64') : null });
   }
   return validateChanges(changes, policy);

@@ -32,6 +32,26 @@ test('redaction fixtures remain publishable without exempting test files from cr
   const content = await readFile(new URL('./opencode-execute.test.mjs', import.meta.url));
   assert.doesNotThrow(() => validateChanges([{ ...change, path: 'src/tests/opencode-execute.test.mjs', content: content.toString('base64') }], policy));
 });
+test('implementation cannot add, edit, delete or chmod accepted product intent under broad grants', () => {
+  const file = content => ({ content: Buffer.from(content), mode: '100644' });
+  for (const root of ['docs/product', 'product-definition']) {
+    const path = `${root}/model/requirements/intent.md`;
+    const before = new Map([['.product/config.yaml', file(`product-root: ${root}\n`)], [path, file('accepted')]]);
+    const variants = [
+      after => after.set(path, file('unapproved')),
+      after => after.delete(path),
+      after => after.set(`${root}/model/new.md`, file('unapproved')),
+      after => after.set(path, { ...file('accepted'), mode: '100755' })
+    ];
+    for (const mutate of variants) {
+      const after = new Map(before); mutate(after);
+      assert.throws(() => collectChanges(before, after, { ...policy, paths: ['*'] }), /Product Change approval and provider apply/);
+    }
+    const afterApply = new Map(before); afterApply.set('src/app.js', file('implementation'));
+    assert.deepEqual(collectChanges(before, afterApply, { ...policy, paths: ['*'] }).map(change => change.path), ['src/app.js']);
+  }
+  assert.throws(() => collectChanges(new Map(), new Map([['docs/product/model/new.md', file('unapproved')]]), { ...policy, paths: ['*'] }), /accepted product model/);
+});
 test('snapshot captures additions and deletions, excludes build output and rejects symlinks', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-implement-'));
   try {
