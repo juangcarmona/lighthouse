@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { completionEffects, authorizeCompletion, inspectCompletion, assertFresh, assertChecks, mergeAccepted, checkCommit, evidenceProtection, postMergeRuns, requiredPolicy } from '../packages/sdlc/src/completion.mjs';
-import { validatePublishable, publishProcessBundle, completionBundle } from '../packages/sdlc/src/process-publication.mjs';
+import { validatePublishable, publishProcessBundle, completionBundle, preflightProcessPublication, readPublishedBundle } from '../packages/sdlc/src/process-publication.mjs';
 import { validateGithubProfile } from '../packages/sdlc/src/github-profile.mjs';
 const head = 'a'.repeat(40), base = 'b'.repeat(40), merged = 'c'.repeat(40);
 const env = { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_REPOSITORY_OWNER: 'owner' };
@@ -208,11 +208,11 @@ test('current completion jobs cannot become external acceptance evidence or eras
   await assert.rejects(observeChecks(async p => p.startsWith('actions/') ? { jobs: [{}] } : api(p), head, '99'), /check identity/);
 });
 
-function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, dispatchOrigin, symlink = false } = {}) {
+function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, dispatchOrigin, symlink = false, recovery = null } = {}) {
   const receipt = { state: 'merged', sha: merged, acceptedHead: head, authorization: { merge: true, issue: 42, pr: 50, head }, ...receiptOverrides };
-  const files = completionBundle({ ...request, stage: 'integrate', ...(dispatchOrigin ? { dispatchOrigin } : {}) }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
+  const files = completionBundle({ ...request, stage: 'integrate', ...(dispatchOrigin ? { dispatchOrigin } : {}), ...(recovery ? { workflowRunId: recovery.runId, attempt: recovery.attempt, recoveryPublication: { runId: '123', attempt: '1', url: request.runUrl, revision: recovery.revision } } : {}) }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
   if (mutateFile) mutateFile(files);
-  const prefix = 'docs/process/20261025-42-a-change/runs/123/attempt-0001/post-integration/';
+  const prefix = `docs/process/20261025-42-a-change/runs/${recovery?.runId ?? '123'}/attempt-0001/post-integration/`;
   const blobs = new Map(), paths = new Map();
   for (const [name, content] of Object.entries(files)) {
     const path = prefix + name, sha = createHash('sha1').update(`blob ${Buffer.byteLength(content)}\0`).update(content).digest('hex');
@@ -221,14 +221,16 @@ function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides =
     const parts = path.split('/');
     for (let i = 1; i < parts.length; i++) { const ancestor = parts.slice(0, i).join('/'); paths.set(ancestor, { path: ancestor, type: 'tree', mode: '040000' }); }
   }
-  const run = { repository: { full_name: 'owner/repo' }, path: '.github/workflows/lighthouse-sdlc-router.yml', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: base, run_attempt: 1, status: 'completed', conclusion: 'success', event: 'workflow_dispatch', ...runOverrides };
-  return async path => {
+  const run = { id: 123, repository: { full_name: 'owner/repo' }, path: '.github/workflows/lighthouse-sdlc-router.yml', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: base, run_attempt: 1, status: 'completed', conclusion: 'success', event: 'workflow_dispatch', ...runOverrides };
+  const api = async path => {
     if (path.startsWith('git/ref/')) return { object: { sha: 'd'.repeat(40) } };
     if (path.startsWith('git/trees/')) return { tree: [...paths.values()], truncated: false };
     if (path.startsWith('git/blobs/')) { const content = blobs.get(path.slice(10)); return { content: Buffer.from(content).toString('base64'), size: Buffer.byteLength(content), encoding: 'base64' }; }
     if (path === 'actions/runs/123') return run;
+    if (recovery && path === `actions/runs/${recovery.runId}/attempts/1`) return { ...run, id: Number(recovery.runId), path: '.github/workflows/lighthouse-worker-maintenance.yml', head_sha: recovery.revision, conclusion: 'success', ...recovery.runOverrides };
     throw Error(`Unexpected retained evidence request: ${path}`);
   };
+  return Object.assign(api, { files, receipt });
 }
 
 test('review receives hashed retained integration authorization and a permanent report', async () => {
@@ -348,4 +350,48 @@ test('rejected merge preflight never attempts or recovers a merge', async () => 
 test('label assessment declares the same request consumption for the agent and publisher', () => {
   for (const status of ['passed', 'blocked']) assert.deepEqual(completionEffects('integrate', status, true), { add: [], remove: ['integrate'], closeIssue: false });
   assert.deepEqual(completionEffects('integrate', 'passed'), { add: [], remove: [], closeIssue: false });
+});
+
+
+test('evidence mapping conflicts fail preflight before any merge or evidence write', async () => {
+  const db = store();
+  let writes = 0;
+  const api = async (path, method = 'GET', body) => {
+    if (method !== 'GET') writes++;
+    const value = await db.api(path, method, body);
+    if (path.startsWith('git/trees/') && method === 'GET') value.tree.push({ path: 'docs/process/20260101-42-first', type: 'tree' }, { path: 'docs/process/20260102-42-second', type: 'tree' });
+    return value;
+  };
+  await assert.rejects(preflightProcessPublication(api, request), /Ambiguous work-item evidence mapping/);
+  assert.equal(writes, 0);
+  await preflightProcessPublication(db.api, request);
+  assert.equal(db.attempts(), 0);
+});
+
+
+test('recovered integration requires both original merge authority and a native publication proof', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const { fingerprint } = await import('../packages/sdlc/src/completion.mjs');
+  const recovery = { runId: '300', attempt: '1', revision: 'e'.repeat(40) };
+  for (const mode of ['valid', 'failed-maintenance', 'record', 'receipt', 'actor', 'cancelled-source']) {
+    const db = retainedIntegration({ runOverrides: { conclusion: mode === 'cancelled-source' ? 'cancelled' : 'failure' }, recovery: { ...recovery, ...(mode === 'actor' ? { runOverrides: { actor: { login: 'outsider' } } } : mode === 'failed-maintenance' ? { runOverrides: { conclusion: 'failure' } } : {}) } });
+    const proof = { schemaVersion: 1, issue: 42, originalRun: '123', originalAttempt: 1, recordSha256: createHash('sha256').update(db.files['evidence-record.json']).digest('hex'), receiptDigest: fingerprint(db.receipt) };
+    if (mode === 'record') proof.recordSha256 = '0'.repeat(64);
+    if (mode === 'receipt') proof.receiptDigest = '0'.repeat(64);
+    const readArtifact = async (_api, repo, run, name, member) => { assert.equal(repo, 'owner/repo'); assert.equal(run, 300); assert.equal(name, 'lighthouse-recovery-effects-42-1'); assert.equal(member, 'completion-recovery.json'); return proof; };
+    const operation = () => readIntegrationEvidence(db, { ...observation, merged: true, merge: merged }, null, { readArtifact });
+    if (['valid', 'failed-maintenance'].includes(mode)) { const result = await operation(); assert.equal(result.workflow.conclusion, 'failure'); assert.equal(result.workflow.recovery.runId, '300'); }
+    else await assert.rejects(operation());
+  }
+});
+
+
+test('a partial-publication notice is read only from the exact immutable original bundle', async () => {
+  const files = { 'report.md': 'Original blocked report' }, prefix = 'docs/process/20261025-42-a-change/runs/123/attempt-0001/post-integration';
+  const tree = { tree: [...prefix.split('/').map((_, index, parts) => ({ path: parts.slice(0, index + 1).join('/'), type: 'tree' })), { path: `${prefix}/report.md`, type: 'blob', mode: '100644', sha: createHash('sha1').update(`blob ${Buffer.byteLength(files['report.md'])}\0`).update(files['report.md']).digest('hex') }] };
+  const api = async (path, method = 'GET') => { assert.equal(method, 'GET'); assert.equal(path, `git/trees/${head}?recursive=1`); return tree; };
+  assert.match((await readPublishedBundle(api, request, files, { commit: head })).url, /report.md$/);
+  await assert.rejects(readPublishedBundle(api, request, { 'report.md': 'Altered' }, { commit: head }), /does not bind/);
+  tree.tree.at(-1).mode = '120000';
+  await assert.rejects(readPublishedBundle(api, request, files, { commit: head }), /does not bind/);
 });

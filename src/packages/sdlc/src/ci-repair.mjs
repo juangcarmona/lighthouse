@@ -87,7 +87,7 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
   }
   if (!currentCandidate) return stop('The current PR head has no authenticated implementation publication. Maintainer: revalidate external or unconfirmed changes before requesting correction.');
   if (!grant) return stop('The retained implementation grant is unavailable or its scope, checks, or owner intent changed.');
-  const chain = [];
+  const rounds = new Map();
   for (const comment of comments) {
     if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || !comment.body.includes('<!-- lighthouse-dispatch:')) continue;
     const receipt = readDispatchReceipt(comment, repository, review.issue);
@@ -98,8 +98,9 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
     let prior;
     try { prior = await readDispatch(api, repository, owner, review.issue, comment.id, worker); } catch { return stop('A previous correction origin cannot be authenticated. Maintainer: reconcile its retained request before further work.'); }
     if (prior.request.id !== currentDispatch && !prior.request.ciRepair && ['requested', 'running', 'unknown'].includes(prior.receipt.status)) return stop('An owner feedback correction has active or unconfirmed effects. Maintainer: follow that execution before requesting automatic CI correction.');
-    if (prior.request.ciRepair?.identity === review.implementationIdentity && prior.request.ciRepair.pr === pr.number) chain.push(prior);
+    if (prior.request.ciRepair?.identity === review.implementationIdentity && prior.request.ciRepair.pr === pr.number) rounds.set(prior.request.recovery?.rootId ?? prior.request.id, prior);
   }
+  const chain = [...rounds.values()];
   const existing = chain.find(item => item.request.ciRepair.head === review.head);
   if (existing && existing.request.id !== currentDispatch) return null;
   const attempt = existing?.request.ciRepair.attempt ?? chain.length + 1;

@@ -32,6 +32,7 @@ runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+  LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
   LIGHTHOUSE_EPIC_CAPACITY: ${{ vars.LIGHTHOUSE_EPIC_CAPACITY }}
   LIGHTHOUSE_WORKER: apply-review
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
@@ -211,7 +212,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-implement-publication-${{ inputs.issue }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
+          path: |
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/ci-requests.json
           if-no-files-found: ignore
           retention-days: 14
       - name: Release the issue reservation

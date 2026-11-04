@@ -1,0 +1,14 @@
+✔ confirmed merge recovery publishes once and resumes existing CI in either receipt order (6.039473ms)
+✔ lost handoff response is reconciled from the actual comment without republishing or repeating effects (1.53319ms)
+✔ uncertain merge, cancellation, changed authority and newer dispatch cannot recover publication (1.989851ms)
+✔ a confirmed blocked report restores only its handoff after a lost response (1.242621ms)
+✔ a claimed recovery event cannot replace native review authority with caller-supplied authorization (0.758113ms)
+✔ retained integration arriving before CI resumes review once without another publication (0.820645ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 126.10253

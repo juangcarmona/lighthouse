@@ -1,0 +1,21 @@
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import assert from 'node:assert/strict';
+import { admitDispatch } from '/srv/workspaces/juangcarmona/lighthouse/issue-142/src/packages/sdlc/src/stage-dispatch.mjs';
+const repository = 'juangcarmona/lighthouse';
+const [issue, run, comment, stage = 'refine'] = process.argv.slice(2);
+const results = [];
+for (const [mode, enabled, scope, expected] of [['disabled', 'false', `[${issue}]`, /Automatic recovery has been disabled/], ['empty-scope', 'true', '[]', /outside the configured maintenance scope/]]) {
+  const reads = [];
+  const api = async (path, method = 'GET', body, optional = false) => {
+    assert.equal(method, 'GET', 'Read-only qualification forbids every mutation');
+    reads.push(path);
+    try { return JSON.parse(execFileSync('gh', ['api', `repos/${repository}${path ? '/' + path : ''}`], { encoding: 'utf8', timeout: 30000, maxBuffer: 4 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] })); }
+    catch (error) { if (optional && String(error.stderr).includes('404')) return null; throw error; }
+  };
+  let outcome;
+  await assert.rejects(admitDispatch(api, repository, 'juangcarmona', { LIGHTHOUSE_ISSUE: issue, GITHUB_RUN_ID: run, GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_STAGE: stage, LIGHTHOUSE_RECOVERY_ENABLED: enabled, LIGHTHOUSE_MAINTENANCE_ISSUES: scope }, { inputs: { 'dispatch-request': comment } }), error => { outcome = error.message; return expected.test(error.message); });
+  results.push({ mode, issue: Number(issue), run: Number(run), comment: Number(comment), outcome, reads, mutations: 0 });
+}
+writeFileSync(`/tmp/142-readonly-admission-${issue}.json`, JSON.stringify(results, null, 2) + '\n');
+console.log(results.map(({ mode, outcome, reads }) => ({ mode, outcome, reads: reads.length })));

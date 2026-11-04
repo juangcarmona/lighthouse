@@ -1,0 +1,20 @@
+fixture-setup	Create only the issue 362 documentation fixture	﻿2026-11-04T11:06:22.3267195Z ##[group]Run node scripts/142-fixture-setup.mjs
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3267713Z [36;1mnode scripts/142-fixture-setup.mjs[0m
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3301583Z shell: /usr/bin/bash -e {0}
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3301917Z env:
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3302179Z   LIGHTHOUSE_MAINTENANCE_ENABLED: true
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3302514Z   LIGHTHOUSE_RECOVERY_ENABLED: false
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3302851Z   LIGHTHOUSE_MAINTENANCE_ISSUES: [359]
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3305882Z   GH_TOKEN: ***
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:22.3306175Z ##[endgroup]
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7770041Z file:///home/runner/work/lighthouse/lighthouse/scripts/142-fixture-setup.mjs:7
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7771286Z   if (!response.ok) throw Error(`Fixture ${method} ${path}: ${response.status}`);
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7772258Z                           ^
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7772913Z 
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7773790Z Error: Fixture POST actions/workflows/ci.yml/dispatches: 500
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7775115Z     at api (file:///home/runner/work/lighthouse/lighthouse/scripts/142-fixture-setup.mjs:7:27)
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7776634Z     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7777985Z     at async file:///home/runner/work/lighthouse/lighthouse/scripts/142-fixture-setup.mjs:19:1
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7778690Z 
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7778902Z Node.js v24.22.1
+fixture-setup	Create only the issue 362 documentation fixture	2026-11-04T11:06:31.7845273Z ##[error]Process completed with exit code 1.

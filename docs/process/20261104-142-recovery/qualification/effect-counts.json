@@ -1,0 +1,10 @@
+{
+  "postMergeCiRuns": [
+    41824892578
+  ],
+  "reviewWorkers": [
+    41826696053
+  ],
+  "reviewResult": "blocked",
+  "reason": "Trace retention and cleanup awaited human acceptance; no additional merge or CI was requested by recovery."
+}

@@ -26,7 +26,7 @@ export function completionBundle(request, envelope, receipt) {
     'stage-result.json': json(envelope.result),
     ...(request.priorPlanningReview ? { 'planning-review.json': json(request.priorPlanningReview) } : {}),
   };
-  const record = { schemaVersion: 1, id: `completion:${request.runId}`, runId: request.runId, kind: 'stage-result', scope: 'delivery', status: envelope.result.status === 'passed' ? 'passed' : 'pending-review', producer: 'Lighthouse GitHub Actions completion adapter', subject: { type: 'issue', id: observation.issueUrl }, observedAt: request.observedAt, artifacts: Object.entries(files).map(([path, content]) => ({ type: path.endsWith('.md') ? 'report' : 'receipt', path, sha256: digest(content) })), payload: { stage: request.stage, priorIntegration, binding: observation.binding, requiredChecks: observation.checks, observedChecks: observation.observedChecks, finalization: observation.finalization, receipt, checkSource: 'GitHub REST API', workflow: { ...(request.dispatchOrigin ? { dispatchOrigin: request.dispatchOrigin } : {}), runId: request.workflowRunId, attempt: request.attempt, url: request.runUrl, harnessRevision: request.harnessRevision } }, nextAction: envelope.result.nextAction };
+  const record = { schemaVersion: 1, id: `completion:${request.runId}`, runId: request.runId, kind: 'stage-result', scope: 'delivery', status: envelope.result.status === 'passed' ? 'passed' : 'pending-review', producer: 'Lighthouse GitHub Actions completion adapter', subject: { type: 'issue', id: observation.issueUrl }, observedAt: request.observedAt, artifacts: Object.entries(files).map(([path, content]) => ({ type: path.endsWith('.md') ? 'report' : 'receipt', path, sha256: digest(content) })), payload: { stage: request.stage, priorIntegration, binding: observation.binding, requiredChecks: observation.checks, observedChecks: observation.observedChecks, finalization: observation.finalization, receipt, checkSource: 'GitHub REST API', workflow: { ...(request.dispatchOrigin ? { dispatchOrigin: request.dispatchOrigin } : {}), runId: request.recoveryPublication?.runId ?? request.workflowRunId, attempt: request.recoveryPublication?.attempt ?? request.attempt, url: request.recoveryPublication?.url ?? request.runUrl, harnessRevision: request.harnessRevision, ...(request.recoveryPublication ? { recovery: { runId: request.workflowRunId, attempt: request.attempt, revision: request.recoveryPublication.revision } } : {}) } }, nextAction: envelope.result.nextAction };
   const errors = validateEvidenceRecord(record); if (errors.length) throw Error(JSON.stringify(errors));
   files['evidence-record.json'] = JSON.stringify(record);
   const { index, errors: buildErrors } = buildEvidenceIndex([record], { runId: request.runId, repository: observation.binding.repository, revision: receipt.sha ?? observation.binding.head, recordPaths: { [record.id]: 'evidence-record.json' } });
@@ -35,31 +35,58 @@ export function completionBundle(request, envelope, receipt) {
   files['evidence-index.json'] = json(index);
   return validatePublishable(files);
 }
-export async function publishProcessBundle(api, request, files, beforeWrite = async () => {}) {
-  validatePublishable(files);
-  const branch = request.completion.profile.evidenceBranch, issue = request.issue;
+function publicationLocation(request, tree) {
+  const issue = request.issue;
   if (!Number.isSafeInteger(issue) || issue < 1 || !/^\d+$/.test(request.workflowRunId) || !/^\d+$/.test(request.attempt) || !['integrate', 'review'].includes(request.stage)) throw Error('Invalid publication identity');
   const date = request.observedAt.slice(0, 10).replaceAll('-', '');
   if (!/^\d{8}$/.test(date)) throw Error('Invalid publication date');
   const slug = request.title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64).replace(/-$/, '') || 'change';
   const phase = request.stage === 'review' || request.completion.merged ? 'post-integration' : 'pr-ready';
   const relative = `runs/${request.workflowRunId}/attempt-${request.attempt.padStart(4, '0')}/${phase}`;
+  if (tree.truncated || tree.tree.length > 10000) throw Error('Evidence tree exceeds bounds');
+  const paths = new Map(tree.tree.map(f => [f.path, f]));
+  const roots = tree.tree.filter(f => f.type === 'tree' && new RegExp(`^docs/process/\\d{8}-${issue}-[a-z0-9-]+$`).test(f.path)).map(f => f.path);
+  if (roots.length > 1) throw Error('Ambiguous work-item evidence mapping');
+  const root = roots[0] ?? `docs/process/${date}-${issue}-${slug}`, prefix = `${root}/${relative}`;
+  for (const path of [prefix, root]) {
+    const parts = path.split('/');
+    for (let i = 1; i <= parts.length; i++) {
+      const ancestor = paths.get(parts.slice(0, i).join('/'));
+      if (ancestor && ancestor.type !== 'tree') throw Error('Evidence ancestor must be a directory');
+    }
+  }
+  return { paths, root, prefix, relative };
+}
+
+export async function preflightProcessPublication(api, request) {
+  const branch = request.completion.profile.evidenceBranch;
+  await evidenceProtection(api, branch, request.completion.profile.completion.protectionObservations);
+  const tip = (await api(`git/ref/heads/${branch}`)).object.sha;
+  const tree = await api(`git/trees/${tip}?recursive=1`);
+  const { paths, root, prefix } = publicationLocation(request, tree);
+  const index = paths.get(`${root}/README.md`);
+  if (index && (index.type !== 'blob' || index.mode !== '100644')) throw Error('Evidence index must be a regular file');
+  if ([...paths.keys()].some(path => path.startsWith(`${prefix}/`) && paths.get(path).type !== 'tree')) throw Error('Evidence destination already exists; reconcile the prior publication before merge');
+  return { commit: tip, prefix };
+}
+
+export async function readPublishedBundle(api, request, files, publication) {
+  if (!/^[a-f0-9]{40}$/.test(publication?.commit ?? '')) throw Error('Missing retained publication commit');
+  const tree = await api(`git/trees/${publication.commit}?recursive=1`);
+  const { paths, prefix } = publicationLocation(request, tree);
+  const actual = [...paths.keys()].filter(path => path.startsWith(`${prefix}/`) && paths.get(path).type !== 'tree');
+  if (actual.length !== Object.keys(files).length || Object.entries(files).some(([name, bytes]) => { const entry = paths.get(`${prefix}/${name}`); return entry?.type !== 'blob' || entry.mode !== '100644' || entry.sha !== blobSha(bytes); })) throw Error('Retained publication does not bind the original outcome');
+  return { commit: publication.commit, url: `https://github.com/${request.completion.binding.repository}/blob/${publication.commit}/${prefix}/report.md` };
+}
+
+export async function publishProcessBundle(api, request, files, beforeWrite = async () => {}) {
+  validatePublishable(files);
+  const branch = request.completion.profile.evidenceBranch, issue = request.issue;
   for (let attempt = 0; attempt < 3; attempt++) {
     await evidenceProtection(api, branch, request.completion.profile.completion.protectionObservations);
     const ref = await api(`git/ref/heads/${branch}`), tip = ref.object.sha;
     const tree = await api(`git/trees/${tip}?recursive=1`);
-    if (tree.truncated || tree.tree.length > 10000) throw Error('Evidence tree exceeds bounds');
-    const paths = new Map(tree.tree.map(f => [f.path, f]));
-    const roots = tree.tree.filter(f => f.type === 'tree' && new RegExp(`^docs/process/\\d{8}-${issue}-[a-z0-9-]+$`).test(f.path)).map(f => f.path);
-    if (roots.length > 1) throw Error('Ambiguous work-item evidence mapping');
-    const root = roots[0] ?? `docs/process/${date}-${issue}-${slug}`, prefix = `${root}/${relative}`;
-    for (const path of [prefix, root]) {
-      const parts = path.split('/');
-      for (let i = 1; i <= parts.length; i++) {
-        const ancestor = paths.get(parts.slice(0, i).join('/'));
-        if (ancestor && ancestor.type !== 'tree') throw Error('Evidence ancestor must be a directory');
-      }
-    }
+    const { paths, root, prefix, relative } = publicationLocation(request, tree);
     const desired = Object.fromEntries(Object.entries(files).map(([name, content]) => [`${prefix}/${name}`, content]));
     const existing = [...paths.keys()].filter(p => p.startsWith(`${prefix}/`) && paths.get(p).type !== 'tree');
     const url = commit => `https://github.com/${request.completion.binding.repository}/blob/${commit}/${prefix}/report.md`;

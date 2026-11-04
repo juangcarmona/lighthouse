@@ -1,0 +1,514 @@
+/tmp/tmp.ArA7asGwbQ/actionlint.tar.gz: OK
+gh aw version v0.93.2
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ Compiled 9 workflows: 9 succeeded, 0 warnings
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, apply-review. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-unattended.yml
+Write disabled policy /tmp/tmp.ArA7asGwbQ/consumer/.lighthouse/unattended.json
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-product-change.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+.github/workflows/lighthouse-sdlc-apply-product-change.md: info: Tip: set permissions.copilot-requests: write to use GitHub Actions token-based inference with the Copilot engine instead of a personal access token (COPILOT_GITHUB_TOKEN). This option requires that your organization has centralized Copilot billing enabled and may not be available in all organizations. To suppress this tip when using a PAT, set permissions.copilot-requests: none — see https://github.github.com/gh-aw/reference/billing/ for details.
+
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-product-change.md (116.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review, product-change. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-unattended.yml
+Preserve existing unattended policy: /tmp/tmp.ArA7asGwbQ/consumer/.lighthouse/unattended.json
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-product-change.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+.github/workflows/lighthouse-sdlc-apply-product-change.md: info: Tip: set permissions.copilot-requests: write to use GitHub Actions token-based inference with the Copilot engine instead of a personal access token (COPILOT_GITHUB_TOKEN). This option requires that your organization has centralized Copilot billing enabled and may not be available in all organizations. To suppress this tip when using a PAT, set permissions.copilot-requests: none — see https://github.github.com/gh-aw/reference/billing/ for details.
+
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-product-change.md (116.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review, product-change. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-unattended.yml
+Preserve existing unattended policy: /tmp/tmp.ArA7asGwbQ/consumer/.lighthouse/unattended.json
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-product-change.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+.github/workflows/lighthouse-sdlc-apply-product-change.md: info: Tip: set permissions.copilot-requests: write to use GitHub Actions token-based inference with the Copilot engine instead of a personal access token (COPILOT_GITHUB_TOKEN). This option requires that your organization has centralized Copilot billing enabled and may not be available in all organizations. To suppress this tip when using a PAT, set permissions.copilot-requests: none — see https://github.github.com/gh-aw/reference/billing/ for details.
+
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-product-change.md (116.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review, product-change. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-propose.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-implement.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-integrate.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-review.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-apply-product-change.md
+Write /tmp/tmp.ArA7asGwbQ/consumer/.github/workflows/lighthouse-sdlc-unattended.yml
+Preserve existing unattended policy: /tmp/tmp.ArA7asGwbQ/consumer/.lighthouse/unattended.json
+Preserve existing request form: /tmp/tmp.ArA7asGwbQ/consumer/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (72.3 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-propose.md (71.4 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-implement.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-integrate.md (71.9 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-review.md (71.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-review.md (73.7 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-product-change.md (73.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+.github/workflows/lighthouse-sdlc-apply-product-change.md: info: Tip: set permissions.copilot-requests: write to use GitHub Actions token-based inference with the Copilot engine instead of a personal access token (COPILOT_GITHUB_TOKEN). This option requires that your organization has centralized Copilot billing enabled and may not be available in all organizations. To suppress this tip when using a PAT, set permissions.copilot-requests: none — see https://github.github.com/gh-aw/reference/billing/ for details.
+
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-apply-product-change.md (116.8 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine, propose, implement, integrate, review, apply-review, product-change. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.

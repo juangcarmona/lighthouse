@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 13316161249,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMxNjE2MTI0OQ==",
+      "name": "lighthouse-142-fixture",
+      "size_in_bytes": 366,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13316161249",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13316161249/zip",
+      "expired": false,
+      "digest": "sha256:60ae4c355615cba116233d8fea213fb3f580b0368628b2c6f2daed9ff5cec9ea",
+      "created_at": "2026-11-04T11:06:32Z",
+      "updated_at": "2026-11-04T11:06:32Z",
+      "expires_at": "2027-02-02T11:06:15Z",
+      "workflow_run": {
+        "id": 41818609406,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "codex/142-maintenance",
+        "head_sha": "b2314e2e80643996d661f9920c4bf8d1939c1a3a"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "qualifiedHarness": "da290f969704ce1a93d58bc8d9da95f1d9045d98",
+  "installedHarness": "99a3feb85293ed94bd5939361c5c3a748d74cdaf",
+  "qualifiedRuntimeTree": "90a0554cebddd97fee873ffbe8c6b64563e700d4",
+  "installedRuntimeTree": "90a0554cebddd97fee873ffbe8c6b64563e700d4",
+  "packageDifferences": [
+    "src/packages/sdlc/workflows/lighthouse-worker-maintenance.yml"
+  ],
+  "reason": "The installed source contains the PR write permission qualified in native workflow 6a32fd0; runtime modules are byte-identical."
+}

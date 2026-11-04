@@ -21,6 +21,13 @@ export async function authorizeCompletionEvent(api, repository, event, env, stag
     return (await import('./integration-request.mjs')).integrationLabelRequest(api, repository, env.GITHUB_REPOSITORY_OWNER, event, env, expectedIntegration);
   }
   if (env.GITHUB_EVENT_NAME === 'workflow_run') {
+    if (event.completionRecovery) {
+      if (stage !== 'review') throw Error('Recovered completion can authorize review only');
+      const run = await api(`actions/runs/${event.completionRecovery.maintenance}`);
+      const verified = await (await import('./completion-recovery.mjs')).recoveredCompletionEvent(api, repository, env.GITHUB_REPOSITORY_OWNER, run, event.completionRecovery.issue);
+      if (fingerprint(event.completionRecovery) !== fingerprint(verified.completionRecovery)) throw Error('Recovered completion authorization changed');
+      return verified.completionAuthorization;
+    }
     const next = await deliveryAfterChecks(api, repository, env.GITHUB_REPOSITORY_OWNER, event);
     if (!next || next.stage !== stage) throw Error('No current delivery authorization after checks');
     const { stage: ignored, ...authorization } = next;

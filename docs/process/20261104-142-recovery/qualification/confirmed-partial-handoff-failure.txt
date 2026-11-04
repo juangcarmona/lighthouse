@@ -1,0 +1,12 @@
+reconcile (362)	Reconcile and record one bounded retry	﻿2026-11-04T11:59:00.2726418Z ##[group]Run node src/packages/sdlc/src/worker-maintenance.mjs prepare
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.2726968Z [36;1mnode src/packages/sdlc/src/worker-maintenance.mjs prepare[0m
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3349742Z shell: /usr/bin/bash -e {0}
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3350692Z env:
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3350974Z   LIGHTHOUSE_MAINTENANCE_ENABLED: true
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3351428Z   LIGHTHOUSE_RECOVERY_ENABLED: true
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3351733Z   LIGHTHOUSE_MAINTENANCE_ISSUES: [359,362]
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3352001Z   LIGHTHOUSE_ISSUE: 362
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3354218Z   GH_TOKEN: ***
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:00.3354441Z ##[endgroup]
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:51.5367095Z GitHub POST issues/364/comments: 403
+reconcile (362)	Reconcile and record one bounded retry	2026-11-04T11:59:51.5448950Z ##[error]Process completed with exit code 1.

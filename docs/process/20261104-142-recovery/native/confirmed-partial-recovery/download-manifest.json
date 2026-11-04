@@ -1,0 +1,20 @@
+[
+  {
+    "id": 13319810145,
+    "name": "lighthouse-recovery-effects-362-1",
+    "archiveSha256": "f22e575dc92750b0b837b90c2a2fa3de11e8de6dbf353e0d321ba90f6dfd9de3",
+    "bytes": 529
+  },
+  {
+    "id": 13318448376,
+    "name": "lighthouse-maintenance-362",
+    "archiveSha256": "b69e25ebbeae3d33e7927e3ffbaefdcf1b56916378cb0416eb8b770b0d944e44",
+    "bytes": 267
+  },
+  {
+    "id": 13318373591,
+    "name": "lighthouse-observation-362",
+    "archiveSha256": "dc271fd6d02f1a65027a56297a77763b58cc1a557af70a6ca09e63cf4204b6d7",
+    "bytes": 152
+  }
+]
