@@ -13,5 +13,5 @@
 
 - [x] Reconcile routes, activation gates, confirmed-effect recovery and incident reporting against executable sources.
 - [x] Extend installer-driven coverage to optional workflows, command labels and activation gates.
-- [ ] Verify the rendered catalogue navigation and all worker diagrams.
-- [ ] Retain concise acceptance evidence and final repository checks.
+- [x] Verify the rendered catalogue navigation and all worker diagrams.
+- [x] Retain concise acceptance evidence and final repository checks.
