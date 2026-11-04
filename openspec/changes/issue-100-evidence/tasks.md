@@ -14,5 +14,5 @@
 
 - [x] 2.1 Cover spoofing, changed inputs, unavailable artifacts, failures, scoped reuse and v1 compatibility from an installed tarball.
 - [x] 2.2 Exercise actual credential-free container checks, including unchanged-head correction.
-- [ ] 2.3 Qualify real Actions artifact transport and retain the original acceptance/rejection trace.
-- [ ] 2.4 Verify workflow projection drift, repository checks, citations and exact-head CI; retain concise evidence and prepare the PR.
+- [x] 2.3 Qualify real Actions artifact transport and retain the original acceptance/rejection trace.
+- [x] 2.4 Verify workflow projection drift, repository checks, citations and exact-head CI; retain concise evidence and prepare the PR.
