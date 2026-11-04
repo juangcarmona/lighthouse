@@ -105,7 +105,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
       let reason = null;
       const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
-        const stop = why => { if (reason) return; reason = why; try { config.resourceOwner?.observe(); } catch {} child.kill('SIGTERM'); spawn('docker', ['rm', '-f', `${name}-checks`], { stdio: 'ignore' }); };
+        const stop = why => { if (reason) return; reason = why; try { config.resourceOwner?.observe(); } catch {} child.kill('SIGTERM'); try { runOwnedDocker(config, ['rm', '-f', `${name}-checks`], { stdio: 'ignore', timeout: 30000 }); } catch {} };
         const timer = setTimeout(() => stop('timeout'), remaining);
         const cancellation = setInterval(() => { if (cancelled()) stop('cancelled'); }, 100);
         const consume = chunk => {
