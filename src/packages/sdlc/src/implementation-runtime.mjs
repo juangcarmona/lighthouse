@@ -27,8 +27,14 @@ export async function prepareWorkspace(root, config) {
   // npm workspaces chmod linked executables; write permission alone is insufficient.
   runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--user', '0:0', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--read-only', '--mount', `type=bind,src=${root},dst=/workspace`, '--entrypoint', 'chown', config.image, '-R', `${config.uid}:${config.uid}`, '/workspace'], { stdio: 'inherit', timeout: 30000 });
 }
-export async function prepareImplementationWorkspace(workspace, config, issue) {
+export function candidateOrigin(repository) {
+  if (repository === undefined || repository === null) return null;
+  if (typeof repository !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9-]*\/[A-Za-z0-9_.-]+$/.test(repository) || repository.endsWith('/.') || repository.endsWith('/..')) throw Error('Invalid repository identity for candidate Git metadata');
+  return `https://github.com/${repository}.git`;
+}
+export async function prepareImplementationWorkspace(workspace, config, issue, repository) {
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Implementation workspace requires a positive issue number');
+  const origin = candidateOrigin(repository);
   await writableTree(workspace);
   // Candidate-only Git metadata supports repository checks without copying checkout credentials or hooks.
   await mkdir(join(workspace, '.git'));
@@ -36,6 +42,7 @@ export async function prepareImplementationWorkspace(workspace, config, issue) {
     env: { PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_AUTHOR_NAME: 'Lighthouse validation', GIT_AUTHOR_EMAIL: 'validation@localhost', GIT_COMMITTER_NAME: 'Lighthouse validation', GIT_COMMITTER_EMAIL: 'validation@localhost' }, stdio: 'pipe',
   });
   git(['init', '--template=', `--initial-branch=fix/${issue}-validation`]);
+  if (origin) git(['remote', 'add', 'origin', origin]);
   git(['add', '--force', '--all']);
   git(['commit', '--allow-empty', '-m', 'Candidate snapshot; repository history is checked separately']);
   await prepareWorkspace(workspace, config);
@@ -76,9 +83,9 @@ export async function copyEvidence(source, destination) {
 export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
 // A regular-file stdout prevents providers using process.exit() from truncating pending pipe writes.
 const checkOutputCommand = 'node /harness/src/managed-command.mjs run /diagnostics "$@" > /tmp/lighthouse-check.log 2>&1; check_exit=$?; cat /tmp/lighthouse-check.log || exit 125; exit "$check_exit"';
-export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
+export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null, repository = request.repository }) {
   const checkBaseline = await sourceFiles(workspace);
-  await prepareImplementationWorkspace(workspace, config, request.issue);
+  await prepareImplementationWorkspace(workspace, config, request.issue, repository);
   const limits = executionLimits(config);
   const harness = fileURLToPath(new URL('../', import.meta.url));
   const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), image: config.image, limits, environment: environmentReceipt(selected), checks: [] };

@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
+import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
@@ -75,6 +75,8 @@ async function main() {
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
   const implementing = request.stage === 'implement' && request.worker !== 'product-change';
+  const repository = request.repository ?? env.GITHUB_REPOSITORY;
+  if (implementing) candidateOrigin(repository);
   const limits = executionLimits(config, implementing);
   let projectModels = null;
   try {
@@ -134,7 +136,7 @@ async function main() {
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
       }
-      await prepareImplementationWorkspace(source, config, request.issue);
+      await prepareImplementationWorkspace(source, config, request.issue, repository);
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
@@ -216,7 +218,7 @@ async function main() {
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
-      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected });
+      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected, repository });
       receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
