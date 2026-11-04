@@ -84,5 +84,31 @@
         "src/tests/fixtures/unattended/regression.test.mjs"
       ]
     ]
+  },
+  "372": {
+    "scope": "Only the disposable #100 command transport fixture and its OpenSpec records. No merge.",
+    "paths": [
+      "src/tests/fixtures/unattended/evidence-100.txt",
+      "openspec/changes/issue-372-proposal/"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ]
   }
 }
