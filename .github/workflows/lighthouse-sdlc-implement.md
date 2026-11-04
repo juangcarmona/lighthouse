@@ -73,7 +73,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
+      ref: 447c842df1cc45c4a327640b07ed45b0acb76f8f
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
+          ref: 447c842df1cc45c4a327640b07ed45b0acb76f8f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
+          ref: 447c842df1cc45c4a327640b07ed45b0acb76f8f
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -206,6 +206,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Preserve authenticated command evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-command-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/implementation-evidence.json
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve the publication receipt
         if: always()
         uses: actions/upload-artifact@v7
