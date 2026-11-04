@@ -35,7 +35,7 @@ function fixture() {
   const readReport = async () => ({ run: { id: 11, run_attempt: 1 }, request: { runId: identity, stage: 'implement', taskDigest: state.intent ?? taskDigest(state.issue, []), implementation: state.implementation ?? await loadImplementation(api, 47, 'owner', base, 'main') } });
   const readDispatch = async (_api, _repo, _owner, _issue, id) => state.prior.find(item => item.commentId === id);
   const call = options => ciRepairAfterChecks(api, repository, 'owner', { action: 'completed', workflow_run: { id: 123, head_sha: head } }, { readReport, readDispatch, ...options });
-  return { state, call };
+  return { state, call, readReport };
 }
 
 test('failed adopted CI uses the authenticated original grant and existing correction worker', async () => {
@@ -150,4 +150,25 @@ test('a later owner decision resolves an earlier objection without delegating me
   assert.equal((await call()).merge, undefined);
   state.reviews.push({ id: 3, user: { login: 'owner' }, state: 'DISMISSED' });
   assert.match((await call()).ciRepairStop, /owner review/);
+});
+
+
+test('a current publication from ordinary owner feedback retains the original implementation identity', async () => {
+  const { state, call, readReport } = fixture();
+  state.comments[0].body = state.comments[0].body.replace(head, base);
+  state.comments.push({ id: 6, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-stage:implement:passed -->\n<!-- lighthouse-pr-state:{"pr":60,"head":"${head}"} -->` });
+  const result = await call({ readReport: async (...args) => args[2].id === 5 ? readReport(...args) : { run: { id: 12, run_attempt: 1 }, request: { runId: 'f'.repeat(64), stage: 'implement', implementationReview: { kind: 'comment', implementationIdentity: identity } } } });
+  assert.equal(result.worker, 'apply-review');
+  assert.equal(result.ciRepair.grant.runId, '11');
+});
+
+
+test('CI correction cannot supersede an active ordinary feedback correction', async () => {
+  const { state, call } = fixture();
+  const receipt = { schemaVersion: 1, stage: 'implement', worker: 'apply-review', status: 'running', id: (await import('../packages/sdlc/src/stage-dispatch.mjs')).dispatchId(repository, 12, 'implement'), digest: 'e'.repeat(64), routerRunId: 12, routerAttempt: 1, workerRunId: 22 };
+  state.comments.push({ id: 100, issue_url: `https://api.github.com/repos/${repository}/issues/47`, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` });
+  const prior = { commentId: 100, receipt, request: { id: receipt.id } };
+  assert.match((await call({ readDispatch: async () => prior })).ciRepairStop, /owner feedback correction has active/);
+  prior.receipt.status = 'completed';
+  assert.equal((await call({ readDispatch: async () => prior })).worker, 'apply-review');
 });

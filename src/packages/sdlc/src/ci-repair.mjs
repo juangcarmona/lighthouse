@@ -58,7 +58,7 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
     const proof = JSON.parse(proofs[0][1]);
     let retained;
     try { retained = await readReport(api, repository, comment, { owner, issue: review.issue }); } catch { return stop('The original implementation evidence cannot be authenticated. Maintainer: restore retained authenticated evidence or request a new authorized assessment.'); }
-    if (proof.head === review.head && (retained.request.runId === review.implementationIdentity || retained.request.ciRepair?.identity === review.implementationIdentity)) currentCandidate = true;
+    if (proof.head === review.head && (retained.request.runId === review.implementationIdentity || retained.request.ciRepair?.identity === review.implementationIdentity || retained.request.implementationReview?.implementationIdentity === review.implementationIdentity)) currentCandidate = true;
     if (retained.request.implementationReview?.kind === 'ci') continue;
     if (retained.request.runId !== review.implementationIdentity || retained.request.stage !== 'implement' || retained.request.taskDigest !== intent || JSON.stringify(retained.request.implementation) !== JSON.stringify(implementation)) continue;
     grant = { runId: String(retained.run.id), attempt: retained.run.run_attempt, requestId: retained.request.runId };
@@ -74,6 +74,7 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
     const worker = await api(`actions/runs/${receipt.workerRunId}`);
     let prior;
     try { prior = await readDispatch(api, repository, owner, review.issue, comment.id, worker); } catch { return stop('A previous correction origin cannot be authenticated. Maintainer: reconcile its retained request before further work.'); }
+    if (prior.request.id !== currentDispatch && !prior.request.ciRepair && ['requested', 'running', 'unknown'].includes(prior.receipt.status)) return stop('An owner feedback correction has active or unconfirmed effects. Maintainer: follow that execution before requesting automatic CI correction.');
     if (prior.request.ciRepair?.identity === review.implementationIdentity && prior.request.ciRepair.pr === pr.number) chain.push(prior);
   }
   const existing = chain.find(item => item.request.ciRepair.head === review.head);
