@@ -224,11 +224,17 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'docs/product'), join(dir, 'docs/product'), { recursive: true });
     await cp(join(process.cwd(), 'docs/architecture'), join(dir, 'docs/architecture'), { recursive: true });
     await cp(join(process.cwd(), 'docs/roadmap'), join(dir, 'docs/roadmap'), { recursive: true });
+    for (const path of ['docs/process', 'src/tests']) {
+      await cp(join(process.cwd(), path), join(dir, path), { recursive: true });
+    }
     await mkdir(join(dir, 'src/examples/opencode-engine'), { recursive: true });
     await cp(join(process.cwd(), 'src/examples/opencode-engine/README.md'), join(dir, 'src/examples/opencode-engine/README.md'));
     await cp(join(process.cwd(), 'src/examples/opencode-engine/ENVIRONMENTS.md'), join(dir, 'src/examples/opencode-engine/ENVIRONMENTS.md'));
     await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
+    for (const file of ['handoffs.md', 'completion.md', 'request-triage.md']) {
+      await cp(join(process.cwd(), 'src/packages/sdlc', file), join(dir, 'src/packages/sdlc', file));
+    }
     await cp(join(process.cwd(), 'src/packages/sdlc/execution-environments.md'), join(dir, 'src/packages/sdlc/execution-environments.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/README.md'), join(dir, 'src/packages/sdlc/README.md'));
     await cp(join(process.cwd(), 'src/packages/sdlc/unattended.md'), join(dir, 'src/packages/sdlc/unattended.md'));
