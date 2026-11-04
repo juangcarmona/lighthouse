@@ -15,6 +15,7 @@ flowchart LR
     Answer --> Admit
     Facts -->|No| Result[Publish triaged and estimate]
     Result --> Wait[Wait for owner delivery decision]
+    Assess -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -24,6 +25,10 @@ The router authenticates the request and serializes work on the issue. The worke
 ## Stops and decisions
 
 A missing answer produces needs-info. An unrelated comment, duplicate request, closed issue or active human reservation cannot authorize another execution. A successful assessment stops at triaged.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 

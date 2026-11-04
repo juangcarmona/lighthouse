@@ -18,6 +18,7 @@ flowchart LR
     Clear -->|Yes| Checks[Run independent checks]
     Checks --> Publish[Publish same PR and fresh evidence]
     Publish --> Review[CI and owner review current head]
+    Correct -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -27,6 +28,10 @@ The router binds feedback to the current discussion and retained implementation 
 ## Stops and decisions
 
 CI repair is opt-in, limited to two attempts for the PR identity, and does not reset when the head changes. Uncertain dispatch, active human work, changed authority and exhausted attempts stop it. Product proposals retain their provider validation and renewed product-decision requirements.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 

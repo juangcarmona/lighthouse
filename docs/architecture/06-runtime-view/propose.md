@@ -15,6 +15,7 @@ flowchart LR
     PR --> Review[Owner reviews current proposal]
     Review -->|Changes requested| Correct[Apply review on same PR]
     Review -->|Approved| Wait[Record design decision]
+    Plan -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -24,6 +25,10 @@ The worker writes proposal artifacts within its granted scope. The publisher ret
 ## Stops and decisions
 
 Proposal approval records a design decision. It starts neither implementation nor merge. For a design-only request, future also prevents implementation continuation. Implementation can instead prepare its plan and code together without this separate proposal PR.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 

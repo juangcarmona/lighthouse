@@ -17,6 +17,7 @@ flowchart LR
     Parent -->|Yes| Resume[Request original delivery stage]
     Parent -->|No| Wait[Retain next decision on PR]
     Publish --> Accept[Separate merge decision accepts baseline]
+    Apply -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -28,6 +29,8 @@ Approval is bound to the proposal, baseline, owner and PR head. The credential-f
 Silence, green checks, a question answer or generic PR approval cannot replace the explicit Product Change decision. Future permits an explicitly approved apply but still pauses parent delivery. Invalid or uncertain apply/publication stops continuation; product approval grants no merge, release or deployment authority.
 
 <!-- pdac:cite id="FR-PRODUCT-CHANGE-WORKFLOW" digest="sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb" -->
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
 
 ## Implementation evidence
 

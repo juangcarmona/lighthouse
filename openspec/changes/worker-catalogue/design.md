@@ -5,7 +5,7 @@
 
 ## Context
 
-The installer selects five independently dispatched workers and a deterministic router.
+The installer selects the current stage/product workers, deterministic router and optional maintenance/unattended workflows. Presence in the package does not establish installation, activation or native acceptance.
 
 ## Goals / Non-Goals
 
@@ -17,4 +17,4 @@ Use the existing ArcShape runtime-view renderer, small Mermaid diagrams and sour
 
 ## Risks / Trade-offs
 
-Descriptions can drift; executable-name coverage and source links constrain the maintenance cost. Screenshots verify readable rendering.
+Descriptions can drift; executable-name coverage and source links constrain the maintenance cost. Screenshots verify readable rendering. The public build supplies commit-pinned, public Git metadata to the renderer in a temporary child-process configuration, so ephemeral checkout origins cannot remove executable source links. Site verification requires an actual exported source anchor; repository Git configuration remains untouched.

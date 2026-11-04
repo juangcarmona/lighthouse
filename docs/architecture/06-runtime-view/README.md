@@ -24,7 +24,7 @@ Start with [Product Definition as Code](product-definition-as-code.md), then fol
 | [Integrate](integrate.md) | An integration assessment and, when separately authorized, a merge. |
 | [Review](review.md) | A retained retrospective and closure when delivery evidence passes. |
 
-The [worker catalogue](worker-catalogue.md) also covers receipts, deterministic maintenance and optional unattended compositions. These are separate from release and deployment automation.
+The [worker catalogue](worker-catalogue.md) maps supported requests, installation and activation gates. [Maintenance and reports](maintenance.md) and [unattended compositions](unattended.md) have separate runtime views. These are separate from release and deployment automation.
 
 ## From request to delivered change
 
@@ -69,13 +69,13 @@ flowchart LR
     Result --> Next[Authorized continuation returns to router]
 ```
 
-The router and worker use separate concurrency groups; workers serialize by issue. Preparation supplies the issue snapshot, source revision, tool scope and runtime limits. The agent runs in a temporary container and cannot grant itself publication or merge authority. Publication rechecks current intent, owner answers, source and reservation before writing. Cleanup releases the reservation after the outcome is recorded.
+The router and worker use separate concurrency groups; workers serialize by issue. Preparation supplies the issue snapshot, source revision, tool scope and runtime limits. The agent runs in a temporary container and cannot grant itself publication or merge authority. Publication rechecks current intent, owner answers, source and reservation before writing. Cleanup attempts to release the reservation after recording the outcome. A cleanup failure is reported; maintenance rechecks ownership before releasing an abandoned reservation.
 
 Receipts distinguish requested, admitted, waiting, completed and failed executions. An Actions success can contain a blocked assessment. Duplicate events reuse authenticated requests or candidates; an unconfirmed dispatch or uncertain publication needs reconciliation before a retry. Human-working stops new admission and requests termination of active work. See [handoffs and recovery](../../../src/packages/sdlc/handoffs.md).
 
 ## Evidence and scope
 
-The worker pages link executable sources and tests. Retained native exercises additionally cover [triage and duplicate requests](../../process/20261103-321-delivery-reconciliation/README.md), [same-PR verification](../../process/20261103-318-same-pr-verification/README.md), [integration assessment without merge](../../process/20261103-317-integration-admission/README.md) and [bounded CI correction](../../process/20261104-311-ci-repair/README.md). Each record states its tested revision and limits; it does not establish acceptance of every route or adopter.
+The worker pages link executable sources and tests. Retained native exercises additionally cover [triage and duplicate requests](../../process/20261103-321-delivery-reconciliation/README.md), [same-PR verification](../../process/20261103-318-same-pr-verification/README.md), [integration assessment without merge](../../process/20261103-317-integration-admission/README.md) and [bounded CI correction](../../process/20261104-311-ci-repair/README.md), [confirmed-effect recovery](../../process/20261104-142-recovery/README.md) and [actionable reports](../../process/20261104-143-reports/README.md). Each record states its tested revision and limits; it does not establish acceptance of every route or adopter.
 
 The [original implementation dispatch proof](implementation-dispatch-poc.md) remains historical evidence. The optional [external-host contract](../../../src/packages/sdlc/host-contract.md) and [ADR-0007](../09-architecture-decisions/0007-host-execution-boundary.md) describe the host boundary; they are not an additional running service in the GitHub Actions route.
 

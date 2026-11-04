@@ -8,3 +8,10 @@
 - [x] Document current workers and routes with accessible diagrams.
 - [x] Add and run the catalogue coverage check.
 - [x] Build the site and inspect rendered diagrams.
+
+## Reconciliation after #142 and #143
+
+- [x] Reconcile routes, activation gates, confirmed-effect recovery and incident reporting against executable sources.
+- [x] Extend installer-driven coverage to optional workflows, command labels and activation gates.
+- [x] Verify the rendered catalogue navigation and all worker diagrams.
+- [x] Retain concise acceptance evidence and final repository checks.

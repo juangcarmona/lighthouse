@@ -19,6 +19,9 @@ flowchart LR
     Verify -->|Yes| Publish[Publish plan and code in draft PR]
     Publish --> CI[Run adopted CI on exact candidate]
     CI --> Ready[Passing CI permits ready for review]
+    Publish -->|CI launch unconfirmed| Pending[Retain candidate and CI send-state diagnostic]
+    Pending --> Recovery[Reconcile existing native CI before any resend]
+    Code -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -28,6 +31,10 @@ The agent writes a candidate in its isolated workspace. Trusted host checks vali
 ## Stops and decisions
 
 An in-scope product gap can use the optional Product Change path while retaining the parent checkpoint. Missing scope authority requires an owner decision. Failed CI keeps the PR unready; optional CI correction uses apply-review. Implementation itself never merges.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 
