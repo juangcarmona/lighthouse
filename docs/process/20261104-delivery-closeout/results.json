@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "acceptedRealChangePilots": 0,
+  "failedPilot": {
+    "issue": 389,
+    "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41926222797",
+    "outcome": "blocked before PR publication: candidate Git had no configured origin",
+    "admittedChecks": "65 regressions and OpenSpec validation passed"
+  },
+  "correction402": {
+    "codeRevision": "384ccb3d1af6a0ab0f7c935d9f05898aebb342cc",
+    "testedSourceSha256": {
+      "implementation-runtime.mjs": "980e01499523424ec15824010046b6e3cf7b9833d2a131614c073d680a05a24e",
+      "opencode-execute.mjs": "85b5f8ea464fe0072a7028ae050e7aeb404f23b9af8595a4e799a14d514306df"
+    },
+    "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+    "siteBuildAndVerification": "passed on exact executor image",
+    "independentChecks": "4 passed on exact executor image",
+    "cleanup": "clean"
+  },
+  "archiveSha256": "f689e2ae21588b66627c3c8dd3027273b05c5fc1fe3bcdbc6822f862a537cd28"
+}
