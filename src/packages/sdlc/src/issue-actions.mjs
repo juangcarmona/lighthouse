@@ -313,6 +313,9 @@ async function main(command) {
     await publishRoutingHandoff(api, route.issue, `${repo}:ci-stop:${route.pr}:${route.head}:${route.ciRepairStop}`, renderHandoff({ status: 'blocked', stage: 'implement', happened: route.ciRepairStop, action: 'Maintainer: inspect the linked CI failure and current PR; reconcile the stated blocker before requesting further work.', next: 'No automatic correction or merge is authorized by this stop.', link: `[PR #${route.pr}](https://github.com/${repo}/pull/${route.pr})`, details: `[Failed CI](https://github.com/${repo}/actions/runs/${route.ciRun})` }));
     await output('run', 'false'); await output('send', 'false'); return;
   }
+  if (command === 'dispatch-prepare' && after && !route.run) {
+    await output('send', 'false'); await summary('No delivery action remains after rechecking the completed execution. No worker dispatched.'); return;
+  }
   if (command === 'prepare' && dispatch?.request.ciRepair && JSON.stringify(route.ciRepair) !== JSON.stringify(dispatch.request.ciRepair)) throw Error('CI correction authority changed before preparation');
   let proposalReview, implementationReview = route.implementationReview;
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && !productApproval && reviewTarget(event, env.GITHUB_EVENT_NAME)) {

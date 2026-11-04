@@ -45,7 +45,8 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
   if (issue.state !== 'open' || issue.user?.login !== owner || issue.labels.some(label => ['future', 'human-working', 'needs-info', 'waiting-review'].includes(label.name))) return stop('The original work is paused, closed, or requires an owner decision.');
   const reviews = await api(`pulls/${pr.number}/reviews?per_page=100`);
   if (reviews.length >= 100) throw Error('CI repair review lookup exceeds bounds');
-  if (reviews.some(item => item.user?.login === owner && ['CHANGES_REQUESTED', 'DISMISSED'].includes(item.state))) return stop('An owner review requires resolution before automatic CI repair.');
+  const decision = reviews.filter(item => item.user?.login === owner && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(item.state)).sort((a, b) => b.id - a.id)[0];
+  if (decision && decision.state !== 'APPROVED') return stop('An owner review requires resolution before automatic CI repair.');
   const implementation = await loadImplementation(api, review.issue, owner, base, metadata.default_branch);
   const answers = comments.filter(c => c.user?.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
   const intent = taskDigest(issue, answers);

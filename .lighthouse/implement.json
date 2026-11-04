@@ -18,6 +18,17 @@
         "npm",
         "run",
         "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
       ]
     ]
   },
@@ -94,6 +105,17 @@
         "npm",
         "run",
         "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
       ]
     ]
   }

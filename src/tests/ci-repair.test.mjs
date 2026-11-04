@@ -117,3 +117,37 @@ test('an external or unconfirmed current-head edit cannot borrow an older candid
   state.comments[0].body += `\n<!-- lighthouse-pr-state:{"pr":60,"head":"${head}"} -->`;
   assert.match((await call()).ciRepairStop, /no authenticated implementation publication/);
 });
+
+test('a queued completion that no longer selects work is a successful dispatch no-op', async () => {
+  const { mkdtemp, writeFile, readFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const { state } = fixture();
+  const dir = await mkdtemp(join(tmpdir(), 'ci-completion-replay-'));
+  try {
+    state.config.completion.ciRepair.enabled = false;
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'completed', workflow_run: { id: 123, head_sha: head } }));
+    await writeFile(join(dir, 'mock.mjs'), `globalThis.fetch = async (url, options) => {
+      if (options.method !== 'GET') throw Error('A stale completion must not write or dispatch');
+      const path = url.replace('https://api.github.com/repos/${repository}', '').replace(/^\\//, '');
+      const value = path === 'actions/runs/123' ? ${JSON.stringify(state.run)} : path === '' ? {default_branch:'main'} : path === 'commits/main' ? {sha:'${base}'} : path.startsWith('contents/') ? ${JSON.stringify(file(state.config))} : path.startsWith('commits/') ? [${JSON.stringify(state.pr)}] : undefined;
+      if (!value) throw Error('Unexpected API request: '+url);
+      return {ok:true,status:200,json:async()=>value};
+    };`);
+    const output = join(dir, 'output');
+    const result = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'dispatch-prepare'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repository, GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'github-actions[bot]', GITHUB_TRIGGERING_ACTOR: 'github-actions[bot]', GITHUB_EVENT_NAME: 'workflow_run', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: output, LIGHTHOUSE_COMPLETION_ENABLED: 'true', LIGHTHOUSE_ISSUE: '47', LIGHTHOUSE_STAGE: 'implement', RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(await readFile(output, 'utf8'), /send=false/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+
+test('a later owner decision resolves an earlier objection without delegating merge', async () => {
+  const { state, call } = fixture();
+  state.reviews = [{ id: 1, user: { login: 'owner' }, state: 'CHANGES_REQUESTED' }, { id: 2, user: { login: 'owner' }, state: 'APPROVED', commit_id: head }];
+  assert.equal((await call()).worker, 'apply-review');
+  assert.equal((await call()).merge, undefined);
+  state.reviews.push({ id: 3, user: { login: 'owner' }, state: 'DISMISSED' });
+  assert.match((await call()).ciRepairStop, /owner review/);
+});
