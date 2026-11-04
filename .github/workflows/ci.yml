@@ -24,7 +24,7 @@ jobs:
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
       - name: Check the disposable CI correction candidate
-        if: startsWith(github.ref, 'refs/heads/lighthouse/implement-348-')
+        if: startsWith(github.ref, 'refs/heads/lighthouse/implement-353-')
         run: >-
           node --input-type=module -e
           "import { readFileSync } from 'node:fs';
@@ -33,15 +33,16 @@ jobs:
           '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.',
           'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"
   reconcile-implementation-pr:
+    timeout-minutes: 5
     needs: repository
-    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')
+    if: always() && github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')
     concurrency:
       group: lighthouse-pr-state
       cancel-in-progress: false
       queue: max
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       contents: read
       issues: write
       pull-requests: write
@@ -58,3 +59,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_CI_RECONCILE: 'true'
         run: node src/packages/sdlc/src/pr-state-actions.mjs
+      - name: Signal failed candidate CI
+        if: always() && needs.repository.result == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_CI_RESULT: ${{ needs.repository.result }}
+        run: node src/packages/sdlc/src/issue-actions.mjs signal-ci-failure

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges } from '../packages/sdlc/src/ci-repair.mjs';
+import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCiRepair, signalCurrentCiRepair } from '../packages/sdlc/src/ci-repair.mjs';
 import { taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
 import { loadImplementation } from '../packages/sdlc/src/implementation.mjs';
 
@@ -17,6 +17,7 @@ function fixture() {
   };
   const api = async path => {
     if (path === 'actions/runs/123') return state.run;
+    if (path.startsWith('actions/runs?head_sha=')) return { total_count: (state.runs ?? [state.run]).length, workflow_runs: state.runs ?? [state.run] };
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha: base };
     if (path.startsWith('contents/.lighthouse/github.json')) return file(state.config);
@@ -171,4 +172,86 @@ test('CI correction cannot supersede an active ordinary feedback correction', as
   assert.match((await call({ readDispatch: async () => prior })).ciRepairStop, /owner feedback correction has active/);
   prior.receipt.status = 'completed';
   assert.equal((await call({ readDispatch: async () => prior })).worker, 'apply-review');
+});
+
+test('existing scheduled reconciliation signals the same router, preserving approval waits and latest CI facts', async () => {
+  const { state } = fixture(), writes = [];
+  let runs = [state.run, { ...state.run, id: 124, event: 'pull_request', conclusion: 'action_required' }];
+  const api = async (path, method, body) => {
+    if (method === 'POST') { writes.push({ path, body }); return; }
+    if (path === '') return { default_branch: 'main' };
+    assert.equal(path, `actions/runs?head_sha=${head}&per_page=100`);
+    return { total_count: runs.length, workflow_runs: runs };
+  };
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), true);
+  assert.deepEqual(writes, [{ path: 'actions/workflows/lighthouse-sdlc-router.yml/dispatches', body: { ref: 'main', inputs: { issue: '47', stage: 'implement', after_run: '123' } } }]);
+  runs.push({ ...state.run, id: 125, conclusion: 'success' });
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), false);
+  state.config.completion.ciRepair.enabled = false;
+  assert.equal(await signalCiRepair(async () => { throw Error('Disabled mode reads no subjects'); }, repository, {}, state.config), false);
+  assert.equal(writes.length, 1);
+});
+
+test('superseded failures on an unchanged head and current owner draft holds cannot request repair', async () => {
+  const { state, call } = fixture();
+  state.runs = [state.run, { ...state.run, id: 124, conclusion: 'success' }];
+  assert.equal(await call(), null);
+  state.runs = [state.run];
+  state.comments.push({ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-hold:60:${head} -->` });
+  assert.match((await call()).ciRepairStop, /owner kept this candidate in draft/);
+});
+
+test('bot CI wake-ups use adopted workflow facts and wait for terminal status through the existing continuation path', async () => {
+  const { completedEvent } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const { state } = fixture(), waits = [];
+  let reads = 0;
+  const api = async path => {
+    if (path === 'actions/runs/123') return { ...state.run, status: ++reads > 1 ? 'completed' : 'in_progress' };
+    if (path === '') return { default_branch: 'main' };
+    if (path.startsWith('contents/')) return file(state.config);
+    throw Error(path);
+  };
+  const event = { inputs: { issue: '47', stage: 'implement', after_run: '123' } }, env = { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_ACTOR: 'github-actions[bot]', GITHUB_TRIGGERING_ACTOR: 'github-actions[bot]', GITHUB_REPOSITORY: repository, GITHUB_REPOSITORY_OWNER: 'owner' };
+  assert.equal((await completedEvent(api, event, env, async ms => waits.push(ms))).workflow_run.id, 123);
+  assert.deepEqual(waits, [5000]);
+  state.run.path = '.github/workflows/unrelated.yml';
+  await assert.rejects(completedEvent(api, event, env), /Bot continuation/);
+});
+
+test('CI freshness follows attempt start time, including reruns of older run IDs', async () => {
+  const { state, call } = fixture();
+  state.run.run_started_at = '2026-11-04T10:00:00Z';
+  state.runs = [state.run, { ...state.run, id: 124, conclusion: 'success', run_started_at: '2026-11-04T09:00:00Z' }];
+  assert.equal((await call()).worker, 'apply-review');
+  state.runs[1].run_started_at = '2026-11-04T11:00:00Z';
+  state.runs[1].conclusion = 'cancelled';
+  assert.equal(await call(), null);
+});
+
+
+test('a failed CI dependency explicitly signals before workflow completion without granting correction', async () => {
+  const { state } = fixture(), writes = [];
+  const api = async (path, method, body) => {
+    if (method === 'POST') { writes.push({ path, body }); return; }
+    if (path === 'actions/runs/123/attempts/1') return { ...state.run, status: 'in_progress', conclusion: null };
+    if (path === '') return { default_branch: 'main' };
+    if (path.startsWith('contents/')) return file(state.config);
+    if (path.includes('/jobs?')) return state.jobs;
+    if (path.startsWith('commits/')) return [state.pr];
+    if (path === 'pulls/60') return state.pr;
+    throw Error(path);
+  };
+  const env = { GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1', GITHUB_SHA: head, LIGHTHOUSE_CI_RESULT: 'failure' };
+  assert.equal(await signalCurrentCiRepair(api, repository, env), true);
+  assert.deepEqual(writes[0].body.inputs, { issue: '47', stage: 'implement', after_run: '123' });
+  state.jobs.jobs[0].conclusion = 'success';
+  assert.equal(await signalCurrentCiRepair(api, repository, env), false);
+  assert.equal(await signalCurrentCiRepair(api, repository, { ...env, LIGHTHOUSE_CI_RESULT: 'success' }), false);
+  assert.equal(writes.length, 1);
+});
+
+test('an admitted requester issue retains its authenticated implementation grant for CI repair', async () => {
+  const { state, call } = fixture();
+  state.issue.user.login = 'requester';
+  assert.equal((await call()).worker, 'apply-review');
 });

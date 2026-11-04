@@ -1,4 +1,4 @@
-import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges } from './ci-repair.mjs';
+import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
 import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
@@ -193,6 +193,10 @@ async function main(command) {
   };
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  if (command === 'signal-ci-failure') {
+    const sent = await signalCurrentCiRepair(api, repo, env);
+    await summary(sent ? 'Failed candidate CI signalled the existing router; current authority is rechecked before any correction.' : 'No eligible failed candidate CI continuation.'); return;
+  }
   if (command === 'product-apply-cleanup') { await reportProductApplyStop(api, repo, owner, env, event); return; }
   if (command === 'dispatch-send') {
     const request = JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8'));
