@@ -89,6 +89,25 @@ test('a child and its pull request keep distinct authenticated journal entries',
   assert.equal((await next.readReceipt(prKey)).publication.head, updated.head);
 });
 
+test('integration CI intent survives a new owner run and rejects malformed workflow or reference identities', async t => {
+  const f = await fixture(t), journal = await f.open(100);
+  const prCorrelation = epicCorrelation({ ...correlation, kind: 'pull-request' }), prKey = epicJournalKey(prCorrelation);
+  const resource = { id: 88, number: 7 }, publication = { run: '100', attempt: 1, head: revision }, candidate = 'c'.repeat(40);
+  await journal.readReceipt(prKey);
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'intent', correlation: prCorrelation });
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'created', correlation: prCorrelation, resource, publication });
+  const checks = { identity: { head: revision, base: revision, candidate, branch: `lighthouse/verification-7-${candidate}`, workflows: ['ci.yml'] }, reference: 'observed', requests: { 'ci.yml': { state: 'observed', run: 123 } } };
+  const linked = { schemaVersion: 1, state: 'linked', correlation: prCorrelation, resource, publication, checks };
+  await journal.writeReceipt(prKey, linked);
+  await f.finish(100);
+  const next = await f.open(101);
+  assert.deepEqual((await next.readReceipt(prKey)).checks, checks);
+  for (const change of [value => { value.identity.branch = 'main'; }, value => { value.identity.workflows = ['../ci.yml']; }, value => { value.requests['unconfigured.yml'] = { state: 'requested' }; }, value => { value.requests['ci.yml'].run = 0; }]) {
+    const invalid = structuredClone(checks); change(invalid);
+    await assert.rejects(next.writeReceipt(prKey, { ...linked, checks: invalid }), /Epic (check identity|CI request) is invalid/);
+  }
+});
+
 test('merge intent binds the exact reviewed head and base through acceptance', async t => {
   const f = await fixture(t), journal = await f.open(100);
   const prCorrelation = epicCorrelation({ ...correlation, kind: 'pull-request' });

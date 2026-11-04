@@ -17,7 +17,7 @@ export function workflowDisplayName(source, path) {
   return name;
 }
 
-export async function completionSubscriptions(root, { implement, propose, productChange }) {
+export async function completionSubscriptions(root, { implement, propose, productChange, epic = false }) {
   const names = ['refine', ...(productChange ? ['triage', ...(propose ? ['propose', 'apply review'] : []), ...(implement ? ['implement'] : []), 'product-change', 'apply-product-change'] : [])];
   const optional = async path => {
     try { return await readFile(path, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; return null; }
@@ -30,7 +30,7 @@ export async function completionSubscriptions(root, { implement, propose, produc
     names.push(workflowDisplayName(await readFile(join(root, path), 'utf8'), path));
   }
   const epicPath = '.github/workflows/lighthouse-sdlc-epic.yml';
-  const epic = await optional(join(root, epicPath));
-  if (epic) names.push(workflowDisplayName(epic, epicPath));
+  const epicSource = epic ? await readFile(new URL('../workflows/lighthouse-sdlc-epic.yml', import.meta.url), 'utf8') : await optional(join(root, epicPath));
+  if (epicSource) names.push(workflowDisplayName(epicSource, epicPath));
   return [...new Set(names)].map(name => name.replace(/[\\*?+\[\]!]/g, '\\$&'));
 }

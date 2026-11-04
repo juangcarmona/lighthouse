@@ -87,7 +87,7 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 
 ## Epic delivery contracts
 
-[Epic delivery contracts](epic-delivery.md) define the confirmed greater-than-eight decomposition boundary, shared epic-branch planning and dependency/base/owner-decision eligibility. The native epic workflow remains uninstalled while child dispatch, review recovery and aggregate acceptance are completed and verified.
+[Epic delivery contracts](epic-delivery.md) define the confirmed greater-than-eight decomposition boundary, shared epic-branch planning and dependency/base/owner-decision eligibility. Use `--with-epic` to install the optional owner-driven serial workflow and completion workers. Configure enforced checks and evidence publication before enabling `LIGHTHOUSE_EPIC_ENABLED`; installation alone does not establish native acceptance.
 
 ## References
 

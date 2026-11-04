@@ -18,13 +18,15 @@ An eligible child PR must be observed as `state: 'open'` and `merged: false`, wi
 
 All accepted children make the aggregate `publication-eligible`; the parent still remains open. Aggregate publication and final merge require their own fresh observations and explicit owner authorization.
 
-## Not yet connected
+## Serial native delivery
 
-The native epic workflow is not installed or enabled. The implementation includes authenticated child admission, epic-targeted candidates, owner-authorized internal acceptance and draft aggregate publication, but automatic child dispatch, review recovery and complete native acceptance remain unfinished. The current `github-decompose --apply` legacy helper is not this lifecycle and does not provide retry-safe native sub-issue orchestration. Do not use it as a substitute.
+Install `--with-epic` through the [workflow installer](src/install-workflows.mjs), review its projections, and separately enable `LIGHTHOUSE_AUTOMATION_ENABLED` and `LIGHTHOUSE_EPIC_ENABLED`. Keep `LIGHTHOUSE_EPIC_CAPACITY=1` for initial qualification. Configure the GitHub profile, retained evidence and dispatchable required CI on the default and epic branches before consuming a worker.
 
-The proposed native `refine-child` action records an explicit owner request for one child after its authenticated triage. The router rechecks the retained authorization, current plan and owner intent before dispatch and before publication. It does not authorize implementation or merge. This path remains unavailable until the native workflow is installed and verified; the action alone is not evidence of completed orchestration.
+The owner-driven workflow provides `reconcile`, `refine-child`, `register-pr`, `ready-child`, `accept-child`, `publish-aggregate`, `ready-aggregate` and `accept-aggregate`. Reconciliation creates native relationships and permits authenticated child triage; `refine-child` authorizes one child's refinement. Implementation remains separately authorized. A dependent child's implementation observes its accepted prerequisites and the updated epic base.
 
-Native child delivery requires the default branch to remain at the authenticated refinement revision. Aggregate acceptance can inspect an advanced default branch after merge: it requires retained readiness evidence, accepted child history, passing checks, owner approval and the merged commit in the current branch. Missing or expired evidence stops acceptance and leaves the parent open. This path has not yet been validated end to end in an installed native workflow.
+Readiness launches configured CI on an immutable verification branch pointing to the exact head/base integration commit, then waits for enforced checks. The candidate must preserve the trusted CI workflow. The journal records intent before branch creation and CI dispatch; an unconfirmed request is reconciled by observation, never blindly resent. Acknowledgement alone cannot make a PR ready. Each child merge still requires the owner's current-head review, and final aggregate acceptance preserves the parent's separate decision.
+
+Native child delivery requires the default branch to remain at the authenticated refinement revision. Aggregate acceptance can inspect an advanced default branch after merge using retained readiness, child history, current checks and owner approval. Missing evidence or changed authority stops the action. The two-child installed acceptance remains pending; tests and installation do not establish it.
 
 ## GitHub reconciliation adapter
 
@@ -34,4 +36,4 @@ The credentialed host must supply `withLease(parentKey, work)` with a serialized
 
 The adapter records intent before creation, records returned native IDs before linking, attaches children with the native sub-issues endpoint and records native blocked-by relationships. It never edits the parent's body or lifecycle. Retries verify exact metadata, receipt identity and native relationships. Duplicate, copied or changed correlations block. A lost create response stops at uncertainty rather than reposting; the host must establish a verified resource receipt before resuming. Confirmed link writes can reconcile on retry. Cancelled receipts cannot be recreated. Partial failures retain already-created children and stop downstream creation.
 
-The native host supplies those callbacks through an owner-triggered workflow and retained Actions artifacts. It is not installed until the remaining lifecycle is complete. Do not invoke the adapter without a durable journal and lease, and do not describe fixture tests as full delivery. See the tracked [implementation tasks](../../../openspec/changes/issue-146-proposal/tasks.md).
+The native host supplies those callbacks through an owner-triggered workflow and retained Actions artifacts. Do not invoke the adapter without a durable journal and lease, and do not describe fixture tests as full delivery. See the tracked [implementation tasks](../../../openspec/changes/issue-146-proposal/tasks.md).

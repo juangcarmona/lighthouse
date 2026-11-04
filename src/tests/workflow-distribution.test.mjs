@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { registryWorkflow } from '../packages/sdlc/src/workflow-distribution.mjs';
 
-const workflows = ['lighthouse-sdlc-router.yml', ...['triage', 'refine', 'propose', 'implement', 'apply-review', 'integrate', 'review', 'product-change', 'apply-product-change'].map(name => `lighthouse-sdlc-${name}.md`), 'lighthouse-worker-maintenance.yml', 'lighthouse-sdlc-unattended.yml', 'shared/lighthouse-opencode.md'];
+const workflows = ['lighthouse-sdlc-router.yml', ...['triage', 'refine', 'propose', 'implement', 'apply-review', 'integrate', 'review', 'product-change', 'apply-product-change'].map(name => `lighthouse-sdlc-${name}.md`), 'lighthouse-worker-maintenance.yml', 'lighthouse-sdlc-unattended.yml', 'lighthouse-sdlc-epic.yml', 'shared/lighthouse-opencode.md'];
 test('the complete registry projection loads the exact package and preserves adopter source checkouts', async () => {
   for (const name of workflows) {
     const source = await readFile(new URL(`../packages/sdlc/workflows/${name}`, import.meta.url), 'utf8');
@@ -30,8 +30,12 @@ test('package-mode installer preserves existing provider files, hooks and agent 
     const preserved = { 'AGENTS.md': '# Existing guidance\n', '.product/config.yaml': 'product-root: product-definition\n', '.git/hooks/pre-commit': '#!/bin/sh\nexit 0\n' };
     for (const [name, content] of Object.entries(preserved)) { await mkdir(join(root, name, '..'), { recursive: true }); await writeFile(join(root, name), content); }
     const compiler = join(root, 'compiler'); await writeFile(compiler, `#!${process.execPath}\nif(process.argv.includes('--version'))console.log('gh-aw v0.93.2');\n`, { mode: 0o755 });
-    execFileSync(process.execPath, [fileURLToPath(new URL('../packages/sdlc/src/install-workflows.mjs', import.meta.url)), root, 'package', '--with-completion', '--with-product-change', '--with-unattended', '--with-maintenance', '--apply'], { env: { ...process.env, LIGHTHOUSE_GH_AW_EXECUTABLE: compiler }, stdio: 'pipe' });
+    execFileSync(process.execPath, [fileURLToPath(new URL('../packages/sdlc/src/install-workflows.mjs', import.meta.url)), root, 'package', '--with-completion', '--with-product-change', '--with-unattended', '--with-maintenance', '--with-epic', '--apply'], { env: { ...process.env, LIGHTHOUSE_GH_AW_EXECUTABLE: compiler }, stdio: 'pipe' });
     for (const [name, content] of Object.entries(preserved)) assert.equal(await readFile(join(root, name), 'utf8'), content);
     assert.doesNotMatch(await readFile(join(root, '.github/workflows/lighthouse-sdlc-router.yml'), 'utf8'), /repository: juangcarmona\/lighthouse\n/);
+    assert.match(await readFile(join(root, '.github/workflows/lighthouse-sdlc-router.yml'), 'utf8'), /Lighthouse epic reconciliation/);
+    const epic = await readFile(join(root, '.github/workflows/lighthouse-sdlc-epic.yml'), 'utf8');
+    assert.match(epic, /working-directory: \.lighthouse-harness\n\s+run: npm ci --ignore-scripts/);
+    assert.match(epic, /node \.lighthouse-harness\/node_modules\/@juangcarmona\/lighthouse-sdlc\/src\/epic-native.mjs/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
