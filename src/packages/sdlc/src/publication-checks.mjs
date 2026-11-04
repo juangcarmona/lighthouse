@@ -34,6 +34,6 @@ export async function validatePublicationFiles(root, files) {
     try { command = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).scripts?.markdownlint; } catch (error) { if (error.code !== 'ENOENT') throw error; }
     const version = command?.match(/^npx (?:-y|--yes) markdownlint-cli2@(\d+\.\d+\.\d+)$/)?.[1];
     if (command && !version) throw Error('Publication Markdown validator must declare a pinned markdownlint-cli2 command');
-    execFileSync('npx', ['--yes', `markdownlint-cli2@${version ?? '0.23.3'}`, ...markdown.map(file => file.path)], { cwd: temp, timeout: 120000, maxBuffer: 1024 * 1024, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: temp, NPM_CONFIG_CACHE: join(tmpdir(), 'lighthouse-publication-npm'), CI: 'true' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    execFileSync('npx', ['--yes', '--prefer-offline', `markdownlint-cli2@${version ?? '0.23.3'}`, ...markdown.map(file => file.path)], { cwd: temp, timeout: 120000, maxBuffer: 1024 * 1024, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: temp, NPM_CONFIG_CACHE: join(tmpdir(), 'lighthouse-publication-npm'), CI: 'true' }, stdio: ['ignore', 'pipe', 'pipe'] });
   } finally { await rm(temp, { recursive: true, force: true }); }
 }

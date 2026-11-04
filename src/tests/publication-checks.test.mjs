@@ -20,7 +20,7 @@ test('hook-free publication rejects malformed Markdown using the actual pinned a
   try {
     await writeFile(join(root, 'package.json'), JSON.stringify({ scripts: { markdownlint: 'npx -y markdownlint-cli2@0.23.3' } }));
     await writeFile(join(root, '.markdownlint-cli2.jsonc'), '{"config":{"default":true,"MD013":false},"globs":["**/*.md"]}');
-    await assert.rejects(validatePublicationFiles(root, [{ path: 'proposal.md', content: '#Missing heading space\n' }]));
-    await validatePublicationFiles(root, [{ path: 'proposal.md', content: '# Valid proposal\n\nA complete paragraph.\n' }]);
+    await assert.rejects(validatePublicationFiles(root, [{ path: 'proposal.md', content: '#Missing heading space\n' }]), error => /MD018|MD041/.test(`${error.stdout}\n${error.stderr}`));
+    await validatePublicationFiles(root, [{ path: 'proposal.md', content: '# Valid proposal\n\n' + 'A complete paragraph. '.repeat(10).trim() + '\n' }]);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
