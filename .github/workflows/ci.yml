@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: 56464d94182e2dc7d238a8101a8b7e9f2ae9f378
+          ref: fb02d02c11efdd9d9ac4f503b08569466e2663cb
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
