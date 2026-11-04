@@ -7,6 +7,48 @@ import { isProductOnlyPullRequest } from '../packages/sdlc/src/pr-state.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 
+test('product proposal checkpoints wait for the actual published head on an existing PR', async () => {
+  for (const scenario of ['lag', 'lost-ack', 'never-visible', 'closed', 'base-changed']) {
+    const repository = 'owner/repo', parent = 'a'.repeat(40), head = 'b'.repeat(40), root = 'openspec/changes/example';
+    const files = [{ path: `${root}/.openspec.yaml`, content: 'schema: product-change\n' }, { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' }, { path: `${root}/product-change/proposed/example.md`, content: 'Proposed artifact' }];
+    const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest, baselineDigest: 'c'.repeat(64), affectedAreas: [], decisions: [] };
+    const snapshot = { issue: 18, stage: 'propose', title: 'Example', defaultBranch: 'main', sourceRevision: parent, runId: 'd'.repeat(64), workflowRunId: '100', workflowRevision: parent, authorizationDigest: 'e'.repeat(64), policyDigest: 'f'.repeat(64), taskDigest: '1'.repeat(64) };
+    const original = { number: 7, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { ref: 'lighthouse/implement-18-previous', sha: parent, repo: { full_name: repository } }, base: { ref: 'main' }, html_url: 'https://example.test/pr/7', body: 'Preserve existing work.\n<!-- lighthouse-product-change:{} -->' };
+    let updated = false, polls = 0, writes = 0, refWrites = 0, publishedBody;
+    const api = async (path, method = 'GET', body) => {
+      if (path === 'pulls?state=open&per_page=100') return [structuredClone(original)];
+      if (path === 'pulls/7' && method === 'GET') {
+        const current = structuredClone(original);
+        if (updated) {
+          if (scenario === 'closed') current.state = 'closed';
+          if (++polls >= 3 && scenario !== 'never-visible') current.head.sha = head;
+          if (scenario === 'base-changed') current.base.ref = 'other';
+        }
+        return current;
+      }
+      if (path === `git/commits/${parent}`) return { tree: { sha: 'tree' } };
+      if (path === 'git/trees') return { sha: 'tree2' };
+      if (path === 'git/commits' && method === 'POST') return { sha: head };
+      if (path.startsWith('git/refs/heads/') && method === 'PATCH') { updated = true; refWrites++; if (scenario === 'lost-ack') throw Error('Lost ref response'); return {}; }
+      if (path.startsWith('git/ref/heads/')) return { object: { sha: head } };
+      if (path === '') return { default_branch: 'main' };
+      if (path === 'pulls/7' && method === 'PATCH') { writes++; publishedBody = body.body; return {}; }
+      if (path === 'issues/18/comments' && method === 'POST') return {};
+      throw Error(`Unexpected request: ${method} ${path}`);
+    };
+    const publish = () => publishProductChangePullRequest(api, repository, snapshot, candidate, { validation: { provider: 'passed', openSpec: 'passed' }, runUrl: 'https://example.test/run', beforeWrite: async () => {}, wait: async () => {} });
+    if (['never-visible', 'closed', 'base-changed'].includes(scenario)) {
+      await assert.rejects(publish(), /head update|closed|identity/); assert.equal(writes, 0);
+    } else {
+      const result = await publish();
+      assert.equal(result.binding.head, head); assert.equal(result.checkpoint.identity.head, head);
+      assert.deepEqual(result.checkpoint.effectIds, [`pr:7:${head}`]); assert.match(publishedBody, /Preserve existing work/);
+      assert.equal(result.pullRequest.head.sha, head);
+    }
+    assert.equal(refWrites, 1);
+  }
+});
+
 test('product review and approval use the same markers, including legacy published PRs', async () => {
   const repository = 'owner/repo', issue = 18, head = 'a'.repeat(40), base = 'b'.repeat(40), root = 'openspec/changes/example';
   const files = [{ path: `${root}/.openspec.yaml`, content: 'schema: product-change\n' }, { path: `${root}/product-change/change.md`, content: '---\nid: CHG-EXAMPLE\nstatus: draft\n---\n' }, { path: `${root}/product-change/proposed/example.md`, content: 'Proposed artifact' }];
