@@ -21,7 +21,10 @@ function fixture(options = {}) {
       if (options.lostCreate) throw Error('lost create acknowledgement');
       return ref;
     }
-    if (path.startsWith('actions/workflows/ci.yml/runs?')) return { total_count: runs.length, workflow_runs: runs };
+    if (path.startsWith('actions/workflows/ci.yml/runs?')) {
+      if (options.moveReference) ref.object.sha = head;
+      return { total_count: options.incompleteInventory ? 1 : runs.length, workflow_runs: runs };
+    }
     if (path === 'actions/workflows/ci.yml/dispatches' && method === 'POST') {
       assert.equal(snapshots.at(-1).checks.requests['ci.yml'].state, 'requested');
       assert.equal(body.ref, branch);
@@ -92,4 +95,12 @@ test('a pause after reference creation prevents dependent CI dispatch', async ()
   const f = fixture({ revokeAfterCreate: true });
   await assert.rejects(f.run(), /authority changed before CI dispatch/);
   assert.deepEqual(f.mutations.map(value => value.path), ['git/refs']);
+});
+
+test('a moved verification reference or incomplete run inventory cannot launch CI', async () => {
+  for (const options of [{ moveReference: true }, { incompleteInventory: true }]) {
+    const f = fixture(options);
+    await assert.rejects(f.run(), /reference or authority changed|inventory is incomplete/);
+    assert.deepEqual(f.mutations.map(value => value.path), ['git/refs']);
+  }
 });

@@ -43,11 +43,13 @@ export async function ensureEpicChecks({ api, repository, sourceRevision, observ
   for (const name of workflows) {
     if (await recheck() !== true) throw Error('Epic check authority changed before CI dispatch');
     const inventory = await api(`actions/workflows/${name}/runs?head_sha=${candidate}&per_page=100`);
-    if (!Array.isArray(inventory.workflow_runs) || inventory.total_count > 100) throw Error('Epic candidate CI inventory is incomplete');
+    if (!Array.isArray(inventory.workflow_runs) || !Number.isSafeInteger(inventory.total_count) || inventory.total_count !== inventory.workflow_runs.length || inventory.total_count > 100) throw Error('Epic candidate CI inventory is incomplete');
     const existing = inventory.workflow_runs.filter(run => run.head_sha === candidate && run.head_branch === identity.branch && run.path === `.github/workflows/${name}` && run.event === 'workflow_dispatch' && run.repository?.full_name === repository).sort((a, b) => b.id - a.id)[0];
     if (existing) { state.requests[name] = { state: 'observed', run: existing.id }; await save(); continue; }
     if (state.requests[name]) throw Error('Epic CI dispatch is unconfirmed; reconcile the retained request before retrying');
     state.requests[name] = { state: 'requested' }; await save();
+    const currentRef = await api(refPath, 'GET', undefined, true);
+    if (currentRef?.ref !== `refs/heads/${identity.branch}` || currentRef.object?.sha !== candidate || await recheck() !== true) throw Error('Epic check reference or authority changed before CI dispatch');
     await api(`actions/workflows/${name}/dispatches`, 'POST', { ref: identity.branch });
     state.requests[name].state = 'acknowledged'; await save();
   }
