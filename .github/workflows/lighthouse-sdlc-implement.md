@@ -73,7 +73,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
+      ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
+          ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
+          ref: c10969724e4add835f7f7bf4bb5f5bb62908e6d3
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -214,6 +214,7 @@ jobs:
           path: |
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/published-pr.json
             ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/ci-requests.json
+            ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/ci-failure.json
           if-no-files-found: ignore
           retention-days: 14
       - name: Release the issue reservation
