@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13317572388,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMxNzU3MjM4OA==",
+      "name": "lighthouse-maintenance-359",
+      "size_in_bytes": 339,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13317572388",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13317572388/zip",
+      "expired": false,
+      "digest": "sha256:043e55e7727288f4436f6d283084e3314dfb3283be4ff0d491bc146f732cddb7",
+      "created_at": "2026-11-04T11:40:30Z",
+      "updated_at": "2026-11-04T11:40:30Z",
+      "expires_at": "2026-11-18T11:40:29Z",
+      "workflow_run": {
+        "id": 41822292570,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "codex/142-maintenance",
+        "head_sha": "cd0052691e306583449571689237b9f8ab982c77"
+      }
+    },
+    {
+      "id": 13316388780,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMxNjM4ODc4MA==",
+      "name": "lighthouse-observation-359",
+      "size_in_bytes": 152,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13316388780",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13316388780/zip",
+      "expired": false,
+      "digest": "sha256:cde6cdde2425046a001a44c6b6b38e3aafe4b6ae6e42225b99e33a60f08467b1",
+      "created_at": "2026-11-04T11:36:53Z",
+      "updated_at": "2026-11-04T11:36:53Z",
+      "expires_at": "2026-11-18T11:36:53Z",
+      "workflow_run": {
+        "id": 41822292570,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "codex/142-maintenance",
+        "head_sha": "cd0052691e306583449571689237b9f8ab982c77"
+      }
+    }
+  ]
+}

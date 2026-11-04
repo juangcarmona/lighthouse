@@ -1,0 +1,50 @@
+[
+  {
+    "id": 13318171116,
+    "name": "lighthouse-result-359-1",
+    "archiveSha256": "8316f729042a356a5ec7a4e9f52527a9ca4c93b2e85716aa5aebfdfedd3c56c7",
+    "bytes": 7404
+  },
+  {
+    "id": 13317981849,
+    "name": "agent-output-fallback",
+    "archiveSha256": "763fb505f8263d5d04cb1b63ed3ca3713139b38a4b19e2bc41f4bd3ed043748a",
+    "bytes": 871
+  },
+  {
+    "id": 13317975629,
+    "name": "lighthouse-input-359-1",
+    "archiveSha256": "e1dcafce2fcd3c12ae08bfa104d8022cf2864fa9b45c03797ad6c298072b5ca9",
+    "bytes": 8549
+  },
+  {
+    "id": 13317857355,
+    "name": "info",
+    "archiveSha256": "a74481ba3d2be2ced593dcaa5316608b32bea14e75659054c1967c2d5ba1e18f",
+    "bytes": 696
+  },
+  {
+    "id": 13317732998,
+    "name": "agent",
+    "archiveSha256": "2cb9db3647e1bffe3429c040ff04f469588d66f7b37395110d0de44bf775fe13",
+    "bytes": 121026
+  },
+  {
+    "id": 13317213480,
+    "name": "usage",
+    "archiveSha256": "9524f9dd7474cf51b0d11466f5ef8ff20dc254cac30908ad5cfc3a19d0aba453",
+    "bytes": 77105
+  },
+  {
+    "id": 13317009046,
+    "name": "opencode-events-359-1",
+    "archiveSha256": "63480fc3d29df812b9f08f4bab814efb66c5599283efc465872152b8fa7558a4",
+    "bytes": 75013
+  },
+  {
+    "id": 13316858713,
+    "name": "activation",
+    "archiveSha256": "ce69393ebf26f504973f22f630d9e79e4be24e5466dd9e4111c8bad74feeccf7",
+    "bytes": 500623
+  }
+]

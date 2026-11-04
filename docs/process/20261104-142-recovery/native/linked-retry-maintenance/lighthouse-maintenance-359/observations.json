@@ -1,0 +1,1 @@
+[{"issue":359,"worker":"refine","runId":"41818026729","rootId":"0f5fda8476ddbf7f0b3c95e7d1ef43e955ae6e0fa6d2b862165fba0c51a9dc38","attempt":0,"outcome":"technical-failure","state":"retryable","code":"worker-technical-failure","cause":"short-run","nextAction":"Record one linked retry under the adopted policy.","retryAt":"2026-11-04T11:33:27.000Z"}]

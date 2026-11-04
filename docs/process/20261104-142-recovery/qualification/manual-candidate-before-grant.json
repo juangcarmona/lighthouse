@@ -1,0 +1,308 @@
+{
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 362,
+    "pr": 364,
+    "head": "719dd761274127f5e3e4658ba26646209ad9f751",
+    "base": "d143a02ca0ada02bc98e08058c404b13a55339f4",
+    "branch": "main",
+    "intent": "021ab729a8e61edf9284f94e79c97fb00f08d4a2ae85ab7750ac380ef6b127ca",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "prIntent": "aa518f81a974108a9fdc45dc8c7c0fb039d73617c8a62c137eeb56d6b9d8909e",
+    "files": "142fad4806d3d4f8517cfa9b9d1dd73757fbc6c60f8efaf22fe63cfa8fb500e5"
+  },
+  "observedChecks": [
+    {
+      "evidenceId": "github-check:126553183895",
+      "name": "reconcile-implementation-pr",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823585301/job/126553183895"
+    },
+    {
+      "evidenceId": "github-check:126553103226",
+      "name": "Cloudflare Pages",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 85455,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/runs/126553103226"
+    },
+    {
+      "evidenceId": "github-check:126552542079",
+      "name": "repository",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823585301/job/126552542079"
+    },
+    {
+      "evidenceId": "github-check:126552516032",
+      "name": "📥 Dispatch selected stage",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823575512/job/126552516032"
+    },
+    {
+      "evidenceId": "github-check:126552513810",
+      "name": "route",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823575512/job/126552513810"
+    },
+    {
+      "evidenceId": "github-check:126552512756",
+      "name": "pr-state",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823575512/job/126552512756"
+    },
+    {
+      "evidenceId": "github-check:126552512702",
+      "name": "epic-triage",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823575512/job/126552512702"
+    },
+    {
+      "evidenceId": "github-check:126539521044",
+      "name": "epic-triage",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41819711928/job/126539521044"
+    },
+    {
+      "evidenceId": "github-check:126539519831",
+      "name": "📥 Dispatch selected stage",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41819711928/job/126539519831"
+    },
+    {
+      "evidenceId": "github-check:126539519616",
+      "name": "route",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "skipped",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41819711928/job/126539519616"
+    },
+    {
+      "evidenceId": "github-check:126539517952",
+      "name": "pr-state",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41819711928/job/126539517952"
+    },
+    {
+      "evidenceId": "github-check:126537212238",
+      "name": "reconcile-implementation-pr",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41818859152/job/126537212238"
+    },
+    {
+      "evidenceId": "github-check:126536578448",
+      "name": "repository",
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "app": 15368,
+      "status": "passed",
+      "state": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41818859152/job/126536578448"
+    }
+  ],
+  "finalization": {
+    "executor": "trusted publisher after current-stage validation",
+    "observedIssue": {
+      "state": "open",
+      "labels": [
+        "execution-failed"
+      ]
+    },
+    "observedPullRequest": {
+      "state": "open",
+      "merged": false,
+      "labels": []
+    },
+    "onPassed": {
+      "add": [],
+      "remove": [],
+      "closeIssue": false
+    },
+    "onBlocked": {
+      "add": [],
+      "remove": [],
+      "closeIssue": false
+    },
+    "pullRequestLabels": "preserve",
+    "reservation": "agent-working is added and previous execution-failed state is cleared after this observation; host cleanup releases the reservation for every outcome"
+  },
+  "workItem": {
+    "title": "Controlled #142 acceptance: recover publication after a confirmed integration",
+    "body": "Disposable native integration/recovery acceptance for #142. A reviewed temporary adopter workflow will create one bot-authored documentation candidate containing only `docs/process/20261104-recovery-acceptance.md`. This fixture setup is deterministic and is not evidence of agent implementation.\n\nThe owner dispatch may assess and merge that exact fixture PR/head after the repository check passes. The temporary publisher fault must occur only after the real merge is confirmed and its original integration receipt is saved. Recovery must retain that original assessment and merge receipt, observe the existing post-merge CI, complete the evidence publication and handoff, and request review under the same grant without another merge, source change, CI run or owner restart. Do not synthesize an approval or successful assessment. If the assessment blocks, preserve the blocker.\n\nKeep recovery explicitly scoped. Preserve failed and recovered native runs, exact revisions and artifacts. Cleanup removes the temporary fixture document and acceptance configuration after evidence is retained. This controlled fixture does not establish unattended delivery on real product work (#185) or verified runtime resource absence (#219).\n\nNo triggering labels are added at creation. All source and integration effects require the supported owner workflow dispatch.",
+    "ownerAnswers": [
+      {
+        "id": 6629780665,
+        "body": "Fixture setup update: PR #363 was retired unmerged after the existing implementation-link guard returned it to draft. Its integration preparation stopped before the agent and merge. The current candidate is PR #364 at the same immutable head `719dd761274127f5e3e4658ba26646209ad9f751`, using the supported manual owner integration route on `codex/142-integration-fixture`. The next owner dispatch applies only to that PR/head after its configured repository check passes. All original fault, recovery, scope and cleanup requirements remain in force; no implementation result or approval is synthesized.",
+        "updated_at": "2026-11-04T11:47:15Z"
+      }
+    ]
+  },
+  "pullRequest": {
+    "title": "Controlled manual integration recovery fixture for #142",
+    "body": "Refs #362 and #142.\n\nThis candidate contains the same single documentation commit `719dd761274127f5e3e4658ba26646209ad9f751` as retired fixture #363. It uses the supported manual owner integration route and has no Lighthouse implementation marker or implementation branch. The old router's implementation-link guard remains active; no implementation authority is synthesized.\n\nThe controlled owner dispatch may merge this exact head after the configured repository check passes. A reviewed issue-specific workflow fault then interrupts evidence publication only after the real merge receipt is saved. Scoped recovery must restore the report and resume review from the original grant and existing CI, without another merge, source edit, CI run or owner restart. Cleanup removes the fixture document after evidence is retained.",
+    "ownerAnswers": [],
+    "reviews": []
+  },
+  "profile": {
+    "schemaVersion": 1,
+    "profileVersion": 1,
+    "repository": "juangcarmona/lighthouse",
+    "intake": "collaborators",
+    "requiredChecks": [
+      {
+        "context": "repository",
+        "integrationId": 15368
+      }
+    ],
+    "requiredApprovals": 0,
+    "evidenceBranch": "process/retrospectives",
+    "releaseWorkflowReady": true,
+    "completion": {
+      "publishEvidence": true,
+      "postMergeWorkflows": [
+        "ci.yml"
+      ],
+      "protectionObservations": [
+        {
+          "id": 25937351,
+          "revision": "e7e042bf36ebd5e0644a5775e38ee94b5f75e1888e12d9c1b6fdab0112f6afad"
+        }
+      ]
+    }
+  },
+  "policy": {
+    "rules": [
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": true,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "repository",
+              "integration_id": 15368
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "juangcarmona/lighthouse",
+        "ruleset_id": 25937483
+      },
+      {
+        "type": "deletion",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "juangcarmona/lighthouse",
+        "ruleset_id": 25648010
+      },
+      {
+        "type": "non_fast_forward",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "juangcarmona/lighthouse",
+        "ruleset_id": 25648010
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "juangcarmona/lighthouse",
+        "ruleset_id": 25648010
+      }
+    ],
+    "classic": null,
+    "checks": [
+      {
+        "context": "repository",
+        "app": 15368
+      }
+    ]
+  },
+  "checks": [
+    {
+      "context": "repository",
+      "app": 15368,
+      "revision": "719dd761274127f5e3e4658ba26646209ad9f751",
+      "status": "passed",
+      "state": "passed",
+      "checks": [
+        {
+          "id": 126552542079,
+          "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823585301/job/126552542079",
+          "status": "completed",
+          "conclusion": "success",
+          "app": 15368
+        },
+        {
+          "id": 126536578448,
+          "url": "https://github.com/juangcarmona/lighthouse/actions/runs/41818859152/job/126536578448",
+          "status": "completed",
+          "conclusion": "success",
+          "app": 15368
+        }
+      ],
+      "commitStatus": null
+    }
+  ],
+  "checkedRevision": "719dd761274127f5e3e4658ba26646209ad9f751",
+  "merged": false,
+  "merge": null,
+  "mergeable": true,
+  "title": "Controlled #142 acceptance: recover publication after a confirmed integration",
+  "issueUrl": "https://github.com/juangcarmona/lighthouse/issues/362",
+  "prUrl": "https://github.com/juangcarmona/lighthouse/pull/364",
+  "labels": [
+    "execution-failed"
+  ],
+  "files": [
+    {
+      "path": "docs/process/20261104-recovery-acceptance.md",
+      "status": "added",
+      "sha": "4a2c6395d66be438590bd6b1ef0b6ba74cb7d7f2"
+    }
+  ],
+  "currentRevision": "d143a02ca0ada02bc98e08058c404b13a55339f4",
+  "mergeActor": null
+}

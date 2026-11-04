@@ -1,0 +1,250 @@
+{
+  "total_count": 6,
+  "jobs": [
+    {
+      "id": 126551161489,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwl6kQ",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551161489",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551161489",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-04T11:43:01Z",
+      "started_at": "2026-11-04T11:43:04Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "Verify accepted commit, checks and evidence protection",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-04T11:43:04Z",
+          "completed_at": "2026-11-04T11:43:05Z"
+        },
+        {
+          "name": "Configure GH_HOST for enterprise compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-04T11:43:05Z",
+          "completed_at": "2026-11-04T11:43:05Z"
+        },
+        {
+          "name": "Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-04T11:43:05Z",
+          "completed_at": "2026-11-04T11:43:06Z"
+        },
+        {
+          "name": "Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-04T11:43:06Z",
+          "completed_at": "2026-11-04T11:43:07Z"
+        },
+        {
+          "name": "Collect verified owner intent and reserve the issue",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-11-04T11:43:07Z",
+          "completed_at": "2026-11-04T11:43:11Z"
+        },
+        {
+          "name": "Preserve the execution request",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-04T11:43:11Z",
+          "completed_at": "2026-11-04T11:43:11Z"
+        },
+        {
+          "name": "Release reservation if preparation failed",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-04T11:43:11Z",
+          "completed_at": "2026-11-04T11:43:15Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-04T11:43:15Z",
+          "completed_at": "2026-11-04T11:43:15Z"
+        },
+        {
+          "name": "Post Run actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-04T11:43:15Z",
+          "completed_at": "2026-11-04T11:43:15Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-04T11:43:15Z",
+          "completed_at": "2026-11-04T11:43:15Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551161489",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031410,
+      "runner_name": "GitHub Actions 1000031410",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 126551283851,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwtYiw",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551283851",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551283851",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T11:43:17Z",
+      "started_at": "2026-11-04T11:43:17Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "pre_activation",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551283851",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126551284576,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwtbYA",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551284576",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551284576",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T11:43:17Z",
+      "started_at": "2026-11-04T11:43:17Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "activation",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551284576",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126551285632,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwtfgA",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551285632",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551285632",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T11:43:17Z",
+      "started_at": "2026-11-04T11:43:17Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "agent",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551285632",
+      "labels": [
+        "self-hosted",
+        "linux",
+        "lighthouse-workflow"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126551285657,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwtfmQ",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551285657",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551285657",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T11:43:17Z",
+      "started_at": "2026-11-04T11:43:17Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "Validate, publish and release",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551285657",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 126551286657,
+      "run_id": 41823170131,
+      "workflow_name": "integrate #362 \u00b7 request 6629697631",
+      "head_branch": "codex/142-maintenance",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41823170131",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAddwtjgQ",
+      "head_sha": "cd0052691e306583449571689237b9f8ab982c77",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126551286657",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41823170131/job/126551286657",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-04T11:43:18Z",
+      "started_at": "2026-11-04T11:43:18Z",
+      "completed_at": "2026-11-04T11:43:17Z",
+      "name": "conclusion",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126551286657",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    }
+  ]
+}

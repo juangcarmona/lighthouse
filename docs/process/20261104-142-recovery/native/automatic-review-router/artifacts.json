@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 13319093206,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMxOTA5MzIwNg==",
+      "name": "lighthouse-dispatch-b375cd1073000a49b0525e487b2ec24221e02d3ddc1ae6566b8bffdf6f94ce06",
+      "size_in_bytes": 2074,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13319093206",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13319093206/zip",
+      "expired": false,
+      "digest": "sha256:5a9744a00d5edd2247924d4bacb7ce34540220726878308e5971c5d1af5e8982",
+      "created_at": "2026-11-04T12:08:25Z",
+      "updated_at": "2026-11-04T12:08:25Z",
+      "expires_at": "2026-11-18T12:08:24Z",
+      "workflow_run": {
+        "id": 41826405946,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "codex/142-maintenance",
+        "head_sha": "6a32fd07261f4f18b39241bd5538a01b249cc8ea"
+      }
+    }
+  ]
+}

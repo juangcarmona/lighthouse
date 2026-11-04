@@ -1,0 +1,15 @@
+✔ CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing (1.957013ms)
+✔ bot publications dispatch adopted CI for the exact branch and refuse a changed head (1.70583ms)
+✔ CI launch checkpoints distinguish safe pre-send failure, rejection and unconfirmed effects (1.554649ms)
+✔ reconciling an earlier uncertain CI request preserves later workflow delays and budgets (0.405863ms)
+✔ confirmed publication recovers only CI and coalesces maintenance replay (6.644903ms)
+✔ legacy missing send-state, changed authority and paused candidates never resend CI (0.985004ms)
+✔ owner review and a forged recovery receipt cannot grant another CI send (2.266298ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 155.453792

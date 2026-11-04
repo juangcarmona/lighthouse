@@ -1,0 +1,32 @@
+Validate, publish and release	Recheck authority and publish the validated result	﻿2026-11-04T11:55:18.3559290Z ##[group]Run cat > "$RUNNER_TEMP/142-after-merge-fault.mjs" <<'JS'
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3560024Z [36;1mcat > "$RUNNER_TEMP/142-after-merge-fault.mjs" <<'JS'[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3560568Z [36;1mimport { readFileSync } from 'node:fs';[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3561097Z [36;1mconst original = globalThis.fetch;[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3561883Z [36;1mglobalThis.fetch = async (url, options = {}) => {[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3562677Z [36;1m  if (process.env.LIGHTHOUSE_ISSUE === '362' && options.method === 'POST' && String(url).endsWith('/git/blobs')) {[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3563748Z [36;1m    const receipt = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/lighthouse-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}/integration-receipt.json`, 'utf8'));[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3564939Z [36;1m    if (receipt.state !== 'merged' || !/^[a-f0-9]{40}$/.test(receipt.sha)) throw Error('Fault injection lacks a confirmed original merge receipt');[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3565808Z [36;1m    throw Error('Controlled #142 evidence-publication interruption after confirmed merge');[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3566515Z [36;1m  }[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3566949Z [36;1m  return original(url, options);[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3567406Z [36;1m};[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3567753Z [36;1mJS[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3568422Z [36;1mnode --import "$RUNNER_TEMP/142-after-merge-fault.mjs" src/packages/sdlc/src/completion-actions.mjs publish[0m
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3589781Z shell: /usr/bin/bash -e {0}
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3590238Z env:
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3590599Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3591167Z   LIGHTHOUSE_MAINTENANCE_ISSUES: [359,362]
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3591763Z   LIGHTHOUSE_RECOVERY_ENABLED: true
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3592284Z   LIGHTHOUSE_STAGE: integrate
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3592745Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3593226Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-integrate
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3594189Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=integrate,gh-aw.repository=juangcarmona/lighthouse,gh-aw.run.id=41824240623,github.run_id=41824240623,gh-aw.engine.id=opencode
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3595015Z   OTEL_EXPORTER_OTLP_HEADERS: 
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3595513Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3595960Z   GH_AW_OTLP_IF_MISSING: ignore
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3596388Z   LIGHTHOUSE_ISSUE: 362
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3596828Z   GH_HOST: github.com
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3599495Z   GH_TOKEN: ***
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:18.3599854Z ##[endgroup]
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:43.9207661Z ##[error]Controlled #142 evidence-publication interruption after confirmed merge
+Validate, publish and release	Recheck authority and publish the validated result	2026-11-04T11:55:43.9272201Z ##[error]Process completed with exit code 1.

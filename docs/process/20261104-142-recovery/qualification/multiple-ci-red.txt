@@ -1,0 +1,43 @@
+✔ CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing (1.989631ms)
+✔ bot publications dispatch adopted CI for the exact branch and refuse a changed head (1.721871ms)
+✔ CI launch checkpoints distinguish safe pre-send failure, rejection and unconfirmed effects (1.57034ms)
+✖ reconciling an earlier uncertain CI request preserves later workflow delays and budgets (1.524288ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 117.896713
+
+✖ failing tests:
+
+test at src/tests/delivery-events.test.mjs:88:1
+✖ reconciling an earlier uncertain CI request preserves later workflow delays and budgets (1.524288ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   attempt: 1,
+  -   attempt: 2,
+      branch: 'lighthouse/implement-47-bbbbbbbbbbbb',
+      head: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  +   observedAt: '2026-01-01T01:00:00.000Z',
+  -   observedAt: '2026-01-01T00:00:00Z',
+      pr: 60,
+      schemaVersion: 1,
+      state: 'not-sent',
+      workflow: 'other.yml'
+    }
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/issue-142/src/tests/delivery-events.test.mjs:100:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { schemaVersion: 1, pr: 60, head: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', branch: 'lighthouse/implement-47-bbbbbbbbbbbb', workflow: 'other.yml', attempt: 1, observedAt: '2026-01-01T01:00:00.000Z', state: 'not-sent' },
+    expected: { schemaVersion: 1, pr: 60, head: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', branch: 'lighthouse/implement-47-bbbbbbbbbbbb', workflow: 'other.yml', attempt: 2, state: 'not-sent', observedAt: '2026-01-01T00:00:00Z' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

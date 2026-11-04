@@ -1,0 +1,40 @@
+[
+  {
+    "mode": "disabled",
+    "issue": 359,
+    "run": 41821998676,
+    "comment": 6629532816,
+    "outcome": "Automatic recovery has been disabled",
+    "reads": [
+      "actions/runs/41821998676/attempts/1",
+      "issues/comments/6629532816",
+      "actions/runs/41821912360/attempts/1",
+      "actions/runs/41821912360/artifacts?per_page=100",
+      "issues/comments/6628971661",
+      "actions/runs/41818026729",
+      "issues/comments/6628971661",
+      "actions/runs/41817959127/attempts/1",
+      "actions/runs/41817959127/artifacts?per_page=100"
+    ],
+    "mutations": 0
+  },
+  {
+    "mode": "empty-scope",
+    "issue": 359,
+    "run": 41821998676,
+    "comment": 6629532816,
+    "outcome": "Recovery is outside the configured maintenance scope",
+    "reads": [
+      "actions/runs/41821998676/attempts/1",
+      "issues/comments/6629532816",
+      "actions/runs/41821912360/attempts/1",
+      "actions/runs/41821912360/artifacts?per_page=100",
+      "issues/comments/6628971661",
+      "actions/runs/41818026729",
+      "issues/comments/6628971661",
+      "actions/runs/41817959127/attempts/1",
+      "actions/runs/41817959127/artifacts?per_page=100"
+    ],
+    "mutations": 0
+  }
+]
