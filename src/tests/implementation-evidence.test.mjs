@@ -24,8 +24,17 @@ async function fixture() {
     if (path.startsWith('issues/18/comments?')) return [{ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:${JSON.stringify({ pr, head, complete: true, run: 700, attempt: 1 })} -->` }];
     if (path.startsWith('contents/.lighthouse/implement.json?')) return file({ defaults: state.policy });
     if (path.startsWith('contents/.lighthouse/environment.json?')) return null;
+    if (path.startsWith('contents/.product/config.yaml?') && state.productRoot) {
+      const content = `product-root: "${state.productRoot}"\n`;
+      return { sha: '9'.repeat(40), encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') };
+    }
     if (path.startsWith('contents/.github/workflows/')) return { sha: path.endsWith('ref=' + state.native.head_sha) ? 'e'.repeat(40) : state.workflow };
     if (path === 'git/commits/' + head) return { tree: { sha: state.tree } };
+    if (/^git\/trees\/[a-f0-9]{40}\?recursive=1$/.test(path)) return { truncated: state.incompleteTree ?? false, tree: [
+      ...(state.productRoot ? [{ path: '.product/config.yaml', sha: '9'.repeat(40) }] : []),
+      { path: (state.productRoot ?? 'docs/product') + '/model', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateModelTree ?? 'f'.repeat(40) : state.modelTree ?? 'f'.repeat(40) },
+      { path: 'openspec/config.yaml', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateSharedPolicy ?? 'f'.repeat(40) : state.sharedPolicy ?? 'f'.repeat(40) },
+    ] };
     throw Error('Unexpected API request: ' + path);
   };
   const implementation = await loadImplementation(api, issue, 'owner', revision, 'main');
@@ -53,6 +62,15 @@ test('a matching host receipt authenticates commands against the current publish
   // Unrelated main commits do not invalidate a byte-identical candidate, policy and workflow.
   f.completion.currentRevision = '1'.repeat(40);
   assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).status, 'passed');
+  f.state.modelTree = f.state.candidateModelTree = '2'.repeat(40);
+  assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).status, 'passed', 'already-tested authority changes remain reusable after merge');
+});
+
+test('authority freshness follows the existing configured ProductShape model root', async () => {
+  const f = await fixture(); f.state.productRoot = 'specification/product';
+  f.completion.currentRevision = '1'.repeat(40); f.state.modelTree = '2'.repeat(40);
+  const result = await readImplementationEvidence(f.api, f.completion, f.options);
+  assert.equal(result.status, 'unavailable'); assert.match(result.reason, /specification\/product\/model/);
 });
 
 test('a bot producer requires the authenticated router receipt and matching admitted inputs', async () => {
@@ -101,7 +119,11 @@ test('spoofed producers and changed criteria, code, plan, policy, command or att
     'changed argv': f => { f.state.artifact.receipt.checks[0].command = ['true']; },
     'changed external plan': f => { f.state.artifact.planningReference = { number: 99 }; },
     'changed workflow': f => { f.completion.currentRevision = '1'.repeat(40); f.state.workflow = '2'.repeat(40); },
+    'changed accepted product model': f => { f.completion.currentRevision = '1'.repeat(40); f.state.modelTree = '2'.repeat(40); },
+    'changed shared validation policy': f => { f.completion.currentRevision = '1'.repeat(40); f.state.sharedPolicy = '2'.repeat(40); },
+    'incomplete authority inventory': f => { f.completion.currentRevision = '1'.repeat(40); f.state.incompleteTree = true; },
     'tampered output': f => { f.state.artifact.receipt.checks[0].output.content = 'Invented success'; },
+    'tampered provider rows': f => { f.state.artifact.receipt.checks[0].output.jsonEvidence = { citations: [{ status: 'current' }] }; },
     'agent JSON': f => { f.state.artifact = { producer: 'agent', status: 'passed', checks: [] }; },
     'legacy receipt': f => { f.state.artifact.receipt.schemaVersion = 1; },
     'missing artifact': f => { f.state.missing = true; },
@@ -133,6 +155,11 @@ test('retained failures, unavailable commands and truncated output preserve thei
   assert.equal(retainedCommandOutput('partial JSON {"summary":').jsonSummary, undefined);
   const lost = retainedCommandOutput('{"summary":{"current":37}}', true);
   assert.equal(lost.logTruncated, true); assert.equal(lost.truncated, true); assert.equal(lost.jsonSummary, undefined);
+  const scoped = retainedCommandOutput(JSON.stringify({ schema: 'provider/v1', documents: [{ path: 'plan/design.md', citations: 1 }, { path: 'other.md', citations: 1 }], citations: [{ source: 'plan/design.md', status: 'current' }, { source: 'other.md', status: 'stale' }], diagnostics: [{ file: 'other.md', message: 'Stale citation' }] }), false, ['plan/']);
+  assert.deepEqual(scoped.jsonEvidence.scope, ['plan/design.md']);
+  assert.deepEqual(scoped.jsonEvidence.citations, [{ source: 'plan/design.md', status: 'current' }]);
+  assert.equal(scoped.jsonEvidence.diagnostics[0].file, 'other.md');
+  assert.equal(retainedCommandOutput(JSON.stringify({ citations: [{ source: 'plan/design.md', content: 'x'.repeat(9000) }] }), false, ['plan/']).jsonEvidence, undefined);
 });
 
 test('publisher rejects an altered binding or a tested tree that differs from publication', async () => {

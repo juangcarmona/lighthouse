@@ -24,6 +24,11 @@ The host MUST bind retained command results to repository, work item, native run
 - **WHEN** code, criteria, policy, plan, workflow, command, run/attempt, output or publication identity differs
 - **THEN** the historical receipt cannot satisfy current acceptance and the reason remains explicit
 
+#### Scenario: Shared authority input changes
+
+- **WHEN** the accepted model or shared validation configuration changes beyond the admitted baseline and tested candidate
+- **THEN** the previous command evidence is unavailable for current acceptance, including configured model roots
+
 ### Requirement: Preserve result and compatibility boundaries
 
 The adapter MUST distinguish failed execution from unavailable/not-executed evidence, preserve stage-result v1 payloads, retain bounded outputs honestly and recheck cited passed receipts before effects. Additional observations MUST NOT create forge merge gates or establish independent test adequacy.

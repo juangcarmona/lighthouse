@@ -4,6 +4,7 @@ import { implementationPrProof } from './pr-state.mjs';
 import { loadImplementation, changesDigest, validateCheckReceipt } from './implementation.mjs';
 import { loadDispatch } from './stage-dispatch.mjs';
 import { checkProposal, reviewThread } from './proposal-review.mjs';
+import { productModelDirectoryFromConfig } from './product-change.mjs';
 
 const hash = text => createHash('sha256').update(text).digest('hex');
 const digest = value => hash(JSON.stringify(value));
@@ -20,15 +21,26 @@ export function commandEvidenceBinding(request) {
   return binding;
 }
 
-export function retainedCommandOutput(log, logTruncated = false) {
+export function retainedCommandOutput(log, logTruncated = false, paths = []) {
   const content = log.slice(0, 4096);
-  let summary;
+  let summary, jsonEvidence, evidenceUnavailable;
   try {
     const parsed = logTruncated ? null : JSON.parse(log);
     if (parsed?.summary && typeof parsed.summary === 'object' && !Array.isArray(parsed.summary) && Buffer.byteLength(JSON.stringify(parsed.summary)) <= 4096) summary = parsed.summary;
+    if (Array.isArray(parsed?.documents) || Array.isArray(parsed?.citations) || Array.isArray(parsed?.diagnostics)) {
+      const relevant = item => {
+        const source = item?.source ?? item?.path;
+        return typeof source === 'string' && paths.some(path => source === path || path.endsWith('/') && source.startsWith(path));
+      };
+      const documents = (parsed.documents ?? []).filter(relevant), citations = (parsed.citations ?? []).filter(relevant);
+      const projection = { schema: parsed.schema ?? null, provider: parsed.provider ?? null, integrationVersion: parsed.integrationVersion ?? null, root: parsed.root ?? null, scope: [...new Set([...documents.map(item => item.path), ...citations.map(item => item.source)].filter(Boolean))].sort(), documents, citations, diagnostics: parsed.diagnostics ?? [] };
+      if (Buffer.byteLength(JSON.stringify(projection)) <= 8192) jsonEvidence = projection;
+      else evidenceUnavailable = 'Scoped provider rows exceed the 8192-byte projection bound; inspect the original host log.';
+    }
   } catch {}
   return { content, sha256: hash(content), logSha256: hash(log), logTruncated, truncated: logTruncated || content !== log,
-    ...(summary ? { jsonSummary: summary, summarySha256: digest(summary) } : {}) };
+    ...(summary ? { jsonSummary: summary, summarySha256: digest(summary) } : {}),
+    ...(jsonEvidence ? { jsonEvidence, evidenceSha256: digest(jsonEvidence) } : {}), ...(evidenceUnavailable ? { evidenceUnavailable } : {}) };
 }
 
 export function implementationEvidenceBundle(request, receipt, changes, publication) {
@@ -39,6 +51,30 @@ export function implementationEvidenceBundle(request, receipt, changes, publicat
     dispatch: request.dispatch ?? null, changesDigest: changesDigest(changes), publication, receipt };
   if (Buffer.byteLength(JSON.stringify(value)) > 128000) throw Error('Command evidence exceeds artifact member bounds');
   return value;
+}
+
+async function verificationInputsCurrent(api, baseline, current, candidate) {
+  if (baseline === current) return { baseline, current, unchanged: true };
+  const readTree = async ref => {
+    const tree = await api(`git/trees/${ref}?recursive=1`);
+    if (tree.truncated !== false || !Array.isArray(tree.tree) || tree.tree.length > 10000 || tree.tree.some(item => typeof item.path !== 'string' || !sha(item.sha))) throw Error('Shared verification input inventory is unavailable or incomplete');
+    return new Map(tree.tree.map(item => [item.path, item.sha]));
+  };
+  const [before, after] = await Promise.all([baseline, current].map(readTree));
+  const configPath = '.product/config.yaml';
+  let config = '';
+  if (after.has(configPath)) {
+    const file = await api(`contents/${configPath}?ref=${current}`);
+    if (file.encoding !== 'base64' || !Number.isSafeInteger(file.size) || file.size < 0 || file.size > 96000 || file.sha !== after.get(configPath)) throw Error('Product authority configuration is unavailable or changed');
+    config = Buffer.from(file.content, 'base64').toString('utf8');
+  }
+  const paths = [configPath, productModelDirectoryFromConfig(config), '.product/installation.lock.json', '.product/templates', 'openspec/config.yaml', 'openspec/schemas', 'openspec/specs', '.markdownlint-cli2.jsonc', '.markdownlint.json', '.markdownlint.jsonc', '.markdownlint.yaml', '.markdownlint.yml', '.markdownlint-rules.cjs'];
+  const changed = paths.filter(path => before.get(path) !== after.get(path));
+  if (!changed.length) return { baseline, current, unchanged: true, paths };
+  // Review may observe this PR's already-tested authority changes after its merge.
+  const tested = await readTree(candidate);
+  if (paths.every(path => tested.get(path) === after.get(path))) return { baseline, current, candidate, unchanged: true, paths };
+  throw Error(`Shared verification inputs changed: ${changed.join(', ')}`);
 }
 
 // An injected API must be authenticated by the host, never supplied by an agent result.
@@ -79,6 +115,7 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     if (!installed.sha || installed.sha !== executed.sha) throw Error('Command workflow changed; revalidation is required');
     if (!sha(receipt.candidateTree) || commit.tree?.sha !== receipt.candidateTree || publication.tree !== receipt.candidateTree) throw Error('Candidate code or plan tree changed');
     if (digest(implementation) !== binding.policy) throw Error('Applicable implementation policy changed');
+    const verificationInputs = await verificationInputsCurrent(api, binding.policyRevision, completion.currentRevision, head);
     if (artifact.planningReference) {
       checkProposal(await api(`pulls/${artifact.planningReference.number}`), repository, artifact.planningReference);
       if (digest(await reviewThread(api, artifact.planningReference.number, owner)) !== artifact.planningReference.threadDigest) throw Error('Approved planning reference changed');
@@ -90,9 +127,10 @@ export async function readImplementationEvidence(api, completion, { readArtifact
       const output = check.output;
       if (output && (typeof output.content !== 'string' || output.content.length > 4096 || hash(output.content) !== output.sha256 || !hex(output.logSha256) || typeof output.logTruncated !== 'boolean' || typeof output.truncated !== 'boolean' || output.logTruncated && !output.truncated || !output.truncated && output.logSha256 !== output.sha256)) throw Error('Retained command output is invalid or tampered');
       if (output?.jsonSummary !== undefined && (output.logTruncated || typeof output.jsonSummary !== 'object' || !output.jsonSummary || Array.isArray(output.jsonSummary) || Buffer.byteLength(JSON.stringify(output.jsonSummary)) > 4096 || digest(output.jsonSummary) !== output.summarySha256)) throw Error('Retained command summary is invalid or tampered');
+      if (output?.jsonEvidence !== undefined && (output.logTruncated || typeof output.jsonEvidence !== 'object' || !output.jsonEvidence || Array.isArray(output.jsonEvidence) || Buffer.byteLength(JSON.stringify(output.jsonEvidence)) > 8192 || digest(output.jsonEvidence) !== output.evidenceSha256)) throw Error('Scoped provider evidence is invalid or tampered');
       const status = !output || check.reason || !check.execution ? 'unavailable' : check.exitCode === 0 && check.execution.status === 'passed' && receipt.serviceCleanup !== false ? 'passed' : 'failed';
       return { evidenceId: `${evidenceId}:${index + 1}`, name: check.command.join(' '), command: check.command, revision: head, status, state: status, exitCode: check.exitCode, output: output ?? null, url: `https://github.com/${repository}/actions/runs/${native.id}/attempts/${attempt}` };
     });
-    return { status: checks.some(c => c.status === 'unavailable') ? 'unavailable' : checks.some(c => c.status === 'failed') ? 'failed' : 'passed', evidenceId, binding, publication, artifact: { name: `lighthouse-command-evidence-${issue}-${attempt}`, member: 'implementation-evidence.json', sha256: digest(artifact) }, observedAt: receipt.observedAt, verifiedAt: new Date(now).toISOString(), producer: { repository, workflow: path, revision: native.head_sha, runId: String(native.id), attempt: Number(attempt) }, checks };
+    return { status: checks.some(c => c.status === 'unavailable') ? 'unavailable' : checks.some(c => c.status === 'failed') ? 'failed' : 'passed', evidenceId, binding, publication, verificationInputs, artifact: { name: `lighthouse-command-evidence-${issue}-${attempt}`, member: 'implementation-evidence.json', sha256: digest(artifact) }, observedAt: receipt.observedAt, verifiedAt: new Date(now).toISOString(), producer: { repository, workflow: path, revision: native.head_sha, runId: String(native.id), attempt: Number(attempt) }, checks };
   } catch (error) { return unavailable(error.message); }
 }

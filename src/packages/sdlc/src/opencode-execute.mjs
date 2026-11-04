@@ -109,7 +109,7 @@ async function main() {
     console.log('Waiting for the operator host engine slot');
     slot = acquireEngineSlot(config.lock);
     await recordPhase('running');
-    runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid });
+    runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid });
     await recordPhase('passed');
     if (cancelled) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
