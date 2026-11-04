@@ -18,6 +18,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+      - run: npm ci --ignore-scripts
       - run: docker pull node:24-bookworm-slim
       - name: Execute the actual host checker and candidate publisher
         env:
