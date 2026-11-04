@@ -2,9 +2,11 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { completionSubscriptions } from './workflow-completions.mjs';
+import { registryWorkflow } from './workflow-distribution.mjs';
 
 const [target, revision, ...flags] = process.argv.slice(2);
-if (!target || !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended]');
+if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended]');
+const packageVersion = revision === 'package' ? JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version : null;
 const apply = flags.includes('--apply'), replace = flags.includes('--replace-reviewed');
 const compilerCommand = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ?? 'gh';
 const compilerArgs = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ? [] : ['aw'];
@@ -26,6 +28,7 @@ for (const name of files) {
     if (!implement) content = content.replace('LIGHTHOUSE_AUTO_IMPLEMENT: true', 'LIGHTHOUSE_AUTO_IMPLEMENT: false');
     if (!completion) content = content.replaceAll('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false');
   }
+  if (packageVersion) content = registryWorkflow(content, packageVersion);
   const path = join(root, '.github/workflows', name);
   const exists = await access(path).then(() => true, () => false);
   if (exists && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing workflow differs: ${path}; review the diff before --replace-reviewed`);
