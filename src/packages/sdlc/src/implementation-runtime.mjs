@@ -88,7 +88,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
-  const runtime = await startEnvironment({ selected, image: config.image, commands: request.implementation.policy.checks, agent: false, name: `${name}-validation`, uid: config.uid });
+  const runtime = await startEnvironment({ selected, image: config.image, commands: [['sh'], ...request.implementation.policy.checks], agent: false, name: `${name}-validation`, uid: config.uid });
   const originalRedact = redact;
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
@@ -126,7 +126,8 @@ export async function runImplementationChecks({ config, request, changes, worksp
       await writeFile(join(output, `check-${i + 1}.log`), log);
       const execution = await executionReceipt(join(output, `check-${i + 1}.json`), exit, reason);
       const exitCode = execution.status === 'passed' ? 0 : exit.code || 1;
-      receipt.checks.push({ command, exitCode, execution, output: retainedCommandOutput(log, logTruncated) });
+      const evidencePaths = [...changes.map(file => file.path), ...(request.implementation.proposal?.root ? [request.implementation.proposal.root + '/'] : [])];
+      receipt.checks.push({ command, exitCode, execution, output: retainedCommandOutput(log, logTruncated, evidencePaths) });
       console.log(`Host check ${i + 1}: ${exitCode === 0 ? 'passed' : executionFailure(execution)}`);
       if (exitCode !== 0) {
         for (const skipped of request.implementation.policy.checks.slice(i + 1)) receipt.checks.push({ command: skipped, exitCode: 125, reason: 'Not run after a failed check' });

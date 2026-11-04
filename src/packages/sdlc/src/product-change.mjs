@@ -89,12 +89,16 @@ export async function productModelDigest(root) {
 }
 
 export async function productModelDirectory(root) {
+  let config = '';
+  try { config = await readFile(resolve(root, '.product/config.yaml'), 'utf8'); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  return productModelDirectoryFromConfig(config);
+}
+
+export function productModelDirectoryFromConfig(config) {
   let productRoot = 'docs/product';
-  try {
-    const config = await readFile(resolve(root, '.product/config.yaml'), 'utf8');
-    const declared = config.match(/^product-root:\s*(.*?)\s*$/m)?.[1]?.replace(/^(?:"(.*)"|'(.*)')$/, (_match, doubleQuoted, singleQuoted) => doubleQuoted ?? singleQuoted);
-    if (declared) productRoot = declared;
-  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const declared = config.match(/^product-root:\s*(.*?)\s*$/m)?.[1]?.replace(/^(?:"(.*)"|'(.*)')$/, (_match, doubleQuoted, singleQuoted) => doubleQuoted ?? singleQuoted);
+  if (declared) productRoot = declared;
   if (!safePath(productRoot) || productRoot.includes('\\') || productRoot.split('/').some(part => part.startsWith('.'))) throw Error('ProductShape product-root is unsafe');
   return `${productRoot}/model`;
 }

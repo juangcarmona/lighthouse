@@ -10,7 +10,7 @@ An adopter can select a build environment once per repository, independently of 
 }
 ```
 
-The [schema](schemas/execution-environment.schema.json) supports `base` (Node 24, npm, Git and Chromium) and `dotnet` (the base plus SDK 10.0.100). Services must be `[]` or `["postgresql"]`. PostgreSQL must be version 17. Custom images, commands and services cannot be selected by repository content. The host resolves this file at the requested source revision; agent edits cannot change the active environment. This selection applies to implementation and its independent checks, not read-only planning stages.
+The [schema](schemas/execution-environment.schema.json) supports `base` (Node 24, npm, Git and Chromium) and `dotnet` (the base plus SDK 10.0.100). Implementation also probes `sh` for host command output capture before starting the agent. Services must be `[]` or `["postgresql"]`. PostgreSQL must be version 17. Custom images, commands and services cannot be selected by repository content. The host resolves this file at the requested source revision; agent edits cannot change the active environment. This selection applies to implementation and its independent checks, not read-only planning stages.
 
 Operators map each selected profile to a locally installed image ID in `LIGHTHOUSE_ENGINE_CONFIG`:
 
