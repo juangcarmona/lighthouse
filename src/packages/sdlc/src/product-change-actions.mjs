@@ -131,7 +131,7 @@ export function reviewText({ repository, snapshot, head, changeId, changeName, f
   return handoff({ status: 'review', stage: snapshot.stage, happened: `Product decision: ${changeId} was prepared for [issue #${snapshot.issue}](https://github.com/${repository}/issues/${snapshot.issue}).\n\n### Affected product areas\n${areas}\n\n### Decisions and trade-offs\n${decisions}\n\n### Product Change\n${sections}\n\n### Proposed artifacts\n${artifacts || 'No artifact links were produced.'}\n\nValidation: ProductShape overlay and OpenSpec strict validation passed (${validation.provider}, ${validation.openSpec}).`, action: `Owner: review the proposal on this PR. Approve this exact product delta in a new comment with \`/product-change approve ${changeName} ${approvalKey}\`. To request a revision, put \`/product-change request-changes ${changeName} ${approvalKey}\` on the first line of a new comment and describe the change on the next line.`, next: 'Approval starts trusted ProductShape apply. Implementation, PR merge, release and deployment require their own authorization.', link: `[Review the branch diff](https://github.com/${repository}/compare/${snapshot.defaultBranch}...${head}) · [Product Change PR](${prUrl})`, details: `[Preparation run](${runUrl})` }).replace(/<!--\s*lighthouse-/gi, '&lt;!-- lighthouse-');
 }
 
-export async function publishProductChangePullRequest(api, repository, snapshot, candidate, { validation, runUrl, beforeWrite }) {
+export async function publishProductChangePullRequest(api, repository, snapshot, candidate, { validation, runUrl, beforeWrite, wait }) {
   const files = validateProductChangeFiles(candidate.files, { changeName: candidate.changeName });
   if (files.changeId !== candidate.changeId || files.digest !== candidate.proposalDigest || validation.provider !== 'passed' || validation.openSpec !== 'passed') throw Error('Product Change candidate validation evidence is stale');
   const pulls = await api('pulls?state=open&per_page=100');
@@ -161,8 +161,7 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   await beforeWrite();
   if (pr) {
     if ((await api(`pulls/${pr.number}`)).head.sha !== parent) throw Error('Issue PR changed before Product Change publication');
-    await api(`git/refs/heads/${branch}`, 'PATCH', { sha: commit.sha, force: false });
-    pr = await api(`pulls/${pr.number}`);
+    await advanceProductRef(api, branch, commit.sha);
   } else {
     const existingBranch = await api(`git/ref/heads/${branch}`, 'GET', undefined, true);
     if (existingBranch) throw Error('Product Change branch already exists without its reviewed PR; reconcile before retry');
@@ -170,6 +169,8 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
     const title = `Product change for #${snapshot.issue}: ${snapshot.title.slice(0, 150)}`;
     pr = await api('pulls', 'POST', { title, head: branch, base: snapshot.defaultBranch, draft: true, body: `Product Change ${candidate.changeId} prepared for #${snapshot.issue}.\n\n${runUrl}\n\n<!-- lighthouse-product-change:${JSON.stringify({ schemaVersion: 1, issue: snapshot.issue, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest })} -->` });
   }
+  pr = await observeUpdatedProductPull(api, pr.number, commit.sha, wait);
+  if (pr.head.ref !== branch || pr.base?.ref !== snapshot.defaultBranch || pr.head.repo?.full_name !== repository || !pr.draft) throw Error('Product PR identity changed while confirming its published head');
   const repositoryInfo = await api('');
   const policyDigest = snapshot.policyDigest;
   const binding = productReviewBinding({ repository, issue: snapshot.issue, pullRequest: pr.number, changeName: candidate.changeName, changeId: candidate.changeId, proposalDigest: candidate.proposalDigest, baselineDigest: candidate.baselineDigest, policyDigest, authorityDigest: snapshot.authorizationDigest, head: pr.head.sha, ...(snapshot.productParent ? { parentDigest: digest(JSON.stringify(snapshot.productParent)) } : {}) });
@@ -287,7 +288,7 @@ export function productApplyHandoff({ stage, receipt, pullRequest, url, affected
 export async function observeUpdatedProductPull(api, number, expectedHead, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
   for (let attempt = 0; attempt < 20; attempt++) {
     const pr = await api(`pulls/${number}`);
-    if (pr.state !== 'open' || pr.merged) throw Error('Product PR closed while confirming the applied head');
+    if (pr.state !== 'open' || pr.merged) throw Error('Product PR closed while confirming the published head');
     if (pr.head?.sha === expectedHead) return pr;
     if (attempt < 19) await wait(1000);
   }
