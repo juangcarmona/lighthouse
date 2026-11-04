@@ -1,3 +1,4 @@
+import { signalCiRepair } from './ci-repair.mjs';
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { authorizedCiCallback, draftIntentMarker, isCurrentPullRequestEvent, pendingDraftIntent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
@@ -112,6 +113,7 @@ async function main() {
       continue;
     }
     const hold = comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`));
+    if (env.GITHUB_EVENT_NAME === 'schedule' && !hold) await signalCiRepair(api, repo, pr, profile);
     const auto = (['workflow_run', 'schedule'].includes(env.GITHUB_EVENT_NAME) || ciCallback) && !hold;
     await reconcileImplementationPr(api, repo, pr, issue, comments, requiredChecks(profile), (current, draft) => setPullRequestDraft(env.GH_TOKEN, current, draft), { auto, beforeDraft: async () => {
       const marker = draftIntentMarker(pr, env.GITHUB_RUN_ID);

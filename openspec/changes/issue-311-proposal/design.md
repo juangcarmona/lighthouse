@@ -24,7 +24,7 @@ Missing or expired grant artifacts prevent automatic repair and produce an actio
 
 ## Migration plan
 
-Regenerate managed projections with the immutable source commit. Enable only issue #348 for acceptance, record its original and corrected heads, CI runs and receipts, then remove the temporary activation and CI assertion. Adopters retain disabled behavior until their own policy is configured.
+Regenerate managed projections with the immutable source commit. Enable only issue #353 for acceptance, record its original and corrected heads, CI runs and receipts, then remove the temporary activation and CI assertion. Adopters retain disabled behavior until their own policy is configured.
 
 <!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 <!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33" -->

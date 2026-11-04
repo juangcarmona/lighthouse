@@ -146,3 +146,50 @@ test('a resumed proposal updates its applied product PR without opening another 
   assert.equal(checkProposal({ ...current, head: { ...current.head, sha: next }, body: revised }, repository).productProposal, true);
   assert.match(revised, /Product decision retained/);
 });
+
+test('authenticated correction reports bind the dispatch base separately from the candidate head', async () => {
+  const { loadStageReport } = await import('../packages/sdlc/src/proposal.mjs');
+  const { dispatchId, dispatchReceiptBody } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const { digest } = await import('../packages/sdlc/src/host-contract.mjs');
+  const repository = 'owner/repo', base = 'a'.repeat(40), head = 'b'.repeat(40), feedbackKey = 'c'.repeat(64), runId = 'd'.repeat(64);
+  const origin = { schemaVersion: 1, repository, issue: 47, stage: 'implement', worker: 'apply-review', feedbackKey, id: dispatchId(repository, feedbackKey, 'implement'), routerRunId: 10, routerAttempt: 1, routerRevision: base, routerRef: 'main', workflowRevision: base, sourceRevision: base, ref: 'main', eventName: 'issue_comment', event: {}, handoff: false, queue: true, taskDigest: 'e'.repeat(64) };
+  const receipt = { schemaVersion: 1, stage: 'implement', worker: 'apply-review', feedbackKey, status: 'completed', id: origin.id, digest: digest(JSON.stringify(origin)), routerRunId: 10, routerAttempt: 1, workerRunId: 20 };
+  const actor = { login: 'owner' }, parent = { id: 10, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'issue_comment', actor, triggering_actor: actor, head_sha: base, head_branch: 'main', repository: { full_name: repository } };
+  const run = { ...parent, id: 20, path: '.github/workflows/lighthouse-sdlc-apply-review.lock.yml', event: 'workflow_dispatch', status: 'completed', conclusion: 'success' };
+  const request = { repository, issue: 47, stage: 'implement', workflowRunId: '20', workflowRevision: base, sourceRevision: head, baseRevision: base, runId, dispatch: { commentId: 7, requestId: origin.id, digest: receipt.digest } };
+  const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/47`, body: dispatchReceiptBody(repository, receipt) };
+  const api = async path => {
+    if (path === 'actions/runs/20') return run;
+    if (path === 'actions/runs/10/attempts/1') return parent;
+    assert.equal(path, 'issues/comments/7'); return comment;
+  };
+  const readArtifact = async (_api, _repo, _run, _name, file) => file === 'dispatch.json' ? origin : file === 'request.json' ? request : { result: { status: 'passed' } };
+  const report = { body: `<!-- lighthouse-actions:${runId} -->\n<!-- lighthouse-stage:implement:passed -->\n[Workflow run](https://github.com/${repository}/actions/runs/20)` };
+  assert.equal((await loadStageReport(api, repository, report, { owner: 'owner', issue: 47 }, readArtifact)).request.sourceRevision, head);
+  request.baseRevision = 'f'.repeat(40);
+  await assert.rejects(loadStageReport(api, repository, report, { owner: 'owner', issue: 47 }, readArtifact), /Dispatched report identity mismatch/);
+  request.baseRevision = base; receipt.workerRunId = 21; comment.body = dispatchReceiptBody(repository, receipt);
+  await assert.rejects(loadStageReport(api, repository, report, { owner: 'owner', issue: 47 }, readArtifact), /admission receipt/);
+});
+
+test('bot correction dispatch origins retain the original adopted failed CI attempt', async () => {
+  const { loadDispatch, dispatchId, dispatchReceiptBody } = await import('../packages/sdlc/src/stage-dispatch.mjs');
+  const { digest } = await import('../packages/sdlc/src/host-contract.mjs');
+  const repository = 'owner/repo', base = 'a'.repeat(40), head = 'b'.repeat(40), feedbackKey = 'c'.repeat(64);
+  const origin = { schemaVersion: 1, repository, issue: 47, stage: 'implement', worker: 'apply-review', feedbackKey, id: dispatchId(repository, feedbackKey, 'implement'), routerRunId: 10, routerAttempt: 1, routerRevision: base, routerRef: 'main', workflowRevision: base, sourceRevision: base, ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '47', stage: 'implement', after_run: '123' } }, eventRunId: '123', handoff: false, queue: true, taskDigest: 'e'.repeat(64), ciRepair: { run: 123, runAttempt: 1, head, pr: 60 } };
+  const receipt = { schemaVersion: 1, stage: 'implement', worker: 'apply-review', feedbackKey, status: 'completed', id: origin.id, digest: digest(JSON.stringify(origin)), routerRunId: 10, routerAttempt: 1, workerRunId: 20, eventRunId: '123' };
+  const actor = { login: 'github-actions[bot]' }, parent = { id: 10, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: base, head_branch: 'main', repository: { full_name: repository } };
+  const run = { ...parent, id: 20, path: '.github/workflows/lighthouse-sdlc-apply-review.lock.yml', status: 'completed', conclusion: 'success' };
+  const ci = { status: 'completed', conclusion: 'failure', head_sha: head, repository: { full_name: repository }, path: '.github/workflows/verify.yml' };
+  const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/47`, body: dispatchReceiptBody(repository, receipt) };
+  const api = async path => {
+    if (path === 'actions/runs/10/attempts/1') return parent;
+    if (path === 'actions/runs/123/attempts/1') return ci;
+    if (path.startsWith('contents/')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['verify.yml'] } })).toString('base64') };
+    assert.equal(path, 'issues/comments/7'); return comment;
+  };
+  const readArtifact = async () => origin;
+  assert.equal((await loadDispatch(api, repository, 'owner', 47, 7, run, readArtifact)).request.ciRepair.run, 123);
+  ci.head_sha = base;
+  await assert.rejects(loadDispatch(api, repository, 'owner', 47, 7, run, readArtifact), /original adopted failed attempt/);
+});
