@@ -32,8 +32,9 @@ export async function prepareNativeEpic(api, repository, owner, issueNumber, loa
   const current = { owner, issue: issueNumber, sourceRevision, taskDigest: taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, owner))) };
   const evidence = await load(api, repository, comments, current);
   if (evidence.request?.issue !== issueNumber || evidence.request.stage !== 'refine' || evidence.request.sourceRevision !== sourceRevision || evidence.request.taskDigest !== current.taskDigest || validateStageEnvelope(evidence.envelope, evidence.request).length) throw Error('Epic refinement result is invalid or stale');
-  const assessment = assessDecomposition(evidence.envelope.result.output);
-  if (assessment.status !== 'planned') throw Error('Epic refinement has no valid oversized plan');
+  // An owner epic action selects an existing plan; automatic refinement keeps its size threshold.
+  const assessment = assessDecomposition(evidence.envelope.result.output, { requested: true });
+  if (assessment.status !== 'planned') throw Error('Epic refinement has no valid decomposition plan');
   const parentNumber = assessment.plan.parent.number ?? assessment.plan.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
   if (String(parentNumber) !== String(issueNumber)) throw Error('Epic plan targets a different parent');
   const report = comments.find(comment => comment.html_url === evidence.report);
