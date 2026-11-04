@@ -31,19 +31,37 @@ test('real disposable runtime fault matrix preserves unrelated resources and sha
       };
       const owner = createExecutionOwner(journals, identity(index + 1), { run });
       const config = { resourceOwner: owner };
+      let execution = null;
       runOwnedDocker(config, ['network', 'create', `${owner.prefix}-private`], { stdio: 'pipe' });
-      if (outcome === 'lost-create') {
+      if (outcome === 'timeout' || outcome === 'cancel') {
+        const args = owner.prepare(['run', '--rm', '--name', `${owner.prefix}-work`, '--network', `${owner.prefix}-private`, '--mount', `type=volume,src=${control},dst=/shared`, '--entrypoint', 'node', image, '-e', 'setInterval(()=>{},1000)']);
+        const child = spawn('docker', args, { stdio: 'pipe' });
+        const exited = new Promise(resolve => child.on('close', (code, signal) => resolve({ code, signal })));
+        let started = false;
+        for (let attempt = 0; attempt < 100; attempt++) {
+          try { if (docker(['inspect', '--format', '{{.State.Running}}', `${owner.prefix}-work`]).trim() === 'true') { started = true; break; } } catch {}
+          await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        assert.equal(started, true);
+        const stop = () => { owner.observe(); child.kill('SIGTERM'); try { docker(['rm', '-f', `${owner.prefix}-work`]); } catch { /* --rm may already have removed it; the independent inventory must still prove absence. */ } };
+        const cancellation = new AbortController();
+        cancellation.signal.addEventListener('abort', stop, { once: true });
+        const timer = setTimeout(outcome === 'timeout' ? stop : () => cancellation.abort(), 50);
+        const exit = await exited; clearTimeout(timer);
+        execution = { status: outcome === 'timeout' ? 'timeout' : 'cancelled', ...exit };
+      } else if (outcome === 'lost-create') {
         const args = owner.prepare(['run', '-d', '--name', `${owner.prefix}-work`, '--network', `${owner.prefix}-private`, '--mount', `type=volume,src=${control},dst=/shared`, '--entrypoint', 'node', image, '-e', 'setInterval(()=>{},1000)']);
         docker(args); // Deliberately drop the create acknowledgement.
       } else {
         const code = outcome === 'success' ? 'process.exit(0)' : outcome === 'agent-failure' ? 'process.exit(7)' : 'setInterval(()=>{},1000)';
         try { runOwnedDocker(config, ['run', ...(outcome === 'success' || outcome === 'agent-failure' ? ['--rm'] : ['-d']), '--name', `${owner.prefix}-work`, '--network', `${owner.prefix}-private`, '--mount', `type=volume,src=${control},dst=/shared`, '--entrypoint', 'node', image, '-e', code], { stdio: 'pipe' }); }
-        catch (error) { assert.equal(outcome, 'agent-failure'); assert.equal(error.status, 7); }
+        catch (error) { assert.equal(outcome, 'agent-failure'); assert.equal(error.status, 7); execution = { status: 'failed', code: error.status, signal: null }; }
+        if (outcome === 'success') execution = { status: 'passed', code: 0, signal: null };
       }
       outage = outcome === 'runtime-outage';
       const first = owner.cleanup();
       assert.equal(first.status, noOp ? 'failed' : outage ? 'unknown' : 'clean');
-      receipts.push({ scenario: outcome, ...first });
+      receipts.push({ scenario: outcome, execution, ...first });
       noOp = false; outage = false;
       assert.equal(owner.cleanup().status, 'clean');
       assert.equal(docker(['container', 'ls', '-aq', '--filter', `label=io.lighthouse.execution=${first.owner}`]).trim(), '');
@@ -61,7 +79,7 @@ test('real disposable runtime fault matrix preserves unrelated resources and sha
     const { prefix } = JSON.parse(await readFile(ready, 'utf8'));
     assert.ok(docker(['container', 'ls', '-aq', '--filter', `name=${prefix}-work`]).trim());
     const recovered = recoverExecutionOwners(journals); assert.equal(recovered[0].status, 'clean');
-    receipts.push({ scenario: 'abrupt-process-loss', ...recovered[0] });
+    receipts.push({ scenario: 'abrupt-process-loss', execution: { status: 'process-lost', ...exit }, ...recovered[0] });
     assert.deepEqual(recoverExecutionOwners(journals), []);
     if (process.env.LIGHTHOUSE_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_CLEANUP_EVIDENCE, JSON.stringify({ image, receipts }, null, 2) + '\n');
     complete = true;
