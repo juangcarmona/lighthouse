@@ -29,13 +29,15 @@ assert.equal(process.env.TMPDIR,'/tmp');
 assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,'1');
 fs.mkdirSync(process.env.XDG_CACHE_HOME,{recursive:true});
 fs.writeFileSync(process.env.XDG_CACHE_HOME+'/scratch','disposable',{mode:0o600});
-if(!scenario.startsWith('zero-')) fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
+let scopeProbe;
+if(scenario==='readonly-review') {assert.throws(()=>fs.writeFileSync('/workspace/demo.js','reviewer tampering'),error=>{scopeProbe=error.code;return error.code==='EROFS';});}
+else if(!scenario.startsWith('zero-')) fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
 fs.mkdirSync('/output/evidence',{mode:0o700});
 fs.writeFileSync('/output/evidence/a-final.log','retained final evidence',{mode:0o600});
 if(scenario==='unreadable') fs.writeFileSync('/output/evidence/b-final.log','unreadable required evidence',{mode:0o000});
 if(scenario==='symlink') fs.symlinkSync('/input/context.json','/output/evidence/b-link');
 if(scenario==='oversized') {fs.writeFileSync('/output/evidence/b-large','');fs.truncateSync('/output/evidence/b-large',64*1024*1024+1);}
-const envelope={schemaVersion:1,result:{schemaVersion:1,runId:request.runId,stage:'implement',gate:'done',status:'passed',evidence:[{id:'fixture',status:'passed'}],missingEvidence:[],unavailableChecks:[],pendingReview:[],nextAction:'Review the candidate.'},effect:{type:'issue-comment',body:'Deterministic runtime fixture; no model invoked.'}};
+const envelope={schemaVersion:1,result:{schemaVersion:1,runId:request.runId,stage:request.stage,gate:'done',status:'passed',evidence:[{id:'fixture',status:'passed'}],missingEvidence:[],unavailableChecks:[],pendingReview:[],nextAction:'Review the candidate.',...(scopeProbe?{output:{scopeProbe}}:{})},effect:{type:'issue-comment',body:'Deterministic runtime fixture; no model invoked.'}};
 if(scenario==='zero-blocked') { envelope.result.status='blocked'; envelope.result.pendingReview.push('Owner decision remains required.'); }
 fs.writeFileSync('/output/envelope.json',JSON.stringify(envelope),{mode:0o600});
 if(scenario==='engine-failed') process.exit(7);
@@ -48,7 +50,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
     image = (await readFile(join(root, 'image-id'), 'utf8')).trim();
     execFileSync('docker', ['volume', 'create', volume], { stdio: 'pipe' });
     volumeCreated = true;
-    for (const scenario of ['success', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed', 'zero-initial', 'zero-review', 'zero-check-failed', 'zero-blocked']) {
+    for (const scenario of ['success', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed', 'zero-initial', 'zero-review', 'zero-check-failed', 'zero-blocked', 'readonly-review']) {
       await t.test(scenario, async () => {
         const current = join(root, scenario), work = join(current, 'work'), runDir = join(current, 'lighthouse-1-1');
         await mkdir(work, { recursive: true }); await mkdir(runDir);
@@ -59,6 +61,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         if (scenario === 'zero-check-failed') checks[0] = ['node', '-e', 'process.exit(1)'];
         if (scenario === 'success') checks.push(['node', '-e', 'console.log(JSON.stringify({data:Array(2000).fill("x".repeat(100)),summary:{current:37,errors:0},documents:[{path:"demo.js"}],citations:[{source:"demo.js",status:"current"}]},null,2));process.exit(0)']);
         const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
+        if (scenario === 'readonly-review') { request.stage = 'integrate'; request.worker = 'independent-review'; }
         if (scenario.startsWith('zero-') && scenario !== 'zero-initial') Object.assign(request, { worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: { issue: request.issue, approved: false, head: request.sourceRevision, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'e'.repeat(64) } });
         await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
         await writeFile(join(runDir, 'context.json'), JSON.stringify({ request, scenario }));
@@ -67,7 +70,12 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         const run = spawnSync(process.execPath, [join(harness, 'src/opencode-execute.mjs')], { encoding: 'utf8', timeout: 60000, env: { ...process.env, LIGHTHOUSE_ENGINE_CONFIG: join(current, 'config'), RUNNER_TEMP: current, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(current, 'prompt'), GH_AW_SAFE_OUTPUTS: join(current, 'completion') } });
         assert.equal(run.error, undefined, run.error?.message);
         const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json')));
-        if (scenario === 'success' || scenario.startsWith('zero-')) {
+        if (scenario === 'readonly-review') {
+          assert.equal(run.status, 0, run.stdout + run.stderr);
+          assert.equal(JSON.parse(await readFile(join(runDir, 'envelope.json'))).result.output.scopeProbe, 'EROFS');
+          assert.equal(runtime.execution.status, 'passed');
+          await assert.rejects(readFile(join(runDir, 'checks.json')), { code: 'ENOENT' });
+        } else if (scenario === 'success' || scenario.startsWith('zero-')) {
           assert.equal(run.status, 0, run.stdout + run.stderr);
           assert.deepEqual(runtime.phases, { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: scenario === 'zero-check-failed' ? 'failed' : 'passed', completion: 'passed' });
           const envelope = JSON.parse(await readFile(join(runDir, 'envelope.json')));

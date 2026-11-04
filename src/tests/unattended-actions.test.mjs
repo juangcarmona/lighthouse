@@ -42,7 +42,7 @@ async function fixture() {
       repository: { full_name: 'owner/repo' }, head_sha: revision, head_branch: 'main', path: '.github/workflows/lighthouse-sdlc-unattended.yml', run_attempt: 1 };
     if (path.startsWith('contents/.lighthouse/unattended.json')) return encode(policy);
     if (path.startsWith('contents/.lighthouse/implement.json')) return encode({ defaults: { scope: 'The isolated issue', paths: ['src/feature/', 'tests/'],
-      checks: [['node', '--test', 'tests/edge.test.mjs']], reviewRequired: false } });
+      checks: [['node', '--test', 'tests/edge.test.mjs']], reviewRequired: false, verification: { paths: ['tests/'], corrections: {} } } });
     if (path.startsWith('contents/.lighthouse/')) return null;
     if (path === 'issues/1') return issue();
     if (path.startsWith('issues/1/comments')) {
@@ -407,5 +407,41 @@ test('an unattended product question is actionable and its answer survives an au
     const retried = await runGithubUnattended(f);
     assert.equal(retried.status, 'waiting-human', retried.reason);
     assert.equal(observedAnswer, true);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('missing admitted checks and stale reviewer bindings stop before candidate publication', async t => {
+  for (const scenario of ['missing-check', 'stale-review']) await t.test(scenario, async () => {
+    const f = await fixture(), execute = f.execute;
+    f.execute = async options => {
+      const result = await execute(options);
+      if (scenario === 'missing-check' && options.request.stage === 'implement' && result.envelope.result.status === 'passed') result.receipt.checks.pop();
+      if (scenario === 'stale-review' && options.context.review?.purpose === 'candidate') result.envelope.result.output.review.binding = 'a'.repeat(64);
+      return result;
+    };
+    try {
+      const result = await runGithubUnattended(f);
+      assert.equal(result.status, 'blocked');
+      assert.match(result.reason, scenario === 'missing-check' ? /check inventory/ : /stale findings/);
+      assert.ok(!f.writes.some(write => write.path === 'pulls'));
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+});
+
+test('an old unattended installation must declare verification inputs before executing', async () => {
+  const f = await fixture(), api = f.api;
+  f.api = async (...args) => {
+    const result = await api(...args);
+    if (args[0].startsWith('contents/.lighthouse/implement.json')) {
+      const configuration = JSON.parse(Buffer.from(result.content, 'base64').toString());
+      delete configuration.defaults.verification;
+      result.content = Buffer.from(JSON.stringify(configuration)).toString('base64');
+    }
+    return result;
+  };
+  try {
+    await assert.rejects(runGithubUnattended(f), /requires declared verification inputs/);
+    assert.equal(f.executions.length, 0);
+    assert.equal(f.writes.length, 0);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });

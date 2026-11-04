@@ -12,6 +12,7 @@ import { selectEnvironment, startEnvironment, environmentArgs, environmentReceip
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
 import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
+import { verificationIntegrity } from './verification-integrity.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -198,7 +199,9 @@ async function main() {
     clearTimeout(timer);
     completionOutput(envelope, request);
     if (implementing) {
-      const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
+      const candidateFiles = await sourceFiles(source, trackedSource);
+      const changes = collectChanges(baseline, candidateFiles, request.implementation.policy);
+      const verification = verificationIntegrity(baseline, candidateFiles, request.implementation.policy, request.issue);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
       await mkdir(join(runDir, 'evidence'), { recursive: true });
       await writeFile(join(runDir, 'evidence', 'candidate-envelope.json'), JSON.stringify(envelope));
@@ -207,10 +210,9 @@ async function main() {
       await recordPhase('passed'); phase = 'verification'; await recordPhase('running');
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
-      const checkBaseline = await sourceFiles(candidate);
       if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
       const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected });
-      if (collectChanges(checkBaseline, await sourceFiles(candidate, checkBaseline), request.implementation.policy).length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated'; }
+      receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
       if (request.implementation.policy.reviewRequired) {

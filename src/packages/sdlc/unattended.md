@@ -19,6 +19,23 @@ gh workflow run lighthouse-sdlc-unattended.yml -f issue=<number> -f route=hotfix
 
 Only an authenticated owner dispatch is admitted initially. The issue must be open, authored by the owner, and free of human reservations, pauses and pending answer/review gates. External intake uses the existing owner-admission route before it can become eligible; this composition does not broaden that route. Installation and workflow availability are separate from successful execution.
 
+## Verification inputs and test corrections
+
+Upgraded unattended execution requires `verification` in the adopted `.lighthouse/implement.json` policy. Declare every test entrypoint, transitive wrapper, manifest/lockfile and relevant runner configuration; paths are exact files or directory prefixes, without globs. The host protects complete bytes and modes, including newly added files under a declared prefix. This declaration is an operator inventory, not automatic dependency discovery.
+
+```json
+"verification": {
+  "paths": ["package.json", "package-lock.json", "scripts/", "tests/"],
+  "corrections": {
+    "tests/boundary.test.mjs": "Correct the equality assertion and add the adjacent lower value."
+  }
+}
+```
+
+`corrections` names exact files with an admitted reason; use `{}` normally. Candidate changes outside those exceptions stop before host checks. Every allowed correction, original file and executed check enters a fresh independent review binding. The reviewer must assess behavior against the issue even when all candidate tests pass. Verification-time source edits fail acceptance regardless of commits or hidden Git index flags. Required missing checks and stale review findings stop publication.
+
+Hotfix RED authoring may change only the independently planned test files. Repair freezes those assertions. If RED itself needs correction, stop and record why in a fresh owner-authorized request, then reproduce and verify again; a repair round cannot rewrite RED. Supervised policies without this declaration remain compatible and report integrity as unconfigured. Runtime/user-journey checks remain the adopted profile's responsibility. A supervised human-reviewed path is sufficient when its configured risk and gate policy permit it; this adds no universal multi-agent requirement.
+
 ## Fast-forward
 
 Refinement must establish low risk, known reversible scope, resolved dependencies, no missing product decision and an explained numeric estimate of 1, 2 or 3. Five points requires `allowFivePoint: true`; legacy size labels are not converted into points. A separate read-only reviewer checks readiness and the real provider-generated engineering plan before code changes. The implementation and required host checks are then reviewed independently against the original issue, owner answers and actual before/after source.

@@ -1,7 +1,8 @@
 import { chmod, mkdir, writeFile, readdir, lstat, copyFile, mkdtemp, rename, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
-import { changesDigest } from './implementation.mjs';
+import { changesDigest, sourceFiles } from './implementation.mjs';
+import { sourceDigest } from './verification-integrity.mjs';
 import { commandEvidenceBinding, retainedCommandOutput } from './implementation-evidence.mjs';
 import { startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { executionLimits, resourceArgs, executionReceipt, executionFailure } from './execution-resources.mjs';
@@ -75,6 +76,7 @@ export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/
 // A regular-file stdout prevents providers using process.exit() from truncating pending pipe writes.
 const checkOutputCommand = 'node /harness/src/managed-command.mjs run /diagnostics "$@" > /tmp/lighthouse-check.log 2>&1; check_exit=$?; cat /tmp/lighthouse-check.log || exit 125; exit "$check_exit"';
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null }) {
+  const checkBaseline = await sourceFiles(workspace);
   await prepareImplementationWorkspace(workspace, config, request.issue);
   const limits = executionLimits(config);
   const harness = fileURLToPath(new URL('../', import.meta.url));
@@ -135,6 +137,9 @@ export async function runImplementationChecks({ config, request, changes, worksp
       }
     }
   } finally { receipt.serviceCleanup = runtime.cleanup() !== false; }
+  if (sourceDigest(checkBaseline) !== sourceDigest(await sourceFiles(workspace, checkBaseline)) && receipt.checks.length) {
+    receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Checks modified source; candidate not validated';
+  }
   if (!receipt.serviceCleanup && receipt.checks.length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Environment cleanup failed; operator cleanup required'; }
   if (receipt.schemaVersion === 2) receipt.observedAt = new Date().toISOString();
   return receipt;
