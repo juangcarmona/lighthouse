@@ -72,7 +72,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
+      ref: da290f969704ce1a93d58bc8d9da95f1d9045d98
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -80,19 +80,6 @@ steps:
     with:
       name: lighthouse-input-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
-  - name: Controlled original-attempt interruption for issue 359
-    if: inputs.issue == '359'
-    env:
-      ACCEPTANCE_REQUEST: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
-    run: |
-      node --input-type=module - <<'JS'
-      import { readFileSync } from 'node:fs';
-      const request = JSON.parse(readFileSync(process.env.ACCEPTANCE_REQUEST, 'utf8'));
-      if (request.issue !== 359) throw Error('Wrong acceptance subject');
-      if (!request.dispatch?.recovery) throw Error('Controlled #142 pre-engine interruption; no provider outage is claimed');
-      console.log('Linked retry: execute the ordinary refinement engine.');
-      JS
-
 post-steps:
   - name: Validate the Lighthouse result
     run: node .lighthouse-harness/src/packages/sdlc/src/issue-actions.mjs validate
@@ -138,7 +125,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
+          ref: da290f969704ce1a93d58bc8d9da95f1d9045d98
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -182,7 +169,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
+          ref: da290f969704ce1a93d58bc8d9da95f1d9045d98
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
