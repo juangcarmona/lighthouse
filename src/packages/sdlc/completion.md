@@ -37,6 +37,23 @@ The merge request includes the accepted head SHA. GitHub's REST merge operation 
 
 After integration, successful post-merge CI starts `review`. The host supplies matching integration evidence from the protected process branch: a commit-pinned report, hash-verified artifacts and receipt, accepted delivery identity, owner merge authorization and the successful originating workflow. Review rechecks that pinned evidence before publication; missing or stale history is explicit. The current review report remains a subsequent host effect. Review records the retrospective, affected-instruction findings and proposed improvements. A passed review closes the work item and removes the delivery labels; a blocker keeps it awaiting review. The router follows the adopted workflow; neither stage changes policy.
 
+## Host command evidence
+
+Implementation and same-PR corrections retain `lighthouse-command-evidence-<issue>-<attempt>` for 30 days. The publisher binds each receipt to its repository, issue, admitted intent, native run and attempt, source revision, implementation policy, planning reference and exact tested/published Git tree. Each command retains argv, exit status, execution outcome and bounded redacted output with hashes. Output truncation is explicit; omitted text cannot establish provider details.
+
+Integration supplies verified commands in `completion.implementationEvidence` and `observedChecks`. The reader authenticates the successful adopted workflow and its dispatch origin through GitHub, compares current inputs and rechecks cited receipts before publication or merge. A producer string, valid JSON or generic green CI does not authenticate a command. The packaged `implementation-evidence` export requires a host-authenticated API; a shape validator is not a trust boundary.
+
+| Change or observation | Current acceptance |
+| --- | --- |
+| Same head/tree, intent, policy, plan, workflow and retained output; unrelated main commits | Reuse the scoped command result |
+| Candidate or in-tree plan changes; criteria/owner answers, applicable policy, external plan or workflow changes | Revalidate; historical evidence stays readable |
+| Wrong repository, producer/run/attempt, argv, publication or output digest | Unavailable evidence with a reason |
+| Missing, expired, inaccessible or oversized artifact; legacy receipt without these bindings | Unavailable evidence; request an authorized same-PR revalidation |
+| Executed command fails | Failed result |
+| Command was not executed or its result is missing | Unavailable result |
+
+These observations supplement explicit work-item verification; they do not add forge merge gates or establish that the tests are strong enough. Existing stage-result v1 payloads remain unchanged. Legacy/unattended receipts without this command handoff retain their existing consumers and cannot be promoted to authenticated command evidence by this reader. Independent test integrity and review remain #101.
+
 ## Evidence and recovery
 
 Actions shows authorization, OpenCode progress, validation, publication and cleanup as separate jobs or steps. The issue and PR receive a report link pinned to the confirmed evidence commit. The report records accepted source, actual integration outcome, GitHub check identities and retrospective. Reports and receipts use the existing evidence record/index formats under `docs/process/YYYYMMDD-issue-slug/runs/run/attempt-NNNN/`; dates use UTC. An existing work-item folder is reused after a rename.

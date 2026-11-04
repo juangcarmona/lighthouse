@@ -206,6 +206,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
+      - name: Preserve authenticated command evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-command-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/implementation-evidence.json
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Preserve the publication receipt
         if: always()
         uses: actions/upload-artifact@v7

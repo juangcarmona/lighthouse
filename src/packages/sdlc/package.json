@@ -70,6 +70,7 @@
     "./workflow": "./src/workflow.mjs",
     "./browser-e2e": "./src/browser-e2e.mjs",
     "./evidence": "./src/evidence.mjs",
+    "./implementation-evidence": "./src/implementation-evidence.mjs",
     "./contract.json": "./contract.json",
     "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
     "./schemas/triage.schema.json": "./schemas/triage.schema.json",

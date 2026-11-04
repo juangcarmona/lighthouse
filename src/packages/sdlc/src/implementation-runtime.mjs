@@ -2,6 +2,7 @@ import { chmod, mkdir, writeFile, readdir, lstat, copyFile, mkdtemp, rename, rm 
 import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { changesDigest } from './implementation.mjs';
+import { commandEvidenceBinding, retainedCommandOutput } from './implementation-evidence.mjs';
 import { startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { executionLimits, resourceArgs, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { fileURLToPath } from 'node:url';
@@ -76,6 +77,12 @@ export async function runImplementationChecks({ config, request, changes, worksp
   const limits = executionLimits(config);
   const harness = fileURLToPath(new URL('../', import.meta.url));
   const receipt = { runId: request.runId, sourceRevision: request.sourceRevision, changesDigest: changesDigest(changes), image: config.image, limits, environment: environmentReceipt(selected), checks: [] };
+  if (request.repository && request.workflowRunId && request.attempt && request.taskDigest) {
+    receipt.schemaVersion = 2;
+    receipt.binding = commandEvidenceBinding(request);
+    receipt.candidateTree = execFileSync('git', ['-c', `safe.directory=${workspace}`, '-C', workspace, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
+    receipt.observedAt = new Date().toISOString();
+  }
   const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
@@ -114,7 +121,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
       await writeFile(join(output, `check-${i + 1}.log`), log);
       const execution = await executionReceipt(join(output, `check-${i + 1}.json`), exit, reason);
       const exitCode = execution.status === 'passed' ? 0 : exit.code || 1;
-      receipt.checks.push({ command, exitCode, execution });
+      receipt.checks.push({ command, exitCode, execution, output: retainedCommandOutput(log) });
       console.log(`Host check ${i + 1}: ${exitCode === 0 ? 'passed' : executionFailure(execution)}`);
       if (exitCode !== 0) {
         for (const skipped of request.implementation.policy.checks.slice(i + 1)) receipt.checks.push({ command: skipped, exitCode: 125, reason: 'Not run after a failed check' });
@@ -123,5 +130,6 @@ export async function runImplementationChecks({ config, request, changes, worksp
     }
   } finally { receipt.serviceCleanup = runtime.cleanup() !== false; }
   if (!receipt.serviceCleanup && receipt.checks.length) { receipt.checks.at(-1).exitCode = 1; receipt.checks.at(-1).reason = 'Environment cleanup failed; operator cleanup required'; }
+  if (receipt.schemaVersion === 2) receipt.observedAt = new Date().toISOString();
   return receipt;
 }

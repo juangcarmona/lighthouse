@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, cp, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, cp, rm, chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { restoreWorkspaceOwnership } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { restoreWorkspaceOwnership, writableTree } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 test('native worker exports private evidence and preserves candidates on collection failures', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE, timeout: 240000 }, async t => {
   const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'lighthouse-worker-evidence-'));
@@ -16,6 +16,7 @@ test('native worker exports private evidence and preserves candidates on collect
   try {
     const harness = join(root, 'harness');
     await cp(new URL('../packages/sdlc/', import.meta.url), harness, { recursive: true });
+    await writableTree(harness);
     execFileSync('git', ['init', '-q', harness]);
     execFileSync('git', ['-C', harness, 'add', '.']);
     execFileSync('git', ['-C', harness, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Runtime under test']);
@@ -41,6 +42,7 @@ if(scenario==='engine-failed') process.exit(7);
 console.log(JSON.stringify({type:'text',part:{text:'Private final evidence written.'}}));
 `);
     execFileSync('docker', ['image', 'tag', base, baseTag]);
+    await chmod(join(root, 'engine.mjs'), 0o644);
     await writeFile(join(root, 'Dockerfile'), `FROM ${baseTag}\nCOPY engine.mjs /fixture-engine.mjs\nENTRYPOINT ["node", "/fixture-engine.mjs"]\nCMD []\n`);
     execFileSync('docker', ['build', '-q', '--iidfile', join(root, 'image-id'), root], { stdio: 'pipe', timeout: 120000 });
     image = (await readFile(join(root, 'image-id'), 'utf8')).trim();
@@ -55,7 +57,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', 'demo.js']);
         const checks = scenario === 'missing-tool' ? [['lighthouse-missing-executable']] : [['node', '-e', 'const assert=require("node:assert/strict");assert.match(require("node:fs").readFileSync("demo.js","utf8"),/repaired = true/);assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,"1");assert.equal(process.env.TMPDIR,"/tmp");']];
         if (scenario === 'zero-check-failed') checks[0] = ['node', '-e', 'process.exit(1)'];
-        const request = { runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
+        const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
         if (scenario.startsWith('zero-') && scenario !== 'zero-initial') Object.assign(request, { worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: { issue: request.issue, approved: false, head: request.sourceRevision, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'e'.repeat(64) } });
         await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
         await writeFile(join(runDir, 'context.json'), JSON.stringify({ request, scenario }));
@@ -73,7 +75,14 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
           if (scenario === 'zero-initial') assert.ok(envelope.result.missingEvidence.includes('No implementation changes were returned'));
           if (scenario === 'zero-blocked') assert.deepEqual(envelope.result.pendingReview, ['Owner decision remains required.']);
           assert.equal(await readFile(join(runDir, 'evidence/agent/a-final.log'), 'utf8'), 'retained final evidence');
-          assert.equal(JSON.parse(await readFile(join(runDir, 'checks.json'))).checks[0].exitCode, scenario === 'zero-check-failed' ? 1 : 0);
+          const receipt = JSON.parse(await readFile(join(runDir, 'checks.json')));
+          assert.equal(receipt.checks[0].exitCode, scenario === 'zero-check-failed' ? 1 : 0);
+          assert.equal(receipt.schemaVersion, 2);
+          assert.equal(receipt.binding.attempt, 1);
+          assert.equal(receipt.binding.intent, request.taskDigest);
+          assert.match(receipt.candidateTree, /^[a-f0-9]{40}$/);
+          assert.equal(typeof receipt.checks[0].output.content, 'string');
+          assert.match(receipt.checks[0].output.sha256, /^[a-f0-9]{64}$/);
           assert.equal(JSON.parse(await readFile(join(current, 'completion'))).type, 'noop');
         } else {
           assert.equal(run.status, 1, run.stdout + run.stderr);
