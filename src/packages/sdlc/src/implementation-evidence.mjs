@@ -14,20 +14,20 @@ const positive = value => /^[1-9][0-9]*$/.test(String(value ?? ''));
 export function commandEvidenceBinding(request) {
   const binding = { repository: request.repository, issue: request.issue, runId: request.runId,
     workflowRunId: String(request.workflowRunId), attempt: Number(request.attempt),
-    sourceRevision: request.sourceRevision, intent: request.taskDigest,
+    sourceRevision: request.sourceRevision, policyRevision: request.baseRevision ?? request.sourceRevision, intent: request.taskDigest,
     policy: digest(request.implementation), planning: digest(request.planningReference ?? null) };
-  if (!/^[\w.-]+\/[\w.-]+$/.test(binding.repository ?? '') || !Number.isSafeInteger(binding.issue) || binding.issue < 1 || !hex(binding.runId) || !positive(binding.workflowRunId) || !Number.isSafeInteger(binding.attempt) || binding.attempt < 1 || !sha(binding.sourceRevision) || !hex(binding.intent)) throw Error('Command evidence requires an admitted repository, work item, run, attempt and intent');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(binding.repository ?? '') || !Number.isSafeInteger(binding.issue) || binding.issue < 1 || !hex(binding.runId) || !positive(binding.workflowRunId) || !Number.isSafeInteger(binding.attempt) || binding.attempt < 1 || !sha(binding.sourceRevision) || !sha(binding.policyRevision) || !hex(binding.intent)) throw Error('Command evidence requires an admitted repository, work item, run, attempt and intent');
   return binding;
 }
 
-export function retainedCommandOutput(log) {
+export function retainedCommandOutput(log, logTruncated = false) {
   const content = log.slice(0, 4096);
   let summary;
   try {
-    const parsed = JSON.parse(log);
+    const parsed = logTruncated ? null : JSON.parse(log);
     if (parsed?.summary && typeof parsed.summary === 'object' && !Array.isArray(parsed.summary) && Buffer.byteLength(JSON.stringify(parsed.summary)) <= 4096) summary = parsed.summary;
   } catch {}
-  return { content, sha256: hash(content), logSha256: hash(log), truncated: content !== log,
+  return { content, sha256: hash(content), logSha256: hash(log), logTruncated, truncated: logTruncated || content !== log,
     ...(summary ? { jsonSummary: summary, summarySha256: digest(summary) } : {}) };
 }
 
@@ -66,11 +66,11 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     if (!artifact) return unavailable('Command evidence artifact is absent; revalidate the candidate');
     const { binding, receipt, publication } = artifact;
     if (artifact.schemaVersion !== 1 || artifact.producer !== 'lighthouse-implementation-host' || binding?.repository !== repository || binding.issue !== issue || binding.intent !== intent || String(binding.workflowRunId) !== String(native.id) || binding.attempt !== Number(attempt) || publication?.pr !== pr || publication.head !== head || digest(binding) !== digest(receipt?.binding) || !hex(artifact.changesDigest) || receipt.changesDigest !== artifact.changesDigest || receipt.runId !== binding.runId || receipt.sourceRevision !== binding.sourceRevision || receipt.schemaVersion !== 2) throw Error('Command receipt identity, criteria or publication binding changed');
-    const expected = commandEvidenceBinding({ ...binding, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference });
+    const expected = commandEvidenceBinding({ ...binding, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference });
     if (digest(expected) !== digest(binding)) throw Error('Command policy or plan binding changed');
     if (artifact.dispatch) {
       const origin = await loadDispatch(api, repository, owner, issue, artifact.dispatch.commentId, native, readArtifact);
-      if (origin.request.id !== artifact.dispatch.requestId || origin.request.sourceRevision !== binding.sourceRevision || origin.request.taskDigest !== intent) throw Error('Command origin does not bind the admitted inputs');
+      if (origin.request.id !== artifact.dispatch.requestId || origin.receipt.digest !== artifact.dispatch.digest || origin.request.stage !== 'implement' || origin.request.sourceRevision !== binding.policyRevision || origin.request.taskDigest !== intent) throw Error('Command origin does not bind the admitted inputs');
     } else if (native.actor.login !== owner || native.triggering_actor.login !== owner) throw Error('Bot command producer has no authenticated dispatch origin');
     const [installed, executed, commit, implementation] = await Promise.all([
       api(`contents/${path}?ref=${completion.currentRevision}`), api(`contents/${path}?ref=${native.head_sha}`),
@@ -88,8 +88,8 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     const checks = receipt.checks.map((check, index) => {
       if (digest(check.command) !== digest(implementation.policy.checks[index]) || !Number.isInteger(check.exitCode)) throw Error('Command argv changed or result is absent');
       const output = check.output;
-      if (output && (typeof output.content !== 'string' || output.content.length > 4096 || hash(output.content) !== output.sha256 || !hex(output.logSha256) || typeof output.truncated !== 'boolean' || !output.truncated && output.logSha256 !== output.sha256)) throw Error('Retained command output is invalid or tampered');
-      if (output?.jsonSummary !== undefined && (typeof output.jsonSummary !== 'object' || !output.jsonSummary || Array.isArray(output.jsonSummary) || Buffer.byteLength(JSON.stringify(output.jsonSummary)) > 4096 || digest(output.jsonSummary) !== output.summarySha256)) throw Error('Retained command summary is invalid or tampered');
+      if (output && (typeof output.content !== 'string' || output.content.length > 4096 || hash(output.content) !== output.sha256 || !hex(output.logSha256) || typeof output.logTruncated !== 'boolean' || typeof output.truncated !== 'boolean' || output.logTruncated && !output.truncated || !output.truncated && output.logSha256 !== output.sha256)) throw Error('Retained command output is invalid or tampered');
+      if (output?.jsonSummary !== undefined && (output.logTruncated || typeof output.jsonSummary !== 'object' || !output.jsonSummary || Array.isArray(output.jsonSummary) || Buffer.byteLength(JSON.stringify(output.jsonSummary)) > 4096 || digest(output.jsonSummary) !== output.summarySha256)) throw Error('Retained command summary is invalid or tampered');
       const status = !output || check.reason || !check.execution ? 'unavailable' : check.exitCode === 0 && check.execution.status === 'passed' && receipt.serviceCleanup !== false ? 'passed' : 'failed';
       return { evidenceId: `${evidenceId}:${index + 1}`, name: check.command.join(' '), command: check.command, revision: head, status, state: status, exitCode: check.exitCode, output: output ?? null, url: `https://github.com/${repository}/actions/runs/${native.id}/attempts/${attempt}` };
     });

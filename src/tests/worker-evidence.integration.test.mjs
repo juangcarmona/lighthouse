@@ -57,6 +57,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', 'demo.js']);
         const checks = scenario === 'missing-tool' ? [['lighthouse-missing-executable']] : [['node', '-e', 'const assert=require("node:assert/strict");assert.match(require("node:fs").readFileSync("demo.js","utf8"),/repaired = true/);assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,"1");assert.equal(process.env.TMPDIR,"/tmp");']];
         if (scenario === 'zero-check-failed') checks[0] = ['node', '-e', 'process.exit(1)'];
+        if (scenario === 'success') checks.push(['node', '-e', 'console.log(JSON.stringify({data:Array(2000).fill("x".repeat(100)),summary:{current:37,errors:0}},null,2));process.exit(0)']);
         const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
         if (scenario.startsWith('zero-') && scenario !== 'zero-initial') Object.assign(request, { worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: { issue: request.issue, approved: false, head: request.sourceRevision, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'e'.repeat(64) } });
         await writeFile(join(runDir, 'request.json'), JSON.stringify(request));
@@ -83,6 +84,11 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
           assert.match(receipt.candidateTree, /^[a-f0-9]{40}$/);
           assert.equal(typeof receipt.checks[0].output.content, 'string');
           assert.match(receipt.checks[0].output.sha256, /^[a-f0-9]{64}$/);
+          if (scenario === 'success') {
+            assert.deepEqual(receipt.checks[1].output.jsonSummary, { current: 37, errors: 0 });
+            assert.equal(JSON.parse(await readFile(join(runDir, 'evidence/host/check-2.log'), 'utf8')).data.length, 2000);
+            assert.equal(receipt.checks[1].output.logTruncated, false);
+          }
           assert.equal(JSON.parse(await readFile(join(current, 'completion'))).type, 'noop');
         } else {
           assert.equal(run.status, 1, run.stdout + run.stderr);
