@@ -3,7 +3,7 @@
 The product model is reviewable source under `docs/product/model/`. ProductShape validates the model and proposed deltas; Lighthouse coordinates the workers and decisions that move a change through delivery. ArcShape documents how the resulting system works.
 
 ```mermaid
-flowchart TD
+flowchart LR
     accTitle: Product Definition as Code in delivery
     accDescr: A proposed product delta is validated and explicitly approved before apply. Apply materializes the branch definition; a separate merge accepts it into the baseline.
     Baseline[Accepted product model] --> Inspect[Inspect intent and impact]

@@ -3,7 +3,7 @@
 After an authorized merge and successful adopted post-merge CI, review checks retained integration evidence and records the delivery retrospective.
 
 ```mermaid
-flowchart TD
+flowchart LR
     accTitle: Review and close
     accDescr: After an authorized merge and successful adopted post-merge CI, review checks retained integration evidence and records the delivery retrospective.
     CI[Successful CI for merged revision] --> Admit{Matching authenticated integration evidence?}

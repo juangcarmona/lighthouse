@@ -3,7 +3,7 @@
 An authorized implementation request or passed refinement starts planning, implementation and verification in one bounded workspace. The worker publishes its candidate as a draft PR.
 
 ```mermaid
-flowchart TD
+flowchart LR
     accTitle: Implement
     accDescr: An authorized implementation request or passed refinement starts planning, implementation and verification in one bounded workspace. The worker publishes its candidate as a draft PR.
     Request[Owner request or authorized continuation] --> Admit{Current scope and checks available?}

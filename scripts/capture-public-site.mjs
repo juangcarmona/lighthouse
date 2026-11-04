@@ -29,6 +29,7 @@ try {
         throw new Error(`Portal returned ${response?.status() ?? 'no response'}: ${portal.path}`);
       }
       if (portal.interactive) {
+        await page.locator('#content iframe[data-native-frame]').first().scrollIntoViewIfNeeded();
         await page.locator('#content iframe[data-native-frame][data-ready]').first().waitFor();
         const diagramUrl = await page.locator('#content a.native-open').first().getAttribute('href');
         const diagram = await page.request.get(new URL(diagramUrl, page.url()).toString());

@@ -3,7 +3,7 @@
 Integration assesses an implementation candidate against its current approvals, required checks and retained evidence. Only a separately authorized merge path can merge that candidate.
 
 ```mermaid
-flowchart TD
+flowchart LR
     accTitle: Integrate
     accDescr: Integration assesses an implementation candidate against its current approvals, required checks and retained evidence. Only a separately authorized merge path can merge that candidate.
     Request[Owner integrate label or completion event] --> Candidate{One current complete candidate?}
