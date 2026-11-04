@@ -92,6 +92,7 @@ function normalizedObservation(repository, observation) {
   const context = { issue: observation.issue, rootId, runId: runId === null ? null : String(runId), attempt: observation.attempt ?? 0, state: observation.state, code };
   for (const key of ['pr', 'head', 'retryAt', 'outcome']) if (observation[key] !== undefined) context[key] = observation[key];
   validateContext(context);
+  if (code === 'worker-completed' && (!observation.rootId || runId === null || observation.state !== 'succeeded')) throw Error('Recovery requires a confirmed execution identity');
   if (!Object.hasOwn(causes, code) || !states.includes(observation.state) || observation.state === 'recovered') return { worker, rootId, context };
   const entry = { key: runId ? `run:${runId}` : `request:${rootId}`, rootId, issue: observation.issue, runId: runId === null ? null : String(runId), attempt: observation.attempt ?? 0, state: observation.state };
   validateEntry(entry);
@@ -104,14 +105,18 @@ export function mergeObservations(repository, previous, observations) {
   const contexts = new Map((previous.contexts ?? []).map(context => [context.rootId, context]));
   const normalized = observations.map(o => normalizedObservation(repository, o)).filter(Boolean);
   for (const o of normalized) if (o.worker === previous.worker && o.code === previous.code) {
+    const pending = entries.get(`request:${o.rootId}`);
+    if (o.entry.runId && pending && pending.issue === o.entry.issue && pending.attempt === o.entry.attempt) entries.delete(pending.key);
     const prior = entries.get(o.entry.key);
     if (prior && (prior.rootId !== o.rootId || prior.issue !== o.entry.issue || prior.attempt !== o.entry.attempt)) throw Error('Report occurrence identity changed');
     entries.set(o.entry.key, { ...o.entry, ...(recoveredRoots.has(o.entry.rootId) ? { state: 'recovered' } : {}) });
   }
   for (const o of normalized) {
     if (o.worker !== previous.worker || ![...entries.values()].some(entry => entry.rootId === o.rootId)) continue;
+    if ([...entries.values()].some(entry => entry.rootId === o.rootId && entry.issue !== o.context.issue)) throw Error('Report request issue changed');
     const prior = contexts.get(o.rootId);
     if (o.context.code === 'worker-completed' && previous.code === 'ci-launch-failure') continue;
+    if (prior?.code === 'worker-completed' && o.context.runId === prior.runId && o.context.code !== prior.code) continue;
     if (prior && (o.context.attempt < prior.attempt || o.context.runId && prior.runId && BigInt(o.context.runId) < BigInt(prior.runId))) continue;
     if (recoveredRoots.has(o.rootId) && !['succeeded', 'reconciled', 'observed', 'waiting-human', 'active'].includes(o.context.state)) continue;
     contexts.set(o.rootId, o.context);

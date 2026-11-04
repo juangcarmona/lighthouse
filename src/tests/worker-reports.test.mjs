@@ -146,6 +146,19 @@ test('normal waits create no incidents; legacy reports migrate and invalid conte
   await assert.rejects(publishReports(f.api, repo, owner, 1, [observation(11, 'b'.repeat(64))]), /identity changed/);
 });
 
+test('confirming a previously unconfirmed run replaces its request placeholder instead of inflating counts', async () => {
+  const f = fixture(), pending = { ...observation(null), runId: null, code: 'dispatch-unconfirmed', state: 'uncertain' };
+  await publishReports(f.api, repo, owner, 1, [pending]);
+  await publishReports(f.api, repo, owner, 1, [{ ...pending, runId: '11' }]);
+  const report = readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed');
+  assert.equal(report.entries.length, 1); assert.equal(report.entries[0].key, 'run:11');
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'active', code: 'worker-active' }]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').contexts[0].code, 'worker-completed');
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(null), runId: null, state: 'succeeded', code: 'worker-completed' }]), /confirmed execution identity/);
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(13), issue: 8, state: 'active', code: 'worker-active' }]), /request issue changed/);
+});
+
 test('owner index edits and occurrence overflow stop publication visibly', async () => {
   const f = fixture(); let reads = 0;
   const api = async (...args) => { if (args[0] === 'issues/1' && ++reads === 2) f.index.body = 'New owner instructions'; return f.api(...args); };
