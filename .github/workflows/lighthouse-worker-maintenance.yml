@@ -73,6 +73,10 @@ jobs:
           path: qualification
           retention-days: 90
   observe:
+    concurrency:
+      group: lighthouse-worker-reports
+      cancel-in-progress: false
+      queue: max
     if: inputs.mode == 'observe'
     runs-on: ubuntu-24.04
     permissions:

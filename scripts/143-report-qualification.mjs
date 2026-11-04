@@ -16,13 +16,11 @@ const api=async(path, method='GET', body, optional=false)=>{
  return result;
 };
 if(env.MODE==='diagnostic'){
- const metadata=await api(''), config=await api(`contents/.lighthouse/github.json?ref=${metadata.default_branch}`);
- const profile=JSON.parse(Buffer.from(config.content,'base64'));
- const fake={number:index,head:{sha:env.GITHUB_SHA,ref:env.GITHUB_REF_NAME}};
+ const metadata=await api('');
+ const candidate=await api('pulls/367');
+ assert.equal(candidate.state,'open');
  let saved, failure;
- // The candidate is a fixture; the workflow inventory and forbidden POST use the real GitHub API.
- const bounded=async(path,...args)=>path.startsWith('contents/.lighthouse/github.json')?{content:Buffer.from(JSON.stringify(profile)).toString('base64')}:path===`pulls/${index}`?{state:'open',head:{...fake.head,repo:{full_name:repo}}}:api(path,...args);
- try{await dispatchDeliveryChecks(bounded,env.GITHUB_SHA,fake,{checkpoint:async rows=>{saved=structuredClone(rows);}});}catch(error){failure=error.ciRequestFailure;}
+ try{await dispatchDeliveryChecks(api,metadata.default_branch,candidate,{checkpoint:async rows=>{saved=structuredClone(rows);}});}catch(error){failure=error.ciRequestFailure;}
  assert.equal(failure?.status,403);assert.equal(failure.method,'POST');assert.equal(saved[0].state,'rejected');
  assert.equal(writes.length,0);
  console.log(JSON.stringify({ciRequestFailure:failure}));console.log(ciFailureSummary(failure));
@@ -62,7 +60,7 @@ await assert.rejects(publishReports(lostUpdate,repo,owner,index,[recurrence]),/I
 await publishReports(api,repo,owner,index,[recurrence]);reportIssue=await snapshot('recurrence');assert.equal(reportIssue.state,'open');assert.equal(readReport(reportIssue,repo,'refine','worker-technical-failure').entries.length,4);
 assert.equal(writes.filter(w=>w.path==='issues'&&w.method==='POST').length,1);
 const diagnostic=JSON.parse(await readFile('qualification/ci-diagnostic.json','utf8'));
-await publishReports(api,repo,owner,index,[{issue:index,worker:'implement',rootId:digest(`${root}:ci`),runId:env.GITHUB_RUN_ID,attempt:0,state:'uncertain',code:'ci-start-unconfirmed',outcome:'completed',pr:index,head:env.GITHUB_SHA}]);
+await publishReports(api,repo,owner,index,[{issue:index,worker:'implement',rootId:digest(`${root}:ci`),runId:env.GITHUB_RUN_ID,attempt:0,state:'uncertain',code:'ci-start-unconfirmed',outcome:'completed',pr:diagnostic.failure.pr,head:diagnostic.failure.head}]);
 await writeFile('qualification/lifecycle.json',JSON.stringify({source,root,index,report:reportIssue.number,fixtureRetryOrdinals:true,actualRetryAdmission:false,captures,writes,diagnostic},null,2));
 await writeFile('qualification/native-runs.json',JSON.stringify(retained));
 console.log(JSON.stringify({index,report:reportIssue.number,failures:3,recovery:'confirmed native success in fixture chain',recurrence:4,lostCreatePosts:1}));
