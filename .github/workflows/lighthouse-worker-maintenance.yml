@@ -137,7 +137,7 @@ jobs:
       queue: max
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
       actions: write
       checks: read
       issues: write

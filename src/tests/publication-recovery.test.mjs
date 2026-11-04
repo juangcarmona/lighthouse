@@ -13,7 +13,7 @@ async function fixture() {
   const parent = { id: 300, run_attempt: 1, path: '.github/workflows/lighthouse-worker-maintenance.yml', repository: { full_name: repository }, event: 'workflow_dispatch', actor: { login: owner }, triggering_actor: { login: owner }, status: 'completed' };
   const report = { id: 20, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:{"pr":60,"head":"${head}","complete":true,"run":200} -->` };
   const comments = [report], writes = [], stored = new Map();
-  let runs = [], requests = [{ schemaVersion: 1, pr: 60, head, branch: pr.head.ref, workflow: 'verify.yml', attempt: 1, state: 'not-sent', observedAt: '2020-01-01T00:00:00Z' }];
+  let reviews = [], runs = [], requests = [{ schemaVersion: 1, pr: 60, head, branch: pr.head.ref, workflow: 'verify.yml', attempt: 1, state: 'not-sent', observedAt: '2020-01-01T00:00:00Z' }];
   const api = async (path, method = 'GET', body) => {
     if (method !== 'GET') {
       writes.push({ path, method, body });
@@ -23,7 +23,7 @@ async function fixture() {
       throw Error(path);
     }
     if (path === 'pulls/60') return pr;
-    if (path === 'pulls/60/reviews?per_page=100') return [];
+    if (path === 'pulls/60/reviews?per_page=100') return reviews;
     if (path === 'issues/7') return issue;
     if (path.startsWith('issues/7/comments?')) return comments;
     if (path === 'commits/main') return { sha: revision };
@@ -40,7 +40,7 @@ async function fixture() {
   const readArtifact = async (_api, _repo, _run, _artifact, name) => ({ 'published-pr.json': { number: 60, head }, 'changes.json': [], 'checks.json': receipt, 'ci-requests.json': requests, 'ci-recovery.json': stored.get('state') })[name];
   const options = { readArtifact, readReport: async () => ({ request, envelope }), save: async value => stored.set('state', structuredClone(value)) };
   const call = (enabled = true) => reconcilePublishedCi(api, repository, owner, issue, comments, { dispatch: { request, commentId: 10 }, run, revision }, parent, enabled, Date.now(), options);
-  return { issue, request, comments, writes, call, setRequests: value => { requests = value; }, setRuns: value => { runs = value; }, pr };
+  return { issue, request, comments, writes, call, parent, setReviews: value => { reviews = value; }, setRequests: value => { requests = value; }, setRuns: value => { runs = value; }, pr };
 }
 
 test('confirmed publication recovers only CI and coalesces maintenance replay', async () => {
@@ -66,5 +66,21 @@ test('legacy missing send-state, changed authority and paused candidates never r
     const result = await f.call();
     assert.equal(result?.code ?? null, mode === 'legacy' ? 'ci-request-evidence-missing' : mode === 'intent' ? 'authority-changed' : null);
     assert.equal(f.writes.length, 0);
+  }
+});
+
+
+test('owner review and a forged recovery receipt cannot grant another CI send', async () => {
+  const held = await fixture();
+  held.setReviews([{ id: 50, user: { login: owner }, state: 'CHANGES_REQUESTED' }]);
+  await assert.rejects(held.call(), /Owner review/);
+  assert.equal(held.writes.length, 0);
+  for (const mode of ['actor', 'state']) {
+    const f = await fixture();
+    await f.call();
+    if (mode === 'actor') f.parent.actor = { login: 'other' };
+    else f.comments[1].body = f.comments[1].body.replace('acknowledged', 'not-sent');
+    assert.equal((await f.call()).code, 'ci-recovery-unconfirmed');
+    assert.equal(f.writes.filter(write => write.path.endsWith('/dispatches')).length, 1);
   }
 });
