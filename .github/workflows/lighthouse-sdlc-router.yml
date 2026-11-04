@@ -72,7 +72,7 @@ permissions:
   contents: read
 env:
   LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
-  LIGHTHOUSE_AUTO_IMPLEMENT: true
+  LIGHTHOUSE_AUTO_IMPLEMENT: false
   LIGHTHOUSE_COMPLETION_ENABLED: true
   LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: true
 jobs:
