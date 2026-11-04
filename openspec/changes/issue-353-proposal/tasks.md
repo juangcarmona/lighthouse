@@ -26,9 +26,17 @@ The completed sections above record the initial candidate and first correction. 
 - [x] 4.2 Run all four unchanged configured checks; retain completed receipts and logs and confirm only authorized paths changed.
 - [x] 4.3 Deliver the phase-two result and retrospective, distinguishing local checks from the later trusted CI failure and automatic correction.
 
+## 5. Second bounded CI correction
+
+The supplied CI run 41807700574 reports the fresh phase-two mismatch. The current continuation is correction attempt 2 on PR #354 under the original implementation identity; no new budget, approval or merge authority is introduced.
+
+- [x] 5.1 Restore only the fixture paragraph to `The current candidate passed its bounded CI correction.`; verify the complete file bytes and unchanged heading with a read-only assertion.
+- [x] 5.2 Run all four unchanged configured checks; retain completed receipts and logs and confirm only authorized paths changed.
+- [x] 5.3 Deliver the correction envelope and retrospective; distinguish local verification from corrected-head hosted CI and duplicate-completion evidence.
+
 ## Workflow follow-up
 
 - The trusted host publishes the initial candidate as one draft PR; no merge or deployment is authorized.
 - Actual CI must report the paragraph mismatch before the authenticated bounded correction replaces only that paragraph on the same PR.
 - Hosted acceptance must collect corrected-head checks and duplicate-completion behavior; an authorized operator retires the unmerged candidate after evidence collection.
-- For phase two, the host retains PR #354 and the original implementation identity. After actual CI reports the fresh mismatch, the bounded automatic continuation must consume correction attempt 2, not reset the budget; it restores only the final paragraph. This worker does not perform that later continuation or claim hosted acceptance.
+- For phase two, the host retains PR #354 and the original implementation identity. The current continuation consumes correction attempt 2 and restores only the final paragraph after the supplied fresh CI failure. Corrected-head hosted CI and duplicate-completion evidence remain host follow-up; this worker does not claim hosted acceptance.

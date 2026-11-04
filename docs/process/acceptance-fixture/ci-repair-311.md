@@ -1,3 +1,3 @@
 # CI correction acceptance
 
-The initial candidate awaits its injected CI correction.
+The current candidate passed its bounded CI correction.
