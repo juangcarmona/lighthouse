@@ -74,16 +74,19 @@ try {
       'arcshape', 'site', 'build', '--docs', join(root, 'docs/architecture'),
       '--format', 'interactive', '--out', join(stage, 'architecture'), '--title', 'Lighthouse',
     ];
-    const sourceRef = process.env.GITHUB_SHA || process.env.GITHUB_REF_NAME;
-    if (sourceRef) architectureArgs.push('--source-ref', sourceRef);
+    const sourceRef = (await execFile('git', ['rev-parse', 'HEAD'], { cwd: root })).stdout.trim();
+    architectureArgs.push('--source-ref', sourceRef);
+    // Renderer source links must not depend on a cloud checkout's private or missing origin.
+    const sourceConfig = join(stage, '.source-gitconfig');
+    await writeFile(sourceConfig, `[remote "origin"]\nurl = https://github.com/juangcarmona/lighthouse.git\n[safe]\ndirectory = ${JSON.stringify(root)}\n`);
     try {
       await execFile(npx, architectureArgs, {
         cwd: root,
-        env: { ...process.env, GITHUB_ACTIONS: process.env.GITHUB_ACTIONS ?? 'true' },
+        env: { ...process.env, GITHUB_ACTIONS: process.env.GITHUB_ACTIONS ?? 'true', GIT_CONFIG_GLOBAL: sourceConfig },
       });
     } catch (error) {
       throw new Error(`ArcShape snapshot generation failed before public-site publication. ${authorityHint('ArcShape')}\n${error.stderr ?? error.message}`);
-    }
+    } finally { await rm(sourceConfig, { force: true }); }
   }
 
   await rm(output, { recursive: true, force: true });
