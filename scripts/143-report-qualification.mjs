@@ -5,7 +5,7 @@ import { digest } from '../src/packages/sdlc/src/host-contract.mjs';
 import { classifyTechnicalFailure } from '../src/packages/sdlc/src/worker-recovery.mjs';
 import { dispatchDeliveryChecks, ciFailureSummary } from '../src/packages/sdlc/src/delivery-events.mjs';
 const env=process.env, repo=env.GITHUB_REPOSITORY, owner=env.GITHUB_REPOSITORY_OWNER;
-const index=366, source='37e91a0', retained=[], writes=[];
+const index=366, source='c10969724e4add835f7f7bf4bb5f5bb62908e6d3', retained=[], writes=[];
 await mkdir('qualification', {recursive:true});
 const api=async(path, method='GET', body, optional=false)=>{
  const response=await fetch(`https://api.github.com/repos/${repo}${path?'/'+path:''}`,{method,headers:{authorization:`Bearer ${env.GH_TOKEN}`,accept:'application/vnd.github+json','content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
