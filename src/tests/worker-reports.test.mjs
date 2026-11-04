@@ -118,6 +118,9 @@ test('exhaustion and exact retry delay have concrete actions; uncertain successf
   assert.equal(f.issues.length, 3);
   assert.match(f.issues[2].body, /execution outcome: completed/);
   assert.doesNotMatch(f.issues[2].body, /Recovery confirmed/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'succeeded', code: 'worker-completed' }]);
+  assert.equal(f.issues[2].state, 'open', 'worker success cannot resolve an unknown CI send');
+  assert.equal(readReport(f.issues[2], repo, 'implement', 'ci-launch-failure').contexts[0].state, 'uncertain');
   await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-requested' }]);
   assert.equal(f.issues[2].state, 'open');
   await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-observed' }]);

@@ -111,6 +111,7 @@ export function mergeObservations(repository, previous, observations) {
   for (const o of normalized) {
     if (o.worker !== previous.worker || ![...entries.values()].some(entry => entry.rootId === o.rootId)) continue;
     const prior = contexts.get(o.rootId);
+    if (o.context.code === 'worker-completed' && previous.code === 'ci-launch-failure') continue;
     if (prior && (o.context.attempt < prior.attempt || o.context.runId && prior.runId && BigInt(o.context.runId) < BigInt(prior.runId))) continue;
     if (recoveredRoots.has(o.rootId) && !['succeeded', 'reconciled', 'observed', 'waiting-human', 'active'].includes(o.context.state)) continue;
     contexts.set(o.rootId, o.context);
