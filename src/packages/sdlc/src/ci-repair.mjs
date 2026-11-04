@@ -92,6 +92,7 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
     if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || !comment.body.includes('<!-- lighthouse-dispatch:')) continue;
     const receipt = readDispatchReceipt(comment, repository, review.issue);
     if (receipt.worker !== 'apply-review') continue;
+    if (!receipt.workerRunId && receipt.feedbackKey === ciRepairKey(review)) return null;
     if (!receipt.workerRunId) return stop('A correction dispatch has no confirmed worker. Maintainer: reconcile the original request before any new effect.');
     const worker = await api(`actions/runs/${receipt.workerRunId}`);
     let prior;

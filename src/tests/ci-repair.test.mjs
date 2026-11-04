@@ -255,3 +255,13 @@ test('an admitted requester issue retains its authenticated implementation grant
   state.issue.user.login = 'requester';
   assert.equal((await call()).worker, 'apply-review');
 });
+
+
+test('simultaneous CI signals coalesce while the matching dispatch is still awaiting admission', async () => {
+  const { state, call } = fixture();
+  const route = await call();
+  const key = ciRepairKey(route.implementationReview);
+  const receipt = { schemaVersion: 1, stage: 'implement', worker: 'apply-review', feedbackKey: key, status: 'requested', id: (await import('../packages/sdlc/src/stage-dispatch.mjs')).dispatchId(repository, key, 'implement'), digest: 'e'.repeat(64), routerRunId: 12, routerAttempt: 1, workerRunId: null };
+  state.comments.push({ id: 100, issue_url: `https://api.github.com/repos/${repository}/issues/47`, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` });
+  assert.equal(await call(), null);
+});
