@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "correctedNativeAcceptance": "pending updated workflow pin",
-  "archiveSha256": "1c26cfc1c8109d38ba5557691081377992ae895bb36fd20eca22a21420b7c844",
+  "correctedNativeAcceptance": {"run":"https://github.com/juangcarmona/lighthouse/actions/runs/41924359951","workflow":"success","stage":"passed","execution":"passed","cleanup":"clean","ownedResources":9,"independentInventory":"empty by owner label and planned name","harnessRevision":"b615468bd3330802c71c08b87d241d4d0c2a51b3"},
+  "archiveSha256": "1aff6a725154da5ccfcc08e209d74e081254f177df9536f10ce8fc58b6fbfdf4",
   "qualifiedImage": "sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c",
   "testedSourceSha256": {"src/packages/sdlc/src/execution-cleanup.mjs":"368971c583cea06e9be0978ccc0c4bada703eb51b71c264a58d0a6a722e01d1c","src/packages/sdlc/src/opencode-execute.mjs":"4b340492c78b8c410a7b1a95c747c35cc3fe68a64dae21c395106833d1a5586b","src/packages/sdlc/src/implementation-runtime.mjs":"53e29abbfff5eb1cdf67f737be9b59f708bdeb6f6112855989b0ebe6701ecf34","src/packages/sdlc/src/codegraph-runtime.mjs":"f20900984ac7211b446aa79f1b1d288a27894b855cc5fc70ec7f635888894039","src/tests/execution-cleanup.integration.test.mjs":"18539ae8a45cf2a4efd61e6be7fdf69959d16a346d36817751da58d044722865"},
   "faultMatrix": [
