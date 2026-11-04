@@ -50,7 +50,7 @@ if (publicSiteEnabled) {
   if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
     throw new Error('Published ArcShape snapshot is missing or stale.');
   }
-  if (!/https:\/\/github\.com\/juangcarmona\/lighthouse\/blob\/[a-f0-9]{40}\/src\/packages\/sdlc\/README\.md/.test(architectureSnapshot)) {
+  if (!/<a\b[^>]*\bhref="https:\/\/github\.com\/juangcarmona\/lighthouse\/blob\/[a-f0-9]{40}\/src\/packages\/sdlc\/README\.md"/.test(architectureSnapshot)) {
     throw new Error('Published architecture is missing commit-pinned executable source links.');
   }
   const diagramRoot = join(output, 'architecture/diagrams');
