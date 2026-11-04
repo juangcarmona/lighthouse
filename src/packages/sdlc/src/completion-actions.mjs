@@ -1,3 +1,4 @@
+import { harnessIdentity } from './harness-identity.mjs';
 import { admitDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection, issueComments } from './stage-dispatch.mjs';
 import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -50,7 +51,7 @@ async function main(command) {
     if (!completion.merged) assertChecks(completion);
     const postMerge = completion.merged ? await postMergeRuns(api, completion, completion.merge) : [];
     const id = fingerprint({ repository, stage, issue: authorization.issue, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT });
-    const request = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(dispatch ? { dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, dispatchOrigin: { request: dispatch.request, receipt: dispatch.receipt } } : {}), runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), harnessRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge };
+    const request = { ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(dispatch ? { dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, dispatchOrigin: { request: dispatch.request, receipt: dispatch.receipt } } : {}), runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), ...await harnessIdentity(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge };
     if (stage === 'integrate' && authorization.merge && !completion.merged) await preflightProcessPublication(api, { ...request, completion: { ...completion, merged: true } });
     request.priorIntegration = priorIntegration;
     request.priorPlanningReview = priorPlanningReview;

@@ -13,6 +13,7 @@ import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs
 import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
 import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
+import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
 
 export function completionOutput(envelope, request) {
@@ -98,8 +99,7 @@ async function main() {
   await mkdir(source); await mkdir(output); await chmod(output, 0o777);
   let name;
   const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-  const pkg = JSON.parse(await readFile(join(harness, 'package.json'), 'utf8'));
-  const runtimeReceipt = { package: { name: pkg.name, version: pkg.version }, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
+  const runtimeReceipt = { ...await harnessIdentity(harness), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
   let phase = 'preflight', evidenceRetained = false;
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });

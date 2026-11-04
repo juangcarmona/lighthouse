@@ -1,3 +1,4 @@
+import { harnessIdentity } from './harness-identity.mjs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -281,7 +282,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         });
         const finalObservation = { ...observation, merged: true, merge: result.sha };
         const request = { runId, issue: issueNumber, stage: 'integrate', title: issue.title, observedAt: new Date().toISOString(), workflowRunId: env.GITHUB_RUN_ID,
-          attempt: env.GITHUB_RUN_ATTEMPT, runUrl, harnessRevision: execFileSync('git', ['-C', harness, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), completion: finalObservation };
+          attempt: env.GITHUB_RUN_ATTEMPT, runUrl, ...await harnessIdentity(harness), completion: finalObservation };
         const envelope = stageContext({ ...request, runId }, issue).contract.envelope;
         envelope.result.evidence = [{ id: 'independent-review:' + lastReview.binding, status: 'passed', source: runUrl }];
         envelope.result.output = { review: lastReview };
