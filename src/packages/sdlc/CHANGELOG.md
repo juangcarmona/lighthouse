@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.5
+
+### Patch Changes
+
+- 674f14e: # Reconcile interrupted workers
+
+  Reconcile interrupted delivery from retained effects and preserve CI correction budgets through linked technical retries.
+
+- 46380c9: # Trusted validation and CI correction
+
+  Validate proposal and candidate Markdown before publication. Add opt-in, issue-scoped CI correction through the existing same-PR worker, with a two-attempt budget and authenticated original implementation authority.
+
 ## 0.20.4
 
 ### Patch Changes
