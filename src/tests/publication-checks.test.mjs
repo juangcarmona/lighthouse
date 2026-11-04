@@ -24,3 +24,11 @@ test('hook-free publication rejects malformed Markdown using the actual pinned a
     await validatePublicationFiles(root, [{ path: 'proposal.md', content: '# Valid proposal\n\n' + 'A complete paragraph. '.repeat(10).trim() + '\n' }]);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('publication preserves an adopter without a declared Markdown style command while still checking links', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'publication-adopter-'));
+  try {
+    await validatePublicationFiles(root, [{ path: 'proposal.md', content: '## Adopter-owned heading\n' }]);
+    await assert.rejects(validatePublicationFiles(root, [{ path: 'proposal.md', content: '[Missing](absent.md)\n' }]), /missing absent/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
