@@ -4,13 +4,15 @@
 
 ## Context
 
-See proposal.md for motivation. This is the initial implementation request, with no predecessor or failed-CI correction diagnostics. Only the fixture and this OpenSpec change directory may change.
+See proposal.md for motivation. The initial implementation remains recorded below. The supplied review for PR #354 reports the intentional paragraph mismatch in CI run 41797814486; the current request authorizes its bounded correction. Only the fixture and this OpenSpec change directory may change.
 
 ## Goals / Non-Goals
 
 **Goals:** Deliver the exact initial fixture, preserve the intentional mismatch, and retain local verification evidence.
 
 **Non-Goals:** Implement the correction router, simulate hosted CI, modify checks, replace the paragraph early, or merge or release the candidate.
+
+For this correction, deliver the final paragraph after the reported CI mismatch, preserve the heading and newline, and rerun the same checks. The initial intermediate-value goals above describe the completed first candidate, not the corrected candidate.
 
 ## Decisions
 
@@ -28,3 +30,5 @@ See proposal.md for motivation. This is the initial implementation request, with
 ## Migration Plan
 
 The host publishes one draft implementation PR containing plan and fixture. Actual CI and its authenticated continuation own the later paragraph-only correction. The candidate remains unmerged and is retired after evidence collection by the responsible host/operator; this implementation performs no publication or retirement.
+
+The current continuation supplies a corrected candidate for that same PR. Local checks cannot establish corrected-head hosted CI or duplicate suppression; those remain host follow-up evidence.

@@ -12,6 +12,12 @@
 - [x] 2.1 Run the unchanged dependency installation, repository verification and ProductShape citation checks; retain completed command receipts and logs and confirm only allowed paths changed.
 - [x] 2.2 Deliver the implementation envelope and concise retrospective; explicitly distinguish local evidence from the later hosted acceptance experiment.
 
+## 3. Bounded CI correction
+
+- [x] 3.1 Replace only the fixture paragraph with the final issue-authorized text after the supplied CI mismatch; verify the complete file bytes with a read-only assertion.
+- [x] 3.2 Rerun all four unchanged configured checks; retain completed receipts and logs and verify the diff stays within the fixture and this plan.
+- [x] 3.3 Record the correction result and retrospective, separating local verification from hosted acceptance and leaving publication to the trusted host.
+
 ## Workflow follow-up
 
 - The trusted host publishes the initial candidate as one draft PR; no merge or deployment is authorized.

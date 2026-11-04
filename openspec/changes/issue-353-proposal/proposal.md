@@ -12,6 +12,8 @@ Issue #353 needs a disposable candidate to exercise the existing #311 failed-CI 
 - Include this plan in the same implementation candidate.
 - Leave the later paragraph replacement to the separately dispatched correction of the same PR.
 
+The initial candidate is now PR #354, and supplied CI run 41797814486 reports the expected paragraph mismatch. This bounded correction replaces only that paragraph with `The current candidate passed its bounded CI correction.` and refreshes local evidence without changing validation or authorizing merge.
+
 ## Capabilities
 
 ### New Capabilities
