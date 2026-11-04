@@ -31,6 +31,7 @@ runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
+  LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
   LIGHTHOUSE_STAGE: triage
   LIGHTHOUSE_DISPATCH_REQUIRED: "true"
 permissions:
@@ -69,7 +70,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: fb02d02c11efdd9d9ac4f503b08569466e2663cb
+      ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -121,7 +122,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: fb02d02c11efdd9d9ac4f503b08569466e2663cb
+          ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -165,7 +166,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: fb02d02c11efdd9d9ac4f503b08569466e2663cb
+          ref: 674f14ee1d175974d6fd1fae10aaf9a508c81266
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
