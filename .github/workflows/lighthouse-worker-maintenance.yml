@@ -62,6 +62,8 @@ jobs:
         with:
           name: ci-diagnostic
           path: qualification
+      - name: Run reporter and diagnostic regressions on the qualified runtime
+        run: node --test src/tests/worker-reports.test.mjs src/tests/delivery-events.test.mjs src/tests/publication-recovery.test.mjs src/tests/worker-recovery.test.mjs
       - run: node scripts/143-report-qualification.mjs
         env:
           GH_TOKEN: ${{ github.token }}

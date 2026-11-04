@@ -34,14 +34,20 @@ const runs=[];
 for(const id of ids){
  const run=await api(`actions/runs/${id}`), jobs=await api(`actions/runs/${id}/jobs?per_page=100`);
  assert.equal(run.repository.full_name,repo);assert.equal(run.actor.login,owner);assert.equal(run.triggering_actor.login,owner);
- assert.equal(run.path,current.path);assert.equal(run.head_sha,'71b97d0ad1adaab49cd58d82a7b31f03488ce2d7');assert.equal(run.event,'workflow_dispatch');assert.equal(run.run_attempt,1);assert.equal(run.status,'completed');
+ assert.equal(run.path,current.path);assert.equal(run.head_sha,current.head_sha);assert.equal(run.event,'workflow_dispatch');assert.equal(run.run_attempt,1);assert.equal(run.status,'completed');
  assert.equal(jobs.total_count,jobs.jobs.length);
  const expected=runs.length===3?'success':'failure';assert.equal(run.conclusion,expected);
  assert.equal(jobs.jobs.find(j=>j.name==='agent').conclusion,expected);
  if(expected==='failure')assert.equal(classifyTechnicalFailure({run,jobs:jobs.jobs,evidence:{result:'absent'}}),'short-run');
  runs.push(run);retained.push({run,jobs});
 }
-const root=digest(`${repo}:${index}:controlled-report-chain`), rows=runs.slice(0,3).map((run,attempt)=>({issue:index,worker:'refine',runId:String(run.id),rootId:root,attempt,state:attempt===2?'exhausted':'retryable',code:'worker-technical-failure',outcome:'technical-failure'}));
+const root=digest(`${repo}:${index}:controlled-report-chain:${ids[0]}`), rows=runs.slice(0,3).map((run,attempt)=>({issue:index,worker:'refine',runId:String(run.id),rootId:root,attempt,state:attempt===2?'exhausted':'retryable',code:'worker-technical-failure',outcome:'technical-failure'}));
+const oldReport=(await api('issues?state=all&per_page=100')).find(issue=>issue.user?.login==='github-actions[bot]'&&issue.body?.includes(`\"signature\":\"${digest(`${repo}:refine:worker-technical-failure`)}\"`));
+const baseline=oldReport?readReport(oldReport,repo,'refine','worker-technical-failure').entries.length:0;
+if(oldReport){
+ const old=readReport(oldReport,repo,'refine','worker-technical-failure');assert.ok(old.entries.every(entry=>entry.issue===index));
+ await publishReports(api,repo,owner,index,[...new Set(old.entries.map(entry=>entry.rootId))].map(rootId=>({issue:index,worker:'refine',rootId,runId:String(runs[3].id),attempt:2,state:'succeeded',code:'worker-completed',outcome:'completed'})));
+}
 const captures=[]; let reportNumber;
 
 const snapshot=async(label)=>{const issue=await api(`issues/${reportNumber}`);assert.ok(issue);captures.push({label,issue});return issue;};
@@ -49,22 +55,22 @@ let lost=true;
 const loseCreate=async(...args)=>{const result=await api(...args);if(args[0]==='issues'&&args[1]==='POST'&&lost){lost=false;throw Error('Injected lost create response after confirmed native POST');}return result;};
 const indexBefore=await api(`issues/${index}`);
 const existing=(await api('issues?state=all&per_page=100')).filter(issue=>issue.user?.login==='github-actions[bot]'&&issue.body?.includes(`\"rootId\":\"${root}\"`));
-if(!existing.length)await assert.rejects(publishReports(loseCreate,repo,owner,index,rows.slice(0,1)),/Injected/);
+if(!oldReport&&!existing.length)await assert.rejects(publishReports(loseCreate,repo,owner,index,rows.slice(0,1)),/Injected/);
 const published=await publishReports(api,repo,owner,index,rows);reportNumber=published.find(row=>row.signature===digest(`${repo}:refine:worker-technical-failure`)).number;
-let reportIssue=await snapshot('three-failures-exhausted');let report=readReport(reportIssue,repo,'refine','worker-technical-failure');assert.equal(report.entries.length,3);assert.match(reportIssue.body,/Owner: retry budget exhausted/);
+let reportIssue=await snapshot('three-failures-exhausted');let report=readReport(reportIssue,repo,'refine','worker-technical-failure');assert.equal(report.entries.length,baseline+3);assert.match(reportIssue.body,/Owner: retry budget exhausted/);
 const count=writes.length;await publishReports(api,repo,owner,index,rows);assert.equal(writes.length,count);
 const state=(state,code)=>({...rows[2],runId:String(runs[3].id),state,code,outcome:state==='waiting-human'?'question':state==='active'?'active':'completed'});
-for(const [status,code] of [['active','worker-active'],['waiting-human','human-decision']]){await publishReports(api,repo,owner,index,[state(status,code)]);reportIssue=await snapshot(status);assert.equal(readReport(reportIssue,repo,'refine','worker-technical-failure').entries.length,3);assert.equal(reportIssue.state,'open');}
+for(const [status,code] of [['active','worker-active'],['waiting-human','human-decision']]){await publishReports(api,repo,owner,index,[state(status,code)]);reportIssue=await snapshot(status);assert.equal(readReport(reportIssue,repo,'refine','worker-technical-failure').entries.length,baseline+3);assert.equal(reportIssue.state,'open');}
 await publishReports(api,repo,owner,index,[state('succeeded','worker-completed')]);reportIssue=await snapshot('confirmed-success');assert.equal(reportIssue.state,'closed');
 const recurrence={...rows[0],rootId:digest(`${root}:recurrence`),runId:String(runs[4].id)};
 let loseUpdate=true;
 const lostUpdate=async(...args)=>{const result=await api(...args);if(args[0]===`issues/${reportIssue.number}`&&args[1]==='PATCH'&&loseUpdate){loseUpdate=false;throw Error('Injected lost update response after confirmed PATCH');}return result;};
 await assert.rejects(publishReports(lostUpdate,repo,owner,index,[recurrence]),/Injected/);
-await publishReports(api,repo,owner,index,[recurrence]);reportIssue=await snapshot('recurrence');assert.equal(reportIssue.state,'open');assert.equal(readReport(reportIssue,repo,'refine','worker-technical-failure').entries.length,4);
+await publishReports(api,repo,owner,index,[recurrence]);reportIssue=await snapshot('recurrence');assert.equal(reportIssue.state,'open');assert.equal(readReport(reportIssue,repo,'refine','worker-technical-failure').entries.length,baseline+4);
 assert.ok(writes.filter(w=>w.path==='issues'&&w.method==='POST').length<=1);
 assert.equal((await api('issues?state=all&per_page=100')).filter(issue=>issue.user?.login==='github-actions[bot]'&&issue.body?.includes(`\"signature\":\"${digest(`${repo}:refine:worker-technical-failure`)}\"`)).length,1);
 const diagnostic=JSON.parse(await readFile('qualification/ci-diagnostic.json','utf8'));
 await publishReports(api,repo,owner,index,[{issue:index,worker:'implement',rootId:digest(`${root}:ci`),runId:env.GITHUB_RUN_ID,attempt:0,state:'uncertain',code:'ci-start-unconfirmed',outcome:'completed',pr:diagnostic.failure.pr,head:diagnostic.failure.head}]);
-await writeFile('qualification/lifecycle.json',JSON.stringify({source,root,index,report:reportIssue.number,fixtureRetryOrdinals:true,originalLostResponseRun:41840223306,fixtureRevision:runs[0].head_sha,qualificationRevision:current.head_sha,actualRetryAdmission:false,captures,writes,diagnostic},null,2));
+await writeFile('qualification/lifecycle.json',JSON.stringify({source,root,index,report:reportIssue.number,baseline,fixtureRetryOrdinals:true,originalLostResponseRun:41840223306,fixtureRevision:runs[0].head_sha,qualificationRevision:current.head_sha,actualRetryAdmission:false,captures,writes,diagnostic},null,2));
 await writeFile('qualification/native-runs.json',JSON.stringify(retained));
 console.log(JSON.stringify({index,report:reportIssue.number,failures:3,recovery:'confirmed native success in fixture chain',recurrence:4,lostCreatePosts:1}));
