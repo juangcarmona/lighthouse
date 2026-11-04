@@ -7,6 +7,12 @@ export async function completionSource(api, repository, event, env = {}) {
   if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;
   const run = await api(`actions/runs/${event.workflow_run.id}`);
   if (run.status !== 'completed' || run.head_sha !== event.workflow_run.head_sha || run.repository?.full_name !== repository) return null;
+  if (event.completionRecovery) {
+    const origin = await api(`actions/runs/${event.completionRecovery.maintenance}`);
+    const verified = await (await import('./completion-recovery.mjs')).recoveredCompletionEvent(api, repository, repository.split('/')[0], origin, event.completionRecovery.issue);
+    if (verified.workflow_run.id !== run.id || JSON.stringify(verified.completionRecovery) !== JSON.stringify(event.completionRecovery)) throw Error('Recovered completion source changed');
+    return 'checks';
+  }
   const parent = ['triage', 'refine', 'propose', 'implement', 'apply-review'].some(worker => run.path === stagePath(worker));
   if (run.conclusion === 'success' && (run.path === stagePath('refine') || env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' && (parent || ['product-change', 'apply-product-change'].some(worker => run.path === stagePath(worker))))) return 'stage';
   const metadata = await api('');

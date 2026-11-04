@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deliveryAfterChecks, dispatchDeliveryChecks } from '../packages/sdlc/src/delivery-events.mjs';
+import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource } from '../packages/sdlc/src/delivery-events.mjs';
 
 const head = 'a'.repeat(40), merge = 'c'.repeat(40), repository = 'owner/repo';
 const pr = { number: 60, state: 'open', merged: false, draft: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/implement-47-${'b'.repeat(12)}`, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${'b'.repeat(64)} -->`, merge_commit_sha: merge };
@@ -98,4 +98,11 @@ test('reconciling an earlier uncertain CI request preserves later workflow delay
   };
   await assert.rejects(dispatchDeliveryChecks(api, head, pr, { now, previous, checkpoint: async value => { saved = structuredClone(value); } }), /unconfirmed/);
   assert.deepEqual(saved[1], previous[1]);
+});
+
+
+test('recovered completion source requires its actual native maintenance proof', async () => {
+  const event = { action: 'completed', workflow_run: { id: 123, head_sha: head }, completionRecovery: { maintenance: 300, issue: 47 } };
+  const api = async path => path === 'actions/runs/123' ? { id: 123, head_sha: head, status: 'completed', repository: { full_name: repository } } : { id: 300, actor: { login: 'other' } };
+  await assert.rejects(completionSource(api, repository, event), /owner maintenance origin/);
 });
