@@ -13,7 +13,10 @@ function fixture() {
   const run = args => {
     calls.push(args);
     if (control.unavailable) throw Error('Runtime unavailable');
-    if (args[1] === 'ls') return resources.filter(row => row.type === args[0]).map(row => row.id).join('\n');
+    if (args[1] === 'ls') {
+      const filter = args[args.indexOf('--filter') + 1];
+      return resources.filter(row => row.type === args[0] && (filter.startsWith('name=') ? new RegExp(filter.slice(5)).test(row.name) : filter === 'label=io.lighthouse.execution' ? row.owner : row.owner === filter.split('=').at(-1))).map(row => row.id).join('\n');
+    }
     if (args[1] === 'inspect') {
       const rows = resources.filter(row => row.type === args[0] && args.includes(row.id));
       return (control.incomplete ? rows.slice(1) : rows).map(row => JSON.stringify(row)).join('\n');
@@ -49,7 +52,7 @@ test('cleanup independently inventories owned containers and networks and preser
     const receipt = f.owner.cleanup();
     assert.equal(receipt.status, 'clean'); assert.deepEqual(receipt.remaining, []);
     assert.equal(f.resources.length, 2); assert.ok(f.resources.every(row => row.name.startsWith(other.prefix)));
-    assert.equal(f.calls.filter(args => args[1] === 'ls').length, 4);
+    assert.ok(f.calls.slice(f.calls.findLastIndex(args => args[1] === 'rm') + 1).some(args => args[1] === 'ls'));
     assert.equal(f.owner.cleanup().status, 'clean');
     assert.throws(() => f.owner.prepare(['run', 'image']), /terminated/);
   } finally { f.dispose(); }
@@ -121,5 +124,37 @@ test('a previous clean receipt cannot hide a late resource or authorize deleting
     assert.throws(() => recoverExecutionOwners(f.directory, { run: f.run }), /active/);
     assert.equal(recoverExecutionOwners(f.directory, { run: f.run, isStopped: () => true })[0].status, 'clean');
     assert.ok(args.includes('--name'));
+  } finally { f.dispose(); }
+});
+test('phase cleanup refuses a substituted owner before the Docker removal, including networks', () => {
+  for (const type of ['container', 'network']) {
+    const f = fixture();
+    try {
+      f.allocate(type); const resource = f.resources[0]; resource.owner = 'b'.repeat(64);
+      assert.throws(() => f.owner.prepare(type === 'container' ? ['rm', '-f', resource.name] : ['network', 'rm', resource.name]), /ownership|inventory/);
+      assert.equal(f.calls.some(args => args[1] === 'rm'), false);
+      assert.throws(() => f.owner.prepare(['run', 'image']), /reconcile/);
+      assert.equal(f.resources.length, 1);
+    } finally { f.dispose(); }
+  }
+});
+test('phase removal resolves checked ownership to immutable IDs and handles confirmed absence', () => {
+  const f = fixture();
+  try {
+    f.allocate(); const resource = f.resources[0];
+    assert.deepEqual(f.owner.prepare(['rm', '-f', resource.name, `${f.owner.prefix}-never-created`]), ['rm', '-f', resource.id]);
+    f.resources.length = 0;
+    assert.deepEqual(f.owner.prepare(['rm', '-f', resource.name]), []);
+  } finally { f.dispose(); }
+});
+test('a phase no-op removal prevents another allocation until owned absence is observed', () => {
+  const f = fixture();
+  try {
+    f.allocate(); const args = ['rm', '-f', f.resources[0].name];
+    f.owner.prepare(args);
+    assert.throws(() => f.owner.removed(args), /not verified absent/);
+    assert.throws(() => f.owner.prepare(['run', 'image']), /reconcile/);
+    f.resources.length = 0; assert.doesNotThrow(() => f.owner.removed(args));
+    assert.equal(f.owner.cleanup().status, 'clean');
   } finally { f.dispose(); }
 });

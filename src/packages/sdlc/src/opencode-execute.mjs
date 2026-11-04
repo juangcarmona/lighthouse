@@ -262,7 +262,7 @@ async function main() {
   } finally {
     clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
     try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
-    stopCodegraph(codegraph?.sidecar);
+    stopCodegraph(codegraph?.sidecar, config);
     runtime?.cleanup();
     try { if (config.resourceOwner) docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     // Read-only stages also create engine-owned command receipt directories.

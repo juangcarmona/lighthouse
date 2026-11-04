@@ -24,10 +24,17 @@ function persist(path, value) {
   renameSync(staging, path);
   const directory = openSync(dirname(path), 'r'); try { fsyncSync(directory); } finally { closeSync(directory); }
 }
-function inventory(run) {
+function inventory(run, key = null) {
+  // Scope observations to owned labels and planned-name prefixes; unrelated container churn is not an incomplete owned inventory.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try { return readInventory(run, key); } catch (error) { if (attempt === 1) throw error; }
+  }
+}
+function readInventory(run, key) {
   const result = [];
   for (const type of ['container', 'network']) {
-    const ids = run(type === 'container' ? ['container', 'ls', '-aq', '--no-trunc'] : ['network', 'ls', '-q', '--no-trunc']).trim().split(/\s+/).filter(Boolean);
+    const filters = key ? [`label=${label}=${key}`, `name=^/?lighthouse-${key.slice(0, 24)}-`] : [`label=${label}`];
+    const ids = [...new Set(filters.flatMap(filter => run([...(type === 'container' ? ['container', 'ls', '-aq', '--no-trunc'] : ['network', 'ls', '-q', '--no-trunc']), '--filter', filter]).trim().split(/\s+/).filter(Boolean)))];
     if (ids.length > 1024 || ids.some(id => !/^[a-f0-9]{64}$/.test(id))) throw Error('Runtime inventory is incomplete');
     if (!ids.length) continue;
     const format = `{"id":{{json .Id}},"name":{{json .Name}},"owner":{{json (index ${type === 'container' ? '.Config.Labels' : '.Labels'} "${label}")}}}`;
@@ -46,9 +53,24 @@ function openOwner(path, record, run) {
   return {
     prefix,
     prepare(args) {
+      const removing = args[0] === 'rm' || args[0] === 'container' && args[1] === 'rm' ? 'container' : args[0] === 'network' && args[1] === 'rm' ? 'network' : null;
+      if (removing) {
+        try {
+          const start = args[0] === 'rm' ? 1 : 2, flags = args.slice(start).filter(arg => arg.startsWith('-')), targets = args.slice(start).filter(arg => !arg.startsWith('-'));
+          if (!targets.length || flags.some(flag => !['-f', '--force', '-v', '--volumes'].includes(flag))) throw Error('Unsupported scoped removal');
+          const present = inventory(run, record.key).filter(row => row.type === removing && targets.some(target => row.name === target || row.id === target));
+          if (present.some(row => row.owner !== record.key || !record.resources.some(item => item.type === row.type && item.name === row.name))) throw Error('Resource ownership mismatch');
+          for (const row of present) record.resources.find(item => item.type === row.type && item.name === row.name).pending = false;
+          persist(path, record);
+          return present.length ? [...args.slice(0, start), ...flags, ...new Set(present.map(row => row.id))] : [];
+        } catch {
+          record.removalBlocked = true; persist(path, record);
+          throw Error('Resource ownership or inventory is unknown; reconcile before removal or another allocation');
+        }
+      }
       const type = args[0] === 'run' ? 'container' : args[0] === 'network' && args[1] === 'create' ? 'network' : null;
       if (!type) return args;
-      if (record.cleanup) throw Error('Execution resources already terminated; reconcile before another allocation');
+      if (record.cleanup || record.removalBlocked) throw Error('Execution resources already terminated or uncertain; reconcile before another allocation');
       const nameIndex = args.indexOf('--name');
       const name = type === 'network' ? args.at(-1) : nameIndex >= 0 ? args[nameIndex + 1] : `${prefix}-helper-${record.resources.length}`;
       const resource = { type, name, pending: true };
@@ -65,8 +87,17 @@ function openOwner(path, record, run) {
       const resource = record.resources.find(item => item.name === name);
       if (resource) { resource.pending = false; persist(path, record); }
     },
+    removed(args) {
+      const type = args[0] === 'network' ? 'network' : 'container';
+      try {
+        if (inventory(run, record.key).some(row => row.type === type && (args.includes(row.name) || args.includes(row.id)))) throw Error('Resource remains after removal');
+      } catch {
+        record.removalBlocked = true; persist(path, record);
+        throw Error('Phase cleanup is not verified absent; reconcile before another allocation');
+      }
+    },
     observe() {
-      for (const row of inventory(run)) {
+      for (const row of inventory(run, record.key)) {
         const resource = record.resources.find(item => item.type === row.type && item.name === row.name);
         if (resource && row.owner === record.key) resource.pending = false;
       }
@@ -75,7 +106,7 @@ function openOwner(path, record, run) {
     cleanup() {
       const receipt = { schemaVersion: 1, identity: record.identity, owner: record.key, observedAt: new Date().toISOString(), status: 'unknown', resources: record.resources, remaining: [], removalErrors: 0 };
       try {
-        const before = inventory(run);
+        const before = inventory(run, record.key);
         const owned = before.filter(row => row.owner === record.key || record.resources.some(item => item.type === row.type && item.name === row.name));
         if (owned.some(row => row.owner !== record.key || !record.resources.some(item => item.type === row.type && item.name === row.name))) throw Error('Resource ownership mismatch');
         for (const row of owned) record.resources.find(item => item.type === row.type && item.name === row.name).pending = false;
@@ -84,7 +115,7 @@ function openOwner(path, record, run) {
           try { run(resource.type === 'container' ? ['container', 'rm', '-f', '-v', resource.id] : ['network', 'rm', resource.id]); }
           catch { receipt.removalErrors++; }
         }
-        receipt.remaining = inventory(run).filter(row => row.owner === record.key || record.resources.some(item => item.type === row.type && item.name === row.name)).map(({ type, id, name }) => ({ type, id, name }));
+        receipt.remaining = inventory(run, record.key).filter(row => row.owner === record.key || record.resources.some(item => item.type === row.type && item.name === row.name)).map(({ type, id, name }) => ({ type, id, name }));
         receipt.status = receipt.remaining.length ? 'failed' : record.resources.some(item => item.pending) ? 'unknown' : 'clean';
         if (receipt.status === 'unknown') receipt.action = 'A create acknowledgement was lost and the resource was never observed; reconcile the owning runtime before another allocation.';
       } catch { receipt.action = 'Restore runtime inventory and verify this execution ownership before retrying; never prune shared resources.'; }
@@ -126,11 +157,16 @@ export function recoverExecutionOwners(directory, { run = docker, isStopped = st
 export const ownedDockerArgs = (config, args) => config.resourceOwner?.prepare(args) ?? args;
 export function runOwnedDocker(config, args, options = {}) {
   const owned = ownedDockerArgs(config, args);
+  if (!owned.length) return options.encoding ? '' : Buffer.alloc(0);
+  const removing = config.resourceOwner && (args[0] === 'rm' || ['container', 'network'].includes(args[0]) && args[1] === 'rm');
+  let result;
   try {
-    const result = execFileSync('docker', owned, options);
-    config.resourceOwner?.completed(owned); return result;
+    result = execFileSync('docker', owned, options);
   } catch (error) {
+    if (removing) { config.resourceOwner.removed(args); return options.encoding ? '' : Buffer.alloc(0); }
     if (Number.isInteger(error.status) && ![125, 126, 127].includes(error.status)) config.resourceOwner?.completed(owned);
     throw error;
   }
+  if (removing) config.resourceOwner.removed(args);
+  config.resourceOwner?.completed(owned); return result;
 }
