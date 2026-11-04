@@ -1,260 +1,109 @@
 name: Lighthouse worker maintenance
+run-name: '#143 report acceptance · ${{ inputs.mode }}'
 on:
-  schedule:
-    - cron: '17,47 * * * *'
   workflow_dispatch:
     inputs:
-      issue:
-        description: Optional source issue; empty scans open owner issues
-        required: false
-        type: string
-      recovery_pr:
-        description: Draft Product Change PR to revalidate and republish after source URL formatting repair
-        required: false
-        type: string
-      expected_head:
-        description: Full current PR head required for explicit publication recovery
-        required: false
+      mode:
+        required: true
+        type: choice
+        options: [failure, success, report, observe]
+      runs:
+        description: Five native run IDs, in fixture order
         type: string
 permissions:
   contents: read
-env:
-  LIGHTHOUSE_MAINTENANCE_ENABLED: ${{ vars.LIGHTHOUSE_MAINTENANCE_ENABLED }}
-  LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
-  LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
-  recover-product-publication:
-    if: github.event_name == 'workflow_dispatch' && inputs.recovery_pr != '' && github.actor == github.repository_owner
-    concurrency:
-      group: lighthouse-issue-${{ inputs.issue }}
-      cancel-in-progress: false
-      queue: max
+  fault:
+    if: inputs.mode == 'failure' || inputs.mode == 'success'
+    name: agent
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Controlled pre-engine outcome
+        env:
+          MODE: ${{ inputs.mode }}
+        run: test "$MODE" = success
+  diagnostic:
+    if: inputs.mode == 'report'
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          path: source
-          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - run: npm ci --ignore-scripts
-      - run: npm install --no-save --package-lock=false --ignore-scripts @prodshape/integration-openspec@0.6.6
-      - run: npm ci --ignore-scripts
-        working-directory: source
-      - run: npx --no-install puppeteer browsers install chrome
-        working-directory: source
-      - run: node --test src/tests/product-change-files.test.mjs src/tests/product-change-publication.test.mjs
-      - name: Revalidate editorial repair and republish for a new product decision
+      - run: node scripts/143-report-qualification.mjs
         env:
+          MODE: diagnostic
           GH_TOKEN: ${{ github.token }}
-          RECOVERY_PR: ${{ inputs.recovery_pr }}
-          RECOVERY_HEAD: ${{ inputs.expected_head }}
-        run: node scripts/recover-product-publication.mjs
       - uses: actions/upload-artifact@v7
         with:
-          name: product-publication-recovery-${{ inputs.recovery_pr }}
-          path: recovery-output
-          if-no-files-found: error
-  scan:
-    if: inputs.recovery_pr == '' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && github.actor == github.repository_owner
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      actions: read
-      issues: read
-    outputs:
-      issues: ${{ steps.scan.outputs.issues }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-      - id: scan
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs scan
-  observe:
-    needs: scan
-    if: needs.scan.outputs.issues != '[]'
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        issue: ${{ fromJSON(needs.scan.outputs.issues) }}
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      actions: read
-      checks: read
-      issues: read
-      pull-requests: read
-    env:
-      LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-      - name: Observe workers without changing issue state
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs observe
-      - name: Preserve observations
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: lighthouse-observation-${{ matrix.issue }}
-          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/observations.json
-          retention-days: 14
-          if-no-files-found: error
-  reconcile:
-    needs: scan
-    if: needs.scan.outputs.issues != '[]'
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        issue: ${{ fromJSON(needs.scan.outputs.issues) }}
-    concurrency:
-      group: lighthouse-issue-${{ matrix.issue }}
-      cancel-in-progress: false
-      queue: max
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      actions: write
-      checks: read
-      issues: write
-      pull-requests: write
-    env:
-      LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-      - name: Reconcile and record one bounded retry
-        id: request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs prepare
-      - name: Preserve request before dispatch
-        if: steps.request.outputs.send == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ steps.request.outputs.artifact }}
-          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/dispatch.json
-          retention-days: 14
-          if-no-files-found: error
-      - name: Send the recorded retry once
-        if: steps.request.outputs.send == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs send
-      - name: Preserve verification recovery evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: lighthouse-recovery-effects-${{ matrix.issue }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/ci-recovery.json
-            ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/completion-recovery.json
-          retention-days: 14
-          if-no-files-found: ignore
-      - name: Resume the recovered completion through the router
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs signal-completion
-      - name: Preserve observations
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: lighthouse-maintenance-${{ matrix.issue }}
-          path: ${{ runner.temp }}/lighthouse-maintenance-${{ github.run_id }}-${{ matrix.issue }}/observations.json
-          retention-days: 14
-          if-no-files-found: error
+          name: ci-diagnostic
+          path: qualification
   report:
-    needs: [scan, reconcile]
-    if: always() && needs.scan.result == 'success' && needs.scan.outputs.issues != '[]' && vars.LIGHTHOUSE_REPORT_INDEX_ISSUE != ''
+    needs: diagnostic
+    if: inputs.mode == 'report'
+    runs-on: ubuntu-24.04
     concurrency:
       group: lighthouse-worker-reports
       cancel-in-progress: false
       queue: max
-    runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: read
       issues: write
-    env:
-      LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
-      LIGHTHOUSE_OBSERVED_ISSUES: ${{ needs.scan.outputs.issues }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
-          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
       - uses: actions/download-artifact@v8
         with:
-          pattern: lighthouse-maintenance-*
-          path: ${{ runner.temp }}/worker-observations
-      - name: Reconcile and update worker error reports
+          name: ci-diagnostic
+          path: qualification
+      - run: node scripts/143-report-qualification.mjs
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs report
-  report-stalled:
-    needs: [scan, observe]
-    if: always() && needs.scan.result == 'success' && needs.scan.outputs.issues != '[]' && vars.LIGHTHOUSE_REPORT_INDEX_ISSUE != ''
-    concurrency:
-      group: lighthouse-worker-reports
-      cancel-in-progress: false
-      queue: max
+          FIXTURE_RUNS: ${{ inputs.runs }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: report-lifecycle
+          path: qualification
+          retention-days: 90
+  observe:
+    if: inputs.mode == 'observe'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: read
+      checks: read
       issues: write
-    env:
-      LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
-      LIGHTHOUSE_OBSERVED_ISSUES: ${{ needs.scan.outputs.issues }}
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
-        with:
-          repository: juangcarmona/lighthouse
-          ref: 99a3feb85293ed94bd5939361c5c3a748d74cdaf
-          persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: lighthouse-observation-*
-          path: ${{ runner.temp }}/worker-observations
-      - name: Reconcile and update worker error reports
+      - name: Observe actual existing recovery chains without admitting or dispatching work
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs report
+          LIGHTHOUSE_MAINTENANCE_ENABLED: 'true'
+          LIGHTHOUSE_RECOVERY_ENABLED: 'false'
+          LIGHTHOUSE_MAINTENANCE_ISSUES: '[341,359,362]'
+          LIGHTHOUSE_REPORT_INDEX_ISSUE: '366'
+          LIGHTHOUSE_OBSERVED_ISSUES: '[341,359,362]'
+        run: |
+          for issue in 341 359 362; do
+            LIGHTHOUSE_ISSUE="$issue" node src/packages/sdlc/src/worker-maintenance.mjs observe
+            mkdir -p "$RUNNER_TEMP/worker-observations/lighthouse-observation-$issue"
+            cp "$RUNNER_TEMP/lighthouse-maintenance-$GITHUB_RUN_ID-$issue/observations.json" "$RUNNER_TEMP/worker-observations/lighthouse-observation-$issue/observations.json"
+          done
+          node src/packages/sdlc/src/worker-maintenance.mjs report
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: real-chain-observations
+          path: ${{ runner.temp }}/worker-observations
+          retention-days: 90
