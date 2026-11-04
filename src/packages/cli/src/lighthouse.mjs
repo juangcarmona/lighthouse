@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { access, chmod, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, chmod, lstat, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { constants, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
@@ -823,6 +823,7 @@ async function initializeFromPlan(args, planFile) {
     await writeFile(resolve(root, file), content, { flag: 'wx', mode: file.startsWith('.husky/') ? 0o755 : 0o644 });
     if (file.startsWith('.husky/')) await chmod(resolve(root, file), 0o755);
   }
+  for (const operation of initialization.plan.operations.filter(item => item.content === '')) await writeFile(resolve(root, operation.path), '', { flag: 'wx' });
   await writeUpgradeState(manifest, null, files);
   console.log(`Initialized ${manifest.product} from the semantic plan. Run lighthouse verify.`);
 }
@@ -844,6 +845,13 @@ async function planInitialization(manifest, manifestMissing) {
     const path = resolve(root, directory);
     if (!(await exists(path))) operations.push({ path: `${directory}/`, action: 'create' });
     else if (!(await isDirectory(path))) conflicts.push(`${directory} exists but is not a directory`);
+  }
+  // Bootstrap markers remain user-owned when real content later replaces an empty root.
+  for (const directory of normalizeRepository(manifest.repository).layout) {
+    if (Object.keys(files).some(file => file.startsWith(`${directory}/`))) continue;
+    const target = resolve(root, directory);
+    if (await exists(target) && (!(await lstat(target)).isDirectory() || (await readdir(target)).length)) continue;
+    operations.push({ path: `${directory}/.gitkeep`, action: 'create', content: '' });
   }
   for (const file of Object.keys(files)) {
     if (await exists(resolve(root, file))) conflicts.push(`${file} already exists; refusing to overwrite it`);
@@ -918,6 +926,7 @@ async function initialize(args) {
     await writeFile(resolve(root, file), content, { flag: 'wx', mode: file.startsWith('.husky/') ? 0o755 : 0o644 });
     if (file.startsWith('.husky/')) await chmod(resolve(root, file), 0o755);
   }
+  for (const operation of plan.operations.filter(item => item.content === '')) await writeFile(resolve(root, operation.path), '', { flag: 'wx' });
   await writeUpgradeState(manifest, null, files);
   try {
     const configured = execFileSync('git', ['config', '--get', 'core.hooksPath'], { cwd: root, encoding: 'utf8' }).trim();
