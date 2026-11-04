@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { runUnattended, validateUnattendedPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
 import { stageContext, executeUnattendedStage, applyCandidate, candidateInventory, boundedOpenSpecProvider } from './unattended-runtime.mjs';
-import { sourceFiles, loadImplementation, createImplementationPullRequest } from './implementation.mjs';
+import { loadImplementation, createImplementationPullRequest } from './implementation.mjs';
 import { prepareProposal, proposalRoot } from './proposal.mjs';
 import { resolveModelProfile } from './model-profiles.mjs';
 import { taskDigest } from './issue-actions.mjs';
@@ -13,6 +13,7 @@ import { completionBundle, publishProcessBundle } from './process-publication.mj
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
 import { handoff, pendingQuestion } from './handoff.mjs';
+import { committedSource, verificationIntegrity } from './verification-integrity.mjs';
 
 const harness = fileURLToPath(new URL('../', import.meta.url));
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
@@ -73,8 +74,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   if (pulls.some(pr => pr.head.ref.startsWith('lighthouse/implement-' + issueNumber + '-'))) throw Error('Existing implementation PR needs review rather than a second delivery');
   const root = join(env.RUNNER_TEMP, 'lighthouse-unattended-' + env.GITHUB_RUN_ID);
   await mkdir(root, { recursive: true });
-  const source = await sourceFiles(sourceRoot);
+  const source = await committedSource(sourceRoot, revision);
   const implementation = await loadImplementation(api, issueNumber, owner, revision, metadata.default_branch, route);
+  if (!implementation.policy.verification) throw Error('Unattended delivery requires declared verification inputs, including test entrypoints and transitive scripts');
+  verificationIntegrity(source, source, implementation.policy, issueNumber);
   if (implementation.policy.reviewRequired) throw Error('Implementation policy requires an owner decision');
   if (policy.paths.some(path => !implementation.policy.paths.some(p => p === '*' || (p.endsWith('/') ? path.startsWith(p) : path === p)))) throw Error('Unattended paths exceed implementation authority');
   implementation.policy.paths = [...policy.paths, ...(route === 'ff' ? [proposalRoot(issueNumber) + '/'] : [])];
@@ -139,6 +142,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     const result = await execute({ env, root, request, source: working, context,
       prompt: text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal });
     if (result.runtime.execution?.status !== 'passed') throw Error('Host cannot verify completed model execution');
+    if (stage === 'implement' && (!Array.isArray(result.receipt?.checks) || result.receipt.checks.length !== selectedPolicy.checks.length || result.receipt.checks.some((check, index) => JSON.stringify(check.command) !== JSON.stringify(selectedPolicy.checks[index]) || !Number.isInteger(check.exitCode) || check.exitCode === 0 && check.execution?.status !== 'passed'))) throw Error('Required host check inventory is unavailable or differs from the admitted policy');
     if (worker === 'independent-review' && result.runtime.model !== reviewer.model || stage === 'implement' && result.runtime.model !== producer.model) throw Error('Operator model selection changed during delivery');
     const question = result.envelope.result.status === 'blocked' ? pendingQuestion(result.envelope.result.output?.handoff?.question) : null;
     if (question) { const error = Error(result.envelope.effect.body); error.question = question; throw error; }
@@ -195,7 +199,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       },
       reviewPlan: async details => { const assessment = await review('plan', details, planProducer); if (!assessment.accepted) throw Error('Independent planning review ' + assessment.verdict + ': ' + assessment.findings.join(' ').slice(0, 3000)); },
       reproduce: async plan => {
-        const selected = { ...implementation.policy, paths: policy.hotfix.testPaths, checks: [...policy.hotfix.setupCommands, plan.command] };
+        const selected = { ...implementation.policy, paths: policy.hotfix.testPaths, checks: [...policy.hotfix.setupCommands, plan.command],
+          verification: { paths: [...new Set([...implementation.policy.verification.paths, ...policy.hotfix.testPaths])], corrections: Object.fromEntries(plan.plannedFiles.filter(path => policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)).map(path => [path, 'Author the independently reviewed RED regression before production repair.'])) } };
         const result = await step('implement', 'implement',
           'Reproduce the confirmed defect before repairing production code. Read context.hotfix. Add the smallest regression assertion and relevant edges ONLY in the authorized test paths. Preserve production code. Run the test and capture the identified behavioral failure. Return an implement envelope with output.eligibility and root-cause evidence; expected RED is a blocked Done result, not a claim of completion. The host reruns the command on production code that is unchanged.',
           { hotfix: plan }, selected);
@@ -205,7 +210,9 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         return { ...result, files: inventory.files, tests: testState(working, inventory.files.map(f => f.path)) };
       },
       implement: async ({ plan, red, previous, round }) => {
-        const selected = { ...implementation.policy, checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, plan.command] : []), ...implementation.policy.checks] };
+        const selected = { ...implementation.policy, checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, plan.command] : []), ...implementation.policy.checks],
+          verification: { ...implementation.policy.verification, paths: [...new Set([...implementation.policy.verification.paths, ...(route === 'hotfix' ? policy.hotfix.testPaths : [])])],
+            corrections: Object.fromEntries(Object.entries(implementation.policy.verification.corrections).filter(([path]) => route !== 'hotfix' || !policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix))) } };
         const result = await step('implement', 'implement',
           'Implement only the reviewed bounded plan. Read /input/context.json and /harness/skills/implement/SKILL.md. ' +
           (route === 'hotfix' ? 'Use the compact hotfix plan; a full OpenSpec feature proposal is not required. Preserve the regression test bytes supplied by the RED phase and repair the root cause. ' : 'Use the supplied OpenSpec plan and update completed tasks accurately. ') +
@@ -221,7 +228,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       },
       reviewCandidate: candidate => review('candidate', { refinement: refined, scope: { implementationPaths: policy.paths, planningRoots: route === 'ff' ? [proposalRoot(issueNumber) + '/'] : [] }, changes: candidate.changes,
         originalFiles: Object.fromEntries(candidate.changes.map(c => [c.path, source.get(c.path)?.content.toString('base64') ?? null])),
-        red: candidate.red, checks: candidate.receipt }, lastStep),
+        red: candidate.red, verification: candidate.receipt.verification, checks: candidate.receipt }, lastStep),
       publish: async candidate => {
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);

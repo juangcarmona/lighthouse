@@ -144,6 +144,9 @@ test('retained failures, unavailable commands and truncated output preserve thei
   f.state.artifact.receipt.checks[0].execution.status = 'failed';
   let result = await readImplementationEvidence(f.api, f.completion, f.options);
   assert.equal(result.status, 'failed'); assert.equal(result.checks[0].status, 'failed');
+  f.state.artifact.receipt.checks[0].reason = 'Checks modified source; candidate not validated';
+  f.state.artifact.receipt.checks[0].execution.status = 'passed';
+  assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).checks[0].status, 'failed');
   f.state.artifact.receipt.checks[1].reason = 'Not run after a failed check';
   delete f.state.artifact.receipt.checks[1].output;
   result = await readImplementationEvidence(f.api, f.completion, f.options);
