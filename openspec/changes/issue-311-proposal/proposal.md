@@ -25,7 +25,7 @@ None.
 
 ## Impact
 
-The SDLC publisher and router, repository Markdown link checker, adopted workflow projections and optional completion configuration change. The controlled native acceptance allowlist contains only disposable issue #346. Merge, product approval, interruption retry and resource cleanup authority are unchanged.
+The SDLC publisher and router, repository Markdown link checker, adopted workflow projections and optional completion configuration change. The controlled native acceptance allowlist contains only disposable issue #348. Merge, product approval, interruption retry and resource cleanup authority are unchanged.
 
 <!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 <!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33" -->
