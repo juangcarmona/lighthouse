@@ -50,6 +50,16 @@ if (publicSiteEnabled) {
   if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
     throw new Error('Published ArcShape snapshot is missing or stale.');
   }
+  const diagramRoot = join(output, 'architecture/diagrams');
+  const diagrams = await readdir(diagramRoot, { withFileTypes: true });
+  if (!diagrams.some(entry => entry.isDirectory())) throw new Error('Published architecture has no interactive diagrams.');
+  for (const entry of diagrams.filter(entry => entry.isDirectory())) {
+    for (const file of ['index.html', 'diagram.svg', 'source.json', 'provenance.json']) {
+      if (!(await exists(join(diagramRoot, entry.name, file)))) {
+        throw new Error(`Missing interactive diagram asset: ${entry.name}/${file}`);
+      }
+    }
+  }
 }
 
 const [bundle, tokens, components] = await Promise.all([

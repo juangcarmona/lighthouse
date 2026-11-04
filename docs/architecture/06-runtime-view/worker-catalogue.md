@@ -33,9 +33,13 @@ The router records intent before sending. A worker authenticates the request and
 
 ## triage
 
+[Explore the triage flow](triage.md).
+
 [Executable source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-triage.md). The owner admits an open issue by label or manual request. The worker preserves the request, cites inferences, asks blocking questions only and returns an explained provisional point estimate. External issue authorship grants no execution authority. A result stops at triaged without dispatching refinement.
 
 ## refine
+
+[Explore the refine flow](refine.md).
 
 **Entry:** Owner refine request or answer to its pending question. **Effects:** Issue comments and workflow labels; no product changes. **Stop:** Ready can continue to implementation under installed policy; future pauses it.
 
@@ -43,11 +47,15 @@ The router records intent before sending. A worker authenticates the request and
 
 ## propose
 
+[Explore the propose flow](propose.md).
+
 **Entry:** Owner planning request after authenticated refinement. **Effects:** Proposal artifacts and their bot-owned PR only. **Stop:** Planning stays separate from implementation and merge approval.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-propose.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/propose/SKILL.md)
 
 ## implement
+
+[Explore the implement flow](implement.md).
 
 **Entry:** Owner implementation request, authorized refinement continuation. **Effects:** Configured product paths on a bot-owned branch; no merge. **Stop:** Passed candidate waits for acceptance; ambiguous scope asks the owner.
 
@@ -55,11 +63,15 @@ The router records intent before sending. A worker authenticates the request and
 
 ## integrate
 
+[Explore the integrate flow](integrate.md).
+
 **Entry:** Owner authorization for a PR head or verified delivery event. **Effects:** Protected process evidence; merge only with current explicit authority. **Stop:** Prepared does not mean merged; failed checks or owner decisions block.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-integrate.md) · [Lifecycle skill](../../../src/packages/sdlc/skills/integrate/SKILL.md)
 
 ## review
+
+[Explore the review flow](review.md).
 
 **Entry:** Authorized completion request for a merged PR. **Effects:** Process evidence and configured issue labels. **Stop:** Missing historical or post-merge evidence remains a blocker.
 
@@ -67,17 +79,23 @@ The router records intent before sending. A worker authenticates the request and
 
 ## apply-review
 
+[Explore the apply-review flow](apply-review.md).
+
 **Entry:** Authorized non-approval feedback on an existing bot proposal or implementation PR. **Effects:** Update that same branch within its existing scope after checking the current head and complete bounded discussion. **Stop:** Ambiguous requests need an answer; duplicate feedback starts no second correction. Approval goes through the integration policy.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-apply-review.md) · [Feedback authentication](../../../src/packages/sdlc/src/proposal-review.mjs)
 
 ## product-change
 
+[Explore the product-change flow](product-change.md).
+
 **Entry:** Owner selects Product Change from an issue idea or answers a pending product question. **Effects:** Prepare and publish a validated ProductShape proposal on the issue delivery PR. **Stop:** Wait for explicit product approval; idea entry does not authorize implementation.
 
 [Workflow source](../../../src/packages/sdlc/workflows/lighthouse-sdlc-product-change.md) · [Product Change contract](../../../src/packages/sdlc/src/product-change.mjs)
 
 ## apply-product-change
+
+[Explore the apply-product-change flow](apply-product-change.md).
 
 **Entry:** Owner explicitly approves the current Product Change proposal. **Effects:** A credential-free job runs provider dry-run and apply, then a trusted publisher verifies and publishes the resulting model delta. **Stop:** Product approval does not authorize PR merge, release or deployment.
 

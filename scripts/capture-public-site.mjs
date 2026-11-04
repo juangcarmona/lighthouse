@@ -8,6 +8,9 @@ const portals = [
   { name: 'landing', path: '/' },
   { name: 'product-model', path: '/model/index.html' },
   { name: 'architecture', path: '/architecture/index.html' },
+  { name: 'runtime', path: '/architecture/index.html#/section/06', interactive: true },
+  { name: 'product-flow', path: '/architecture/index.html#/section/06/product-definition-as-code', interactive: true },
+  { name: 'refine-flow', path: '/architecture/index.html#/section/06/refine', interactive: true },
 ];
 const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
@@ -24,6 +27,13 @@ try {
       const response = await page.goto(new URL(portal.path, baseUrl).toString(), { waitUntil: 'networkidle' });
       if (!response || !response.ok()) {
         throw new Error(`Portal returned ${response?.status() ?? 'no response'}: ${portal.path}`);
+      }
+      if (portal.interactive) {
+        await page.locator('#content iframe[data-native-frame]').first().scrollIntoViewIfNeeded();
+        await page.locator('#content iframe[data-native-frame][data-ready]').first().waitFor();
+        const diagramUrl = await page.locator('#content a.native-open').first().getAttribute('href');
+        const diagram = await page.request.get(new URL(diagramUrl, page.url()).toString());
+        if (!diagram.ok()) throw new Error(`Interactive diagram returned ${diagram.status()}: ${diagramUrl}`);
       }
       await page.screenshot({
         path: resolve(output, `${portal.name}-${viewport.name}.png`),

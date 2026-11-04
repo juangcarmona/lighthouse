@@ -72,7 +72,7 @@ try {
 
     const architectureArgs = [
       'arcshape', 'site', 'build', '--docs', join(root, 'docs/architecture'),
-      '--out', join(stage, 'architecture/index.html'), '--title', 'Lighthouse',
+      '--format', 'interactive', '--out', join(stage, 'architecture'), '--title', 'Lighthouse',
     ];
     const sourceRef = process.env.GITHUB_SHA || process.env.GITHUB_REF_NAME;
     if (sourceRef) architectureArgs.push('--source-ref', sourceRef);
