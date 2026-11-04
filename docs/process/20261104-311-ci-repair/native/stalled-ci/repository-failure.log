@@ -1,0 +1,35 @@
+repository	Check the disposable CI correction candidate	﻿2026-11-04T07:03:59.5092294Z ##[group]Run node --input-type=module -e "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; assert.equal(readFileSync('docs/process/acceptance-fixture/ci-repair-311.md', 'utf8').trim(), '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.', 'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5095309Z [36;1mnode --input-type=module -e "import { readFileSync } from 'node:fs'; import assert from 'node:assert/strict'; assert.equal(readFileSync('docs/process/acceptance-fixture/ci-repair-311.md', 'utf8').trim(), '# CI correction acceptance\n\nThe current candidate passed its bounded CI correction.', 'The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.');"[0m
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5126784Z shell: /usr/bin/bash -e {0}
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5127062Z ##[endgroup]
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5483989Z node:internal/modules/run_main:107
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5484831Z     triggerUncaughtException(
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5485228Z     ^
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5485385Z 
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5486095Z AssertionError [ERR_ASSERTION]: The disposable #311 candidate must replace the initial paragraph with the final authorized paragraph.
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5486801Z + actual - expected
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5486947Z 
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5487080Z   '# CI correction acceptance\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5487357Z     '\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5487713Z +   'The initial candidate awaits its injected CI correction.'
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5488221Z -   'The current candidate passed its bounded CI correction.'
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5488551Z 
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5488786Z     at file:///home/runner/work/lighthouse/lighthouse/[eval1]:1:89
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5489426Z     at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5489876Z     at async node:internal/modules/esm/loader:223:26
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5490415Z     at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:220:20)
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5491620Z     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5492421Z   generatedMessage: false,
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5492852Z   code: 'ERR_ASSERTION',
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5493345Z   actual: '# CI correction acceptance\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5493819Z     '\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5494353Z     'The initial candidate awaits its injected CI correction.',
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5495047Z   expected: '# CI correction acceptance\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5495525Z     '\n' +
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5496039Z     'The current candidate passed its bounded CI correction.',
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5496642Z   operator: 'strictEqual',
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5497044Z   diff: 'simple'
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5497387Z }
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5497552Z 
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5497707Z Node.js v24.22.1
+repository	Check the disposable CI correction candidate	2026-11-04T07:03:59.5534187Z ##[error]Process completed with exit code 1.

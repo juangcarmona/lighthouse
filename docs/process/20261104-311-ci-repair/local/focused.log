@@ -1,0 +1,48 @@
+✔ failed adopted CI uses the authenticated original grant and existing correction worker (3.444573ms)
+✔ unrelated, stale, fork and unsupported runs never authorize repair (0.697436ms)
+✔ missing opt-in, revoked intent, scope changes and human decisions cannot authorize source effects (1.020427ms)
+✔ the two-attempt budget survives changed heads; duplicate and uncertain effects never dispatch again (3.478994ms)
+✔ lost dispatch acknowledgement, unavailable origin and invalid policy stop before another effect (0.967776ms)
+✔ CI correction preserves product models and other Product Changes, including configured roots (0.380122ms)
+✔ CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing (1.944877ms)
+✔ bot publications dispatch adopted CI for the exact branch and refuse a changed head (1.289868ms)
+✔ epic routing is opt-in and authenticates bot children before selecting a parent lease (2.183748ms)
+✔ epic child refinement rejects triage from a different parent, slice or plan (0.342602ms)
+✔ routing handoffs are idempotent per authenticated feedback identity (0.657245ms)
+✔ continuation binds the previous question to the authenticated reply (0.530588ms)
+✔ completed refinement names the actual next action for each continuation policy (0.25889ms)
+✔ product outcomes must match the authenticated idea or feedback entry (0.20923ms)
+✔ product prerequisite handoff states whether preparation can start (0.252953ms)
+✔ independent dispatch rejects issue aliases before claiming outside the issue concurrency group (450.647815ms)
+✔ only the owner can start refinement; reservations and PRs are excluded (1.343479ms)
+✔ owner replies resume the blocked stage and never approve the next stage (2.373848ms)
+✔ pending reply ignores stale, empty and spoofed reports and cannot replay after publication (1.217017ms)
+✔ publication refuses changed answers, changed source, closed issues and human takeover (1.513295ms)
+✔ repository metadata endpoint has no trailing slash while subresources retain their separator (0.273953ms)
+✔ decision replies extend input without accepting edited history or stale source (1.223612ms)
+✔ router refreshes a queued comment event and visibly acknowledges the owner reply (108.287893ms)
+✔ refine handoff binds the passed result to this issue, run, source and owner answers (4.366493ms)
+✔ future pauses implementation and its removal resumes an implement-labelled issue (0.347871ms)
+✔ an explicit question remains answerable when a proposal review is also linked (0.313593ms)
+✔ product review and approval use the same markers, including legacy published PRs (22.06522ms)
+✔ a dismissed or changed product review cannot authorize apply (0.418307ms)
+✔ only existing bot proposal branches with intact identity can be updated (1.819788ms)
+✔ owner feedback is fetched from source and approvals never request revision (1.057934ms)
+✔ submitted feedback includes every bounded inline request and rejects an older head (0.446182ms)
+✔ bounded correction conversation includes owner comments, inline requests and reviews only (0.993652ms)
+✔ publication rejects feedback edited or revoked after preparation and a changed head (0.513257ms)
+✔ feedback reloads the provider skip flag without exposing mutable schema metadata (1.160482ms)
+✔ publication updates the same branch non-forcibly and rejects a concurrent writer (1.260714ms)
+✔ delayed dispatch of already-handled feedback is a successful no-op (97.791227ms)
+✔ real router ignores owner approval of an unrelated release PR (88.268989ms)
+✔ real router maps a PR comment to its source issue and reports approvals without execution (163.027778ms)
+✔ publication validates links against the proposed overlay and existing repository targets (9.814187ms)
+✔ hook-free publication rejects malformed Markdown using the actual pinned adopted configuration (11111.242468ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11227.762148

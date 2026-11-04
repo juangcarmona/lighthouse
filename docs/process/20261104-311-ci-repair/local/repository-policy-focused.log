@@ -1,0 +1,41 @@
+✔ failed adopted CI uses the authenticated original grant and existing correction worker (5.316475ms)
+✔ unrelated, stale, fork and unsupported runs never authorize repair (1.238715ms)
+✔ missing opt-in, revoked intent, scope changes and human decisions cannot authorize source effects (2.818561ms)
+✔ the two-attempt budget survives changed heads; duplicate and uncertain effects never dispatch again (3.290207ms)
+✔ lost dispatch acknowledgement, unavailable origin and invalid policy stop before another effect (1.23122ms)
+✔ CI correction preserves product models and other Product Changes, including configured roots (0.451108ms)
+✔ an external or unconfirmed current-head edit cannot borrow an older candidate publication (0.470007ms)
+✔ a queued completion that no longer selects work is a successful dispatch no-op (98.655146ms)
+✔ a later owner decision resolves an earlier objection without delegating merge (1.404441ms)
+✔ a current publication from ordinary owner feedback retains the original implementation identity (0.843307ms)
+✔ CI correction cannot supersede an active ordinary feedback correction (1.038962ms)
+✔ existing scheduled reconciliation signals the same router, preserving approval waits and latest CI facts (1.470422ms)
+✔ superseded failures on an unchanged head and current owner draft holds cannot request repair (0.438302ms)
+✔ bot CI wake-ups use adopted workflow facts and wait for terminal status through the existing continuation path (0.882147ms)
+✔ CI freshness follows attempt start time, including reruns of older run IDs (0.60481ms)
+✔ a failed CI dependency explicitly signals before workflow completion without granting correction (0.589606ms)
+✔ an admitted requester issue retains its authenticated implementation grant for CI repair (0.350822ms)
+✔ simultaneous CI signals coalesce while the matching dispatch is still awaiting admission (0.593727ms)
+✔ CI evidence ignores unrelated repository metadata while binding the execution facts (0.562674ms)
+✔ only existing bot proposal branches with intact identity can be updated (2.395524ms)
+✔ owner feedback is fetched from source and approvals never request revision (1.735693ms)
+✔ submitted feedback includes every bounded inline request and rejects an older head (0.709452ms)
+✔ bounded correction conversation includes owner comments, inline requests and reviews only (1.529476ms)
+✔ publication rejects feedback edited or revoked after preparation and a changed head (0.863444ms)
+✔ feedback reloads the provider skip flag without exposing mutable schema metadata (1.69734ms)
+✔ publication updates the same branch non-forcibly and rejects a concurrent writer (1.633764ms)
+✔ delayed dispatch of already-handled feedback is a successful no-op (94.60297ms)
+✔ real router ignores owner approval of an unrelated release PR (86.492205ms)
+✔ real router maps a PR comment to its source issue and reports approvals without execution (171.789709ms)
+✔ publication validates links against the proposed overlay and existing repository targets (6.633195ms)
+✔ hook-free publication rejects malformed Markdown using the actual pinned adopted configuration (1308.885727ms)
+✔ publication preserves an adopter without a declared Markdown style command while still checking links (2.937876ms)
+✔ publisher uses the admitted repository policy and candidate facts rather than the harness checkout (625.180272ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2029.802966

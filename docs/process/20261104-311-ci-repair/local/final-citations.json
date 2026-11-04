@@ -1,0 +1,4017 @@
+{
+  "schema": "product-definition-as-code/citations-provider/v1alpha1",
+  "provider": "openspec",
+  "integrationVersion": "0.23.0",
+  "root": "openspec",
+  "includeArchived": false,
+  "documents": [
+    {
+      "path": "openspec/changes/issue-311-proposal/proposal.md",
+      "change": "issue-311-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 6
+    },
+    {
+      "path": "openspec/changes/issue-311-proposal/design.md",
+      "change": "issue-311-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 6
+    },
+    {
+      "path": "openspec/changes/issue-311-proposal/tasks.md",
+      "change": "issue-311-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 6
+    },
+    {
+      "path": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "change": "issue-311-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 6
+    },
+    {
+      "path": "openspec/changes/worker-recovery/proposal.md",
+      "change": "worker-recovery",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-recovery/design.md",
+      "change": "worker-recovery",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-recovery/tasks.md",
+      "change": "worker-recovery",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-recovery/specs/worker-recovery/spec.md",
+      "change": "worker-recovery",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-318-proposal/proposal.md",
+      "change": "issue-318-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-318-proposal/design.md",
+      "change": "issue-318-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-318-proposal/tasks.md",
+      "change": "issue-318-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-318-proposal/specs/same-pr-verification/spec.md",
+      "change": "issue-318-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-320-proposal/proposal.md",
+      "change": "issue-320-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-320-proposal/design.md",
+      "change": "issue-320-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-320-proposal/tasks.md",
+      "change": "issue-320-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "change": "issue-320-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 5
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/proposal.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/design.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/tasks.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "change": "issue-321-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/worker-catalogue/proposal.md",
+      "change": "worker-catalogue",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-catalogue/design.md",
+      "change": "worker-catalogue",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-catalogue/tasks.md",
+      "change": "worker-catalogue",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-catalogue/specs/worker-catalogue/spec.md",
+      "change": "worker-catalogue",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-error-reports/proposal.md",
+      "change": "worker-error-reports",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-error-reports/design.md",
+      "change": "worker-error-reports",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-error-reports/tasks.md",
+      "change": "worker-error-reports",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/worker-error-reports/specs/worker-reports/spec.md",
+      "change": "worker-error-reports",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-210-proposal/proposal.md",
+      "change": "issue-210-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 8
+    },
+    {
+      "path": "openspec/changes/issue-210-proposal/design.md",
+      "change": "issue-210-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 8
+    },
+    {
+      "path": "openspec/changes/issue-210-proposal/tasks.md",
+      "change": "issue-210-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 8
+    },
+    {
+      "path": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "change": "issue-210-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 16
+    },
+    {
+      "path": "openspec/changes/issue-272-product-change/proposal.md",
+      "change": "issue-272-product-change",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-272-proposal/proposal.md",
+      "change": "issue-272-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 2
+    },
+    {
+      "path": "openspec/changes/issue-272-proposal/design.md",
+      "change": "issue-272-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 2
+    },
+    {
+      "path": "openspec/changes/issue-272-proposal/tasks.md",
+      "change": "issue-272-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 2
+    },
+    {
+      "path": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "change": "issue-272-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 8
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/proposal.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/design.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/tasks.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "change": "issue-317-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "change": "issue-184-product-workflow",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 17
+    },
+    {
+      "path": "openspec/changes/issue-184-proposal/proposal.md",
+      "change": "issue-184-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 23
+    },
+    {
+      "path": "openspec/changes/issue-184-proposal/design.md",
+      "change": "issue-184-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 35
+    },
+    {
+      "path": "openspec/changes/issue-184-proposal/tasks.md",
+      "change": "issue-184-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 37
+    },
+    {
+      "path": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "change": "issue-184-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 43
+    },
+    {
+      "path": "openspec/changes/issue-196-proposal/proposal.md",
+      "change": "issue-196-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "exempt",
+      "declaration": "none",
+      "citations": 0
+    },
+    {
+      "path": "openspec/changes/issue-196-proposal/design.md",
+      "change": "issue-196-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "exempt",
+      "declaration": "none",
+      "citations": 0
+    },
+    {
+      "path": "openspec/changes/issue-196-proposal/tasks.md",
+      "change": "issue-196-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "exempt",
+      "declaration": "none",
+      "citations": 0
+    },
+    {
+      "path": "openspec/changes/issue-146-proposal/proposal.md",
+      "change": "issue-146-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-146-proposal/design.md",
+      "change": "issue-146-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-146-proposal/tasks.md",
+      "change": "issue-146-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "change": "issue-146-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 5
+    },
+    {
+      "path": "openspec/changes/issue-148-proposal/proposal.md",
+      "change": "issue-148-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-148-proposal/design.md",
+      "change": "issue-148-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-148-proposal/tasks.md",
+      "change": "issue-148-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "change": "issue-148-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 5
+    },
+    {
+      "path": "openspec/changes/issue-148-proposal/specs/worker-model-profiles/spec.md",
+      "change": "issue-148-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-155-pr-state/proposal.md",
+      "change": "issue-155-pr-state",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 5
+    },
+    {
+      "path": "openspec/changes/issue-155-pr-state/design.md",
+      "change": "issue-155-pr-state",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 5
+    },
+    {
+      "path": "openspec/changes/issue-155-pr-state/tasks.md",
+      "change": "issue-155-pr-state",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-155-pr-state/specs/implementation-pr-state/spec.md",
+      "change": "issue-155-pr-state",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-183-workflow-handoffs/proposal.md",
+      "change": "issue-183-workflow-handoffs",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-183-workflow-handoffs/design.md",
+      "change": "issue-183-workflow-handoffs",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-183-workflow-handoffs/tasks.md",
+      "change": "issue-183-workflow-handoffs",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-183-workflow-handoffs/specs/workflow-handoffs/spec.md",
+      "change": "issue-183-workflow-handoffs",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/proposal.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/design.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/tasks.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/apply-review-worker/specs/apply-review/spec.md",
+      "change": "apply-review-worker",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "change": "authorized-workflow-entry",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 8
+    },
+    {
+      "path": "openspec/changes/authorized-workflow-entry/design.md",
+      "change": "authorized-workflow-entry",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 2
+    },
+    {
+      "path": "openspec/changes/authorized-workflow-entry/tasks.md",
+      "change": "authorized-workflow-entry",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 2
+    },
+    {
+      "path": "openspec/changes/authorized-workflow-entry/specs/workflow-authorization/spec.md",
+      "change": "authorized-workflow-entry",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/bounded-fast-forward-hotfix/proposal.md",
+      "change": "bounded-fast-forward-hotfix",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/bounded-fast-forward-hotfix/design.md",
+      "change": "bounded-fast-forward-hotfix",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/bounded-fast-forward-hotfix/tasks.md",
+      "change": "bounded-fast-forward-hotfix",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/bounded-fast-forward-hotfix/specs/bounded-delivery/spec.md",
+      "change": "bounded-fast-forward-hotfix",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 4
+    },
+    {
+      "path": "openspec/changes/issue-125-proposal/proposal.md",
+      "change": "issue-125-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-125-proposal/design.md",
+      "change": "issue-125-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-125-proposal/tasks.md",
+      "change": "issue-125-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-125-proposal/specs/execution-environments/spec.md",
+      "change": "issue-125-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-145-proposal/proposal.md",
+      "change": "issue-145-proposal",
+      "archived": false,
+      "artifactKind": "proposal",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 3
+    },
+    {
+      "path": "openspec/changes/issue-145-proposal/design.md",
+      "change": "issue-145-proposal",
+      "archived": false,
+      "artifactKind": "design",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-145-proposal/tasks.md",
+      "change": "issue-145-proposal",
+      "archived": false,
+      "artifactKind": "tasks",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    },
+    {
+      "path": "openspec/changes/issue-145-proposal/specs/request-triage/spec.md",
+      "change": "issue-145-proposal",
+      "archived": false,
+      "artifactKind": "specs",
+      "state": "bound",
+      "declaration": "cited",
+      "citations": 1
+    }
+  ],
+  "citations": [
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-BOUNDED-AUTOMATION",
+      "digest": "sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-311-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-BOUNDED-AUTOMATION",
+      "digest": "sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-311-proposal/design.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 19,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-BOUNDED-AUTOMATION",
+      "digest": "sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-311-proposal/tasks.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 40,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 41,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 42,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-BOUNDED-AUTOMATION",
+      "digest": "sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 43,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 44,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-311-proposal/specs/bounded-ci-correction/spec.md",
+      "line": 45,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-recovery/proposal.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-recovery/design.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-recovery/tasks.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-recovery/specs/worker-recovery/spec.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-318-proposal/proposal.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-318-proposal/proposal.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-318-proposal/proposal.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-318-proposal/design.md",
+      "line": 6,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-318-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-318-proposal/design.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-318-proposal/tasks.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-318-proposal/tasks.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-318-proposal/tasks.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-318-proposal/specs/same-pr-verification/spec.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-318-proposal/specs/same-pr-verification/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-318-proposal/specs/same-pr-verification/spec.md",
+      "line": 26,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-320-proposal/proposal.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-320-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-320-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-320-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-320-proposal/design.md",
+      "line": 19,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-320-proposal/design.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-320-proposal/design.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-320-proposal/design.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-320-proposal/tasks.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-320-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-320-proposal/tasks.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-320-proposal/tasks.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-320-proposal/specs/worker-evidence-export/spec.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/design.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/tasks.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-321-proposal/specs/delivery-request-reconciliation/spec.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-catalogue/proposal.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-catalogue/design.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-catalogue/tasks.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-catalogue/specs/worker-catalogue/spec.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-error-reports/proposal.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-error-reports/design.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-error-reports/tasks.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/worker-error-reports/specs/worker-reports/spec.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 38,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONFIGURE-AGENT-CONTROL-PLANE",
+      "digest": "sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 39,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-AGENT",
+      "digest": "sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 40,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 41,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 42,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 43,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-210-proposal/proposal.md",
+      "line": 44,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONFIGURE-AGENT-CONTROL-PLANE",
+      "digest": "sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 27,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-AGENT",
+      "digest": "sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 28,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-210-proposal/design.md",
+      "line": 41,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 27,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-AGENT",
+      "digest": "sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 28,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONFIGURE-AGENT-CONTROL-PLANE",
+      "digest": "sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-210-proposal/tasks.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONFIGURE-AGENT-CONTROL-PLANE",
+      "digest": "sha256:552d5971429dfc41af56702e249b9a75cb6f10519090d14e7ee8849aab2bb571",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 49,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 50,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 66,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 67,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 88,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 89,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 105,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 106,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 122,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 123,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 139,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-210-proposal/specs/worker-model-selection/spec.md",
+      "line": 140,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:f5e1ab48267f899e412c90a39cbca5b1e67986c10b5c8faf46b51f1034354b7e",
+      "source": "openspec/changes/issue-272-product-change/proposal.md",
+      "line": 16,
+      "form": "inline",
+      "status": "stale"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:0d7131052668df1c8212a67d4daf5fb6167e30611f5dcbf3c92a4e9df6ddcf0f",
+      "source": "openspec/changes/issue-272-product-change/proposal.md",
+      "line": 18,
+      "form": "inline",
+      "status": "stale"
+    },
+    {
+      "id": "TERM-AGENT-MEMORY",
+      "digest": "sha256:5da14158ed73f214d7c4aee585845738ea707631a0a6d65ebd96f92e4fbd8349",
+      "source": "openspec/changes/issue-272-product-change/proposal.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-272-product-change/proposal.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/design.md",
+      "line": 8,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/tasks.md",
+      "line": 6,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/tasks.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 46,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 47,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AGENT-MEMORY",
+      "digest": "sha256:cd9761a13f756ebb99959814be9795d373067d3040dbe383ace15f1f2acfd2e2",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 62,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-MEMORY-BOUNDARY",
+      "digest": "sha256:6b23a4eb8dcbbef1b2c0dbf4c211e21288b57bb54c2522a3f5232b88f5bd89c8",
+      "source": "openspec/changes/issue-272-proposal/specs/scoped-agent-learnings/spec.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/proposal.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 6,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/design.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 8,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-ROLES",
+      "digest": "sha256:1c708a16c7730f0fe94cef9efa5f729e3d64a6b4943dcc06adf6759ce062725c",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 26,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-317-proposal/specs/integration-label-admission/spec.md",
+      "line": 27,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 27,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 39,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 45,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 49,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 53,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-OWNED-AUTHORITY",
+      "digest": "sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 54,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 58,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 59,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 64,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-WORKFLOW-STATE",
+      "digest": "sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 68,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-FAIL-CLOSED",
+      "digest": "sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 72,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 76,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 77,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BC-FOUNDATION",
+      "digest": "sha256:b286bdefecf1a005e993a0fb626dd73c466f46ea9a5f517a5b8bb454398852b3",
+      "source": "openspec/changes/issue-184-product-workflow/proposal.md",
+      "line": 78,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 49,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 50,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 51,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 55,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 56,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 57,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 58,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 62,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 64,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 68,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 69,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-WORKFLOW-STATE",
+      "digest": "sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 70,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 71,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 75,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 76,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-GATE-CONTROLLABILITY",
+      "digest": "sha256:c80dabd65061799c33d1c6f855048f3f46c4c7824a32bb5a67df915581a0f758",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 77,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORITY-CONTEXT",
+      "digest": "sha256:39d5fabc1afdaec4f779b28efcd21b86ec5c86635b13c1d6283c359ae67823a3",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 78,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 82,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/proposal.md",
+      "line": 83,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 14,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 25,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 38,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 39,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 40,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 41,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 42,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 52,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 53,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 54,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-WORKFLOW-STATE",
+      "digest": "sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 55,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 56,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 66,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 67,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 68,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 69,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 81,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 82,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 83,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 84,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 92,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 93,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 94,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORITY-CONTEXT",
+      "digest": "sha256:39d5fabc1afdaec4f779b28efcd21b86ec5c86635b13c1d6283c359ae67823a3",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 95,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 96,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 97,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 98,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-GATE-CONTROLLABILITY",
+      "digest": "sha256:c80dabd65061799c33d1c6f855048f3f46c4c7824a32bb5a67df915581a0f758",
+      "source": "openspec/changes/issue-184-proposal/design.md",
+      "line": 99,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 8,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 18,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 19,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-WORKFLOW-STATE",
+      "digest": "sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 44,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 45,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 46,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 47,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 55,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 56,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 57,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORITY-CONTEXT",
+      "digest": "sha256:39d5fabc1afdaec4f779b28efcd21b86ec5c86635b13c1d6283c359ae67823a3",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 58,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 59,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 60,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 61,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 62,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-GATE-CONTROLLABILITY",
+      "digest": "sha256:c80dabd65061799c33d1c6f855048f3f46c4c7824a32bb5a67df915581a0f758",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 71,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 72,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 73,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 74,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 82,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 83,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 84,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/tasks.md",
+      "line": 85,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 19,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 51,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 53,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 55,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 57,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 59,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 61,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "CON-EXISTING-AUTHORITIES",
+      "digest": "sha256:7b06e159cb84ceeebce60777e112af4536e0f57481200a94dc6c0db459d67664",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 65,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 87,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 89,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 91,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 93,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 116,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 118,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 120,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 122,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 140,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 142,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 144,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 146,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 148,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 170,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 172,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-PREPARE-PRODUCT-CHANGE",
+      "digest": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 174,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 176,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORITY-CONTEXT",
+      "digest": "sha256:39d5fabc1afdaec4f779b28efcd21b86ec5c86635b13c1d6283c359ae67823a3",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 178,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 180,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 198,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 200,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-CONTINUE-AGENT-RUN",
+      "digest": "sha256:6544c612ba2690454c06dd305b5888a637cf3b8b7d3d9cdb2fc7d3eaea79fa6b",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 202,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 204,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 206,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-WORKFLOW-STATE",
+      "digest": "sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 208,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ENTRY-AUTHORITY",
+      "digest": "sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 210,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 212,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 214,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-AGENT-ISOLATION",
+      "digest": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 216,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-GATE-CONTROLLABILITY",
+      "digest": "sha256:c80dabd65061799c33d1c6f855048f3f46c4c7824a32bb5a67df915581a0f758",
+      "source": "openspec/changes/issue-184-proposal/specs/product-change-workflow/spec.md",
+      "line": 218,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/proposal.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-DECOMPOSE-WORK-ITEM",
+      "digest": "sha256:2413b31fdfc906532aa330c653c34701cabd2a2653342ec616a6dc1f6108c669",
+      "source": "openspec/changes/issue-146-proposal/proposal.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-MANAGE-STACKED-CHANGE",
+      "digest": "sha256:c4aa8990ece018886e19f98d7aaa4984f3f7fb0605abf4edf860074ffb3838ff",
+      "source": "openspec/changes/issue-146-proposal/proposal.md",
+      "line": 38,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/tasks.md",
+      "line": 5,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-DECOMPOSE-WORK-ITEM",
+      "digest": "sha256:2413b31fdfc906532aa330c653c34701cabd2a2653342ec616a6dc1f6108c669",
+      "source": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "line": 42,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-DECOMPOSITION",
+      "digest": "sha256:35124f644d4b43927a3045d1fbfc63858a5d63347dd3c24c5053630e1cb768b1",
+      "source": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-MANAGE-STACKED-CHANGE",
+      "digest": "sha256:c4aa8990ece018886e19f98d7aaa4984f3f7fb0605abf4edf860074ffb3838ff",
+      "source": "openspec/changes/issue-146-proposal/specs/epic-delivery/spec.md",
+      "line": 79,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-148-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-148-proposal/proposal.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/design.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/design.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-148-proposal/design.md",
+      "line": 25,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-148-proposal/design.md",
+      "line": 26,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/tasks.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/tasks.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-148-proposal/tasks.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-148-proposal/tasks.md",
+      "line": 25,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PROFILE-DELEGATION",
+      "digest": "sha256:dfe2874654b6e78de96b24d146fb944d966c6773a69d5a1d93a3f5eaadc8eb1b",
+      "source": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "line": 53,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-148-proposal/specs/profile-task-delegation/spec.md",
+      "line": 54,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/specs/worker-model-profiles/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/specs/worker-model-profiles/spec.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-148-proposal/specs/worker-model-profiles/spec.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-MODEL-PROFILES",
+      "digest": "sha256:76493c2d6d9cca77ad0d549c24a4c3ccdb55d62da1a348d84c1b0c22b85ada71",
+      "source": "openspec/changes/issue-148-proposal/specs/worker-model-profiles/spec.md",
+      "line": 48,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-LABEL-STATE",
+      "digest": "sha256:754d81137a03d3679e7213068b36a5377dd5aa02fe479be14ad720973bf2d705",
+      "source": "openspec/changes/issue-155-pr-state/proposal.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-155-pr-state/proposal.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-155-pr-state/proposal.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-LABEL-DETERMINISM",
+      "digest": "sha256:73569634bd1ef7f981ded88c9567f96f2c128fc03cf494c6bb179f48d550fc6d",
+      "source": "openspec/changes/issue-155-pr-state/proposal.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-155-pr-state/proposal.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-LABEL-STATE",
+      "digest": "sha256:754d81137a03d3679e7213068b36a5377dd5aa02fe479be14ad720973bf2d705",
+      "source": "openspec/changes/issue-155-pr-state/design.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-LABEL-DETERMINISM",
+      "digest": "sha256:73569634bd1ef7f981ded88c9567f96f2c128fc03cf494c6bb179f48d550fc6d",
+      "source": "openspec/changes/issue-155-pr-state/design.md",
+      "line": 8,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/issue-155-pr-state/design.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-155-pr-state/design.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-155-pr-state/design.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-LABEL-STATE",
+      "digest": "sha256:754d81137a03d3679e7213068b36a5377dd5aa02fe479be14ad720973bf2d705",
+      "source": "openspec/changes/issue-155-pr-state/tasks.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-155-pr-state/tasks.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-155-pr-state/tasks.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-LABEL-STATE",
+      "digest": "sha256:754d81137a03d3679e7213068b36a5377dd5aa02fe479be14ad720973bf2d705",
+      "source": "openspec/changes/issue-155-pr-state/specs/implementation-pr-state/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-CHANGE-EVIDENCE",
+      "digest": "sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0",
+      "source": "openspec/changes/issue-155-pr-state/specs/implementation-pr-state/spec.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/issue-155-pr-state/specs/implementation-pr-state/spec.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-183-workflow-handoffs/proposal.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-183-workflow-handoffs/design.md",
+      "line": 7,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-183-workflow-handoffs/tasks.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-WORKFLOW-HANDOFFS",
+      "digest": "sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a",
+      "source": "openspec/changes/issue-183-workflow-handoffs/specs/workflow-handoffs/spec.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/proposal.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/design.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/tasks.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "openspec/changes/apply-review-worker/specs/apply-review/spec.md",
+      "line": 4,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-ROUTE-CONTRACT",
+      "digest": "sha256:477e145dfa2a1e4aecc6fcaab72909269a3f41b23486d0ebe59ec90c908d10a9",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-TRIAGE-CONTRACT",
+      "digest": "sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 38,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 39,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-SDLC",
+      "digest": "sha256:bf1ff365ec01cf2d4ced18899e1fbd86ffcd406b15b1f07b626ffab41a80f674",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 40,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-IMPLEMENT-CHANGE",
+      "digest": "sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 41,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-LABEL-STATE",
+      "digest": "sha256:89b37e9800f3bed08ebd4a95eb64bad036c292e763b212763362af6c41623012",
+      "source": "openspec/changes/authorized-workflow-entry/proposal.md",
+      "line": 42,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/authorized-workflow-entry/design.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/authorized-workflow-entry/design.md",
+      "line": 22,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/authorized-workflow-entry/tasks.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AUTHORITY-BOUNDARIES",
+      "digest": "sha256:76a491da103c53651b27e2723ee04b4cf5949e566f6102ed1714e0dbff29f40d",
+      "source": "openspec/changes/authorized-workflow-entry/tasks.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/authorized-workflow-entry/specs/workflow-authorization/spec.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/proposal.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/proposal.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/proposal.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/design.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/design.md",
+      "line": 18,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/design.md",
+      "line": 19,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/design.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/tasks.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/tasks.md",
+      "line": 16,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/tasks.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/tasks.md",
+      "line": 18,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/specs/bounded-delivery/spec.md",
+      "line": 75,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/specs/bounded-delivery/spec.md",
+      "line": 76,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-STAGE-GATES",
+      "digest": "sha256:bc61b8429b31d6b4bb9888317d4f665c36681eeca8ce656f027645373339cb3e",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/specs/bounded-delivery/spec.md",
+      "line": 77,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-HUMAN-AUTHORITY",
+      "digest": "sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8",
+      "source": "openspec/changes/bounded-fast-forward-hotfix/specs/bounded-delivery/spec.md",
+      "line": 78,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-125-proposal/proposal.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-125-proposal/design.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-125-proposal/tasks.md",
+      "line": 9,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-BOUNDED-WORKFLOW",
+      "digest": "sha256:d67762bd448033970425c077d560dd2749e26200676953cd64aa1c09b31d803d",
+      "source": "openspec/changes/issue-125-proposal/specs/execution-environments/spec.md",
+      "line": 48,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-TRIAGE-CONTRACT",
+      "digest": "sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b",
+      "source": "openspec/changes/issue-145-proposal/proposal.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-TRIAGE-WORK-ITEM",
+      "digest": "sha256:834a4bc0e1ed08ba60eab82d1d0615267d33e4a5acf2b5294be11bcbb8b34bb5",
+      "source": "openspec/changes/issue-145-proposal/proposal.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "TERM-WORK-ITEM-SIZE",
+      "digest": "sha256:e62709b1ae3cf3ee91d117922fabf6043ca7e5ff600a8f0810aa4945cccef2de",
+      "source": "openspec/changes/issue-145-proposal/proposal.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-TRIAGE-CONTRACT",
+      "digest": "sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b",
+      "source": "openspec/changes/issue-145-proposal/design.md",
+      "line": 13,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-TRIAGE-CONTRACT",
+      "digest": "sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b",
+      "source": "openspec/changes/issue-145-proposal/tasks.md",
+      "line": 10,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-TRIAGE-CONTRACT",
+      "digest": "sha256:35458afe1b482e22633da9638f2e1ea824c8ba1a1d2370596926b98dad4a969b",
+      "source": "openspec/changes/issue-145-proposal/specs/request-triage/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "PRODUCT061",
+      "message": "Citation of 'FR-AGENT-MEMORY' is stale: canonical content changed since the citation was recorded",
+      "file": "openspec/changes/issue-272-product-change/proposal.md",
+      "target": "FR-AGENT-MEMORY",
+      "line": 16
+    },
+    {
+      "severity": "warning",
+      "code": "PRODUCT061",
+      "message": "Citation of 'BR-MEMORY-BOUNDARY' is stale: canonical content changed since the citation was recorded",
+      "file": "openspec/changes/issue-272-product-change/proposal.md",
+      "target": "BR-MEMORY-BOUNDARY",
+      "line": 18
+    }
+  ],
+  "summary": {
+    "totalDocuments": 86,
+    "currentDocuments": 86,
+    "bound": 83,
+    "exempt": 3,
+    "unclassified": 0,
+    "totalCitations": 400,
+    "current": 398,
+    "stale": 2,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 2
+  }
+}

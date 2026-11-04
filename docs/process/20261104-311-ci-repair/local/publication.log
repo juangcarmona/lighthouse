@@ -1,0 +1,11 @@
+✔ publication validates links against the proposed overlay and existing repository targets (5.776938ms)
+✔ hook-free publication rejects malformed Markdown using the actual pinned adopted configuration (1323.045792ms)
+✔ publication preserves an adopter without a declared Markdown style command while still checking links (4.894361ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1400.875424

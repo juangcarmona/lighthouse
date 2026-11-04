@@ -22,13 +22,6 @@
         "id": 25937351,
         "revision": "e7e042bf36ebd5e0644a5775e38ee94b5f75e1888e12d9c1b6fdab0112f6afad"
       }
-    ],
-    "ciRepair": {
-      "enabled": true,
-      "maxAttempts": 2,
-      "issues": [
-        353
-      ]
-    }
+    ]
   }
 }

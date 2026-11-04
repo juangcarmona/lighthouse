@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 13308434518,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMwODQzNDUxOA==",
+      "name": "lighthouse-dispatch-d7f6fb1cf8b1c82afbfbea47d3b423a475fec6be7489a3454670a579c2aea31d",
+      "size_in_bytes": 3138,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13308434518",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13308434518/zip",
+      "expired": false,
+      "digest": "sha256:07b7c09ee7a2c93068fc6ece5a2995ad4aae3367bdb54d979e40df1f454cf1a7",
+      "created_at": "2026-11-04T09:14:02Z",
+      "updated_at": "2026-11-04T09:14:02Z",
+      "expires_at": "2026-11-18T09:14:01Z",
+      "workflow_run": {
+        "id": 41805704492,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "71a5b56f2487d916a52fa53996d5f5722abb2c41"
+      }
+    }
+  ]
+}

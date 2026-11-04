@@ -13,8 +13,8 @@
 
 - [x] Exercise stale/unrelated runs, revoked intent, changed scope, duplicate events, lost acknowledgement and exhaustion.
 - [x] Exercise hook-free malformed Markdown and broken-link publication rejection.
-- [ ] Complete repository, package-consumer, workflow and provider checks.
-- [ ] Retain the native failed-CI-to-corrected-same-PR trace and remove acceptance activation.
+- [x] Complete repository, package-consumer, workflow and provider checks.
+- [x] Retain the native failed-CI-to-corrected-same-PR trace and remove acceptance activation.
 
 <!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 <!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33" -->

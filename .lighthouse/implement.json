@@ -84,39 +84,5 @@
         "src/tests/fixtures/unattended/regression.test.mjs"
       ]
     ]
-  },
-  "353": {
-    "scope": "Only the disposable #311 CI correction fixture and its OpenSpec plan. Preserve validation scripts, configuration, tests and every unrelated file. The initial paragraph is deliberately intermediate; CI correction replaces it with the final paragraph already specified by the issue.",
-    "paths": [
-      "docs/process/acceptance-fixture/ci-repair-311.md",
-      "openspec/changes/issue-353-proposal/"
-    ],
-    "reviewRequired": false,
-    "checks": [
-      [
-        "npm",
-        "ci",
-        "--ignore-scripts"
-      ],
-      [
-        "env",
-        "GITHUB_ACTIONS=true",
-        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
-        "npm",
-        "run",
-        "verify"
-      ],
-      [
-        "npx",
-        "--no-install",
-        "prodshape",
-        "citations",
-        "verify",
-        "--provider",
-        "openspec",
-        "--format",
-        "json"
-      ]
-    ]
   }
 }

@@ -1,0 +1,205 @@
+{
+  "total_count": 2,
+  "jobs": [
+    {
+      "id": 126473881231,
+      "run_id": 41800220073,
+      "workflow_name": "Lighthouse verification",
+      "head_branch": "lighthouse/implement-353-e40f37678b6b",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41800220073",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdcm5Gjw",
+      "head_sha": "fd6c4b24313f9e21eb8c030b12b04cb5c48ce4b6",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126473881231",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41800220073/job/126473881231",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-04T08:31:58Z",
+      "started_at": "2026-11-04T08:32:01Z",
+      "completed_at": "2026-11-04T08:33:23Z",
+      "name": "repository",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-04T08:32:01Z",
+          "completed_at": "2026-11-04T08:32:02Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-04T08:32:02Z",
+          "completed_at": "2026-11-04T08:32:03Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-04T08:32:03Z",
+          "completed_at": "2026-11-04T08:32:05Z"
+        },
+        {
+          "name": "Run npm ci --ignore-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-04T08:32:05Z",
+          "completed_at": "2026-11-04T08:32:16Z"
+        },
+        {
+          "name": "Install Chrome for architecture rendering",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-04T08:32:16Z",
+          "completed_at": "2026-11-04T08:32:20Z"
+        },
+        {
+          "name": "Run npm run verify",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-04T08:32:20Z",
+          "completed_at": "2026-11-04T08:33:21Z"
+        },
+        {
+          "name": "Check the disposable CI correction candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-04T08:33:21Z",
+          "completed_at": "2026-11-04T08:33:21Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-04T08:33:21Z",
+          "completed_at": "2026-11-04T08:33:21Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-04T08:33:21Z",
+          "completed_at": "2026-11-04T08:33:22Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-04T08:33:22Z",
+          "completed_at": "2026-11-04T08:33:22Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126473881231",
+      "labels": [
+        "ubuntu-26.04"
+      ],
+      "runner_id": 1000031254,
+      "runner_name": "GitHub Actions 1000031254",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 126474480162,
+      "run_id": 41800220073,
+      "workflow_name": "Lighthouse verification",
+      "head_branch": "lighthouse/implement-353-e40f37678b6b",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/41800220073",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAdcndqIg",
+      "head_sha": "fd6c4b24313f9e21eb8c030b12b04cb5c48ce4b6",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/126474480162",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/41800220073/job/126474480162",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-04T08:33:23Z",
+      "started_at": "2026-11-04T08:33:26Z",
+      "completed_at": "2026-11-04T08:33:38Z",
+      "name": "reconcile-implementation-pr",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-04T08:33:27Z",
+          "completed_at": "2026-11-04T08:33:28Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-04T08:33:28Z",
+          "completed_at": "2026-11-04T08:33:29Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-04T08:33:29Z",
+          "completed_at": "2026-11-04T08:33:29Z"
+        },
+        {
+          "name": "Project the verified implementation PR",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-04T08:33:29Z",
+          "completed_at": "2026-11-04T08:33:35Z"
+        },
+        {
+          "name": "Signal failed candidate CI",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-04T08:33:35Z",
+          "completed_at": "2026-11-04T08:33:35Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-04T08:33:35Z",
+          "completed_at": "2026-11-04T08:33:35Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-04T08:33:35Z",
+          "completed_at": "2026-11-04T08:33:35Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-04T08:33:35Z",
+          "completed_at": "2026-11-04T08:33:35Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/126474480162",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000031256,
+      "runner_name": "GitHub Actions 1000031256",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

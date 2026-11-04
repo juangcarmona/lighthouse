@@ -1,0 +1,25 @@
+# Correction retrospective
+
+## What went well
+
+Reused the existing documentation-only plan. Restored the exact issue-authorized paragraph without changing the heading, validation commands, tests or configuration. All four configured checks and the exact-byte assertion completed with exit code 0. Repository verification reported 582 passing tests, 7 skipped and no failures.
+
+## What failed
+
+The first dependency installation exceeded the shell's 120-second timeout; its terminal receipt records cancellation with exit code 137. After reading that receipt, the same configured command was retried with a longer tool timeout and completed with exit code 0. No dependency or configuration changes were needed.
+
+## Start doing
+
+Allow sufficient execution time for installation and full repository verification while retaining completed receipts before proceeding.
+
+## Stop doing
+
+Do not treat local checks as proof of hosted CI, continuation routing or duplicate suppression. Those checks remain with the trusted host.
+
+## Evidenced recurring patterns
+
+The supplied history records an initial correction followed by an owner-requested reset. This continuation restores the same final paragraph as correction attempt 2 on PR #354, retaining the original implementation identity rather than restarting the budget. No broader infrastructure pattern is inferred from the single local timeout.
+
+## Scope and prose review
+
+Only the fixture and its OpenSpec tasks changed. Existing proposal, design and documentation-only metadata were preserved. Prose was manually reviewed for accuracy and repetition; no optional Humanizer skill was available in the inspected skill inventory. Browser screenshots are not applicable to this Markdown-only correction.
