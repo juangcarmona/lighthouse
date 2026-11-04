@@ -14,6 +14,7 @@ flowchart LR
     Valid -->|No| Block
     Valid -->|Yes| Publish[Publish durable process record]
     Publish --> Close[Close issue and clear delivery labels]
+    Review -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -23,6 +24,10 @@ The host supplies the commit-pinned integration report, matching artifacts, acce
 ## Stops and decisions
 
 Missing history, failed post-merge CI or a blocked review keeps the issue open. Closure establishes the delivery outcome covered by those checks; release and deployment require their own evidence and automation.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 

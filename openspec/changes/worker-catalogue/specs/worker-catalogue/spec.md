@@ -18,3 +18,13 @@ The documentation SHALL expose each installed worker with its entry, bounded eff
 
 - **WHEN** an installer-selected worker is absent from the catalogue
 - **THEN** the coverage check fails.
+
+#### Scenario: Optional workflows and activation differ from source availability
+
+- **WHEN** an operator compares the package, installed workflows, policy and native acceptance
+- **THEN** the catalogue distinguishes those observations and links the evidence limits, including optional maintenance, reporting and unattended compositions.
+
+#### Scenario: Requests or activation gates change
+
+- **WHEN** executable command labels, manual dispatch choices or activation gates change
+- **THEN** the coverage check detects an omission in the catalogue.

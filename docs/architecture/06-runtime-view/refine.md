@@ -17,6 +17,7 @@ flowchart LR
     Ready --> Policy{Implementation enabled and no hold?}
     Policy -->|Yes| Implement[Request implement]
     Policy -->|No| Wait[Wait with next action]
+    Refine -->|Technical failure or cancellation| Failure[Retain evidence; inspect effects before retry]
 ```
 
 ## Interactions
@@ -26,6 +27,10 @@ Preparation snapshots issue intent. The agent proposes an assessment; publicatio
 ## Stops and decisions
 
 The future label pauses implementation. Missing authority, changed intent, human-working and unresolved questions stop admission or continuation. Ready is evidence of preparation, not merge permission.
+
+Execution failure, publication uncertainty and recovery follow the [shared maintenance boundary](maintenance.md).
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
 
 ## Implementation evidence
 

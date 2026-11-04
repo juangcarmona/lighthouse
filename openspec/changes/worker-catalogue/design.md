@@ -5,7 +5,7 @@
 
 ## Context
 
-The installer selects five independently dispatched workers and a deterministic router.
+The installer selects the current stage/product workers, deterministic router and optional maintenance/unattended workflows. Presence in the package does not establish installation, activation or native acceptance.
 
 ## Goals / Non-Goals
 
