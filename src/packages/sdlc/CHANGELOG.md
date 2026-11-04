@@ -1,5 +1,33 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.6
+
+### Patch Changes
+
+- 60ccff2: # Actionable worker reports
+
+  Keep worker incident counts separate from current recovery and human waits. Retain safe structured CI launch diagnostics in publication evidence and operator handoffs.
+
+- a771b75: # Authenticate implementation command evidence
+
+  Carry authenticated implementation command results into integration with current-input and published-tree bindings. Preserve v1 results and distinguish unavailable evidence from failed checks. Reinstall the implementation/correction workflows to adopt the retained command artifact.
+
+- 5e6820b: # Protect verification inputs
+
+  Protect declared verification inputs and reject source tampering independently of Git status. Unattended adoption now requires an explicit verification inventory; reasoned test corrections receive renewed independent review. Supervised legacy policies remain compatible.
+
+- bb12ae0: # Verify owned execution cleanup
+
+  Persist run/attempt resource ownership in the trusted host adapter and independently inventory containers and networks after removal. Reconcile stopped executions before admission, preserve shared state and unrelated runs, and block on incomplete ownership or uncertain cleanup without granting delivery retry authority.
+
+- 34a01f7: # Preserve product model ownership
+
+  Reject implementation edits to the accepted ProductShape model, including configured model roots. Resume code against the provider-applied baseline without granting the implementation worker product approval or apply authority.
+
+- b9c7412: # Install workflows from the published package
+
+  Allow the existing workflow installer to select its exact published SDLC package with the `package` revision argument, without downloading the Lighthouse source checkout. Record installed package identity and lockfile integrity separately from source Git provenance, including completion evidence.
+
 ## 0.20.5
 
 ### Patch Changes
