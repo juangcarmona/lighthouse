@@ -6,7 +6,7 @@ on:
       mode:
         required: true
         type: choice
-        options: [failure, success, report, observe]
+        options: [failure, success, report, observe, surface]
       runs:
         description: Five native run IDs, in fixture order
         type: string
@@ -112,4 +112,26 @@ jobs:
         with:
           name: real-chain-observations
           path: ${{ runner.temp }}/worker-observations
+          retention-days: 90
+
+  surface:
+    if: inputs.mode == 'surface'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: node scripts/143-ci-surfaces.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ci-failure-surfaces
+          path: qualification
           retention-days: 90
