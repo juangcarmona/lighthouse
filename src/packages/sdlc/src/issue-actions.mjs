@@ -4,7 +4,7 @@ import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource } from './delivery-events.mjs';
+import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource, ciRequestFailure, ciFailureSummary } from './delivery-events.mjs';
 import { implementationContinuation, consumeReconciledLabel } from './delivery-request.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
@@ -888,9 +888,20 @@ async function main(command) {
         prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID), ...(!changes.length ? { implementationIdentity: snapshot.implementationReview.implementationIdentity } : {}) })} -->`;
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
         try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr, { checkpoint: requests => writeFile(join(dir, 'ci-requests.json'), JSON.stringify(requests)) }); }
-        catch (error) { ciDispatchFailed = true; console.error(`CI dispatch failed: ${error.message}`); value.effect.body += `\n\nThe PR was saved, but CI could not start: ${error.message}. See the retained CI request receipt.`; await summary(`CI dispatch failed: ${error.message}`); }
+        catch (error) {
+          ciDispatchFailed = true;
+          const failure = error.ciRequestFailure ?? ciRequestFailure(error, pr);
+          const observation = { ...failure, execution: String(env.GITHUB_RUN_ID), executionAttempt: Number(env.GITHUB_RUN_ATTEMPT) };
+          await writeFile(join(dir, 'ci-failure.json'), JSON.stringify(observation));
+          const diagnostic = ciFailureSummary(failure);
+          console.error(JSON.stringify({ ciRequestFailure: observation }));
+          value.effect.body += `\n\nThe candidate was published; CI launch is not confirmed. ${diagnostic}`;
+          await summary(diagnostic);
+          const notice = `<!-- lighthouse-ci-failure:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT} -->`;
+          reviewNotice = { pr, marker: notice, body: renderHandoff({ status: 'blocked', stage: snapshot.stage, happened: diagnostic, action: deliveryCiHandoff(true).action, next: deliveryCiHandoff(true).next, link: `[Execution](${runUrl})`, details: notice }) };
+        }
         const verificationBlocked = !changes.length && !candidateComplete;
-        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: question ? 'question' : ciDispatchFailed || verificationBlocked ? 'blocked' : 'queued', stage: snapshot.stage, happened: question ? value.effect.body : changes.length ? 'The draft PR was updated with your feedback.' : 'The existing PR was checked without changing its head.', action: question ? `Owner: ${question} Reply here on this PR.` : deliveryCiHandoff(ciDispatchFailed)?.action ?? (verificationBlocked ? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : 'None. Wait for the required checks.'), next: question ? 'Your PR feedback will request a correction of the same branch.' : deliveryCiHandoff(ciDispatchFailed)?.next ?? (verificationBlocked ? 'Resolve the recorded blocker before another authorized correction.' : 'The workflow will recheck readiness when the checks finish.'), link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
+        if (snapshot.implementationReview) reviewNotice = { pr, marker: snapshot.implementationReview.receipt, body: renderHandoff({ status: question ? 'question' : ciDispatchFailed || verificationBlocked ? 'blocked' : 'queued', stage: snapshot.stage, happened: question || ciDispatchFailed ? value.effect.body : changes.length ? 'The draft PR was updated with your feedback.' : 'The existing PR was checked without changing its head.', action: question ? `Owner: ${question} Reply here on this PR.` : deliveryCiHandoff(ciDispatchFailed)?.action ?? (verificationBlocked ? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : 'None. Wait for the required checks.'), next: question ? 'Your PR feedback will request a correction of the same branch.' : deliveryCiHandoff(ciDispatchFailed)?.next ?? (verificationBlocked ? 'Resolve the recorded blocker before another authorized correction.' : 'The workflow will recheck readiness when the checks finish.'), link: `[Draft PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.implementationReview.receipt}` }) };
         proposalLink = `\n\n[Implementation PR #${pr.number}](${pr.html_url}) is a draft. ${ciDispatchFailed ? 'Required CI must be started before review.' : candidateComplete ? 'Required CI will decide when it becomes ready for review.' : 'Address the blocker in the run before review.'}`;
         await summary(`### Implementation PR\n[Review #${pr.number}](${pr.html_url})\n\nHost checks:\n${checks}`);
       }

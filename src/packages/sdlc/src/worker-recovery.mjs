@@ -65,7 +65,7 @@ export async function readFailureEvidence(api, repository, request, run, jobs, r
 }
 
 export function recoveryDecision({ request, receipt, run, jobs, issue, comments, owner, revision, workflowRevision, evidence, execution, now = Date.now() }) {
-  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome };
+  const base = { ...identity({ request, run }), outcome: (execution ?? workerExecutionObservation({ run, jobs, receipt, worker: workerFor(request) })).outcome, ...(request.completionAuthorization ? { pr: request.completionAuthorization.pr, head: request.completionAuthorization.head } : {}) };
   const cause = classifyTechnicalFailure({ run, jobs, evidence });
   const result = (state, code, nextAction, extra = {}) => ({ ...base, state, code, cause, nextAction, ...extra });
   if (run.status !== 'completed') {
@@ -140,7 +140,7 @@ export async function observeRecovery(api, repository, owner, issueNumber, now =
   const observations = [];
   for (const { comment } of latest.values()) {
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...observation } = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
-    if (observation.state === 'stalled' || observation.code === 'dispatch-unconfirmed') observations.push(observation);
+    observations.push(observation);
   }
   return observations;
 }

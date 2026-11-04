@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource } from '../packages/sdlc/src/delivery-events.mjs';
+import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource, ciFailureSummary } from '../packages/sdlc/src/delivery-events.mjs';
 
 const head = 'a'.repeat(40), merge = 'c'.repeat(40), repository = 'owner/repo';
 const pr = { number: 60, state: 'open', merged: false, draft: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/implement-47-${'b'.repeat(12)}`, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${'b'.repeat(64)} -->`, merge_commit_sha: merge };
@@ -105,4 +105,28 @@ test('recovered completion source requires its actual native maintenance proof',
   const event = { action: 'completed', workflow_run: { id: 123, head_sha: head }, completionRecovery: { maintenance: 300, issue: 47 } };
   const api = async path => path === 'actions/runs/123' ? { id: 123, head_sha: head, status: 'completed', repository: { full_name: repository } } : { id: 300, actor: { login: 'other' } };
   await assert.rejects(completionSource(api, repository, event), /owner maintenance origin/);
+});
+
+test('CI diagnostics retain safe HTTP, timeout and changed-head facts without exception content', async () => {
+  for (const mode of ['http', 'timeout', 'head']) {
+    let saved, caught;
+    const api = async (path, method) => {
+      if (path.startsWith('contents/')) return file(profile);
+      if (path === 'pulls/60') return mode === 'head' ? { ...pr, state: 'closed' } : pr;
+      if (path.includes('/runs?')) return { total_count: 0, workflow_runs: [] };
+      assert.equal(method, 'POST');
+      throw Object.assign(Error('SECRET response body token=private'), mode === 'http' ? { status: 403, headers: { authorization: 'SECRET' } } : { name: 'TimeoutError' });
+    };
+    try { await dispatchDeliveryChecks(api, head, pr, { checkpoint: async rows => { saved = structuredClone(rows); } }); } catch (error) { caught = error; }
+    const failure = saved[0].error;
+    assert.deepEqual(failure, caught.ciRequestFailure);
+    assert.equal(failure.pr, 60); assert.equal(failure.head, head);
+    assert.equal(failure.method, mode === 'head' ? 'GET' : 'POST');
+    assert.equal(failure.path, mode === 'head' ? 'pulls/60' : 'actions/workflows/verify.yml/dispatches');
+    assert.equal(failure.status, mode === 'http' ? 403 : null);
+    assert.equal(failure.code, mode === 'head' ? 'head-changed' : 'request-failed');
+    assert.equal(saved[0].state, mode === 'http' ? 'rejected' : mode === 'head' ? 'not-sent' : 'unknown');
+    assert.doesNotMatch(JSON.stringify(failure) + ciFailureSummary(failure), /SECRET|private|response body|authorization/);
+    assert.match(ciFailureSummary(failure), /Maintainer: reconcile/);
+  }
 });

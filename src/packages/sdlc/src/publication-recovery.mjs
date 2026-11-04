@@ -2,7 +2,7 @@ import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadStageReport } from './proposal.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { loadImplementation, validateCheckReceipt } from './implementation.mjs';
-import { dispatchDeliveryChecks } from './delivery-events.mjs';
+import { dispatchDeliveryChecks, ciFailureSummary, ciRequestFailure } from './delivery-events.mjs';
 import { issueComments } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
@@ -18,7 +18,8 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
   if (proofs.length !== 1) return null;
   const proof = JSON.parse(proofs[0][1]);
   if (proof.complete !== true || proof.run !== Number(run.id)) return null;
-  const stopped = (code, nextAction) => ({ state: 'uncertain', code, nextAction });
+  const subject = { pr: proof.pr, head: proof.head };
+  const stopped = (code, nextAction) => ({ ...subject, state: 'uncertain', code, nextAction });
   const retained = await readReport(api, repository, report, { issue: issue.number, owner }, readArtifact);
   const request = retained.request;
   if (String(request.workflowRunId) !== String(run.id) || request.stage !== 'implement' || retained.envelope.result.status !== 'passed' || validateStageEnvelope(retained.envelope, request).length) return stopped('publication-unconfirmed', 'Inspect the original publication and validated outcome.');
@@ -43,7 +44,7 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
   if (comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(`<!-- lighthouse-pr-hold:${pr.number}:${pr.head.sha} -->`))) return null;
   const prior = await readArtifact(api, repository, run.id, `lighthouse-implement-publication-${issue.number}-${run.run_attempt}`, 'ci-requests.json', true);
   if (!Array.isArray(prior)) return stopped('ci-request-evidence-missing', 'The legacy CI request has no retained send-state proof. Reconcile its effects before an explicit owner verification request.');
-  if (!enabled) return { state: 'observed', code: 'ci-recovery-disabled', nextAction: 'Enable bounded recovery explicitly to reconcile the retained CI request.' };
+  if (!enabled) return { ...subject, state: 'observed', code: 'ci-recovery-disabled', nextAction: 'Enable bounded recovery explicitly to reconcile the retained CI request.' };
   if (!save) return stopped('recovery-evidence-unavailable', 'Retain native recovery evidence before requesting CI.');
   const key = digest(JSON.stringify({ pr: pr.number, head: pr.head.sha, origin: String(run.id) }));
   const pattern = new RegExp(`<!-- lighthouse-ci-recovery:${key}:(\\{[^\\n]*\\}) -->`);
@@ -59,6 +60,8 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
     if (JSON.stringify(retainedState) !== JSON.stringify(previousState)) return stopped('ci-recovery-unconfirmed', 'The native recovery artifact does not bind this request state.');
     previous = previousState.requests;
   }
+  // Legacy receipts contained arbitrary exception messages; do not republish them.
+  previous = previous.map(({ error, ...request }) => ({ ...request, ...(error?.schemaVersion === 1 ? { error: ciRequestFailure({ status: error.status, name: error.exception }, pr, error) } : {}) }));
   const state = { origin: String(run.id), maintenance: String(parent.id), maintenanceAttempt: parent.run_attempt, requests: previous };
   const body = () => handoff({ status: state.requests.some(item => ['unknown', 'requested', 'rejected'].includes(item.state)) ? 'blocked' : state.requests.every(item => item.state === 'observed') ? 'completed' : 'queued', stage: 'implement', happened: 'Reconciling CI for the retained candidate without rerunning its agent.', action: 'None. Follow the linked candidate and retained request state.', next: 'Only confirmed unsent or rejected requests may be retried within the existing delay and budget.', link: `[PR #${pr.number}](${pr.html_url})`, details: `<!-- lighthouse-ci-recovery:${key}:${JSON.stringify(state)} -->` });
   await save(state);
@@ -76,6 +79,10 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
   };
   try {
     const result = await dispatchDeliveryChecks(api, revision, pr, { previous, checkpoint, now });
-    return { state: 'reconciled', code: result.every(item => item.state === 'observed') ? 'ci-observed' : 'ci-requested', nextAction: 'Follow the existing candidate CI; no agent or source effect was repeated.' };
-  } catch (error) { return stopped('ci-start-unconfirmed', `Inspect the retained CI request: ${error.message}`); }
+    return { ...subject, state: 'reconciled', code: result.every(item => item.state === 'observed') ? 'ci-observed' : 'ci-requested', nextAction: 'Follow the existing candidate CI; no agent or source effect was repeated.' };
+  } catch (error) {
+    const failure = error.ciRequestFailure;
+    const state = failure?.code === 'budget-exhausted' ? 'exhausted' : failure?.code === 'delay-pending' ? 'delayed' : 'uncertain';
+    return { ...stopped('ci-start-unconfirmed', failure ? ciFailureSummary(failure) : 'Maintainer: inspect the retained CI request and current authority before any resend.'), state };
+  }
 }

@@ -9,3 +9,10 @@
 - [x] Record creation intent and reconcile lost responses before writing again.
 - [x] Integrate a serialized report job and document operator setup.
 - [x] Test duplicates, spoofing, privacy, lost responses and recovery; run final checks.
+
+## Current adoption
+
+- [x] Preserve incident history while reporting current execution, human waits, exhaustion and reconciled effects.
+- [x] Retain safe structured CI launch diagnostics across original publication surfaces.
+- [x] Qualify installed configuration and the native report lifecycle, including lost responses.
+- [x] Retain compact acceptance evidence and restore temporary settings.

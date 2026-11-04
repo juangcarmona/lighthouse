@@ -86,8 +86,80 @@ test('reports reject spoofed ownership and never publish free text or logs', asy
   await assert.rejects(publishReports(f.api, repo, owner, 1, [observation(11)]), /bot-owned/);
   const g = fixture();
   await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), worker: 'secret-worker' }]), /Unknown observed/);
-  await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), runId: '11?token=secret' }]), /Invalid report occurrence/);
+  await assert.rejects(publishReports(g.api, repo, owner, 1, [{ ...observation(11), runId: '11?token=secret' }]), /Invalid report (occurrence|context)/);
   assert.equal(g.issues.length, 1);
+});
+
+test('latest linked execution explains active work and human waits without adding failures or claiming recovery', async () => {
+  const f = fixture();
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  for (const [state, code] of [['active', 'worker-active'], ['waiting-human', 'human-decision'], ['blocked', 'stage-blocked']]) {
+    await publishReports(f.api, repo, owner, 1, [{ ...observation(12), attempt: 1, state, code, pr: 60, head: 'd'.repeat(40), nextAction: 'SECRET' }]);
+    const report = readReport(f.issues[1], repo, 'implement', 'worker-technical-failure');
+    assert.equal(report.entries.length, 1);
+    assert.equal(report.entries[0].runId, '11');
+    assert.equal(report.contexts[0].runId, '12');
+    assert.equal(report.contexts[0].state, state);
+    assert.equal(f.issues[1].state, 'open');
+    assert.match(f.issues[1].body, /PR #60/);
+    assert.doesNotMatch(f.issues[1].body, /SECRET|Recovery confirmed/);
+  }
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', code).contexts[0].state, 'blocked', 'older observations cannot overwrite the latest execution');
+});
+
+test('exhaustion and exact retry delay have concrete actions; uncertain successful publication is not recovery', async () => {
+  const f = fixture(), retryAt = '2026-11-04T13:00:00.000Z';
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(11), state: 'delayed', retryAt }]);
+  assert.match(f.issues[1].body, /wait until 2026-11-04T13:00/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), state: 'exhausted', attempt: 2 }]);
+  assert.match(f.issues[1].body, /Owner: retry budget exhausted/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'uncertain', code: 'ci-start-unconfirmed', outcome: 'completed', pr: 60, head: 'd'.repeat(40) }]);
+  assert.equal(f.issues.length, 3);
+  assert.match(f.issues[2].body, /execution outcome: completed/);
+  assert.doesNotMatch(f.issues[2].body, /Recovery confirmed/);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'succeeded', code: 'worker-completed' }]);
+  assert.equal(f.issues[2].state, 'open', 'worker success cannot resolve an unknown CI send');
+  assert.equal(readReport(f.issues[2], repo, 'implement', 'ci-launch-failure').contexts[0].state, 'uncertain');
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-requested' }]);
+  assert.equal(f.issues[2].state, 'open');
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-observed' }]);
+  assert.equal(f.issues[2].state, 'closed');
+  assert.match(f.issues[2].body, /CI success and delivery acceptance are separate/);
+  assert.equal(f.issues[1].state, 'closed', 'the separate worker incident was resolved by confirmed worker completion');
+});
+
+test('normal waits create no incidents; legacy reports migrate and invalid context metadata cannot enter reports', async () => {
+  const f = fixture();
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(11), state: 'waiting-human', code: 'human-decision' }]);
+  assert.equal(f.issues.length, 1);
+  await publishReports(f.api, repo, owner, 1, [observation(11)]);
+  const legacy = readReport(f.issues[1], repo, 'implement', code);
+  delete legacy.contexts; legacy.schemaVersion = 1;
+  f.issues[1].body = `<!-- lighthouse-worker-report:${JSON.stringify(legacy)} -->`;
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
+  assert.equal(f.issues[1].state, 'closed');
+  assert.equal(readReport(f.issues[1], repo, 'implement', code).schemaVersion, 2);
+  for (const invalid of [{ pr: '60?SECRET' }, { head: 'SECRET' }, { retryAt: 'SECRET' }, { outcome: 'SECRET' }]) {
+    await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(13), ...invalid }]), /Invalid report context metadata/);
+  }
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [observation(11, 'b'.repeat(64))]), /identity changed/);
+});
+
+test('confirming a previously unconfirmed run replaces its request placeholder instead of inflating counts', async () => {
+  const f = fixture(), pending = { ...observation(null), runId: null, code: 'dispatch-unconfirmed', state: 'uncertain' };
+  await publishReports(f.api, repo, owner, 1, [pending]);
+  await publishReports(f.api, repo, owner, 1, [{ ...pending, runId: '11' }]);
+  const report = readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed');
+  assert.equal(report.entries.length, 1); assert.equal(report.entries[0].key, 'run:11');
+  await publishReports(f.api, repo, owner, 1, [pending]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').entries.length, 1);
+  assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').contexts[0].runId, '11');
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
+  await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'active', code: 'worker-active' }]);
+  assert.equal(readReport(f.issues[1], repo, 'implement', 'dispatch-unconfirmed').contexts[0].code, 'worker-completed');
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(null), runId: null, state: 'succeeded', code: 'worker-completed' }]), /confirmed execution identity/);
+  await assert.rejects(publishReports(f.api, repo, owner, 1, [{ ...observation(13), issue: 8, state: 'active', code: 'worker-active' }]), /request issue changed/);
 });
 
 test('owner index edits and occurrence overflow stop publication visibly', async () => {
