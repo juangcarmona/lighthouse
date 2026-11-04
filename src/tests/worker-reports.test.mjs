@@ -126,7 +126,7 @@ test('exhaustion and exact retry delay have concrete actions; uncertain successf
   await publishReports(f.api, repo, owner, 1, [{ ...observation(13), attempt: 2, state: 'reconciled', code: 'ci-observed' }]);
   assert.equal(f.issues[2].state, 'closed');
   assert.match(f.issues[2].body, /CI success and delivery acceptance are separate/);
-  assert.equal(f.issues[1].state, 'open', 'CI observation cannot hide an unrelated exhausted execution failure');
+  assert.equal(f.issues[1].state, 'closed', 'the separate worker incident was resolved by confirmed worker completion');
 });
 
 test('normal waits create no incidents; legacy reports migrate and invalid context metadata cannot enter reports', async () => {
