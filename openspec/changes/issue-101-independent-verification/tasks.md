@@ -9,11 +9,11 @@
 
 - [x] 1.1 Inventory existing host, scope, reviewer and freshness owners.
 - [x] 1.2 Bind declared verification inputs and correction reasons; reject effective-byte tampering and missing checks.
-- [ ] 1.3 Update concise guidance and prove compatibility, stale-review rejection and bounded stopping.
+- [x] 1.3 Update concise guidance and prove compatibility, stale-review rejection and bounded stopping.
 
 ## 2. Acceptance
 
-- [ ] 2.1 Qualify committed, working-tree and hidden-index tampering in real containers.
-- [ ] 2.2 Use an installed package and the existing read-only reviewer to reject a weak-test false positive and accept a legitimate correction with renewed verification.
-- [ ] 2.3 Retain original RED/GREEN, scope, model and runtime observations; distinguish unavailable cost/human-effort evidence.
-- [ ] 2.4 Complete repository/workflow checks and exact-head CI; prepare a concise reviewable PR.
+- [x] 2.1 Qualify committed, working-tree and hidden-index tampering in real containers.
+- [x] 2.2 Use an installed package and the existing read-only reviewer to reject a weak-test false positive and accept a legitimate correction with renewed verification.
+- [x] 2.3 Retain original RED/GREEN, scope, model and runtime observations; distinguish unavailable cost/human-effort evidence.
+- [x] 2.4 Complete repository/workflow checks and exact-head CI; prepare a concise reviewable PR.
