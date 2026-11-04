@@ -265,3 +265,11 @@ test('simultaneous CI signals coalesce while the matching dispatch is still awai
   state.comments.push({ id: 100, issue_url: `https://api.github.com/repos/${repository}/issues/47`, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` });
   assert.equal(await call(), null);
 });
+
+
+test('CI evidence ignores unrelated repository metadata while binding the execution facts', async () => {
+  const { reviewDigest } = await import('../packages/sdlc/src/proposal-review.mjs');
+  const { state } = fixture(), original = reviewDigest('ci', state.run);
+  assert.equal(reviewDigest('ci', { ...state.run, repository: { ...state.run.repository, pushed_at: 'later', description: 'Updated independently' }, pull_requests: [{ title: 'Updated description' }] }), original);
+  for (const patch of [{ run_attempt: 2 }, { head_sha: base }, { conclusion: 'success' }, { path: '.github/workflows/other.yml' }, { head_branch: 'other' }, { repository: { full_name: 'fork/repo' } }]) assert.notEqual(reviewDigest('ci', { ...state.run, ...patch }), original);
+});
