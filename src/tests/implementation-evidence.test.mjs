@@ -8,6 +8,8 @@ import { execFileSync } from 'node:child_process';
 import { commandEvidenceBinding, retainedCommandOutput, implementationEvidenceBundle, readImplementationEvidence } from '../packages/sdlc/src/implementation-evidence.mjs';
 import { changesDigest, loadImplementation } from '../packages/sdlc/src/implementation.mjs';
 import { assertCitedChecks } from '../packages/sdlc/src/completion.mjs';
+import { dispatchId, dispatchArtifact, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { digest } from '../packages/sdlc/src/host-contract.mjs';
 
 const revision = 'a'.repeat(40), head = 'b'.repeat(40), tree = 'c'.repeat(40), intent = 'd'.repeat(64);
 const copy = value => structuredClone(value);
@@ -51,6 +53,34 @@ test('a matching host receipt authenticates commands against the current publish
   // Unrelated main commits do not invalidate a byte-identical candidate, policy and workflow.
   f.completion.currentRevision = '1'.repeat(40);
   assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).status, 'passed');
+});
+
+test('a bot producer requires the authenticated router receipt and matching admitted inputs', async () => {
+  const f = await fixture(), repository = f.completion.binding.repository;
+  f.state.native.actor.login = f.state.native.triggering_actor.login = 'github-actions[bot]';
+  const request = { schemaVersion: 1, id: dispatchId(repository, '300', 'implement'), repository, issue: 18, stage: 'implement', autoImplement: false, routerRunId: '300', routerAttempt: 1, workflowRevision: revision, sourceRevision: revision, taskDigest: intent, ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'implement' } }, handoff: false };
+  const receipt = { schemaVersion: 1, stage: 'implement', id: request.id, digest: digest(JSON.stringify(request)), routerRunId: '300', routerAttempt: 1, workerRunId: '700' };
+  f.state.artifact.dispatch = { commentId: 30, requestId: request.id, digest: receipt.digest };
+  const api = async path => {
+    if (path === 'issues/comments/30') return { id: 30, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/18`, body: dispatchReceiptBody(repository, receipt) };
+    if (path === 'actions/runs/300/attempts/1') return { id: 300, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, head_sha: revision, head_branch: 'main', repository: { full_name: repository } };
+    return f.api(path);
+  };
+  const readArtifact = async (...args) => args[3] === dispatchArtifact(request) ? copy(request) : f.options.readArtifact(...args);
+  const result = await readImplementationEvidence(api, f.completion, { ...f.options, readArtifact });
+  assert.equal(result.status, 'passed', result.reason);
+  // A correction reads the PR head while its router still admits the default-branch policy revision.
+  request.worker = 'apply-review'; request.feedbackKey = '3'.repeat(64);
+  request.id = dispatchId(repository, request.feedbackKey, 'implement');
+  receipt.worker = request.worker; receipt.feedbackKey = request.feedbackKey; receipt.id = request.id; receipt.digest = digest(JSON.stringify(request));
+  f.state.native.path = '.github/workflows/lighthouse-sdlc-apply-review.lock.yml';
+  const corrected = { ...f.request, sourceRevision: '2'.repeat(40), baseRevision: revision, dispatch: { commentId: 30, requestId: request.id, digest: receipt.digest } };
+  const correctedReceipt = { ...f.receipt, binding: commandEvidenceBinding(corrected), sourceRevision: corrected.sourceRevision };
+  f.state.artifact = implementationEvidenceBundle(corrected, correctedReceipt, f.changes, { pr: 23, head, tree });
+  const correction = await readImplementationEvidence(api, f.completion, { ...f.options, readArtifact });
+  assert.equal(correction.status, 'passed', correction.reason);
+  request.taskDigest = '1'.repeat(64);
+  assert.equal((await readImplementationEvidence(api, f.completion, { ...f.options, readArtifact })).status, 'unavailable');
 });
 
 test('spoofed producers and changed criteria, code, plan, policy, command or attempt stay unavailable', async t => {
@@ -101,6 +131,8 @@ test('retained failures, unavailable commands and truncated output preserve thei
   const provider = retainedCommandOutput(JSON.stringify({ citations: ['x'.repeat(6000)], summary: { current: 37, stale: 0, errors: 0 } }));
   assert.equal(provider.truncated, true); assert.deepEqual(provider.jsonSummary, { current: 37, stale: 0, errors: 0 });
   assert.equal(retainedCommandOutput('partial JSON {"summary":').jsonSummary, undefined);
+  const lost = retainedCommandOutput('{"summary":{"current":37}}', true);
+  assert.equal(lost.logTruncated, true); assert.equal(lost.truncated, true); assert.equal(lost.jsonSummary, undefined);
 });
 
 test('publisher rejects an altered binding or a tested tree that differs from publication', async () => {

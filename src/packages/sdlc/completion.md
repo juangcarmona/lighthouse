@@ -39,7 +39,7 @@ After integration, successful post-merge CI starts `review`. The host supplies m
 
 ## Host command evidence
 
-Implementation and same-PR corrections retain `lighthouse-command-evidence-<issue>-<attempt>` for 30 days. The publisher binds each receipt to its repository, issue, admitted intent, native run and attempt, source revision, implementation policy, planning reference and exact tested/published Git tree. Each command retains argv, exit status, execution outcome and bounded redacted output with hashes. Output truncation is explicit; omitted text cannot establish provider details.
+Implementation and same-PR corrections retain `lighthouse-command-evidence-<issue>-<attempt>` for 30 days. The publisher binds each receipt to its repository, issue, admitted intent, native run and attempt, source and admitted policy revisions, implementation policy, planning reference and exact tested/published Git tree. Each command retains argv, exit status, execution outcome and bounded redacted output with hashes. A complete JSON log also supplies its bounded summary. Commands buffer output inside the disposable container before host capture to preserve provider output across abrupt exits; capture limits and excerpt limits are recorded separately. Output truncation is explicit; omitted text cannot establish provider details. Reuse also requires the originating authorization artifacts to remain available.
 
 Integration supplies verified commands in `completion.implementationEvidence` and `observedChecks`. The reader authenticates the successful adopted workflow and its dispatch origin through GitHub, compares current inputs and rechecks cited receipts before publication or merge. A producer string, valid JSON or generic green CI does not authenticate a command. The packaged `implementation-evidence` export requires a host-authenticated API; a shape validator is not a trust boundary.
 
@@ -52,7 +52,7 @@ Integration supplies verified commands in `completion.implementationEvidence` an
 | Executed command fails | Failed result |
 | Command was not executed or its result is missing | Unavailable result |
 
-These observations supplement explicit work-item verification; they do not add forge merge gates or establish that the tests are strong enough. Existing stage-result v1 payloads remain unchanged. Legacy/unattended receipts without this command handoff retain their existing consumers and cannot be promoted to authenticated command evidence by this reader. Independent test integrity and review remain #101.
+The current check policy declares one candidate-wide input scope. Changes within that tree or its shared policy invalidate the group; unrelated main commits do not. These observations supplement explicit work-item verification; they do not add forge merge gates or establish that the tests are strong enough. Existing stage-result v1 payloads remain unchanged. Legacy/unattended receipts without this command handoff retain their existing consumers and cannot be promoted to authenticated command evidence by this reader. Independent test integrity and review remain #101.
 
 ## Evidence and recovery
 
