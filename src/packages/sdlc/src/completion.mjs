@@ -111,6 +111,7 @@ export async function observeChecks(api, revision, workflowRunId = null) {
 export function assertCitedChecks(envelope, before, after) {
   for (const evidence of envelope.result.evidence) {
     if (evidence.status !== 'passed') continue;
+    if (/^(?:implementation|github-check|github-status):/.test(evidence.id ?? '') && !(before.observedChecks ?? []).some(check => check.evidenceId === evidence.id)) throw Error('Cited host evidence is unavailable or unauthenticated');
     const cited = (before.observedChecks ?? []).filter(c => evidence.id === c.evidenceId || c.url && evidence.source === c.url);
     for (const check of cited) {
       const current = (after.observedChecks ?? []).find(c => c.evidenceId === check.evidenceId && c.revision === check.revision);

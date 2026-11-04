@@ -145,6 +145,8 @@ test('publisher rejects an altered binding or a tested tree that differs from pu
 test('publication rechecks any cited host receipt before accepting the assessment', async () => {
   const f = await fixture(), before = await readImplementationEvidence(f.api, f.completion, f.options);
   const envelope = { result: { evidence: [{ id: before.checks[0].evidenceId, status: 'passed' }] } };
+  assert.doesNotThrow(() => assertCitedChecks(envelope, { observedChecks: before.checks }, { observedChecks: before.checks }));
+  for (const id of ['implementation:forged', 'github-check:forged', 'github-status:forged']) assert.throws(() => assertCitedChecks({ result: { evidence: [{ id, status: 'passed' }] } }, { observedChecks: before.checks }, { observedChecks: before.checks }), /unauthenticated/);
   f.state.missing = true;
   const after = await readImplementationEvidence(f.api, f.completion, f.options);
   assert.throws(() => assertCitedChecks(envelope, { observedChecks: before.checks }, { observedChecks: after.checks }), /unavailable/);
