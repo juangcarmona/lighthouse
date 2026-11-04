@@ -86,7 +86,7 @@
     ]
   },
   "372": {
-    "scope": "Only the disposable #100 command transport fixture and its OpenSpec records. No merge.",
+    "scope": "Only the disposable #100 command transport fixture and its OpenSpec records. No merge. Require a newly approved verification scope for this stale-policy probe.",
     "paths": [
       "src/tests/fixtures/unattended/evidence-100.txt",
       "openspec/changes/issue-372-proposal/"
