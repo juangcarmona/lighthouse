@@ -5,6 +5,10 @@ import { mkdtemp, writeFile, readFile, symlink, rm, cp } from 'node:fs/promises'
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
 import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
 
 async function fixtureHarness(root) {
@@ -91,6 +95,7 @@ test('engine adapter preserves structured evidence while streaming readable outp
     ];
     const shim = join(bin, 'docker');
     await writeFile(shim, `#!${process.execPath}
+require(${JSON.stringify(resourceShim)})(process.argv.slice(2));
 const fs = require('node:fs');
 const args = process.argv.slice(2);
 if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
@@ -151,6 +156,7 @@ test('profile adapter forwards two worker variants, marks receipts unverified an
       await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'legacy-unchanged', lock: join(root, 'lock'), modelProfiles: { schemaVersion: 2, enabled: true, allowExecutionSelection: scenario === 'execution' }, modelCapabilities: { 'openai/test-sol': { available: scenario !== 'unavailable', tools: true, reasoningEfforts: ['high'] }, 'openai/test-luna': { available: true, tools: true, reasoningEfforts: ['medium'] } } }));
       const callsFile = join(root, 'calls.jsonl'), shim = join(bin, 'docker');
       await writeFile(shim, `#!${process.execPath}
+require(${JSON.stringify(resourceShim)})(process.argv.slice(2));
 const fs = require('node:fs'), args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
 if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
@@ -204,7 +210,7 @@ test('a product worker from implementation uses the read-only product engine wit
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Check product intent');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
-    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args[0]==='run'&&!args.includes('cleanup-session')){ if(!args.some(x=>x.endsWith(',dst=/workspace,readonly')))process.exit(2); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.writeFileSync(out+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))}); }\n`);
+    await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args[0]==='run'&&!args.includes('cleanup-session')){ if(!args.some(x=>x.endsWith(',dst=/workspace,readonly')))process.exit(2); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.writeFileSync(out+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))}); }\n`);
     await chmod(shim, 0o755);
     const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_REPOSITORY: 'owner/repo', GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 0, result.stdout + result.stderr);
@@ -226,7 +232,7 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
-    await writeFile(shim, `#!${process.execPath}\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
+    await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
     await chmod(shim, 0o755);
     const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 1, result.stdout + result.stderr);
@@ -245,7 +251,7 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
 test('declared environment preflights before agent, validates with fresh services, and cleans failures', async () => {
   const { mkdir, chmod } = await import('node:fs/promises');
   const { spawnSync } = await import('node:child_process');
-  for (const outcome of ['success', 'missing-sdk', 'missing-agent', 'agent-failure', 'agent-cancel']) {
+  for (const outcome of ['success', 'missing-sdk', 'missing-agent', 'agent-failure', 'agent-cancel', 'ownership-changed']) {
     const root = await mkdtemp(join(tmpdir(), 'lighthouse-environment-'));
     try {
       const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1'), callsFile = join(root, 'calls.jsonl');
@@ -259,6 +265,7 @@ test('declared environment preflights before agent, validates with fresh service
       await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'d'.repeat(64)}`, environments: { dotnet: { image, postgresImage } }, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
       const shim = join(bin, 'docker');
       await writeFile(shim, `#!${process.execPath}
+require(${JSON.stringify(resourceShim)})(process.argv.slice(2));
 const fs = require('node:fs'), args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
 if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
@@ -275,6 +282,7 @@ if(args.includes('--entrypoint') && !mount('/output')) {
 }
 if(mount('/output')) {
  fs.writeFileSync(mount('/workspace')+'/demo.js','new');
+ if(${JSON.stringify(outcome)}==='ownership-changed') { const stateFile=require('node:path').join(require('node:path').dirname(process.argv[1]),'.docker-resource-state.json');const rows=JSON.parse(fs.readFileSync(stateFile,'utf8'));const agent=rows.find(row=>row.name.endsWith('-engine'));agent.id='f'.repeat(64);agent.owner='e'.repeat(64);fs.writeFileSync(stateFile,JSON.stringify(rows));process.exit(1); }
   if(${JSON.stringify(outcome)}==='agent-cancel') { process.kill(process.ppid, 'SIGTERM'); setTimeout(()=>process.exit(1), 1000); return; }
  if(${JSON.stringify(outcome)}==='agent-failure') process.exit(1);
  fs.writeFileSync(mount('/output')+'/envelope.json', ${JSON.stringify(JSON.stringify(envelope))});
@@ -295,8 +303,8 @@ if(mount('/output')) {
         assert.equal(services.length, outcome === 'success' ? 2 : 1);
         for (const service of services) {
           const name = service[service.indexOf('--name') + 1];
-          assert.ok(calls.some(a => a[0] === 'rm' && a.includes('-v') && a.includes(name)));
-          assert.ok(calls.some(a => a[0] === 'network' && a[1] === 'rm' && a.includes(name.replace(/-postgres$/, '-network'))));
+          assert.ok(calls.some(a => a[0] === 'rm' && a.includes('-v') && a.includes(createHash('sha256').update(name).digest('hex'))));
+          assert.ok(calls.some(a => a[0] === 'network' && a[1] === 'rm' && a.includes(createHash('sha256').update(name.replace(/-postgres$/, '-network')).digest('hex'))));
         }
         if (outcome === 'success') {
           assert.equal(execution.status, 0, execution.stdout + execution.stderr);
@@ -311,6 +319,11 @@ if(mount('/output')) {
           const log = await readFile(join(runDir, 'evidence/host/check-1.log'), 'utf8');
           assert.ok(!log.includes('Password=')); assert.match(log, /TEST DATABASE/);
         } else assert.notEqual(execution.status, 0);
+        if (outcome === 'ownership-changed') {
+          assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).cleanup.status, 'unknown');
+          const foreign = JSON.parse(await readFile(join(bin, '.docker-resource-state.json'))).find(row => row.id === 'f'.repeat(64));
+          assert.ok(foreign); assert.equal(calls.some(args => (args[0] === 'rm' || args[1] === 'rm') && args.includes(foreign.id)), false);
+        }
       }
     } finally { await rm(root, { recursive: true, force: true }); }
   }

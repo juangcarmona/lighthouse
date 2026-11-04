@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "correctedNativeAcceptance": "pending updated workflow pin",
+  "archiveSha256": "1c26cfc1c8109d38ba5557691081377992ae895bb36fd20eca22a21420b7c844",
+  "qualifiedImage": "sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c",
+  "testedSourceSha256": {
+    "src/packages/sdlc/src/execution-cleanup.mjs": "368971c583cea06e9be0978ccc0c4bada703eb51b71c264a58d0a6a722e01d1c",
+    "src/packages/sdlc/src/opencode-execute.mjs": "4b340492c78b8c410a7b1a95c747c35cc3fe68a64dae21c395106833d1a5586b",
+    "src/packages/sdlc/src/implementation-runtime.mjs": "53e29abbfff5eb1cdf67f737be9b59f708bdeb6f6112855989b0ebe6701ecf34",
+    "src/packages/sdlc/src/codegraph-runtime.mjs": "f20900984ac7211b446aa79f1b1d288a27894b855cc5fc70ec7f635888894039",
+    "src/tests/execution-cleanup.integration.test.mjs": "18539ae8a45cf2a4efd61e6be7fdf69959d16a346d36817751da58d044722865"
+  },
+  "faultMatrix": [
+    {
+      "scenario": "success",
+      "owner": "100289c7848372e1d171fd323f7d6e8bb5eda9a81f441c023ad5388f4d67037a",
+      "status": "clean",
+      "execution": {
+        "status": "passed",
+        "code": 0,
+        "signal": null
+      },
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "agent-failure",
+      "owner": "d0f25b56e59349d84cfd562ba432402a2145946cb83db6763a2b25acf0be564d",
+      "status": "clean",
+      "execution": {
+        "status": "failed",
+        "code": 7,
+        "signal": null
+      },
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "timeout",
+      "owner": "fab03e00964f4e1c09b0c5bc1c958a9f81afe823498bb197c52ca3c219166667",
+      "status": "clean",
+      "execution": {
+        "status": "timeout",
+        "code": 137,
+        "signal": null
+      },
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "cancel",
+      "owner": "6c42ce9f5baedb1362c4e274f87bc2eb2211e3fadd4a12c265a7ba1fcf36a960",
+      "status": "clean",
+      "execution": {
+        "status": "cancelled",
+        "code": 137,
+        "signal": null
+      },
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "no-op-remove",
+      "owner": "d890e4012daec3f1a2488df41ff9d534f87deb93c74839a8e7277ffe7b8212aa",
+      "status": "failed",
+      "execution": null,
+      "resourceCount": 2,
+      "remainingCount": 2
+    },
+    {
+      "scenario": "lost-create",
+      "owner": "29312db1c70a7d69ed48b4a47e798669f2d5f38cb719f91fda518e798ed66b56",
+      "status": "clean",
+      "execution": null,
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "lost-remove",
+      "owner": "50c993b3d688c8fd6dac6aa352c7d2546787b347d1fc2a959083a27b30e29d7d",
+      "status": "clean",
+      "execution": null,
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "runtime-outage",
+      "owner": "e2ca68c2431202a590b36840673a039948730950b2af7b1e3a47136206c8152c",
+      "status": "unknown",
+      "execution": null,
+      "resourceCount": 2,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "foreign-container-at-owned-name",
+      "owner": "a43c787a367fb4b82f66287ad7243614cfff5eb98cc462cc2fb3c4888a89fe07",
+      "status": "unknown",
+      "execution": null,
+      "resourceCount": 1,
+      "remainingCount": 0,
+      "preserved": {
+        "type": "container",
+        "id": "ca008da6fb9181be8b9b60fc78808a6da3eb20fa1cefc412f9734b79df64995d"
+      }
+    },
+    {
+      "scenario": "foreign-network-at-owned-name",
+      "owner": "40da5dfe79b36f006e6f26895d1bc09e26af001cfb3904567ce723e443fa1857",
+      "status": "unknown",
+      "execution": null,
+      "resourceCount": 1,
+      "remainingCount": 0,
+      "preserved": {
+        "type": "network",
+        "id": "8a1014d341ab194c9e7e496dafa2f75df51909c5dc30bed270d9b64fefb3fc29"
+      }
+    },
+    {
+      "scenario": "phase-no-op-removal",
+      "owner": "36d94dee2a9da149adc8724fac97a7049808de2e10de4e0c3380a59e35611353",
+      "status": "failed",
+      "execution": null,
+      "resourceCount": 1,
+      "remainingCount": 1
+    },
+    {
+      "scenario": "phase-lost-response-removal",
+      "owner": "87e2d51b1bcb30bfbfed5512ba8472a19272397a403059cdb9761a7f22c887be",
+      "status": "clean",
+      "execution": null,
+      "resourceCount": 1,
+      "remainingCount": 0
+    },
+    {
+      "scenario": "abrupt-process-loss",
+      "owner": "e481e36f755672116ff7ee4d43ec28003b5721cb970fc2db211f5e09aec7cbcb",
+      "status": "clean",
+      "execution": {
+        "status": "process-lost",
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "resourceCount": 1,
+      "remainingCount": 0
+    }
+  ],
+  "priorNativeRuns": [
+    {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41911290800",
+      "workflowOutcome": "failure: publication rejected a changed source revision after PR386 merged",
+      "stageOutcome": null,
+      "execution": "passed",
+      "cleanup": "clean",
+      "independentInventory": {
+        "containers": [],
+        "networks": []
+      }
+    },
+    {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41915997334",
+      "workflowOutcome": "success",
+      "stageOutcome": "blocked",
+      "execution": "passed",
+      "cleanup": "clean",
+      "independentInventory": {
+        "containers": [],
+        "networks": []
+      }
+    }
+  ]
+}

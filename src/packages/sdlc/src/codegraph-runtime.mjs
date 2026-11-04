@@ -1,6 +1,5 @@
 import { chmod, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { runOwnedDocker } from './execution-cleanup.mjs';
 
 export function codegraphSelection(config, implementing) {
@@ -71,7 +70,7 @@ export async function startCodegraph({ config, source, harness, dir, name, docke
   }
 }
 
-export function stopCodegraph(sidecar) {
+export function stopCodegraph(sidecar, config = {}) {
   if (!sidecar) return;
-  try { execFileSync('docker', ['rm', '-f', sidecar], { stdio: 'ignore', timeout: 30000 }); } catch {}
+  try { runOwnedDocker(config, ['rm', '-f', sidecar], { stdio: 'ignore', timeout: 30000 }); } catch {}
 }
