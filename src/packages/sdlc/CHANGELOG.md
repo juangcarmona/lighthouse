@@ -1,5 +1,117 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.7
+
+### Patch Changes
+
+- c7fa9d9: # Align planning and failure reports with admitted checks
+
+  Expose the admitted command inventory as planned verification and preserve bounded concrete findings when independent review escalates. Command execution and acceptance still require actual host receipts.
+
+- 68a2525: # Reduce repeated verification artifact downloads
+
+  Read the required planning and regression members from one fresh canonical Actions archive per reconstruction. Keep new inventory and download observations for each separate verification, with the existing identity, expiry, size, ZIP integrity and evidence checks.
+
+- be3d644: # Bound transient artifact download retries
+
+  Retry confirmed HTTP 502, 503 and 504 failures of the selected immutable artifact GET at most three times, preserving command limits, terminal errors and archive validation. Delivery effects are not retried.
+
+- 1b22272: # Bound CI inventory read retries
+
+  Retry identified transient CI inventory reads before any confirmed send, preserving effect uncertainty, the existing recovery budget and safe transport diagnostics.
+
+- 17406da: # Retain safe GitHub denial reasons
+
+  Include a bounded, redacted GitHub denial message in issue-stage API failures when safe. Preserve the original HTTP status and failure outcome, with status-only fallback for unsafe or unavailable diagnostics.
+
+- 8d10ec9: # Repair engineering plans within the existing correction budget
+
+  Allow bounded FF proposal corrections before implementation, preserve independent review of the accepted round, and share the repair budget with candidate corrections.
+
+- b6ff983: # Separate bounded receipts from full diagnostics
+
+  Keep native unattended receipt artifacts within the existing reader bound by retaining exact stage members and uploading full execution diagnostics separately. Preserve canonical member names, bytes and validation limits.
+
+- de3703b: # Explain bounded workspace provenance
+
+  Identify synthetic local Git history in the shared worker context so missing original commit objects do not become unavailable checks. The trusted host still authenticates revision, candidate tree and command receipts.
+
+- 3e2ba16: # Preserve repository identity in candidate Git metadata
+
+  Configure a declared credential-free origin for agent and independent-check workspaces so repository-aware checks can resolve source links. Keep synthetic history, disabled hooks and legacy contexts without a repository.
+
+- 09134aa: # Ignore feedback on closed delivery PRs
+
+  Treat owner feedback on a closed PR as a routing no-op while retaining actor authorization and stale-dispatch rejection.
+
+- 46d422e: # Trigger qualifying CI for bot delivery
+
+  Use an optional repository-scoped GitHub App to create immutable verification refs and start eligible push checks. Retain CI request state and reconcile uncertain effects without repeating publication.
+
+- f84c541: # Resume final review after CI
+
+  Resume final review through an authenticated explicit CI signal when GitHub suppresses the workflow completion event.
+
+- faf2ef1: # Recover retained final-review publication
+
+  Finish missing labels, handoffs and dispatch completion from an authenticated, already published final review without starting another agent. Maintenance includes unresolved closed-issue reviews from its bounded recent native-run window and preserves current authority, evidence and check gates.
+
+- 93e4828: # Validate bound independent review decisions in the host
+
+  Unattended reviewers return a strict verdict and findings; the host constructs the stage envelope and retains the raw decision. Preserve legacy execution and align bounded artifact reads with whole-file candidates.
+
+- 6950ab1: # Verify retained hotfix evidence at final review
+
+  Reconstruct the compact hotfix plan and independent planning review from the native delivery artifacts. Authenticate the expected RED failure, successful GREEN command and frozen regression bytes against the original grant and published candidate, preserving unavailable or mismatched evidence.
+
+- 1af1ad3: # Preserve independent review identity
+
+  Prepare an initially blocked review envelope with the admitted identity, and retain redacted rejected output and engine events for diagnosis. Strict result validation and review acceptance remain required.
+
+- 8795485: # Preserve actionable provider validation failures
+
+  Keep bounded strict OpenSpec findings visible in ordinary supervised failure messages while preserving the original error and structured unattended repair report.
+
+- 4518325: # Authenticate required-check workflow events
+
+  Reject dispatched GitHub Actions jobs as pull-request rule evidence and report their actual event and execution link. Preserve dispatch-based post-merge verification.
+
+- a833930: # Supply current product evidence to read-only planners
+
+  Reuse pinned ProductShape graph reports and current citation payloads in isolated planning contexts without adding shell access or product approval authority.
+
+- 7917a05: # Reconstruct the reviewed provider plan accurately
+
+  Preserve provider metadata ordering when authenticating retained planning reviews, including proposals with specification deltas or differently ordered model metadata.
+
+- 187bac2: # Repair incomplete technical implementations
+
+  Return a blocked implementation's missing evidence to the existing correction loop when its host checks pass. Require a later passed result and independent review, preserve human and unavailable-prerequisite stops, and share the existing correction budget across planning and implementation.
+
+- ccfc638: # Repair rejected technical plans
+
+  Return matching deterministic OpenSpec validation findings to the existing bounded proposal correction loop. Preserve strict validation, independent review, the shared repair budget and terminal stops for unavailable or unknown provider execution.
+
+- adbacff: # Serial epic integration checks
+
+  Install the optional serial epic workflow and run its configured checks against each exact integration candidate before readiness. Use the adopter-owned GitHub App for eligible push CI, retain reference intent and reconcile lost acknowledgements without duplicate effects.
+
+- be322c1: # Retain bounded recovery for shorthand artifact failures
+
+  Retry confirmed shorthand GitHub 502/503/504 artifact-download failures within the existing three-attempt limit, while preserving terminal failures and evidence validation.
+
+- 93d4b4a: # Correct skipped and neutral verification evidence
+
+  Report skipped and neutral check runs as unavailable verification evidence, preserving their native conclusions and rejecting passed citations by native ID or URL. Required-check and merge eligibility remain unchanged.
+
+- c1b58b4: # Authenticate unattended command receipts
+
+  Retain the tested implementation receipt and exact published tree in the native unattended artifact. Final review authenticates FF and hotfix commands against the original owner grant, current implementation policy, workflow, intent and retained output.
+
+- fe56d59: # Bind unattended checks to native execution and intent
+
+  Carry authenticated native run, numeric attempt and original authorized intent into unattended stage requests so existing v2 check receipts bind to the correct execution. Clarify that candidate production returns before later host and installed-runtime acceptance.
+
 ## 0.20.6
 
 ### Patch Changes
