@@ -29,6 +29,8 @@ if(process.argv[2]==='cleanup-session') process.exit(0);
 const {request,scenario}=JSON.parse(fs.readFileSync('/input/context.json'));
 assert.equal(process.env.TMPDIR,'/tmp');
 assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,'1');
+assert.equal(process.env.LIGHTHOUSE_CI_APP_CLIENT_ID,undefined);
+assert.equal(process.env.LIGHTHOUSE_CI_APP_PRIVATE_KEY,undefined);
 fs.mkdirSync(process.env.XDG_CACHE_HOME,{recursive:true});
 fs.writeFileSync(process.env.XDG_CACHE_HOME+'/scratch','disposable',{mode:0o600});
 let scopeProbe;
@@ -89,7 +91,7 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
         await writeFile(join(runDir, 'context.json'), JSON.stringify({ ...stageContext(request, {}), scenario }));
         await writeFile(join(current, 'prompt'), 'Exercise only the deterministic fixture.');
         await writeFile(join(current, 'config'), JSON.stringify({ image, implementationImage: image, uid: 20003, authVolume: volume, model: 'fixture-no-model', lock: join(current, 'lock') }));
-        const run = spawnSync(process.execPath, [join(harness, 'src/opencode-execute.mjs')], { encoding: 'utf8', timeout: 60000, env: { ...process.env, LIGHTHOUSE_ENGINE_CONFIG: join(current, 'config'), RUNNER_TEMP: current, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(current, 'prompt'), GH_AW_SAFE_OUTPUTS: join(current, 'completion') } });
+        const run = spawnSync(process.execPath, [join(harness, 'src/opencode-execute.mjs')], { encoding: 'utf8', timeout: 60000, env: { ...process.env, LIGHTHOUSE_CI_APP_CLIENT_ID: 'host-only-client', LIGHTHOUSE_CI_APP_PRIVATE_KEY: 'host-only-private-key', LIGHTHOUSE_ENGINE_CONFIG: join(current, 'config'), RUNNER_TEMP: current, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(current, 'prompt'), GH_AW_SAFE_OUTPUTS: join(current, 'completion') } });
         assert.equal(run.error, undefined, run.error?.message);
         const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json')));
         if (scenario.startsWith('readonly-payload-')) {

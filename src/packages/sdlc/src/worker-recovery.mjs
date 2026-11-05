@@ -315,7 +315,7 @@ export async function verifyRecoveryOrigin(api, repository, owner, dispatch, par
   if (decision.state !== 'retryable') throw Error(`Recovery no longer authorized: ${decision.code}`);
 }
 
-export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson, { saveCiRecovery, saveCompletionRecovery } = {}) {
+export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson, { saveCiRecovery, saveCompletionRecovery, ciTrigger = null } = {}) {
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
   await reconcileUnattendedStop(api, repository, owner, issue, comments);
   const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.body.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
@@ -332,7 +332,7 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
       const completion = await reconcileCompletion(api, repository, owner, issue, observation, parent, enabled, { readArtifact, save: saveCompletionRecovery });
       if (completion) Object.assign(publicObservation, completion);
       if (completion?.state === 'reconciled' && observation.stop?.observation !== 'cleanup-failure') observation.stop = null;
-      const ci = await reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now, { readArtifact, save: saveCiRecovery });
+      const ci = await reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now, { readArtifact, save: saveCiRecovery, ciTrigger });
       if (ci) Object.assign(publicObservation, ci);
       if (await reconcileAbandonedReservation(api, repository, owner, issue, comments, observation, readArtifact)) Object.assign(publicObservation, { state: 'reconciled', code: 'reservation-released', nextAction: 'Follow the retained outcome before requesting further work.' });
       const preparationRun = observation.observedRunId ?? run?.id;

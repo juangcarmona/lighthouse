@@ -1,5 +1,6 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { checkCommit } from './completion.mjs';
+import { verificationPush } from './ci-subject.mjs';
 import { validateProductCheckpoint, productProposalProof } from './product-change.mjs';
 
 const marker = /<!-- lighthouse-pr-state:(\{[^\n]*\}) -->/;
@@ -56,7 +57,7 @@ export async function scheduledImplementationPulls(api) {
 }
 
 export function authorizedCiCallback(run, { id, sha, repo, workflows }) {
-  return Number.isSafeInteger(id) && /^[a-f0-9]{40}$/.test(sha ?? '') && run.id === id && run.event === 'workflow_dispatch' && run.head_sha === sha && run.repository?.full_name === repo && workflows?.some(name => run.path === `.github/workflows/${name}`) === true;
+  return Number.isSafeInteger(id) && /^[a-f0-9]{40}$/.test(sha ?? '') && run.id === id && (run.event === 'workflow_dispatch' || verificationPush(run)) && run.head_sha === sha && run.repository?.full_name === repo && workflows?.some(name => run.path === `.github/workflows/${name}`) === true;
 }
 
 export async function setPullRequestDraft(token, pr, draft) {

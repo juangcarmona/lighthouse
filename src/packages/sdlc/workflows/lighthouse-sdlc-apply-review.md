@@ -206,6 +206,8 @@ jobs:
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_CI_APP_CLIENT_ID: ${{ vars.LIGHTHOUSE_CI_APP_CLIENT_ID }}
+          LIGHTHOUSE_CI_APP_PRIVATE_KEY: ${{ secrets.LIGHTHOUSE_CI_APP_PRIVATE_KEY }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
       - name: Preserve authenticated command evidence
         if: always()

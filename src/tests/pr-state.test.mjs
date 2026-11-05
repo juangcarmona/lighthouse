@@ -28,7 +28,8 @@ const fixture = (draft, passed = true) => {
   const issue = { number: 18, state: 'open', labels: [{ name: 'ready' }, { name: 'waiting-review' }] };
   const candidate = pr(draft), changed = [];
   const api = async (path, method, body) => {
-    if (path.startsWith(`commits/${head}/check-runs`)) return { check_runs: passed ? [{ name: 'repository', app: { id: 15368 }, head_sha: head, status: 'completed', conclusion: 'success' }] : [] };
+    if (path.startsWith(`commits/${head}/check-runs`)) return { check_runs: passed ? [{ name: 'repository', app: { id: 15368 }, head_sha: head, check_suite: { id: 123 }, details_url: 'https://github.com/owner/repo/actions/runs/456/job/789', status: 'completed', conclusion: 'success' }] : [] };
+    if (path === 'actions/runs/456') return { id: 456, head_sha: head, check_suite_id: 123, event: 'pull_request' };
     if (path.startsWith(`commits/${head}/statuses`)) return [];
     if (path === 'issues/18' && method === undefined) return issue;
     if (path === 'issues/18/labels' && method === 'POST') { for (const name of body.labels) issue.labels.push({ name }); return []; }
@@ -122,6 +123,10 @@ test('CI callback accepts only the current configured repository run', () => {
   const context = { id: 123, sha: head, repo, workflows: ['ci.yml'] };
   const run = { id: 123, event: 'workflow_dispatch', head_sha: head, path: '.github/workflows/ci.yml', repository: { full_name: repo } };
   assert.equal(authorizedCiCallback(run, context), true);
+  const pushed = { ...run, event: 'push', head_branch: `lighthouse/verification-34-${head}` };
+  assert.equal(authorizedCiCallback(pushed, context), true);
+  assert.equal(authorizedCiCallback({ ...pushed, head_branch: 'main' }, context), false);
+  assert.equal(authorizedCiCallback({ ...pushed, head_branch: `lighthouse/verification-34-${'c'.repeat(40)}` }, context), false);
   for (const changed of [{ id: 124 }, { event: 'pull_request' }, { head_sha: 'c'.repeat(40) }, { path: '.github/workflows/other.yml' }, { repository: { full_name: 'other/repo' } }]) assert.equal(authorizedCiCallback({ ...run, ...changed }, context), false);
 });
 

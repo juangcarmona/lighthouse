@@ -48,6 +48,7 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `LIGHTHOUSE_MAINTENANCE_ISSUES` | Limits subjects; `[]` admits none, absence selects open owner issues, invalid data stops admission |
 | `LIGHTHOUSE_RECOVERY_ENABLED` | Separately permits bounded retries and confirmed-effect recovery; checked again at worker admission |
 | `LIGHTHOUSE_REPORT_INDEX_ISSUE` | Selects an open owner-authored report index; absence disables reports |
+| `LIGHTHOUSE_CI_APP_CLIENT_ID` | Optional eligible CI connection, paired with the `LIGHTHOUSE_CI_APP_PRIVATE_KEY` Actions secret; grants no delivery or merge authority |
 | `LIGHTHOUSE_EPIC_ENABLED` | Gates existing epic continuation hooks; does not install the epic workflow or establish aggregate acceptance |
 | `LIGHTHOUSE_EPIC_CAPACITY` | Bounds child admission through existing epic hooks; default one, without installing aggregate delivery |
 | `completion.ciRepair` in `.lighthouse/github.json` | Separately selects CI correction issues and budget; no global repair by default |

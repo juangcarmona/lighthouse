@@ -81,6 +81,8 @@ Review the preview, then repeat with `--apply`; updating differing existing work
 
 The installer subscribes the router to selected continuation workers and the workflow names resolved from `.lighthouse/github.json` → `completion.postMergeWorkflows`. CI files must exist and use a static single-line `name`, or omit it to use the workflow path. Review and reinstall workflows after renaming CI or changing this list. Runtime admission still verifies paths, repository, revision and candidate subject. Unrelated workflow completions are excluded; explicit bot wake-ups and scheduled PR-state reconciliation remain available.
 
+Required PR checks must come from an event [GitHub accepts for PR rules](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks?plain=1). A green `workflow_dispatch` job supports execution evidence but cannot satisfy those rules. Lighthouse authenticates the native run, SHA and check suite before counting a job; unavailable origin or an ineligible event blocks integration with its execution link. Configure eligible CI for bot publications separately; dispatch alone does not establish unattended merge readiness. Post-merge verification can still use dispatch.
+
 ## Bounded unattended routes
 
 Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops. The bounded `lighthouse-unattended-<run>-<attempt>` artifact contains delivery receipts; full engine and check logs are retained separately as `lighthouse-unattended-diagnostics-<run>-<attempt>`.

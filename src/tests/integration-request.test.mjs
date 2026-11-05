@@ -31,7 +31,8 @@ function fixtureApi(s, path, method = 'GET', body) {
   if (path.startsWith('contents/.lighthouse/github.json')) { if (s.noProfile) throw Error('Profile missing'); return { content: Buffer.from(JSON.stringify(s.profile)).toString('base64') }; }
   if (path.startsWith('rules/branches/')) return [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'repository', integration_id: 15368 }] } }];
   if (path === 'branches/main') return { protection: { enabled: false } };
-  if (path.includes('/check-runs?')) return { check_runs: [{ name: 'repository', head_sha: s.pr.head.sha, app: { id: 15368 }, status: s.pending ? 'in_progress' : 'completed', conclusion: s.failed ? 'failure' : 'success' }] };
+  if (path.includes('/check-runs?')) return { check_runs: [{ name: 'repository', head_sha: s.pr.head.sha, app: { id: 15368 }, check_suite: { id: 123 }, details_url: 'https://github.com/owner/repo/actions/runs/456/job/789', status: s.pending ? 'in_progress' : 'completed', conclusion: s.failed ? 'failure' : 'success' }] };
+  if (path === 'actions/runs/456') return { id: 456, head_sha: s.pr.head.sha, check_suite_id: 123, event: 'pull_request' };
   if (path.includes('/statuses?')) return [];
   throw Error('Unexpected API: ' + path);
 }

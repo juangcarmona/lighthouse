@@ -13,6 +13,7 @@ import { taskDigest } from './issue-actions.mjs';
 import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } from './completion.mjs';
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
+import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
 import { handoff, pendingQuestion } from './handoff.mjs';
 import { committedSource, verificationIntegrity } from './verification-integrity.mjs';
@@ -241,7 +242,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         await projectImplementationPrState(api, issueNumber, true);
         if (await releaseReservation() !== 'released') throw Error('The execution reservation changed before PR handoff; inspect the current issue and PR.');
         await notify(handoff({ status: policy.merge ? 'queued' : 'review', stage: route, happened: 'The candidate passed its executed checks and independent review.', action: policy.merge ? 'None. Wait for the required CI and integration check.' : 'Owner: review the linked PR and authorize integration if appropriate.', next: policy.merge ? 'The workflow will recheck the PR head, CI and delegated merge authority.' : 'Integration waits for separate authorization.', link: `[Candidate PR #${published.number}](${published.html_url})`, details: '<!-- lighthouse-pr-state:' + JSON.stringify({ pr: published.number, head: published.head.sha, complete: true, run: Number(env.GITHUB_RUN_ID) }) + ' -->' }));
-        await dispatchDeliveryChecks(dispatchApi, revision, published);
+        await dispatchDeliveryChecks(dispatchApi, revision, published, { ciTrigger: githubAppCiTrigger(env), beforeWrite: recheck, checkpoint: requests => writeFile(join(root, 'ci-requests.json'), JSON.stringify(requests)) });
         return published;
       },
       integrate: async (candidate, pr) => {
@@ -257,7 +258,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           // Observe a draft without promoting it while CI is pending. The final merge recheck still rejects drafts.
           observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID, { observeDraft: true });
           let checked = false;
-          try { assertChecks(observation); checked = true; } catch {}
+          try { assertChecks(observation); checked = true; }
+          catch (error) { if (observation.checks.some(check => ['ineligible-event', 'unverified-workflow'].includes(check.state))) throw error; }
           if (checked) {
             await recheck();
             if (current.draft) {
