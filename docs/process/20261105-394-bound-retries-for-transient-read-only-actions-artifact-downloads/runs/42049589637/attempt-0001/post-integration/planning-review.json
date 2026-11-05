@@ -1,0 +1,455 @@
+{
+  "binding": "0ed01191d0ea883fd4d62577d21ff5855f07a2d2e6ed77d80ed30dc3bfaa7308",
+  "runId": "42043226550",
+  "attempt": "1",
+  "sourceRevision": "104d6939219f18cacb1a9a33d5f48dd10050c645",
+  "intent": "b8b14bf71b3285a9dcc643344376711af0196c942922d7d29458ecbfbcb6f235",
+  "policyDigest": "357679c31ccf231c4d28a5a8caad96dcc586ef166f0cf0814be51c2a7e807143",
+  "details": {
+    "refined": {
+      "eligibility": {
+        "points": 2,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "Two points is the approved small-component-behavior anchor, assessed directly rather than converted from labels. actions-artifact.mjs:11 performs a single bounded read-only GET of the selected artifact ID; ZIP validation follows at line 12. A narrow retry for confirmed 502/503/504 command failures can stay within the admitted owner, focused test file and patch changeset. stage-dispatch.mjs:139-177 and proposal.mjs:83-112 retain downstream identity/authority checks, while stage-dispatch.mjs:106-112 forbids mutation retries and worker-recovery.mjs:42-95 retains unknown-evidence and uncertain-publication stops. Low risk depends on leaving these boundaries unchanged, using the same artifact ID and credentials, and rethrowing terminal errors. The correction is reversible without data migration. Existing product boundaries describe bounded, fail-closed delivery; no new product meaning or human-only decision is needed. Two points satisfies FF's 1–3-point limit; five-point opt-in is false."
+      },
+      "estimate": {
+        "points": 2,
+        "status": "confirmed",
+        "rationale": {
+          "scope": "Small behavior change inside the existing 13-line artifact reader, focused download/error regression tests and one SDLC patch changeset; no public API or authority-contract changes.",
+          "dependencies": "Reuse node:child_process, the existing gh command and ZIP reader, and the existing builtin-module mocking/ZIP fixtures. No new package, credentials, external service contract or predecessor issue completion is required.",
+          "verification": "Exercise actual readActionsJson calls with realistic child-process failures, preserve archive regressions, and run the exact admitted install, focused test, repository, citation and OpenSpec commands during implementation."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "The remote 503 incident is reported by issue #394; this refinement did not independently retrieve or reproduce run 41916018912.",
+          "The exact implementation and behavioral test outcomes remain for the subsequent planning and implementation stages."
+        ]
+      },
+      "problem": "Lighthouse adopters and the agent host can lose preparation or evidence retrieval on a transient Actions artifact ZIP GET failure even when the immutable artifact remains valid. The existing reader immediately propagates the first command failure. Recover only clearly identified transient reads within a finite local bound, without altering delivery authority or accepting invalid evidence.",
+      "affectedUsers": [
+        "Adopters and maintainers relying on authenticated stage artifacts",
+        "The trusted host retrieving dispatch, refinement and recovery evidence"
+      ],
+      "scope": {
+        "plannedFiles": [
+          "src/packages/sdlc/src/actions-artifact.mjs",
+          "src/tests/actions-artifact.test.mjs",
+          ".changeset/bounded-artifact-read-retry.md"
+        ],
+        "owner": "Existing SDLC artifact download owner, readActionsJson",
+        "releaseNote": "One patch changeset for @juangcarmona/lighthouse-sdlc; do not edit package versions or lockfiles for this correction.",
+        "planningArtifacts": "The subsequent FF proposal is host-managed under openspec/changes/issue-394-proposal/ as described in unattended-actions.mjs:89,197-212; this refinement creates neither proposal nor implementation files.",
+        "outOfScope": [
+          "Retrying the inventory API, generic API requests, mutations, dispatches, workers, publication, merge or an unknown delivery effect",
+          "Changing artifact identity selection, archive/member validation, optional-absence semantics or caller authorization",
+          "Adding scheduler, recovery authority, fallback credentials, dependencies or policy changes",
+          "Replaying the incident run or changing the canonical product model"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For each of HTTP 502, 503 and 504, a realistic failed gh artifact GET followed by a valid ZIP returns exactly the JSON from that selected artifact; repository, run inventory, artifact ID, member and credential path remain unchanged. No GET occurs after success.",
+        "Use a fixed maximum of three GET attempts, retaining a maximum 30000 ms command timeout and 2 MiB maxBuffer on every attempt, with no unbounded waits or backoff. Thus configured GET timeouts total at most 90000 ms per reader invocation, apart from fixed local overhead; the inventory retains its existing separate API timeout. Tests assert the attempt count and timeout values without waiting in real time.",
+        "Retry only a positively identified 502/503/504 HTTP diagnostic from the failed gh download command. Model realistic execFileSync errors with nonzero process exit status and Buffer stderr containing a gh HTTP diagnostic; the process exit status is not the HTTP status. A bare number or generic error message is not sufficient identification.",
+        "On three transient failures, reject visibly with the original final command error and its existing terminal diagnostic; do not return null, partial output or fabricated success. On a transient followed by any terminal error, stop immediately with that terminal error.",
+        "401/403/404 and other non-allowlisted HTTP failures, unknown errors, missing-command errors, signals, timeouts and buffer-limit errors are not retried. Inventory failures or absent, expired, duplicate, incomplete and oversized artifact selection retain their current outcomes without entering the GET retry loop.",
+        "ZIP parsing and all downstream validation remain outside the retry catch. Invalid ZIP, missing required member, duplicate member, invalid JSON/UTF-8, size/decompression/CRC failures and optional null evidence fail without another GET, including when obtained after an earlier transient read. Confirmed optional absence keeps its existing null behavior.",
+        "Focused tests exercise readActionsJson through the existing childProcess mock seam and verify exact argv, selected artifact identity, attempt counts, preserved limits and error identity. Existing archive and repository regressions remain passing, and the SDLC patch changeset describes only the bounded read correction."
+      ],
+      "dependencies": [
+        {
+          "name": "Existing download and validation ownership",
+          "resolved": true,
+          "source": "src/packages/sdlc/src/actions-artifact.mjs; src/packages/sdlc/src/zip-json.mjs",
+          "disposition": "Reuse existing owner and validation unchanged; no new authority or dependency."
+        },
+        {
+          "name": "Caller compatibility and recovery semantics",
+          "resolved": true,
+          "source": "src/packages/sdlc/src/stage-dispatch.mjs; src/packages/sdlc/src/proposal.mjs; src/packages/sdlc/src/worker-recovery.mjs; src/packages/sdlc/src/issue-actions.mjs",
+          "disposition": "Keep the same exported signature, selected artifact, success/absence values and terminal failures. Authentication and uncertain-effect decisions remain caller-owned."
+        },
+        {
+          "name": "Related issues and incident",
+          "resolved": true,
+          "source": "/input/context.json:issue.body; issue.issue_dependencies_summary",
+          "disposition": "#185 and #211 supply motivation, not required changes or replay authority. The supplied dependency summary reports no blockers; the bounded local correction needs no external issue completion."
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Misclassifying a process exit code or unrelated diagnostic as a transient HTTP response",
+          "mitigation": "Recognize only explicit gh artifact-GET HTTP 502/503/504 diagnostics; test Buffer stderr, terminal HTTP statuses, signals and unknown errors. Fail closed for uncertain classifications."
+        },
+        {
+          "risk": "Broad shared-reader impact or increased preparation latency",
+          "mitigation": "Limit retry to the single selected immutable GET, cap three attempts and their configured timeouts, preserve error identity and validation, and run the complete repository test suite covering callers."
+        }
+      ],
+      "rollback": "Revert the eventual isolated three-file implementation commit through the normal authorized change process. This restores single-attempt GET behavior without migration or remote-effect compensation; do not replay any worker or publication as rollback.",
+      "definitionOfReady": [
+        {
+          "check": "Problem and affected users identified",
+          "satisfied": true,
+          "evidence": "Issue #394 and the single-attempt GET in actions-artifact.mjs:11 establish the failure mode and bounded desired result."
+        },
+        {
+          "check": "Product meaning and outcome unambiguous",
+          "satisfied": true,
+          "evidence": "A local immutable-read retry preserves existing fail-closed and authority boundaries; explicit acceptance criteria exclude delivery-effect replay and invalid evidence."
+        },
+        {
+          "check": "Scope and implementation owner known",
+          "satisfied": true,
+          "evidence": "context.unattended.scope names the existing owner, focused tests and one changeset; no caller edits are required."
+        },
+        {
+          "check": "Dependencies and risks resolved for design",
+          "satisfied": true,
+          "evidence": "Source-reviewed callers retain authentication and recovery decisions; no new dependency, product approval or human-only architecture choice is identified."
+        },
+        {
+          "check": "Testable criteria and verification plan defined",
+          "satisfied": true,
+          "evidence": "Positive, exhaustion and no-retry matrices use the existing production-reader test seam; all five admitted implementation commands are preserved below."
+        },
+        {
+          "check": "Confirmed numeric estimate and reversible FF eligibility",
+          "satisfied": true,
+          "evidence": "Two-point small-component-behavior anchor, low risk, isolated revert and no unresolved current-stage decision; no legacy size conversion or invented triage predecessor."
+        }
+      ],
+      "verificationPlan": {
+        "status": "planned-not-executed",
+        "inventorySource": "context.unattended.implementationChecks",
+        "checks": [
+          {
+            "command": [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            "purpose": "Install the locked verification dependencies without lifecycle scripts."
+          },
+          {
+            "command": [
+              "node",
+              "--test",
+              "src/tests/actions-artifact.test.mjs"
+            ],
+            "purpose": "Execute focused production-path transient, exhaustion, terminal-error and archive regressions."
+          },
+          {
+            "command": [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            "purpose": "Run Markdown lint, all Node tests including caller regressions, documentation links and public-site verification from package.json:17."
+          },
+          {
+            "command": [
+              "npx",
+              "--no-install",
+              "prodshape",
+              "citations",
+              "verify",
+              "--provider",
+              "openspec",
+              "--format",
+              "json"
+            ],
+            "purpose": "Verify explicit scope and current product citations in the later planning artifacts; repository verification is not a substitute."
+          },
+          {
+            "command": [
+              "npx",
+              "--yes",
+              "--package=@fission-ai/openspec@1.15.0",
+              "openspec",
+              "validate",
+              "issue-394-proposal",
+              "--strict",
+              "--no-interactive"
+            ],
+            "purpose": "Strictly validate the proposal after the subsequent proposal stage materializes it."
+          }
+        ],
+        "additionalAgentObservations": [
+          "Only read-only source and product-report inspection was performed in refinement. No npm install, test command, provider validation or live artifact download was executed.",
+          "CodeGraph symbol search did not identify the JavaScript owner and its context query was unavailable; direct source inspection of the owner, tests and relevant callers supplied the assessment instead.",
+          "The ponytail skill loader reported unavailable; no skill execution is claimed. This is an auxiliary observation, not an unavailable mandatory product check.",
+          "The reported incident and remote deployed version/branch were not independently verified. The assessment concerns the admitted source revision and does not assert deployed behavior."
+        ],
+        "laterIndependentReview": "The trusted host must obtain separate planning and candidate engineering review with a different configured model and fresh context. These are subsequent gates, not pending review of this refinement.",
+        "laterForgeCI": "After candidate publication, the trusted host must authenticate the actual candidate head, adopted forge checks and separately delegated integration authority. No CI, merge, post-merge, release or deployment success is claimed here."
+      },
+      "productContext": {
+        "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+        "assessment": "Technical reliability correction within existing bounded delivery and fail-closed evidence semantics, not a Product Change. Model artifacts report draft status; host-prepared baseline context and citation payloads are not a new approval. This assessment does not amend or approve the product model.",
+        "currentCitationPayloads": [
+          "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+          "pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\""
+        ],
+        "impactReview": "The FF and handoff reports connect the change context to entry authority, stage gates, human authority and fail-closed lifecycle behavior. Those boundaries remain unchanged. Product preparation/apply, decomposition, scoped memory and public-site behavior are neighboring concerns, not targets of this correction."
+      },
+      "route": "ff",
+      "hotfixAssessment": "Not applicable: the admitted route is FF. The unrelated hotfix admission fixture does not select a hotfix route or authorize a fabricated RED receipt."
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-394-proposal/proposal.md",
+          "content": "# Proposal\n\n<!-- pdac-scope: cited -->\n\n## Why\n\n[Issue #394](https://github.com/juangcarmona/lighthouse/issues/394) reports that preparation stopped on an immutable Actions artifact download returning HTTP 503 before the worker started. A bounded retry of that read can tolerate a transient service failure without replaying delivery effects.\n\n## What Changes\n\n- Retry only positively identified HTTP 502/503/504 failures of the selected artifact ZIP GET, with at most three attempts, each retaining the 30000 ms timeout and 2 MiB maxBuffer; add no delay or backoff.\n- Keep the same selected artifact ID, repository, member, credential path, inventory rules, ZIP validation and downstream identity checks; propagate the original terminal command error.\n- Add focused production-reader tests for transient success, exhaustion and all no-retry boundaries, and one patch changeset for `@juangcarmona/lighthouse-sdlc`.\n- Do not retry inventory reads, mutations, dispatch, workers, publication or uncertain effects; add no scheduler, fallback credential, dependency or policy change.\n\n## Capabilities\n\n### New Capabilities\n\nNone.\n\n### Modified Capabilities\n\nNone. This is a local reliability correction under existing delivery and evidence contracts, not a new capability or changed product requirement. The current `openspec/specs/` inventory contains only `.gitkeep`; no existing capability is being renamed or replaced. Return `.openspec.yaml` containing only `skip_specs: true`; the host merges it into provider-owned metadata.\n\n## Impact\n\nImplementation changes only `src/packages/sdlc/src/actions-artifact.mjs`, `src/tests/actions-artifact.test.mjs` and `.changeset/bounded-artifact-read-retry.md`. The shared reader's signature and JSON/null/error contracts stay unchanged; consumers retain authentication and recovery decisions. No data migration, package-version edit or lockfile change is required. These host-managed planning artifacts are additional to that three-file implementation scope.\n\n### Product context\n\nDiscovery compared the whole `docs/product/model/` definition with this issue before drafting and widened the affected set using the host-prepared impact reports. The following artifacts are dependencies to preserve, not canonical artifacts to edit.\n\n- `FR-FAST-FORWARD-DELIVERY`: keep bounded execution, independent engineering review and separately authorized integration; this proposal grants none of those later effects.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n- `FR-WORKFLOW-HANDOFFS`: keep unknown execution and uncertain publication explicit; this correction does not authorize recovery replay.\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n- `BR-FAIL-CLOSED`: terminal failures and invalid evidence must remain visible, never fabricated success.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n- `QR-BOUNDED-AUTOMATION`: retain explicit scope, limits, evidence and stop conditions. The concrete three-attempt/30000 ms limits come from this issue's admitted refinement, not a new product parameter.\n<!-- pdac:cite id=\"QR-BOUNDED-AUTOMATION\" digest=\"sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f\" -->\n\nDirect and transitive neighbours checked but not targeted include `BR-ENTRY-AUTHORITY`, `BR-HUMAN-AUTHORITY`, `BR-STAGE-GATES`, `BR-AUTHORITY-BOUNDARIES`, `UC-RUN-SDLC`, `UC-CONTINUE-AGENT-RUN` and `UC-IMPLEMENT-CHANGE`: their entry, gate and decision contracts remain untouched. `BR-PRODUCT-CHANGE-HANDOFF`/`FR-PRODUCT-CHANGE-WORKFLOW`, `BR-MEMORY-BOUNDARY`/`FR-AGENT-MEMORY`, `FR-DECOMPOSE-WORK-ITEM` and `FR-PUBLIC-SITE-PROJECTION` were excluded because this change neither prepares product intent, retains memory, decomposes work nor changes site behaviour.\n\nProduct definition drift: none identified for this correction; no Product Change is needed. The supplied baseline digest is `e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0`; its artifacts remain draft, and these read-only reports are not product approval. Architecture context is `docs/architecture/05-building-block-view/README.md`, `docs/architecture/06-runtime-view/README.md` and `docs/architecture/08-crosscutting-concepts/README.md` at supplied source revision `104d6939219f18cacb1a9a33d5f48dd10050c645`. No architecture source or acceptance decision changes.\n\n## Verification and next decision\n\n[Design](design.md) defines the retry boundary and test matrix; [tasks](tasks.md) preserves every admitted implementation check and the Definition of Done. Those commands are planned, not execution receipts. The trusted host validates and materializes this proposal before separate independent plan review; implementation, current-head forge CI and any integration decision remain later work.\n"
+        },
+        {
+          "path": "openspec/changes/issue-394-proposal/design.md",
+          "content": "# Design\n\n<!-- pdac-scope: cited -->\n\n## Context\n\nSee [proposal.md](proposal.md) for motivation and authority context. `readActionsJson` in `src/packages/sdlc/src/actions-artifact.mjs` selects one non-expired artifact from a bounded inventory, runs `gh api repos/<repository>/actions/artifacts/<id>/zip` once with a 30000 ms timeout and 2 MiB buffer, then calls `readZipJson`. Existing tests replace `childProcess.execFileSync`, synchronize builtin ESM exports and use the existing ZIP fixture.\n\n`stage-dispatch.mjs` and `proposal.mjs` authenticate retrieved evidence downstream. `worker-recovery.mjs` treats failed evidence reads as unknown and stops uncertain publication; dispatch POST explicitly forbids automatic retry. Retain these owners rather than widening recovery semantics.\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n\n## Goals / Non-Goals\n\n**Goals:** Tolerate only a confirmed transient response from the already-selected immutable GET; keep success payload, command identity, resource limits and terminal error identity unchanged.\n\n**Non-Goals:** Generic retry infrastructure, inventory retries, reselection, reauthentication, caller edits, mutation retries, worker replay, publication reconciliation, new dependencies or canonical product/architecture changes. No live incident replay is needed.\n\n## Decisions\n\n### 1. Keep one local retry boundary\n\nPut a fixed loop around only `execFileSync` in the existing owner. Select the artifact once; issue the identical argv and options on each attempt with the inherited authentication environment unchanged. Allow at most three total GET attempts, with no sleep/backoff and no GET after success. Keep inventory validation before the loop and `readZipJson` after it, outside every retry catch. A failed command contributes no bytes to later attempts.\n\nEvery attempt retains `timeout: 30000` and `maxBuffer: 2 * 1024 * 1024`. Configured GET timeouts sum to at most 90000 ms, apart from process/local overhead; inventory retains its separate existing timeout. This is not a bound on an entire lifecycle run. Prefer these fixed admitted limits to configurable budgets or generic wrappers, which would broaden policy and ownership.\n<!-- pdac:cite id=\"QR-BOUNDED-AUTOMATION\" digest=\"sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f\" -->\n\n### 2. Classify command failures conservatively\n\nWithin that GET-only catch, require a normal nonzero process exit and an explicit gh HTTP diagnostic in stderr, such as `gh: Service Unavailable (HTTP 503)`. Decode Buffer stderr; recognize the diagnostic's HTTP status, never confuse `error.status` (the process exit status) with HTTP status. Match the gh diagnostic form and an exact allowlisted HTTP code, not an arbitrary number, message substring, stdout or requested URL. Unknown/malformed or conflicting diagnostics are terminal.\n\nReject retries for signals, killed processes, missing command, timeout and maxBuffer/OS error codes even if stderr also contains a transient-looking line. Retry only an unambiguous 502, 503 or 504 diagnostic while attempts remain. On exhaustion or any terminal failure, throw that exact error object without wrapping, suppressing stderr, returning null or synthesizing a result. A transient followed by a terminal error stops on that terminal error. Broad network-error retries and generic `message` matching were rejected because they could misclassify non-HTTP or uncertain failures.\n\nValidation failure is not transport failure: invalid ZIP/member/JSON/UTF-8, size/decompression/CRC problems and optional null evidence never enter the catch, including after an earlier transient. Preserve confirmed optional inventory/member absence as null and all other current reader semantics. Caller validation and authentication run as before, with no fallback success.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n### 3. Test the production path, not only a classifier\n\nExtend only `src/tests/actions-artifact.test.mjs`, using its builtin-module mock seam and `src/tests/fixtures/zip.mjs` unchanged. Model realistic `execFileSync` errors with process `status: 1` and Buffer stderr containing a gh HTTP diagnostic. Restore mocks and synchronize builtin exports in cleanup; avoid real waits and remote credentials.\n\n| Case | Required assertions |\n| --- | --- |\n| Immediate success; each of 502/503/504 then success; two transients then success | Exact expected JSON; one inventory call; identical selected artifact argv/credential path and limits on every GET; one, two or three attempts respectively; no GET after success |\n| Three transients; transient then terminal | Exactly three or two GETs; reject with the original final error object and diagnostic; never null or partial success |\n| 401/403/404, other HTTP codes, unknown/malformed errors, bare 502/503/504, numeric status alone | One GET only and original rejection, both initially and after a transient |\n| ENOENT, timeout, signal/killed and maxBuffer failures, including transient-looking stderr | No retry of those failures; preserve original errors and attempt counts |\n| Inventory failure, absent/expired/duplicate/incomplete/over-bound/oversized selection | Existing rejection or confirmed optional absence; no GET or inventory retry |\n| Malformed ZIP, missing required member, duplicate member, invalid JSON/UTF-8, size/decompression/CRC failures, optional null evidence | No extra GET after bytes arrive, initially and after a transient; preserve optional confirmed absence and existing stored/deflated/descriptor/ZIP64 regressions |\n\n### 4. Keep delivery and publication separate\n\nNo exported signature, schema, persisted state or credentials change. The reader returns the JSON decoded from the selected archive; authentication remains caller-owned, so the reader itself must not claim to authenticate that JSON. Add one `@juangcarmona/lighthouse-sdlc` patch changeset describing only the read correction. Do not edit versions, lockfiles, workflow pins or delivery policy.\n\nThe FF host must obtain independent plan and candidate engineering reviews with fresh context and a different configured model, then authenticate later actual candidate-head forge checks. This plan is neither review acceptance nor merge/release permission.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n## Risks / Trade-offs\n\n- [A gh diagnostic format differs] → Fail closed without retry; fixtures cover realistic Buffer stderr rather than guessed numeric properties.\n- [An OS failure carries buffered HTTP text] → Check process termination/error metadata before the HTTP diagnostic and test the combination.\n- [Shared readers wait longer] → Three attempts only, unchanged per-command limits, no backoff, focused count/limit assertions and full repository caller regressions.\n- [Transport handling swallows validation] → Parse ZIP only outside the catch; test invalid archives immediately and after a transient.\n\n## Migration Plan\n\nLand one isolated implementation slice with focused tests and the patch changeset, then run all checks in [tasks.md](tasks.md). There is no migration or external mutation. Publication and adoption follow existing authorized package/workflow processes; no deployed version is asserted here. Roll back through an authorized revert of that isolated implementation commit to restore single-attempt reads; rollback never replays a worker or publication.\n"
+        },
+        {
+          "path": "openspec/changes/issue-394-proposal/tasks.md",
+          "content": "# Tasks\n\n<!-- pdac-scope: cited -->\n\n## 1. Verification setup\n\n- [ ] 1.1 Run `npm ci --ignore-scripts` from the repository root and retain its exit/output receipt; verify locked dependencies install without lifecycle scripts and no package-version or lockfile changes enter the candidate.\n\n## 2. Bounded reader correction, tests and release note\n\nKeep the retry local to the immutable GET, preserve explicit limits and retain fail-closed evidence handling; the concrete attempt and timeout values are the admitted issue criteria.\n<!-- pdac:cite id=\"QR-BOUNDED-AUTOMATION\" digest=\"sha256:bcc08b11d7ab7ebf52669319710f57c9b32ec6b1c17c89c7ae8df6452249450f\" -->\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n- [ ] 2.1 Extend `src/tests/actions-artifact.test.mjs` through `readActionsJson` using realistic process-status/Buffer-stderr failures, and implement the GET-only loop in `src/packages/sdlc/src/actions-artifact.mjs` per design decisions 1–2; verify immediate success, each 502/503/504 then success, success on attempt three, exact JSON/argv/artifact identity, one inventory call, no GET after success, and unchanged 30000 ms/2 MiB limits with `node --test src/tests/actions-artifact.test.mjs`.\n- [ ] 2.2 Add exhaustion and transient-then-terminal production-reader cases; verify exactly three attempts on exhaustion and immediate stop on terminal failure with strict identity of the original final error and preserved diagnostics using `node --test src/tests/actions-artifact.test.mjs`.\n- [ ] 2.3 Cover the design's full no-retry matrix: 401/403/404 and other HTTP codes, bare numbers/process status, malformed/unknown diagnostics, missing command, timeout, signal/killed and buffer-limit failures including misleading buffered HTTP text, plus inventory/selection outcomes; verify counts and original outcomes both initially and after a transient where applicable with `node --test src/tests/actions-artifact.test.mjs`.\n- [ ] 2.4 Exercise invalid ZIP, missing/duplicate member, malformed JSON/UTF-8, size/decompression/CRC errors and optional null through the production reader both immediately and after a transient; verify no GET after validation failure, unchanged confirmed optional absence, and all existing archive-format regressions with `node --test src/tests/actions-artifact.test.mjs`.\n- [ ] 2.5 Add `.changeset/bounded-artifact-read-retry.md` with `\"@juangcarmona/lighthouse-sdlc\": patch` frontmatter and a concise read-only retry note; verify the delivered changeset names only that package, and inspect the diff to confirm implementation stays within the admitted three files with no caller, credential, validation-owner or policy edits.\n\n## 3. Integration verification and Definition of Done\n\nReport actual evidence separately from the planned inventory; unknown effects remain unknown and do not permit retries.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n\n- [ ] 3.1 Run `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify`; verify and retain successful Markdown, full Node/caller regression, documentation-link and public-site results, or report the actual failure without expanding scope.\n- [ ] 3.2 Run `npx --no-install prodshape citations verify --provider openspec --format json` after host materialization; verify every current document is explicitly scoped and every citation current. If genuinely stale, refresh through provider inspect/cite rather than hand-editing payloads or removing citations; rerun and retain the report without editing canonical intent.\n- [ ] 3.3 Run `npx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-394-proposal --strict --no-interactive` against the materialized proposal; verify strict success and that the host-retained metadata includes `skip_specs: true` without invented delta requirements.\n- [ ] 3.4 Assemble Done evidence: verify all acceptance cases in design decision 3 have retained focused-test receipts, all five admitted commands have actual outcomes, the candidate matches the three-file scope plus authorized planning files, and rollback is an isolated revert. Record failures, unavailable evidence and unresolved decisions explicitly; mark tasks complete only from observed work, never this admitted check inventory.\n\n## Workflow follow-up\n\n- The trusted host validates/materializes the proposal, then obtains independent plan review before implementation and separate current-candidate engineering review afterward, using fresh context and a different configured model. These later gates are not pending review of this proposal-producing execution.\n- After publication, authenticate the exact candidate head and adopted forge CI before considering any separately delegated integration. Local checks, this plan and a review verdict grant no merge, release or deployment authority.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n- Archive through the owning provider only after the applicable delivery requirements are satisfied; verify the archived result under the existing workflow.\n"
+        },
+        {
+          "path": "openspec/changes/issue-394-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-05\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "eligibility": {
+          "points": 2,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "Two points is the approved small-component-behavior anchor, assessed directly rather than converted from labels. actions-artifact.mjs:11 performs a single bounded read-only GET of the selected artifact ID; ZIP validation follows at line 12. A narrow retry for confirmed 502/503/504 command failures can stay within the admitted owner, focused test file and patch changeset. stage-dispatch.mjs:139-177 and proposal.mjs:83-112 retain downstream identity/authority checks, while stage-dispatch.mjs:106-112 forbids mutation retries and worker-recovery.mjs:42-95 retains unknown-evidence and uncertain-publication stops. Low risk depends on leaving these boundaries unchanged, using the same artifact ID and credentials, and rethrowing terminal errors. The correction is reversible without data migration. Existing product boundaries describe bounded, fail-closed delivery; no new product meaning or human-only decision is needed. Two points satisfies FF's 1–3-point limit; five-point opt-in is false."
+        },
+        "estimate": {
+          "points": 2,
+          "status": "confirmed",
+          "rationale": {
+            "scope": "Small behavior change inside the existing 13-line artifact reader, focused download/error regression tests and one SDLC patch changeset; no public API or authority-contract changes.",
+            "dependencies": "Reuse node:child_process, the existing gh command and ZIP reader, and the existing builtin-module mocking/ZIP fixtures. No new package, credentials, external service contract or predecessor issue completion is required.",
+            "verification": "Exercise actual readActionsJson calls with realistic child-process failures, preserve archive regressions, and run the exact admitted install, focused test, repository, citation and OpenSpec commands during implementation."
+          },
+          "confidence": "high",
+          "uncertainty": [
+            "The remote 503 incident is reported by issue #394; this refinement did not independently retrieve or reproduce run 41916018912.",
+            "The exact implementation and behavioral test outcomes remain for the subsequent planning and implementation stages."
+          ]
+        },
+        "problem": "Lighthouse adopters and the agent host can lose preparation or evidence retrieval on a transient Actions artifact ZIP GET failure even when the immutable artifact remains valid. The existing reader immediately propagates the first command failure. Recover only clearly identified transient reads within a finite local bound, without altering delivery authority or accepting invalid evidence.",
+        "affectedUsers": [
+          "Adopters and maintainers relying on authenticated stage artifacts",
+          "The trusted host retrieving dispatch, refinement and recovery evidence"
+        ],
+        "scope": {
+          "plannedFiles": [
+            "src/packages/sdlc/src/actions-artifact.mjs",
+            "src/tests/actions-artifact.test.mjs",
+            ".changeset/bounded-artifact-read-retry.md"
+          ],
+          "owner": "Existing SDLC artifact download owner, readActionsJson",
+          "releaseNote": "One patch changeset for @juangcarmona/lighthouse-sdlc; do not edit package versions or lockfiles for this correction.",
+          "planningArtifacts": "The subsequent FF proposal is host-managed under openspec/changes/issue-394-proposal/ as described in unattended-actions.mjs:89,197-212; this refinement creates neither proposal nor implementation files.",
+          "outOfScope": [
+            "Retrying the inventory API, generic API requests, mutations, dispatches, workers, publication, merge or an unknown delivery effect",
+            "Changing artifact identity selection, archive/member validation, optional-absence semantics or caller authorization",
+            "Adding scheduler, recovery authority, fallback credentials, dependencies or policy changes",
+            "Replaying the incident run or changing the canonical product model"
+          ]
+        },
+        "acceptanceCriteria": [
+          "For each of HTTP 502, 503 and 504, a realistic failed gh artifact GET followed by a valid ZIP returns exactly the JSON from that selected artifact; repository, run inventory, artifact ID, member and credential path remain unchanged. No GET occurs after success.",
+          "Use a fixed maximum of three GET attempts, retaining a maximum 30000 ms command timeout and 2 MiB maxBuffer on every attempt, with no unbounded waits or backoff. Thus configured GET timeouts total at most 90000 ms per reader invocation, apart from fixed local overhead; the inventory retains its existing separate API timeout. Tests assert the attempt count and timeout values without waiting in real time.",
+          "Retry only a positively identified 502/503/504 HTTP diagnostic from the failed gh download command. Model realistic execFileSync errors with nonzero process exit status and Buffer stderr containing a gh HTTP diagnostic; the process exit status is not the HTTP status. A bare number or generic error message is not sufficient identification.",
+          "On three transient failures, reject visibly with the original final command error and its existing terminal diagnostic; do not return null, partial output or fabricated success. On a transient followed by any terminal error, stop immediately with that terminal error.",
+          "401/403/404 and other non-allowlisted HTTP failures, unknown errors, missing-command errors, signals, timeouts and buffer-limit errors are not retried. Inventory failures or absent, expired, duplicate, incomplete and oversized artifact selection retain their current outcomes without entering the GET retry loop.",
+          "ZIP parsing and all downstream validation remain outside the retry catch. Invalid ZIP, missing required member, duplicate member, invalid JSON/UTF-8, size/decompression/CRC failures and optional null evidence fail without another GET, including when obtained after an earlier transient read. Confirmed optional absence keeps its existing null behavior.",
+          "Focused tests exercise readActionsJson through the existing childProcess mock seam and verify exact argv, selected artifact identity, attempt counts, preserved limits and error identity. Existing archive and repository regressions remain passing, and the SDLC patch changeset describes only the bounded read correction."
+        ],
+        "dependencies": [
+          {
+            "name": "Existing download and validation ownership",
+            "resolved": true,
+            "source": "src/packages/sdlc/src/actions-artifact.mjs; src/packages/sdlc/src/zip-json.mjs",
+            "disposition": "Reuse existing owner and validation unchanged; no new authority or dependency."
+          },
+          {
+            "name": "Caller compatibility and recovery semantics",
+            "resolved": true,
+            "source": "src/packages/sdlc/src/stage-dispatch.mjs; src/packages/sdlc/src/proposal.mjs; src/packages/sdlc/src/worker-recovery.mjs; src/packages/sdlc/src/issue-actions.mjs",
+            "disposition": "Keep the same exported signature, selected artifact, success/absence values and terminal failures. Authentication and uncertain-effect decisions remain caller-owned."
+          },
+          {
+            "name": "Related issues and incident",
+            "resolved": true,
+            "source": "/input/context.json:issue.body; issue.issue_dependencies_summary",
+            "disposition": "#185 and #211 supply motivation, not required changes or replay authority. The supplied dependency summary reports no blockers; the bounded local correction needs no external issue completion."
+          }
+        ],
+        "risks": [
+          {
+            "risk": "Misclassifying a process exit code or unrelated diagnostic as a transient HTTP response",
+            "mitigation": "Recognize only explicit gh artifact-GET HTTP 502/503/504 diagnostics; test Buffer stderr, terminal HTTP statuses, signals and unknown errors. Fail closed for uncertain classifications."
+          },
+          {
+            "risk": "Broad shared-reader impact or increased preparation latency",
+            "mitigation": "Limit retry to the single selected immutable GET, cap three attempts and their configured timeouts, preserve error identity and validation, and run the complete repository test suite covering callers."
+          }
+        ],
+        "rollback": "Revert the eventual isolated three-file implementation commit through the normal authorized change process. This restores single-attempt GET behavior without migration or remote-effect compensation; do not replay any worker or publication as rollback.",
+        "definitionOfReady": [
+          {
+            "check": "Problem and affected users identified",
+            "satisfied": true,
+            "evidence": "Issue #394 and the single-attempt GET in actions-artifact.mjs:11 establish the failure mode and bounded desired result."
+          },
+          {
+            "check": "Product meaning and outcome unambiguous",
+            "satisfied": true,
+            "evidence": "A local immutable-read retry preserves existing fail-closed and authority boundaries; explicit acceptance criteria exclude delivery-effect replay and invalid evidence."
+          },
+          {
+            "check": "Scope and implementation owner known",
+            "satisfied": true,
+            "evidence": "context.unattended.scope names the existing owner, focused tests and one changeset; no caller edits are required."
+          },
+          {
+            "check": "Dependencies and risks resolved for design",
+            "satisfied": true,
+            "evidence": "Source-reviewed callers retain authentication and recovery decisions; no new dependency, product approval or human-only architecture choice is identified."
+          },
+          {
+            "check": "Testable criteria and verification plan defined",
+            "satisfied": true,
+            "evidence": "Positive, exhaustion and no-retry matrices use the existing production-reader test seam; all five admitted implementation commands are preserved below."
+          },
+          {
+            "check": "Confirmed numeric estimate and reversible FF eligibility",
+            "satisfied": true,
+            "evidence": "Two-point small-component-behavior anchor, low risk, isolated revert and no unresolved current-stage decision; no legacy size conversion or invented triage predecessor."
+          }
+        ],
+        "verificationPlan": {
+          "status": "planned-not-executed",
+          "inventorySource": "context.unattended.implementationChecks",
+          "checks": [
+            {
+              "command": [
+                "npm",
+                "ci",
+                "--ignore-scripts"
+              ],
+              "purpose": "Install the locked verification dependencies without lifecycle scripts."
+            },
+            {
+              "command": [
+                "node",
+                "--test",
+                "src/tests/actions-artifact.test.mjs"
+              ],
+              "purpose": "Execute focused production-path transient, exhaustion, terminal-error and archive regressions."
+            },
+            {
+              "command": [
+                "env",
+                "GITHUB_ACTIONS=true",
+                "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+                "npm",
+                "run",
+                "verify"
+              ],
+              "purpose": "Run Markdown lint, all Node tests including caller regressions, documentation links and public-site verification from package.json:17."
+            },
+            {
+              "command": [
+                "npx",
+                "--no-install",
+                "prodshape",
+                "citations",
+                "verify",
+                "--provider",
+                "openspec",
+                "--format",
+                "json"
+              ],
+              "purpose": "Verify explicit scope and current product citations in the later planning artifacts; repository verification is not a substitute."
+            },
+            {
+              "command": [
+                "npx",
+                "--yes",
+                "--package=@fission-ai/openspec@1.15.0",
+                "openspec",
+                "validate",
+                "issue-394-proposal",
+                "--strict",
+                "--no-interactive"
+              ],
+              "purpose": "Strictly validate the proposal after the subsequent proposal stage materializes it."
+            }
+          ],
+          "additionalAgentObservations": [
+            "Only read-only source and product-report inspection was performed in refinement. No npm install, test command, provider validation or live artifact download was executed.",
+            "CodeGraph symbol search did not identify the JavaScript owner and its context query was unavailable; direct source inspection of the owner, tests and relevant callers supplied the assessment instead.",
+            "The ponytail skill loader reported unavailable; no skill execution is claimed. This is an auxiliary observation, not an unavailable mandatory product check.",
+            "The reported incident and remote deployed version/branch were not independently verified. The assessment concerns the admitted source revision and does not assert deployed behavior."
+          ],
+          "laterIndependentReview": "The trusted host must obtain separate planning and candidate engineering review with a different configured model and fresh context. These are subsequent gates, not pending review of this refinement.",
+          "laterForgeCI": "After candidate publication, the trusted host must authenticate the actual candidate head, adopted forge checks and separately delegated integration authority. No CI, merge, post-merge, release or deployment success is claimed here."
+        },
+        "productContext": {
+          "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+          "assessment": "Technical reliability correction within existing bounded delivery and fail-closed evidence semantics, not a Product Change. Model artifacts report draft status; host-prepared baseline context and citation payloads are not a new approval. This assessment does not amend or approve the product model.",
+          "currentCitationPayloads": [
+            "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+            "pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\""
+          ],
+          "impactReview": "The FF and handoff reports connect the change context to entry authority, stage gates, human authority and fail-closed lifecycle behavior. Those boundaries remain unchanged. Product preparation/apply, decomposition, scoped memory and public-site behavior are neighboring concerns, not targets of this correction."
+        },
+        "route": "ff",
+        "hotfixAssessment": "Not applicable: the admitted route is FF. The unrelated hotfix admission fixture does not select a hotfix route or authorize a fabricated RED receipt."
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "fb464be33f3720da76308786c368f8c38441867dbd037b94a89a057b8e825480",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "0ed01191d0ea883fd4d62577d21ff5855f07a2d2e6ed77d80ed30dc3bfaa7308",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "proposalRunId": "7dddeaaee9e982ca7462e92831900b91bb18328d90ff3c39f537f849cb4b8b67",
+  "reviewRunId": "fb464be33f3720da76308786c368f8c38441867dbd037b94a89a057b8e825480",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-42043226550-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550"
+}

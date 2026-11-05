@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "runId": "7d1d789fe290169804516777885db2122ebb0df0511382d205ad61dad0516a1b",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550/attempts/1",
+      "reason": "Host-verified locked install completed with exit 0. Three low-severity dependency warnings are retained separately; this receipt does not establish their cause or applicability."
+    },
+    {
+      "id": "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550/attempts/1",
+      "reason": "Ten focused tests passed at the accepted head. Inspection of the actual test assertions confirms production-reader coverage of transient success, exhaustion, terminal errors, identity and limits, selection boundaries and validation after transient reads."
+    },
+    {
+      "id": "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550/attempts/1",
+      "reason": "Host-verified npm run verify completed with exit 0 at the accepted head. The displayed excerpt is truncated; omitted output is not treated as independently inspected test detail."
+    },
+    {
+      "id": "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550/attempts/1",
+      "reason": "Citation verification completed with exit 0. Retained provider rows cover all three issue-394 planning documents and 13 current citations, with no diagnostics; the complete summary reports zero errors, stale, tampered or unresolved citations."
+    },
+    {
+      "id": "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42043226550/attempts/1",
+      "reason": "Strict OpenSpec validation completed with exit 0 and accepted the existing skip_specs declaration. This is provider validation, not a new product approval."
+    },
+    {
+      "id": "github-check:127317947300",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42048511446/job/127317947300",
+      "reason": "Authenticated required repository check from app 15368 succeeded on accepted head e1c7024af3bf1c816a55cbfc62988b65ad8e9e57."
+    },
+    {
+      "id": "integration:42043226550:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/1bfb9b699e247d82c497caae6cb27892db1db2a7/docs/process/20261105-394-bound-retries-for-transient-read-only-actions-artifact-downloads/runs/42043226550/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained integration receipt records the accepted head, owner-authorized bounded merge:true delegation, successful originating workflow, independent candidate acceptance with no findings, and actual merged revision be3d644798c3dc456e1cf40253d5ba310d6cc086."
+    },
+    {
+      "id": "planning-review:0ed01191d0ea883fd4d62577d21ff5855f07a2d2e6ed77d80ed30dc3bfaa7308",
+      "status": "passed",
+      "source": "/input/context.json#/priorPlanningReview",
+      "reason": "Host-reconstructed planning review accepts the retained refinement and plan with no findings. Configured producer and reviewer models differ; provider-reported settings remain unverified as explicitly permitted by the unattended guide."
+    },
+    {
+      "id": "github-check:127319938908",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42049070747/job/127319938908",
+      "reason": "Authenticated required repository check from app 15368 succeeded on the actual merge revision. Host postMerge observations identify adopted ci.yml run 42049070747 as passed at that same revision. No skipped optional job is counted as an executed acceptance check."
+    },
+    {
+      "id": "review:source-and-acceptance",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/src/actions-artifact.mjs:4-28; /workspace/src/tests/actions-artifact.test.mjs:9-156",
+      "reason": "Static comparison against the accepted work item establishes the intended narrow GET-only retry boundary and meaningful positive and negative assertions. No current source defect was established."
+    },
+    {
+      "id": "review:guidance-and-finalization",
+      "status": "passed",
+      "source": "/workspace/AGENTS.md; /workspace/src/packages/sdlc/completion.md:26-55; /workspace/src/packages/sdlc/unattended.md; /workspace/.lighthouse/github.json; /input/context.json#/completion/finalization",
+      "reason": "Affected guidance, package release-note policy and host finalization agree with the delivered scope and review-only authority. No conflicting instruction was established. Closing the open issue and clearing delivery labels remain subsequent publisher effects."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, GitHub checks and reservation; publish this review on the adopted evidence branch, remove the adopted delivery labels and close issue #394, preserving PR labels and releasing the reservation.",
+  "output": {
+    "summary": "PR #443 satisfies issue #394's bounded immutable-artifact read acceptance criteria. The host-verified receipt establishes integration, and authenticated adopted CI passed on the actual merged revision. No unresolved current-stage blocker or current source defect was established.",
+    "delivery": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 394,
+      "pullRequest": 443,
+      "acceptedHead": "e1c7024af3bf1c816a55cbfc62988b65ad8e9e57",
+      "integratedRevision": "be3d644798c3dc456e1cf40253d5ba310d6cc086",
+      "checkedRevision": "be3d644798c3dc456e1cf40253d5ba310d6cc086",
+      "intentFingerprint": "b8b14bf71b3285a9dcc643344376711af0196c942922d7d29458ecbfbcb6f235",
+      "policyFingerprint": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "changedPathsFingerprint": "690f0a68bc730636e11404e88cd84952404fa4cc89963aa6b5cfa831b12779f9",
+      "dispatchRequestId": "2b65fa2e6ed5e7c5a83e926f5f2090cbda7cb7b26f174017e471409c466c009a",
+      "identityBasis": "Host-supplied provenance and authenticated receipts; no independent GitHub or Git identity check was performed in the engine.",
+      "integrationRecordSha256": "8c58f96ac7eeb6ec3a481b848fbd5aa0e546a197329607e70a4268b460d57967",
+      "currentAuthorization": "Review dispatch has merge:false and grants no integration action. Historical integration is established separately by the retained merge:true receipt.",
+      "scopeAssessment": "The seven changed paths are exactly the reader, focused tests, one SDLC patch changeset and four authorized host-managed planning files. No caller, ZIP validation owner, package version, lockfile, workflow or authority-policy path is in the changed list."
+    },
+    "acceptanceAssessment": [
+      {
+        "criterion": "Confirmed HTTP 502/503/504 followed by success returns the selected artifact without reselection or another GET after success.",
+        "decision": "satisfied",
+        "support": "Reader lines 12-22 select once and reuse the same command; tests lines 15-60 assert exact repository, inventory run, artifact ID, member result, inherited synthetic credential path, options and GET count."
+      },
+      {
+        "criterion": "A fixed attempt and configured command-time bound applies; exhaustion preserves the final failure.",
+        "decision": "satisfied",
+        "support": "Reader lines 19-24 cap total GET attempts at three, each with timeout 30000 and maxBuffer 2 MiB, with no backoff. Tests lines 23 and 63-67 assert limits, counts and strict final-error identity. The 90000 ms sum is configured GET timeouts, not a measured wall-clock guarantee or whole-stage bound."
+      },
+      {
+        "criterion": "Terminal or uncertain failures do not retry or become success.",
+        "decision": "satisfied",
+        "support": "Classifier lines 4-8 requires a normal nonzero process exit and a single anchored gh HTTP diagnostic. Tests lines 70-96 cover 401/403/404 and other non-allowlisted codes, unknown and conflicting diagnostics, bare process statuses, missing commands, timeout/buffer/OS codes, signals and killed processes, initially and after a transient."
+      },
+      {
+        "criterion": "Inventory, archive/member validation and optional absence retain their boundaries.",
+        "decision": "satisfied",
+        "support": "Inventory precedes the retry loop; readZipJson is outside its catch at line 27. Tests lines 98-156 cover inventory rejection, optional absence, malformed ZIP/member/JSON/UTF-8, duplicate members, size/decompression/CRC problems and optional null, including after a transient. Required-member JSON null retains its pre-existing return contract; this change does not authenticate or validate caller-specific result schemas."
+      },
+      {
+        "criterion": "Focused regressions, repository verification, scoped release note and independent review are retained.",
+        "decision": "satisfied",
+        "support": "All five authenticated command receipts passed on the accepted head; retained planning and candidate engineering verdicts accept with no findings. The single changeset names only @juangcarmona/lighthouse-sdlc at patch level. Shared verification inputs are host-observed unchanged at review."
+      }
+    ],
+    "findings": [
+      {
+        "id": "R394-F1",
+        "classification": "fixed",
+        "kind": "historical-test-setup",
+        "summary": "Implementation notes report that the initial focused run used an unavailable Node mock API; the helper was corrected to restore the environment explicitly.",
+        "owner": "SDLC test maintainer",
+        "evidence": [
+          "openspec/changes/issue-394-proposal/tasks.md:35",
+          "src/tests/actions-artifact.test.mjs:15-52",
+          "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:2"
+        ],
+        "followUpReference": "Issue #394 review record, improvement candidate R394-I1; correction delivered in PR #443",
+        "disposition": "Current helper and authenticated passing receipt support correction. The original failing API name, runtime and raw first-failure log are not supplied here; no independent reproduction or cross-item recurrence is claimed. This is not a present production-source defect."
+      },
+      {
+        "id": "R394-F2",
+        "classification": "fixed",
+        "kind": "historical-execution-setup",
+        "summary": "Implementation notes report a first install cancelled at the shell timeout with exit 137, followed by a successful install with a longer allowance.",
+        "owner": "Implementation runner maintainer",
+        "evidence": [
+          "openspec/changes/issue-394-proposal/tasks.md:34",
+          "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:1"
+        ],
+        "followUpReference": "Issue #394 review record R394-F2; successful implementation run 42043226550 attempt 1",
+        "disposition": "The current required install passed. The reported first-attempt failure is historical, not a failed current check. Original timeout configuration and raw first-attempt receipt were not inspected, so no runner root cause, new timeout threshold or generalized guard is proposed."
+      },
+      {
+        "id": "R394-F3",
+        "classification": "deferred",
+        "kind": "dependency-warning",
+        "summary": "The successful install reports three low-severity vulnerabilities without package names or applicability details.",
+        "owner": "Repository dependency maintainer",
+        "evidence": [
+          "implementation:42043226550:1:79a0f53e40ec067068e6d784b37c4a50f5b0fa41880e594e90120708d859f713:1"
+        ],
+        "followUpReference": "Issue #394 review record R394-F3; no new issue opened",
+        "disposition": "Record for ordinary dependency triage. No dependency or lockfile path changed, attribution to this PR is unestablished, and audit remediation is not an explicit acceptance gate here. Deferral is this review's scope classification, not owner acceptance of a security risk. No audit or exploit verification was performed."
+      }
+    ],
+    "guidanceAssessment": {
+      "decision": "No stale or conflicting affected guidance established.",
+      "reviewed": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md",
+        "src/packages/sdlc/README.md:19-36,48-66,86-104",
+        "src/packages/sdlc/completion.md:26-55,63-69",
+        "src/packages/sdlc/handoffs.md:24-42",
+        "src/packages/sdlc/unattended.md:5-9,35-59",
+        ".changeset/README.md",
+        "openspec/changes/issue-394-proposal/proposal.md",
+        "openspec/changes/issue-394-proposal/design.md",
+        "openspec/changes/issue-394-proposal/tasks.md"
+      ],
+      "reason": "Read retries neither broaden the documented two-retry worker-recovery authority nor grant mutation replay. Planning documents retain historical before-change context and later-gate instructions; these are not current operational claims. Current command receipts and integration/post-merge observations supersede the PR body's historical next-step wording without requiring a guidance rewrite.",
+      "productAndArchitecture": "The prepared index and relevant inspect/impact reports for FR-FAST-FORWARD-DELIVERY, FR-WORKFLOW-HANDOFFS, BR-FAIL-CLOSED and QR-BOUNDED-AUTOMATION support preserving existing boundaries. Their cited digests match the planning documents and retained current provider rows. Model status is draft; these reports grant no approval. No new product meaning or architecture change was established by this local reliability correction."
+    },
+    "finalization": {
+      "policySource": "src/packages/sdlc/completion.md:38 and host completion.finalization",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedOnPassed": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "Trusted host releases its reservation for every outcome; observation predates reservation addition.",
+      "appliedByAgent": false,
+      "publisher": "Trusted publisher after current-stage validation, fresh authority/check/reservation rechecks and protected evidence-branch publication. Review neither changes permissions nor starts another stage."
+    },
+    "limits": [
+      "This execution inspected source, guidance and retained evidence; it did not rerun commands, download live artifacts or call external services. Authenticated command receipts establish execution, while actual test assertions supplied the adequacy assessment.",
+      "The original reported incident run 41916018912 was not independently retrieved or replayed. Its remote root cause and deployed correction are not established. The accepted synthetic production-path tests satisfy the stated verification requirement without live incident replay.",
+      "The full verify excerpt is truncated. Its authenticated exit status remains usable; aggregate counts in tasks.md are implementation notes, not independently recovered omitted log content.",
+      "Configured distinct review models are retained; provider-reported model settings remain unverified, as permitted by the installed unattended contract.",
+      "CodeGraph context retrieval was unavailable and its symbol search did not locate the JavaScript owner. Ponytail and Humanizer skill loading was unavailable. Direct source and guidance inspection completed the review; these auxiliary limits are not failed or missing mandatory product checks.",
+      "Original first-install and first-focused-failure diagnostic receipts were not inspected. Their reported corrections are distinguished from the current authenticated passing checks.",
+      "Current review publication, final labels, issue closure and terminal completion signaling are host duties and have not been emitted by this agent."
+    ],
+    "laterStageEvidence": [
+      {
+        "subject": "Package publication and adopter rollout",
+        "status": "not-verified",
+        "intendedStage": "existing release/adoption process",
+        "reason": "The changeset requests a patch; merge does not establish package publication, workflow installation or deployment. No further stage is requested by this review."
+      },
+      {
+        "subject": "Live incident replay",
+        "status": "not-performed",
+        "intendedStage": "separately authorized operational acceptance if requested",
+        "reason": "Not an acceptance requirement or authorization in this work item; no worker or uncertain publication replay is permitted by the artifact-read correction."
+      }
+    ],
+    "retrospective": "## What went well\n\n- PR #443 kept the correction inside the existing artifact reader, focused tests and one patch changeset, plus authorized planning files. The actual assertions exercise identical GET identity/options, all three transient statuses, exhaustion and validation after a transient (`actions-artifact.mjs:4-28`; `actions-artifact.test.mjs:15-156`; authenticated focused receipt ending `:2`). No current source defect was established.\n- Separate bound planning/candidate verdicts accepted without findings. The retained integration receipt proves the actual merge; authenticated `repository` checks passed on both the accepted head and merge revision. These are separate facts, not inferred from one green workflow.\n\n## What went wrong\n\n- Implementation notes report an install timeout and an unsupported mock API before successful corrected runs (`tasks.md:34-35`; findings R394-F1/F2). The original failure logs were not inspected, so exact runtime/API and timeout causes remain unknown. These are setup corrections within one work item, not evidence of recurrence across issues or current production defects.\n- The install emitted three low-severity dependency warnings (receipt ending `:1`). Applicability and attribution remain unknown; dependency maintainer follow-up is recorded as R394-F3, not a new acceptance gate or risk approval.\n\n## Start doing\n\n- SDLC test maintainers: prefer helper patterns supported by the declared runtime and explicit cleanup on success and failure. Preserve first-failure diagnostics before proposing an additional compatibility guard (R394-I1 below).\n- Delivery maintainers: keep command provenance, test adequacy, integration receipts and exact-revision post-merge checks distinct, as this review does.\n\n## Stop doing\n\n- Do not treat an implementation retry as cross-work-item recurrence, infer deployment from merge, or treat skipped optional jobs and truncated details as executed acceptance evidence. No new policy enforcement is proposed here.\n\n## Improvement candidates\n\n- **R394-I1 — test-helper runtime compatibility (deferred candidate; owner: SDLC test maintainer).** Observed failure: the first focused run reportedly used an unavailable mock API (`tasks.md:35`). Smallest useful guard: first assess whether the existing focused suite is sufficient; if not, add only a focused helper-cleanup regression covering initially absent/preset synthetic values and thrown outcomes under the supported runtime. Before claiming a fix, recover the pre-correction helper and original runtime/error from run 42043226550's retained diagnostics, reproduce the same missing-API failure, then prove the corrected helper and cleanup assertions pass on the declared minimum and CI runtimes (`package.json:19-21`; `ci.yml:39-46`). That reproduction has not occurred here, and the original API identity is unknown. Any new guard or guidance change requires its own scoped review and regression proof; this stage only records the candidate in issue #394's review record.\n- **Dependency follow-up R394-F3 (owner: repository dependency maintainer).** Inspect the existing install warning through the normal dependency-review process before proposing a correction or guard. No package identity, regression mechanism or new source defect is established, so this review proposes no dependency guard and makes no remediation claim.\n\nNo affected-guidance drift or product/architecture follow-up was established. The original incident was not replayed, provider-reported model settings remain unverified, and release/adopter deployment remains outside this review. No issues were opened, policy changed, or new stage started."
+  }
+}
