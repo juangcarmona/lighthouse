@@ -143,7 +143,7 @@ export async function runUnattended({ route, policy, host, signal }) {
       const review = await host.reviewCandidate(candidate);
       evidence.push({ kind: 'candidate', round, review });
       if (review.accepted === true) { accepted = true; break; }
-      if (review.verdict !== 'request-changes') throw Error('Independent review requires a human decision');
+      if (review.verdict !== 'request-changes') throw Error('Independent review stopped delivery: ' + ((review.findings ?? []).join(' ').slice(0, 3000) || 'Inspect the independent review evidence before continuing'));
       candidate.feedback = review.findings;
     }
     if (!accepted) throw Error('Independent review correction limit exhausted');
