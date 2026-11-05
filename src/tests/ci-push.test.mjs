@@ -6,7 +6,7 @@ const head = 'a'.repeat(40), revision = 'b'.repeat(40), blob = 'c'.repeat(40), r
 const pr = { number: 12, state: 'open', head: { sha: head, ref: 'lighthouse/implement-9', repo: { full_name: repository } }, base: { sha: revision, ref: 'main', repo: { full_name: repository } } };
 const branch = 'lighthouse/verification-12-' + head, now = Date.parse('2026-11-05T06:00:00Z');
 function fixture() {
-  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null };
+  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null, inventoryCalls: 0, inventoryErrors: [], afterWriteError: null };
   const checkpoint = async requests => { state.saved = structuredClone(requests); state.checkpoints.push(state.saved); };
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET', 'Only the narrow App trigger may write');
@@ -16,6 +16,10 @@ function fixture() {
     if (path.startsWith('git/ref/heads/')) { assert.equal(path, 'git/ref/heads/' + branch); return state.ref; }
     const workflow = path.match(/^actions\/workflows\/(ci|package)\.yml\/runs\?head_sha=/)?.[1];
     assert.ok(workflow, path);
+    state.inventoryCalls++;
+    state.onInventory?.();
+    const failure = state.inventoryErrors.shift() ?? (state.calls ? state.afterWriteError : null);
+    if (failure) throw failure;
     const rows = state.visible ? [{ id: workflow === 'ci' ? 101 : 102, event: state.mode === 'wrong-event' ? 'workflow_dispatch' : 'push', head_sha: head, head_branch: branch, path: `.github/workflows/${workflow}.yml`, repository: { full_name: repository } }] : [];
     return { total_count: state.mode === 'incomplete' ? 2 : rows.length, workflow_runs: rows };
   };
@@ -101,4 +105,57 @@ test('a preexisting ref, wrong event or incomplete inventory cannot manufacture 
   await assert.rejects(incomplete.dispatch(), error => error.ciRequestFailure.code === 'inventory-incomplete'); assert.equal(incomplete.state.calls, 0);
   const wrong = fixture(); wrong.state.mode = 'wrong-event';
   const requested = await wrong.dispatch(); assert.ok(requested.every(x => x.state === 'acknowledged' && !x.run));
+});
+
+test('transient pre-send inventory reads recover without repeating the App effect or launch attempt', async t => {
+  for (const failure of [Object.assign(Error('temporary'), { status: 502 }), Object.assign(Error('temporary'), { status: 503 }), Object.assign(Error('temporary'), { status: 504 }), new TypeError('private transport details', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }), Object.assign(Error('temporary'), { code: 'ECONNRESET' }), Object.assign(Error('temporary'), { code: 'EAI_AGAIN' }), Object.assign(Error('temporary'), { name: 'TimeoutError' })]) await t.test(String(failure.status ?? failure.cause?.code ?? failure.code ?? failure.name), async () => {
+    const f = fixture(); f.state.inventoryErrors = [failure, failure];
+    const result = await f.dispatch();
+    assert.equal(f.state.inventoryCalls, 6);
+    assert.equal(f.state.calls, 1);
+    assert.ok(result.every(row => row.state === 'observed' && row.attempt === 1));
+  });
+});
+
+test('exhausted read retries preserve the original error, safe diagnostics and a confirmed unsent request', async () => {
+  const f = fixture(), failure = new TypeError('SECRET private response', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } });
+  f.state.inventoryErrors = [failure, failure, failure];
+  await assert.rejects(f.dispatch(), error => error === failure);
+  assert.equal(f.state.inventoryCalls, 3);
+  assert.equal(f.state.calls, 0);
+  assert.ok(f.state.saved.every(row => row.state === 'not-sent' && row.attempt === 1));
+  assert.equal(failure.ciRequestFailure.code, 'connection-timeout');
+  assert.match(ciFailureSummary(failure.ciRequestFailure), /connection-timeout/);
+  assert.doesNotMatch(JSON.stringify(failure.ciRequestFailure) + ciFailureSummary(failure.ciRequestFailure), /SECRET|private|response/);
+});
+
+test('terminal, malformed, cancelled and post-send failures keep their existing stops', async t => {
+  for (const failure of [Object.assign(Error('terminal'), { status: 401 }), Object.assign(Error('terminal'), { status: 403 }), Object.assign(Error('terminal'), { status: 404 }), Object.assign(Error('terminal'), { status: 500 }), new SyntaxError('invalid inventory'), Object.assign(Error('cancelled'), { name: 'AbortError', cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }), Object.assign(Error('certificate'), { code: 'CERT_HAS_EXPIRED' }), Error('unknown')]) await t.test(String(failure.status ?? failure.code ?? failure.name), async () => {
+    const f = fixture(); f.state.inventoryErrors = [failure];
+    await assert.rejects(f.dispatch(), error => error === failure);
+    assert.equal(f.state.inventoryCalls, 1); assert.equal(f.state.calls, 0);
+    assert.ok(f.state.saved.every(row => row.state === 'not-sent'));
+  });
+  const malformed = fixture(); malformed.state.mode = 'incomplete';
+  await assert.rejects(malformed.dispatch(), error => error.ciRequestFailure.code === 'inventory-incomplete');
+  assert.equal(malformed.state.inventoryCalls, 1); assert.equal(malformed.state.calls, 0);
+  const changed = fixture(); changed.state.inventoryErrors = [Object.assign(Error('temporary'), { status: 503 })];
+  changed.state.onInventory = () => { if (changed.state.inventoryCalls === 2) changed.state.changed = 'base'; };
+  await assert.rejects(changed.dispatch(), error => error.ciRequestFailure.code === 'base-changed');
+  assert.equal(changed.state.calls, 0);
+  const sent = fixture(); sent.state.afterWriteError = Object.assign(Error('after write'), { status: 503 });
+  await assert.rejects(sent.dispatch());
+  assert.equal(sent.state.inventoryCalls, 3); assert.equal(sent.state.calls, 1);
+  const previous = structuredClone(sent.state.saved);
+  assert.ok(previous.every(row => row.state === 'acknowledged'));
+  sent.state.afterWriteError = null;
+  const recovered = await sent.dispatch({ previous });
+  assert.ok(recovered.every(row => row.state === 'observed')); assert.equal(sent.state.calls, 1);
+  const unknown = fixture(); unknown.state.mode = 'unknown';
+  await assert.rejects(unknown.dispatch());
+  const uncertain = structuredClone(unknown.state.saved), reads = unknown.state.inventoryCalls;
+  unknown.state.inventoryErrors = [Object.assign(Error('unavailable observation'), { status: 503 })];
+  await assert.rejects(unknown.dispatch({ previous: uncertain }));
+  assert.equal(unknown.state.inventoryCalls, reads + 1); assert.equal(unknown.state.calls, 1);
+  assert.ok(unknown.state.saved.every(row => row.state === 'unknown'));
 });

@@ -3,12 +3,28 @@ import { stagePath } from './stage-dispatch.mjs';
 import { retryLimit, retryDelayMs } from './worker-recovery.mjs';
 import { verificationBranch } from './ci-subject.mjs';
 
+function transportFailureCode(error) {
+  if (error?.name === 'AbortError') return null;
+  const code = error?.cause?.code ?? error?.code;
+  if (['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT'].includes(code)) return 'connection-timeout';
+  return code === 'ECONNRESET' ? 'connection-reset' : code === 'EAI_AGAIN' ? 'dns-temporary' : null;
+}
+
+async function readCiInventory(api, path) {
+  for (let attempt = 0; ; attempt++) {
+    try { return await api(path); }
+    catch (error) {
+      if (attempt >= 2 || error?.name === 'AbortError' || !([502, 503, 504].includes(error?.status) || error?.name === 'TimeoutError' || transportFailureCode(error))) throw error;
+    }
+  }
+}
+
 // Never retain exception messages, headers or response bodies across the API boundary.
 export function ciRequestFailure(error, pr, operation = {}) {
   const status = Number.isSafeInteger(error.status) && error.status >= 100 && error.status <= 599 ? error.status : null;
   const exception = status ? 'http' : ['TimeoutError', 'AbortError', 'TypeError'].includes(error.name) ? error.name : 'Error';
-  const requestedCode = operation.code ?? (error.ciAppSetupRequired ? 'app-setup-required' : null);
-  const code = ['head-changed', 'base-changed', 'authority-changed', 'workflow-changed', 'app-setup-required', 'inventory-incomplete', 'send-unconfirmed', 'budget-exhausted', 'delay-pending'].includes(requestedCode) ? requestedCode : 'request-failed';
+  const requestedCode = operation.code ?? (error.ciAppSetupRequired ? 'app-setup-required' : transportFailureCode(error));
+  const code = ['head-changed', 'base-changed', 'authority-changed', 'workflow-changed', 'app-setup-required', 'inventory-incomplete', 'send-unconfirmed', 'budget-exhausted', 'delay-pending', 'connection-timeout', 'connection-reset', 'dns-temporary'].includes(requestedCode) ? requestedCode : 'request-failed';
   const method = operation.method === 'POST' ? 'POST' : 'GET';
   const path = /^(?:git\/refs|pulls\/[1-9][0-9]*|actions\/workflows\/[\w.-]+\.ya?ml\/(?:runs|dispatches)|contents\/\.lighthouse\/github\.json)$/.test(operation.path ?? '') ? operation.path : 'contents/.lighthouse/github.json';
   if (!Number.isSafeInteger(pr.number) || pr.number < 1 || !/^[a-f0-9]{40}$/.test(pr.head.sha)) throw Error('Invalid CI diagnostic subject');
@@ -125,7 +141,8 @@ export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = a
       const current = await api(`pulls/${pr.number}`);
       if (current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || current.state !== 'open') { stop('head-changed'); throw Error('PR changed before checks could start'); }
       operation.path = `actions/workflows/${workflow}/runs`;
-      const found = await api(`actions/workflows/${workflow}/runs?head_sha=${pr.head.sha}&per_page=100`);
+      const path = `actions/workflows/${workflow}/runs?head_sha=${pr.head.sha}&per_page=100`;
+      const found = await (!prior || ['not-sent', 'rejected'].includes(prior.state) ? readCiInventory(api, path) : api(path));
       if (!Array.isArray(found.workflow_runs) || found.total_count > 100) { stop('inventory-incomplete'); throw Error('CI request inventory exceeds bounds'); }
       const existing = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === pr.head.ref && run.repository?.full_name === current.head.repo?.full_name && run.path === `.github/workflows/${workflow}` && ['push', 'workflow_dispatch'].includes(run.event)).sort((a, b) => b.id - a.id)[0];
       if (existing) { Object.assign(request, { state: 'observed', run: existing.id }); await checkpoint(requests); continue; }
@@ -182,17 +199,18 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
       requests.push({ ...identity, attempt: prior?.attempt ?? 1, observedAt: prior?.observedAt ?? new Date(now).toISOString(), state: prior?.state ?? 'not-sent', ...(prior?.run ? { run: prior.run } : {}) });
     }
     if (previous && previous.length !== requests.length) throw Error('CI recovery workflow inventory changed');
-    const inventory = async () => {
+    const inventory = async (retryRead = false) => {
       for (const request of requests) {
         operation = { method: 'GET', path: `actions/workflows/${request.workflow}/runs` };
-        const found = await api(`${operation.path}?head_sha=${pr.head.sha}&per_page=100`);
+        const path = `${operation.path}?head_sha=${pr.head.sha}&per_page=100`;
+        const found = await (retryRead ? readCiInventory(api, path) : api(path));
         if (!Array.isArray(found.workflow_runs) || !Number.isSafeInteger(found.total_count) || found.total_count !== found.workflow_runs.length || found.total_count > 100) { operation.code = 'inventory-incomplete'; throw Error('CI push inventory is incomplete'); }
         const run = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === branch && run.repository?.full_name === repository && run.path === `.github/workflows/${request.workflow}` && run.event === 'push').sort((a, b) => b.id - a.id)[0];
         if (run) Object.assign(request, { state: 'observed', run: run.id });
         else if (request.state === 'observed') { request.state = 'unknown'; delete request.run; }
       }
     };
-    await inventory();
+    await inventory(requests.every(request => ['not-sent', 'rejected'].includes(request.state)));
     const refPath = `git/ref/heads/${branch}`;
     let reference = await api(refPath, 'GET', undefined, true);
     if (reference && (reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha)) { operation.code = 'head-changed'; throw Error('CI verification ref changed'); }
