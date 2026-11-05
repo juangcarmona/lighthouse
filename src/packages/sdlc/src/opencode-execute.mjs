@@ -90,11 +90,13 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   signal?.throwIfAborted();
   const baselineDigest = await productModelDigest(source), reports = join(runDir, 'evidence/host/product-context');
   const result = await prepareProductEvidence(source, reports, core, { baselineDigest });
+  signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
   const evidence = { provider: '@prodshape/core', version: core.version, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
   const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
   context.productEvidence = evidence;
   context.contract.rules += ' The host prepared current ProductShape inspect, impact and citation reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  signal?.throwIfAborted();
   await writeFile(path, JSON.stringify(context));
   return evidence;
 }
@@ -222,6 +224,7 @@ async function main() {
       if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
     }, 10000);
     const exit = await new Promise((ok, no) => {
+      if (cancelled) throw Error('Execution cancelled before agent startup');
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const consume = line => {
         try {

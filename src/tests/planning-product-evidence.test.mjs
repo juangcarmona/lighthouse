@@ -109,3 +109,14 @@ test('cancellation interrupts an active provider installation before planning co
     assert.deepEqual(await readFile(join(f.run, 'context.json')), before);
   } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
+
+test('cancellation during graph validation cannot publish a planning context', async () => {
+  const f = await fixture(), controller = new AbortController();
+  try {
+    const validate = f.core.validateBaseline;
+    f.core.validateBaseline = async repository => { controller.abort(); return validate(repository); };
+    const before = await readFile(join(f.run, 'context.json'));
+    await assert.rejects(preparePlanningProductEvidence(f.source, f.run, { core: f.core, signal: controller.signal }), { name: 'AbortError' });
+    assert.deepEqual(await readFile(join(f.run, 'context.json')), before);
+  } finally { await rm(f.dir, { recursive: true, force: true }); }
+});

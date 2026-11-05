@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "e76974869a4bea0cf5ae5b01e3cc2072e8876a00f2e8052fe86b92bbc19030d4",
+  "archiveSha256": "b5e96ff1574d1061d79142cd10a2fb9c9677ba9398a12dc1dee7433296d69a18",
   "failedPilots": [
     {
       "issue": 389,
@@ -200,7 +200,7 @@
   "supervisedComparisonIssue": 391,
   "correction416": {
     "testedSourceSha256": {
-      "opencode-execute.mjs": "1a6c9d15cfe5e24f1a876fb0782bc5f27f7af48d916171a9a961f769888cd876",
+      "opencode-execute.mjs": "84a0d7906ef42461a551098bb29e88cbaac961bc34afd00d36221778aae4a28f",
       "product-change.mjs": "66014641f43450be926ae6347a49fd9cf8aaf4d6d371f0c11896c65428af3163"
     },
     "provider": {
@@ -217,8 +217,9 @@
       "integrity": "sha512-tlP42CGVfi+/XAERDz2+kjgqqPf9Q/BXH3gaE9h6t/VNoFd/Eraqx959StH4UD7jP5h5l85AH7knOXeQ2XvQ3A=="
     },
     "actualModelUnchanged": true,
-    "controls": "6 focused provider-context controls, 14 actual container adapter cases, full verification 725 passed and 9 optional skips",
-    "scope": "Actual pinned provider and adapter qualification; native planning with the installed revision remains pending"
+    "controls": "7 focused provider-context controls, 14 actual container adapter cases, full verification 726 passed and 9 optional skips",
+    "scope": "Actual pinned provider and adapter qualification; native planning with the installed revision remains pending",
+    "cancellation": "Aborting during graph validation fails before context publication; the new control fails before the cancellation guards"
   },
   "serial146": {
     "sourcePr": "https://github.com/juangcarmona/lighthouse/pull/401",
