@@ -83,7 +83,7 @@ The installer subscribes the router to selected continuation workers and the wor
 
 ## Bounded unattended routes
 
-Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops.
+Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops. The bounded `lighthouse-unattended-<run>-<attempt>` artifact contains delivery receipts; full engine and check logs are retained separately as `lighthouse-unattended-diagnostics-<run>-<attempt>`.
 
 ## Epic delivery contracts
 

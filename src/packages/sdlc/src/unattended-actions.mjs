@@ -55,6 +55,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   if (run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner ||
       run.repository?.full_name !== repository || run.head_sha !== revision || run.head_branch !== metadata.default_branch ||
       run.path !== '.github/workflows/lighthouse-sdlc-unattended.yml' || String(run.run_attempt) !== env.GITHUB_RUN_ATTEMPT) throw Error('Unattended workflow identity or current source changed');
+  const workflowRunId = env.GITHUB_RUN_ID, attempt = Number(run.run_attempt);
+  if (!Number.isSafeInteger(attempt) || attempt < 1) throw Error('Unattended workflow attempt must be a positive safe integer');
   const sourceRoot = env.LIGHTHOUSE_SOURCE_ROOT ?? join(env.GITHUB_WORKSPACE, 'product');
   if (execFileSync('git', ['-C', sourceRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() !== revision) throw Error('Source checkout does not match the authorized revision');
   const policyFile = await api('contents/.lighthouse/unattended.json?ref=' + revision);
@@ -137,6 +139,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const step = async (stage, worker, text, extra = {}, selectedPolicy = implementation.policy) => {
     await recheck();
     const request = { repository, runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
+      workflowRunId, attempt, taskDigest: intent,
       ...(stage === 'implement' ? { implementation: { ...implementation, policy: selectedPolicy } } : {}) };
     const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');

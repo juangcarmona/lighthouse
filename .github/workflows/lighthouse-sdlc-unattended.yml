@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: c7fa9d9d36b991ebdad397040d37e843999da66d
+          ref: fe56d595acd9781089ccd853b71154641e82ef73
           path: .lighthouse-harness
           persist-credentials: false
       - name: Load current product source
@@ -48,7 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node .lighthouse-harness/src/packages/sdlc/src/unattended-actions.mjs
-      - name: Retain candidate and execution evidence
+      - name: Retain bounded delivery receipts
         if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -56,12 +56,19 @@ jobs:
           path: |
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/report.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/candidate.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/request.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/envelope.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/checks.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/changes.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/runtime.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/engine-error.json
-            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/**/evidence/**
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/checks.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/changes.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/engine-error.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Retain execution diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-unattended-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
           if-no-files-found: warn
           retention-days: 14
