@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "runId": "2bc1ed833ba37a78e07e74c9ee8eb795b6766dc1ebe43ba38bf6c3279b5d0f46",
+  "stage": "integrate",
+  "status": "passed",
+  "gate": "done",
+  "evidence": [
+    {
+      "id": "independent-review:f78922431e8bdbc6d687b1d8dcda2534a86d6a6ac22328984103d5b14d3e5636",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780"
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Return to the trusted host",
+  "output": {
+    "review": {
+      "binding": "f78922431e8bdbc6d687b1d8dcda2534a86d6a6ac22328984103d5b14d3e5636",
+      "result": {
+        "schemaVersion": 1,
+        "runId": "9640eeddf0b4328f9e8f25e572dd94f7c7f1afb0bcc3e13c28ddaec8376b7203",
+        "stage": "integrate",
+        "gate": "done",
+        "status": "passed",
+        "evidence": [],
+        "missingEvidence": [],
+        "unavailableChecks": [],
+        "pendingReview": [],
+        "output": {
+          "review": {
+            "binding": "f78922431e8bdbc6d687b1d8dcda2534a86d6a6ac22328984103d5b14d3e5636",
+            "verdict": "accept",
+            "findings": []
+          }
+        },
+        "nextAction": "Return to the trusted host for the remaining delivery gates."
+      },
+      "model": {
+        "requested": {
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high"
+        },
+        "resolved": {
+          "mode": "profile",
+          "profile": "fast",
+          "model": "openai/gpt-6-luna",
+          "reasoningEffort": "high",
+          "engineModel": "openai/gpt-6-luna#high",
+          "source": "task.profile",
+          "fields": {
+            "model": "project",
+            "reasoningEffort": "project"
+          },
+          "capabilityEvidence": "operator-configuration-only"
+        },
+        "providerReported": {
+          "model": null,
+          "reasoningEffort": null,
+          "status": "unverified",
+          "reason": "The current adapter has no authenticated provider-settings receipt"
+        },
+        "billing": {
+          "route": "unchanged",
+          "actualCost": null,
+          "estimatedApiEquivalentCost": null,
+          "subscriptionUsage": null
+        }
+      },
+      "execution": {
+        "status": "passed",
+        "exitCode": 0,
+        "signal": null,
+        "resources": {
+          "pidsLimit": 128,
+          "pidsPeak": 36,
+          "pidsDenied": 0,
+          "memoryPeakBytes": 523812864,
+          "oomKills": 0
+        }
+      }
+    }
+  }
+}
