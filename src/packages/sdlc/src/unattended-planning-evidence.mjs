@@ -13,12 +13,15 @@ export async function readUnattendedPlanningReview(api, completion, priorIntegra
     if (run.path !== '.github/workflows/lighthouse-sdlc-unattended.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.actor?.login !== authorization.owner || run.triggering_actor?.login !== authorization.owner || run.repository?.full_name !== repository || run.run_attempt !== 1 || !/^[a-f0-9]{40}$/.test(run.head_sha ?? '')) return null;
     const root = unattendedDigest({ repository, issue, route: authorization.route, run: runId });
     const stageId = (sequence, stage, worker) => unattendedDigest({ runId: root, sequence, stage, worker });
-    const refineId = stageId(1, 'refine', 'refine'), proposalId = stageId(2, 'propose', 'propose'), reviewId = stageId(3, 'integrate', 'independent-review');
     const name = `lighthouse-unattended-${runId}-${attempt}`;
     const read = file => readArtifact(api, repository, runId, name, file);
     const member = (id, file) => `${id}/tmp/lighthouse-${runId}-${attempt}/${file}`;
-    const [report, candidate, refineRequest, refinement, proposalRequest, proposal, producer, reviewRequest, review, reviewer] = await Promise.all([
-      read('report.json'), read('candidate.json'), read(member(refineId, 'request.json')), read(member(refineId, 'envelope.json')),
+    const [report, candidate] = await Promise.all([read('report.json'), read('candidate.json')]);
+    const round = report.planningRound === undefined ? 0 : report.planningRound;
+    if (!Number.isSafeInteger(round) || round < 0 || round > 2) return null;
+    const refineId = stageId(1, 'refine', 'refine'), proposalId = stageId(2 + round * 2, 'propose', 'propose'), reviewId = stageId(3 + round * 2, 'integrate', 'independent-review');
+    const [refineRequest, refinement, proposalRequest, proposal, producer, reviewRequest, review, reviewer] = await Promise.all([
+      read(member(refineId, 'request.json')), read(member(refineId, 'envelope.json')),
       read(member(proposalId, 'request.json')), read(member(proposalId, 'envelope.json')), read(member(proposalId, 'runtime.json')),
       read(member(reviewId, 'request.json')), read(member(reviewId, 'envelope.json')), read(member(reviewId, 'runtime.json')),
     ]);

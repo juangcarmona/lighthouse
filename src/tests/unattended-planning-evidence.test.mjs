@@ -4,14 +4,14 @@ import { readUnattendedPlanningReview } from '../packages/sdlc/src/unattended-pl
 import { unattendedDigest } from '../packages/sdlc/src/unattended.mjs';
 import { stageContext } from '../packages/sdlc/src/unattended-runtime.mjs';
 
-function fixture() {
+function fixture(round = 0) {
   const repository = 'owner/repo', issue = 196, runId = '123', attempt = '1', revision = 'a'.repeat(40), head = 'b'.repeat(40), merge = 'c'.repeat(40), intent = 'd'.repeat(64), policyDigest = 'e'.repeat(64);
   const completion = { merged: true, merge, binding: { repository, issue, pr: 238, head, intent } };
   const prior = { workflow: { runId, attempt }, receipt: { authorization: { unattended: { owner: 'owner', route: 'ff', policyDigest } } } };
   const run = { path: '.github/workflows/lighthouse-sdlc-unattended.yml', event: 'workflow_dispatch', status: 'completed', conclusion: 'success', actor: { login: 'owner' }, triggering_actor: { login: 'owner' }, repository: { full_name: repository }, run_attempt: 1, head_sha: revision };
   const root = unattendedDigest({ repository, issue, route: 'ff', run: runId });
   const id = (sequence, stage, worker) => unattendedDigest({ runId: root, sequence, stage, worker });
-  const refine = id(1, 'refine', 'refine'), propose = id(2, 'propose', 'propose'), review = id(3, 'integrate', 'independent-review');
+  const refine = id(1, 'refine', 'refine'), propose = id(2 + round * 2, 'propose', 'propose'), review = id(3 + round * 2, 'integrate', 'independent-review');
   const path = `openspec/changes/issue-${issue}-proposal/.openspec.yaml`, refined = { eligibility: { points: 1 } };
   const original = [{ path: 'openspec/changes/issue-196-proposal/proposal.md', content: 'Plan' }, { path, content: 'skip_specs: true' }];
   const metadata = 'schema: spec-driven\nskip_specs: true\n';
@@ -22,7 +22,7 @@ function fixture() {
   const request = (runId, stage, worker) => ({ runId, issue, stage, worker, sourceRevision: revision });
   const member = (stageRunId, name) => `${stageRunId}/tmp/lighthouse-${runId}-1/${name}`;
   const files = new Map([
-    ['report.json', { status: 'passed', published: { number: 238, head: { sha: head } }, integrated: { sha: merge } }],
+    ['report.json', { status: 'passed', ...(round ? { planningRound: round } : {}), published: { number: 238, head: { sha: head } }, integrated: { sha: merge } }],
     ['candidate.json', [{ path, content: Buffer.from(metadata).toString('base64') }]],
     [member(refine, 'request.json'), request(refine, 'refine', 'refine')],
     [member(refine, 'envelope.json'), { result: { runId: refine, stage: 'refine', status: 'passed', output: refined } }],
@@ -44,6 +44,17 @@ test('reconstructs an independently reviewed plan from authenticated retained ar
   assert.equal(evidence.verdict, 'accept');
   assert.equal(evidence.providerSettings, 'unverified');
   assert.equal(evidence.details.plan.files[1].content, 'schema: spec-driven\nskip_specs: true\n');
+});
+
+test('post-integration evidence selects the accepted replacement plan and rejects changed round pointers', async () => {
+  for (const round of [1, 2]) {
+    const f = fixture(round), evidence = await readUnattendedPlanningReview(f.api, f.completion, f.prior, f.read);
+    assert.equal(evidence?.binding, f.binding); assert.equal(evidence?.proposalRunId, f.propose);
+    for (const changed of [0, 3, -1, '1', null]) {
+      f.files.get('report.json').planningRound = changed;
+      assert.equal(await readUnattendedPlanningReview(f.api, f.completion, f.prior, f.read), null);
+    }
+  }
 });
 
 test('rejects changed plans, producer identity, results, run authority and missing artifacts', async () => {

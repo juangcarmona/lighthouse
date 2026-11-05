@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "e4780e9fd1f2ea92ab2dde823c9f0247d9043198ab4d04234cc7e0b6de5149e0",
+  "archiveSha256": "2f3beb388ec99237bb09114589f1a39cda70336cf4c43140963700c21236b36f",
   "failedPilots": [
     {
       "issue": 389,
@@ -55,6 +55,13 @@
       "publication": "none",
       "cleanup": "clean; 14 implementation resources removed",
       "correction": "owner grant requires runtime construction of synthetic credential fixtures; publication guard unchanged"
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41953938164",
+      "outcome": "refinement and proposal passed; independent planning reviewer requests artifact scope and metadata instruction corrections",
+      "publication": "none",
+      "correction": "#414 shares the existing correction budget between FF plans and candidates"
     }
   ],
   "correction407": {
@@ -82,7 +89,9 @@
     },
     "coldClone": "passed; no preinstalled dependencies; 44 customization hashes preserved; no tracked diff",
     "scope": "bootstrap only; native delivery, upgrade and rollback pending",
-    "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored"
+    "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored",
+    "configurationRevision": "43df7fb50bdc05dc5af67ffb75845e846671524a",
+    "configurationChange": "Narrow invalid shared OpenSpec scope; future execution gets exact per-issue grants. Baseline cold-clone evidence remains bound to the earlier revision."
   },
   "correction410": {
     "testedSourceSha256": {
@@ -120,6 +129,66 @@
     "canonicalMembers": 27,
     "diagnosticMembers": 55,
     "templateSha256": "e0de8eb2165379aff8f571cd49252e96de4bc9e5a7d795eb378636670c2f0275",
-    "nativeLayoutQualification": "pending subsequent native pilot"
-  }
+    "nativeLayoutQualification": {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41953938164",
+      "sourceRevision": "e86ec5d534474e03eb55b85d42833d6b8565e848",
+      "scope": "Actual installed artifact layout and authenticated transport only; native delivery remains blocked before implementation",
+      "canonical": {
+        "id": 13382573295,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM4MjU3MzI5NQ==",
+        "name": "lighthouse-unattended-41953938164-1",
+        "size_in_bytes": 21960,
+        "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13382573295",
+        "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13382573295/zip",
+        "expired": false,
+        "digest": "sha256:a4d0953a762c99165eabc5c6c512c1946aced5ca607f6b3a5dc7370ff4d7a912",
+        "created_at": "2026-11-05T02:24:24Z",
+        "updated_at": "2026-11-05T02:24:24Z",
+        "expires_at": "2026-11-19T02:24:23Z",
+        "workflow_run": {
+          "id": 41953938164,
+          "repository_id": 1427668548,
+          "head_repository_id": 1427668548,
+          "head_branch": "main",
+          "head_sha": "e86ec5d534474e03eb55b85d42833d6b8565e848"
+        }
+      },
+      "diagnostics": {
+        "id": 13382668031,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM4MjY2ODAzMQ==",
+        "name": "lighthouse-unattended-diagnostics-41953938164-1",
+        "size_in_bytes": 350326,
+        "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13382668031",
+        "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13382668031/zip",
+        "expired": false,
+        "digest": "sha256:49b5b296f3e2e54dbcdce0d8362d5883dac2a0f41ff32d4232d7227fc77c498c",
+        "created_at": "2026-11-05T02:24:27Z",
+        "updated_at": "2026-11-05T02:24:27Z",
+        "expires_at": "2026-11-19T02:24:25Z",
+        "workflow_run": {
+          "id": 41953938164,
+          "repository_id": 1427668548,
+          "head_repository_id": 1427668548,
+          "head_branch": "main",
+          "head_sha": "e86ec5d534474e03eb55b85d42833d6b8565e848"
+        }
+      },
+      "canonicalSha256": "a4d0953a762c99165eabc5c6c512c1946aced5ca607f6b3a5dc7370ff4d7a912",
+      "diagnosticsSha256": "49b5b296f3e2e54dbcdce0d8362d5883dac2a0f41ff32d4232d7227fc77c498c",
+      "existingReader": "Actual GitHub metadata/download reads report and independent planning-review envelope unchanged",
+      "canonicalMembers": 10,
+      "diagnosticsMembers": 3
+    }
+  },
+  "correction414": {
+    "testedSourceSha256": {
+      "unattended.mjs": "67e3f682dc0745a4e34cdbb463f3bb1a7a77202bb5af24a0885d27fee29e7d5e",
+      "unattended-actions.mjs": "2920cd0411e550dcb7035d9e26ee1ef8a420d6a5a0152a6b4acfc568d786531d",
+      "unattended-planning-evidence.mjs": "f131fb29c2c7a18d3e9e243515c3acd4fdb75d630021cc9252bd12c225bdc2aa"
+    },
+    "newRegressionFailuresBeforeFix": 5,
+    "focusedTestsPassed": 103,
+    "scope": "Bounded planning repair, shared budget and authentic accepted-round evidence; native repaired-plan acceptance pending"
+  },
+  "supervisedComparisonIssue": 391
 }
