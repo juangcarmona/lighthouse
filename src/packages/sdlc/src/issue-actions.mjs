@@ -10,7 +10,7 @@ import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { isDeepStrictEqual } from 'node:util';
+import { isDeepStrictEqual, stripVTControlCharacters } from 'node:util';
 import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection } from './implementation.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
@@ -176,6 +176,48 @@ export async function checkEpicAuthority(epic, authenticate) {
 export function checkEpicTriageBinding(epic, triage) {
   if (epic && !isDeepStrictEqual(triage?.request?.epic, epic)) throw Error('Child triage does not match the current authenticated epic plan');
 }
+export async function githubResponseError(response, method, path, token) {
+  const error = Object.assign(Error(`GitHub ${method} ${path}: ${response.status}`), { status: response.status });
+  let reader, timer, finished = false;
+  try {
+    if (response.bodyUsed || !response.body || response.body.locked) return error;
+    reader = response.body.getReader();
+    const deadline = new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Diagnostic deadline')), 1000); });
+    const chunks = [];
+    let bytes = 0;
+    for (let reads = 0; reads < 256; reads++) {
+      const { done, value } = await Promise.race([reader.read(), deadline]);
+      if (done) { finished = true; break; }
+      if (!(value instanceof Uint8Array) || value.byteLength > 16384 - bytes) return error;
+      bytes += value.byteLength;
+      chunks.push(value);
+    }
+    if (!finished) return error;
+    const payload = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks, bytes)));
+    if (!payload || Array.isArray(payload) || typeof payload !== 'object' || !Object.hasOwn(payload, 'message') || typeof payload.message !== 'string') return error;
+    // Source brackets are never allowed to impersonate generated redaction placeholders.
+    if (/[\[\]]/.test(stripVTControlCharacters(payload.message))) return error;
+    let message = token ? payload.message.split(token).join('[REDACTED]') : payload.message;
+    message = stripVTControlCharacters(message).replace(/[\r\n\t]/g, ' ').replace(/[\p{Cc}\p{Cf}]/gu, '').replace(/\s+/g, ' ').trim();
+    if (token) message = message.split(token).join('[REDACTED]');
+    message = message.replace(/Bearer\s+[^\s"']+/gi, 'Bearer [REDACTED]')
+      .replace(/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]{15,}/g, '[REDACTED]')
+      .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[REDACTED]');
+    if (!message || /\b(?:[a-z][a-z0-9+.-]*:(?![:\s])|www\.)/i.test(message)) return error;
+    message = message.replace(/:{2,}/g, value => [...value].join(' '));
+    if (/[^A-Za-z0-9 .,;:!?()'"/_+=-]/.test(message.replaceAll('[REDACTED]', ''))) return error;
+    error.message += ` - ${message.length > 500 ? message.slice(0, 499) + '…' : message}`;
+  } catch { /* Diagnostics must never replace the original HTTP failure. */ }
+  finally {
+    clearTimeout(timer);
+    if (reader) {
+      try { if (!finished) void reader.cancel().catch(() => {}); } catch { /* Best-effort cleanup. */ }
+      try { reader.releaseLock(); } catch { /* A failed cleanup cannot mask the HTTP error. */ }
+    }
+  }
+  return error;
+}
+
 async function main(command) {
   const env = { ...process.env }, repo = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo ?? '')) throw Error('Invalid repository');
@@ -184,7 +226,7 @@ async function main(command) {
   const api = async (path, method = 'GET', body, optional = false) => {
     const r = await fetch(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     if (optional && r.status === 404) return null;
-    if (!r.ok) throw Object.assign(Error(`GitHub ${method} ${path}: ${r.status}`), { status: r.status });
+    if (!r.ok) throw await githubResponseError(r, method, path, env.GH_TOKEN);
     if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
       const log = await r.text();
       if (Buffer.byteLength(log) > 4 * 1024 * 1024) throw Error('Job log exceeds recovery bounds');
