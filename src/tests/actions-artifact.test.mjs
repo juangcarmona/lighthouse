@@ -54,7 +54,10 @@ async function exerciseDownload(t, outcomes, { error, invalid = false, optional 
 
 test('immutable artifact GET retries only confirmed transients, with identical identity, credentials and limits', async t => {
   await exerciseDownload(t, [artifactZip()]);
-  for (const status of [502, 503, 504]) await exerciseDownload(t, [httpFailure(status), artifactZip()]);
+  for (const status of [502, 503, 504]) {
+    await exerciseDownload(t, [httpFailure(status), artifactZip()]);
+    await exerciseDownload(t, [httpFailure(status, `gh: HTTP ${status}\n`), artifactZip()]);
+  }
   await exerciseDownload(t, [httpFailure(502), httpFailure(504), artifactZip()]);
   const stringStderr = Object.assign(httpFailure(503), { stderr: 'gh: Service Unavailable (HTTP 503)\n' });
   await exerciseDownload(t, [stringStderr, artifactZip()]);
@@ -62,14 +65,16 @@ test('immutable artifact GET retries only confirmed transients, with identical i
 
 test('transient exhaustion preserves the exact final command failure', async t => {
   for (const status of [502, 503, 504]) {
-    const errors = [httpFailure(status), httpFailure(status), httpFailure(status)];
-    await exerciseDownload(t, errors, { error: errors[2] });
+    for (const diagnostic of [`gh: Service response (HTTP ${status})\n`, `gh: HTTP ${status}\n`]) {
+      const errors = Array.from({ length: 3 }, () => httpFailure(status, diagnostic));
+      await exerciseDownload(t, errors, { error: errors[2] });
+    }
   }
 });
 
 test('terminal and uncertain command failures never retry, initially or following a transient', async t => {
   const errors = [
-    ...[400, 401, 403, 404, 408, 429, 500, 501, 505].map(status => httpFailure(status)),
+    ...[400, 401, 403, 404, 408, 429, 500, 501, 505].flatMap(status => [httpFailure(status), httpFailure(status, `gh: HTTP ${status}\n`)]),
     Error('unknown download failure'),
     ...[502, 503, 504].flatMap(status => [
       Object.assign(Error(String(status)), { status }),
@@ -79,6 +84,8 @@ test('terminal and uncertain command failures never retry, initially or followin
     ]),
     httpFailure(503, 'gh: Service Unavailable (HTTP 503)\ngh: Forbidden (HTTP 403)\n'),
     httpFailure(503, 'gh: HTTP 403 (HTTP 503)'),
+    httpFailure(503, 'gh: HTTP 503\ngh: HTTP 403\n'),
+    httpFailure(503, 'gh: HTTP 503 trailing text'),
     httpFailure(503, 'proxy: Service Unavailable (HTTP 503)'),
     httpFailure(503, 'gh: Service Unavailable (HTTP 503) trailing text'),
     Object.assign(httpFailure(503), { status: 0 }),
