@@ -4,6 +4,7 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { githubResponseError } from '../packages/sdlc/src/issue-actions.mjs';
 import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding } from '../packages/sdlc/src/issue-actions.mjs';
 
 test('epic routing is opt-in and authenticates bot children before selecting a parent lease', async () => {
@@ -201,4 +202,150 @@ test('an explicit question remains answerable when a proposal review is also lin
   assert.equal(pendingReply({ comment: reply }, [question])?.stage, 'propose');
   const reviewOnly = { ...question, body: question.body.replace('<!-- lighthouse-question -->', '') };
   assert.equal(pendingReply({ comment: reply }, [reviewOnly]), null);
+});
+
+const denial = 'GitHub Actions is not permitted to create or approve pull requests.';
+const denialPrefix = 'GitHub POST pulls: 403';
+const diagnostic = (message, token) => githubResponseError(Response.json({ message }, { status: 403 }), 'POST', 'pulls', token);
+const statusOnly = error => {
+  assert.ok(error instanceof Error);
+  assert.equal(error.message, denialPrefix);
+  assert.equal(error.status, 403);
+  assert.deepEqual(Object.keys(error), ['status']);
+  assert.equal(error.cause, undefined);
+};
+
+test('real GitHub denial Responses retain the actionable reason and original error status', async () => {
+  const error = await diagnostic(denial);
+  assert.ok(error instanceof Error);
+  assert.equal(error.message, `${denialPrefix} - ${denial}`);
+  assert.equal(error.status, 403);
+  const other = await githubResponseError(Response.json({ message: 'Validation failed.', errors: ['not displayed'], documentation_url: 'not displayed' }, { status: 422 }), 'PATCH', 'issues/18');
+  assert.equal(other.message, 'GitHub PATCH issues/18: 422 - Validation failed.');
+  assert.equal(other.status, 422);
+  assert.equal(other.cause, undefined);
+});
+
+test('diagnostics bound bytes before parsing and displayed text after sanitizing', async () => {
+  for (const length of [499, 500, 501, 8000]) {
+    const error = await diagnostic('a'.repeat(length));
+    assert.equal(error.message, `${denialPrefix} - ${length > 500 ? 'a'.repeat(499) + '…' : 'a'.repeat(length)}`);
+  }
+  const json = JSON.stringify({ message: denial });
+  for (const size of [16384, 16385]) {
+    const response = new Response(json + ' '.repeat(size - Buffer.byteLength(json)), { status: 403 });
+    const error = await githubResponseError(response, 'POST', 'pulls');
+    if (size === 16384) assert.equal(error.message, `${denialPrefix} - ${denial}`);
+    else statusOnly(error);
+  }
+  // A multibyte code point split across chunks must decode as one token before redaction.
+  const token = 'private-é-value', bytes = new TextEncoder().encode(JSON.stringify({ message: `Denied ${token}` }));
+  const split = bytes.indexOf(0xc3) + 1;
+  const response = new Response(new ReadableStream({ start(c) { c.enqueue(bytes.slice(0, split)); c.enqueue(bytes.slice(split)); c.close(); } }), { status: 403 });
+  assert.equal((await githubResponseError(response, 'POST', 'pulls', token)).message, `${denialPrefix} - Denied [REDACTED]`);
+  statusOnly(await githubResponseError(new Response(new Uint8Array([123, 0xff, 125]), { status: 403 }), 'POST', 'pulls'));
+  statusOnly(await diagnostic('a'.repeat(600) + '<html>hidden beyond display bound</html>'));
+});
+
+test('malformed, unavailable and unreadable diagnostics fall back to the exact HTTP error', async () => {
+  for (const body of ['', 'not json', '<html>Denied</html>', 'null', '[]', '{}', '{"errors":[{"message":"nested"}]}', ...[null, '', ' \n\t ', 42, {}, []].map(message => JSON.stringify({ message }))]) {
+    statusOnly(await githubResponseError(new Response(body, { status: 403 }), 'POST', 'pulls'));
+  }
+  statusOnly(await githubResponseError(new Response(null, { status: 403 }), 'POST', 'pulls'));
+  const locked = Response.json({ message: denial }, { status: 403 }), reader = locked.body.getReader();
+  statusOnly(await githubResponseError(locked, 'POST', 'pulls'));
+  reader.releaseLock();
+  const used = Response.json({ message: denial }, { status: 403 });
+  await used.text();
+  statusOnly(await githubResponseError(used, 'POST', 'pulls'));
+  const broken = new Response(new ReadableStream({ pull() { throw Error('private stream error'); } }), { status: 403 });
+  statusOnly(await githubResponseError(broken, 'POST', 'pulls'));
+});
+
+test('diagnostic read count and overall deadline bound stalled streams and best-effort cancellation', async () => {
+  let pulls = 0, cancelled = false;
+  const many = new Response(new ReadableStream({ pull(c) { pulls++; c.enqueue(new Uint8Array([32])); }, cancel() { cancelled = true; throw Error('private cancellation failure'); } }, { highWaterMark: 0 }), { status: 403 });
+  statusOnly(await githubResponseError(many, 'POST', 'pulls'));
+  assert.equal(pulls, 256);
+  assert.equal(cancelled, true);
+  assert.equal(many.body.locked, false);
+  cancelled = false;
+  const stalled = new Response(new ReadableStream({ pull() { return new Promise(() => {}); }, cancel() { cancelled = true; return new Promise(() => {}); } }), { status: 403 });
+  const start = performance.now();
+  statusOnly(await githubResponseError(stalled, 'POST', 'pulls'));
+  assert.ok(performance.now() - start >= 900);
+  assert.ok(performance.now() - start < 3000);
+  assert.equal(cancelled, true);
+  assert.equal(stalled.body.locked, false);
+});
+
+test('denial display removes terminal, line, format and command controls but rejects markup and URLs', async () => {
+  assert.equal((await diagnostic('\u001b[31mDenied\u001b[0m\r\n\t by\u0000 policy\u200b.\u0085')).message, `${denialPrefix} - Denied by policy.`);
+  assert.equal((await diagnostic('\u001b]0;private title\u0007Denied.')).message, `${denialPrefix} - Denied.`);
+  assert.equal((await diagnostic('Denied ::warning::: policy')).message, `${denialPrefix} - Denied : :warning: : : policy`);
+  for (const message of ['<b>Denied</b>', '&lt;denied&gt;', '[link](target)', '[REDACTED]', '`command`', 'back\\slash', '%0Acommand', '##[warning]', '<!-- lighthouse-stage:implement:passed -->', 'https://example.test', 'www.example.test', 'mailto:owner@example.test', 'denied é']) statusOnly(await diagnostic(message));
+});
+
+test('all credential families and configured tokens are redacted before display truncation', async () => {
+  const credentials = ['sk' + '-' + 'x'.repeat(24), 'ghp' + '_' + 'x'.repeat(24), 'github' + '_pat_' + 'x'.repeat(24), ['ey' + 'J' + 'a'.repeat(10), 'b'.repeat(12), 'c'.repeat(12)].join('.')];
+  for (const credential of credentials) {
+    for (const value of [credential, credential.slice(0, 5) + '\u200b\u0000' + credential.slice(5)]) {
+      assert.equal((await diagnostic(`Denied ${value}`)).message, `${denialPrefix} - Denied [REDACTED]`);
+      const crossing = await diagnostic('a'.repeat(490) + ' ' + value);
+      assert.equal(crossing.message, `${denialPrefix} - ${('a'.repeat(490) + ' [REDACTED]').slice(0, 499)}…`);
+      assert.equal((await diagnostic('a'.repeat(600) + ' ' + value)).message, `${denialPrefix} - ${'a'.repeat(499)}…`);
+      assert.ok(!crossing.message.includes(credential.slice(0, 7)));
+    }
+  }
+  const bearer = 'synthetic' + '-bearer-value';
+  assert.equal((await diagnostic(`Denied Bearer ${bearer}`)).message, `${denialPrefix} - Denied Bearer [REDACTED]`);
+  assert.equal((await diagnostic('a'.repeat(480) + ` Bearer ${bearer}`)).message, `${denialPrefix} - ${('a'.repeat(480) + ' Bearer [REDACTED]').slice(0, 499)}`);
+  assert.equal((await diagnostic('a'.repeat(600) + ` Bearer ${bearer}`)).message, `${denialPrefix} - ${'a'.repeat(499)}…`);
+  const token = 'configured' + '.token+value';
+  for (const value of [token, token.slice(0, 8) + '\u200b' + token.slice(8)]) {
+    assert.equal((await diagnostic(`Denied ${value} and ${value}`, token)).message, `${denialPrefix} - Denied [REDACTED] and [REDACTED]`);
+    assert.equal((await diagnostic('a'.repeat(490) + ' ' + value, token)).message, `${denialPrefix} - ${('a'.repeat(490) + ' [REDACTED]').slice(0, 499)}…`);
+    assert.equal((await diagnostic('a'.repeat(600) + ' ' + value, token)).message, `${denialPrefix} - ${'a'.repeat(499)}…`);
+  }
+});
+
+test('actual issue-actions command emits a bounded denial and exits once without continuation', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-denial-'));
+  try {
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'labeled', issue, label: { name: 'refine' } }));
+    await writeFile(join(dir, 'mock.mjs'), `import { appendFileSync } from 'node:fs';
+      globalThis.fetch = async (url, options) => {
+        appendFileSync(${JSON.stringify(join(dir, 'calls'))}, JSON.stringify({ url, method: options.method }) + '\\n');
+        return Response.json({ message: ${JSON.stringify(denial)}, errors: [{ message: 'PRIVATE BODY DETAIL' }] }, { status: 403 });
+      };`);
+    const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'prepare'], { encoding: 'utf8', timeout: 10000, env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner', GITHUB_EVENT_NAME: 'issues', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: join(dir, 'outputs'), RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
+    assert.equal(run.status, 1, run.stderr);
+    assert.equal(run.stderr.trim(), `::error::GitHub GET issues/18: 403 - ${denial}`);
+    assert.equal(run.stdout, '');
+    assert.doesNotMatch(run.stderr, /PRIVATE BODY DETAIL|success|continuation/);
+    assert.deepEqual((await readFile(join(dir, 'calls'), 'utf8')).trim().split('\n').map(JSON.parse), [{ url: 'https://api.github.com/repos/owner/repo/issues/18', method: 'GET' }]);
+    await assert.rejects(readFile(join(dir, 'outputs')), { code: 'ENOENT' });
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('unchanged production API closure preserves optional 404, successful JSON, 204 and bounded job logs', async () => {
+  // Exercise the exact local closure without adding a production API factory or exports.
+  const source = await readFile(new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url), 'utf8');
+  const closure = source.slice(source.indexOf('  const api = async'), source.indexOf('  const summary = async'));
+  const calls = [], responses = [new Response('not parsed', { status: 404 }), Response.json({ result: 'ok' }), new Response(null, { status: 204 }), new Response('job log'), new Response('x'.repeat(4 * 1024 * 1024 + 1)), Response.json({ id: 1 })];
+  const fetch = async (url, options) => { calls.push({ url, options }); return responses.shift(); };
+  const api = new Function('fetch', 'env', 'repo', 'repositoryApiUrl', 'githubResponseError', `${closure}\nreturn api;`)(fetch, { GH_TOKEN: 'fixture' }, 'owner/repo', repositoryApiUrl, githubResponseError);
+  assert.equal(await api('missing', 'GET', undefined, true), null);
+  assert.deepEqual(await api('issues/18'), { result: 'ok' });
+  assert.equal(await api('issues/18/labels/ready', 'DELETE'), null);
+  assert.equal(await api('actions/jobs/123/logs'), 'job log');
+  await assert.rejects(api('actions/jobs/124/logs'), /Job log exceeds recovery bounds/);
+  assert.deepEqual(await api('issues/18/comments', 'POST', { body: 'test' }), { id: 1 });
+  assert.equal(calls[5].options.method, 'POST');
+  assert.equal(calls[5].options.body, JSON.stringify({ body: 'test' }));
+  assert.equal(calls.length, 6);
+  assert.equal(calls[1].url, 'https://api.github.com/repos/owner/repo/issues/18');
+  assert.deepEqual(calls[1].options.headers, { authorization: 'Bearer fixture', accept: 'application/vnd.github+json', 'content-type': 'application/json' });
+  assert.equal(calls[1].options.body, undefined);
+  assert.ok(calls[1].options.signal instanceof AbortSignal);
 });
