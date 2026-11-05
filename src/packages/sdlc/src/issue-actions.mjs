@@ -5,6 +5,7 @@ import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfter
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource, ciRequestFailure, ciFailureSummary } from './delivery-events.mjs';
+import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { implementationContinuation, consumeReconciledLabel } from './delivery-request.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
@@ -893,7 +894,7 @@ async function main(command) {
         }
         prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(!changes.length ? { implementationIdentity: snapshot.implementationReview.implementationIdentity } : {}) })} -->`;
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
-        try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr, { checkpoint: requests => writeFile(join(dir, 'ci-requests.json'), JSON.stringify(requests)) }); }
+        try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr, { ciTrigger: githubAppCiTrigger(env), beforeWrite: recheck, checkpoint: requests => writeFile(join(dir, 'ci-requests.json'), JSON.stringify(requests)) }); }
         catch (error) {
           ciDispatchFailed = true;
           const failure = error.ciRequestFailure ?? ciRequestFailure(error, pr);

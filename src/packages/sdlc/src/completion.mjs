@@ -119,17 +119,38 @@ export function assertCitedChecks(envelope, before, after) {
     }
   }
 }
-export async function checkCommit(api, revision, required) {
-  const runs = await list(api, `commits/${revision}/check-runs?filter=latest`, 'check_runs');
+export async function checkCommit(api, revision, required, { pullRequest = true } = {}) {
+  const runs = await list(api, `commits/${revision}/check-runs?filter=${pullRequest ? 'all' : 'latest'}`, 'check_runs');
   const statuses = await list(api, `commits/${revision}/statuses`);
   const latest = [...new Map(statuses.map(s => [s.context, s]).reverse()).values()];
+  const origins = new Map(), workflows = new Map();
+  // GitHub excludes workflow_dispatch job checks from PR rules, even at the right SHA.
+  // Authenticate the actual workflow rather than infer its event from a green job.
+  if (pullRequest) await Promise.all(runs.filter(r => required.some(c => r.name === c.context && (c.app === null || r.app?.id === c.app)) && (r.app?.id === 15368 || r.app?.slug === 'github-actions')).map(async r => {
+    let origin = { eligible: false, state: 'unverified-workflow' };
+    const match = typeof r.details_url === 'string' && r.details_url.match(/^https:\/\/[^/]+\/[^/]+\/[^/]+\/actions\/runs\/([1-9][0-9]*)\/job\/[1-9][0-9]*$/);
+    const id = Number(match?.[1]);
+    if (Number.isSafeInteger(id) && id > 0 && Number.isSafeInteger(r.check_suite?.id) && r.check_suite.id > 0) {
+      if (!workflows.has(id)) workflows.set(id, Promise.resolve().then(() => api(`actions/runs/${id}`)).catch(() => null));
+      const run = await workflows.get(id);
+      if (run?.id === id && run.head_sha === r.head_sha && run.check_suite_id === r.check_suite.id && /^[a-z_]{1,40}$/.test(run.event ?? '')) {
+        const eligible = ['push', 'pull_request', 'pull_request_review', 'pull_request_target', 'deployment', 'deployment_status'].includes(run.event);
+        origin = { eligible, state: eligible ? 'eligible' : 'ineligible-event', event: run.event, run: id, url: r.details_url.replace(/\/job\/[1-9][0-9]*$/, '') };
+      }
+    }
+    origins.set(r, origin);
+  }));
   return required.map(c => {
     const matches = runs.filter(r => r.name === c.context && (c.app === null || r.app?.id === c.app));
+    const qualified = matches.filter(r => origins.get(r)?.eligible !== false);
+    const eligible = pullRequest && qualified.every(r => Number.isSafeInteger(r.id)) ? [...new Map(qualified.sort((a, b) => a.id - b.id).map(r => [r.app?.id, r])).values()] : qualified;
+    const ignored = matches.filter(r => origins.get(r)?.eligible === false);
     const status = latest.find(s => s.context === c.context);
-    const passed = (matches.length > 0 || c.app === null && status?.state === 'success') && matches.every(r => r.head_sha === revision && r.status === 'completed' && ['success', 'neutral', 'skipped'].includes(r.conclusion)) && (!status || status.state === 'success');
-    const failed = matches.some(r => r.head_sha !== revision || r.status === 'completed' && !['success', 'neutral', 'skipped'].includes(r.conclusion)) || ['error', 'failure'].includes(status?.state);
-    const pending = matches.some(r => r.status !== 'completed') || status?.state === 'pending';
-    return { ...c, revision, status: passed ? 'passed' : failed ? 'failed' : 'unavailable', state: passed ? 'passed' : failed ? 'failed' : pending ? 'pending' : 'missing', checks: matches.map(r => ({ id: r.id, url: r.html_url, status: r.status, conclusion: r.conclusion, app: r.app?.id })), commitStatus: status ? { state: status.state, url: status.target_url } : null };
+    const passed = (eligible.length > 0 || c.app === null && status?.state === 'success') && eligible.every(r => r.head_sha === revision && r.status === 'completed' && ['success', 'neutral', 'skipped'].includes(r.conclusion)) && (!status || status.state === 'success');
+    const failed = eligible.some(r => r.head_sha !== revision || r.status === 'completed' && !['success', 'neutral', 'skipped'].includes(r.conclusion)) || ['error', 'failure'].includes(status?.state);
+    const pending = eligible.some(r => r.status !== 'completed') || status?.state === 'pending';
+    const unavailable = ignored.some(r => origins.get(r).state === 'ineligible-event') ? 'ineligible-event' : ignored.length ? 'unverified-workflow' : 'missing';
+    return { ...c, revision, status: passed ? 'passed' : failed ? 'failed' : 'unavailable', state: passed ? 'passed' : failed ? 'failed' : pending ? 'pending' : unavailable, checks: [...eligible, ...ignored].map(r => ({ id: r.id, url: r.html_url, status: r.status, conclusion: r.conclusion, app: r.app?.id, ...(origins.has(r) ? origins.get(r) : {}) })), commitStatus: status ? { state: status.state, url: status.target_url } : null };
   });
 }
 export function completionEffects(stage, status, integrationLabel = false) {
@@ -152,10 +173,10 @@ export async function inspectCompletion(api, repository, owner, input, stage, wo
     const test = await api(`git/commits/${pr.merge_commit_sha}`, 'GET', undefined, true);
     if (test?.parents?.some(p => p.sha === input.head) && test.parents.some(p => p.sha === current.sha)) {
       const mergeChecks = await checkCommit(api, pr.merge_commit_sha, policy.checks);
-      if (mergeChecks.some(c => c.checks.length || c.commitStatus)) checkedRevision = pr.merge_commit_sha;
+      if (mergeChecks.some(c => c.checks.some(check => check.eligible !== false) || c.commitStatus)) checkedRevision = pr.merge_commit_sha;
     }
   }
-  const checks = await checkCommit(api, checkedRevision, policy.checks);
+  const checks = await checkCommit(api, checkedRevision, policy.checks, { pullRequest: !pr.merged });
   const observedChecks = (await Promise.all([...new Set([pr.head.sha, checkedRevision])].map(revision => observeChecks(api, revision, workflowRunId)))).flat();
   const reviews = await list(api, `pulls/${input.pr}/reviews`);
   if (input.integrationLabel) (await import('./integration-request.mjs')).assertIntegrationLabelCurrent(repository, owner, input, pr, issue, comments, reviews);
@@ -172,6 +193,11 @@ export function assertFresh(before, after) {
   if (fingerprint(before.binding) !== fingerprint(after.binding) || before.merged !== after.merged) throw Error('Completion evidence is stale: head, base, intent, policy, review or scope changed');
 }
 export function assertChecks(observation) {
+  const origin = observation.checks.find(c => ['ineligible-event', 'unverified-workflow'].includes(c.state));
+  if (origin) {
+    const check = origin.checks.find(c => c.eligible === false);
+    throw Error(`Required check ${origin.context} lacks an eligible verified PR workflow event${check?.event ? ` (${check.event})` : ''}. Workflow maintainer: run CI through a supported PR event; a dispatched job cannot satisfy this hosting rule.${check?.url ? ` Inspect ${check.url}.` : ''}`);
+  }
   if (!observation.checks.length || observation.checks.some(c => c.status !== 'passed')) throw Error('Required checks are missing, pending or failed');
 }
 export async function mergeAccepted(api, snapshot, recheck, beforeMerge = async () => {}) {

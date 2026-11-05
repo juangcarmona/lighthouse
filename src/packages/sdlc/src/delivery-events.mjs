@@ -1,20 +1,23 @@
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { stagePath } from './stage-dispatch.mjs';
 import { retryLimit, retryDelayMs } from './worker-recovery.mjs';
+import { verificationBranch } from './ci-subject.mjs';
 
 // Never retain exception messages, headers or response bodies across the API boundary.
 export function ciRequestFailure(error, pr, operation = {}) {
   const status = Number.isSafeInteger(error.status) && error.status >= 100 && error.status <= 599 ? error.status : null;
   const exception = status ? 'http' : ['TimeoutError', 'AbortError', 'TypeError'].includes(error.name) ? error.name : 'Error';
-  const code = ['head-changed', 'inventory-incomplete', 'send-unconfirmed', 'budget-exhausted', 'delay-pending'].includes(operation.code) ? operation.code : 'request-failed';
+  const requestedCode = operation.code ?? (error.ciAppSetupRequired ? 'app-setup-required' : null);
+  const code = ['head-changed', 'base-changed', 'authority-changed', 'workflow-changed', 'app-setup-required', 'inventory-incomplete', 'send-unconfirmed', 'budget-exhausted', 'delay-pending'].includes(requestedCode) ? requestedCode : 'request-failed';
   const method = operation.method === 'POST' ? 'POST' : 'GET';
-  const path = /^(?:pulls\/[1-9][0-9]*|actions\/workflows\/[\w.-]+\.ya?ml\/(?:runs|dispatches)|contents\/\.lighthouse\/github\.json)$/.test(operation.path ?? '') ? operation.path : 'contents/.lighthouse/github.json';
+  const path = /^(?:git\/refs|pulls\/[1-9][0-9]*|actions\/workflows\/[\w.-]+\.ya?ml\/(?:runs|dispatches)|contents\/\.lighthouse\/github\.json)$/.test(operation.path ?? '') ? operation.path : 'contents/.lighthouse/github.json';
   if (!Number.isSafeInteger(pr.number) || pr.number < 1 || !/^[a-f0-9]{40}$/.test(pr.head.sha)) throw Error('Invalid CI diagnostic subject');
   return { schemaVersion: 1, method, path, status, exception, code, pr: pr.number, head: pr.head.sha };
 }
 
 export function ciFailureSummary(failure) {
   const safe = ciRequestFailure({ status: failure.status, name: failure.exception }, { number: failure.pr, head: { sha: failure.head } }, failure);
+  if (safe.code === 'app-setup-required') return `CI trigger unavailable for PR #${safe.pr} at ${safe.head}. Workflow maintainer: install the repository-scoped CI App and configure LIGHTHOUSE_CI_APP_CLIENT_ID and LIGHTHOUSE_CI_APP_PRIVATE_KEY; preserve the retained candidate and request state.`;
   return `CI request: ${safe.method} ${safe.path}; ${safe.status ? `HTTP ${safe.status}` : safe.exception}; ${safe.code}; PR #${safe.pr} at ${safe.head}. Maintainer: reconcile the retained send state and native CI before any resend.`;
 }
 
@@ -75,13 +78,14 @@ export async function deliveryAfterChecks(api, repository, owner, event) {
   return null;
 }
 
-export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = async () => {}, previous = null, now = Date.now() } = {}) {
+export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = async () => {}, previous = null, now = Date.now(), ciTrigger = null, beforeWrite = async () => {} } = {}) {
   let config;
   try { config = await api(`contents/.lighthouse/github.json?ref=${revision}`, 'GET', undefined, true); }
   catch (error) { error.ciRequestFailure = ciRequestFailure(error, pr); throw error; }
   if (!config) return [];
   const workflows = JSON.parse(Buffer.from(config.content, 'base64').toString()).completion?.postMergeWorkflows ?? [];
-  if (!Array.isArray(workflows) || workflows.length > 12 || workflows.some(w => !/^[\w.-]+\.ya?ml$/.test(w))) throw Error('Invalid repository check workflows');
+  if (!Array.isArray(workflows) || workflows.length > 12 || new Set(workflows).size !== workflows.length || workflows.some(w => !/^[\w.-]+\.ya?ml$/.test(w))) throw Error('Invalid repository check workflows');
+  if (previous?.some(item => item.schemaVersion === 2) || ciTrigger && !previous) return dispatchPushChecks(api, revision, pr, workflows, { checkpoint, previous, now, ciTrigger, beforeWrite });
   const requests = workflows.map(workflow => {
     const prior = previous?.find(item => item.workflow === workflow);
     if (previous && (!prior || prior.schemaVersion !== 1 || prior.pr !== pr.number || prior.head !== pr.head.sha || prior.branch !== pr.head.ref || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1)) throw Error('CI recovery receipt differs from the retained candidate');
@@ -127,4 +131,88 @@ export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = a
     }
   }
   return requests;
+}
+
+// One immutable ref emits one eligible push for all configured trusted workflows.
+async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, previous, now, ciTrigger, beforeWrite }) {
+  if (!workflows.length) return [];
+  let requests = [], operation = { method: 'GET', path: `pulls/${pr.number}` };
+  const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
+  try {
+    const current = await api(`pulls/${pr.number}`), repository = current.head.repo?.full_name;
+    if (current.number !== pr.number || current.state !== 'open' || current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || !/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || current.base?.repo?.full_name !== repository || !sha(current.base?.sha) || !sha(revision)) { operation.code = 'head-changed'; throw Error('CI subject changed'); }
+    const base = current.base.sha, baseBranch = current.base.ref, branch = verificationBranch(pr.number, pr.head.sha);
+    const recheck = async () => {
+      await beforeWrite();
+      const fresh = await api(`pulls/${pr.number}`);
+      if (fresh.state !== 'open' || fresh.head.sha !== pr.head.sha || fresh.head.ref !== pr.head.ref) { operation.code = 'head-changed'; throw Error('CI head changed'); }
+      if (fresh.base?.sha !== base || fresh.base.ref !== baseBranch) { operation.code = 'base-changed'; throw Error('CI base changed'); }
+    };
+    for (const workflow of workflows) {
+      const path = `contents/.github/workflows/${workflow}?ref=`;
+      const trusted = await api(path + revision), candidate = await api(path + pr.head.sha);
+      if (trusted.type !== 'file' || !sha(trusted.sha) || candidate.type !== 'file' || trusted.sha !== candidate.sha) { operation.code = 'workflow-changed'; throw Error('CI definition changed'); }
+      const identity = { schemaVersion: 2, trigger: 'app-push', pr: pr.number, head: pr.head.sha, sourceBranch: pr.head.ref, base, baseBranch, branch, workflow, workflowSha: trusted.sha, revision };
+      const prior = previous?.find(item => item.workflow === workflow);
+      if (previous && (!prior || Object.keys(identity).some(key => prior[key] !== identity[key]) || !['not-sent', 'requested', 'acknowledged', 'unknown', 'observed', 'rejected'].includes(prior.state) || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1 || !Number.isFinite(Date.parse(prior.observedAt)))) throw Error('CI recovery differs from the retained push identity');
+      requests.push({ ...identity, attempt: prior?.attempt ?? 1, observedAt: prior?.observedAt ?? new Date(now).toISOString(), state: prior?.state ?? 'not-sent', ...(prior?.run ? { run: prior.run } : {}) });
+    }
+    if (previous && previous.length !== requests.length) throw Error('CI recovery workflow inventory changed');
+    const inventory = async () => {
+      for (const request of requests) {
+        operation = { method: 'GET', path: `actions/workflows/${request.workflow}/runs` };
+        const found = await api(`${operation.path}?head_sha=${pr.head.sha}&per_page=100`);
+        if (!Array.isArray(found.workflow_runs) || !Number.isSafeInteger(found.total_count) || found.total_count !== found.workflow_runs.length || found.total_count > 100) { operation.code = 'inventory-incomplete'; throw Error('CI push inventory is incomplete'); }
+        const run = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === branch && run.repository?.full_name === repository && run.path === `.github/workflows/${request.workflow}` && run.event === 'push').sort((a, b) => b.id - a.id)[0];
+        if (run) Object.assign(request, { state: 'observed', run: run.id });
+        else if (request.state === 'observed') { request.state = 'unknown'; delete request.run; }
+      }
+    };
+    await inventory();
+    const refPath = `git/ref/heads/${branch}`;
+    let reference = await api(refPath, 'GET', undefined, true);
+    if (reference && (reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha)) { operation.code = 'head-changed'; throw Error('CI verification ref changed'); }
+    if (reference) {
+      await checkpoint(requests);
+      if (requests.every(request => request.state === 'observed') || previous && requests.every(request => ['observed', 'acknowledged'].includes(request.state))) return requests;
+      operation.code = 'send-unconfirmed'; throw Error('Existing CI ref has no confirmed native push');
+    }
+    if (requests.some(request => !['not-sent', 'rejected'].includes(request.state))) { operation.code = 'send-unconfirmed'; throw Error('CI ref creation is unconfirmed; do not resend'); }
+    if (!ciTrigger) { operation.code = 'app-setup-required'; throw Error('CI App configuration is unavailable'); }
+    if (previous) {
+      if (requests.some(request => request.attempt >= retryLimit + 1)) { operation.code = 'budget-exhausted'; throw Error('CI push budget exhausted'); }
+      if (requests.some(request => now - Date.parse(request.observedAt) < retryDelayMs)) { operation.code = 'delay-pending'; throw Error('CI push retry delay pending'); }
+      for (const request of requests) Object.assign(request, { attempt: request.attempt + 1, observedAt: new Date(now).toISOString() });
+    }
+    await recheck();
+    for (const request of requests) request.state = 'requested';
+    await checkpoint(requests);
+    operation = { method: 'POST', path: 'git/refs' };
+    try {
+      const app = await ciTrigger({ branch, head: pr.head.sha, beforeWrite: recheck });
+      for (const request of requests) Object.assign(request, { state: 'acknowledged', app });
+    } catch (error) {
+      reference = await api(refPath, 'GET', undefined, true);
+      if (!reference || reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha) {
+        const rejected = error.referenceAttempted === false || Number.isInteger(error.status) && error.status >= 400 && error.status < 500;
+        for (const request of requests) request.state = rejected ? 'rejected' : 'unknown';
+        operation.code ??= error.authorityChanged ? 'authority-changed' : error.referenceAttempted === false ? 'app-setup-required' : 'send-unconfirmed';
+        throw error;
+      }
+      for (const request of requests) request.state = 'acknowledged';
+    }
+    reference = await api(refPath, 'GET', undefined, true);
+    if (reference?.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha) {
+      for (const request of requests) request.state = 'unknown';
+      operation.code = 'send-unconfirmed'; throw Error('CI reference effect is unconfirmed');
+    }
+    await checkpoint(requests);
+    await inventory();
+    await checkpoint(requests);
+    return requests;
+  } catch (error) {
+    error.ciRequestFailure = ciRequestFailure(error, pr, operation);
+    if (requests.length === workflows.length) await checkpoint(requests);
+    throw error;
+  }
 }
