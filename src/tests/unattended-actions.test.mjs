@@ -216,6 +216,26 @@ test('a hotfix model cannot substitute its own regression command', async () => 
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
+test('an untouched blocked reviewer template cannot authorize implementation', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review') {
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.output = {};
+      result.envelope.result.missingEvidence = ['Independent reviewer must complete the assessment'];
+    }
+    return result;
+  };
+  try {
+    const outcome = await runGithubUnattended(f);
+    assert.equal(outcome.status, 'blocked');
+    assert.match(outcome.reason, /invalid or stale findings/);
+    assert.ok(!f.executions.some(value => value.request.stage === 'implement'));
+    assert.ok(!f.writes.some(value => value.path === 'pulls'));
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test('provider deadline is checked before any process starts', async () => {
   const controller = new AbortController(); controller.abort();
   const provider = boundedOpenSpecProvider({ root: tmpdir(), deadline: Date.now() + 1000, signal: controller.signal });
