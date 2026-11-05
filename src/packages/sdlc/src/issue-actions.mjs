@@ -12,7 +12,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
-import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
+import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection } from './implementation.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
@@ -163,6 +163,18 @@ export function checkPublication(snapshot, issue, comments, revision) {
   if (snapshot.productAlignment && issue.labels.some(x => x.name === 'future')) throw Error('Product alignment continuation was paused');
   if (issue.labels.some(x => x.name === 'human-working') || !issue.labels.some(x => x.name === 'agent-working')) throw Error('Execution reservation revoked');
   if (taskDigest(issue, comments) !== snapshot.taskDigest) throw Error('Issue or owner answers changed; request refinement again');
+}
+
+export function checkImplementationPrInventory(pulls, snapshot, published = null) {
+  let permitted = snapshot.implementationReview?.number ?? snapshot.productResume?.pullRequest ?? snapshot.productAlignment?.parent.pullRequest?.number;
+  if (published) {
+    const expected = checkImplementationPullRequest(published, snapshot.repository);
+    const current = pulls.find(pr => pr.number === published.number);
+    if (permitted !== undefined || !Number.isSafeInteger(published.id) || published.id < 1 || expected.issue !== snapshot.issue || expected.implementationIdentity !== snapshot.runId || expected.base !== (snapshot.epic?.base ?? snapshot.defaultBranch) || published.base.sha !== snapshot.sourceRevision || !current || current.id !== published.id || current.base?.sha !== published.base.sha) throw Error('Published implementation identity changed');
+    checkImplementationPullRequest(current, snapshot.repository, expected);
+    permitted = published.number;
+  }
+  if (pulls.length >= 100 || pulls.some(pr => pr.number !== permitted && pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`))) throw Error('Existing implementation PR requires review');
 }
 export async function resolveEpicRouting(api, repository, owner, issueNumber, route, enabled, authenticate) {
   if (!route.run || enabled !== 'true' || !['triage', 'refine', 'implement', 'integrate'].includes(route.stage) || route.worker && !(route.worker === 'apply-review' && route.stage === 'implement')) return undefined;
@@ -922,6 +934,7 @@ async function main(command) {
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
       if (!changes.length && value.result.status === 'passed' && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
       if (changes.length || isVerificationOnlyCorrection(snapshot)) {
+        let publishedPr = null;
         const checkAuthority = async () => {
           if (snapshot.ciRepair) {
             const run = await api(`actions/runs/${snapshot.ciRepair.run}`);
@@ -944,7 +957,7 @@ async function main(command) {
             else await checkReviewCurrent(api, repo, snapshot.implementationReview, true);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.implementationReview.number, owner))) !== snapshot.implementationReview.threadDigest) throw Error('PR feedback changed');
           }
-          if (pulls.length >= 100 || pulls.some(pr => pr.number !== (snapshot.implementationReview?.number ?? snapshot.productResume?.pullRequest ?? snapshot.productAlignment?.parent.pullRequest?.number) && pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Existing implementation PR requires review');
+          checkImplementationPrInventory(pulls, snapshot, publishedPr);
         };
         if (!changes.length) recheckVerifiedCandidate = checkAuthority;
         const recheck = async () => { await recheckPublication(); if (changes.length) await checkAuthority(); };
@@ -959,6 +972,7 @@ async function main(command) {
           await recheckPublication();
         };
         const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite);
+        if (!snapshot.implementationReview && !snapshot.productResume && !snapshot.productAlignment?.parent.pullRequest) publishedPr = structuredClone(pr);
         if (receipt.schemaVersion === 2) {
           const commit = await api(`git/commits/${pr.head.sha}`);
           const evidence = implementationEvidenceBundle(snapshot, receipt, changes, { pr: pr.number, head: pr.head.sha, tree: commit.tree.sha });
