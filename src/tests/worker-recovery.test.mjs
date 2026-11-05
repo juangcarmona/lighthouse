@@ -871,3 +871,26 @@ test('explicit maintenance scope can disable every issue and fails closed on inv
   assert.deepEqual(recoveryIssues('[7,8,7]'), [7, 8]);
   for (const invalid of ['null', '{}', '["7"]', '[0]', '[1.5]', '[true]', 'invalid', JSON.stringify(Array(101).fill(7))]) assert.throws(() => recoveryIssues(invalid));
 });
+
+test('maintenance includes closed issues from the bounded native review window without trusting the run title as authority', async () => {
+  const { maintenanceIssues } = await import('../packages/sdlc/src/worker-maintenance.mjs');
+  const visited = [];
+  const api = async path => {
+    visited.push(path);
+    if (path.startsWith('issues?')) return [{ number: 1, state: 'open', user: { login: owner } }];
+    if (path.startsWith('actions/workflows/')) return { workflow_runs: [
+      ...[2, 3, 4].map(number => ({ id: 200 + number, path: '.github/workflows/lighthouse-sdlc-review.lock.yml', status: 'completed', conclusion: 'failure', display_title: `review #${number} · request 10` })),
+      { path: '.github/workflows/other.yml', status: 'completed', conclusion: 'failure', display_title: 'review #5 · request 10' },
+      { path: '.github/workflows/lighthouse-sdlc-review.lock.yml', status: 'completed', conclusion: 'cancelled', display_title: 'review #6 · request 10' },
+    ] };
+    if (path === 'issues/2') return { number: 2, state: 'closed', user: { login: owner } };
+    if (path === 'issues/comments/10') return { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/2`, body: dispatchReceiptBody(repository, { schemaVersion: 1, stage: 'review', id: dispatchId(repository, '100', 'review'), digest: 'd'.repeat(64), routerRunId: '100', routerAttempt: 1, workerRunId: '202', status: 'unknown' }) };
+    if (path === 'issues/3') return { number: 3, state: 'closed', user: { login: 'other' } };
+    if (path === 'issues/4') return { number: 4, state: 'closed', user: { login: owner }, pull_request: {} };
+    throw Error(`Unexpected API ${path}`);
+  };
+  assert.deepEqual(await maintenanceIssues(api, owner, repository), [1, 2]);
+  assert.equal(visited.includes('issues/5'), false); assert.equal(visited.includes('issues/6'), false);
+  assert.deepEqual(await maintenanceIssues(async path => path.startsWith('issues?') ? [{ number: 1, user: { login: owner } }] : null, owner, repository), [1]);
+  await assert.rejects(maintenanceIssues(async path => path.startsWith('issues?') ? [] : { workflow_runs: {} }, owner, repository), /inventory/);
+});
