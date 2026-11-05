@@ -5,9 +5,9 @@
     "ff"
   ],
   "paths": [
-    "src/packages/sdlc/src/completion.mjs",
-    "src/tests/completion.test.mjs",
-    ".changeset/skipped-check-evidence.md"
+    "src/packages/cli/src/lighthouse.mjs",
+    "src/tests/lighthouse.test.mjs",
+    ".changeset/legacy-init-json-preview.md"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,
