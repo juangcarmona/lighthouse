@@ -214,6 +214,18 @@ async function denialMessage(response, token) {
   }
 }
 
+export function existingEpicTriage(request, issue, comments) {
+  if (request.stage !== 'triage' || request.worker || !request.epic || request.issue !== issue.number || issue.state !== 'open' || issue.labels.some(label => ['future', 'human-working', 'needs-info', 'waiting-review'].includes(label.name)) || request.intent !== dispatchIntent(request)) return null;
+  const key = epicTriageKey(request.repository, request.epic.parent, request.issue, request.epic.planDigest);
+  if (request.epicKey !== key || request.id !== dispatchId(request.repository, key, 'triage')) return null;
+  for (const comment of comments) {
+    if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || !comment.body?.includes('<!-- lighthouse-dispatch:')) continue;
+    const receipt = readDispatchReceipt(comment, request.repository, request.issue);
+    if (receipt.id === request.id && receipt.intent === request.intent) return comment;
+  }
+  return null;
+}
+
 export function createIssueApi(repo, env, fetchRequest = fetch) {
   return async (path, method = 'GET', body, optional = false) => {
     const r = await fetchRequest(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
@@ -464,9 +476,10 @@ async function main(command) {
     const productEntry = ['product-change', 'apply-product-change'].includes(route.worker);
     const installed = productEntry ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' : (env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage);
     if (!route.run || route.issue !== issueNumber || !installed || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
-    const issue = await api(issuePath), answers = ownerAnswers(await comments());
+    const issue = await api(issuePath), observedComments = await comments(), answers = ownerAnswers(observedComments);
     const metadata = await api(''), revision = (await api(`commits/${metadata.default_branch}`)).sha;
-    if ((!productEntry && !eligibleIssueAuthor(issue, owner, stage)) || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue)) throw Error('Issue not eligible for dispatch');
+    if ((!productEntry && !eligibleIssueAuthor(issue, owner, stage)) || issue.state !== 'open' && stage !== 'review' || issue.pull_request || issue.labels.some(x => x.name === 'human-working' || x.name === 'agent-working' && !queue && !epicTriage)) throw Error('Issue not eligible for dispatch');
+    if (epicTriage && issue.labels.some(label => ['future', 'needs-info', 'waiting-review'].includes(label.name))) throw Error('Epic child triage is paused');
     if (route.productResume && (route.productResume.baseRevision !== revision || (route.productResume.parent.feedback?.taskDigest ?? route.productResume.parent.taskDigest) !== taskDigest(issue, answers) || issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name)))) throw Error('Applied product parent, intent or authorization changed');
     if (route.productAlignment && (route.productAlignment.baseRevision !== revision || (route.productAlignment.parent.feedback?.taskDigest ?? route.productAlignment.parent.taskDigest) !== taskDigest(issue, answers) || issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name)))) throw Error('Aligned product parent, intent or authorization changed');
     if (route.productParent && (route.productParent.baseRevision !== revision || route.productParent.taskDigest !== taskDigest(issue, answers) || issue.labels.some(x => ['future', 'needs-info', 'waiting-review'].includes(x.name)))) throw Error('Product prerequisite parent, intent or authorization changed');
@@ -490,6 +503,11 @@ async function main(command) {
     executionModelSelection(request);
     if (['integrate', 'review'].includes(stage)) request.completionAuthorization = await (await import('./completion.mjs')).authorizeCompletionEvent(api, repo, after ?? event, { ...env, ...(after ? { GITHUB_EVENT_NAME: 'workflow_run' } : {}) }, stage, integrationRequest);
     request.intent = dispatchIntent(request);
+    if (epicTriage) {
+      const previous = existingEpicTriage(request, issue, observedComments);
+      if (previous) { await output('send', 'false'); await summary(`[Existing triage request](${previous.html_url}) is already recorded. No duplicate worker dispatched.`); return; }
+      if (issue.labels.some(label => label.name === 'agent-working') && !queue) throw Error('Issue not eligible for dispatch');
+    }
     const existing = await implementationContinuation(api, repo, owner, request);
     if (existing) {
       await consumeReconciledLabel(api, owner, request, existing.status);
