@@ -1,0 +1,511 @@
+{
+  "binding": "5ef11cd3fe93a2bcfd199aad8d983b69c500a0e959c36ccd297cebeaba396927",
+  "runId": "42060476780",
+  "attempt": "1",
+  "sourceRevision": "70c1d0186b1b43a0879044d4d0c1856651cca4ca",
+  "intent": "68b098c2c72808563b743667aeb2c03441a0efab4bee49456ff88e62921e5b9b",
+  "policyDigest": "b990193d43b4fcaa466e51ebe8e4af4b8d475f2447bdac6c66741990e99df37f",
+  "details": {
+    "refined": {
+      "eligibility": {
+        "points": 2,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "At the supplied revision, lighthouse.mjs:1719-1726 accepts init JSON, while initialize:894-918 ignores it and prints prose; planInitialization:831-862 already supplies the operations and conflicts. The fix is a bounded presentation/format guard in that module, real CLI regressions in its existing test file and one CLI patch changeset. Keep semantic initialization unchanged and use its existing JSON-preview-only convention (748-789), preserve text default apply and conflict status, and return before any dry-run writes (915-935). There is no new provider behavior, dependency, data migration or missing product choice. The package binary and subprocess callers have been inspected. Reverting the isolated correction restores the old output contract without data conversion. Two points uses the approved small-component anchor, not labels, and qualifies for FF with allowFivePoint=false. Engineering eligibility does not establish completed dependency deliveries, current grant validity, successful checks, review acceptance or merge/release authority."
+      },
+      "estimate": {
+        "points": 2,
+        "status": "confirmed",
+        "rationale": {
+          "scope": "Small component behavior: teach the existing legacy initialize branch to honor JSON plan output, guard JSON apply consistently with existing CLI conventions, extend its current subprocess tests and add one patch changeset. No new module or schema migration.",
+          "dependencies": "The current module already provides formatFromArgs, planInitialization, manifest validation and the semantic JSON reporting convention. No package addition, provider change or cross-team implementation prerequisite is needed.",
+          "verification": "Cover the real legacy entrypoint in greenfield and existing-manifest targets, JSON/text/conflict/no-write and apply-mode boundaries, retain adjacent semantic tests, then execute the exact admitted repository and provider commands in later stages."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "Runtime reproduction and candidate verification have not been executed in this refinement; results must come from later completed command receipts.",
+          "Live hosting state, continued authorization and successful sequencing of historical pilot work are rechecked by the trusted host, not inferred from checked-in artifacts."
+        ]
+      },
+      "problem": "An adopter or automated caller can request JSON from the accepted legacy name-based initialization dry run, receive exit status zero and get prose that JSON.parse cannot consume. The semantic plan-file branch already has machine-readable previews. Restore a truthful JSON contract for the existing legacy plan without changing what it plans or writes.",
+      "affectedUsers": [
+        "Project adopters using lighthouse init --name <product> --dry-run --format json.",
+        "Agent hosts and scripts parsing legacy initialization plans, plus existing text and semantic initialization callers whose behavior must remain compatible."
+      ],
+      "scope": {
+        "route": "ff",
+        "productionFiles": [
+          "src/packages/cli/src/lighthouse.mjs"
+        ],
+        "testFiles": [
+          "src/tests/lighthouse.test.mjs"
+        ],
+        "changeset": ".changeset/legacy-init-json-preview.md",
+        "changesetPackage": "@juangcarmona/lighthouse",
+        "changesetReleaseType": "patch",
+        "planningBoundary": "Later host-managed OpenSpec artifacts belong under openspec/changes/issue-392-proposal/. They are not permission to broaden the three-file implementation scope. No proposal or product file is authored by this refinement.",
+        "constraints": [
+          "Retain existing assertions, manifest validation, conflict checks, file ownership and provider boundaries; do not bypass checks.",
+          "Serialize the existing legacy plan rather than substituting a semantic plan or fabricating product intent, reference metadata or resolved questions.",
+          "Keep default text initialization applying as before; do not silently turn the legacy route into semantic dry-run-by-default behavior.",
+          "Use one patch changeset with package frontmatter and an H1; do not directly bump package versions or edit lockfiles."
+        ],
+        "outOfScope": [
+          "Provider initialization, provider-owned source edits, remote writes or new profile/validation semantics.",
+          "New JSON apply support, changed semantic plan schema or new initialization product decisions.",
+          "Policy, authorization, merge fallback, release or deployment changes.",
+          "Hotfix RED/GREEN acceptance for #186 or #395; this admitted assessment is FF."
+        ]
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "AC1",
+          "criterion": "Invoke the real CLI with init --name 'Published delivery consumer' --dry-run --format json in a fresh target. It exits zero and its entire stdout parses as one JSON object, with no prose prefix, suffix or separate success message. Cover --format=json as well.",
+          "verification": "Use the existing subprocess run helper, JSON.parse on the full stdout and semantic field assertions, not source-text matching or a mocked serializer."
+        },
+        {
+          "id": "AC2",
+          "criterion": "The JSON report projects the existing planned path/action operations and conflicts with manifest/context sufficient to identify the product, application, selected profiles and existing public-site/authority-gap context. It reports readiness versus conflict blocking without inventing semantic intent or treating existing informational authority gaps as newly fatal.",
+          "verification": "Assert representative manifest, directory, managed-file and empty-root-marker operations; selected manifest context and authority gaps; and equality of planned operations with the corresponding text preview. Exercise an existing valid manifest as well as a default manifest."
+        },
+        {
+          "id": "AC3",
+          "criterion": "Successful and conflicting JSON dry runs leave target contents and configuration unchanged, including existing project/provider files, lighthouse.json, managed paths, ownership state and Git hooks configuration. They do not invoke provider apply or remote mutation.",
+          "verification": "Snapshot isolated fixture trees and relevant Git configuration before/after; include provider-owned and user-owned sentinel files. Inspect the production call path to ensure the dry-run return remains before all mutating operations."
+        },
+        {
+          "id": "AC4",
+          "criterion": "A directory collision or existing managed-file conflict produces one parseable JSON report containing the conflict, exits one and performs no writes. Text previews retain their existing headings, operation/adoption-gap messages, stderr conflict diagnostics and exit status.",
+          "verification": "Exercise src-as-a-file and an existing managed path, preserving their bytes. Run both JSON and text conflict cases through the CLI."
+        },
+        {
+          "id": "AC5",
+          "criterion": "Keep JSON plan-only, consistent with semantic initialization and upgrade: reject explicit JSON --apply and legacy implicit JSON apply without --dry-run before writes, with an actionable diagnostic directing callers to preview or use text for apply. Do not silently ignore format or change text-mode implicit apply.",
+          "verification": "Test JSON without --dry-run, JSON with --apply and their no-write outcomes; retain successful text implicit initialization and semantic text apply. Cover combined apply/dry-run flags without enabling a JSON write path."
+        },
+        {
+          "id": "AC6",
+          "criterion": "Adjacent semantic initialization retains JSON default previews, explicit text apply, unresolved-question blocking and reference behavior. Existing text initialization, profile conflicts and repository-boundary marker tests remain intact. Include one CLI patch changeset and complete every admitted verification command before claiming implementation success.",
+          "verification": "Extend src/tests/lighthouse.test.mjs without weakening its existing assertions and execute the later verification plan with completed receipts."
+        }
+      ],
+      "dependencies": [
+        {
+          "name": "Local CLI planning and manifest context",
+          "resolution": "Available in the supplied source: initialize, initializeFromPlan, planInitialization, defaultManifest, normalizeRepository and formatFromArgs. No dependency update required.",
+          "source": "src/packages/cli/src/lighthouse.mjs:169-200,748-862,894-935,1687-1691"
+        },
+        {
+          "name": "Pilot sequencing and prior hotfix reservation",
+          "resolution": "#390 and #394 concern delivery infrastructure, not an implementation dependency for this CLI branch. Their planning artifacts are present and #394's bounded reader exists in source, but neither establishes completed delivery receipts. The issue and owner answer explicitly supersede the old #392 hotfix reservation with #395. Current execution sequencing, reservations and grant validity remain trusted-host admission checks, not a new product question.",
+          "source": "/input/context.json: issue.body, issue.ownerAnswers, issue.issue_dependencies_summary; openspec/changes/issue-390-proposal/proposal.md; openspec/changes/issue-394-proposal/proposal.md; src/packages/sdlc/src/actions-artifact.mjs:11-28"
+        }
+      ],
+      "riskAssessment": {
+        "level": "low",
+        "affectedSurface": "CLI legacy initialization output and its format-specific pre-write guard; shared planner, provider semantics and semantic initialization are preserved.",
+        "failureModes": [
+          "Mixed prose and JSON or loss of operation/conflict/context information.",
+          "Accidental writes in a preview or implicit JSON apply.",
+          "Changed text behavior, conflict exit status or adjacent semantic behavior."
+        ],
+        "mitigation": "Real subprocess parsing and field assertions, fixture/configuration snapshots, paired text and conflict cases, adjacent semantic tests, independent source review and the full admitted verification inventory.",
+        "recovery": "Revert the isolated implementation commit and patch changeset through the normal reviewed path. This output-only correction needs no data migration or provider-state rollback; any release rollback remains separately authorized."
+      },
+      "productContext": {
+        "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+        "discovery": "Read the 137-artifact index, the relevant initialization and FF inspect/impact reports and their canonical requirements/use-case text. Direct and transitive authority, human-decision, fail-closed and adoption boundaries remain unchanged. Product and architecture reports supply context, not apply or approval authority.",
+        "citations": [
+          "pdac:cite id=\"FR-INITIALIZE-FOUNDATION\" digest=\"sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4\"",
+          "pdac:cite id=\"FR-SEMANTIC-INITIALIZATION\" digest=\"sha256:aae9be2e26f3303a45ed3ddf4fa09866e2e9222518e4ac2072ab1a16326a6e21\"",
+          "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\""
+        ],
+        "productChangeNeeded": false,
+        "reason": "Correct the already accepted format selection using existing local plan information and the existing plan-only JSON convention. No missing product meaning or ambiguous required outcome was identified within this scope; broader draft product requirements are not asserted as implemented or approved."
+      },
+      "definitionOfReady": [
+        {
+          "check": "Problem and affected callers understood",
+          "status": "passed",
+          "evidenceIds": [
+            "source-grounded-problem",
+            "callers-and-existing-conventions"
+          ]
+        },
+        {
+          "check": "Known bounded scope and explicit exclusions",
+          "status": "passed",
+          "evidenceIds": [
+            "bounded-entry-and-route",
+            "estimate-and-ff-readiness"
+          ]
+        },
+        {
+          "check": "Testable acceptance and complete evidence plan",
+          "status": "passed",
+          "evidenceIds": [
+            "callers-and-existing-conventions",
+            "verification-plan-complete"
+          ]
+        },
+        {
+          "check": "Dependencies and decision ownership resolved for refinement",
+          "status": "passed",
+          "evidenceIds": [
+            "bounded-entry-and-route",
+            "product-and-architecture-alignment"
+          ]
+        },
+        {
+          "check": "Explained numeric estimate and separate risk/reversibility assessment",
+          "status": "passed",
+          "evidenceIds": [
+            "estimate-and-ff-readiness",
+            "source-grounded-problem"
+          ]
+        }
+      ],
+      "verificationPlan": {
+        "basis": "Exact inventory from context.unattended.implementationChecks; admission is not an execution receipt.",
+        "workingDirectory": "/workspace",
+        "commands": [
+          [
+            "npm",
+            "ci",
+            "--ignore-scripts"
+          ],
+          [
+            "node",
+            "--test",
+            "src/tests/lighthouse.test.mjs"
+          ],
+          [
+            "env",
+            "GITHUB_ACTIONS=true",
+            "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+            "npm",
+            "run",
+            "verify"
+          ],
+          [
+            "npx",
+            "--no-install",
+            "prodshape",
+            "citations",
+            "verify",
+            "--provider",
+            "openspec",
+            "--format",
+            "json"
+          ],
+          [
+            "npx",
+            "--yes",
+            "--package=@fission-ai/openspec@1.15.0",
+            "openspec",
+            "validate",
+            "issue-392-proposal",
+            "--strict",
+            "--no-interactive"
+          ]
+        ],
+        "executionStatus": "planned-not-executed",
+        "sequence": "Install dependencies first. Materialize and validate the engineering proposal before implementation and obtain separate planning review. After the candidate exists, execute all admitted checks sequentially and retain actual command, exit status and logs; repeat provider validation for the final proposal. Allow 600000 ms for full repository verification as recorded in the #392 implementation policy.",
+        "receiptBoundary": "Agent-run observations, even if later green, are additional observations. Independent host checks and fresh bound engineering review must retain their own receipts. No check was executed by this refinement.",
+        "laterGates": [
+          "Provider-valid engineering plan and distinct read-only planning review before source changes.",
+          "Completed candidate command receipts and independent host verification, followed by distinct candidate review against #392 and owner answers.",
+          "Actual current-head forge CI, including the configured repository check from the eligible origin; local or workflow-dispatch success is not a substitute for required PR evidence.",
+          "Fresh trusted-host authority, scope, reservation and hosting checks before any separately delegated integration; no manual merge fallback.",
+          "Successful adopted post-merge verification and accepted post-merge review before delivery closure. Merge does not establish release or deployment."
+        ]
+      },
+      "agentObservations": [
+        "Only read-only source, policy, skill and prepared-product-report inspection was performed. The supplied source identity is 70c1d0186b1b43a0879044d4d0c1856651cca4ca; no independent Git or registry lookup was performed.",
+        "The issue reports registry CLI 0.12.38. The inspected source package declares 0.12.39; its current legacy branch still has the format omission. No installed-package execution or published-version claim is made.",
+        "Optional CodeGraph context retrieval was unavailable; direct inspection of the CLI entrypoint, planner, semantic branch, package binary, initialization skill and subprocess tests supplied the necessary caller context. This optional discovery limitation is not an unavailable required product check.",
+        "No production code, tests, proposal, policy or provider files were changed. The envelope is the only authored artifact."
+      ],
+      "decisionBoundary": "No new human product or architecture decision is required for this bounded correction. The adopter retains the Ready/Planned/Done gate ownership; the trusted host must validate continuation against the separately adopted FF grant and authenticated dispatch. This assessment neither launches an agent nor grants integration, release or deployment permission."
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-392-proposal/proposal.md",
+          "content": "# Proposal\n\n<!-- pdac-scope: cited -->\n\n## Why\n\n[Issue #392](https://github.com/juangcarmona/lighthouse/issues/392) reports that the accepted legacy `init --name \"Published delivery consumer\" --dry-run --format json` command succeeds but emits prose. Restore machine-readable access to its existing plan without changing initialization choices, ownership or text-mode application.\n\n## What Changes\n\n- Emit one JSON projection of the legacy plan's operations, conflicts, selected manifest, repository/public-site context and existing authority adoption gaps for either JSON flag spelling.\n- Keep JSON preview-only: reject implicit JSON apply and explicit JSON `--apply`, including combined apply/dry-run flags, before writes; direct callers to JSON preview or text apply.\n- Preserve text output, implicit text apply, conflict exit status, manifest validation, profile selection and semantic initialization.\n- Add real CLI regressions in the existing test file and one CLI patch changeset. Do not initialize providers, perform remote writes or introduce dependencies.\n\n## Capabilities\n\n### New Capabilities\n\nNone.\n\n### Modified Capabilities\n\nNone. This corrects an implementation omission in an accepted format contract, not a product requirement or semantic-plan contract. The inspected `openspec/specs/` inventory contains only `.gitkeep`. Return `.openspec.yaml` containing only `skip_specs: true`; the host retains provider-owned metadata in the final file. No requirement is invented to fill an empty inventory.\n\n## Impact\n\nImplementation is limited to `src/packages/cli/src/lighthouse.mjs`, `src/tests/lighthouse.test.mjs` and `.changeset/legacy-init-json-preview.md`. The changeset targets `@juangcarmona/lighthouse` with release type `patch` and an H1 after frontmatter. No direct version bump, lockfile edit, provider source edit, migration, policy change or new JSON apply support is authorized. These host-managed planning artifacts are separate from that three-file implementation scope.\n\n### Product context\n\nDiscovery compared the issue with the 137-artifact product inventory, read the relevant canonical text and widened the dependency set through the host-prepared direct/transitive impact reports before drafting. The artifacts used by this plan are preservation dependencies, not canonical files to change:\n\n- `FR-INITIALIZE-FOUNDATION`: retain reviewable operations, conflict preservation and actionable public-site authority gaps.\n<!-- pdac:cite id=\"FR-INITIALIZE-FOUNDATION\" digest=\"sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4\" -->\n- `FR-SEMANTIC-INITIALIZATION`: preserve plan-driven initialization, name/profile compatibility and project/provider ownership; do not manufacture semantic intent, reference metadata or resolved questions for the legacy route.\n<!-- pdac:cite id=\"FR-SEMANTIC-INITIALIZATION\" digest=\"sha256:aae9be2e26f3303a45ed3ddf4fa09866e2e9222518e4ac2072ab1a16326a6e21\" -->\n- `FR-FAST-FORWARD-DELIVERY`: retain independent engineering review, current evidence and separately delegated integration; this proposal grants no continuation or merge authority.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\nChecked neighbours not targeted are `UC-INITIALIZE-PROJECT`, `SB-INITIALIZE`, `SB-SEMANTIC-INITIALIZATION`, `BR-OWNED-AUTHORITY`, `BR-HUMAN-AUTHORITY`, `BR-FAIL-CLOSED`, `BR-ENTRY-AUTHORITY` and `BR-STAGE-GATES`: their selection, ownership, evidence and decision rules do not change. `FR-AUTHORITY-INITIALIZATION`, `FR-AUTHORITY-ADOPTION`, `FR-CODEGRAPH-INIT-CHECK` and `FR-PUBLIC-SITE-PROJECTION` are excluded from implementation: reporting current local context does not initialize authorities, add a graph check or change site publication. The impact reports' other actors, terms and delivery neighbours introduce no additional implementation surface.\n\nProduct definition drift: none identified for this bounded correction; no altered product intent or Product Change is proposed. The supplied product baseline is `e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0`; its draft artifacts and read-only reports do not establish approval or implementation of their broader target behaviour. Current architecture context is `docs/architecture/02-constraints/README.md`, `docs/architecture/05-building-block-view/README.md` and `docs/architecture/06-runtime-view/README.md`; no architecture decision or authority changes.\n\n## Verification and next decision\n\n[Design](design.md) defines the projection, guards and compatibility matrix; [tasks](tasks.md) maps every refined acceptance criterion and preserves the admitted checks. Commands are planned, not execution receipts. The host validates/materializes this candidate before distinct independent plan review; candidate checks, current-head forge CI, separately bounded integration and accepted post-merge review remain later work. The owner answer assigns the hotfix proof to #395, not this FF correction; historical pilot sequencing and current grant validity remain host checks.\n"
+        },
+        {
+          "path": "openspec/changes/issue-392-proposal/design.md",
+          "content": "# Design\n\n<!-- pdac-scope: cited -->\n\n## Context\n\nSee [proposal.md](proposal.md) for motivation and authority discovery. The executable `lighthouse` binary maps to `src/packages/cli/src/lighthouse.mjs`; its dispatcher accepts both JSON flag spellings. `initialize` delegates `--plan-file` first, then validates the legacy manifest and obtains `planInitialization` operations/conflicts, but always prints text. Its dry-run return precedes manifest, directory, managed-file, ownership-state and Git-hook configuration writes. The semantic route already rejects JSON apply.\n\n## Goals / Non-Goals\n\n**Goals:** expose the same local plan to parsers, preserve existing text callers and make every JSON invocation incapable of applying initialization.\n\n**Non-Goals:** change planning, validation, ownership, provider invocation, profile semantics or semantic initialization; infer product intent; enable JSON apply; add a shared reporting framework or schema file. No UI change or new visual acceptance evidence is needed.\n\n## Decisions\n\n### 1. Project the legacy plan, not a fabricated semantic plan\n\nWithin the existing CLI module, branch the legacy renderer on `formatFromArgs`. Emit a single `JSON.stringify` result with `schemaVersion: 1`, `status` (`blocked` iff conflicts exist), the selected `manifest` unchanged, normalized `repository` context, `operations` projected to `{ path, action }`, `conflicts` unchanged and `adoptionGaps`. Represent each current gap with its authority and actionable next step, using the same public-site-enabled/null-integration conditions and repair commands as the existing text messages. Do not include generated file contents or semantic-only intent/reference/question fields. Informational authority gaps do not make an otherwise conflict-free plan blocked.\n\nThis retains the current initialization and adoption contract.\n<!-- pdac:cite id=\"FR-INITIALIZE-FOUNDATION\" digest=\"sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4\" -->\n\nKeep text headings, operation lines, gap messages and stderr conflict diagnostics unchanged; JSON writes no prose prefix, suffix or separate success message. Conflicting JSON previews still print the complete object and exit one; ready previews exit zero. Validation errors and invalid mode combinations remain nonzero diagnostics, not successful JSON plans.\n\nAlternative: reuse the semantic report by constructing a plan. Rejected because legacy input contains no semantic intent, reference or resolved-question evidence. Sharing or changing the planner is unnecessary and risks changing planned actions.\n\n### 2. Guard JSON before any mutation; leave text semantics alone\n\nAfter the existing semantic-route delegation, read the legacy format and dry-run flags. For JSON, require `--dry-run` and reject any explicit `--apply`, even when paired with `--dry-run`; issue an actionable error explaining JSON preview and text apply. Keep the existing dry-run return and conflict handling ahead of every mutation. Do not change legacy text's implicit apply or reinterpret its existing flags.\n\nPreserve the semantic route's default preview, explicit text apply, unresolved-question blocking and optional-reference behaviour without modifying its report contract.\n<!-- pdac:cite id=\"FR-SEMANTIC-INITIALIZATION\" digest=\"sha256:aae9be2e26f3303a45ed3ddf4fa09866e2e9222518e4ac2072ab1a16326a6e21\" -->\n\nAlternative: allow JSON apply or silently convert implicit apply to a preview. Rejected: both exceed the admitted correction or conceal the requested mode. A global flag-policy refactor would also unnecessarily affect text/semantic callers.\n\n### 3. Verify at the real subprocess boundary\n\nExtend the existing `run`-based tests in `src/tests/lighthouse.test.mjs`; parse entire stdout, not substrings or mocked serializers. Test fresh targets with the issue's product name and both JSON flag spellings, plus an existing valid manifest with meaningful application/profile/repository context. Compare projected path/action pairs with a paired text preview; check manifest creation when absent and its absence from operations when present, directories, managed paths and empty-root markers. Cover public-site enabled/disabled and missing/recorded authority context.\n\nFor ready, conflicting and rejected-apply cases, compare before/after fixture trees, file bytes/modes and isolated local Git configuration, including provider/user sentinels, `lighthouse.json`, managed paths, ownership state and `core.hooksPath`. Cover a file at `src` and a pre-existing managed file, retaining their bytes and JSON/text exit-one results. Source review must confirm no provider apply/remote call is added and that no preview reaches mutation; snapshots alone cannot prove absence of external effects.\n\nRetain and run existing implicit text initialization, semantic JSON/default preview, semantic text apply, unresolved-question/reference, profile-conflict and committed/cloned-boundary tests. Add guard cases for JSON without dry-run, JSON apply and JSON apply plus dry-run. No existing assertion is weakened.\n\n## Risks / Trade-offs\n\n- Mixed output or omitted context → parse full stdout and assert fields and paired text operation parity.\n- Accidental preview writes or changed exit status → tree/config snapshots for ready, conflict and guard cases plus pre-write call-path review.\n- Shared-route regression → keep the change legacy-local and run adjacent semantic/text/profile/marker tests and full verification.\n- Exposing incidental internal data → project operations to path/action only and use already selected local manifest/context, not generated contents or invented semantic evidence.\n\n## Migration Plan\n\nDeliver one CLI patch changeset through the normal reviewed release path; no data conversion, package-version edit or provider migration is needed. Roll back the isolated correction and changeset through an authorized reviewed revert; this restores prior presentation and requires no adopter-data conversion.\n\nThe host first validates/materializes the proposal and obtains distinct read-only independent plan review. Later candidate command receipts, independent host verification and fresh candidate review remain separate from actual eligible current-head forge CI. Integration requires fresh host authority checks and its separate bounded delegation; there is no manual merge fallback. Accepted post-merge verification/review is required before delivery closure; merge is not release or deployment.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n"
+        },
+        {
+          "path": "openspec/changes/issue-392-proposal/tasks.md",
+          "content": "# Tasks\n\n<!-- pdac-scope: cited -->\n\n## 1. Verification setup\n\n- [ ] 1.1 Run `npm ci --ignore-scripts` from `/workspace`; retain actual exit/output evidence and verify no package-version or lockfile changes enter the candidate.\n\n## 2. Legacy JSON correction, regressions and release note\n\nPreserve the existing local plan, conflicts, public-site context and authority-gap meaning; the concrete cases below come from #392's refined acceptance criteria.\n<!-- pdac:cite id=\"FR-INITIALIZE-FOUNDATION\" digest=\"sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4\" -->\n\n- [ ] 2.1 Add real `run`-based regressions and implement the legacy-only JSON projection in `src/packages/cli/src/lighthouse.mjs` per design decision 1; verify with `node --test src/tests/lighthouse.test.mjs` that both `--format json` and `--format=json` parse as one full-stdout object for the issue's fresh-target command and an existing valid manifest, with correct status, manifest/application/profiles, repository context, authority gaps, representative manifest/directory/managed-file/empty-marker operations and paired text operation parity (AC1–AC2).\n- [ ] 2.2 Add ready/conflict no-write fixtures and paired text cases; verify full JSON reports and exit one for `src`-as-file and managed-file collisions, unchanged text headings/operations/gap messages/stderr conflicts, and unchanged tree bytes/modes, provider/user sentinels, manifest, managed paths, ownership state and isolated Git hooks configuration before/after using `node --test src/tests/lighthouse.test.mjs`; inspect the call path to confirm the preview return precedes all mutations and adds no provider apply or remote operation (AC3–AC4).\n\nKeep semantic plan behaviour and the legacy text compatibility boundary intact; do not synthesize semantic intent or silently accept JSON apply.\n<!-- pdac:cite id=\"FR-SEMANTIC-INITIALIZATION\" digest=\"sha256:aae9be2e26f3303a45ed3ddf4fa09866e2e9222518e4ac2072ab1a16326a6e21\" -->\n\n- [ ] 2.3 Implement the legacy JSON pre-write mode guard and its subprocess tests; verify actionable nonzero diagnostics and unchanged target/configuration for JSON without `--dry-run`, JSON `--apply` and combined apply/dry-run flags, while retaining implicit text apply, semantic JSON default previews, explicit semantic text apply, unresolved questions, optional references, manifest validation, profile conflicts and committed/cloned repository-boundary markers with `node --test src/tests/lighthouse.test.mjs` (AC5–AC6).\n- [ ] 2.4 Add `.changeset/legacy-init-json-preview.md` with `\"@juangcarmona/lighthouse\": patch` frontmatter and an H1 describing the JSON preview correction and apply restriction; verify the artifact names only that package and inspect the candidate diff for exactly the three admitted implementation files plus authorized planning artifacts, with no direct version, lockfile, provider or policy edits (AC6).\n\n## 3. Integration verification and Definition of Done\n\nEvery command below is planned, not an execution receipt. Keep additional agent observations separate from independently retained host evidence and later forge CI.\n\n- [ ] 3.1 Run `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify` with the admitted 600000 ms allowance; retain actual exit/output for Markdown, full Node tests, links and public-site verification, or report the concrete failure without weakening checks or expanding scope (AC6).\n- [ ] 3.2 After host materialization, run `npx --no-install prodshape citations verify --provider openspec --format json`; verify every current document is explicitly scoped and every citation current. Refresh any genuinely affected/stale citations through provider inspect/cite and rerun, never editing canonical intent, hand-authoring digests, dropping citations or declaring exemptions to hide errors (AC6).\n- [ ] 3.3 Run `npx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-392-proposal --strict --no-interactive` against the materialized proposal; retain strict validation evidence and verify final metadata preserves host-owned fields alongside `skip_specs: true`, with no invented delta specs (AC6).\n- [ ] 3.4 Assemble candidate Done evidence: verify AC1–AC6 have behavioural/source evidence from tasks 2.1–2.4, all five admitted commands have actual command/exit/log receipts, no existing assertions were weakened and the diff respects scope. Record failures, unavailable checks and unresolved decisions honestly; mark tasks complete only from observed work, never the admitted inventory.\n\n## Workflow follow-up\n\n- The trusted host validates/materializes this plan, then obtains distinct read-only independent plan review before source changes. After implementation, obtain independent host verification and fresh candidate engineering review against the issue and owner answers, with fresh context and a different configured model. These are later gates, not pending review of this proposal-producing execution.\n- Authenticate actual current-head forge CI, including the configured `repository` check from integration ID `15368` and an eligible origin. Local/agent or workflow-dispatch success alone does not satisfy required PR evidence; checked-in hosting configuration does not prove live protection or a completed check.\n- Recheck current grant, authenticated dispatch/continuation, scope, source, reservations and hosting requirements before separately delegated integration; stop on stale authority, uncertain evidence or findings. No manual merge fallback is authorized.\n- Complete adopted post-merge verification through `ci.yml` and accepted post-merge review before delivery closure. Archive through OpenSpec only when applicable gates are satisfied, then verify the archived result. Merge does not establish release or deployment.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n"
+        },
+        {
+          "path": "openspec/changes/issue-392-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-05\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "eligibility": {
+          "points": 2,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "At the supplied revision, lighthouse.mjs:1719-1726 accepts init JSON, while initialize:894-918 ignores it and prints prose; planInitialization:831-862 already supplies the operations and conflicts. The fix is a bounded presentation/format guard in that module, real CLI regressions in its existing test file and one CLI patch changeset. Keep semantic initialization unchanged and use its existing JSON-preview-only convention (748-789), preserve text default apply and conflict status, and return before any dry-run writes (915-935). There is no new provider behavior, dependency, data migration or missing product choice. The package binary and subprocess callers have been inspected. Reverting the isolated correction restores the old output contract without data conversion. Two points uses the approved small-component anchor, not labels, and qualifies for FF with allowFivePoint=false. Engineering eligibility does not establish completed dependency deliveries, current grant validity, successful checks, review acceptance or merge/release authority."
+        },
+        "estimate": {
+          "points": 2,
+          "status": "confirmed",
+          "rationale": {
+            "scope": "Small component behavior: teach the existing legacy initialize branch to honor JSON plan output, guard JSON apply consistently with existing CLI conventions, extend its current subprocess tests and add one patch changeset. No new module or schema migration.",
+            "dependencies": "The current module already provides formatFromArgs, planInitialization, manifest validation and the semantic JSON reporting convention. No package addition, provider change or cross-team implementation prerequisite is needed.",
+            "verification": "Cover the real legacy entrypoint in greenfield and existing-manifest targets, JSON/text/conflict/no-write and apply-mode boundaries, retain adjacent semantic tests, then execute the exact admitted repository and provider commands in later stages."
+          },
+          "confidence": "high",
+          "uncertainty": [
+            "Runtime reproduction and candidate verification have not been executed in this refinement; results must come from later completed command receipts.",
+            "Live hosting state, continued authorization and successful sequencing of historical pilot work are rechecked by the trusted host, not inferred from checked-in artifacts."
+          ]
+        },
+        "problem": "An adopter or automated caller can request JSON from the accepted legacy name-based initialization dry run, receive exit status zero and get prose that JSON.parse cannot consume. The semantic plan-file branch already has machine-readable previews. Restore a truthful JSON contract for the existing legacy plan without changing what it plans or writes.",
+        "affectedUsers": [
+          "Project adopters using lighthouse init --name <product> --dry-run --format json.",
+          "Agent hosts and scripts parsing legacy initialization plans, plus existing text and semantic initialization callers whose behavior must remain compatible."
+        ],
+        "scope": {
+          "route": "ff",
+          "productionFiles": [
+            "src/packages/cli/src/lighthouse.mjs"
+          ],
+          "testFiles": [
+            "src/tests/lighthouse.test.mjs"
+          ],
+          "changeset": ".changeset/legacy-init-json-preview.md",
+          "changesetPackage": "@juangcarmona/lighthouse",
+          "changesetReleaseType": "patch",
+          "planningBoundary": "Later host-managed OpenSpec artifacts belong under openspec/changes/issue-392-proposal/. They are not permission to broaden the three-file implementation scope. No proposal or product file is authored by this refinement.",
+          "constraints": [
+            "Retain existing assertions, manifest validation, conflict checks, file ownership and provider boundaries; do not bypass checks.",
+            "Serialize the existing legacy plan rather than substituting a semantic plan or fabricating product intent, reference metadata or resolved questions.",
+            "Keep default text initialization applying as before; do not silently turn the legacy route into semantic dry-run-by-default behavior.",
+            "Use one patch changeset with package frontmatter and an H1; do not directly bump package versions or edit lockfiles."
+          ],
+          "outOfScope": [
+            "Provider initialization, provider-owned source edits, remote writes or new profile/validation semantics.",
+            "New JSON apply support, changed semantic plan schema or new initialization product decisions.",
+            "Policy, authorization, merge fallback, release or deployment changes.",
+            "Hotfix RED/GREEN acceptance for #186 or #395; this admitted assessment is FF."
+          ]
+        },
+        "acceptanceCriteria": [
+          {
+            "id": "AC1",
+            "criterion": "Invoke the real CLI with init --name 'Published delivery consumer' --dry-run --format json in a fresh target. It exits zero and its entire stdout parses as one JSON object, with no prose prefix, suffix or separate success message. Cover --format=json as well.",
+            "verification": "Use the existing subprocess run helper, JSON.parse on the full stdout and semantic field assertions, not source-text matching or a mocked serializer."
+          },
+          {
+            "id": "AC2",
+            "criterion": "The JSON report projects the existing planned path/action operations and conflicts with manifest/context sufficient to identify the product, application, selected profiles and existing public-site/authority-gap context. It reports readiness versus conflict blocking without inventing semantic intent or treating existing informational authority gaps as newly fatal.",
+            "verification": "Assert representative manifest, directory, managed-file and empty-root-marker operations; selected manifest context and authority gaps; and equality of planned operations with the corresponding text preview. Exercise an existing valid manifest as well as a default manifest."
+          },
+          {
+            "id": "AC3",
+            "criterion": "Successful and conflicting JSON dry runs leave target contents and configuration unchanged, including existing project/provider files, lighthouse.json, managed paths, ownership state and Git hooks configuration. They do not invoke provider apply or remote mutation.",
+            "verification": "Snapshot isolated fixture trees and relevant Git configuration before/after; include provider-owned and user-owned sentinel files. Inspect the production call path to ensure the dry-run return remains before all mutating operations."
+          },
+          {
+            "id": "AC4",
+            "criterion": "A directory collision or existing managed-file conflict produces one parseable JSON report containing the conflict, exits one and performs no writes. Text previews retain their existing headings, operation/adoption-gap messages, stderr conflict diagnostics and exit status.",
+            "verification": "Exercise src-as-a-file and an existing managed path, preserving their bytes. Run both JSON and text conflict cases through the CLI."
+          },
+          {
+            "id": "AC5",
+            "criterion": "Keep JSON plan-only, consistent with semantic initialization and upgrade: reject explicit JSON --apply and legacy implicit JSON apply without --dry-run before writes, with an actionable diagnostic directing callers to preview or use text for apply. Do not silently ignore format or change text-mode implicit apply.",
+            "verification": "Test JSON without --dry-run, JSON with --apply and their no-write outcomes; retain successful text implicit initialization and semantic text apply. Cover combined apply/dry-run flags without enabling a JSON write path."
+          },
+          {
+            "id": "AC6",
+            "criterion": "Adjacent semantic initialization retains JSON default previews, explicit text apply, unresolved-question blocking and reference behavior. Existing text initialization, profile conflicts and repository-boundary marker tests remain intact. Include one CLI patch changeset and complete every admitted verification command before claiming implementation success.",
+            "verification": "Extend src/tests/lighthouse.test.mjs without weakening its existing assertions and execute the later verification plan with completed receipts."
+          }
+        ],
+        "dependencies": [
+          {
+            "name": "Local CLI planning and manifest context",
+            "resolution": "Available in the supplied source: initialize, initializeFromPlan, planInitialization, defaultManifest, normalizeRepository and formatFromArgs. No dependency update required.",
+            "source": "src/packages/cli/src/lighthouse.mjs:169-200,748-862,894-935,1687-1691"
+          },
+          {
+            "name": "Pilot sequencing and prior hotfix reservation",
+            "resolution": "#390 and #394 concern delivery infrastructure, not an implementation dependency for this CLI branch. Their planning artifacts are present and #394's bounded reader exists in source, but neither establishes completed delivery receipts. The issue and owner answer explicitly supersede the old #392 hotfix reservation with #395. Current execution sequencing, reservations and grant validity remain trusted-host admission checks, not a new product question.",
+            "source": "/input/context.json: issue.body, issue.ownerAnswers, issue.issue_dependencies_summary; openspec/changes/issue-390-proposal/proposal.md; openspec/changes/issue-394-proposal/proposal.md; src/packages/sdlc/src/actions-artifact.mjs:11-28"
+          }
+        ],
+        "riskAssessment": {
+          "level": "low",
+          "affectedSurface": "CLI legacy initialization output and its format-specific pre-write guard; shared planner, provider semantics and semantic initialization are preserved.",
+          "failureModes": [
+            "Mixed prose and JSON or loss of operation/conflict/context information.",
+            "Accidental writes in a preview or implicit JSON apply.",
+            "Changed text behavior, conflict exit status or adjacent semantic behavior."
+          ],
+          "mitigation": "Real subprocess parsing and field assertions, fixture/configuration snapshots, paired text and conflict cases, adjacent semantic tests, independent source review and the full admitted verification inventory.",
+          "recovery": "Revert the isolated implementation commit and patch changeset through the normal reviewed path. This output-only correction needs no data migration or provider-state rollback; any release rollback remains separately authorized."
+        },
+        "productContext": {
+          "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+          "discovery": "Read the 137-artifact index, the relevant initialization and FF inspect/impact reports and their canonical requirements/use-case text. Direct and transitive authority, human-decision, fail-closed and adoption boundaries remain unchanged. Product and architecture reports supply context, not apply or approval authority.",
+          "citations": [
+            "pdac:cite id=\"FR-INITIALIZE-FOUNDATION\" digest=\"sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4\"",
+            "pdac:cite id=\"FR-SEMANTIC-INITIALIZATION\" digest=\"sha256:aae9be2e26f3303a45ed3ddf4fa09866e2e9222518e4ac2072ab1a16326a6e21\"",
+            "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\""
+          ],
+          "productChangeNeeded": false,
+          "reason": "Correct the already accepted format selection using existing local plan information and the existing plan-only JSON convention. No missing product meaning or ambiguous required outcome was identified within this scope; broader draft product requirements are not asserted as implemented or approved."
+        },
+        "definitionOfReady": [
+          {
+            "check": "Problem and affected callers understood",
+            "status": "passed",
+            "evidenceIds": [
+              "source-grounded-problem",
+              "callers-and-existing-conventions"
+            ]
+          },
+          {
+            "check": "Known bounded scope and explicit exclusions",
+            "status": "passed",
+            "evidenceIds": [
+              "bounded-entry-and-route",
+              "estimate-and-ff-readiness"
+            ]
+          },
+          {
+            "check": "Testable acceptance and complete evidence plan",
+            "status": "passed",
+            "evidenceIds": [
+              "callers-and-existing-conventions",
+              "verification-plan-complete"
+            ]
+          },
+          {
+            "check": "Dependencies and decision ownership resolved for refinement",
+            "status": "passed",
+            "evidenceIds": [
+              "bounded-entry-and-route",
+              "product-and-architecture-alignment"
+            ]
+          },
+          {
+            "check": "Explained numeric estimate and separate risk/reversibility assessment",
+            "status": "passed",
+            "evidenceIds": [
+              "estimate-and-ff-readiness",
+              "source-grounded-problem"
+            ]
+          }
+        ],
+        "verificationPlan": {
+          "basis": "Exact inventory from context.unattended.implementationChecks; admission is not an execution receipt.",
+          "workingDirectory": "/workspace",
+          "commands": [
+            [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            [
+              "node",
+              "--test",
+              "src/tests/lighthouse.test.mjs"
+            ],
+            [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            [
+              "npx",
+              "--no-install",
+              "prodshape",
+              "citations",
+              "verify",
+              "--provider",
+              "openspec",
+              "--format",
+              "json"
+            ],
+            [
+              "npx",
+              "--yes",
+              "--package=@fission-ai/openspec@1.15.0",
+              "openspec",
+              "validate",
+              "issue-392-proposal",
+              "--strict",
+              "--no-interactive"
+            ]
+          ],
+          "executionStatus": "planned-not-executed",
+          "sequence": "Install dependencies first. Materialize and validate the engineering proposal before implementation and obtain separate planning review. After the candidate exists, execute all admitted checks sequentially and retain actual command, exit status and logs; repeat provider validation for the final proposal. Allow 600000 ms for full repository verification as recorded in the #392 implementation policy.",
+          "receiptBoundary": "Agent-run observations, even if later green, are additional observations. Independent host checks and fresh bound engineering review must retain their own receipts. No check was executed by this refinement.",
+          "laterGates": [
+            "Provider-valid engineering plan and distinct read-only planning review before source changes.",
+            "Completed candidate command receipts and independent host verification, followed by distinct candidate review against #392 and owner answers.",
+            "Actual current-head forge CI, including the configured repository check from the eligible origin; local or workflow-dispatch success is not a substitute for required PR evidence.",
+            "Fresh trusted-host authority, scope, reservation and hosting checks before any separately delegated integration; no manual merge fallback.",
+            "Successful adopted post-merge verification and accepted post-merge review before delivery closure. Merge does not establish release or deployment."
+          ]
+        },
+        "agentObservations": [
+          "Only read-only source, policy, skill and prepared-product-report inspection was performed. The supplied source identity is 70c1d0186b1b43a0879044d4d0c1856651cca4ca; no independent Git or registry lookup was performed.",
+          "The issue reports registry CLI 0.12.38. The inspected source package declares 0.12.39; its current legacy branch still has the format omission. No installed-package execution or published-version claim is made.",
+          "Optional CodeGraph context retrieval was unavailable; direct inspection of the CLI entrypoint, planner, semantic branch, package binary, initialization skill and subprocess tests supplied the necessary caller context. This optional discovery limitation is not an unavailable required product check.",
+          "No production code, tests, proposal, policy or provider files were changed. The envelope is the only authored artifact."
+        ],
+        "decisionBoundary": "No new human product or architecture decision is required for this bounded correction. The adopter retains the Ready/Planned/Done gate ownership; the trusted host must validate continuation against the separately adopted FF grant and authenticated dispatch. This assessment neither launches an agent nor grants integration, release or deployment permission."
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "fe39a4a943879456d8daf7a571049642435f8c603ab7b57ab30d1863f7779c23",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "5ef11cd3fe93a2bcfd199aad8d983b69c500a0e959c36ccd297cebeaba396927",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "proposalRunId": "fd49f4683a570051b761fcfd8a4840ac948cb0a5f034b9ff2ae0652ba25cc40c",
+  "reviewRunId": "fe39a4a943879456d8daf7a571049642435f8c603ab7b57ab30d1863f7779c23",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-42060476780-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780"
+}

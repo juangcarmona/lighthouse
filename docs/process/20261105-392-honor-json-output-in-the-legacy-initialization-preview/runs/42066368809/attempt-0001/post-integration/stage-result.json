@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "runId": "ba580d3f196e0dcbef3f00f4c759f235dda353784a27f8f8e54bb53e8f29de17",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "review-source-and-acceptance",
+      "status": "passed",
+      "source": "src/packages/cli/src/lighthouse.mjs:783-958; src/tests/lighthouse.test.mjs:33-223,299-369",
+      "reason": "Read-only inspection supports the legacy JSON projection, pre-write mode guard, conflict status, text parity and adjacent semantic compatibility. Behavioral execution is established separately by authenticated receipts. No new source defect was established."
+    },
+    {
+      "id": "review-scope-and-guidance",
+      "status": "passed",
+      "source": "AGENTS.md; src/packages/cli/README.md:7-31; src/packages/cli/assets/skills/init/SKILL.md; .changeset/legacy-init-json-preview.md; openspec/changes/issue-392-proposal/design.md",
+      "reason": "The host-supplied seven changed paths comprise the three admitted implementation artifacts and four authorized planning artifacts. Initialization guidance retains the semantic/legacy distinction and provider ownership; no conflicting affected guidance was established. The changeset targets only the CLI package with a patch release."
+    },
+    {
+      "id": "planning-review:5ef11cd3fe93a2bcfd199aad8d983b69c500a0e959c36ccd297cebeaba396927",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780",
+      "reason": "Host-verified retained planning review accepted the bounded FF plan. Configured producer/reviewer models differ; provider-reported settings remain unverified and are not asserted here."
+    },
+    {
+      "id": "candidate-review:f78922431e8bdbc6d687b1d8dcda2534a86d6a6ac22328984103d5b14d3e5636",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780",
+      "reason": "The host-verified prior integration receipt retains a distinct candidate review with verdict accept and no findings. This is separate from the empty GitHub PR reviews array and does not invent a manual approval."
+    },
+    {
+      "id": "implementation:42060476780:1:8fa22e6b9813f2681dd060ebe7f35485cbac1f456aa40533718be7db5da41f84:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780/attempts/1",
+      "reason": "Authenticated npm ci --ignore-scripts receipt exited zero for the accepted candidate. Its three low-severity audit notices do not establish a newly introduced vulnerability or an audit resolution."
+    },
+    {
+      "id": "implementation:42060476780:1:8fa22e6b9813f2681dd060ebe7f35485cbac1f456aa40533718be7db5da41f84:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780/attempts/1",
+      "reason": "Authenticated real CLI test receipt reports 40 passed, zero failed or skipped, including the three new JSON preview/conflict/apply-mode regressions and adjacent semantic/text cases. Test adequacy was also inspected rather than inferred from this result alone."
+    },
+    {
+      "id": "implementation:42060476780:1:8fa22e6b9813f2681dd060ebe7f35485cbac1f456aa40533718be7db5da41f84:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780/attempts/1",
+      "reason": "Authenticated admitted repository verification command exited zero. The supplied excerpt is truncated; omitted test-level details are not independently asserted from it."
+    },
+    {
+      "id": "implementation:42060476780:1:8fa22e6b9813f2681dd060ebe7f35485cbac1f456aa40533718be7db5da41f84:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780/attempts/1",
+      "reason": "Authenticated citation verification exited zero. Retained structured rows cover all three issue-392 planning documents and nine current citations with no diagnostics; the complete-output summary reports no errors or stale citations despite excerpt truncation."
+    },
+    {
+      "id": "implementation:42060476780:1:8fa22e6b9813f2681dd060ebe7f35485cbac1f456aa40533718be7db5da41f84:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42060476780/attempts/1",
+      "reason": "Authenticated strict OpenSpec validation exited zero and accepted the correction's skip_specs declaration. This is provider validation, not a new product approval."
+    },
+    {
+      "id": "github-check:127377329801",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42065216776/job/127377329801",
+      "reason": "Host-authenticated repository check from app 15368 passed at accepted head 96afee09714801090a7d707809d4d7dfc76d02e5. Only the effective policy's repository check is treated as a forge merge gate."
+    },
+    {
+      "id": "integration:42060476780:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/a2febe466fcc059476e89b4aa9dbb716ff886082/docs/process/20261105-392-honor-json-output-in-the-legacy-initialization-preview/runs/42060476780/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected-branch receipt records actual merge 16e98d3670c0726e3cc11073f5be04fb282cdcac of accepted head 96afee09714801090a7d707809d4d7dfc76d02e5 under the retained explicit bounded owner merge delegation. A successful assessment alone is not the basis for claiming merge."
+    },
+    {
+      "id": "github-check:127379445146",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42065808408/job/127379445146",
+      "reason": "Host-authenticated repository check from app 15368 passed at the actual merged and checked revision 16e98d3670c0726e3cc11073f5be04fb282cdcac. The host also supplies successful completion of adopted post-merge workflow ci.yml, run 42065808408, at that revision."
+    },
+    {
+      "id": "review-finalization-policy",
+      "status": "passed",
+      "source": "src/packages/sdlc/completion.md:38; .lighthouse/github.json:6-19; /input/context.json:completion.finalization",
+      "reason": "Passed-review closure and delivery-label cleanup agree with repository policy and the host observation of an open issue labeled pr-ready and a closed, merged PR with no labels. These are intended publisher effects, not already-applied actions."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, cited evidence and reservation; publish this review on the adopted evidence branch, apply the declared delivery-label cleanup and close issue #392 if validation still passes, then release the reservation.",
+  "output": {
+    "summary": "Accepted delivery review for issue #392 and PR #447 passes. Source inspection and authenticated behavioral receipts support the requested legacy JSON preview correction, and retained integration plus adopted post-merge CI evidence establish the delivered revision. No unresolved current-stage finding was established.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 392,
+      "pr": 447,
+      "acceptedHead": "96afee09714801090a7d707809d4d7dfc76d02e5",
+      "integratedRevision": "16e98d3670c0726e3cc11073f5be04fb282cdcac",
+      "checkedRevision": "16e98d3670c0726e3cc11073f5be04fb282cdcac",
+      "intent": "68b098c2c72808563b743667aeb2c03441a0efab4bee49456ff88e62921e5b9b",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "filesFingerprint": "7f50c34fcfaf5a4929d8d03cebea2cc4fba5a33f74e331c8da09c6e2c4417fd8",
+      "dispatchRequestId": "42b1ad20d18e8092c51268c1333cbae7d61bb60a7617f29c71ab2c832acff9af",
+      "workflowRunId": "42066368809",
+      "provenance": "Host-supplied identities and authenticated observations; no independent Git or API identity verification is claimed. The current review request has merge:false and authorizes no new integration."
+    },
+    "acceptance": [
+      {
+        "criteria": [
+          "AC1",
+          "AC2"
+        ],
+        "decision": "satisfied",
+        "evidence": "src/tests/lighthouse.test.mjs:71-127 parses complete stdout for both JSON flag spellings in fresh and existing-manifest targets, checks exact report keys and representative operations, compares paired text operations, and covers authority/public-site context. lighthouse.mjs:911-937 projects the existing plan without fabricating semantic fields."
+      },
+      {
+        "criteria": [
+          "AC3",
+          "AC4"
+        ],
+        "decision": "satisfied",
+        "evidence": "Tests at lines 33-69,71-147 snapshot the isolated fixture tree, including local Git configuration, file bytes, modes and provider/user sentinels. src and LIGHTHOUSE.md collisions produce parseable blocked JSON, exit one and matching text diagnostics. The inspected planner reads local state and the preview returns at lighthouse.mjs:938-940, before writes and Git configuration operations at 943-957; no provider application or remote mutation is added to this path."
+      },
+      {
+        "criteria": [
+          "AC5"
+        ],
+        "decision": "satisfied",
+        "evidence": "lighthouse.mjs:895-900 delegates the semantic route first and rejects legacy JSON without dry-run or with any explicit apply. Tests at lighthouse.test.mjs:149-167 exercise both JSON spellings, implicit apply, explicit apply and combined apply/dry-run, preserving the fixture after every rejection. Existing text apply cases remain present and passed."
+      },
+      {
+        "criteria": [
+          "AC6"
+        ],
+        "decision": "satisfied",
+        "evidence": "The authenticated CLI receipt includes adjacent text, semantic preview/apply, unresolved-question, optional-reference, profile-conflict and clone-boundary cases. All five admitted command receipts passed. The CLI-only patch changeset has the required package frontmatter and H1. Historical independent planning and candidate review acceptances are retained separately from CI."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "kind": "source-defect",
+        "classification": "fixed",
+        "summary": "The reported legacy JSON preview returned prose instead of the requested machine-readable plan.",
+        "owner": "Lighthouse CLI maintainer",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/447",
+        "evidence": "lighthouse.mjs:894-940; lighthouse.test.mjs:71-167; authenticated CLI command receipt ending :2.",
+        "remainingAction": "Retain the delivered regressions. No additional source correction was established by this review."
+      },
+      {
+        "id": "F2",
+        "kind": "test-fixture-process-gap",
+        "classification": "fixed",
+        "summary": "The implementation notes report that the first CLI test attempt used a visual-profile fixture without required package pins. The fixture was corrected without relaxing manifest validation.",
+        "owner": "Lighthouse CLI test maintainer",
+        "followUpReference": "openspec/changes/issue-392-proposal/tasks.md:32-34; src/tests/lighthouse.test.mjs:75-81",
+        "evidence": "The initial failure is a retained agent observation, not an independently supplied failed-command log. Current source contains both pins, validation still requires them at lighthouse.mjs:635-657, and the authenticated final CLI receipt reports 40 passes.",
+        "remainingAction": "Optional candidate I1 records a smaller fixture guard for separate review; it is not a delivery blocker or an owner-approved new task."
+      }
+    ],
+    "instructionReview": {
+      "decision": "No stale or conflicting affected operational guidance was established.",
+      "references": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:7-31",
+        "src/packages/cli/assets/skills/init/SKILL.md:18-30",
+        "src/packages/sdlc/README.md:84-88,123-129",
+        "src/packages/sdlc/completion.md:20,38-55,63",
+        ".changeset/legacy-init-json-preview.md:1-7",
+        "openspec/changes/issue-392-proposal/design.md:7-56"
+      ],
+      "reason": "Semantic previews remain dry-run by default with explicit text apply; legacy text still applies implicitly, while the changeset accurately documents JSON preview-only use. The design's description of the original prose defect is historical motivation, not current operating guidance. The generic hosted completion instructions and the custom adapter's host-owned completion signal describe intentional host boundaries, not instruction drift.",
+      "productContext": "Read the prepared product index, initialization/semantic/FF inspect-impact reports and corresponding canonical requirements. Their draft status does not supply new approval or broaden #392 into provider initialization, CodeGraph adoption or a full foundation implementation. Retained citation rows remain current. No product or architecture change is proposed."
+    },
+    "integration": {
+      "outcome": "merged",
+      "basis": "Host-verified priorIntegration receipt and current merged PR observation, not the passed integration assessment alone.",
+      "evidenceRecordCommit": "a2febe466fcc059476e89b4aa9dbb716ff886082",
+      "evidenceRecordSha256": "04ff0be76c7b90127a23da17dc391c043cb992d20f50f3abc2821beeb29fd580",
+      "independentCandidateReview": "accept; no findings; binding f78922431e8bdbc6d687b1d8dcda2534a86d6a6ac22328984103d5b14d3e5636",
+      "authorization": "The retained receipt records explicit bounded owner delegation with merge:true for the accepted head. This review neither grants nor repeats that authority.",
+      "postMerge": "Adopted ci.yml run 42065808408 passed at the actual integrated revision. The historical integration report correctly said post-merge checks were not yet performed by that invocation; the newer host observations supply them now."
+    },
+    "nonBlockingObservations": [
+      {
+        "subject": "Cloudflare Pages at merged revision",
+        "evidenceId": "github-check:127379271610",
+        "status": "pending",
+        "source": "https://github.com/juangcarmona/lighthouse/runs/127379271610",
+        "reason": "Not the required repository check or an adopted post-merge acceptance workflow for this CLI correction. Pending remains pending; this review claims no deployment success."
+      },
+      {
+        "subject": "Skipped CI App, routing and reconciliation jobs",
+        "status": "skipped",
+        "reason": "Not failed checks and not additional acceptance gates. The workflow conditions scope ci-app to an explicit operator check, candidate reconciliation to candidate refs and post-merge continuation to successful default-branch verification. Unrelated skipped router jobs do not invalidate completed acceptance evidence."
+      },
+      {
+        "subject": "Repository test skip details",
+        "status": "historical-agent-observation",
+        "reason": "tasks.md:34 reports 821 passes and nine existing opt-in runtime/container skips. The authenticated command passed, but its supplied excerpt omits the full test summary; no claim is made that those opt-in tests executed or independently passed. They are not explicit #392 acceptance requirements."
+      },
+      {
+        "subject": "Dependency audit notices",
+        "status": "unassessed",
+        "reason": "The successful install receipt reports three low-severity vulnerabilities without affected-package details. No dependency path changed in this delivery; attribution and remediation remain unknown, and no vulnerability investigation or dependency edit was performed."
+      }
+    ],
+    "limits": [
+      "This review inspected read-only source and host-supplied execution receipts; no new test execution, network request, package installation or source edit was performed.",
+      "Optional CodeGraph context retrieval was unavailable; direct inspection supplied the relevant entrypoint, planner, validation, guard and tests. This discovery limitation is not an unavailable required product check.",
+      "Provider-reported model settings and actual cost are unverified; configured models do not prove provider identity. No timing or cost measurements are inferred.",
+      "The registry version in the issue is historical. The checked-out package declares 0.12.39 and includes a pending patch changeset; no published-package adoption, release or deployment is established.",
+      "No FF RED/GREEN proof is invented. The owner assigned the separate hotfix proof to #395, outside this review. No recurrence across work items is inferred from this delivery's corrected fixture attempt.",
+      "The host validates and publishes this envelope and records the terminal completion signal. No direct GitHub write, issue opening, next-stage dispatch or policy change was attempted."
+    ],
+    "improvementCandidates": [
+      {
+        "id": "I1",
+        "status": "proposed-only",
+        "observedFailure": "One reported CLI attempt constructed a profiled manifest without mandatory package pins.",
+        "evidence": "openspec/changes/issue-392-proposal/tasks.md:34; lighthouse.test.mjs:75-81; lighthouse.mjs:635-657",
+        "proposedOwner": "Lighthouse CLI test maintainer",
+        "smallestUsefulGuard": "If another profiled fixture is needed, use a small local valid-profile fixture builder that includes exact installed SDLC/UI pins; do not relax production validation or add a repository-wide policy.",
+        "reproductionBeforeCorrection": "In a separately authorized test workspace, construct the same visual-theme fixture without packages and assert that the real CLI rejects it for missing pins. The original failed-attempt log is not supplied here, so the historical observation is not claimed as fresh reproduction.",
+        "regressionProofForProposedGuard": "Review the helper separately; demonstrate rejection for missing pins, a successful real JSON preview for the helper's valid manifest, and continued passing no-write/text/semantic regressions. Preserve the negative validation case rather than merely making all fixtures valid.",
+        "followUpReference": "This review record, I1; no issue opened and no implementation started.",
+        "recurrence": "Not established; one corrected attempt on #392."
+      }
+    ],
+    "finalization": {
+      "executor": "Trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedOnPassed": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "Host cleanup releases agent-working for every outcome. No agent label mutation is claimed.",
+      "reason": "The issue's remaining pr-ready label is a pre-finalization observation, not evidence of a failed cleanup. No done label is invented. This result permits only the already-declared review publication and finalization after the host's fresh checks."
+    },
+    "retrospective": "## What went well\nThe bounded CLI correction preserved the existing planner and text/semantic routes. Real subprocess regressions parse all stdout, compare text operations, exercise conflicts and reject JSON apply while checking target bytes, modes and local Git configuration (`lighthouse.test.mjs:33-167`). All five authenticated command receipts passed; distinct planning/candidate acceptances, the actual merge receipt and post-merge `ci.yml` success remain separate evidence.\n\n## What went wrong\nThe reported product defect was a successful JSON request returning prose; PR #447 fixes it. `tasks.md:34` also reports one test-fixture attempt missing required package pins, corrected without weakening validation. The original failed-attempt log is not supplied, and recurrence across work items is not established. No new source defect or conflicting affected guidance was established.\n\n## Start doing\nCLI test maintainer: keep format/mode cases at the real executable boundary and construct profiled fixtures with their required pins. Retain negative validation coverage alongside valid fixtures.\n\n## Stop doing\nDo not interpret a green check as behavior proof, skipped tests as executed tests, configured models as authenticated provider settings, or merge as release/deployment. Do not generalize this single corrected fixture attempt into a recurring process failure.\n\n## Improvement candidates\n**I1 — proposed owner: CLI test maintainer.** The observed fixture gap is documented at `tasks.md:34`; current pins and their validator are at `lighthouse.test.mjs:75-81` and `lighthouse.mjs:635-657`. The smallest optional guard is a local valid-profile fixture builder when another such fixture is needed. Before adopting it, reproduce the missing-pin rejection in an authorized workspace, then prove valid previews and unchanged negative/no-write/text/semantic cases. This guard needs its own review and regression proof; it is not implemented or approved here. Follow-up reference: this record, I1. No policy change, new issue or next stage is started."
+  }
+}
