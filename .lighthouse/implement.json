@@ -349,6 +349,63 @@
       }
     }
   },
+  "391": {
+    "scope": "Implement only #391 through the supervised route: honor JSON authority-initialization dry-run output while preserving provider preflight failures, text compatibility and no-write behavior. Preserve provider ownership and authority. Use an H1 after changeset frontmatter. Allow 600000 ms for complete repository verification. Distinguish workspace observations from independent host receipts and later CI; construct any synthetic credential values at runtime. The supervised implementation must include its own OpenSpec plan under openspec/changes/issue-391-proposal/; no other proposal root is authorized.",
+    "paths": [
+      "src/packages/cli/src/lighthouse.mjs",
+      "src/tests/lighthouse.test.mjs",
+      ".changeset/authority-init-json-preview.md",
+      "openspec/changes/issue-391-proposal/"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "node",
+        "--test",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "corrections": {
+        "src/tests/lighthouse.test.mjs": "Add behavioral CLI regressions for the exact JSON authority preview, text compatibility, provider failures and no-write guarantees; preserve existing assertions."
+      }
+    }
+  },
   "395": {
     "scope": "Implement only #395 with a real test-first hotfix: activate installed managed hooks for fresh Git repositories with unset hooksPath through both existing initialization entry paths. Preserve explicitly empty and custom hooksPath settings, their files, non-Git initialization and parent repository configuration for nested targets. Follow the repository Markdown convention for the patch changeset. Use a 600000 ms shell timeout for dependency installation and complete repository verification; cold installation and the test/site build can exceed the short tool default. Keep the existing overall execution deadline. Use an H1 after changeset frontmatter. Construct synthetic credential values at runtime; unchanged publication validation rejects literal credential-shaped content.",
     "paths": [

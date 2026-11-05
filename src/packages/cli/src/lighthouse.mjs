@@ -894,6 +894,10 @@ function printReconciliationPlan(plan) {
 async function initialize(args) {
   const planFile = valueFromArgs(args, '--plan-file');
   if (planFile) return initializeFromPlan(args, planFile);
+  const format = formatFromArgs(args);
+  if (format === 'json' && (!args.includes('--dry-run') || args.includes('--apply'))) {
+    throw new Error('--format json is available only for initialization previews; use --dry-run --format json to preview, or omit --format json and --dry-run to apply in text mode.');
+  }
   let manifest = await readManifest();
   const manifestMissing = !manifest;
   const selectedProfiles = profileArguments(args);
@@ -905,12 +909,31 @@ async function initialize(args) {
   const problems = validate(manifest);
   if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
   const plan = await planInitialization(manifest, manifestMissing);
-  console.log('Lighthouse initialization plan:');
-  for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
-  for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
-  if (normalizeRepository(manifest.repository).publicSite.enabled) {
-    if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
-    if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+  if (format === 'json') {
+    const repository = normalizeRepository(manifest.repository);
+    const adoptionGaps = [];
+    if (repository.publicSite.enabled) {
+      for (const [integration, authority] of [['productShape', 'ProductShape'], ['arcShape', 'ArcShape']]) {
+        if (manifest.integrations[integration] === null) adoptionGaps.push({ authority, nextAction: 'review lighthouse authorities --dry-run, then run lighthouse authorities --apply' });
+      }
+    }
+    console.log(JSON.stringify({
+      schemaVersion: 1,
+      status: plan.conflicts.length ? 'blocked' : 'ready',
+      manifest,
+      repository,
+      operations: plan.operations.map(({ path, action }) => ({ path, action })),
+      conflicts: plan.conflicts,
+      adoptionGaps,
+    }, null, 2));
+  } else {
+    console.log('Lighthouse initialization plan:');
+    for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
+    for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
+    if (normalizeRepository(manifest.repository).publicSite.enabled) {
+      if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+      if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+    }
   }
   if (args.includes('--dry-run')) {
     if (plan.conflicts.length) process.exitCode = 1;
