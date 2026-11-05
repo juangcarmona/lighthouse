@@ -1,5 +1,54 @@
 # @juangcarmona/lighthouse
 
+## 0.12.40
+
+### Patch Changes
+
+- 3778ebc: # Honor JSON authority initialization previews
+
+  Return one JSON plan containing both provider identities and actual preflight results for authority initialization previews. Preserve text output, provider commands and no-write previews; reject JSON apply and retain failures for missing or unsuccessful providers.
+
+- 7b30832: # Activate installed hooks in fresh Git repositories
+
+  Activate the installed baseline hooks after legacy or semantic initialization when the target is the Git worktree root and core.hooksPath is unset. Preserve explicitly empty, custom and inherited settings, non-Git initialization, parent repository configuration and write-free previews.
+
+- 16e98d3: # Honor JSON output for legacy initialization previews
+
+  Emit one machine-readable plan for name-based initialization with `--dry-run --format json`, preserving conflicts and local context without writes. Reject JSON apply requests; use text mode to apply initialization.
+
+- 8333457: # Retain empty repository boundaries in Git
+
+  Include empty-root markers in initialization previews and both apply paths so verification also succeeds after a clone. Preserve existing content and externally linked directories.
+
+- Updated dependencies [c7fa9d9]
+- Updated dependencies [68a2525]
+- Updated dependencies [be3d644]
+- Updated dependencies [1b22272]
+- Updated dependencies [17406da]
+- Updated dependencies [8d10ec9]
+- Updated dependencies [b6ff983]
+- Updated dependencies [de3703b]
+- Updated dependencies [3e2ba16]
+- Updated dependencies [09134aa]
+- Updated dependencies [46d422e]
+- Updated dependencies [f84c541]
+- Updated dependencies [faf2ef1]
+- Updated dependencies [93e4828]
+- Updated dependencies [6950ab1]
+- Updated dependencies [1af1ad3]
+- Updated dependencies [8795485]
+- Updated dependencies [4518325]
+- Updated dependencies [a833930]
+- Updated dependencies [7917a05]
+- Updated dependencies [187bac2]
+- Updated dependencies [ccfc638]
+- Updated dependencies [adbacff]
+- Updated dependencies [be322c1]
+- Updated dependencies [93d4b4a]
+- Updated dependencies [c1b58b4]
+- Updated dependencies [fe56d59]
+  - @juangcarmona/lighthouse-sdlc@0.20.7
+
 ## 0.12.39
 
 ### Patch Changes
