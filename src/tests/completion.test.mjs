@@ -192,6 +192,84 @@ test('additional check observations can support review without silently changing
   assert.doesNotThrow(() => assertCitedChecks({ result: { evidence: [] } }, { observedChecks }, { observedChecks: [{ ...observedChecks[0], status: 'failed' }] }));
 });
 
+const nativeCheck = { id: 10, name: 'foundation', app: { id: 15368, slug: 'github-actions' }, head_sha: head, status: 'completed', conclusion: 'success', html_url: 'https://github.com/owner/repo/actions/runs/1/job/10', details_url: 'https://github.com/owner/repo/actions/runs/1/job/10', check_suite: { id: 20 } };
+const checkApi = (runs, statuses = []) => async path => {
+  if (path.includes('check-runs')) return { check_runs: runs };
+  if (path === 'actions/runs/1') return { id: 1, head_sha: head, check_suite_id: 20, event: 'pull_request' };
+  if (path.includes('/statuses')) return statuses;
+  throw Error(`Unexpected check request: ${path}`);
+};
+const checkClaim = selector => ({ result: { evidence: [selector === 'id' ? { id: 'github-check:10', status: 'passed' } : { id: 'local-verification', source: nativeCheck.html_url, status: 'passed' }] } });
+
+for (const selector of ['id', 'url']) {
+  test(`native ${selector} citations require successful original and refreshed observations`, async () => {
+    const { observeChecks, assertCitedChecks } = await import('../packages/sdlc/src/completion.mjs');
+    const before = { observedChecks: await observeChecks(checkApi([nativeCheck]), head) };
+    const claim = checkClaim(selector);
+    assert.equal(before.observedChecks[0].status, 'passed');
+    assert.doesNotThrow(() => assertCitedChecks(claim, before, before));
+    const cases = [
+      [{ conclusion: 'skipped' }, 'unavailable', 'skipped'],
+      [{ conclusion: 'neutral' }, 'unavailable', 'neutral'],
+      [{ status: 'queued', conclusion: null }, 'unavailable', 'pending'],
+      [{ status: 'in_progress', conclusion: null }, 'unavailable', 'pending'],
+      ...['failure', 'cancelled', 'timed_out', 'action_required', null].map(conclusion => [{ conclusion }, 'failed', conclusion]),
+      ...['success', 'skipped', 'neutral'].map(conclusion => [{ head_sha: base, conclusion }, 'failed', conclusion]),
+    ];
+    for (const [changes, status, state] of cases) {
+      const after = { observedChecks: await observeChecks(checkApi([{ ...nativeCheck, ...changes }]), head) };
+      assert.equal(after.observedChecks[0].status, status, JSON.stringify(changes));
+      assert.equal(after.observedChecks[0].state, state);
+      assert.deepEqual(after.observedChecks[0], { evidenceId: 'github-check:10', name: 'foundation', revision: head, app: 15368, status, state, url: nativeCheck.html_url });
+      assert.throws(() => assertCitedChecks(claim, after, after), /Cited CI/);
+      assert.throws(() => assertCitedChecks(claim, before, after), /Cited CI/);
+      assert.throws(() => assertCitedChecks(claim, after, before), /Cited CI/);
+      for (const nonPassed of ['failed', 'unavailable']) assert.doesNotThrow(() => assertCitedChecks({ result: { evidence: [{ ...claim.result.evidence[0], status: nonPassed }] } }, after, after));
+    }
+    const missing = { observedChecks: await observeChecks(checkApi([]), head) };
+    assert.throws(() => assertCitedChecks(claim, before, missing), /Cited CI/);
+    assert.throws(() => assertCitedChecks({ result: { evidence: [{ id: 'github-check:999', status: 'passed' }] } }, before, before), /unavailable or unauthenticated/);
+  });
+}
+
+test('hosting accepts eligible required success, skipped and neutral without gating optional jobs', async () => {
+  const { observeChecks } = await import('../packages/sdlc/src/completion.mjs');
+  const required = [{ context: 'foundation', app: 15368 }];
+  for (const conclusion of ['success', 'skipped', 'neutral']) {
+    const api = checkApi([{ ...nativeCheck, conclusion }]);
+    const checks = await checkCommit(api, head, required);
+    assert.equal(checks.length, 1);
+    assert.equal(checks[0].status, 'passed');
+    assert.equal(checks[0].checks[0].eligible, true);
+    assert.equal(checks[0].checks[0].event, 'pull_request');
+    assert.equal((await observeChecks(api, head))[0].status, conclusion === 'success' ? 'passed' : 'unavailable');
+  }
+  const optional = ['skipped', 'neutral'].map((conclusion, index) => ({ ...nativeCheck, id: 11 + index, name: `optional-${conclusion}`, conclusion }));
+  const api = checkApi([nativeCheck, ...optional]);
+  assert.deepEqual(await checkCommit(api, head, required), await checkCommit(checkApi([nativeCheck]), head, required));
+  const checks = await checkCommit(api, head, required);
+  assert.doesNotThrow(() => assertChecks({ checks }));
+  assert.deepEqual((await observeChecks(api, head)).map(c => c.status), ['passed', 'unavailable', 'unavailable']);
+});
+
+test('commit status observations retain latest selection, pending and failure behavior', async () => {
+  const { observeChecks, assertCitedChecks } = await import('../packages/sdlc/src/completion.mjs');
+  const statuses = [
+    { id: 5, context: 'legacy', state: 'success', target_url: 'https://ci.example/5' },
+    { id: 4, context: 'pending', state: 'pending' },
+    { id: 3, context: 'failed', state: 'failure' },
+    { id: 2, context: 'error', state: 'error' },
+    { id: 1, context: 'legacy', state: 'failure' },
+  ];
+  const observedChecks = await observeChecks(checkApi([], statuses), head);
+  assert.equal(observedChecks.length, 4);
+  for (const status of statuses.slice(0, 4)) {
+    const check = observedChecks.find(c => c.name === status.context);
+    assert.deepEqual(check, { evidenceId: `github-status:${status.id}`, name: status.context, revision: head, status: status.state === 'success' ? 'passed' : status.state === 'pending' ? 'unavailable' : 'failed', state: status.state, url: status.target_url });
+  }
+  assert.doesNotThrow(() => assertCitedChecks({ result: { evidence: [{ id: 'github-status:5', status: 'passed' }] } }, { observedChecks }, { observedChecks }));
+});
+
 test('current completion jobs cannot become external acceptance evidence or erase required gates', async () => {
   const { observeChecks } = await import('../packages/sdlc/src/completion.mjs');
   const checks = [
