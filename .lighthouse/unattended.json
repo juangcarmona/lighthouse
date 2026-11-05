@@ -5,9 +5,9 @@
     "ff"
   ],
   "paths": [
-    "src/packages/sdlc/src/issue-actions.mjs",
-    "src/tests/issue-actions.test.mjs",
-    ".changeset/bounded-github-denial-message.md"
+    "src/packages/sdlc/src/actions-artifact.mjs",
+    "src/tests/actions-artifact.test.mjs",
+    ".changeset/bounded-artifact-read-retry.md"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,

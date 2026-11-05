@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { reviewOutputProtocol, reviewTemplate, reviewEnvelope, validateReviewPayload } from '../packages/sdlc/src/independent-review.mjs';
 import { stageContext } from '../packages/sdlc/src/unattended-runtime.mjs';
@@ -48,4 +49,16 @@ test('legacy review envelopes stay schema-validated without implicit payload con
   envelope.result.evidence = ['Actual malformed fourth-pilot wrapper'];
   assert.throws(() => completionOutput(envelope, legacy), /evidence/);
   assert.throws(() => reviewEnvelope(decision, legacy), /absent/);
+});
+
+
+test('review payload output stays inside the actual read-only engine tool policy', () => {
+  const config = JSON.parse(readFileSync(new URL('../examples/opencode-engine/opencode.json', import.meta.url), 'utf8'));
+  const output = stageContext(request, {}).contract.rules.match(/^Write only (\S+) using contract\.review\./)?.[1];
+  assert.ok(output, 'The review contract must name its sole output file');
+  const allowed = path => ['read', 'edit'].every(action =>
+    config.permissions.some(rule => rule.action === action && rule.resource === path && rule.effect === 'allow') &&
+    config.policies.some(rule => rule.action === 'tool.use' && rule.resource === `${action}:${path}` && rule.effect === 'allow'));
+  assert.equal(allowed(output), true, `Read-only engine policy denies ${output}`);
+  assert.equal(allowed('/output/review.json'), false, 'The fifth native attempt used this denied path');
 });
