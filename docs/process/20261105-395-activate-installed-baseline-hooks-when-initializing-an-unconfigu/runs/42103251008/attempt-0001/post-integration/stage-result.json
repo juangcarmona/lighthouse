@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "runId": "598cc52e08add3451988a62c9d8413c95f75a2e2b657e3d63c1aa68355d8ec84",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "planning-review:8799e206075e0e85984464c4c0f12d512ea088cbb0aa425b77dda6ecfaff2c19",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168",
+      "reason": "Host-verified hotfix planning review accepted the bounded plan. Retained RED proof contains two actual ERR_ASSERTION failures at the named hook-activation assertion, not setup failures; the host verifies unchanged regression-test bytes against the candidate. Passed here means regression-proof assessment satisfied, not that RED passed."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Authenticated dependency setup exited zero; its three low-severity audit warnings are retained separately, not treated as failed setup."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Both fresh-repository regression tests passed on accepted head 3c5b00ab20c462605ba8bafca6d41f18e9185f7d. Inspected tests assert installed executable hooks and effective/local core.hooksPath=.husky after successful initialization."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Initializer suite exited zero. Retained output explicitly records both entry paths preserving local/global empty/custom settings and owner files, supporting non-Git and nested targets, and preview checks. Inspected assertions verify bytes, modes and parent configuration. The excerpt is truncated; no unseen test detail is inferred."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Host-authenticated npm run verify receipt exited zero. Detailed output is excerpt-truncated; this establishes command success, not additional unobserved acceptance scenarios."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Independent OpenSpec citation verification exited zero; retained complete-output summary reports zero stale, tampered, unresolved or erroneous citations. Empty retained row collections do not establish individual omitted document details."
+    },
+    {
+      "id": "integration:42092952168:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/b15713fbf9e09de2ebdee7b093005465707290d0/docs/process/20261105-395-activate-installed-baseline-hooks-when-initializing-an-unconfigu/runs/42092952168/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained receipt records independent candidate acceptance with no findings, explicit owner-delegated merge:true for PR 458 and the accepted head, actual merge 7b30832a6510d9937183853a48e21ef05e3ba2b9, and successful originating workflow. This is merge evidence distinct from an assessment."
+    },
+    {
+      "id": "github-check:127491584305",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42097586406/job/127491584305",
+      "reason": "Required repository check from app 15368 passed on the accepted candidate head."
+    },
+    {
+      "id": "github-check:127493421089",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098112951/job/127493421089",
+      "reason": "Required repository check from app 15368 passed on the actual merged revision; host-authenticated postMerge records adopted ci.yml run 42098112951 passed at that same revision."
+    },
+    {
+      "id": "review:affected-guidance-and-finalization",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/completion.md:26-38",
+      "reason": "Compared the three accepted changed paths and source behavior with AGENTS.md, CLI initialization guidance, semantic initialization requirements, unattended hotfix policy and completion finalization. No conflicting affected guidance established. Host observations and intended passed-result label cleanup agree with completion policy; final labels are subsequent publisher effects."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, cited checks and reservation, then retain this review on process/retrospectives and apply the declared passed-result finalization. Release maintainer juangcarmona: separately inspect the failed release job before any authorized release recovery.",
+  "output": {
+    "summary": "Accepted delivery for issue #395 / PR #458 satisfies post-merge review. Both initialization paths activate installed hooks only at an unconfigured target Git worktree root, with behavioral RED/GREEN and preservation evidence. No new source defect or unresolved current-stage decision was established. Release success is not established.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 395,
+      "pullRequest": 458,
+      "acceptedHead": "3c5b00ab20c462605ba8bafca6d41f18e9185f7d",
+      "mergedRevision": "7b30832a6510d9937183853a48e21ef05e3ba2b9",
+      "currentRevisionObservedByHost": "a1d86a988d63ca1434b683d11c17cc084f2eaa10",
+      "intent": "84ec41709e66be40311fedb5418af7efafaaca2d7a1d2e12e1aa1f99d9bc7e58",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "filesFingerprint": "e682ac2b63cfef0100021b60ed06f082af59deab5969ab5c0aad42758ea7232e",
+      "requestId": "8d9428b9994eaf3b34fce522148b7b95d79fe93c3c897c88f871d903f3121d0f",
+      "requestDigest": "e1b58c85265c6a8675afb5f3ee9a2a55467c1b1d709cfb71de2926f0a0721145",
+      "provenance": "Host-supplied authenticated delivery identity; no independent GitHub or git identity verification was attempted. Current merge:false dispatch authorizes review only; prior retained merge:true delegation establishes the historical integration authorization."
+    },
+    "scope": {
+      "changedPaths": [
+        ".changeset/fresh-git-hook-activation.md",
+        "src/packages/cli/src/lighthouse.mjs",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "assessment": "Matches the admitted three-file hotfix scope: one CLI production module, existing test surface and one CLI patch changeset. No .git candidate path, new provider policy or added module appears in the host changed-path inventory. The retained host-accepted bounded delivery is scope evidence; no independent added/deleted production-line count was performed here.",
+      "sourceReferences": [
+        "src/packages/cli/src/lighthouse.mjs:783-792: worktree-root realpath equality; process status 1 distinguishes absent key from empty/custom/inherited success; local write only",
+        "src/packages/cli/src/lighthouse.mjs:829-840,950-967: shared activation follows successful writes and is unreachable from previews",
+        "src/tests/lighthouse.test.mjs:71-155: isolated real-Git fixture, matching activation assertions, setting/file/mode preservation and parent/non-Git cases",
+        ".changeset/fresh-git-hook-activation.md:1-7: CLI patch declaration and preservation contract"
+      ]
+    },
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "owner": "juangcarmona (CLI maintainer)",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/458",
+        "finding": "Legacy initialization treated an absent Git configuration key as exceptional and skipped activation; semantic initialization did not activate the installed path. The shared helper corrects both without overwriting explicit settings or configuring a parent repository.",
+        "evidence": "priorPlanningReview.regression.red records both named assertion failures; frozen test SHA-256 cf75f66a7552c8bbe530935aad28cbf28b7885c62f550fd35e551e6004723f93 is host verified against the candidate; authenticated implementation checks :2 and :3 pass. No additional source defect was established."
+      },
+      {
+        "id": "F2",
+        "classification": "deferred",
+        "kind": "release-operation-follow-up",
+        "owner": "juangcarmona (release maintainer)",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/actions/runs/42098627030/job/127498911251",
+        "finding": "Validate, publish and release failed at the merged revision. Cause, any partial publication and corrective action are unknown from the supplied status-only evidence; this is an actual failed job, not missing verification or an established CLI source defect.",
+        "evidenceId": "github-check:127498911251",
+        "observedStatus": "failed",
+        "stageDisposition": "Recorded outside this review gate, not waived or owner-accepted. Only repository/app 15368 is the configured forge check, ci.yml is the adopted post-merge workflow, and #395 does not require release completion. A separate green conclusion does not override this failed job. No release retry or policy change is authorized by this result."
+      },
+      {
+        "id": "F3",
+        "classification": "deferred",
+        "kind": "dependency-maintenance-observation",
+        "owner": "juangcarmona (dependency maintainer)",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+        "finding": "Successful npm ci reported three low-severity vulnerabilities. Advisory identities, introduced-versus-preexisting status and applicability are not supplied; no dependency defect is attributed to this patch.",
+        "evidenceId": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:1",
+        "stageDisposition": "Non-gating maintenance observation retained for owner assessment; no new issue or remediation stage started."
+      }
+    ],
+    "guidanceReview": {
+      "outcome": "No stale or conflicting affected instruction established.",
+      "references": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:7-25,50-54",
+        "docs/product/model/requirements/functional/fr-semantic-initialization.md:19-21",
+        "src/packages/sdlc/unattended.md:49-59",
+        "src/packages/sdlc/completion.md:26-55",
+        ".lighthouse/github.json:6-19"
+      ],
+      "reason": "The correction restores installed local guardrails while retaining preview, ownership and no-remote-write contracts. CLI guidance describes installed hooks without contradicting the narrower activation condition documented in the changeset. ProductShape inspection/impact/citation reports were used as context, not inferred product approval; the requirement records are draft. Native forge approvals and retained unattended independent review are distinct: an empty PR review list is not missing required approval when the effective policy requires zero and the prior independent acceptance is retained. Host-side completion signaling differs intentionally from generic safe-output instructions; this adapter requires only the envelope. No guidance, policy or permission was changed."
+    },
+    "finalization": {
+      "executor": "trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "closed",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true,
+        "pullRequestLabels": "preserve"
+      },
+      "reason": "Issue closure is already observed; passed-result cleanup removes the remaining pr-ready delivery label. Final labels are not a prerequisite already expected to be applied. Host cleanup releases agent-working for every outcome. This envelope neither applies labels nor starts another delivery stage."
+    },
+    "limits": [
+      "No commands were executed in this read-only review; runtime results are the exact host-authenticated retained receipts, supplemented by direct source and test inspection.",
+      "CodeGraph context was unavailable; direct source inspection covered the helper, both callers, tests and affected guidance. This optional navigation limitation is not an unavailable acceptance check.",
+      "Some implementation excerpts are truncated. Retained exit outcomes and explicit summary fields remain evidence; omitted details are not claimed.",
+      "Configured producer/reviewer model identifiers are not provider-authenticated identities. No measured attention time, cost, deployment, release completion or recurrence across work items is claimed.",
+      "Skipped optional orchestration/ci-app checks remain skipped, not passed or failed. They do not add gates beyond the configured required check and explicit work-item evidence. Required review evidence is present.",
+      "Release failure diagnosis and advisory-level dependency evidence remain unknown outside the requested stage. This review does not claim they were resolved."
+    ],
+    "retrospective": "## What went well\n\n- Both initializer entry paths had real-Git, isolated-configuration assertions before the repair. The retained RED failed twice at the intended activation assertion; the frozen tests then passed twice on the accepted candidate (priorPlanningReview.regression; implementation receipt :2). This demonstrates behavior rather than relying only on a green workflow.\n- One shared root-identity/absent-key helper covers both apply paths. Adjacent tests preserve custom and explicitly empty local/inherited settings, owner file bytes/modes, parent configuration and previews (lighthouse.mjs:783-792,839,966; lighthouse.test.mjs:71-155; receipt :3).\n- Independent candidate acceptance, explicit prior delegated integration and exact-merge post-merge CI are separately retained (integration:42092952168:1; github-check:127493421089).\n\n## What went wrong\n\n- The original source installed hooks without activating them; absence was conflated with an exceptional Git read in legacy initialization, and semantic initialization omitted activation. F1 is fixed by PR #458. No new source defect or affected-guidance conflict was established.\n- The separate release job actually failed (github-check:127498911251). Its cause and publication outcome are unknown; source review and post-merge CI do not establish a released artifact. F2 remains with release maintainer juangcarmona, outside this gate.\n- Dependency setup reported three low-severity vulnerabilities but supplied no advisory detail (receipt :1); F3 is a maintenance observation, not a proven regression. No recurrence across work items is established; multiple routing observations for this issue do not establish recurrence.\n\n## Start doing\n\n- Keep the delivered real-Git parity matrix as the minimum regression evidence when changing either initializer. Owner: CLI maintainer juangcarmona. Retain the exact RED assertion, frozen test identity and GREEN receipt rather than merely reporting test counts.\n- Release maintainer juangcarmona should inspect the retained failed release job and determine any partial effects before proposing recovery through the existing authorized release path. Do not infer a source fix or retry authorization from the status alone.\n\n## Stop doing\n\n- Do not equate an installed executable hook with an active Git hook path, or an unset configuration key with an explicitly empty setting. These were demonstrated by this issue's RED evidence.\n- Do not describe successful integration, a green conclusion job or this passed review as proof of publication/deployment. No additional process violation or repeated pattern is asserted.\n\n## Improvement candidates\n\n- **Retain the behavior-first guard already delivered (owner: CLI maintainer juangcarmona; follow-up: PR #458 / F1).** Observed failure: fresh legacy and semantic repositories had installed hooks but no effective hooksPath. Evidence: two named ERR_ASSERTION failures in the retained RED and both successful GREEN cases in receipt :2. Smallest useful guard: the existing two-entry real-Git activation test plus the explicit-setting/parent/preview preservation matrix; no new checker mechanism is needed. Reproduce before correction in an authorized isolated fixture by running the frozen named regression against unchanged pre-fix production and requiring the actual hooksPath assertion failure, then run those same bytes against the repair and the adjacent suite. This delivery already has that regression proof and independent review; any extension needs its own review and negative/positive evidence.\n- **No additional release guard is proposed yet.** The failed-job identity supports investigation, not a root-cause hypothesis. Owner: release maintainer juangcarmona; follow-up: F2's exact job URL. Before proposing a guard, identify the failed step and partial effects, reproduce that specific failure without publication in an authorized regression fixture, then separately review the smallest correction and its negative/positive proof. No policy/provider guidance change, permission expansion, new issue or next stage is created here."
+  }
+}

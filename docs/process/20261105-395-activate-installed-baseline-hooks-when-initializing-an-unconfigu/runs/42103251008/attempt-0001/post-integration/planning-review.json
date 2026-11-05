@@ -1,0 +1,332 @@
+{
+  "kind": "hotfix",
+  "binding": "8799e206075e0e85984464c4c0f12d512ea088cbb0aa425b77dda6ecfaff2c19",
+  "runId": "42092952168",
+  "attempt": "1",
+  "sourceRevision": "b987fbb5c0a6df45b35338bcac01dfc586dacdd6",
+  "intent": "84ec41709e66be40311fedb5418af7efafaaca2d7a1d2e12e1aa1f99d9bc7e58",
+  "policyDigest": "a4c615f0671227a9e4dc560128af10b897ff688f5817e3829d4df46e86030d96",
+  "details": {
+    "refined": {
+      "requestAnalysis": {
+        "originalRequest": "Confirmed real defect selected for #186's test-first unattended hotfix.\n\nReproduction with published CLI 0.12.38 and Node 24: initialize a fresh Git repository, then run `lighthouse init --name \"Hook contract probe\"`. The executable `.husky/pre-push` is installed, but `git config --get core.hooksPath` exits 1 with no configured path. Git therefore never uses the installed baseline hooks. The legacy initializer treats the normal unset-key exit as an exception; the semantic initializer must honor the same hook-activation contract.\n\nAcceptance: add and execute a behavioral assertion first, proving initialization activates the installed hook path in a real fresh Git repository with isolated Git configuration. Cover both initialization entry paths. RED must be the actual hook-activation assertion, not a missing dependency. Preserve those exact test bytes while making the smallest correction. GREEN and adjacent checks must prove existing custom and explicitly empty hook-path settings and their files stay unchanged. Initialization outside Git remains supported; a target nested inside another repository must not change that parent repository's configuration. Finish through the existing independent review, delegated integration and accepted post-merge review, without manual merge fallback.\n\nBound production to the existing CLI initialization module, its existing test surface and one CLI patch changeset; remain within #186's 100 production-line, 10-file and two-module limits. No `.git` data enters a candidate, no global Git settings change, and no new product/provider policy is introduced. The separately adopted hotfix grant and authenticated initial dispatch control execution; this issue starts nothing.",
+        "originalRequestUrl": "https://github.com/juangcarmona/lighthouse/issues/395",
+        "problem": "Initialization installs executable baseline hooks but does not activate them in an otherwise unconfigured fresh Git repository.",
+        "desiredResult": "Both initialization apply paths activate the installed local hook directory only for the target repository when the setting is absent, preserving explicit configuration and unrelated repositories.",
+        "inferences": [
+          {
+            "inference": "An unset Git configuration key is being conflated with a non-Git target; explicit empty values would instead be overwritten by the current truthiness check.",
+            "source": "src/packages/cli/src/lighthouse.mjs:954-957"
+          },
+          {
+            "inference": "The semantic path must share the same narrowly guarded activation behavior after successful writes; previews must remain write-free.",
+            "source": "src/packages/cli/src/lighthouse.mjs:783-829,894-958; docs/product/model/requirements/functional/fr-semantic-initialization.md:19-21"
+          },
+          {
+            "inference": "Repository-root identity must be checked before any local configuration write because Git invoked in a nested target can discover a parent repository.",
+            "source": "src/packages/cli/src/lighthouse.mjs:28,954-957; issue #395 preservation outcome"
+          }
+        ],
+        "unknowns": [
+          "Exact production diff and runtime RED/GREEN outcomes remain to be measured during implementation; this does not prevent estimating the bounded correction."
+        ],
+        "questions": []
+      },
+      "estimate": {
+        "points": 2,
+        "status": "provisional",
+        "rationale": {
+          "scope": "Small component behavior under the initial two-point anchor: introduce a shared guarded activation operation in the existing CLI module and invoke it from both successful apply paths; extend the existing tests and add one CLI patch changeset.",
+          "dependencies": "Uses existing Node child-process APIs, Git and the declared npm setup; no new dependency, provider policy, module or product decision is needed.",
+          "verification": "Real-Git isolated fixtures must distinguish absence from explicit empty/custom configuration, check repository identity and executable hooks, and preserve previews and non-Git support. Then execute all three admitted implementation checks."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "Git environment isolation and repository identity handling need careful fixture coverage, including inherited settings and linked-worktree roots.",
+          "No runtime checks or independent review have occurred in this triage; production additions plus deletions must be measured later."
+        ]
+      },
+      "eligibility": {
+        "points": 2,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "confirmedDefect": true,
+        "rollback": "Revert the bounded CLI patch through the existing authorized delivery path. For a previously initialized consumer, remove only the local core.hooksPath=.husky value demonstrably introduced by this fix if it remains unchanged and the prior state was absent; never reset custom/empty, parent or global configuration. A source revert alone does not undo consumer Git configuration.",
+        "reason": "Source confirms the defect in both paths: initialize catches git config --get exit 1 before writing the path (lighthouse.mjs:954-957), while initializeFromPlan writes hooks without activating them (783-829). Both already install the same managed hook files (431-444). A target-root and absent-key guarded shared operation restores documented local guardrails while preserving owner content, within the admitted three files and one module. Two numeric points derives from the small-component anchor, not size labels. Low risk assumes those guards and adjacent proof; no new product outcome or unresolved triage decision is required. The admitted route is hotfix, not FF; five-point opt-in is false."
+      },
+      "hotfix": {
+        "command": [
+          "node",
+          "--test",
+          "--test-name-pattern",
+          "activates installed hooks in a fresh Git repository",
+          "src/tests/lighthouse.test.mjs"
+        ],
+        "assertion": "Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky",
+        "rootCause": "Legacy init uses throwing execFileSync for git config --get: normal absence exits 1 and jumps into a catch intended for non-Git targets, skipping activation. It also confuses an explicitly empty configured value with absence. Plan-driven initialization bypasses the legacy activation block entirely. Neither path currently establishes target repository-root identity for safe configuration writes.",
+        "estimatedProductionLines": 40,
+        "plannedFiles": [
+          "src/packages/cli/src/lighthouse.mjs",
+          "src/tests/lighthouse.test.mjs",
+          ".changeset/fresh-git-hook-activation.md"
+        ],
+        "productionLineAccounting": "Provisional 40 additions plus deletions in the CLI production module; hard cap 100, measured by the host on the candidate. Test lines are excluded only from that production cap. Three total files in the declared cli module.",
+        "plan": [
+          "Author matching legacy and semantic apply behavioral tests in the admitted test file, with the exact assertion message above on equality of the effective configured path and .husky. Confirm initialization succeeds and executable hooks exist before that assertion. Use fresh real repositories with isolated system/global/command Git configuration and no inherited Git repository overrides.",
+          "Run admitted npm ci --ignore-scripts setup and the exact regression argv against unchanged production. Require ERR_ASSERTION at the named hook-activation assertion; dependency/setup errors, no matching tests, or an unrelated failure are not RED proof. Preserve those exact regression test bytes for the repair.",
+          "Implement the smallest shared activation operation inside lighthouse.mjs. Verify the target is itself the repository worktree root, distinguish missing key from explicit empty/custom settings using process status rather than truthiness, and write only target-local configuration when truly absent. Invoke only after successful legacy or semantic apply, never on previews. Keep non-Git initialization supported and do not alter reconciliation, upgrade or provider behavior.",
+          "Add adjacent tests for both paths covering custom and explicit empty local/effective inherited configuration, unchanged associated files and modes, non-Git success, nested-target parent configuration preservation, and preview no-write behavior. Keep test repositories outside the candidate and never include .git data.",
+          "Add the single CLI patch changeset, execute GREEN and every admitted implementation check, retain actual receipts, and pass the unchanged RED snapshot plus before/after source to independent review."
+        ],
+        "rollback": "Use eligibility.rollback; configuration changes on already initialized consumer repositories need narrowly scoped restoration distinct from reverting source."
+      },
+      "assessments": {
+        "urgency": {
+          "value": "asap",
+          "confidence": "medium",
+          "evidence": "Issue #395 reports installed guardrails are inactive for fresh Git adopters; no outage, data loss or emergency release is established."
+        },
+        "impact": {
+          "value": "medium",
+          "confidence": "high",
+          "evidence": "Both initialization entry paths affect new adopters' baseline local enforcement; existing custom hook configurations must remain untouched."
+        },
+        "dependencies": {
+          "value": "resolved for triage",
+          "confidence": "high",
+          "evidence": "Existing Git/Node APIs, current test surface, admitted setup and implementation-check inventory; successful setup and later CI remain unproven."
+        },
+        "risk": {
+          "value": "low",
+          "confidence": "high",
+          "evidence": "One localized module and no migration; target-root and absent-setting guards plus preservation tests bound configuration side effects."
+        },
+        "blastRadius": {
+          "value": "low",
+          "confidence": "high",
+          "evidence": "Only successful initialization of target-root Git repositories lacking an effective hook-path setting should change behavior; other initialization modes must preserve state."
+        },
+        "route": {
+          "value": "hotfix",
+          "confidence": "high",
+          "evidence": "context.unattended.route and adopted .lighthouse/unattended.json explicitly select hotfix with the exact three-file scope."
+        },
+        "owner": {
+          "value": "juangcarmona",
+          "confidence": "high",
+          "evidence": "context.issue author and repository owner; host retains responsibility for authenticating continuation authority."
+        }
+      },
+      "labels": {
+        "proposed": [
+          "triaged",
+          "urgency-asap",
+          "impact-medium",
+          "risk-low",
+          "blast-radius-low"
+        ],
+        "sizeLabel": null,
+        "reason": "Use declared SDLC labels only; numeric points have no inferred legacy size conversion. No labels were applied.",
+        "transition": {
+          "from": "admitted triage",
+          "to": "triaged",
+          "startsNextStage": false
+        }
+      },
+      "verificationPlan": {
+        "inventorySource": "context.unattended.implementationChecks; admission is not an execution receipt",
+        "implementationChecks": [
+          {
+            "command": [
+              "node",
+              "--test",
+              "src/tests/lighthouse.test.mjs"
+            ],
+            "status": "not-run",
+            "intendedStage": "implement",
+            "purpose": "GREEN and adjacent initializer preservation regressions"
+          },
+          {
+            "command": [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            "status": "not-run",
+            "intendedStage": "implement",
+            "purpose": "Repository verification including lint, tests, links and public-site checks"
+          },
+          {
+            "command": [
+              "npx",
+              "--no-install",
+              "prodshape",
+              "citations",
+              "verify",
+              "--provider",
+              "openspec",
+              "--format",
+              "json"
+            ],
+            "status": "not-run",
+            "intendedStage": "implement",
+            "purpose": "Independent provider citation verification"
+          }
+        ],
+        "additionalAgentObservations": [
+          {
+            "status": "observed",
+            "source": "src/tests/lighthouse.test.mjs:46-59,195-224",
+            "observation": "Existing tests supply isolated Git and real repository fixture patterns but the inspected cases do not assert installed hook activation."
+          },
+          {
+            "status": "observed",
+            "source": "src/packages/cli/package.json:3; context.issue.body",
+            "observation": "Mounted CLI is 0.12.39; reporter reproduction cites published 0.12.38. The defect is independently visible in mounted source, not a claim of reproducing that published artifact."
+          },
+          {
+            "status": "unavailable",
+            "source": "CodeGraph get_ai_context for lighthouse.mjs:894",
+            "observation": "CodeGraph returned query unavailable. Direct source inspection covered binary dispatch, both initialization branches, managed hook generation and adjacent reconciliation/upgrade boundaries; no missing triage conclusion depends on that optional tool."
+          }
+        ],
+        "laterEvidence": [
+          {
+            "status": "not-run",
+            "intendedStage": "implement",
+            "check": "Host-authenticated RED/GREEN command receipts and frozen regression-test snapshot"
+          },
+          {
+            "status": "not-run",
+            "intendedStage": "independent-review",
+            "check": "Separate reviewer assessment of actual assertion, repair, scope and check receipts"
+          },
+          {
+            "status": "not-run",
+            "intendedStage": "integrate",
+            "check": "Current-head required forge CI and hosting-rule checks before delegated integration; local inventory or green local tests cannot substitute"
+          },
+          {
+            "status": "not-run",
+            "intendedStage": "review",
+            "check": "Adopted post-merge forge CI and accepted post-merge review; no manual merge fallback"
+          }
+        ]
+      }
+    },
+    "plan": {
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern",
+        "activates installed hooks in a fresh Git repository",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "assertion": "Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky",
+      "rootCause": "Legacy init uses throwing execFileSync for git config --get: normal absence exits 1 and jumps into a catch intended for non-Git targets, skipping activation. It also confuses an explicitly empty configured value with absence. Plan-driven initialization bypasses the legacy activation block entirely. Neither path currently establishes target repository-root identity for safe configuration writes.",
+      "estimatedProductionLines": 40,
+      "plannedFiles": [
+        "src/packages/cli/src/lighthouse.mjs",
+        "src/tests/lighthouse.test.mjs",
+        ".changeset/fresh-git-hook-activation.md"
+      ],
+      "productionLineAccounting": "Provisional 40 additions plus deletions in the CLI production module; hard cap 100, measured by the host on the candidate. Test lines are excluded only from that production cap. Three total files in the declared cli module.",
+      "plan": [
+        "Author matching legacy and semantic apply behavioral tests in the admitted test file, with the exact assertion message above on equality of the effective configured path and .husky. Confirm initialization succeeds and executable hooks exist before that assertion. Use fresh real repositories with isolated system/global/command Git configuration and no inherited Git repository overrides.",
+        "Run admitted npm ci --ignore-scripts setup and the exact regression argv against unchanged production. Require ERR_ASSERTION at the named hook-activation assertion; dependency/setup errors, no matching tests, or an unrelated failure are not RED proof. Preserve those exact regression test bytes for the repair.",
+        "Implement the smallest shared activation operation inside lighthouse.mjs. Verify the target is itself the repository worktree root, distinguish missing key from explicit empty/custom settings using process status rather than truthiness, and write only target-local configuration when truly absent. Invoke only after successful legacy or semantic apply, never on previews. Keep non-Git initialization supported and do not alter reconciliation, upgrade or provider behavior.",
+        "Add adjacent tests for both paths covering custom and explicit empty local/effective inherited configuration, unchanged associated files and modes, non-Git success, nested-target parent configuration preservation, and preview no-write behavior. Keep test repositories outside the candidate and never include .git data.",
+        "Add the single CLI patch changeset, execute GREEN and every admitted implementation check, retain actual receipts, and pass the unchanged RED snapshot plus before/after source to independent review."
+      ],
+      "rollback": "Use eligibility.rollback; configuration changes on already initialized consumer repositories need narrowly scoped restoration distinct from reverting source."
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "8a7b4f35d7353a83a524ec4fe01981c1e935b7bcd418776904e9fb20db25111c",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "8799e206075e0e85984464c4c0f12d512ea088cbb0aa425b77dda6ecfaff2c19",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "triageRunId": "2da121de8ffd48a595fe5861b9c19aa8a9d5a2dc5eac0aa7a39e76fd50c316ae",
+  "reviewRunId": "8a7b4f35d7353a83a524ec4fe01981c1e935b7bcd418776904e9fb20db25111c",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-42092952168-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168",
+  "regression": {
+    "red": {
+      "runId": "fd4662f53d5791375fb7ff6c4a1528fe912916790d97fda4ed8089b74a5a4c6d",
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern",
+        "activates installed hooks in a fresh Git repository",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "exitCode": 1,
+      "state": "failed",
+      "assertion": "Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky",
+      "output": {
+        "content": "✖ legacy init activates installed hooks in a fresh Git repository (208.608486ms)\n✖ semantic init activates installed hooks in a fresh Git repository (174.434589ms)\nℹ tests 2\nℹ suites 0\nℹ pass 0\nℹ fail 2\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 479.624475\n\n✖ failing tests:\n\ntest at src/tests/lighthouse.test.mjs:88:3\n✖ legacy init activates installed hooks in a fresh Git repository (208.608486ms)\n  AssertionError [ERR_ASSERTION]: Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky\n  \n  '' !== '.husky'\n  \n      at TestContext.<anonymous> (file:///workspace/src/tests/lighthouse.test.mjs:106:14)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: '',\n    expected: '.husky',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n\ntest at src/tests/lighthouse.test.mjs:88:3\n✖ semantic init activates installed hooks in a fresh Git repository (174.434589ms)\n  AssertionError [ERR_ASSERTION]: Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky\n  \n  '' !== '.husky'\n  \n      at TestContext.<anonymous> (file:///workspace/src/tests/lighthouse.test.mjs:106:14)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: '',\n    expected: '.husky',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+        "sha256": "e83b177d4d289491e1928631217778f15998cb584b4f5cb7094159a9d6baf506",
+        "logSha256": "e83b177d4d289491e1928631217778f15998cb584b4f5cb7094159a9d6baf506",
+        "logTruncated": false,
+        "truncated": false
+      }
+    },
+    "green": {
+      "evidenceId": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:2",
+      "name": "node --test --test-name-pattern activates installed hooks in a fresh Git repository src/tests/lighthouse.test.mjs",
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern",
+        "activates installed hooks in a fresh Git repository",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "revision": "3c5b00ab20c462605ba8bafca6d41f18e9185f7d",
+      "status": "passed",
+      "state": "passed",
+      "exitCode": 0,
+      "output": {
+        "content": "✔ legacy init activates installed hooks in a fresh Git repository (193.831678ms)\n✔ semantic init activates installed hooks in a fresh Git repository (217.647343ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 516.438626\n",
+        "sha256": "fcee9404650fe78bd7fc09a0660a9c82244cedd9a78aeae8999335d92e977ca3",
+        "logSha256": "fcee9404650fe78bd7fc09a0660a9c82244cedd9a78aeae8999335d92e977ca3",
+        "logTruncated": false,
+        "truncated": false
+      },
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1"
+    },
+    "frozenTests": [
+      {
+        "path": "src/tests/lighthouse.test.mjs",
+        "mode": "100644",
+        "sha256": "cf75f66a7552c8bbe530935aad28cbf28b7885c62f550fd35e551e6004723f93"
+      }
+    ]
+  }
+}
