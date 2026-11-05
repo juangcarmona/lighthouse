@@ -99,7 +99,7 @@ function fixture(overrides = {}) {
     recheck: async () => { events.push('recheck'); },
     refine: async () => ({ eligibility: eligible(), hotfix: plan() }),
     propose: async () => ({ files: [] }),
-    reviewPlan: async () => { events.push('review-plan'); },
+    reviewPlan: async () => { events.push('review-plan'); return { accepted: true }; },
     reproduce: async () => ({ files: [file('tests/edge.test.mjs')], tests: { edge: 'original assertion' }, receipt: check(1, plan().assertion) }),
     implement: async () => ({ eligibility: eligible(), files: [file(), file('tests/edge.test.mjs')], tests: { edge: 'original assertion' }, receipt: check() }),
     reviewCandidate: async () => { events.push('review-candidate'); return { accepted: true }; },
@@ -138,6 +138,68 @@ test('bounded correction permits repair, then requires fresh review', async () =
   });
   assert.equal((await runUnattended({ route: 'ff', policy: policy(), host })).status, 'passed');
   assert.equal(repairs, 2); assert.equal(reviews, 2);
+});
+
+test('a rejected FF plan is corrected and independently reviewed before production edits', async () => {
+  let proposals = 0, reviews = 0, implementations = 0;
+  const { host } = fixture({
+    propose: async (_refined, correction) => {
+      proposals++;
+      if (proposals === 2) { assert.equal(correction.previous.version, 1); assert.deepEqual(correction.findings, ['Cite the affected product requirement']); }
+      return { version: proposals };
+    },
+    reviewPlan: async ({ plan }) => {
+      assert.equal(implementations, 0); assert.equal(plan.version, ++reviews);
+      return reviews === 1 ? { accepted: false, verdict: 'request-changes', findings: ['Cite the affected product requirement'] } : { accepted: true };
+    },
+    implement: async ({ plan }) => { implementations++; assert.equal(plan.version, 2); return { eligibility: eligible(), receipt: check() }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'passed'); assert.equal(result.planningRound, 1);
+  assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1);
+});
+
+test('planning and candidate repairs share the existing correction budget', async () => {
+  let reviews = 0, implementations = 0;
+  const { host, events } = fixture({
+    reviewPlan: async () => ++reviews === 1 ? { accepted: false, verdict: 'request-changes', findings: ['Correct the plan'] } : { accepted: true },
+    implement: async () => { implementations++; return { eligibility: eligible(), receipt: check(1) }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: { ...policy(), maxCorrections: 1 }, host });
+  assert.equal(result.status, 'blocked'); assert.equal(implementations, 1); assert.ok(!events.includes('publish'));
+});
+
+test('exhausted planning corrections retain findings and never edit production', async () => {
+  let proposals = 0, implementations = 0;
+  const { host } = fixture({
+    propose: async () => { proposals++; return {}; },
+    reviewPlan: async () => ({ accepted: false, verdict: 'request-changes', findings: ['Verification plan still contradicts the grant'] }),
+    implement: async () => { implementations++; throw Error('Must not implement'); },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'blocked'); assert.match(result.reason, /planning.*limit exhausted.*Verification plan/);
+  assert.equal(proposals, 3); assert.equal(implementations, 0);
+});
+
+test('planning escalation, missing verdicts and hotfix rejection cannot start automatic plan repair', async () => {
+  for (const [route, assessment] of [['ff', { accepted: false, verdict: 'escalate', findings: ['Product decision required'] }], ['ff', undefined], ['hotfix', { accepted: false, verdict: 'request-changes', findings: ['Root cause remains uncertain'] }]]) {
+    let proposals = 0, implementations = 0;
+    const { host } = fixture({ propose: async () => { proposals++; return {}; }, reviewPlan: async () => assessment, implement: async () => { implementations++; } });
+    const result = await runUnattended({ route, policy: policy(), host });
+    assert.equal(result.status, 'blocked'); assert.equal(proposals, route === 'ff' ? 1 : 0); assert.equal(implementations, 0);
+    if (assessment) assert.ok(result.reason.includes(assessment.findings[0]));
+  }
+});
+
+test('revoked authority after planning review prevents the next proposal attempt', async () => {
+  let rejected = false, proposals = 0;
+  const { host } = fixture({
+    recheck: async () => { if (rejected) throw Error('Owner authorization changed'); },
+    propose: async () => { proposals++; return {}; },
+    reviewPlan: async () => { rejected = true; return { accepted: false, verdict: 'request-changes', findings: ['Correct the plan'] }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'blocked'); assert.match(result.reason, /authorization changed/); assert.equal(proposals, 1);
 });
 
 test('escalation retains bounded concrete findings without publishing or inventing product approval', async () => {

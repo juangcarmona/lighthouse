@@ -329,6 +329,44 @@ test('a rejected plan reports the actual reviewer findings and does not start im
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
+test('FF planning repair uses concrete feedback, drops superseded files and retains its accepted round', async () => {
+  const f = await fixture({ route: 'ff' }), execute = f.execute;
+  const staleSpec = 'openspec/changes/issue-1-proposal/specs/superseded/spec.md';
+  let proposals = 0, reviews = 0, implementations = 0;
+  const bindings = [];
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.stage === 'propose') {
+      if (++proposals === 1) {
+        result.envelope.result.output.files = result.envelope.result.output.files.filter(file => !file.path.endsWith('.openspec.yaml'));
+        result.envelope.result.output.files.push({ path: staleSpec, content: '## ADDED Requirements\n\n### Requirement: Boundary\nThe boundary SHALL include equality.\n\n#### Scenario: Equality\n- **WHEN** value is 2\n- **THEN** it is eligible\n' });
+      } else {
+        assert.deepEqual(options.context.correction.findings, ['Correct the artifact scope']);
+        assert.ok(options.context.correction.previous.files.some(file => file.path === staleSpec));
+      }
+      assert.match(options.prompt, /adopter rules.*openspec\/config.yaml/);
+      assert.match(options.prompt, /final file also includes host-owned provider metadata/);
+    }
+    if (options.request.worker === 'independent-review' && options.context.review.purpose === 'plan') {
+      bindings.push(options.context.review.binding);
+      if (++reviews === 1) {
+        result.envelope.result.status = 'blocked';
+        result.envelope.result.missingEvidence = ['Correct the artifact scope'];
+        result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Correct the artifact scope'] };
+      }
+    }
+    if (options.request.stage === 'implement') { implementations++; assert.equal(reviews, 2); assert.equal(options.source.has(staleSpec), false); }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'waiting-human'); assert.equal(result.planningRound, 1);
+    assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1); assert.notEqual(bindings[0], bindings[1]);
+    const retained = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/report.json')));
+    assert.equal(retained.planningRound, 1);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test('planning review rejects the actual producer using the reviewer model', async () => {
   const f = await fixture(), execute = f.execute;
   f.execute = async options => {

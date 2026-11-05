@@ -191,17 +191,17 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         }
         return refined;
       },
-      propose: async () => {
+      propose: async (_refined, correction = null) => {
         const proposal = await prepareProposal(issueNumber, null, provider);
         const result = await step('propose', 'propose',
-          'Prepare the smallest engineering plan through context.proposal.instructions. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, return .openspec.yaml containing exactly skip_specs: true in place of a spec; the host combines it with provider metadata and validates it. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
-          { proposal, refinement: refined });
+          'Prepare the smallest engineering plan through context.proposal.instructions. Read the adopter rules in /workspace/openspec/config.yaml and follow their document scope and citation requirements. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, the returned .openspec.yaml payload contains only skip_specs: true; the final file also includes host-owned provider metadata. When context.correction is present, repair its concrete findings against the previous plan without expanding the authorized issue. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
+          { proposal, refinement: refined, ...(correction ? { correction } : {}) });
         planProducer = result;
         const files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider);
-        working = applyCandidate(working, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
+        working = applyCandidate(source, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
         return { files, refinement: refined };
       },
-      reviewPlan: async details => { const assessment = await review('plan', details, planProducer); if (!assessment.accepted) throw Error('Independent planning review ' + assessment.verdict + ': ' + assessment.findings.join(' ').slice(0, 3000)); },
+      reviewPlan: details => review('plan', details, planProducer),
       reproduce: async plan => {
         const selected = { ...implementation.policy, paths: policy.hotfix.testPaths, checks: [...policy.hotfix.setupCommands, plan.command],
           verification: { paths: [...new Set([...implementation.policy.verification.paths, ...policy.hotfix.testPaths])], corrections: Object.fromEntries(plan.plannedFiles.filter(path => policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)).map(path => [path, 'Author the independently reviewed RED regression before production repair.'])) } };
