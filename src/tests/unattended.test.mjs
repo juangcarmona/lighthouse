@@ -214,6 +214,48 @@ test('a rejected FF plan is corrected and independently reviewed before producti
   assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1);
 });
 
+test('deterministic proposal findings consume planning budget before any independent review or production edit', async () => {
+  let proposals = 0, reviews = 0, implementations = 0;
+  const rejected = { files: [{ path: 'proposal.md', content: 'Rejected plan' }], validation: { provider: '@fission-ai/openspec@1.15.0', status: 'failed', findings: ['Split the overlong requirement'], report: { original: true } } };
+  const { host } = fixture({
+    propose: async (_refined, correction) => {
+      if (++proposals === 1) return rejected;
+      assert.deepEqual(correction.previous, rejected);
+      assert.deepEqual(correction.findings, rejected.validation.findings);
+      return { files: [] };
+    },
+    reviewPlan: async ({ plan }) => { reviews++; assert.equal(plan.validation, undefined); return { accepted: true }; },
+    implement: async () => { implementations++; return { eligibility: eligible(), receipt: check() }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'passed'); assert.equal(result.planningRound, 1);
+  assert.equal(reviews, 1); assert.equal(implementations, 1);
+  assert.deepEqual(result.evidence[0], { kind: 'proposal-validation', round: 0, files: rejected.files, validation: rejected.validation });
+});
+
+test('proposal validation, planning review and failed implementation share one correction limit', async () => {
+  let proposals = 0, reviews = 0, implementations = 0;
+  const { host, events } = fixture({
+    propose: async () => ++proposals === 1 ? { files: [], validation: { provider: '@fission-ai/openspec@1.15.0', status: 'failed', findings: ['Fix strict validation'] } } : {},
+    reviewPlan: async () => ++reviews === 1 ? { accepted: false, verdict: 'request-changes', findings: ['Finish the verification plan'] } : { accepted: true },
+    implement: async () => { implementations++; return { eligibility: eligible(), receipt: check(1) }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'blocked'); assert.equal(proposals, 3); assert.equal(reviews, 2); assert.equal(implementations, 1);
+  assert.ok(!events.includes('publish'));
+});
+
+test('exhausted validation and operational provider failures cannot reach review or publication', async () => {
+  for (const operational of [false, true]) {
+    let proposals = 0;
+    const { host, events } = fixture({ propose: async () => { proposals++; if (operational) throw Error('Provider unavailable'); return { files: [], validation: { provider: '@fission-ai/openspec@1.15.0', status: 'failed', findings: ['Still invalid'] } }; } });
+    const result = await runUnattended({ route: 'ff', policy: policy(), host });
+    assert.equal(result.status, 'blocked'); assert.equal(proposals, operational ? 1 : 3);
+    assert.ok(!events.includes('review-plan')); assert.ok(!events.includes('publish'));
+    if (!operational) assert.match(result.reason, /limit exhausted.*Still invalid/);
+  }
+});
+
 test('planning and candidate repairs share the existing correction budget', async () => {
   let reviews = 0, implementations = 0;
   const { host, events } = fixture({
