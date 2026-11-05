@@ -348,5 +348,56 @@
         "src/tests/lighthouse.test.mjs": "Add meaningful real CLI JSON/text/conflict/dry-run regressions for this issue; preserve existing assertions and provider boundaries."
       }
     }
+  },
+  "395": {
+    "scope": "Implement only #395 with a real test-first hotfix: activate installed managed hooks for fresh Git repositories with unset hooksPath through both existing initialization entry paths. Preserve explicitly empty and custom hooksPath settings, their files, non-Git initialization and parent repository configuration for nested targets. Follow the repository Markdown convention for the patch changeset. Allow 600000 ms for the complete repository verification command; its test and site build exceed the shell tool default. Use an H1 after changeset frontmatter. Construct synthetic credential values at runtime; unchanged publication validation rejects literal credential-shaped content.",
+    "paths": [
+      "src/packages/cli/src/lighthouse.mjs",
+      "src/tests/lighthouse.test.mjs",
+      ".changeset/fresh-git-hook-activation.md"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "node",
+        "--test",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "corrections": {
+        "src/tests/lighthouse.test.mjs": "Add meaningful regression coverage for this exact issue; preserve existing assertions and validation. For hotfix, author RED before changing production code and keep the accepted RED test bytes unchanged during repair."
+      }
+    }
   }
 }
