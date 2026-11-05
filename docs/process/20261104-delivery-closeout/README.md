@@ -1,7 +1,9 @@
 # Delivery qualification
 
-The first [real-change pilot](https://github.com/juangcarmona/lighthouse/actions/runs/41926222797) for #185 stopped before publishing a PR: its candidate Git repository had no configured origin, so architecture source-link verification failed. Its 65 admitted regressions and OpenSpec validation passed. This attempt is retained as a failure.
+The first [#185 pilot](https://github.com/juangcarmona/lighthouse/actions/runs/41926222797) stopped before PR publication because candidate Git had no origin. The #402 correction passes the complete site build and all four independent checks with the exact executor image.
 
-The #402 correction supplies a declared credential-free origin to both agent and independent-check workspaces. The complete site build and verification pass with the exact executor image; all four independent container checks pass. The original diagnostic, command and cleanup receipts are in the [archive](evidence.tar.gz), bound by the [compact index](results.json).
+The [second attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41936010763) stopped before implementation: its planning reviewer returned a mismatched identity. The rejected output was unavailable. The #407 correction prepares a blocked review template and retains rejected diagnostics; 14 adapter tests pass in real containers, including untouched and stale-identity controls.
 
-Native delivery qualification remains in progress. A fresh authorized pilot must complete before it contributes to unattended acceptance.
+The #216 consumer passes a clean registry-only clone check with all 44 customization hashes preserved. This proves bootstrap only. No real-change pilot or full consumer delivery is accepted yet.
+
+Original command, failure and cleanup evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json). Native delivery qualification remains in progress.

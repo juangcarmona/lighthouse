@@ -1,12 +1,6 @@
 {
   "schemaVersion": 1,
   "acceptedRealChangePilots": 0,
-  "failedPilot": {
-    "issue": 389,
-    "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41926222797",
-    "outcome": "blocked before PR publication: candidate Git had no configured origin",
-    "admittedChecks": "65 regressions and OpenSpec validation passed"
-  },
   "correction402": {
     "codeRevision": "384ccb3d1af6a0ab0f7c935d9f05898aebb342cc",
     "testedSourceSha256": {
@@ -18,5 +12,39 @@
     "independentChecks": "4 passed on exact executor image",
     "cleanup": "clean"
   },
-  "archiveSha256": "f689e2ae21588b66627c3c8dd3027273b05c5fc1fe3bcdbc6822f862a537cd28"
+  "archiveSha256": "8aee04d28e7290eb29f2a3a592c8e40088e3b4ceb7b979ce95c230e7c347a1bd",
+  "failedPilots": [
+    {
+      "issue": 389,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41926222797",
+      "outcome": "blocked before PR publication: candidate Git had no configured origin",
+      "admittedChecks": "65 regressions and OpenSpec validation passed"
+    },
+    {
+      "issue": 389,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41936010763",
+      "outcome": "independent planning review returned a mismatched result identity; no implementation or PR",
+      "rejectedOutput": "unavailable in original artifact; corrected retention in #407"
+    }
+  ],
+  "correction407": {
+    "testedSourceSha256": {
+      "opencode-execute.mjs": "383cd9061a3fd530bbf8618cb77662a268285c30b0f7cb793f7d8421187a4567",
+      "unattended-actions.mjs": "b5cd8985c97007dc749720a5d83d1e34e4bdf1463ef15a6aad5288e919320f5e"
+    },
+    "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
+    "adapterRegression": "original adapter fails all three review controls; corrected adapter passes 14 tests with real containers",
+    "validation": "untouched review remains blocked; stale identity rejected; redacted diagnostic and events retained"
+  },
+  "consumer216": {
+    "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+    "revision": "bb9eb10ec66c814bea65e8c2d4a36ccf0c0caf44",
+    "registryTuple": {
+      "cli": "0.12.38",
+      "sdlc": "0.20.5",
+      "ui": "0.2.0"
+    },
+    "coldClone": "passed; no preinstalled dependencies; 44 customization hashes preserved; no tracked diff",
+    "scope": "bootstrap only; native delivery, upgrade and rollback pending"
+  }
 }
