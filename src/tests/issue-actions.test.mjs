@@ -4,7 +4,141 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding, createIssueApi } from '../packages/sdlc/src/issue-actions.mjs';
+import { ciRequestFailure } from '../packages/sdlc/src/delivery-events.mjs';
+
+const denialCondition = 'GitHub Actions is not permitted to create or approve pull requests.';
+const denialPrefix = 'GitHub POST pulls: 403';
+async function deniedResponse(response, token = '') {
+  let calls = 0;
+  const api = createIssueApi('owner/repo', { GH_TOKEN: token }, async (url, options) => {
+    calls++;
+    assert.equal(url, 'https://api.github.com/repos/owner/repo/pulls');
+    assert.equal(options.method, 'POST');
+    assert.equal(options.headers.authorization, `Bearer ${token}`);
+    assert.equal(options.body, '{"title":"test"}');
+    assert.ok(options.signal instanceof AbortSignal);
+    return response;
+  });
+  let error;
+  await assert.rejects(api('pulls', 'POST', { title: 'test' }), caught => { error = caught; return true; });
+  assert.equal(calls, 1);
+  assert.equal(error.status, response.status);
+  assert.deepEqual(Object.keys(error).sort(), ['status']);
+  return error;
+}
+
+test('actual issue adapter retains a representative PR denial and numeric failure status', async () => {
+  const error = await deniedResponse(Response.json({ message: denialCondition, errors: [{ message: 'NESTED_SENTINEL' }], documentation_url: 'RAW_SENTINEL' }, { status: 403 }));
+  assert.equal(error.message, `${denialPrefix}: ${denialCondition}`);
+  assert.deepEqual(ciRequestFailure(error, { number: 18, head: { sha: 'a'.repeat(40) } }), ciRequestFailure(Object.assign(Error(denialPrefix), { status: 403 }), { number: 18, head: { sha: 'a'.repeat(40) } }));
+});
+
+test('denial diagnostics reject unusable JSON and unsafe text without exposing other fields', async () => {
+  const payloads = ['{broken RAW_SENTINEL', '<html>RAW_SENTINEL</html>', 'null', '[]', '"RAW_SENTINEL"', '42', ...[{}, { message: null }, { message: 4 }, { message: {} }, { message: '' }, { message: ' \r\n ' }].map(JSON.stringify)];
+  const unsafe = ['<b>denied</b>', '[click](https://example.test)', '`command`', '**bold**', '# Heading', '(link)', '::error::denied', ':\u200b:error::denied', '%0A::error::denied', '\\n::error::denied', '&#10;denied', 'https://example.test', '{message}', 'denied\u001b[31m<script>'];
+  for (const message of unsafe) payloads.push(JSON.stringify({ message, errors: 'RAW_SENTINEL' }));
+  for (const payload of payloads) {
+    const error = await deniedResponse(new Response(payload, { status: 403 }));
+    assert.equal(error.message, denialPrefix);
+  }
+  const invalidUtf8 = new Response(new Uint8Array([123, 34, 109, 101, 115, 115, 97, 103, 101, 34, 58, 34, 255, 34, 125]), { status: 403 });
+  assert.equal((await deniedResponse(invalidUtf8)).message, denialPrefix);
+});
+
+test('diagnostic input is byte bounded and stream failures preserve the original error', async () => {
+  const encoder = new TextEncoder();
+  const exact = JSON.stringify({ message: 'x'.repeat(8192 - JSON.stringify({ message: '' }).length) });
+  assert.equal(encoder.encode(exact).length, 8192);
+  assert.equal((await deniedResponse(new Response(exact, { status: 403 }))).message.length, denialPrefix.length + 2 + 300);
+  let reads = 0, cancelled = false;
+  const oversized = new Response(new ReadableStream({
+    pull(controller) { reads++; controller.enqueue(new Uint8Array(4096)); },
+    cancel() { cancelled = true; throw Error('CANCEL_SENTINEL'); }
+  }, { highWaterMark: 0 }), { status: 403 });
+  assert.equal(oversized.headers.get('content-length'), null);
+  assert.equal((await deniedResponse(oversized)).message, denialPrefix);
+  assert.equal(reads, 3);
+  assert.equal(cancelled, true);
+  for (const response of [
+    new Response(null, { status: 403 }),
+    new Response(exact + ' ', { status: 403, headers: { 'content-length': '1' } }),
+    new Response(JSON.stringify({ message: 'é'.repeat(5000) }), { status: 403 }),
+    new Response(new ReadableStream({ start(controller) { controller.error(Error('READ_SENTINEL')); } }), { status: 403 }),
+    new Response(new ReadableStream({ start(controller) { controller.error(new DOMException('ABORT_SENTINEL', 'AbortError')); } }), { status: 403 })
+  ]) assert.equal((await deniedResponse(response)).message, denialPrefix);
+  const locked = Response.json({ message: denialCondition }, { status: 403 });
+  const reader = locked.body.getReader();
+  assert.equal((await deniedResponse(locked)).message, denialPrefix);
+  reader.releaseLock();
+  const consumed = Response.json({ message: denialCondition }, { status: 403 });
+  await consumed.text();
+  assert.equal((await deniedResponse(consumed)).message, denialPrefix);
+});
+
+test('denial text is single-line, redacted before truncation and surrogate safe', async () => {
+  const active = ['active', 'private', 'credential'].join('-');
+  const secrets = [active, ...['p', 'o', 'u', 's', 'r'].map(family => `gh${family}_${'A'.repeat(35)}`), `github_${'pat'}_${'B'.repeat(40)}`, `sk-${'C'.repeat(25)}`, ['eyJ' + 'D'.repeat(20), 'E'.repeat(20), 'F'.repeat(20)].join('.'), 'bearer-value-' + 'G'.repeat(25)];
+  const message = `Denied\r\n\x1b[31mpermission\x1b[0m\u0000\u202e\u200b ${secrets.slice(0, -1).join(' ')} Bearer ${secrets.at(-1)}`;
+  const error = await deniedResponse(Response.json({ message }, { status: 403 }), active);
+  assert.ok(error.message.startsWith(`${denialPrefix}: Denied permission`));
+  assert.doesNotMatch(error.message, /[\p{Cc}\p{Cf}]/u);
+  for (const secret of secrets) assert.ok(!error.message.includes(secret));
+  assert.match(error.message, /REDACTED/);
+  const normalized = `g\u200bhp_${'H'.repeat(35)}`;
+  const assembled = await deniedResponse(Response.json({ message: `Denied ${normalized} ${active.replace('-', '\u200b-')}` }, { status: 403 }), active);
+  assert.equal(assembled.message, `${denialPrefix}: Denied REDACTED REDACTED`);
+  const spacedToken = 'private\ncredential';
+  assert.equal((await deniedResponse(Response.json({ message: 'Denied private credential' }, { status: 403 }), spacedToken)).message, `${denialPrefix}: Denied REDACTED`);
+  for (const secret of secrets) {
+    const prefix = secret === secrets.at(-1) ? 'x'.repeat(283) + 'Bearer ' : 'x'.repeat(290);
+    const boundary = await deniedResponse(Response.json({ message: prefix + secret + ' trailing'.repeat(50) }, { status: 403 }), active);
+    const suffix = boundary.message.slice(denialPrefix.length + 2);
+    assert.ok(suffix.length <= 300);
+    assert.equal(suffix.slice(290), 'REDACTED …');
+    assert.ok(!suffix.includes(secret.slice(0, 8)));
+  }
+  const long = await deniedResponse(Response.json({ message: 'x'.repeat(298) + '😀 trailing'.repeat(100) }, { status: 403 }));
+  const suffix = long.message.slice(denialPrefix.length + 2);
+  assert.equal(suffix, 'x'.repeat(298) + '…');
+  assert.equal(suffix.isWellFormed(), true);
+});
+
+test('issue API preserves optional 404, other failures, success, 204 and job logs', async () => {
+  const optional = Response.json({ message: denialCondition }, { status: 404 });
+  const optionalApi = createIssueApi('owner/repo', {}, async () => optional);
+  assert.equal(await optionalApi('missing', 'GET', undefined, true), null);
+  assert.equal(optional.bodyUsed, false);
+  for (const status of [404, 422, 500]) {
+    const error = await deniedResponse(new Response(null, { status }));
+    assert.equal(error.message, `GitHub POST pulls: ${status}`);
+    const enriched = await deniedResponse(Response.json({ message: 'Permission condition' }, { status }));
+    assert.equal(enriched.message, `GitHub POST pulls: ${status}: Permission condition`);
+  }
+  const responses = [Response.json({ id: 18 }), new Response(null, { status: 204 }), new Response('job log'), new Response('x'.repeat(4 * 1024 * 1024 + 1))];
+  let calls = 0;
+  const api = createIssueApi('owner/repo', {}, async () => { calls++; return responses.shift(); });
+  assert.deepEqual(await api('issues/18'), { id: 18 });
+  assert.equal(await api('issues/18', 'DELETE'), null);
+  assert.equal(await api('actions/jobs/18/logs'), 'job log');
+  await assert.rejects(api('actions/jobs/18/logs'), /Job log exceeds recovery bounds/);
+  assert.equal(calls, 4);
+});
+
+test('wired CLI displays safe denial text and still exits unsuccessfully', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-denial-'));
+  try {
+    const token = ['private', 'cli', 'credential'].join('-');
+    await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'labeled', issue: { number: 18 }, label: { name: 'refine' } }));
+    await writeFile(join(dir, 'mock.mjs'), `globalThis.fetch = async () => Response.json({ message: ${JSON.stringify(denialCondition)} + ' ' + process.env.GH_TOKEN, errors: 'RAW_SENTINEL', documentation_url: '<html>HOSTILE_SENTINEL</html>' }, { status: 403 });`);
+    const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: 'owner', GITHUB_EVENT_NAME: 'issues', GITHUB_EVENT_PATH: join(dir, 'event.json'), RUNNER_TEMP: dir, GH_TOKEN: token } });
+    assert.equal(run.status, 1, run.stderr);
+    assert.ok(run.stderr.includes(denialCondition));
+    assert.match(run.stderr, /GitHub GET issues\/18\/comments\?per_page=100&page=1: 403/);
+    assert.ok(!run.stderr.includes(token));
+    assert.doesNotMatch(run.stderr + run.stdout, /RAW_SENTINEL|HOSTILE_SENTINEL|<html>/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
 
 test('epic routing is opt-in and authenticates bot children before selecting a parent lease', async () => {
   const route = { run: true, stage: 'triage' }, parent = { parent: 146 }, calls = [];

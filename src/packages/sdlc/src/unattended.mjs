@@ -142,9 +142,18 @@ export async function runUnattended({ route, policy, host, signal }) {
         if (unattendedDigest(candidate.tests) !== unattendedDigest(red.tests)) throw Error('Hotfix repair changed its regression assertions');
       }
       if (!candidate.receipt?.checks?.length) throw Error('Required candidate checks are unavailable');
+      const completion = candidate.envelope?.result;
+      if (completion && (completion.pendingReview?.length || completion.unavailableChecks?.length)) throw Error('Implementation requires a human decision or unavailable evidence');
       if (candidate.receipt.checks.some(c => c.exitCode !== 0)) {
         candidate.feedback = ['Required host checks failed; preserve regression assertions and repair only the authorized scope.'];
         evidence.push({ kind: 'failed-checks', round, checks: candidate.receipt.checks });
+        continue;
+      }
+      if (completion && completion.status !== 'passed') {
+        const missing = completion.missingEvidence;
+        if (completion.status !== 'blocked' || !Array.isArray(missing) || !missing.length || missing.some(value => typeof value !== 'string' || !value.trim())) throw Error('Implementation stopped without actionable missing evidence');
+        candidate.feedback = ['Complete the missing planned evidence within the existing scope. Do not infer approval or repair an external prerequisite.', ...missing.slice(0, 8).map(value => value.slice(0, 1000))];
+        evidence.push({ kind: 'incomplete-implementation', round, runId: completion.runId, status: completion.status, missingEvidence: [...missing] });
         continue;
       }
       if (route === 'hotfix') assertRegression(candidate.receipt, plan, 'green');
@@ -155,7 +164,7 @@ export async function runUnattended({ route, policy, host, signal }) {
       if (review.verdict !== 'request-changes') throw Error('Independent review stopped delivery: ' + ((review.findings ?? []).join(' ').slice(0, 3000) || 'Inspect the independent review evidence before continuing'));
       candidate.feedback = review.findings;
     }
-    if (!accepted) throw Error('Independent review correction limit exhausted');
+    if (!accepted) throw Error('Unattended correction limit exhausted' + (candidate?.feedback?.length ? ': ' + candidate.feedback.join(' ').slice(0, 3000) : ''));
     await check();
     const published = await host.publish(candidate);
     await check();

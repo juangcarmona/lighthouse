@@ -49,7 +49,31 @@ export async function completionSource(api, repository, event, env = {}) {
   }) ? 'checks' : null;
 }
 
-// CI completion may resume delivery only for a matching bot PR and current owner decision.
+// Signal before the final CI job exits; only terminal CI can authorize the later review.
+export async function signalCurrentPostMergeReview(api, repository, env) {
+  const id = Number(env.GITHUB_RUN_ID), attempt = Number(env.GITHUB_RUN_ATTEMPT);
+  if (!['workflow_dispatch', 'push'].includes(env.GITHUB_EVENT_NAME) || env.LIGHTHOUSE_CI_RESULT !== 'success' || !Number.isSafeInteger(id) || id < 1 || !Number.isSafeInteger(attempt) || attempt < 1) return false;
+  const run = await api(`actions/runs/${id}/attempts/${attempt}`);
+  if (run.repository?.full_name !== repository || run.event !== env.GITHUB_EVENT_NAME || run.run_attempt !== attempt || run.head_sha !== env.GITHUB_SHA || run.status === 'completed' && run.conclusion !== 'success') return false;
+  const metadata = await api('');
+  if (run.head_branch !== metadata.default_branch) return false;
+  const config = await api(`contents/.lighthouse/github.json?ref=${metadata.default_branch}`, 'GET', undefined, true);
+  const profile = config ? JSON.parse(Buffer.from(config.content, 'base64').toString()) : null;
+  if (!profile?.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`)) return false;
+  const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
+  if (pulls.length >= 100) throw Error('Post-merge signal subject inventory exceeds its bound');
+  const targets = [];
+  for (const candidate of pulls) {
+    const pr = await api(`pulls/${candidate.number}`);
+    if (!pr.merged || pr.merge_commit_sha !== run.head_sha || pr.base?.ref !== metadata.default_branch) continue;
+    try { targets.push(checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository)); } catch { /* Unrelated merges cannot request review. */ }
+  }
+  if (targets.length !== 1) return false;
+  // A wake-up only: the router waits for terminal CI and authenticates retained integration.
+  await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: metadata.default_branch, inputs: { issue: String(targets[0].issue), stage: 'review', workflow: 'stage', after_run: String(id) } });
+  return true;
+}
+
 export async function deliveryAfterChecks(api, repository, owner, event) {
   const id = event.workflow_run?.id;
   if (!Number.isSafeInteger(id) || event.action !== 'completed') return null;
