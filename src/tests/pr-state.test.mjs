@@ -28,7 +28,8 @@ const fixture = (draft, passed = true) => {
   const issue = { number: 18, state: 'open', labels: [{ name: 'ready' }, { name: 'waiting-review' }] };
   const candidate = pr(draft), changed = [];
   const api = async (path, method, body) => {
-    if (path.startsWith(`commits/${head}/check-runs`)) return { check_runs: passed ? [{ name: 'repository', app: { id: 15368 }, head_sha: head, status: 'completed', conclusion: 'success' }] : [] };
+    if (path.startsWith(`commits/${head}/check-runs`)) return { check_runs: passed ? [{ name: 'repository', app: { id: 15368 }, head_sha: head, check_suite: { id: 123 }, details_url: 'https://github.com/owner/repo/actions/runs/456/job/789', status: 'completed', conclusion: 'success' }] : [] };
+    if (path === 'actions/runs/456') return { id: 456, head_sha: head, check_suite_id: 123, event: 'pull_request' };
     if (path.startsWith(`commits/${head}/statuses`)) return [];
     if (path === 'issues/18' && method === undefined) return issue;
     if (path === 'issues/18/labels' && method === 'POST') { for (const name of body.labels) issue.labels.push({ name }); return []; }

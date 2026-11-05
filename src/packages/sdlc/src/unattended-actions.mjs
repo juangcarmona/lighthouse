@@ -257,7 +257,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           // Observe a draft without promoting it while CI is pending. The final merge recheck still rejects drafts.
           observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID, { observeDraft: true });
           let checked = false;
-          try { assertChecks(observation); checked = true; } catch {}
+          try { assertChecks(observation); checked = true; }
+          catch (error) { if (observation.checks.some(check => ['ineligible-event', 'unverified-workflow'].includes(check.state))) throw error; }
           if (checked) {
             await recheck();
             if (current.draft) {
