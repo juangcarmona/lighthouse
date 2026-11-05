@@ -1,4 +1,4 @@
-import { readActionsJson } from './actions-artifact.mjs';
+import { readActionsJson, createActionsJsonReader } from './actions-artifact.mjs';
 import { createHash } from 'node:crypto';
 import { assertIndependentReview, assertRegression, regressionPlan, unattendedDigest, validateUnattendedPolicy } from './unattended.mjs';
 import { validateCheckReceipt, withinScope } from './implementation.mjs';
@@ -16,7 +16,7 @@ export async function readUnattendedPlanningReview(api, completion, priorIntegra
     const root = unattendedDigest({ repository, issue, route: authorization.route, run: runId });
     const stageId = (sequence, stage, worker) => unattendedDigest({ runId: root, sequence, stage, worker });
     const name = `lighthouse-unattended-${runId}-${attempt}`;
-    const read = file => readArtifact(api, repository, runId, name, file);
+    const read = readArtifact === readActionsJson ? await createActionsJsonReader(api, repository, runId, name) : file => readArtifact(api, repository, runId, name, file);
     const member = (id, file) => `${id}/tmp/lighthouse-${runId}-${attempt}/${file}`;
     const [report, candidate] = await Promise.all([read('report.json'), read('candidate.json')]);
     if (report.status !== 'passed' || report.published?.number !== pr || report.published?.head?.sha !== head || report.integrated?.sha !== completion.merge) return null;

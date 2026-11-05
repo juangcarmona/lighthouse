@@ -5,6 +5,9 @@ import { unattendedDigest, unattendedImplementationPolicy } from '../packages/sd
 import { commandEvidenceBinding, implementationEvidenceBundle, retainedCommandOutput } from '../packages/sdlc/src/implementation-evidence.mjs';
 import { changesDigest } from '../packages/sdlc/src/implementation.mjs';
 import { stageContext } from '../packages/sdlc/src/unattended-runtime.mjs';
+import childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
+import { zip } from './fixtures/zip.mjs';
 
 function fixture() {
   const repository = 'owner/repo', issue = 395, runId = '123', attempt = '1', revision = 'a'.repeat(40), head = 'b'.repeat(40), merge = 'c'.repeat(40), intent = 'd'.repeat(64);
@@ -86,4 +89,33 @@ test('hotfix review cannot promote missing, stale, altered or mismatched regress
   for (const [name, corrupt] of Object.entries(cases)) await t.test(name, async () => {
     const f = fixture(); corrupt(f); assert.equal(await readUnattendedPlanningReview(f.api, f.completion, f.prior, f.read), null);
   });
+});
+
+test('native hotfix reconstruction reads one fresh archive per verification and still rejects tampered frozen tests', async t => {
+  let downloads = 0, inventories = 0, bytes;
+  t.mock.method(childProcess, 'execFileSync', (command, args, options) => {
+    assert.equal(command, 'gh');
+    assert.deepEqual(args, ['api', 'repos/owner/repo/actions/artifacts/27/zip']);
+    assert.deepEqual(options, { maxBuffer: 2 * 1024 * 1024, timeout: 30000 });
+    downloads++; return bytes;
+  });
+  syncBuiltinESMExports();
+  try {
+    for (const tamper of [false, true]) {
+      const f = fixture();
+      if (tamper) f.files.get('candidate.json')[0].content = Buffer.from('weakened assertion').toString('base64');
+      bytes = zip([...f.files].map(([name, value]) => ({ name, content: JSON.stringify(value) })));
+      const api = async path => {
+        if (path === 'actions/runs/123/artifacts?per_page=100') {
+          inventories++; return { total_count: 1, artifacts: [{ id: 27, name: 'lighthouse-unattended-123-1', size_in_bytes: bytes.length, expired: false }] };
+        }
+        return f.api(path);
+      };
+      const before = downloads;
+      const evidence = await readUnattendedPlanningReview(api, f.completion, f.prior);
+      if (tamper) assert.equal(evidence, null); else assert.equal(evidence?.kind, 'hotfix');
+      assert.equal(downloads - before, 1);
+    }
+    assert.equal(downloads, 2); assert.equal(inventories, 2);
+  } finally { t.mock.restoreAll(); syncBuiltinESMExports(); }
 });
