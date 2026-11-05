@@ -1,15 +1,11 @@
 # Delivery qualification
 
-The first [#185 pilot](https://github.com/juangcarmona/lighthouse/actions/runs/41926222797) stopped before PR publication because candidate Git had no origin. The #402 correction passes the site build and four independent container checks; the third native attempt also completes the agent's site build and admitted checks with clean resource removal.
+Accepted real-change pilots: **0**. The FF queue is #390, #394 and #392, with #391 as the supervised comparison and #395 as the hotfix.
 
-The [second attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41936010763) stopped because its planning reviewer returned a mismatched identity. The #407 correction passes 14 real-container adapter tests and a subsequent native planning review with the admitted identity and clean resource removal.
+The installed producer now has authentic v2 receipts from four passing host commands. Corrections #402, #407, #410 and #412 have scoped acceptance; #416 supplied current product reports in native planning. These results do not establish unattended delivery acceptance.
 
-The [third attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41938501442) stopped in candidate review: its plan required commands absent from the admitted host inventory. #410 exposes the planned inventory and preserves the concrete escalation findings; the next #389 grant admits those commands. This attempt published no PR.
+Issue #390 has four failed attempts. The fourth repaired its plan automatically and passed host checks, then rejected a malformed reviewer envelope before publication. Corrections #418 and #419 address that protocol and whole-file artifact reads; native qualification remains pending.
 
-The [fourth attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41944081446) completes all four independent host commands but waits for a receipt from the corrected host before installation. #389 is now a reviewed maintainer bootstrap, with installed v2 acceptance pending on #390. The clean FF pilot queue is #390, #394 and #392; accepted pilots remain zero.
+The #216 registry consumer preserves 44 customizations and modes through baseline installation, published upgrade and rollback. The final published tuple and native delivery matrix remain pending.
 
-The first [#390 attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41949937184) passed the agent's workspace checks, then stopped because its regression contained a literal credential-shaped value. The publication guard remains unchanged; the retry grant requires synthetic values constructed at runtime.
-
-The #216 consumer passes clean registry-only bootstrap and baseline safety controls with all 44 customization hashes preserved. No complete real-change pilot or consumer delivery is accepted yet.
-
-Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json). Native qualification continues after the technical corrections.
+Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json).

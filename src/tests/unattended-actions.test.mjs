@@ -66,7 +66,7 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
   const execute = async options => {
     assert.equal(options.request.repository, 'owner/repo');
     executions.push(options);
-    const envelope = stageContext(options.request, issue()).contract.envelope;
+    const envelope = stageContext({ ...options.request, reviewOutput: undefined }, issue()).contract.envelope;
     let changes = [], receipt = null;
     if (['triage', 'refine'].includes(options.request.stage)) envelope.result.output = { eligibility, hotfix: plan };
     else if (options.request.stage === 'propose') envelope.result.output.files = [
@@ -76,7 +76,10 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
     else if (options.request.worker === 'independent-review') {
       if (options.context.review.purpose === 'candidate') {
         assert.deepEqual(options.context.review.details.scope, { implementationPaths: policy.paths, planningRoots: route === 'ff' ? ['openspec/changes/issue-1-proposal/'] : [] });
-        assert.match(options.prompt, /findings as an array of plain strings/);
+        assert.match(options.prompt, /findings \(plain strings/);
+        assert.deepEqual(options.request.reviewOutput, { protocol: 'verdict-v1', purpose: 'candidate', binding: options.context.review.binding });
+        assert.equal(options.context.contract.envelope, undefined);
+        assert.equal(options.context.contract.review.binding, options.context.review.binding);
         if (route === 'hotfix') {
           assert.match(options.context.review.details.red.receipt.checks.find(c => c.exitCode !== 0).log, /ERR_ASSERTION/);
           assert.ok(options.context.review.details.red.tests['tests/edge.test.mjs']);
@@ -326,6 +329,44 @@ test('a rejected plan reports the actual reviewer findings and does not start im
     assert.ok(startLabel >= 0 && startLabel < startComment && endLabel > startComment && endLabel < endComment);
     assert.match(f.comments.at(-1).body, /Root cause is not justified by source/);
     assert.doesNotMatch(f.comments.at(-1).body, /Ready for your review/);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('FF planning repair uses concrete feedback, drops superseded files and retains its accepted round', async () => {
+  const f = await fixture({ route: 'ff' }), execute = f.execute;
+  const staleSpec = 'openspec/changes/issue-1-proposal/specs/superseded/spec.md';
+  let proposals = 0, reviews = 0, implementations = 0;
+  const bindings = [];
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.stage === 'propose') {
+      if (++proposals === 1) {
+        result.envelope.result.output.files = result.envelope.result.output.files.filter(file => !file.path.endsWith('.openspec.yaml'));
+        result.envelope.result.output.files.push({ path: staleSpec, content: '## ADDED Requirements\n\n### Requirement: Boundary\nThe boundary SHALL include equality.\n\n#### Scenario: Equality\n- **WHEN** value is 2\n- **THEN** it is eligible\n' });
+      } else {
+        assert.deepEqual(options.context.correction.findings, ['Correct the artifact scope']);
+        assert.ok(options.context.correction.previous.files.some(file => file.path === staleSpec));
+      }
+      assert.match(options.prompt, /adopter rules.*openspec\/config.yaml/);
+      assert.match(options.prompt, /final file also includes host-owned provider metadata/);
+    }
+    if (options.request.worker === 'independent-review' && options.context.review.purpose === 'plan') {
+      bindings.push(options.context.review.binding);
+      if (++reviews === 1) {
+        result.envelope.result.status = 'blocked';
+        result.envelope.result.missingEvidence = ['Correct the artifact scope'];
+        result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Correct the artifact scope'] };
+      }
+    }
+    if (options.request.stage === 'implement') { implementations++; assert.equal(reviews, 2); assert.equal(options.source.has(staleSpec), false); }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'waiting-human'); assert.equal(result.planningRound, 1);
+    assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1); assert.notEqual(bindings[0], bindings[1]);
+    const retained = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/report.json')));
+    assert.equal(retained.planningRound, 1);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 

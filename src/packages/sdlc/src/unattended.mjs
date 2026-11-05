@@ -109,9 +109,18 @@ export async function runUnattended({ route, policy, host, signal }) {
     await check();
     const refined = await host.refine();
     admitUnattended(refined.eligibility, policy, route);
-    const plan = route === 'hotfix' ? regressionPlan(refined.hotfix) : await host.propose(refined);
-    await check();
-    await host.reviewPlan({ refined, plan });
+    let plan = route === 'hotfix' ? regressionPlan(refined.hotfix) : await host.propose(refined), planningRound = 0;
+    for (;;) {
+      await check();
+      const review = await host.reviewPlan({ refined, plan });
+      evidence.push({ kind: 'planning', round: planningRound, review });
+      if (review?.accepted === true) break;
+      const findings = (review?.findings ?? []).join(' ').slice(0, 3000);
+      if (route !== 'ff' || review?.verdict !== 'request-changes' || !findings) throw Error('Independent planning review stopped delivery: ' + (findings || 'Missing accepted assessment'));
+      if (planningRound >= policy.maxCorrections) throw Error('Independent planning review correction limit exhausted: ' + findings);
+      await check();
+      plan = await host.propose(refined, { previous: plan, findings: review.findings, round: ++planningRound });
+    }
     let red = null;
     if (route === 'hotfix') {
       red = await host.reproduce(plan);
@@ -124,7 +133,7 @@ export async function runUnattended({ route, policy, host, signal }) {
       evidence.push({ kind: 'red', receipt: red.receipt, tests: red.tests });
     }
     let candidate, accepted = false;
-    for (let round = 0; round <= policy.maxCorrections; round++) {
+    for (let round = 0; round <= policy.maxCorrections - planningRound; round++) {
       await check();
       candidate = await host.implement({ refined, plan, red, previous: candidate, round });
       admitUnattended(candidate.eligibility, policy, route);
@@ -150,10 +159,10 @@ export async function runUnattended({ route, policy, host, signal }) {
     await check();
     const published = await host.publish(candidate);
     await check();
-    if (!policy.merge) return { status: 'waiting-human', published, evidence, nextAction: 'Authorize integration of the reviewed PR head' };
+    if (!policy.merge) return { status: 'waiting-human', published, planningRound, evidence, nextAction: 'Authorize integration of the reviewed PR head' };
     const integrated = await host.integrate(candidate, published);
     evidence.push({ kind: 'integration', result: integrated });
-    return { status: 'passed', published, integrated, evidence, durationMs: Date.now() - started, nextAction: 'Follow existing post-merge review and release policy' };
+    return { status: 'passed', published, integrated, planningRound, evidence, durationMs: Date.now() - started, nextAction: 'Follow existing post-merge review and release policy' };
   } catch (error) {
     await host.stop(error.message, evidence, error);
     return { status: 'blocked', evidence, reason: error.message, nextAction: 'Inspect execution evidence and resolve the identified blocker' };

@@ -1,3 +1,4 @@
+import { validateReviewPayload } from './independent-review.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -140,6 +141,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     await recheck();
     const request = { repository, runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
       workflowRunId, attempt, taskDigest: intent,
+      ...(worker === 'independent-review' ? { reviewOutput: { protocol: 'verdict-v1', binding: extra.review.binding, purpose: extra.review.purpose } } : {}),
       ...(stage === 'implement' ? { implementation: { ...implementation, policy: selectedPolicy } } : {}) };
     const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');
@@ -156,14 +158,13 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const review = async (purpose, details, producingRun = null) => {
     const binding = unattendedDigest({ revision, intent, policyDigest, purpose, details });
     const phase = purpose === 'plan'
-      ? 'This is pre-implementation PLANNING review. Assess context.review.details.refined and plan for scope, readiness, rollback and the planned verification. The mounted source is intentionally unrepaired. Candidate diffs, RED/GREEN and CI are future-stage requirements, not missing evidence for this planning decision. Do not claim those future checks passed.'
+      ? 'This is pre-implementation PLANNING review. Assess context.review.details.refined and plan for scope, readiness, rollback and the planned verification. For FF, plan.files are final files already materialized and validated by the host provider: .openspec.yaml includes provider-owned schema and created metadata, although the model was asked to return only skip_specs: true. Review the final artifacts against that producer contract. The mounted source is intentionally unrepaired. Candidate diffs, RED/GREEN and CI are future-stage requirements, not missing evidence for this planning decision. Do not claim those future checks passed.'
       : 'This is CANDIDATE review. Assess context.review.details changes, originalFiles, RED and executed host checks. Scope identifies the declared implementation paths and any host-authorized OpenSpec planning root; inspect all candidate files and assess the planning artifacts on their merits. Forge CI and merge/release are subsequent trusted-host gates after PR publication; do not claim they passed or require their receipts at this pre-publication review.';
     const result = await step('integrate', 'independent-review',
-      phase + ' The contract.envelope is an OUTPUT TEMPLATE, never an execution receipt. Actual review inputs are context.review.details and the original issue. Execute only read-only independent engineering review. Source is mounted at /workspace. The host has prepared /output/envelope.json with the current identity and a blocked status. Read and edit that existing file; do not reconstruct execution identifiers from prior results or the review binding. Complete the assessment and preserve all required fields, including schemaVersion at both the envelope root and result, plus result.runId, stage and gate, for every outcome including blocked. Read /input/context.json and /harness/skills/independent-review/SKILL.md. Assess the original issue, criteria and authorities against the candidate and executed evidence. Write /output/envelope.json. Return output.review with the exact binding, verdict accept/request-changes/escalate and findings as an array of plain strings, each containing one concrete finding; never use objects. Use an empty array when accepting. Product decisions and unavailable proof require escalation. Acceptance requires passed status and empty blocker arrays; requested corrections use blocked status. Never grant merge authority or edit the workspace.',
+      phase + ' Execute only read-only independent engineering review. Read /input/context.json and /harness/skills/independent-review/SKILL.md. Actual inputs are context.review.details and the original issue; source is mounted at /workspace. Read the host-prepared /output/review.json and preserve its binding. Return only binding, verdict (accept/request-changes/escalate) and findings (plain strings, one concrete finding each). Accept requires empty findings; other verdicts require concrete findings. Product decisions and unavailable proof require escalation. Write only /output/review.json; the host builds the stage envelope. Review grants no merge authority.',
       { review: { purpose, binding, details, originalIssue: issueContext } });
     const value = result.envelope.result.output?.review;
-    if (!value || value.binding !== binding || !['accept', 'request-changes', 'escalate'].includes(value.verdict) ||
-        !Array.isArray(value.findings) || value.findings.length > 30 || value.findings.some(f => typeof f !== 'string' || !f.trim() || f.length > 4000)) throw Error('Reviewer returned invalid or stale findings');
+    validateReviewPayload(value, binding);
     if (!producingRun) throw Error('Planning review lacks its producing execution');
     const from = { model: producingRun.runtime.model, runId: producingRun.request.runId };
     const to = { model: result.runtime.model, runId: result.request.runId };
@@ -191,17 +192,17 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         }
         return refined;
       },
-      propose: async () => {
+      propose: async (_refined, correction = null) => {
         const proposal = await prepareProposal(issueNumber, null, provider);
         const result = await step('propose', 'propose',
-          'Prepare the smallest engineering plan through context.proposal.instructions. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, return .openspec.yaml containing exactly skip_specs: true in place of a spec; the host combines it with provider metadata and validates it. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
-          { proposal, refinement: refined });
+          'Prepare the smallest engineering plan through context.proposal.instructions. Read the adopter rules in /workspace/openspec/config.yaml and follow their document scope and citation requirements. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, the returned .openspec.yaml payload contains only skip_specs: true; the final file also includes host-owned provider metadata. When context.correction is present, repair its concrete findings against the previous plan without expanding the authorized issue. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
+          { proposal, refinement: refined, ...(correction ? { correction } : {}) });
         planProducer = result;
         const files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider);
-        working = applyCandidate(working, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
+        working = applyCandidate(source, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
         return { files, refinement: refined };
       },
-      reviewPlan: async details => { const assessment = await review('plan', details, planProducer); if (!assessment.accepted) throw Error('Independent planning review ' + assessment.verdict + ': ' + assessment.findings.join(' ').slice(0, 3000)); },
+      reviewPlan: details => review('plan', details, planProducer),
       reproduce: async plan => {
         const selected = { ...implementation.policy, paths: policy.hotfix.testPaths, checks: [...policy.hotfix.setupCommands, plan.command],
           verification: { paths: [...new Set([...implementation.policy.verification.paths, ...policy.hotfix.testPaths])], corrections: Object.fromEntries(plan.plannedFiles.filter(path => policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)).map(path => [path, 'Author the independently reviewed RED regression before production repair.'])) } };
