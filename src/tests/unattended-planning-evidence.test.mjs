@@ -35,7 +35,7 @@ function fixture(round = 0) {
   ]);
   const api = async () => run;
   const read = async (_api, repo, idValue, artifact, file) => { assert.equal(repo, repository); assert.equal(idValue, runId); assert.equal(artifact, 'lighthouse-unattended-123-1'); if (!files.has(file)) throw Error('Missing artifact'); return structuredClone(files.get(file)); };
-  return { completion, prior, run, files, api, read, member, review, propose, binding };
+  return { completion, prior, run, files, api, read, member, review, propose, binding, refined };
 }
 
 test('reconstructs an independently reviewed plan from authenticated retained artifacts', async () => {
@@ -65,8 +65,33 @@ test('rejects changed plans, producer identity, results, run authority and missi
     f => { f.files.get(f.member(f.review, 'runtime.json')).model = 'openai/producer'; },
     f => { f.files.get(f.member(f.review, 'envelope.json')).result.output.review.verdict = 'request-changes'; },
     f => { f.files.delete('candidate.json'); },
+    f => { f.files.get('candidate.json')[0].content = Buffer.from('schema: changed\n').toString('base64'); },
+    f => { const files = f.files.get(f.member(f.propose, 'envelope.json')).result.output.files; files.push(files.at(-1)); },
+    f => { f.files.get(f.member(f.propose, 'envelope.json')).result.output.files.pop(); },
   ]) {
     const f = fixture(); corrupt(f);
     assert.equal(await readUnattendedPlanningReview(f.api, f.completion, f.prior, f.read), null);
   }
+});
+
+
+test('reconstruction matches provider metadata ordering for every valid proposal form', async t => {
+  for (const form of ['metadata-first', 'content-first', 'specifications']) await t.test(form, async () => {
+    const f = fixture(1), proposal = f.files.get(f.member(f.propose, 'envelope.json')).result.output.files;
+    if (form === 'metadata-first') proposal.reverse();
+    if (form === 'content-first') proposal[1] = { content: proposal[1].content, path: proposal[1].path };
+    if (form === 'specifications') {
+      const metadata = f.files.get('candidate.json')[0];
+      proposal.pop();
+      proposal.push({ path: 'openspec/changes/issue-196-proposal/specs/verification/spec.md', content: '# Verification delta' });
+      const content = 'schema: spec-driven\ncreated: 2026-11-05\n';
+      metadata.content = Buffer.from(content).toString('base64');
+      const plan = { files: [...proposal, { path: metadata.path, content }], refinement: f.refined };
+      f.binding = unattendedDigest({ revision: f.run.head_sha, intent: f.completion.binding.intent, policyDigest: f.prior.receipt.authorization.unattended.policyDigest, purpose: 'plan', details: { refined: f.refined, plan } });
+      f.files.get(f.member(f.review, 'envelope.json')).result.output.review.binding = f.binding;
+    }
+    const evidence = await readUnattendedPlanningReview(f.api, f.completion, f.prior, f.read);
+    assert.equal(evidence?.binding, f.binding, form);
+    assert.match(evidence.details.plan.files.at(-1).path, /\.openspec\.yaml$/);
+  });
 });
