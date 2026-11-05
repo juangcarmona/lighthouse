@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
-import { taskDigest } from './issue-actions.mjs';
+import { taskDigest, createIssueApi } from './issue-actions.mjs';
 import { loadRefinement } from './proposal.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { assessDecomposition, epicPlanDigest } from './epic.mjs';
@@ -524,12 +524,7 @@ export async function runEpicAction({ api, repository, owner, issue, run, journa
 async function main() {
   const env = process.env, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER, issue = Number(env.LIGHTHOUSE_ISSUE);
   if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_ACTOR !== owner || env.GITHUB_TRIGGERING_ACTOR !== owner || !/^[1-9][0-9]*$/.test(env.LIGHTHOUSE_ISSUE ?? '') || !Number.isSafeInteger(issue)) throw Error('Epic execution requires an explicit owner request');
-  const api = async (path, method = 'GET', body, optional = false) => {
-    const response = await fetch(`https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
-    if (optional && response.status === 404) return null;
-    if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
-    return response.status === 204 ? null : response.json();
-  };
+  const api = createIssueApi(repository, env);
   const run = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   const dir = join(env.RUNNER_TEMP, `lighthouse-epic-${env.GITHUB_RUN_ID}-${issue}`);
   await mkdir(dir, { recursive: true });

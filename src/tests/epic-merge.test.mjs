@@ -130,3 +130,69 @@ test('authority revoked after a merge leaves the receipt uncertain', async () =>
   await assert.rejects(mergeEpicChild(api, { correlation, resource }, { journal, observe: async () => observed, authorize: async () => ++authorizations < 3, verifyChecks: async () => true }), /authority or checks/);
   assert.equal(receipt.state, 'merging');
 });
+
+function refusalFixture() {
+  const correlation = epicCorrelation({ repository: 'owner/repo', parent: 146, slice: 'first', planDigest: 'e'.repeat(64), base: 'lighthouse/epic-146', dependencies: [], kind: 'pull-request' });
+  const resource = { id: 77, number: 7 }, actual = '1'.repeat(40), tree = '2'.repeat(40);
+  const f = { puts: 0, authorized: true, error: Object.assign(Error('Merge not allowed'), { status: 405 }), receipt: { schemaVersion: 1, state: 'linked', correlation, resource, publication: { run: '100', attempt: 1, head } } };
+  const pr = { ...resource, state: 'open', merged: false, head: { sha: head, repo: { full_name: 'owner/repo' } }, base: { ref: correlation.base, repo: { full_name: 'owner/repo' } }, merge_commit_sha: actual, merged_by: { login: 'github-actions[bot]', type: 'Bot' } };
+  f.pr = pr; f.branch = { ref: `refs/heads/${correlation.base}`, object: { sha: base } };
+  f.api = async (path, method = 'GET') => {
+    if (path === 'pulls/7/merge' && method === 'PUT') { f.puts++; if (f.error) throw f.error; pr.merged = true; return { merged: true, sha: actual }; }
+    if (path === 'pulls/7') return structuredClone(pr);
+    if (path === `git/ref/heads/${correlation.base}`) return f.branch;
+    if (path === `git/commits/${actual}`) return { parents: [{ sha: base }], tree: { sha: tree } };
+    if (path === `git/commits/${merge}`) return { tree: { sha: tree } };
+    throw Error(`Unexpected ${path}`);
+  };
+  f.observed = { parent: 146, slice: 'first', planDigest: correlation.planDigest, pr: 7, head, base, mergeCandidate: merge, review: 9 };
+  f.options = { journal: { readReceipt: async () => structuredClone(f.receipt), writeReceipt: async (_key, value) => { f.receipt = structuredClone(value); } }, observe: async () => f.observed, authorize: async () => f.authorized, verifyChecks: async () => true };
+  f.run = () => mergeEpicChild(f.api, { correlation, resource }, f.options);
+  return f;
+}
+
+test('a confirmed 405 retains its binding and permits a fresh authorized acceptance', async () => {
+  const f = refusalFixture();
+  await assert.rejects(f.run(), /Merge not allowed/);
+  assert.equal(f.receipt.state, 'linked');
+  assert.deepEqual(f.receipt.refusal, { status: 405, head, base, candidate: merge, review: 9 });
+  assert.equal(f.receipt.merge, undefined);
+  assert.equal(f.puts, 1);
+  f.error = null;
+  assert.equal((await f.run()).status, 'accepted');
+  assert.equal(f.receipt.refusal, undefined);
+  assert.equal(f.puts, 2);
+  await f.run();
+  assert.equal(f.puts, 2);
+});
+
+test('unknown errors and changed authority or PR identity never turn into a retryable refusal', async () => {
+  for (const mutate of [
+    f => { f.error = Error('GitHub PUT pulls/7/merge: 405'); },
+    f => { f.error.status = 500; },
+    f => { f.pr.id++; },
+    f => { f.pr.state = 'closed'; },
+    f => { f.pr.head.sha = base; },
+    f => { f.pr.base.ref = 'main'; },
+    f => { f.pr.head.repo.full_name = 'other/repo'; },
+    f => { f.branch.object.sha = head; },
+    f => { f.options.authorize = async () => f.puts === 0; },
+  ]) {
+    const f = refusalFixture(); mutate(f);
+    await assert.rejects(f.run());
+    assert.equal(f.receipt.state, 'merging');
+    assert.equal(f.receipt.refusal, undefined);
+    await assert.rejects(f.run());
+    assert.equal(f.puts, 1);
+  }
+});
+
+test('a confirmed successful merge wins over an erroneous refusal response without another PUT', async () => {
+  const f = refusalFixture();
+  const api = f.api;
+  f.api = async (...args) => { if (args[1] === 'PUT') f.pr.merged = true; return api(...args); };
+  assert.equal((await f.run()).status, 'accepted');
+  assert.equal(f.receipt.refusal, undefined);
+  await f.run();
+  assert.equal(f.puts, 1);
+});

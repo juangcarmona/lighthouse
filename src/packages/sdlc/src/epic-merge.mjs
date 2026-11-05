@@ -67,7 +67,8 @@ export async function mergeEpicChild(api, { correlation, resource }, { journal, 
   const initial = await observe();
   if (initial.parent !== correlation.parent || initial.slice !== correlation.slice || initial.planDigest !== correlation.planDigest || initial.pr !== resource.number || !sha(initial.head) || initial.head !== receipt.publication?.head || !sha(initial.base) || !sha(initial.mergeCandidate) || !Number.isSafeInteger(initial.review) || initial.review < 1) throw Error('Epic merge observation does not match the receipt');
   const merge = { head: initial.head, base: initial.base, candidate: initial.mergeCandidate, review: initial.review };
-  const intent = { ...receipt, state: 'merging', merge };
+  const { refusal: previousRefusal, ...linked } = receipt;
+  const intent = { ...linked, state: 'merging', merge };
   if (await authorize() !== true) throw Error('Epic merge is not authorized');
   await journal.writeReceipt(key, intent);
   const fresh = await observe();
@@ -77,7 +78,16 @@ export async function mergeEpicChild(api, { correlation, resource }, { journal, 
   try { response = await api(`pulls/${resource.number}/merge`, 'PUT', { sha: merge.head, merge_method: 'squash' }); }
   catch (error) {
     const commit = await confirm(merge).catch(() => null);
-    if (!commit) throw error;
+    if (!commit) {
+      // A typed refusal plus current unmerged identity is safe to retry; unknown effects are not.
+      if (error.status === 405) {
+        const pr = await api(`pulls/${resource.number}`), branch = await api(`git/ref/heads/${correlation.base}`);
+        if (pr.id === resource.id && pr.number === resource.number && pr.state === 'open' && pr.merged === false && pr.head?.sha === merge.head && pr.head.repo?.full_name === correlation.repository && pr.base?.ref === correlation.base && pr.base.repo?.full_name === correlation.repository && branch.ref === `refs/heads/${correlation.base}` && branch.object?.sha === merge.base && await authorize() === true) {
+          await journal.writeReceipt(key, { ...linked, state: 'linked', refusal: { ...merge, status: 405 } });
+        }
+      }
+      throw error;
+    }
     if (await verifyChecks(merge) !== true || await authorize() !== true) throw Error('Epic merge authority or checks are no longer valid');
     await journal.writeReceipt(key, { ...intent, state: 'accepted', merge: { ...merge, commit } });
     return { status: 'accepted', commit, recovered: true };
