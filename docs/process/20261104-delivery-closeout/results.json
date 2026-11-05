@@ -47,6 +47,14 @@
       "outcome": "all four independent host commands passed; model blocked on receipts from the not-yet-installed corrected host",
       "publication": "none",
       "classification": "recovered candidate becomes reviewed host bootstrap; excluded from unattended pilot acceptance"
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41949937184",
+      "outcome": "agent workspace checks passed; candidate publication rejected credential-shaped content in regression before independent host verification",
+      "publication": "none",
+      "cleanup": "clean; 14 implementation resources removed",
+      "correction": "owner grant requires runtime construction of synthetic credential fixtures; publication guard unchanged"
     }
   ],
   "correction407": {
@@ -112,6 +120,6 @@
     "canonicalMembers": 27,
     "diagnosticMembers": 55,
     "templateSha256": "e0de8eb2165379aff8f571cd49252e96de4bc9e5a7d795eb378636670c2f0275",
-    "nativeLayoutQualification": "pending a subsequent native pilot; active #390 is unchanged"
+    "nativeLayoutQualification": "pending subsequent native pilot"
   }
 }
