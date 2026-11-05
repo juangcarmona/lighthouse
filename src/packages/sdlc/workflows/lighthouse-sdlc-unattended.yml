@@ -73,6 +73,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-unattended-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+          path: |
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/provider-commands/*
           if-no-files-found: warn
           retention-days: 14

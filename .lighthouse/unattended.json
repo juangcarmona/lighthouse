@@ -5,9 +5,9 @@
     "ff"
   ],
   "paths": [
-    "src/packages/sdlc/src/actions-artifact.mjs",
-    "src/tests/actions-artifact.test.mjs",
-    ".changeset/bounded-artifact-read-retry.md"
+    "src/packages/sdlc/src/completion.mjs",
+    "src/tests/completion.test.mjs",
+    ".changeset/skipped-check-evidence.md"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,

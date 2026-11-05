@@ -37,6 +37,16 @@ export function validateProposalFiles(files, issue) {
 
 const openspec = (cwd, args) => execFileSync('npx', ['--yes', '--package', '@fission-ai/openspec@1.15.0', 'openspec', ...args], { cwd, encoding: 'utf8', timeout: 120000, maxBuffer: 1024 * 1024, env: { ...process.env, OPENSPEC_TELEMETRY: '0', CI: 'true' }, stdio: ['ignore', 'pipe', 'pipe'] });
 
+export function proposalValidationFailure(error, issue) {
+  if ((error.code ?? error.status) !== 1 || error.signal || error.killed || !error.stdout || Buffer.byteLength(error.stdout) > 65536) return null;
+  try {
+    const output = error.stdout.toString(), report = JSON.parse(output), item = report.items?.[0];
+    if (report.version !== '1.0' || report.items.length !== 1 || item.id !== changeName(issue) || item.type !== 'change' || item.valid !== false || report.summary?.totals?.items !== 1 || report.summary.totals.failed !== 1 || report.summary.totals.passed !== 0 || !Array.isArray(item.issues) || !item.issues.length || item.issues.length > 64 || item.issues.some(finding => !['ERROR', 'WARNING', 'INFO'].includes(finding.level) || typeof finding.path !== 'string' || typeof finding.message !== 'string' || !finding.message.trim())) return null;
+    const findings = item.issues.filter(finding => finding.level !== 'INFO').slice(0, 8).map(finding => `${finding.path}: ${finding.message}`.slice(0, 1000));
+    return findings.length ? { provider: '@fission-ai/openspec@1.15.0', status: 'failed', findings, output } : null;
+  } catch { return null; }
+}
+
 // Use the provider's scaffold, instructions and validator; never maintain a copied schema.
 export async function prepareProposal(issue, files, provider = openspec) {
   if (files) validateProposalFiles(files, issue);
@@ -58,7 +68,15 @@ export async function prepareProposal(issue, files, provider = openspec) {
       if (file.path === metadata) { await writeFile(path, `${(await readFile(path, 'utf8')).trimEnd()}\nskip_specs: true\n`); continue; }
       await mkdir(dirname(path), { recursive: true }); await writeFile(path, file.content);
     }
-    await provider(dir, ['validate', name, '--strict', '--no-interactive']);
+    try { await provider(dir, ['validate', name, '--strict', '--no-interactive', '--json']); }
+    catch (error) {
+      const validation = proposalValidationFailure(error, issue);
+      if (validation) {
+        error.proposalValidation = validation;
+        error.message += '\nOpenSpec validation: ' + validation.findings.join('; ').slice(0, 3000);
+      }
+      throw error;
+    }
     const status = JSON.parse(await provider(dir, ['status', '--change', name, '--json']));
     if (!status.isPlanningComplete) throw Error('OpenSpec planning artifacts are incomplete');
     return [...files.filter(file => file.path !== metadata), { path: metadata, content: await readFile(join(dir, metadata), 'utf8') }];
