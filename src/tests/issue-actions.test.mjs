@@ -4,7 +4,8 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding, createIssueApi } from '../packages/sdlc/src/issue-actions.mjs';
+import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding, existingEpicTriage, createIssueApi } from '../packages/sdlc/src/issue-actions.mjs';
+import { dispatchIntent, dispatchId, epicTriageKey, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { ciRequestFailure } from '../packages/sdlc/src/delivery-events.mjs';
 
 const denialCondition = 'GitHub Actions is not permitted to create or approve pull requests.';
@@ -360,4 +361,37 @@ test('wired router ignores feedback on closed PRs without delivery effects and r
       }
     }
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+function repeatedEpicTriage(status = 'running') {
+  const repository = 'owner/repo', epic = { parent: 146, slice: 'A', planDigest: 'b'.repeat(64), sourceRevision: 'a'.repeat(40), base: 'lighthouse/epic-146' };
+  const epicKey = epicTriageKey(repository, epic.parent, 10, epic.planDigest);
+  const request = { repository, issue: 10, stage: 'triage', epic, epicKey, id: dispatchId(repository, epicKey, 'triage'), taskDigest: 'c'.repeat(64), sourceRevision: epic.sourceRevision, workflowRevision: epic.sourceRevision, handoff: false, autoImplement: false, productChangeEnabled: false };
+  request.intent = dispatchIntent(request);
+  const receipt = { schemaVersion: 1, stage: 'triage', epicKey, id: request.id, intent: request.intent, digest: 'd'.repeat(64), routerRunId: '700', routerAttempt: 1, workerRunId: status === 'requested' || status === 'unknown' ? null : '800', status };
+  const issue = { number: 10, state: 'open', labels: [{ name: 'agent-working' }] };
+  const comment = { id: 12, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/10`, html_url: 'https://github.com/owner/repo/issues/10#issuecomment-12', body: dispatchReceiptBody(repository, receipt) };
+  return { request, issue, comment, receipt };
+}
+
+test('repeated epic triage observes the original recorded request despite its reservation', () => {
+  for (const status of ['requested', 'running', 'completed', 'unknown']) {
+    const f = repeatedEpicTriage(status);
+    assert.equal(existingEpicTriage(f.request, f.issue, [f.comment]), f.comment);
+  }
+});
+
+test('epic triage reconciliation rejects changed intent, identity, untrusted receipts and pauses', () => {
+  for (const patch of [{ taskDigest: 'e'.repeat(64) }, { sourceRevision: 'e'.repeat(40) }, { workflowRevision: 'e'.repeat(40) }, { epic: { ...repeatedEpicTriage().request.epic, planDigest: 'e'.repeat(64) } }, { issue: 11 }, { stage: 'implement' }, { worker: 'apply-review' }]) {
+    const f = repeatedEpicTriage(); Object.assign(f.request, patch); f.request.intent = dispatchIntent(f.request);
+    assert.equal(existingEpicTriage(f.request, f.issue, [f.comment]), null);
+  }
+  for (const label of ['future', 'human-working', 'needs-info', 'waiting-review']) {
+    const f = repeatedEpicTriage(); f.issue.labels.push({ name: label }); assert.equal(existingEpicTriage(f.request, f.issue, [f.comment]), null);
+  }
+  for (const user of [{ login: 'owner', type: 'User' }, { login: 'github-actions[bot]', type: 'User' }]) {
+    const f = repeatedEpicTriage(); f.comment.user = user; assert.equal(existingEpicTriage(f.request, f.issue, [f.comment]), null);
+  }
+  const f = repeatedEpicTriage(); f.comment.body = f.comment.body.replace(f.receipt.intent, 'e'.repeat(64)); assert.equal(existingEpicTriage(f.request, f.issue, [f.comment]), null);
+  f.comment.issue_url += '/wrong'; assert.throws(() => existingEpicTriage(f.request, f.issue, [f.comment]), /Untrusted dispatch receipt/);
 });
