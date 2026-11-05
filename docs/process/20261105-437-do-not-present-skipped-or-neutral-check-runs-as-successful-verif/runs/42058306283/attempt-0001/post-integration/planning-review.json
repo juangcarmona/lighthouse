@@ -1,0 +1,469 @@
+{
+  "binding": "beac30b87f4e345bdeb6e4059cf4a20dc8eeafdb41f4fc4f6e644a569151271c",
+  "runId": "42052016478",
+  "attempt": "1",
+  "sourceRevision": "a418f5de98fdae7bb22de1a7d9d26d1c6ac32b39",
+  "intent": "79c7c7efe71c42672c4aad940d2692d4b05b8bd03c8fad0c6cc5d28511de047d",
+  "policyDigest": "14535207c21e72bae392cd1ad04f1f2b52c76b68b0b7983a34c5bae974e0d870",
+  "details": {
+    "refined": {
+      "eligibility": {
+        "points": 2,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "A small component-behavior correction: completion.mjs:107 currently projects completed success, neutral and skipped check runs as passed, and assertCitedChecks at lines 111–120 trusts that projection for native-ID and URL citations. Restrict only the observed-evidence mapping; retain raw conclusion in state and leave checkCommit:122–154 and requiredPolicy:82–92 unchanged. Existing behavioral tests at completion.test.mjs:183–209 exercise the relevant public functions. The admitted three-file scope needs no new dependency, migration, permission or product choice. Low risk rests on narrowing evidence acceptance without changing hosting gates or authorization, not merely on diff size. The change is revertible as a bounded code/test/changeset commit. Two points uses the small-component anchor in request-triage.md, not a legacy size-label conversion; five-point opt-in is false. This assesses refinement readiness only, not implementation or merge authorization."
+      },
+      "estimate": {
+        "points": 2,
+        "status": "confirmed",
+        "rationale": {
+          "scope": "One observed-check projection, behavioral controls in the existing completion test file, and one SDLC patch changeset; host-owned issue-437 OpenSpec planning is separate.",
+          "dependencies": "Existing observation and citation APIs suffice; callers require no signature or policy changes. No additional package, service, migration or product decision is needed for the bounded correction.",
+          "verification": "Cover the conclusion/citation matrix and preserve required-check semantics, then execute every admitted implementation command. Independent planning/candidate review and current-revision forge CI remain later gates."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "Implementation command outcomes, independent review verdicts and later forge CI have not been observed in this refinement.",
+          "The historical #390 artifact cited by the issue was not independently retrieved; the current source independently demonstrates the reported projection defect."
+        ]
+      },
+      "problem": {
+        "summary": "GitHub skipped and neutral check runs are currently presented as successful verification evidence and can therefore be cited as passed despite not establishing successful execution.",
+        "affectedUsers": [
+          "Maintainers relying on integration and final-review evidence",
+          "Agents consuming completion.observedChecks and trusted publishers validating their citations"
+        ],
+        "desiredOutcome": "Only a completed successful check run for the requested revision projects to passed. Skipped and neutral conclusions remain visible in state but project to unavailable, so passed citations fail through the existing citation guard without introducing new merge gates."
+      },
+      "scope": {
+        "implementationFiles": [
+          "src/packages/sdlc/src/completion.mjs",
+          "src/tests/completion.test.mjs",
+          ".changeset/skipped-check-evidence.md"
+        ],
+        "hostOwnedPlan": "openspec/changes/issue-437-proposal/",
+        "productionBoundary": "Change only observeChecks evidence projection and any strictly local expression needed for that projection. Preserve exported signatures and existing evidenceId, revision, app, name, URL and state contracts.",
+        "outOfScope": [
+          "Changes to checkCommit, requiredPolicy, configured hosting rules, required workflows or merge eligibility",
+          "New CI triggers, workflow dispatches, retries, bypasses, permissions or policy edits",
+          "ProductShape model changes, architecture decisions, releases or deployment",
+          "Changes to supervised comparison #391 or unrelated pilot issues",
+          "Editing historical retained evidence or repairing unrelated unavailable observations"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For a matching-revision completed run, conclusion success projects to status passed; conclusions skipped and neutral project to status unavailable, with their exact native conclusion preserved in state.",
+        "Through observeChecks followed by assertCitedChecks, a skipped or neutral observation cannot support status passed when cited by github-check:<native ID> or by its exact native URL. Both selection paths must be exercised independently.",
+        "A genuine completed successful check remains citable by native ID and URL when present and passed in both observations. Re-observation as skipped, neutral, pending, failed or absent rejects an earlier passed citation.",
+        "Pending runs retain unavailable/pending; failed conclusions retain failed and their native state; wrong-revision runs remain failed even when success, skipped or neutral. Missing native evidence remains unauthenticated rather than being manufactured as passed.",
+        "Existing commit-status projection, latest-status selection and current-workflow job exclusion remain unchanged.",
+        "Behavioral controls demonstrate that checkCommit continues to accept eligible completed success, skipped and neutral required checks according to existing GitHub semantics, while unrequired optional skipped/neutral jobs do not become gates. Configured required-check matching and policy remain unchanged.",
+        "Add the named patch changeset for @juangcarmona/lighthouse-sdlc, complete all admitted implementation checks, obtain independent planning and candidate review, and follow separately authorized integration, current-revision required forge CI and accepted post-merge review before claiming delivery complete."
+      ],
+      "sourceInvestigation": {
+        "rootCause": "observeChecks copies the success/neutral/skipped acceptance set used for GitHub hosting eligibility into the separate verification-evidence projection. assertCitedChecks checks projected status before and after, not the native conclusion; this makes the incorrect projection citable through either matching evidenceId or matching source URL.",
+        "callers": [
+          {
+            "source": "src/packages/sdlc/src/completion.mjs:160–190",
+            "finding": "inspectCompletion separately computes policy checks through checkCommit and observed checks through observeChecks for the accepted head and checked revision, then appends authenticated implementation evidence. Preserve that separation and the implementation-evidence path."
+          },
+          {
+            "source": "src/packages/sdlc/src/completion-actions.mjs:44–66,123–140,157–161",
+            "finding": "Preparation supplies observations to the agent. Publication refreshes completion and checks passed citations with assertCitedChecks before effects and authorized merge. Correcting the projection propagates through this existing guard without caller edits."
+          },
+          {
+            "source": "src/packages/sdlc/src/unattended-actions.mjs:14; src/packages/sdlc/src/unattended.mjs:119–192",
+            "finding": "The unattended adapter reuses completion inspection and hosting checks; its composition keeps independent plan/candidate review, host checks and delegated integration separate. Refinement must not replace those later gates with its own assessment."
+          },
+          {
+            "source": "src/tests/completion.test.mjs:24–38,174–209",
+            "finding": "Existing tests establish required-policy behavior, pending states, successful observation/citation, freshness rejection and current-workflow exclusion. Extend these public-function controls rather than testing only a detached helper."
+          }
+        ],
+        "observations": [
+          "These are agent source-inspection findings, not executed behavioral checks or independent review receipts.",
+          "CodeGraph symbol search returned no matches and AI context was unavailable; direct source reads supplied the relevant function and caller evidence. CodeGraph availability is not a required refinement or product check.",
+          "The inspected SDLC package declares version 0.20.6; the checked-in router contains pin ccfc63822ef4764957b49604b534207080315bc4, distinct from the supplied assessment source revision a418f5de98fdae7bb22de1a7d9d26d1c6ac32b39. No claim is made about deployed workflow behavior or the current Git branch."
+        ]
+      },
+      "productContext": {
+        "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+        "discovery": "Read the host-prepared 137-artifact index and the BR-FAIL-CLOSED and FR-CHANGE-EVIDENCE inspection/impact/citation reports, plus their canonical texts and FR-FAST-FORWARD-DELIVERY. Reports identify draft artifacts in the supplied model; neither their existence nor this assessment constitutes product approval.",
+        "alignment": "BR-FAIL-CLOSED requires explicit failure/unavailability rather than unverified compliance. FR-CHANGE-EVIDENCE requires reviewable evidence and explicit unresolved findings. The requested distinction repairs the implementation of that existing evidence meaning; it does not add product meaning. FR-FAST-FORWARD-DELIVERY preserves independent review and separately delegated integration.",
+        "impact": "The inspected impact graph links change evidence to UC-IMPLEMENT-CHANGE, BR-HUMAN-AUTHORITY and BR-FAIL-CLOSED. Preserve those authority boundaries; no product, lifecycle, workflow-state, memory, initialization or public-site behavior is targeted. Architecture evidence states and execution authority in docs/architecture/08-crosscutting-concepts/README.md:53–61,80–84 remain unchanged.",
+        "citations": [
+          "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\"",
+          "pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\""
+        ]
+      },
+      "dependencies": {
+        "engineering": "Resolved for refinement: observation, citation and hosting-policy functions already exist in the bounded component, and tests can call them directly without external services or new dependencies.",
+        "pilotContext": "The issue positions this pilot after #394 and #392 and leaves #391 supervised. Their remote completion states were not independently queried here; no code prerequisite on further changes to those issues was identified. This assessment does not certify their delivery or authorize a pilot dispatch.",
+        "laterOwners": "The trusted host must recheck the adopted bounded grant, current source, scope and authority for continuation. The proposal stage owns the host-materialized OpenSpec plan; separate reviewers own plan and candidate assessments; integration and post-merge review retain their existing authorized owners."
+      },
+      "risks": [
+        {
+          "risk": "Accidentally tightening merge eligibility by applying the evidence rule to checkCommit.",
+          "mitigation": "Leave checkCommit and requiredPolicy unchanged; add controls contrasting unavailable observed skipped/neutral evidence with preserved required-check acceptance."
+        },
+        {
+          "risk": "Regressing pending, wrong-revision, stale or URL-selected evidence behavior.",
+          "mitigation": "Keep existing precedence and identities; exercise both citation selectors and before/after changes through the production functions."
+        }
+      ],
+      "rollbackPlan": "If later integration needs reversal, revert only the issue's bounded implementation commit through the existing authorized change process. No data migration or remote setting requires rollback; reverting restores the evidence defect and must not be described as successful verification.",
+      "verificationPlan": {
+        "basis": "context.unattended.implementationChecks is the admitted command inventory, not an execution receipt. All commands below are planned for the later candidate workspace; none was executed in this refinement.",
+        "checks": [
+          {
+            "command": [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            "status": "planned",
+            "purpose": "Install the locked dependencies without lifecycle scripts."
+          },
+          {
+            "command": [
+              "node",
+              "--test",
+              "src/tests/completion.test.mjs"
+            ],
+            "status": "planned",
+            "purpose": "Run the observation/citation matrix and focused completion regressions."
+          },
+          {
+            "command": [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            "status": "planned",
+            "purpose": "Run repository Markdown, complete Node tests, link and public-site verification under the admitted environment."
+          },
+          {
+            "command": [
+              "npx",
+              "--no-install",
+              "prodshape",
+              "citations",
+              "verify",
+              "--provider",
+              "openspec",
+              "--format",
+              "json"
+            ],
+            "status": "planned",
+            "purpose": "Verify actual proposal citation scope and provider-emitted digests."
+          },
+          {
+            "command": [
+              "npx",
+              "--yes",
+              "--package=@fission-ai/openspec@1.15.0",
+              "openspec",
+              "validate",
+              "issue-437-proposal",
+              "--strict",
+              "--no-interactive"
+            ],
+            "status": "planned",
+            "purpose": "Validate the host-materialized issue plan using the admitted pinned provider."
+          }
+        ],
+        "additionalAgentObservations": "Source inspection above is the only additional observation made here. Any optional later agent-run tests must have their own command, revision, outcome and provenance; they cannot substitute for trusted host checks.",
+        "laterForgeCI": "Current-head required GitHub checks, hosting-policy verification and adopted post-merge checks must be observed separately by the trusted completion path. Local command success, skipped/neutral jobs and this refinement assessment are not receipts for those gates.",
+        "laterReviews": "Obtain separate independent plan review before implementation and candidate review after actual checks; complete authorized integration and accepted post-merge review. These are next-stage actions, not unresolved reviews of this refinement."
+      },
+      "definitionOfReady": [
+        {
+          "check": "Problem and desired behavior are unambiguous",
+          "satisfied": true,
+          "source": "Issue #437 acceptance; completion.mjs:93–120 directly demonstrates the incorrect projection and its citation consequence."
+        },
+        {
+          "check": "Bounded scope and exclusions are known",
+          "satisfied": true,
+          "source": "context.unattended.scope names exactly three implementation files; hosting-policy functions remain outside the behavioral change."
+        },
+        {
+          "check": "Testable acceptance and verification plan exist",
+          "satisfied": true,
+          "source": "Existing completion.test.mjs public-function tests and all five context.unattended.implementationChecks are retained in this plan."
+        },
+        {
+          "check": "Dependencies and decision owners are resolved for refinement",
+          "satisfied": true,
+          "source": "No new technical dependency or product choice is needed; the trusted host and separate downstream reviewers retain authority for later continuation."
+        },
+        {
+          "check": "Estimate and concrete affected-surface risk support the FF limit",
+          "satisfied": true,
+          "source": "Two-point small-component behavior anchor; narrower evidence acceptance, preserved hosting semantics and reversible bounded edits satisfy the low-risk criterion in unattended.mjs:41–48."
+        }
+      ]
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-437-proposal/proposal.md",
+          "content": "# Proposal\n\n<!-- pdac-scope: cited -->\n\n## Why\n\n[Issue #437](https://github.com/juangcarmona/lighthouse/issues/437) identifies skipped and neutral GitHub check runs being projected as passed and therefore accepted as successful verification citations. Correct the observed-evidence projection without changing which checks GitHub requires or accepts for merge.\n\n## What Changes\n\n- In `observeChecks`, reserve passed check-run evidence for a matching-revision, completed `success`; project completed `skipped` and `neutral` as unavailable while preserving the exact native conclusion in `state`.\n- Exercise `observeChecks` followed by `assertCitedChecks` using independent native-ID and URL-only citation selectors; retain successful, pending, failed, wrong-revision, missing and refreshed-evidence behavior.\n- Add controls preserving `checkCommit` hosting semantics and optional-job non-gating behavior, plus the named SDLC patch changeset.\n- Leave required-check policy, signatures, callers, workflows, permissions, retry behavior and CI triggers unchanged.\n\n## Capabilities\n\n### New Capabilities\n\nNone.\n\n### Modified Capabilities\n\nNone. This repairs implementation of existing truthful-evidence requirements, not their meaning or a spec-level contract. The inspected `openspec/specs/` inventory contains only `.gitkeep`; no capability is introduced or replaced. Return `.openspec.yaml` containing only `skip_specs: true`; the host combines it with provider-owned metadata.\n\n## Impact\n\nImplementation is bounded to `src/packages/sdlc/src/completion.mjs`, `src/tests/completion.test.mjs` and `.changeset/skipped-check-evidence.md`, plus this host-owned plan. Consumers see corrected observation statuses through existing APIs; no schema, dependency, persisted-data migration, package-version edit or remote setting changes are needed. The production edit stays within the observation projection; `assertCitedChecks`, `checkCommit` and `requiredPolicy` remain unchanged.\n\n### Product context\n\nBefore drafting, discovery compared the issue with the host-prepared whole-model index of 137 artifacts and widened the evidence roots through their direct/transitive impact reports. Relevant canonical texts and provider-emitted citation payloads supply these dependencies to preserve, not artifacts to edit:\n\n- `BR-FAIL-CLOSED`: unavailable verification is explicit, never presented as compliance.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n- `FR-CHANGE-EVIDENCE`: reports distinguish inspected evidence and unresolved findings from successful implementation.\n<!-- pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\" -->\n- `BR-HUMAN-AUTHORITY`: product, architecture acceptance, merge and release retain their human or explicitly delegated owners.\n<!-- pdac:cite id=\"BR-HUMAN-AUTHORITY\" digest=\"sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8\" -->\n- `UC-IMPLEMENT-CHANGE`: implementation consumes the reviewed plan and produces actual Done evidence; integration remains separate.\n<!-- pdac:cite id=\"UC-IMPLEMENT-CHANGE\" digest=\"sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6\" -->\n- `FR-FAST-FORWARD-DELIVERY`: keep separate independent plan/candidate review, current evidence and separately authorized integration; planning grants no delivery authority.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\nChecked impact neighbours not targeted include `FR-FOUNDATION-UPGRADE`, `FR-MODEL-PROFILES`, `FR-REPOSITORY-CONVENTIONS`, `FR-SEMANTIC-INITIALIZATION`, `FR-VERIFY-FOUNDATION`, `SB-VERIFY`, `UC-VERIFY-FOUNDATION`, `UC-UPDATE-FOUNDATION`, `BR-ENTRY-AUTHORITY`, `BR-STAGE-GATES`, `BR-PRODUCT-CHANGE-HANDOFF`, `BR-MEMORY-BOUNDARY` and `UC-BUILD-PUBLIC-STORY`: no upgrade, initialization, catalogue, lifecycle, memory or site behavior changes. `TERM-GUARDRAIL`, `TERM-INTEGRATION`, `TERM-MANAGED-PROJECTION` and `BC-FOUNDATION` retain their existing meanings. Graph adjacency alone does not expand this correction.\n\nProduct definition drift: none identified; no altered product intent or Product Change is proposed. Relevant supplied artifacts are draft, and read-only discovery is not product approval. Architecture evidence-state and execution-authority boundaries in `docs/architecture/08-crosscutting-concepts/README.md` remain unchanged.\n\n## Verification and next decision\n\n[Design](design.md) defines precedence and behavioral controls; [tasks](tasks.md) retains all admitted commands and the Definition of Done. These are planned checks, not receipts. The trusted host validates and materializes this plan before separate independent plan review. This proposal neither dispatches the pilot nor certifies #394/#392 completion, changes supervised comparison #391, or authorizes implementation, merge, release or deployment.\n"
+        },
+        {
+          "path": "openspec/changes/issue-437-proposal/design.md",
+          "content": "# Design\n\n<!-- pdac-scope: cited -->\n\n## Context\n\nSee [proposal.md](proposal.md) for motivation and product discovery. `completion.mjs:93-120` projects check runs and commit statuses separately, then guards passed citations against both original and refreshed observations. The check-run projection currently shares the `success`/`neutral`/`skipped` acceptance set used by `checkCommit`, conflating verification with hosting eligibility. `inspectCompletion` and `completion-actions.mjs` already separate policy checks from cited observations; no caller change is necessary.\n\n## Goals / Non-Goals\n\n**Goals:** Narrow verification acceptance at its projection source while retaining native identity, conclusion and freshness checks. Unexecuted or non-successful evidence must not establish successful verification.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n**Non-Goals:** New gates, classifier infrastructure, signature/schema changes, historical evidence rewrites, citation-guard redesign, hosting-policy edits, triggers, retries, bypasses, new dependencies or product/architecture edits.\n\n## Decisions\n\n### 1. Correct only check-run observation status\n\nKeep the existing precedence: revision mismatch first, incomplete execution second, then classify the completed conclusion. Change only the local expression in `observeChecks`; preserve `evidenceId`, name, requested revision, app, URL and native `state` construction.\n\n| Input | Observed status | Observed state |\n| --- | --- | --- |\n| Wrong revision, including completed success/skipped/neutral | failed | Existing native conclusion or pending |\n| Matching revision, queued/in progress | unavailable | pending |\n| Matching revision, completed success | passed | success |\n| Matching revision, completed skipped | unavailable | skipped |\n| Matching revision, completed neutral | unavailable | neutral |\n| Matching revision, any other completed conclusion | failed | Unchanged native conclusion |\n\nCommit-status projection and latest-status selection remain unchanged, as does current-workflow job exclusion. Do not reuse this narrower rule in `checkCommit` or `requiredPolicy`: hosting eligibility intentionally continues to accept eligible completed success/skipped/neutral required checks. Optional unrequired jobs remain observations, not additional gates. A shared helper would blur this deliberate distinction and is unnecessary.\n\n### 2. Reuse the citation guard\n\nLeave `assertCitedChecks` unchanged. It already requires a selected observation to be passed both before and after refresh, with the same evidence identity and revision. Fixing its input projection rejects skipped/neutral evidence through either matching native ID or matching exact URL. Adding conclusion checks to the guard instead would leave incorrect passed observations exposed to other consumers.\n\nReports retain raw evidence context and explicit unavailability rather than suppressing skipped/neutral observations or manufacturing a successful receipt.\n<!-- pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\" -->\n\n### 3. Test the existing public functions\n\nExtend only `src/tests/completion.test.mjs`, using deterministic fake GitHub API responses with native IDs, URLs, app identity and head SHA. Obtain snapshots through `observeChecks`, not manually edited projected statuses. For each selector, use ID alone without source, then an unrelated local evidence ID with only the exact native URL as source, so one path cannot mask the other.\n\n- Matching completed success is passed and citable through each selector; skipped and neutral are unavailable with exact state and reject passed citations.\n- For both selectors, refresh an initially successful observation as skipped, neutral, queued/in-progress, failed, wrong-revision or absent; every earlier passed citation is rejected. Check initially unavailable/failed observations also cannot support passed citations.\n- Cover wrong-revision success/skipped/neutral precedence, ordinary failed conclusions, absent native IDs remaining unauthenticated, and existing behavior for non-passed evidence claims. A URL matched before but missing after is rejected; do not invent new behavior for arbitrary unmatched URLs.\n- Retain controls for commit statuses, latest selection and current-workflow exclusion.\n- Through `checkCommit`, show eligible completed success/skipped/neutral required runs still pass. Use realistic authenticated GitHub Actions origin responses for the required-check control; retain existing wrong-app, wrong-revision, pending, missing and ineligible-event regressions. Add optional skipped/neutral runs alongside a successful required run and assert no extra required result or gate. Retain configured-policy matching controls without editing policy code.\n\nAdd `.changeset/skipped-check-evidence.md` with `\"@juangcarmona/lighthouse-sdlc\": patch`, describing only corrected verification reporting and preserved merge eligibility. No version, lockfile or workflow pin edit.\n\n### 4. Preserve authority and evidence provenance\n\nProductShape owns intent, ArcShape owns architecture and the host owns effects. This proposal supplies no acceptance, merge or release decision.\n<!-- pdac:cite id=\"BR-HUMAN-AUTHORITY\" digest=\"sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8\" -->\n\nSeparate read-only independent plan and candidate reviews require fresh context and a different configured model under existing policy. Local commands, agent observations, current-head required forge checks and accepted post-merge review are distinct evidence; none substitutes for another or delegates integration.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n## Risks / Trade-offs\n\n- [Accidental merge-policy tightening] → Keep hosting functions untouched; test the contrast between unavailable observations and eligible required-check acceptance.\n- [Pending or revision precedence regresses] → Assert the full projection table and original/refreshed citation paths through production functions.\n- [A test exercises ID and URL together] → Use independent single-selector claims for both rejection and genuine success.\n- [Corrected reporting exposes less successful evidence] → Retain native conclusions; an unavailable optional job is not a new required gate or permission to retry.\n\n## Migration Plan\n\nLand one bounded code/test/changeset slice after accepted independent planning review, then run [tasks.md](tasks.md)'s candidate checks and independent candidate review. No data migration or external configuration change is needed. Integration and post-merge review follow separate existing authorization. If reversal is later authorized, revert only the isolated implementation commit; reverting restores the reporting defect and is not proof of successful verification.\n"
+        },
+        {
+          "path": "openspec/changes/issue-437-proposal/tasks.md",
+          "content": "# Tasks\n\n<!-- pdac-scope: cited -->\n\nAll items remain unchecked. The admitted `context.unattended.implementationChecks` inventory is a plan, not an execution receipt. No implementation command ran during proposal preparation.\n\n## 1. Bounded evidence correction\n\nThe slice preserves explicit unavailable evidence and reviewable outcomes rather than representing absence of successful execution as compliance.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n<!-- pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\" -->\n\n- [ ] 1.1 Install locked dependencies with `npm ci --ignore-scripts`; verify successful exit and retain the actual command, candidate revision and outcome without treating installation as behavioral verification.\n- [ ] 1.2 In `src/tests/completion.test.mjs`, add the design's observation/citation matrix using `observeChecks` and `assertCitedChecks`, independent ID-only and URL-only selectors, initial skipped/neutral rejection, genuine success, refresh rejection, pending, failed, wrong-revision and missing controls; verify the new skipped/neutral controls expose the current defect with `node --test src/tests/completion.test.mjs`.\n- [ ] 1.3 Change only `observeChecks`' local check-run status expression in `src/packages/sdlc/src/completion.mjs` to distinguish completed success from skipped/neutral without altering state or precedence; verify the matrix passes with `node --test src/tests/completion.test.mjs`.\n- [ ] 1.4 In the same test file, add/retain eligible required success/skipped/neutral and optional-job controls through `checkCommit`, configured-policy matching, commit-status/latest selection and current-workflow exclusion regressions; verify `node --test src/tests/completion.test.mjs` passes and diff inspection confirms no `checkCommit`, `requiredPolicy`, citation-guard or caller edits.\n- [ ] 1.5 Add `.changeset/skipped-check-evidence.md` for an `@juangcarmona/lighthouse-sdlc` patch describing the reporting correction and unchanged merge eligibility; verify its frontmatter against existing changesets and that the implementation diff contains only the three admitted files plus this host-owned plan.\n\n## 2. Candidate integration checks\n\nImplementation must produce actual evidence for the Done gate; a planned command, installed package or provider status is not execution evidence.\n<!-- pdac:cite id=\"UC-IMPLEMENT-CHANGE\" digest=\"sha256:fc65ab1eb13b9a5e66e3a7d7efd57bb1c3bd3e6ea92c092d4e40ee5856a40ee6\" -->\n\n- [ ] 2.1 Run `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify` on the completed candidate; retain the real exit/result and diagnostics, and stop dependent advancement on failure or unavailable required verification.\n- [ ] 2.2 Verify/refresh affected proposal citations against current provider-emitted payloads without editing canonical product text or deleting bindings; run `npx --no-install prodshape citations verify --provider openspec --format json` and verify current citations and exactly one valid scope declaration in every changed Markdown document, retaining the provider report.\n- [ ] 2.3 Run `npx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-437-proposal --strict --no-interactive` against the host-materialized plan; verify successful strict validation, required documents and final provider metadata with `skip_specs: true`, retaining the actual outcome.\n\n## Definition of Done\n\nThe bounded correction and changeset are delivered with the design's production-function controls passing, all five admitted commands have actual successful receipts for the candidate, citations/provider validation are current, and scope/policy preservation is demonstrated. Additional agent-run observations must name their own command, revision, outcome and provenance; they cannot replace trusted host checks. Candidate readiness is not authorization to merge or a claim of accepted post-merge delivery.\n<!-- pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\" -->\n\n## Workflow follow-up\n\n- The trusted host validates/materializes this envelope, then obtains accepted separate independent plan review before implementation. After candidate checks, obtain independent candidate review with fresh context and a different configured model; findings or uncertain evidence stop continuation.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n- The authorized host rechecks the current bounded grant, intent, scope, source and hosting policy, observes current-revision required forge CI separately from local checks, and performs integration only under separate authorization. Await actual adopted post-merge checks and accepted post-merge review before claiming delivery complete; archive only after applicable review and citation requirements are satisfied. No new workflow, dispatch, retry or bypass is requested.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n<!-- pdac:cite id=\"BR-HUMAN-AUTHORITY\" digest=\"sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8\" -->\n"
+        },
+        {
+          "path": "openspec/changes/issue-437-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-05\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "eligibility": {
+          "points": 2,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "A small component-behavior correction: completion.mjs:107 currently projects completed success, neutral and skipped check runs as passed, and assertCitedChecks at lines 111–120 trusts that projection for native-ID and URL citations. Restrict only the observed-evidence mapping; retain raw conclusion in state and leave checkCommit:122–154 and requiredPolicy:82–92 unchanged. Existing behavioral tests at completion.test.mjs:183–209 exercise the relevant public functions. The admitted three-file scope needs no new dependency, migration, permission or product choice. Low risk rests on narrowing evidence acceptance without changing hosting gates or authorization, not merely on diff size. The change is revertible as a bounded code/test/changeset commit. Two points uses the small-component anchor in request-triage.md, not a legacy size-label conversion; five-point opt-in is false. This assesses refinement readiness only, not implementation or merge authorization."
+        },
+        "estimate": {
+          "points": 2,
+          "status": "confirmed",
+          "rationale": {
+            "scope": "One observed-check projection, behavioral controls in the existing completion test file, and one SDLC patch changeset; host-owned issue-437 OpenSpec planning is separate.",
+            "dependencies": "Existing observation and citation APIs suffice; callers require no signature or policy changes. No additional package, service, migration or product decision is needed for the bounded correction.",
+            "verification": "Cover the conclusion/citation matrix and preserve required-check semantics, then execute every admitted implementation command. Independent planning/candidate review and current-revision forge CI remain later gates."
+          },
+          "confidence": "high",
+          "uncertainty": [
+            "Implementation command outcomes, independent review verdicts and later forge CI have not been observed in this refinement.",
+            "The historical #390 artifact cited by the issue was not independently retrieved; the current source independently demonstrates the reported projection defect."
+          ]
+        },
+        "problem": {
+          "summary": "GitHub skipped and neutral check runs are currently presented as successful verification evidence and can therefore be cited as passed despite not establishing successful execution.",
+          "affectedUsers": [
+            "Maintainers relying on integration and final-review evidence",
+            "Agents consuming completion.observedChecks and trusted publishers validating their citations"
+          ],
+          "desiredOutcome": "Only a completed successful check run for the requested revision projects to passed. Skipped and neutral conclusions remain visible in state but project to unavailable, so passed citations fail through the existing citation guard without introducing new merge gates."
+        },
+        "scope": {
+          "implementationFiles": [
+            "src/packages/sdlc/src/completion.mjs",
+            "src/tests/completion.test.mjs",
+            ".changeset/skipped-check-evidence.md"
+          ],
+          "hostOwnedPlan": "openspec/changes/issue-437-proposal/",
+          "productionBoundary": "Change only observeChecks evidence projection and any strictly local expression needed for that projection. Preserve exported signatures and existing evidenceId, revision, app, name, URL and state contracts.",
+          "outOfScope": [
+            "Changes to checkCommit, requiredPolicy, configured hosting rules, required workflows or merge eligibility",
+            "New CI triggers, workflow dispatches, retries, bypasses, permissions or policy edits",
+            "ProductShape model changes, architecture decisions, releases or deployment",
+            "Changes to supervised comparison #391 or unrelated pilot issues",
+            "Editing historical retained evidence or repairing unrelated unavailable observations"
+          ]
+        },
+        "acceptanceCriteria": [
+          "For a matching-revision completed run, conclusion success projects to status passed; conclusions skipped and neutral project to status unavailable, with their exact native conclusion preserved in state.",
+          "Through observeChecks followed by assertCitedChecks, a skipped or neutral observation cannot support status passed when cited by github-check:<native ID> or by its exact native URL. Both selection paths must be exercised independently.",
+          "A genuine completed successful check remains citable by native ID and URL when present and passed in both observations. Re-observation as skipped, neutral, pending, failed or absent rejects an earlier passed citation.",
+          "Pending runs retain unavailable/pending; failed conclusions retain failed and their native state; wrong-revision runs remain failed even when success, skipped or neutral. Missing native evidence remains unauthenticated rather than being manufactured as passed.",
+          "Existing commit-status projection, latest-status selection and current-workflow job exclusion remain unchanged.",
+          "Behavioral controls demonstrate that checkCommit continues to accept eligible completed success, skipped and neutral required checks according to existing GitHub semantics, while unrequired optional skipped/neutral jobs do not become gates. Configured required-check matching and policy remain unchanged.",
+          "Add the named patch changeset for @juangcarmona/lighthouse-sdlc, complete all admitted implementation checks, obtain independent planning and candidate review, and follow separately authorized integration, current-revision required forge CI and accepted post-merge review before claiming delivery complete."
+        ],
+        "sourceInvestigation": {
+          "rootCause": "observeChecks copies the success/neutral/skipped acceptance set used for GitHub hosting eligibility into the separate verification-evidence projection. assertCitedChecks checks projected status before and after, not the native conclusion; this makes the incorrect projection citable through either matching evidenceId or matching source URL.",
+          "callers": [
+            {
+              "source": "src/packages/sdlc/src/completion.mjs:160–190",
+              "finding": "inspectCompletion separately computes policy checks through checkCommit and observed checks through observeChecks for the accepted head and checked revision, then appends authenticated implementation evidence. Preserve that separation and the implementation-evidence path."
+            },
+            {
+              "source": "src/packages/sdlc/src/completion-actions.mjs:44–66,123–140,157–161",
+              "finding": "Preparation supplies observations to the agent. Publication refreshes completion and checks passed citations with assertCitedChecks before effects and authorized merge. Correcting the projection propagates through this existing guard without caller edits."
+            },
+            {
+              "source": "src/packages/sdlc/src/unattended-actions.mjs:14; src/packages/sdlc/src/unattended.mjs:119–192",
+              "finding": "The unattended adapter reuses completion inspection and hosting checks; its composition keeps independent plan/candidate review, host checks and delegated integration separate. Refinement must not replace those later gates with its own assessment."
+            },
+            {
+              "source": "src/tests/completion.test.mjs:24–38,174–209",
+              "finding": "Existing tests establish required-policy behavior, pending states, successful observation/citation, freshness rejection and current-workflow exclusion. Extend these public-function controls rather than testing only a detached helper."
+            }
+          ],
+          "observations": [
+            "These are agent source-inspection findings, not executed behavioral checks or independent review receipts.",
+            "CodeGraph symbol search returned no matches and AI context was unavailable; direct source reads supplied the relevant function and caller evidence. CodeGraph availability is not a required refinement or product check.",
+            "The inspected SDLC package declares version 0.20.6; the checked-in router contains pin ccfc63822ef4764957b49604b534207080315bc4, distinct from the supplied assessment source revision a418f5de98fdae7bb22de1a7d9d26d1c6ac32b39. No claim is made about deployed workflow behavior or the current Git branch."
+          ]
+        },
+        "productContext": {
+          "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+          "discovery": "Read the host-prepared 137-artifact index and the BR-FAIL-CLOSED and FR-CHANGE-EVIDENCE inspection/impact/citation reports, plus their canonical texts and FR-FAST-FORWARD-DELIVERY. Reports identify draft artifacts in the supplied model; neither their existence nor this assessment constitutes product approval.",
+          "alignment": "BR-FAIL-CLOSED requires explicit failure/unavailability rather than unverified compliance. FR-CHANGE-EVIDENCE requires reviewable evidence and explicit unresolved findings. The requested distinction repairs the implementation of that existing evidence meaning; it does not add product meaning. FR-FAST-FORWARD-DELIVERY preserves independent review and separately delegated integration.",
+          "impact": "The inspected impact graph links change evidence to UC-IMPLEMENT-CHANGE, BR-HUMAN-AUTHORITY and BR-FAIL-CLOSED. Preserve those authority boundaries; no product, lifecycle, workflow-state, memory, initialization or public-site behavior is targeted. Architecture evidence states and execution authority in docs/architecture/08-crosscutting-concepts/README.md:53–61,80–84 remain unchanged.",
+          "citations": [
+            "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\"",
+            "pdac:cite id=\"FR-CHANGE-EVIDENCE\" digest=\"sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0\""
+          ]
+        },
+        "dependencies": {
+          "engineering": "Resolved for refinement: observation, citation and hosting-policy functions already exist in the bounded component, and tests can call them directly without external services or new dependencies.",
+          "pilotContext": "The issue positions this pilot after #394 and #392 and leaves #391 supervised. Their remote completion states were not independently queried here; no code prerequisite on further changes to those issues was identified. This assessment does not certify their delivery or authorize a pilot dispatch.",
+          "laterOwners": "The trusted host must recheck the adopted bounded grant, current source, scope and authority for continuation. The proposal stage owns the host-materialized OpenSpec plan; separate reviewers own plan and candidate assessments; integration and post-merge review retain their existing authorized owners."
+        },
+        "risks": [
+          {
+            "risk": "Accidentally tightening merge eligibility by applying the evidence rule to checkCommit.",
+            "mitigation": "Leave checkCommit and requiredPolicy unchanged; add controls contrasting unavailable observed skipped/neutral evidence with preserved required-check acceptance."
+          },
+          {
+            "risk": "Regressing pending, wrong-revision, stale or URL-selected evidence behavior.",
+            "mitigation": "Keep existing precedence and identities; exercise both citation selectors and before/after changes through the production functions."
+          }
+        ],
+        "rollbackPlan": "If later integration needs reversal, revert only the issue's bounded implementation commit through the existing authorized change process. No data migration or remote setting requires rollback; reverting restores the evidence defect and must not be described as successful verification.",
+        "verificationPlan": {
+          "basis": "context.unattended.implementationChecks is the admitted command inventory, not an execution receipt. All commands below are planned for the later candidate workspace; none was executed in this refinement.",
+          "checks": [
+            {
+              "command": [
+                "npm",
+                "ci",
+                "--ignore-scripts"
+              ],
+              "status": "planned",
+              "purpose": "Install the locked dependencies without lifecycle scripts."
+            },
+            {
+              "command": [
+                "node",
+                "--test",
+                "src/tests/completion.test.mjs"
+              ],
+              "status": "planned",
+              "purpose": "Run the observation/citation matrix and focused completion regressions."
+            },
+            {
+              "command": [
+                "env",
+                "GITHUB_ACTIONS=true",
+                "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+                "npm",
+                "run",
+                "verify"
+              ],
+              "status": "planned",
+              "purpose": "Run repository Markdown, complete Node tests, link and public-site verification under the admitted environment."
+            },
+            {
+              "command": [
+                "npx",
+                "--no-install",
+                "prodshape",
+                "citations",
+                "verify",
+                "--provider",
+                "openspec",
+                "--format",
+                "json"
+              ],
+              "status": "planned",
+              "purpose": "Verify actual proposal citation scope and provider-emitted digests."
+            },
+            {
+              "command": [
+                "npx",
+                "--yes",
+                "--package=@fission-ai/openspec@1.15.0",
+                "openspec",
+                "validate",
+                "issue-437-proposal",
+                "--strict",
+                "--no-interactive"
+              ],
+              "status": "planned",
+              "purpose": "Validate the host-materialized issue plan using the admitted pinned provider."
+            }
+          ],
+          "additionalAgentObservations": "Source inspection above is the only additional observation made here. Any optional later agent-run tests must have their own command, revision, outcome and provenance; they cannot substitute for trusted host checks.",
+          "laterForgeCI": "Current-head required GitHub checks, hosting-policy verification and adopted post-merge checks must be observed separately by the trusted completion path. Local command success, skipped/neutral jobs and this refinement assessment are not receipts for those gates.",
+          "laterReviews": "Obtain separate independent plan review before implementation and candidate review after actual checks; complete authorized integration and accepted post-merge review. These are next-stage actions, not unresolved reviews of this refinement."
+        },
+        "definitionOfReady": [
+          {
+            "check": "Problem and desired behavior are unambiguous",
+            "satisfied": true,
+            "source": "Issue #437 acceptance; completion.mjs:93–120 directly demonstrates the incorrect projection and its citation consequence."
+          },
+          {
+            "check": "Bounded scope and exclusions are known",
+            "satisfied": true,
+            "source": "context.unattended.scope names exactly three implementation files; hosting-policy functions remain outside the behavioral change."
+          },
+          {
+            "check": "Testable acceptance and verification plan exist",
+            "satisfied": true,
+            "source": "Existing completion.test.mjs public-function tests and all five context.unattended.implementationChecks are retained in this plan."
+          },
+          {
+            "check": "Dependencies and decision owners are resolved for refinement",
+            "satisfied": true,
+            "source": "No new technical dependency or product choice is needed; the trusted host and separate downstream reviewers retain authority for later continuation."
+          },
+          {
+            "check": "Estimate and concrete affected-surface risk support the FF limit",
+            "satisfied": true,
+            "source": "Two-point small-component behavior anchor; narrower evidence acceptance, preserved hosting semantics and reversible bounded edits satisfy the low-risk criterion in unattended.mjs:41–48."
+          }
+        ]
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "4a76c8bea9e4c5fff41102a6efcffc1085ee68ff947e701cd3984569331cbf87",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "beac30b87f4e345bdeb6e4059cf4a20dc8eeafdb41f4fc4f6e644a569151271c",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "proposalRunId": "4a2b65f206e6f02b980b18ac99ebafe3375b0082a06e60661f607aa2bbf8de6a",
+  "reviewRunId": "4a76c8bea9e4c5fff41102a6efcffc1085ee68ff947e701cd3984569331cbf87",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-42052016478-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478"
+}

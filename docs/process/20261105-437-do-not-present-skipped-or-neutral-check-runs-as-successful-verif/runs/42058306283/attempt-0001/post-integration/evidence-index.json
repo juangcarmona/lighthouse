@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "indexId": "evidence-index",
+  "runId": "fe7cfc9175869efb3861060e8081b3960ec12d22e4f64bbf6fbe2fa3ebc8059b",
+  "repository": "juangcarmona/lighthouse",
+  "revision": "93d4b4a7419d833e26448069e24103df9366cb6a",
+  "records": [
+    {
+      "id": "completion:fe7cfc9175869efb3861060e8081b3960ec12d22e4f64bbf6fbe2fa3ebc8059b",
+      "path": "evidence-record.json",
+      "sha256": "d56115bf1d3907fff3162a7b6db2699ff4af358ceffa99d94c441745fe549e25",
+      "kind": "stage-result",
+      "status": "passed",
+      "subject": {
+        "type": "issue",
+        "id": "https://github.com/juangcarmona/lighthouse/issues/437"
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "subject": {
+        "type": "issue",
+        "id": "https://github.com/juangcarmona/lighthouse/issues/437"
+      },
+      "status": "verified",
+      "evidenceIds": [
+        "completion:fe7cfc9175869efb3861060e8081b3960ec12d22e4f64bbf6fbe2fa3ebc8059b"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "runId": "fe7cfc9175869efb3861060e8081b3960ec12d22e4f64bbf6fbe2fa3ebc8059b",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "review:source-acceptance",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/src/completion.mjs:93-154",
+      "reason": "Source inspection, not a new test execution: observeChecks reserves passed for matching-revision completed success, retains skipped/neutral native state as unavailable, and preserves revision/pending precedence. assertCitedChecks requires successful original and refreshed observations; checkCommit retains separate hosting eligibility semantics. Tests at src/tests/completion.test.mjs:195-271 exercise independent ID/URL selectors and hosting/commit-status controls."
+    },
+    {
+      "id": "implementation:42052016478:1:9b3e58fd7939ec0138413eaf9d783fb78ad4d893f3cc712a251b7a0f5ecb3413:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478/attempts/1",
+      "reason": "Host-verified npm ci --ignore-scripts receipt, exit 0, bound to the accepted candidate. Installation is not behavioral verification; its three low-severity audit warnings are not newly established source defects."
+    },
+    {
+      "id": "implementation:42052016478:1:9b3e58fd7939ec0138413eaf9d783fb78ad4d893f3cc712a251b7a0f5ecb3413:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478/attempts/1",
+      "reason": "Host-verified focused completion command, exit 0; complete retained output reports 37 passed, zero failed and zero skipped. Test source establishes relevant behavioral coverage rather than relying on the green result alone."
+    },
+    {
+      "id": "implementation:42052016478:1:9b3e58fd7939ec0138413eaf9d783fb78ad4d893f3cc712a251b7a0f5ecb3413:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478/attempts/1",
+      "reason": "Host-verified admitted npm run verify command, exit 0. The supplied excerpt is truncated; command success is authenticated, but omitted per-test output is not independently established here. Skipped tests are not counted as executed verification."
+    },
+    {
+      "id": "implementation:42052016478:1:9b3e58fd7939ec0138413eaf9d783fb78ad4d893f3cc712a251b7a0f5ecb3413:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478/attempts/1",
+      "reason": "Host-verified OpenSpec citation verification, exit 0. Retained provider rows cover proposal/design/tasks and current bindings; complete-output summary reports zero errors, warnings, stale, tampered or unresolved citations. Structured rows remain usable despite excerpt truncation."
+    },
+    {
+      "id": "implementation:42052016478:1:9b3e58fd7939ec0138413eaf9d783fb78ad4d893f3cc712a251b7a0f5ecb3413:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478/attempts/1",
+      "reason": "Host-verified pinned OpenSpec strict validation, exit 0; valid issue-437-proposal with skip_specs true. This validates the bounded engineering plan, not new product approval."
+    },
+    {
+      "id": "planning-review:beac30b87f4e345bdeb6e4059cf4a20dc8eeafdb41f4fc4f6e644a569151271c",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478",
+      "reason": "Host-verified retained independent planning review accepted the bound proposal without findings. Configured producer/reviewer models differ; provider-reported settings remain unverified and are not claimed authenticated."
+    },
+    {
+      "id": "candidate-review:a9ed6e09c72e14c3959649b247858428ef251aa96089f78830e73b8010ee270e",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42052016478",
+      "reason": "The host-verified prior integration receipt retains the independent candidate acceptance, passed execution and empty findings. Absence of native PR reviews does not erase this separately retained review."
+    },
+    {
+      "id": "github-check:127348631300",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42057175632/job/127348631300",
+      "reason": "Authenticated repository check concluded success at accepted head aca76608a5ab1df9c3a7ad5d381761cdd677b602. No skipped job is cited as passed."
+    },
+    {
+      "id": "integration:42052016478:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/c9bdd2a3f343ec4e0b97ef0e0a95608466ae392e/docs/process/20261105-437-do-not-present-skipped-or-neutral-check-runs-as-successful-verif/runs/42052016478/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected-branch record and receipt bind PR 445, accepted head, prior explicit merge:true bounded owner delegation and actual merged revision 93d4b4a7419d833e26448069e24103df9366cb6a. Merge is established by this receipt and current merged observation, not by an assessment pass."
+    },
+    {
+      "id": "github-check:127350706603",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42057755839/job/127350706603",
+      "reason": "Authenticated required repository check concluded success at actual merged revision 93d4b4a7419d833e26448069e24103df9366cb6a. Host postMerge also reports adopted ci.yml run 42057755839 passed at that revision."
+    },
+    {
+      "id": "review:guidance-and-finalization",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/completion.md:26-63",
+      "reason": "Compared affected guidance, package version, router pin, plan, source and host finalization observations. The intended passed-review label/closure transition agrees with completionEffects; existing issue labels need not already reflect future publisher effects. Historical planning prose and the intentionally separate pinned harness do not establish active guidance drift."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, evidence and reservation, retain this review on the adopted evidence branch, then apply the declared passed-review labels and issue closure; release the reservation. No new stage or integration is requested.",
+  "output": {
+    "summary": "Accepted delivery review for issue #437 / PR #445. The bounded source correction and production-function controls satisfy the requested evidence distinction while preserving configured hosting eligibility. Retained independent reviews, authorized integration and current merged-revision CI support completion. No unresolved current-stage verification or decision remains.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 437,
+      "pullRequest": 445,
+      "acceptedHead": "aca76608a5ab1df9c3a7ad5d381761cdd677b602",
+      "mergedRevision": "93d4b4a7419d833e26448069e24103df9366cb6a",
+      "taskDigest": "79c7c7efe71c42672c4aad940d2692d4b05b8bd03c8fad0c6cc5d28511de047d",
+      "policyFingerprint": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "changedPathsFingerprint": "74ee0f5317cae1790422e8874fc4fde481d109b20d289b1c45d5fc099ff3c695",
+      "dispatchRequestId": "27c2183f0ace8305c4ca167278a103ef2bfafcbb2d56f6cf8fa0a54f05b6bd2a",
+      "provenance": "Host-supplied authenticated delivery identity; no independent git or API authentication is claimed. Current review authorization has merge:false; only the retained earlier authorization permitted the observed integration."
+    },
+    "acceptance": [
+      {
+        "criterion": "Skipped/neutral cannot support passed citations through native ID or URL; actual success remains citable.",
+        "decision": "satisfied",
+        "basis": "completion.mjs:107-118 and completion.test.mjs:202-232. Independent selectors exercise original, refreshed and reversed observations through production functions, not fabricated projected statuses."
+      },
+      {
+        "criterion": "Pending, failed, wrong-revision, missing and commit-status behavior remains distinct.",
+        "decision": "satisfied",
+        "basis": "completion.test.mjs:211-231,255-286 covers queued/in-progress, failed conclusions, wrong-revision success/skipped/neutral, disappearance, unauthenticated IDs, latest commit statuses and current-workflow exclusion."
+      },
+      {
+        "criterion": "Preserve hosting policy and optional-job non-gating behavior.",
+        "decision": "satisfied",
+        "basis": "completion.mjs:122-154 retains success/neutral/skipped required-check eligibility. completion.test.mjs:235-252 authenticates fake required workflow origins and contrasts policy eligibility with unavailable observed evidence. Host policy requires only repository from app 15368."
+      },
+      {
+        "criterion": "Bounded scope, patch metadata and engineering plan.",
+        "decision": "satisfied",
+        "basis": "The host changed-path inventory contains only completion.mjs, completion.test.mjs, the named patch changeset and four issue-437 plan files. The changeset targets @juangcarmona/lighthouse-sdlc. No workflow, permission, required-policy configuration or product model file is in the accepted inventory."
+      },
+      {
+        "criterion": "Actual commands, independent review, authorized integration and post-merge review.",
+        "decision": "satisfied for this review",
+        "basis": "All five host-bound command receipts succeeded; retained plan and candidate reviews accepted; priorIntegration proves the authorized merge; adopted ci.yml and required repository check passed at the merged SHA. Publication of this review is still a future host action."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "summary": "Verification evidence had conflated GitHub hosting eligibility with successful execution. The delivered observation projection now distinguishes them.",
+        "owner": "SDLC package maintainer (juangcarmona)",
+        "followUpReference": "Issue #437 / PR #445; src/tests/completion.test.mjs:204-252",
+        "disposition": "Closed for source delivery by the inspected correction, focused command receipt and retained independent candidate acceptance. No new source defect was established."
+      },
+      {
+        "id": "F2",
+        "classification": "deferred",
+        "kind": "process-documentation-gap",
+        "summary": "tasks.md:5,13-26 uses ephemeral workspace receipt references and names base 9a130d0c6c2c296a9480ef3d0d5db61e76c99419, without explaining its relationship to the host receipt's producer source/baseline a418f5de98fdae7bb22de1a7d9d26d1c6ac32b39 and accepted candidate.",
+        "owner": "SDLC evidence/documentation maintainer (juangcarmona)",
+        "followUpReference": "This review F2; openspec/changes/issue-437-proposal/tasks.md:5-26; completion.implementationEvidence.binding/publication",
+        "disposition": "Non-blocking review recommendation, not an owner-approved policy change. The host independently authenticates the tested/published tree, all admitted command results and unchanged shared verification inputs. The documentary ambiguity does not invalidate those bindings or establish a failed check. Improve future report references through a separately reviewed change; do not rewrite historical evidence here."
+      },
+      {
+        "id": "F3",
+        "classification": "rejected",
+        "kind": "deployment-inference",
+        "summary": "Skipped observations still labeled passed in this input do not demonstrate that the newly merged source correction failed.",
+        "owner": "Workflow adoption/release maintainer (juangcarmona)",
+        "followUpReference": ".github/workflows/lighthouse-sdlc-router.yml:95-99; src/packages/sdlc/README.md:5-7,68-84; this review F3",
+        "disposition": "The workflow and host harness use pin ccfc63822ef4764957b49604b534207080315bc4, separate from the delivered source. The plan explicitly excludes pin/version edits. Package/source integration does not prove workflow adoption; this intentional separation is not guidance drift or a new acceptance gate. No skipped observation is used as passed evidence in this result."
+      }
+    ],
+    "guidanceReview": {
+      "inspected": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:62-78",
+        "src/packages/sdlc/README.md:5-7,48-84,101,123",
+        "src/packages/sdlc/completion.md:20-63",
+        "src/packages/sdlc/unattended.md:5-11,35-59",
+        "docs/architecture/08-crosscutting-concepts/README.md:53-61,80-84",
+        "openspec/changes/issue-437-proposal/proposal.md",
+        "openspec/changes/issue-437-proposal/design.md",
+        "openspec/changes/issue-437-proposal/tasks.md"
+      ],
+      "conclusion": "No stale active instruction or product/architecture conflict established. The design's pre-change context and proposal's planned commands are historical plan text, not fresh receipts. F2 records task-record traceability ambiguity separately. Package version remains 0.20.6 and a patch changeset is present; no release or deployed runtime behavior is inferred.",
+      "productContext": "Read the host ProductShape index and relevant BR-FAIL-CLOSED, FR-CHANGE-EVIDENCE and FR-FAST-FORWARD-DELIVERY reports, plus canonical evidence texts. Existing draft artifacts supply context, not new approval. The correction preserves explicit evidence states and authority boundaries; no Product Change or architecture follow-up is established."
+    },
+    "excludedVerification": {
+      "reason": "Raw skipped outcomes are unavailable successful-execution evidence even though the older host projection labels them passed. They are optional or routing observations, not additional policy gates.",
+      "evidenceIds": [
+        "github-check:127349825742",
+        "github-check:127348634086",
+        "github-check:127352039748",
+        "github-check:127352039742",
+        "github-check:127351917863",
+        "github-check:127351571512",
+        "github-check:127351495136",
+        "github-check:127351494547",
+        "github-check:127351494473",
+        "github-check:127350709176"
+      ]
+    },
+    "limits": [
+      "No commands or tests were executed by this review engine; executed results cited above are supplied host-verified receipts. CodeGraph returned no symbol match and its context query was unavailable; direct source inspection supplied context. This is not an unavailable product check.",
+      "tasks.md reports regression-before.json failed on three new controls before the fix, but that RED receipt is not included among the authenticated command observations. Historical RED execution is therefore reported, not independently verified here. This FF review relies on inspected behavioral controls, authenticated candidate execution and retained independent acceptance, not an invented RED receipt.",
+      "The full repository test totals of 797 passed and nine skipped are reported in PR/task prose; the authenticated verify command succeeded, but its supplied excerpt omits the final totals. The complete focused receipt independently establishes 37 passed completion tests.",
+      "Configured distinct review models are retained; actual provider-reported settings, attention time and costs are unknown. No claim of provider-authenticated model identity is made.",
+      "The historical #390 artifact was not retrieved. This is one tracked projection defect; neither its appearances nor retries establish recurrence across independent work items.",
+      "The npm installation output reports three low-severity audit warnings without dependency/advisory details. Their introduction, exploitability and resolution are not established; no dependency investigation or policy change was performed.",
+      "No release, deployment, workflow-pin adoption, issue closure or current review publication has been performed by this engine. They are not implied by the prior merge receipt or this assessment."
+    ],
+    "finalization": {
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true,
+        "pullRequestLabels": "preserve"
+      },
+      "executor": "Trusted publisher after current-stage validation and fresh authority/evidence/reservation checks",
+      "reservation": "Host cleanup releases agent-working for every outcome. No engine-side label or GitHub write occurred.",
+      "basis": "completion.finalization and completion.mjs:156-158 agree with completion.md:38. An open issue bearing pr-ready before publication is expected, not a blocker."
+    },
+    "retrospective": "## What went well\n- The correction stays at the evidence projection boundary. Independent ID/URL controls cover original and refreshed observations, and hosting controls preserve the deliberately different merge semantics (completion.mjs:107-153; completion.test.mjs:204-271).\n- Five authenticated command receipts, retained independent planning/candidate acceptance, a protected-branch merge receipt and successful merged-revision CI provide distinct evidence rather than one generic green signal.\n\n## What went wrong\n- F1: skipped/neutral conclusions had been presented as successful verification; #437 / #445 fixes that source defect. No additional source defect was established.\n- F2: tasks.md:5-26 points at workspace receipts and a base whose relationship to the authenticated delivery binding is unexplained. This is a non-blocking traceability gap, not failed verification. The historical RED receipt is not independently available in this review input.\n\n## Start doing\n- SDLC maintainer: distinguish working-tree base, producer source and published candidate in task summaries, and reference the retained delivery record instead of relying on ephemeral paths. Preserve unknown historical evidence explicitly.\n\n## Stop doing\n- Evidence consumers: do not treat skipped jobs as executed verification or package/source integration as proof that a separately pinned workflow adopted the change. The present old-pin observations are not a newly demonstrated source regression (F3).\n\n## Improvement candidates\n1. **Retain the boundary controls already delivered — owner: SDLC package maintainer.** Observed failure: hosting acceptance leaked into verification evidence (F1). Smallest guard: the existing production-function ID/URL matrix and contrasting hosting test. Reproduction: run those controls against the old projection before checking the corrected projection. tasks.md:14 reports the failing baseline, but its RED receipt is not independently supplied here; authenticated candidate tests pass 37/37. No new guard or permission is proposed.\n2. **Improve task-record provenance — owner: SDLC evidence/documentation maintainer (juangcarmona), follow-up: F2 in this retained review.** Evidence: tasks.md:5,13-26 versus completion.implementationEvidence.binding/publication. Smallest useful guard candidate: render clearly named source/base/candidate references from host receipt metadata and retain a durable evidence link. First reproduce the current ambiguous summary with that fixture; then require separate review and a regression proving the corrected summary preserves each distinct identity and its evidence reference. This proposal is unimplemented and unverified; it creates no new acceptance gate.\n\n## Continuity\nNo recurrence across independent work items is established; repeated observations or retries of this projection defect are not independent incidents. No product/architecture change, new issue, new stage, policy edit or merge permission is requested. Current publication and final labels remain publisher actions; release and workflow adoption remain separately authorized."
+  }
+}
