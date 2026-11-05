@@ -772,3 +772,22 @@ test('an old unattended installation must declare verification inputs before exe
     assert.equal(f.writes.length, 0);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
+
+test('RED prerequisite stops retain the concrete unavailable check or human decision without repair or publication', async t => {
+  for (const [field, reason] of [['unavailableChecks', 'Required isolated service receipt is unavailable'], ['pendingReview', 'Maintainer must decide the target retention policy']]) await t.test(field, async () => {
+    const f = await fixture(), execute = f.execute;
+    f.execute = async options => {
+      const result = await execute(options);
+      if (options.context.hotfix) { result.envelope.result.status = 'blocked'; result.envelope.result[field] = [reason]; }
+      return result;
+    };
+    try {
+      const result = await runGithubUnattended(f);
+      assert.equal(result.status, 'blocked');
+      assert.ok(result.reason.includes(reason), result.reason);
+      assert.deepEqual(f.executions.map(e => e.request.stage), ['triage', 'integrate', 'implement']);
+      assert.equal(f.writes.filter(w => w.path === 'pulls').length, 0);
+      assert.ok(!f.labels.includes('agent-working'));
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+});
