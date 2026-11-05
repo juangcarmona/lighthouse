@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "ed01977f0c8c2343b0311fbf213db6a00604de51fc211539dd37ed2655411a6e",
+  "archiveSha256": "9eea5d73016dce6d516f1fa8bb7611fe861ab801e294d78b453fbb1e3b4c0263",
   "failedPilots": [
     {
       "issue": 389,
@@ -76,6 +76,13 @@
       "outcome": "Automatic plan correction accepted at round 1; all four independent host commands passed with authentic v2 receipts; semantic candidate accept rejected for malformed stage evidence. No PR.",
       "publication": "none",
       "correction": "#418 host-owned review envelope; #419 bounded whole-file artifact reads"
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41968229630",
+      "outcome": "Refinement and proposal passed; OpenCode denied the newly named review output file, leaving the host template blocked. A semantic verdict in stdout was correctly not accepted. No implementation or PR.",
+      "publication": "none",
+      "correction": "#418 reuses the existing allowlisted engine output path; actual OpenCode controls reject weakened tests and accept correct repair."
     }
   ],
   "correction407": {
@@ -105,7 +112,16 @@
     "scope": "Registry bootstrap at recorded cold-clone revision; published baseline upgrade/rollback separately qualified in publishedUpgrade216; final native delivery pending.",
     "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored",
     "configurationRevision": "43df7fb50bdc05dc5af67ffb75845e846671524a",
-    "configurationChange": "Narrow invalid shared OpenSpec scope; future execution gets exact per-issue grants. Baseline cold-clone evidence remains bound to the earlier revision."
+    "configurationChange": "Narrow invalid shared OpenSpec scope; future execution gets exact per-issue grants. Baseline cold-clone evidence remains bound to the earlier revision.",
+    "currentConfigurationColdClone": {
+      "revision": "43df7fb50bdc05dc5af67ffb75845e846671524a",
+      "noPreinstalledDependencies": true,
+      "registryOnly": true,
+      "preservedCustomizations": 44,
+      "trackedDiff": "",
+      "scope": "Current baseline package/configuration bootstrap; final tuple/native delivery pending",
+      "artifacts": "current-cold-clone-216/"
+    }
   },
   "correction410": {
     "testedSourceSha256": {
@@ -267,5 +283,31 @@
     },
     "originalArchiveUnchanged": true,
     "scope": "Host-owned verdict protocol and bounded canonical JSON reader; fresh native execution pending."
+  },
+  "correction418Transport": {
+    "codeRevision": "7917a0559f0ed311bf7525fd5e860c3505109eb8",
+    "outputPath": "/output/envelope.json",
+    "operatorPermissionExpansion": false,
+    "actualEngine": "OpenCode with the existing operator image/configuration and tool policies",
+    "actualVerdicts": {
+      "weakenedTests": "request-changes",
+      "correctRepair": "accept"
+    },
+    "controlScope": "Disposable fixture with synthetic host execution identity; not native whole-delivery acceptance",
+    "realDockerControls": 20,
+    "fullVerification": {
+      "passed": 733,
+      "optionalSkipped": 9,
+      "siteFiles": 136
+    },
+    "artifacts": "engine-output-qualification/"
+  },
+  "correction421": {
+    "codeRevision": "7917a0559f0ed311bf7525fd5e860c3505109eb8",
+    "redValidForms": 3,
+    "focusedTestsPassed": 85,
+    "guards": "Changed, duplicate and missing metadata remain rejected; current bindings preserved.",
+    "originalPlanReconstruction": "Exact fourth-native accepted plan files preserved; no fabricated whole-run or post-merge acceptance",
+    "nativeReaderAcceptance": "pending"
   }
 }
