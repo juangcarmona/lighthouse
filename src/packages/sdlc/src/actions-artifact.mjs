@@ -4,7 +4,7 @@ import { readZipJson } from './zip-json.mjs';
 function transientDownload(error) {
   if (!Number.isInteger(error?.status) || error.status <= 0 || error.signal || error.killed || error.code) return false;
   const stderr = Buffer.isBuffer(error.stderr) ? error.stderr.toString('utf8') : error.stderr;
-  return typeof stderr === 'string' && /^gh: [^\r\n]+ \(HTTP (502|503|504)\)$/.test(stderr.trim())
+  return typeof stderr === 'string' && /^gh: (?:HTTP (?:502|503|504)|[^\r\n]+ \(HTTP (?:502|503|504)\))$/.test(stderr.trim())
     && (stderr.match(/\bHTTP\b/g) ?? []).length === 1;
 }
 
