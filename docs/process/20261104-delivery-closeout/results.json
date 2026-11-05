@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "9eea5d73016dce6d516f1fa8bb7611fe861ab801e294d78b453fbb1e3b4c0263",
+  "archiveSha256": "327b107b10d53829dd0afd1a68b4f205b3e6331dc73b51f207e606924a769848",
   "failedPilots": [
     {
       "issue": 389,
@@ -83,6 +83,14 @@
       "outcome": "Refinement and proposal passed; OpenCode denied the newly named review output file, leaving the host template blocked. A semantic verdict in stdout was correctly not accepted. No implementation or PR.",
       "publication": "none",
       "correction": "#418 reuses the existing allowlisted engine output path; actual OpenCode controls reject weakened tests and accept correct repair."
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41970774426",
+      "outcome": "Both independent reviews accepted and four authentic host commands passed; dispatched CI was green but ineligible for required PR rules. No merge.",
+      "publication": "https://github.com/juangcarmona/lighthouse/pull/423",
+      "correction": "#424 authenticates workflow events; #425 supplies a separate eligible CI trigger.",
+      "canonical": "native-sixth-390/canonical.zip"
     }
   ],
   "correction407": {
@@ -300,7 +308,14 @@
       "optionalSkipped": 9,
       "siteFiles": 136
     },
-    "artifacts": "engine-output-qualification/"
+    "artifacts": "engine-output-qualification/",
+    "nativeReviews": {
+      "run": 41970774426,
+      "plan": "accept",
+      "candidate": "accept",
+      "cleanup": "clean",
+      "scope": "Protocol acceptance only; whole delivery blocked at forge CI"
+    }
   },
   "correction421": {
     "codeRevision": "7917a0559f0ed311bf7525fd5e860c3505109eb8",
@@ -309,5 +324,49 @@
     "guards": "Changed, duplicate and missing metadata remain rejected; current bindings preserved.",
     "originalPlanReconstruction": "Exact fourth-native accepted plan files preserved; no fabricated whole-run or post-merge acceptance",
     "nativeReaderAcceptance": "pending"
+  },
+  "ciOrigin424": {
+    "documentedConstraint": "Workflow-job checks from workflow_dispatch do not satisfy required PR rules.",
+    "before": "passed",
+    "after": "unavailable: ineligible-event",
+    "nativeHeadRun": 41974442487,
+    "operatorMergeCandidateRuns": [
+      41975645715,
+      41976184876
+    ],
+    "normalMergeAttempts": "Both rejected with HTTP405: Required status check repository is expected; rules unchanged.",
+    "fullVerification": {
+      "passed": 738,
+      "optionalSkipped": 9,
+      "siteFiles": 136
+    },
+    "artifacts": "ci-origin-qualification/",
+    "eligibleTrigger": "#425 pending"
+  },
+  "approvedProduct211": {
+    "approvalComment": 6650528593,
+    "approvedHead": "6df8bc075bbb70e3c7383198c654f3af0bc7adf3",
+    "applyRun": 41974431671,
+    "appliedHead": "4ef517b20a6791fd107c52562098f1246376edf2",
+    "automaticResumeRouter": 41974881446,
+    "resumedRefineRun": 41974989257,
+    "automaticImplementationRouter": 41975952686,
+    "implementationRun": 41976153248,
+    "samePullRequest": 126,
+    "implementedHead": "d29b3c5aa796799e8185837739c7643bc1c85bbf",
+    "independentHostChecks": 2,
+    "cleanup": "clean",
+    "canonicalMain": "ce30891357a60d9c852004fb7597518feff07823",
+    "merge": "not performed",
+    "scope": "Controlled installed-adopter approval/apply/resume; not a clean FF pilot",
+    "artifacts": "approved-product-apply-211/"
+  },
+  "ideaEntry184": {
+    "run": 41908997623,
+    "issue": 124,
+    "entry": "idea",
+    "outcome": "aligned",
+    "implementation": "not authorized or dispatched",
+    "scope": "Honest no-delta idea entry; the worker did not manufacture a Product Change."
   }
 }
