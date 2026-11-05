@@ -110,6 +110,27 @@ test('native adapter connects triage, independent planning, RED, repair, review 
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
+test('planning sees admitted command inventory and escalation reports actual missing evidence', async () => {
+  const f = await fixture(), execute = f.execute;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.worker === 'independent-review' && options.context.review.purpose === 'candidate') {
+      result.envelope.result.status = 'blocked';
+      result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'escalate', findings: ['The host grant lacks npm run verify; maintainer must align the admitted command inventory.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.deepEqual(f.executions[0].context.unattended.implementationChecks, [['node', '--test', 'tests/edge.test.mjs']]);
+    for (const value of f.executions.filter(e => e.request.stage === 'implement')) assert.deepEqual(value.context.unattended.implementationChecks, value.request.implementation.policy.checks);
+    assert.match(f.comments.at(-1).body, /host grant lacks npm run verify/);
+    assert.ok(!f.comments.at(-1).body.includes('requires a human decision'));
+    assert.ok(!f.writes.some(w => w.path === 'pulls'));
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test('published unattended candidates remain compatible with existing CI PR reconciliation', async () => {
   const f = await fixture();
   try {

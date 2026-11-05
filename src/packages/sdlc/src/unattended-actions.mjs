@@ -138,10 +138,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     await recheck();
     const request = { repository, runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
       ...(stage === 'implement' ? { implementation: { ...implementation, policy: selectedPolicy } } : {}) };
-    const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths }, ...extra };
+    const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');
     const result = await execute({ env, root, request, source: working, context,
-      prompt: text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal });
+      prompt: 'Use context.unattended.implementationChecks to plan verification; this admitted inventory is not an execution receipt. Keep additional agent observations and later forge CI explicit. ' + text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal });
     if (result.runtime.execution?.status !== 'passed') throw Error('Host cannot verify completed model execution');
     if (stage === 'implement' && (!Array.isArray(result.receipt?.checks) || result.receipt.checks.length !== selectedPolicy.checks.length || result.receipt.checks.some((check, index) => JSON.stringify(check.command) !== JSON.stringify(selectedPolicy.checks[index]) || !Number.isInteger(check.exitCode) || check.exitCode === 0 && check.execution?.status !== 'passed'))) throw Error('Required host check inventory is unavailable or differs from the admitted policy');
     if (worker === 'independent-review' && result.runtime.model !== reviewer.model || stage === 'implement' && result.runtime.model !== producer.model) throw Error('Operator model selection changed during delivery');

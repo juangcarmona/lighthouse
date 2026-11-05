@@ -10,9 +10,17 @@
     "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
     "siteBuildAndVerification": "passed on exact executor image",
     "independentChecks": "4 passed on exact executor image",
-    "cleanup": "clean"
+    "cleanup": "clean",
+    "nativeAgentBuild": {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41938501442",
+      "phase": "a59d40404456f0e39a5f16a7a0d26a0ae73e82be64b00e466b9489b4c690d9a1",
+      "receipt": "evidence/agent/commands/verify-03.json",
+      "exitCode": 0,
+      "site": "136 files verified; host admitted checks passed; resource cleanup clean",
+      "scope": "actual agent command observation, additional to the four independent container checks"
+    }
   },
-  "archiveSha256": "8aee04d28e7290eb29f2a3a592c8e40088e3b4ceb7b979ce95c230e7c347a1bd",
+  "archiveSha256": "c2f8df5dea76a5166f6f9407b74e43354f22b87b6a02e2118e1974b02a2a0353",
   "failedPilots": [
     {
       "issue": 389,
@@ -25,6 +33,13 @@
       "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41936010763",
       "outcome": "independent planning review returned a mismatched result identity; no implementation or PR",
       "rejectedOutput": "unavailable in original artifact; corrected retention in #407"
+    },
+    {
+      "issue": 389,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41938501442",
+      "outcome": "host checks and native build passed; review escalated because admitted host commands omitted planned full verification and six-file compatibility",
+      "publication": "none",
+      "correction": "#410 and aligned owner-controlled #389 grant"
     }
   ],
   "correction407": {
@@ -34,7 +49,13 @@
     },
     "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
     "adapterRegression": "original adapter fails all three review controls; corrected adapter passes 14 tests with real containers",
-    "validation": "untouched review remains blocked; stale identity rejected; redacted diagnostic and events retained"
+    "validation": "untouched review remains blocked; stale identity rejected; redacted diagnostic and events retained",
+    "nativeReview": {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41938501442",
+      "reviewRunId": "9c543a249d03c9bcbd1c24781b683f5c11c4f737dd7c2183f128298cfad3f0a7",
+      "result": "accepted with exact admitted identity and binding; cleanup clean",
+      "scope": "independent planning review qualified; complete #389 attempt subsequently blocked on its host-check inventory"
+    }
   },
   "consumer216": {
     "repository": "juangcarmona/lighthouse-published-consumer-20261104",
@@ -45,6 +66,16 @@
       "ui": "0.2.0"
     },
     "coldClone": "passed; no preinstalled dependencies; 44 customization hashes preserved; no tracked diff",
-    "scope": "bootstrap only; native delivery, upgrade and rollback pending"
+    "scope": "bootstrap only; native delivery, upgrade and rollback pending",
+    "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored"
+  },
+  "correction410": {
+    "testedSourceSha256": {
+      "unattended.mjs": "2f2ee71eda45b7926c4fe89728eefe4ae36d4cbe20fdfcb4f2a75201493a5ac4",
+      "unattended-actions.mjs": "b77b610f62da15305dff53990e4cb87b304cabc5438cecf56b56f6f5f7cbfea3"
+    },
+    "focusedRegressions": "46 passed; both new controls failed before correction",
+    "grant389": "independent six-file compatibility and complete repository verification now admitted",
+    "nativeRollout": "pending"
   }
 }
