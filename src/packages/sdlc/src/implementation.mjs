@@ -37,6 +37,7 @@ export async function loadImplementation(api, issue, owner, revision, defaultBra
   }
   const planCheck = ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', changeName(issue), '--strict', '--no-interactive'];
   policy = validateImplementationPolicy(policy, issue);
+  if (route === 'epic') policy = validateImplementationPolicy({ ...policy, paths: [...new Set([...policy.paths, `${proposalRoot(issue)}/`])] }, issue);
   policy = { ...policy, checks: [...policy.checks, ...(route === 'hotfix' ? [] : [planCheck])] };
   const environmentFile = await api(`contents/.lighthouse/environment.json?ref=${revision}`, 'GET', undefined, true);
   const environment = environmentFile ? validateEnvironment(JSON.parse(Buffer.from(environmentFile.content, 'base64').toString())) : null;

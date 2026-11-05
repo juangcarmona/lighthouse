@@ -547,7 +547,7 @@ async function main(command) {
       }
       if (issue.labels.some(x => x.name === 'future')) throw Error('Implementation paused by future label');
       if (issue.user.login !== owner && !handoff && !implementationReview && !productResume) await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: epicImplementation || alignedPr ? baseRevision : revision.sha, taskDigest: taskDigest(issue, answers) });
-      implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch);
+      implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch, epicImplementation ? 'epic' : null);
       seed = implementationReview || alignedPr ? null : await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');
       if (pulls.length >= 100 || pulls.some(pr => pr.number !== (implementationReview?.number ?? productResume?.pullRequest ?? alignedPr?.number) && pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Review the existing implementation PR before requesting another');
@@ -861,7 +861,7 @@ async function main(command) {
             checkProposal(await api(`pulls/${snapshot.planningReference.number}`), repo, snapshot.planningReference);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.planningReference.number, owner))) !== snapshot.planningReference.threadDigest) throw Error('Proposal feedback changed');
           }
-          const fresh = await loadImplementation(api, issueNumber, owner, snapshot.baseRevision ?? snapshot.sourceRevision, repository.default_branch);
+          const fresh = await loadImplementation(api, issueNumber, owner, snapshot.baseRevision ?? snapshot.sourceRevision, repository.default_branch, snapshot.epic ? 'epic' : null);
           if (JSON.stringify(fresh) !== JSON.stringify(snapshot.implementation)) throw Error('Implementation authority changed');
           const pulls = await api('pulls?state=open&per_page=100');
           if (snapshot.productResume) checkProductResumePullRequest(await api(`pulls/${snapshot.productResume.pullRequest}`), repo, snapshot.productResume);

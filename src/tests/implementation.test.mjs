@@ -28,6 +28,19 @@ test('policy and change boundaries reject traversal, control files, changed plan
   assert.throws(() => validateChanges([{ ...change, content: Buffer.from('ghp_' + 'a'.repeat(30)).toString('base64') }], policy), /Credential-shaped content rejected in src\/app\.js/);
   assert.throws(() => validateImplementationPolicy({ ...policy, checks: [] }, 18));
 });
+
+test('authenticated epic delivery adds only its own planning root to a narrow standing policy', async () => {
+  const defaults = { scope: 'Deliver this child and its own OpenSpec plan', paths: ['src/'], checks: [['npm', 'test']], reviewRequired: false };
+  const api = async path => path.startsWith('contents/.lighthouse/implement.json') ? { content: Buffer.from(JSON.stringify({ defaults })).toString('base64') } : null;
+  const load = mode => loadImplementation(api, 18, 'owner', 'revision', 'main', mode);
+  const child = await load('epic'), current = await load('epic'), regular = await load(null);
+  assert.deepEqual(child, current, 'publication must reconstruct the same exact authority');
+  assert.deepEqual(child.policy.paths, ['src/', 'openspec/changes/issue-18-proposal/']);
+  const change = path => [{ path, mode: '100644', content: Buffer.from('# Plan\n').toString('base64') }];
+  validateChanges(change('openspec/changes/issue-18-proposal/tasks.md'), child.policy);
+  for (const path of ['openspec/changes/issue-19-proposal/tasks.md', '.lighthouse/implement.json', 'docs/architecture/design.md']) assert.throws(() => validateChanges(change(path), child.policy), /out-of-scope/);
+  assert.throws(() => validateChanges(change('openspec/changes/issue-18-proposal/tasks.md'), regular.policy), /out-of-scope/);
+});
 test('redaction fixtures remain publishable without exempting test files from credential checks', async () => {
   const content = await readFile(new URL('./opencode-execute.test.mjs', import.meta.url));
   assert.doesNotThrow(() => validateChanges([{ ...change, path: 'src/tests/opencode-execute.test.mjs', content: content.toString('base64') }], policy));
