@@ -1,4 +1,5 @@
 import { signalCiRepair } from './ci-repair.mjs';
+import { verificationPush } from './ci-subject.mjs';
 import { readFile } from 'node:fs/promises';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { authorizedCiCallback, draftIntentMarker, isCurrentPullRequestEvent, pendingDraftIntent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
@@ -39,7 +40,7 @@ async function main() {
   const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
   if (profile.repository !== repo) throw Error('Repository profile differs from the event');
   let candidates = [];
-  const ciCallback = env.GITHUB_EVENT_NAME === 'workflow_dispatch' && env.LIGHTHOUSE_CI_RECONCILE === 'true';
+  const ciCallback = ['workflow_dispatch', 'push'].includes(env.GITHUB_EVENT_NAME) && env.LIGHTHOUSE_CI_RECONCILE === 'true';
   if (env.GITHUB_EVENT_NAME === 'pull_request') {
     if (env.GITHUB_ACTOR !== owner || !['ready_for_review', 'converted_to_draft', 'closed', 'reopened'].includes(event.action)) return;
     candidates = [event.pull_request?.number];
@@ -60,7 +61,7 @@ async function main() {
     if (!authorizedCiCallback(run, { id, sha: env.GITHUB_SHA, repo, workflows: profile.completion?.postMergeWorkflows })) return;
     const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
     if (pulls.length >= 100) throw Error('PR lookup exceeds bound');
-    candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
+    candidates = pulls.filter(pr => pr.head?.sha === run.head_sha && (run.event !== 'push' || verificationPush(run, pr.number))).map(pr => pr.number);
   } else return;
   for (const number of candidates) {
     if (!Number.isSafeInteger(number)) continue;

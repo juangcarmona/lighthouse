@@ -51,6 +51,19 @@ test('failed adopted CI uses the authenticated original grant and existing corre
   assert.equal(ciRepairKey(route.implementationReview), ciRepairKey({ ...route.implementationReview, id: 456 }));
 });
 
+test('verification push repair is bound to its PR and cannot revive an older dispatched failure', async () => {
+  const pushed = fixture();
+  Object.assign(pushed.state.run, { event: 'push', head_branch: `lighthouse/verification-60-${head}` });
+  assert.equal((await pushed.call()).worker, 'apply-review');
+  pushed.state.runs = [pushed.state.run, { ...pushed.state.run, id: 124, event: 'workflow_dispatch', head_branch: pushed.state.pr.head.ref, conclusion: 'success' }];
+  assert.equal((await pushed.call()).worker, 'apply-review');
+  pushed.state.run.head_branch = `lighthouse/verification-61-${head}`;
+  assert.equal(await pushed.call(), null);
+  const newer = fixture();
+  newer.state.runs = [newer.state.run, { ...newer.state.run, id: 124, event: 'push', head_branch: `lighthouse/verification-60-${head}`, conclusion: 'success' }];
+  assert.equal(await newer.call(), null);
+});
+
 test('unrelated, stale, fork and unsupported runs never authorize repair', async () => {
   for (const delta of [{ repository: { full_name: 'fork/repo' } }, { conclusion: 'cancelled' }, { event: 'pull_request_target' }, { head_sha: base }, { head_branch: 'main' }, { path: '.github/workflows/other.yml' }]) {
     const { state, call } = fixture(); Object.assign(state.run, delta); assert.equal(await call(), null);
