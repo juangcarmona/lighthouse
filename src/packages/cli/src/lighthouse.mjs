@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { access, chmod, lstat, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { access, chmod, lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { constants, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
@@ -780,6 +780,17 @@ function printInitializationPlan(plan, result, format) {
   console.log('  default is dry-run; apply only after review with --apply');
 }
 
+async function activateInstalledHooks() {
+  const repository = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' });
+  // Git discovery in a nested target must never configure its parent repository.
+  if (repository.status !== 0 || await realpath(repository.stdout.trim()) !== await realpath(root)) return;
+  const configured = spawnSync('git', ['config', '--get', 'core.hooksPath'], { cwd: root, encoding: 'utf8' });
+  // Exit 1 means absent; success includes explicitly empty and inherited settings.
+  if (configured.status === 1) {
+    execFileSync('git', ['config', '--local', 'core.hooksPath', '.husky'], { cwd: root, stdio: 'ignore' });
+  }
+}
+
 async function initializeFromPlan(args, planFile) {
   const plan = await readInitPlan(planFile);
   const format = formatFromArgs(args);
@@ -825,6 +836,7 @@ async function initializeFromPlan(args, planFile) {
   }
   for (const operation of initialization.plan.operations.filter(item => item.content === '')) await writeFile(resolve(root, operation.path), '', { flag: 'wx' });
   await writeUpgradeState(manifest, null, files);
+  await activateInstalledHooks();
   console.log(`Initialized ${manifest.product} from the semantic plan. Run lighthouse verify.`);
 }
 
@@ -951,10 +963,7 @@ async function initialize(args) {
   }
   for (const operation of plan.operations.filter(item => item.content === '')) await writeFile(resolve(root, operation.path), '', { flag: 'wx' });
   await writeUpgradeState(manifest, null, files);
-  try {
-    const configured = execFileSync('git', ['config', '--get', 'core.hooksPath'], { cwd: root, encoding: 'utf8' }).trim();
-    if (!configured) execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: root, stdio: 'ignore' });
-  } catch { /* A non-git target can adopt the hooks when it creates its repository. */ }
+  await activateInstalledHooks();
   console.log(`Initialized ${manifest.product}. Review lighthouse.json and the managed guardrails, then run lighthouse verify.`);
 }
 
