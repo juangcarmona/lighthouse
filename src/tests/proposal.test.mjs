@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
-import { checkRefinement, validateProposalFiles, prepareProposal, createProposalPullRequest } from '../packages/sdlc/src/proposal.mjs';
+import { checkRefinement, validateProposalFiles, prepareProposal, proposalValidationFailure, createProposalPullRequest } from '../packages/sdlc/src/proposal.mjs';
 import { validateStageEnvelope } from '../packages/sdlc/src/host-contract.mjs';
 import { routeIssue } from '../packages/sdlc/src/issue-actions.mjs';
 
@@ -13,6 +13,31 @@ const files = [
   { path: `${root}/tasks.md`, content: '# Tasks\n\n## 1. Static talk\n\n- [ ] 1.1 Build the talk from public dependencies.\n- [ ] 1.2 Check direct navigation and keyboard access.\n' },
   { path: `${root}/specs/static-talk/spec.md`, content: '## ADDED Requirements\n\n### Requirement: Public static build\nThe talk SHALL build using public dependencies without credentials.\n\n#### Scenario: Clean CI build\n- **WHEN** CI builds a fresh checkout without credentials\n- **THEN** the static talk is available in the output\n' },
 ];
+
+test('only the matching deterministic OpenSpec JSON rejection is eligible for bounded plan repair', () => {
+  const report = { version: '1.0', items: [{ id: 'issue-18-proposal', type: 'change', valid: false, issues: [{ level: 'WARNING', path: 'static-talk/spec.md', message: 'Split the overlong requirement' }] }], summary: { totals: { items: 1, passed: 0, failed: 1 } } };
+  const rejection = value => Object.assign(Error('Provider validation rejected the plan'), { code: 1, stdout: JSON.stringify(value) });
+  const output = rejection(report).stdout;
+  assert.deepEqual(proposalValidationFailure(rejection(report), 18), { provider: '@fission-ai/openspec@1.15.0', status: 'failed', findings: ['static-talk/spec.md: Split the overlong requirement'], output });
+  for (const patch of [{ code: 2 }, { code: 'ETIMEDOUT' }, { signal: 'SIGTERM' }, { killed: true }, { stdout: 'npm error unavailable' }, { stdout: 'x'.repeat(65537) }]) assert.equal(proposalValidationFailure(Object.assign(rejection(report), patch), 18), null);
+  for (const mutate of [x => { x.items[0].id = 'another-change'; }, x => { x.items[0].valid = true; }, x => { x.items[0].type = 'spec'; }, x => { x.summary.totals.failed = 0; }, x => { x.items[0].issues = []; }, x => { x.items[0].issues[0].level = 'UNKNOWN'; }]) {
+    const changed = structuredClone(report); mutate(changed); assert.equal(proposalValidationFailure(rejection(changed), 18), null);
+  }
+});
+
+test('strict provider warnings remain failures and retain the actual validation report', async () => {
+  const cli = resolve('node_modules/@fission-ai/openspec/bin/openspec.js');
+  const provider = (cwd, args) => execFileSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8', env: { ...process.env, OPENSPEC_TELEMETRY: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const invalid = files.map(file => file.path.endsWith('/spec.md') ? { ...file, content: file.content.replace('The talk SHALL build using public dependencies without credentials.', 'The talk SHALL ' + 'keep bounded output and preserve existing behavior '.repeat(15) + '.') } : file);
+  await assert.rejects(prepareProposal(18, invalid, provider), error => {
+    assert.equal(error.status, 1);
+    assert.equal(error.proposalValidation.status, 'failed');
+    assert.match(error.proposalValidation.findings.join(' '), /very long/);
+    assert.equal(JSON.parse(error.proposalValidation.output).items[0].valid, false);
+    return true;
+  });
+  assert.equal((await prepareProposal(18, files, provider)).length, files.length + 1);
+});
 
 test('proposal boundaries reject traversal, executable/config files, duplicates, missing artifacts and completed tasks', () => {
   assert.equal(validateProposalFiles(files, 18), files);
