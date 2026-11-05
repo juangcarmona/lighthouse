@@ -368,6 +368,121 @@ test('semantic init does not require a declared reference to exist', async () =>
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('authority initialization JSON previews report real providers and preserve text and consumer state', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-authority-preview-'));
+  try {
+    assert.equal(run(dir, 'init', ['--name', 'Preview']).status, 0);
+    const env = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0' };
+    for (const args of [['init', '--initial-branch=main'], ['config', '--local', 'core.hooksPath', 'user-hooks']]) {
+      assert.equal(spawnSync('git', args, { cwd: dir, env: { ...process.env, ...env } }).status, 0);
+    }
+    await mkdir(join(dir, 'user-hooks'));
+    await writeFile(join(dir, 'user-hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+    await chmod(join(dir, 'user-hooks/pre-commit'), 0o755);
+    await writeFile(join(dir, 'AGENTS.md'), '# User guidance\n');
+    const before = await initializationSnapshot(dir);
+    let report;
+    for (const args of [['--dry-run', '--format', 'json'], ['--dry-run', '--format=json'], ['--format', 'json']]) {
+      const preview = run(dir, 'authorities', args, { env });
+      assert.equal(preview.status, 0, `${preview.stdout}\n${preview.stderr}`);
+      assert.equal(preview.stderr, '');
+      report = JSON.parse(preview.stdout);
+      assert.deepEqual(Object.keys(report), ['schemaVersion', 'command', 'dryRun', 'status', 'authorities', 'apply']);
+      assert.equal(report.schemaVersion, 1);
+      assert.equal(report.command, 'lighthouse authorities');
+      assert.equal(report.dryRun, true);
+      assert.equal(report.status, 'ready');
+      assert.equal(report.apply, 'lighthouse authorities --apply');
+      assert.deepEqual(report.authorities.map(({ label, provider, version, command, repair }) => ({ label, provider, version, command, repair })), [
+        { label: 'ProductShape', provider: '@prodshape/cli', version: '0.23.0', command: 'prodshape init --full --sdd none --gitignore --dry-run', repair: 'prodshape init --full --sdd none --gitignore' },
+        { label: 'ArcShape', provider: '@arcshape/cli', version: '0.4.0', command: 'arcshape init --no-agents --dry-run', repair: 'arcshape init --no-agents --yes' },
+      ]);
+      for (const authority of report.authorities) {
+        assert.equal(authority.preflight.ok, true);
+        assert.equal(authority.preflight.status, 0);
+        assert.ok(authority.preflight.output.trim());
+      }
+      assert.deepEqual(await initializationSnapshot(dir), before);
+    }
+    for (const args of [[], ['--dry-run'], ['--dry-run', '--format', 'text']]) {
+      const text = run(dir, 'authorities', args, { env });
+      assert.equal(text.status, 0, text.stderr);
+      assert.match(text.stdout, /^Lighthouse authority plan:\n  ProductShape: initialize the full ProductShape layout without an SDD integration\n  ArcShape: initialize arc42 documentation without installing agent capabilities\n  Provider-owned files remain under provider control; Lighthouse records only exact versions\./);
+      for (const authority of report.authorities) {
+        assert.ok(text.stdout.includes(`\n${authority.label} preflight:\n`));
+        assert.ok(`${text.stdout}${text.stderr}`.includes(authority.preflight.output.trim()));
+      }
+      assert.match(text.stdout, /Dry run: nothing was changed\. Re-run with --apply to apply both provider plans\.\n$/);
+      assert.deepEqual(await initializationSnapshot(dir), before);
+    }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('authority JSON previews preserve unsuccessful, conflicting and missing provider outcomes and refuse apply', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-authority-outcomes-'));
+  try {
+    const cli = join(dir, 'cli');
+    await cp(new URL('../packages/cli', import.meta.url), cli, { recursive: true });
+    const consumer = join(dir, 'consumer');
+    await mkdir(consumer);
+    await writeFile(join(consumer, 'lighthouse.json'), JSON.stringify(manifest));
+    await writeFile(join(consumer, 'LIGHTHOUSE.md'), '# Preserve customized guidance\n');
+    const execute = (args) => spawnSync(process.execPath, [join(cli, 'src/lighthouse.mjs'), 'authorities', ...args], { cwd: consumer, encoding: 'utf8' });
+    const providers = [['@prodshape/cli', 'prodshape'], ['@arcshape/cli', 'arcshape']];
+    for (const [name, command] of providers) {
+      const target = join(cli, 'node_modules', name);
+      await mkdir(target, { recursive: true });
+      await writeFile(join(target, 'package.json'), JSON.stringify({ name, version: '9.8.7', bin: { [command]: 'bin.cjs' } }));
+      await writeFile(join(target, 'bin.cjs'), `if (!process.argv.includes('--dry-run')) { require('node:fs').writeFileSync('unexpected-apply', 'mutation'); process.exit(99); }\nconsole.log(JSON.stringify(process.argv.slice(2))); console.error('provider diagnostic');\n`);
+    }
+    const before = await initializationSnapshot(consumer);
+    for (const [script, expected] of [
+      ["console.log('failed provider'); process.exit(7);", { ok: false, output: 'failed provider\n', status: 7 }],
+      ["console.log('  conflict existing file');", { ok: false, output: '  conflict existing file\n', status: 0 }],
+      ["console.error('Conflicts (1)');", { ok: false, output: 'Conflicts (1)\n', status: 0 }],
+    ]) {
+      await writeFile(join(cli, 'node_modules/@prodshape/cli/bin.cjs'), script);
+      const preview = execute(['--dry-run', '--format', 'json']);
+      assert.equal(preview.status, 1);
+      const report = JSON.parse(preview.stdout);
+      assert.equal(report.status, 'blocked');
+      assert.deepEqual(report.authorities[0].preflight, expected);
+      assert.equal(report.authorities[1].preflight.ok, true);
+      assert.equal(report.authorities[1].preflight.status, 0);
+      assert.equal(report.authorities[1].preflight.output, '["init","--no-agents","--dry-run"]\nprovider diagnostic\n');
+      assert.deepEqual(report.authorities.map(authority => authority.version), ['9.8.7', '9.8.7']);
+      assert.match(preview.stderr, /ProductShape preflight failed; repair with: prodshape init --full --sdd none --gitignore/);
+      const text = execute(['--dry-run']);
+      assert.equal(text.status, 1);
+      assert.match(text.stdout, /ProductShape preflight:/);
+      assert.match(text.stderr, /ProductShape preflight failed/);
+      assert.deepEqual(await initializationSnapshot(consumer), before);
+    }
+    for (const [name] of providers) {
+      await rm(join(cli, 'node_modules', name), { recursive: true });
+      const preview = execute(['--dry-run', '--format', 'json']);
+      assert.equal(preview.status, 1);
+      const report = JSON.parse(preview.stdout);
+      assert.equal(report.status, 'blocked');
+      const missing = report.authorities.find(authority => authority.provider === name);
+      assert.equal(missing.version, null);
+      assert.equal(missing.preflight.ok, false);
+      assert.equal(missing.preflight.status, null);
+      assert.match(missing.preflight.output, /Cannot find module/);
+      assert.equal(report.authorities.length, 2);
+      assert.deepEqual(await initializationSnapshot(consumer), before);
+    }
+    for (const args of [['--apply', '--format', 'json'], ['--apply', '--format=json'], ['--apply', '--dry-run', '--format', 'json']]) {
+      const rejected = execute(args);
+      assert.equal(rejected.status, 1);
+      assert.equal(rejected.stdout, '');
+      assert.match(rejected.stderr, /dry runs|cannot be used together/);
+      assert.doesNotMatch(rejected.stderr, /Cannot find module|preflight failed/);
+      assert.deepEqual(await initializationSnapshot(consumer), before);
+    }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('existing-authority adoption is dry-run by default and does not initialize missing providers', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-authority-adoption-absent-'));
   try {
