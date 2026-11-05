@@ -218,7 +218,8 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         const result = await step('implement', 'implement',
           'Reproduce the confirmed defect before repairing production code. Read context.hotfix. Add the smallest regression assertion and relevant edges ONLY in the authorized test paths. Preserve production code. Run the test and capture the identified behavioral failure. Return an implement envelope with output.eligibility and root-cause evidence; expected RED is a blocked Done result, not a claim of completion. The host reruns the command on production code that is unchanged.',
           { hotfix: plan }, selected);
-        if (result.envelope.result.pendingReview.length || result.envelope.result.unavailableChecks.length) throw Error('Reproduction requires a human decision or unavailable check');
+        const prerequisites = [...result.envelope.result.pendingReview, ...result.envelope.result.unavailableChecks];
+        if (prerequisites.length) throw Error('Reproduction stopped: ' + prerequisites.slice(0, 8).join('; ').slice(0, 3000));
         working = result.source;
         const inventory = await candidateInventory(source, working, implementation.policy);
         return { ...result, files: inventory.files, tests: testState(working, inventory.files.map(f => f.path)) };

@@ -336,3 +336,28 @@ test('an explicit question remains answerable when a proposal review is also lin
   const reviewOnly = { ...question, body: question.body.replace('<!-- lighthouse-question -->', '') };
   assert.equal(pendingReply({ comment: reply }, [reviewOnly]), null);
 });
+
+test('wired router ignores feedback on closed PRs without delivery effects and retains actor authorization', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-closed-review-'));
+  try {
+    const candidate = { number: 18, state: 'closed', merged: true, head: { ref: 'lighthouse/implement-47-aaaaaaaaaaaa' } };
+    await writeFile(join(dir, 'mock.mjs'), `globalThis.fetch = async (url, options) => {
+      if (url !== 'https://api.github.com/repos/owner/repo/pulls/18' || options.method !== 'GET') throw Error('Unexpected delivery effect: ' + options.method + ' ' + url);
+      return Response.json({ ...${JSON.stringify(candidate)}, merged: process.env.LIGHTHOUSE_TEST_PR_MERGED === 'true' });
+    };`);
+    for (const merged of [true, false]) {
+      const event = { action: 'submitted', pull_request: { ...candidate, merged }, review: { id: 81, state: 'commented', body: 'Technical history only.', user: { login: 'owner', type: 'User' } } };
+      await writeFile(join(dir, 'event.json'), JSON.stringify(event));
+      for (const actor of ['owner', 'outsider']) {
+        const output = join(dir, 'output'), summary = join(dir, 'summary');
+        await writeFile(output, ''); await writeFile(summary, '');
+        const run = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: actor, GITHUB_TRIGGERING_ACTOR: actor, GITHUB_EVENT_NAME: 'pull_request_review', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: output, GITHUB_STEP_SUMMARY: summary, LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: '', LIGHTHOUSE_TEST_PR_MERGED: String(merged), RUNNER_TEMP: dir } });
+        if (actor === 'outsider') { assert.equal(run.status, 1); assert.match(run.stderr, /Review actor is not authorized/); continue; }
+        assert.equal(run.status, 0, run.stderr);
+        assert.match(await readFile(output, 'utf8'), /run=false/);
+        assert.match(await readFile(summary, 'utf8'), /closed PR/);
+        assert.doesNotMatch(run.stderr, /Unexpected delivery effect/);
+      }
+    }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
