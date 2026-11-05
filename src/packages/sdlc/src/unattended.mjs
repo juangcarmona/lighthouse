@@ -1,8 +1,18 @@
 import { createHash } from 'node:crypto';
 import { withinScope } from './implementation.mjs';
 import { validateStageCompletion } from './contracts.mjs';
+import { proposalRoot } from './proposal.mjs';
 
 export const unattendedDigest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+
+export function unattendedImplementationPolicy(implementation, policy, issue, route) {
+  validateUnattendedPolicy(policy, route);
+  if (policy.paths.some(path => !implementation.paths.some(prefix => prefix === '*' || (prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)))) throw Error('Unattended paths exceed implementation authority');
+  return { ...implementation, paths: [...policy.paths, ...(route === 'ff' ? [proposalRoot(issue) + '/'] : [])],
+    checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, policy.hotfix.regressionCommand] : []), ...implementation.checks],
+    verification: { ...implementation.verification, paths: [...new Set([...implementation.verification.paths, ...(route === 'hotfix' ? policy.hotfix.testPaths : [])])],
+      corrections: Object.fromEntries(Object.entries(implementation.verification.corrections).filter(([path]) => route !== 'hotfix' || !policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix))) } };
+}
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const boundedPath = path => typeof path === 'string' && path !== '*' && !/[?*\[\]{}]/.test(path) && withinScope(path.replace(/\/$/, ''), { paths: ['*'] }) && !path.startsWith('.github') && !/^docs\/product(?:\/|$)/.test(path) && !/^openspec(?:\/|$)/.test(path);
 const contains = (prefix, path) => prefix.endsWith('/') ? path.startsWith(prefix) : prefix === path;
