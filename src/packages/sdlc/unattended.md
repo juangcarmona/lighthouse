@@ -36,6 +36,8 @@ Upgraded unattended execution requires `verification` in the adopted `.lighthous
 
 Hotfix RED authoring may change only the independently planned test files. Repair freezes those assertions. If RED itself needs correction, stop and record why in a fresh owner-authorized request, then reproduce and verify again; a repair round cannot rewrite RED. Supervised policies without this declaration remain compatible and report integrity as unconfigured. Runtime/user-journey checks remain the adopted profile's responsibility. A supervised human-reviewed path is sufficient when its configured risk and gate policy permit it; this adds no universal multi-agent requirement.
 
+Unattended reviewers return only the bound verdict and findings in `/output/review.json`; the trusted host validates that payload and builds the stage envelope. An untouched template stays blocked. Raw model decisions and execution identities are retained for audit. Legacy review executions keep the envelope protocol. Canonical artifact JSON reads allow at most 2 MiB compressed per archive and 2 MiB decompressed per selected member, with size and CRC validation; diagnostics remain separate.
+
 ## Fast-forward
 
 Concrete engineering-plan corrections may return to the proposal worker before implementation. Planning and candidate repairs share `maxCorrections`; every revised plan requires provider validation and a fresh independent review. Escalation and changed authority stop delivery. Hotfix planning retains its existing terminal review behavior.

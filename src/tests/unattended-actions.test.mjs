@@ -66,7 +66,7 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
   const execute = async options => {
     assert.equal(options.request.repository, 'owner/repo');
     executions.push(options);
-    const envelope = stageContext(options.request, issue()).contract.envelope;
+    const envelope = stageContext({ ...options.request, reviewOutput: undefined }, issue()).contract.envelope;
     let changes = [], receipt = null;
     if (['triage', 'refine'].includes(options.request.stage)) envelope.result.output = { eligibility, hotfix: plan };
     else if (options.request.stage === 'propose') envelope.result.output.files = [
@@ -76,7 +76,10 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
     else if (options.request.worker === 'independent-review') {
       if (options.context.review.purpose === 'candidate') {
         assert.deepEqual(options.context.review.details.scope, { implementationPaths: policy.paths, planningRoots: route === 'ff' ? ['openspec/changes/issue-1-proposal/'] : [] });
-        assert.match(options.prompt, /findings as an array of plain strings/);
+        assert.match(options.prompt, /findings \(plain strings/);
+        assert.deepEqual(options.request.reviewOutput, { protocol: 'verdict-v1', purpose: 'candidate', binding: options.context.review.binding });
+        assert.equal(options.context.contract.envelope, undefined);
+        assert.equal(options.context.contract.review.binding, options.context.review.binding);
         if (route === 'hotfix') {
           assert.match(options.context.review.details.red.receipt.checks.find(c => c.exitCode !== 0).log, /ERR_ASSERTION/);
           assert.ok(options.context.review.details.red.tests['tests/edge.test.mjs']);

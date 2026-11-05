@@ -42,9 +42,10 @@ test('ZIP reader accepts stored, deflated, streaming descriptors and ZIP64 membe
     const bytes = zip([{ name: 'request.json', content: '{"message":"á🙂"}', method, descriptor }], { zip64 });
     assert.deepEqual(readZipJson(bytes, 'request.json'), { message: 'á🙂' });
   }
-  const exact = JSON.stringify('x'.repeat(127998));
-  assert.equal(Buffer.byteLength(exact), 128000);
-  assert.equal(readZipJson(zip([{ name: 'request.json', content: exact, method: 8 }]), 'request.json').length, 127998);
+  const limit = 2 * 1024 * 1024;
+  const exact = JSON.stringify('x'.repeat(limit - 2));
+  assert.equal(Buffer.byteLength(exact), limit);
+  assert.equal(readZipJson(zip([{ name: 'candidate.json', content: exact, method: 8 }]), 'candidate.json').length, limit - 2);
 });
 
 test('ZIP reader preserves absence semantics and rejects duplicates and invalid JSON', () => {
@@ -61,8 +62,9 @@ test('ZIP reader bounds archives and decompression and verifies integrity', () =
   const bytes = zip([entry]);
   assert.throws(() => readZipJson(Buffer.alloc(2 * 1024 * 1024 + 1), entry.name));
   for (const cut of [1, 10, 30]) assert.throws(() => readZipJson(bytes.subarray(0, bytes.length - cut), entry.name));
-  for (const advertisedSize of [128001, 1]) assert.throws(() => readZipJson(zip([{ ...entry, advertisedSize }]), entry.name));
+  for (const advertisedSize of [2 * 1024 * 1024 + 1, 1]) assert.throws(() => readZipJson(zip([{ ...entry, advertisedSize }]), entry.name));
   assert.throws(() => readZipJson(zip([{ ...entry, content: JSON.stringify('x'.repeat(130000)), advertisedSize: 10 }]), entry.name));
+  for (const advertisedSize of [10, 2 * 1024 * 1024 + 3]) assert.throws(() => readZipJson(zip([{ ...entry, content: JSON.stringify('x'.repeat(2 * 1024 * 1024 + 1)), advertisedSize }]), entry.name));
   const corrupt = Buffer.from(bytes), central = corrupt.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
   corrupt.writeUInt32LE(0, central + 16);
   assert.throws(() => readZipJson(corrupt, entry.name), /CRC/);

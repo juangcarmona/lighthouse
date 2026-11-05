@@ -5,6 +5,8 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
+import { reviewOutputProtocol, reviewTemplate, reviewEnvelope } from './independent-review.mjs';
 import { createRequire } from 'node:module';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
 import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
@@ -117,6 +119,7 @@ async function main() {
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
+  const reviewOutput = reviewOutputProtocol(request);
   const implementing = request.stage === 'implement' && request.worker !== 'product-change';
   const repository = request.repository ?? env.GITHUB_REPOSITORY;
   if (implementing) candidateOrigin(repository);
@@ -184,7 +187,10 @@ async function main() {
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
-    if (request.worker === 'independent-review') {
+    if (reviewOutput) {
+      await writeFile(join(output, 'review.json'), JSON.stringify(reviewTemplate(reviewOutput)));
+      await chmod(join(output, 'review.json'), 0o666);
+    } else if (request.worker === 'independent-review') {
       const template = JSON.parse(await readFile(context, 'utf8')).contract?.envelope;
       completionOutput(template, request);
       template.result = { ...template.result, status: 'blocked', evidence: [], missingEvidence: ['Independent reviewer must complete the assessment'], unavailableChecks: [], pendingReview: [], output: {}, nextAction: 'Independent reviewer: complete the supplied review assessment' };
@@ -193,7 +199,7 @@ async function main() {
       await chmod(join(output, 'envelope.json'), 0o666);
     }
     const prompt = join(dir, 'prompt.txt');
-    const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
+    const completionBoundary = reviewOutput ? '\n\n# Completion in this custom engine adapter\nWrite only /output/review.json using contract.review. The host validates the binding, verdict and findings and constructs the stage envelope and terminal noop. Stop after writing the review; safeoutputs is a host duty.\n' : '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     codegraph = codegraphSelection(config, implementing);
     if (codegraph.status === 'pending') codegraph = await startCodegraph({ config, source, harness, dir, name, docker });
@@ -253,15 +259,20 @@ async function main() {
     restoreWorkspaceOwnership(dir, config);
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
     if (runtimeReceipt.execution.status !== 'passed') { phase = 'execution'; throw Error(executionFailure(runtimeReceipt.execution)); }
-    const result = join(output, 'envelope.json'), stat = await lstat(result);
+    const result = join(output, reviewOutput ? 'review.json' : 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
     const rawEnvelope = await readFile(result, 'utf8');
     let envelope;
-    try { envelope = JSON.parse(rawEnvelope); completionOutput(envelope, request); }
+    try { envelope = reviewOutput ? reviewEnvelope(JSON.parse(rawEnvelope), request) : JSON.parse(rawEnvelope); completionOutput(envelope, request); }
     catch (error) {
       await mkdir(join(runDir, 'evidence/host'), { recursive: true });
-      await writeFile(join(runDir, 'evidence/host/rejected-envelope.txt'), redact(rawEnvelope).slice(0, 128000));
+      await writeFile(join(runDir, reviewOutput ? 'evidence/host/rejected-review.txt' : 'evidence/host/rejected-envelope.txt'), redact(rawEnvelope).slice(0, 128000));
       throw error;
+    }
+    if (reviewOutput) {
+      await mkdir(join(runDir, 'evidence/host'), { recursive: true });
+      await writeFile(join(runDir, 'evidence/host/review-payload.json'), rawEnvelope);
+      runtimeReceipt.independentReview = { ...reviewOutput, sha256: createHash('sha256').update(rawEnvelope).digest('hex') };
     }
     clearTimeout(timer);
     if (implementing) {

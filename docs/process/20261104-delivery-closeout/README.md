@@ -2,10 +2,10 @@
 
 Accepted real-change pilots: **0**. The FF queue is #390, #394 and #392, with #391 as the supervised comparison and #395 as the hotfix.
 
-Issue #389 is a maintainer bootstrap; its actual installed v2 receipt remains pending. Corrections #402, #407 and #410 have scoped acceptance. Issue #412's separate installed artifacts pass the unchanged authenticated reader.
+The installed producer now has authentic v2 receipts from four passing host commands. Corrections #402, #407, #410 and #412 have scoped acceptance; #416 supplied current product reports in native planning. These results do not establish unattended delivery acceptance.
 
-Issue #390 stopped at credential-shaped test data, requested plan corrections and missing provider context in three attempts. Issue #414 repairs FF plans within the shared correction budget; #416 supplies host-prepared current product reports. Native qualification remains pending.
+Issue #390 has four failed attempts. The fourth repaired its plan automatically and passed host checks, then rejected a malformed reviewer envelope before publication. Corrections #418 and #419 address that protocol and whole-file artifact reads; native qualification remains pending.
 
-The #216 consumer passes registry-only bootstrap and baseline safety controls with all 44 customization hashes preserved. Native delivery, published upgrade and rollback remain pending.
+The #216 registry consumer preserves 44 customizations and modes through baseline installation, published upgrade and rollback. The final published tuple and native delivery matrix remain pending.
 
-Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json). Native qualification continues after the technical corrections.
+Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json).
