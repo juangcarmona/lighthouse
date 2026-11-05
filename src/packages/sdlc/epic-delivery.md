@@ -1,6 +1,6 @@
 # Epic delivery contracts
 
-Refinement re-estimates on the [intake scale](request-triage.md#estimate-contract). A confirmed estimate strictly greater than eight requires decomposition planning; eight does not. Every slice needs its own useful acceptance evidence and explicit acyclic dependencies. When no safe split exists, record the reason and ask the owner. A plan is not live orchestration. Until native child delivery is connected, a passed refinement with a decomposition plan does not automatically dispatch parent implementation.
+Refinement re-estimates on the [intake scale](request-triage.md#estimate-contract). A confirmed estimate strictly greater than eight requires decomposition planning; eight does not. Every slice needs its own useful acceptance evidence and explicit acyclic dependencies. When no safe split exists, record the reason and ask the owner. A passed refinement with a decomposition plan pauses parent implementation; native child delivery requires the separately selected epic workflow.
 
 ## Available interfaces
 
@@ -26,7 +26,7 @@ The owner-driven workflow provides `reconcile`, `refine-child`, `register-pr`, `
 
 Readiness uses the [adopter-owned GitHub App](github-actions.md#eligible-ci-for-bot-delivery) to create an immutable verification branch pointing to the exact head/base integration commit, then observes its native push CI and waits for enforced checks. The candidate must preserve the trusted CI workflow. The journal records intent before branch creation; an unconfirmed request is reconciled by observation, never blindly resent. `workflow_dispatch` checks cannot satisfy PR rules. Acknowledgement alone cannot make a PR ready. Each child merge still requires the owner's current-head review, and final aggregate acceptance preserves the parent's separate decision.
 
-Native child delivery requires the default branch to remain at the authenticated refinement revision. Aggregate acceptance can inspect an advanced default branch after merge using retained readiness, child history, current checks and owner approval. Missing evidence or changed authority stops the action. The two-child installed acceptance remains pending; tests and installation do not establish it.
+Native child delivery requires the default branch to remain at the authenticated refinement revision. Aggregate acceptance can inspect an advanced default branch after merge using retained readiness, child history, current checks and owner approval. Missing evidence or changed authority stops the action. Retain separate two-child and aggregate acceptance receipts; tests and installation do not establish native acceptance. [Issue #146](https://github.com/juangcarmona/lighthouse/issues/146) tracks that qualification.
 
 ## GitHub reconciliation adapter
 

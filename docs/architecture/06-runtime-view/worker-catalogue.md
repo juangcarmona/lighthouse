@@ -55,7 +55,7 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `completion.ciRepair` in `.lighthouse/github.json` | Separately selects CI correction issues and budget; no global repair by default |
 | `.lighthouse/unattended.json` | Selects enabled composition routes and budgets; merge delegation is separate |
 
-Stage selection and router feature flags live in the reviewed workflow; the global automation and maintenance/report switches are repository variables. Installer defaults do not describe an adopter's existing policy: the installer preserves it. Changing an installed file or policy requires its normal review. The optional [epic delivery workflow](../../../src/packages/sdlc/epic-delivery.md) retains explicit child and aggregate merge decisions; its two-child native acceptance remains pending.
+Stage selection and router feature flags live in the reviewed workflow; the global automation and maintenance/report switches are repository variables. Installer defaults do not describe an adopter's existing policy: the installer preserves it. Changing an installed file or policy requires its normal review. The optional [epic delivery workflow](../../../src/packages/sdlc/epic-delivery.md) retains explicit child and aggregate merge decisions; [issue #146](https://github.com/juangcarmona/lighthouse/issues/146) tracks its serial native acceptance.
 
 ## Router and supported requests
 
