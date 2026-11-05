@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 6232de829ca819d7827b1282fe5191ee0d36c912
+          ref: 224316acf81feaeac710c65fc818300c83f4b5e1
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 6232de829ca819d7827b1282fe5191ee0d36c912
+          ref: 224316acf81feaeac710c65fc818300c83f4b5e1
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
@@ -188,7 +188,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 6232de829ca819d7827b1282fe5191ee0d36c912
+          ref: 224316acf81feaeac710c65fc818300c83f4b5e1
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -236,7 +236,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 6232de829ca819d7827b1282fe5191ee0d36c912
+          ref: 224316acf81feaeac710c65fc818300c83f4b5e1
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
