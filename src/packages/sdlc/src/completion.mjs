@@ -104,7 +104,7 @@ export async function observeChecks(api, revision, workflowRunId = null) {
   const statuses = await list(api, `commits/${revision}/statuses`);
   const latest = [...new Map(statuses.map(s => [s.context, s]).reverse()).values()];
   return [
-    ...runs.filter(r => !excluded.has(String(r.id))).map(r => ({ evidenceId: `github-check:${r.id}`, name: r.name, revision, app: r.app?.id, status: r.head_sha !== revision ? 'failed' : r.status !== 'completed' ? 'unavailable' : ['success', 'neutral', 'skipped'].includes(r.conclusion) ? 'passed' : 'failed', state: r.status === 'completed' ? r.conclusion : 'pending', url: r.html_url })),
+    ...runs.filter(r => !excluded.has(String(r.id))).map(r => ({ evidenceId: `github-check:${r.id}`, name: r.name, revision, app: r.app?.id, status: r.head_sha !== revision ? 'failed' : r.status !== 'completed' ? 'unavailable' : r.conclusion === 'success' ? 'passed' : ['neutral', 'skipped'].includes(r.conclusion) ? 'unavailable' : 'failed', state: r.status === 'completed' ? r.conclusion : 'pending', url: r.html_url })),
     ...latest.map(s => ({ evidenceId: `github-status:${s.id}`, name: s.context, revision, status: s.state === 'success' ? 'passed' : s.state === 'pending' ? 'unavailable' : 'failed', state: s.state, url: s.target_url })),
   ];
 }
