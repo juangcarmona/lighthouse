@@ -8,4 +8,4 @@ The owner-approved Product Change on adopter PR #126 passed trusted apply, autom
 
 The #216 registry consumer preserves 44 customizations and modes through baseline installation, published upgrade and rollback. The final published tuple and native delivery matrix remain pending.
 
-Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json).
+Original evidence is compressed in the [archive](https://github.com/juangcarmona/lighthouse/blob/19a0deaee49ace7dc3440b1eeac427c9f9dda027/acceptance/20261104-delivery-closeout/evidence-327b107b10d53829dd0afd1a68b4f205b3e6331dc73b51f207e606924a769848.tar.gz), bound by the [index](results.json).

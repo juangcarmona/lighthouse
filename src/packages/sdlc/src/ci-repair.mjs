@@ -4,6 +4,7 @@ import { issueComments, readDispatchReceipt, loadDispatch } from './stage-dispat
 import { loadStageReport } from './proposal.mjs';
 import { loadImplementation } from './implementation.mjs';
 import { taskDigest } from './issue-actions.mjs';
+import { ciRunMatches } from './ci-subject.mjs';
 
 function repairPolicy(completion) {
   const policy = completion?.ciRepair;
@@ -18,9 +19,10 @@ async function latestCandidateCi(api, repository, target, completion) {
   const latest = new Map();
   const time = run => Date.parse(run.run_started_at ?? run.created_at);
   for (const run of runs.workflow_runs.sort((a, b) => time(b) - time(a) || b.id - a.id)) {
-    if (run.repository?.full_name !== repository || run.head_sha !== target.head || run.head_branch !== target.branch || !['push', 'pull_request', 'workflow_dispatch'].includes(run.event) || !completion.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`)) continue;
-    const key = `${run.path}:${run.event}`;
-    if (!latest.has(key)) latest.set(key, run);
+    if (run.repository?.full_name !== repository || run.conclusion === 'action_required' || !ciRunMatches(run, target) || !['push', 'pull_request', 'workflow_dispatch'].includes(run.event) || !completion.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`)) continue;
+    const key = run.path;
+    const prior = latest.get(key);
+    if (!prior || prior.event === 'workflow_dispatch' && run.event !== 'workflow_dispatch') latest.set(key, run);
   }
   return [...latest.values()];
 }
@@ -50,7 +52,7 @@ export async function ciRepairAfterChecks(api, repository, owner, event, { curre
   const targets = [];
   for (const candidate of pulls) {
     const pr = await api(`pulls/${candidate.number}`);
-    if (pr.state !== 'open' || pr.merged || pr.base?.ref !== metadata.default_branch || pr.head?.sha !== run.head_sha || run.head_branch !== pr.head.ref) continue;
+    if (pr.state !== 'open' || pr.merged || pr.base?.ref !== metadata.default_branch || !ciRunMatches(run, { number: pr.number, head: pr.head.sha, branch: pr.head.ref })) continue;
     try { targets.push({ pr, review: checkImplementationPullRequest(pr, repository) }); } catch {
       try { targets.push({ pr, review: checkProposal(pr, repository), proposal: true }); } catch { /* Unrelated PRs cannot authorize repair. */ }
     }
@@ -135,9 +137,9 @@ export async function signalCiRepair(api, repository, pr, profile) {
 
 export async function signalCurrentCiRepair(api, repository, env) {
   const id = Number(env.GITHUB_RUN_ID), attempt = Number(env.GITHUB_RUN_ATTEMPT);
-  if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.LIGHTHOUSE_CI_RESULT !== 'failure' || !Number.isSafeInteger(id) || id < 1 || !Number.isSafeInteger(attempt) || attempt < 1) return false;
+  if (!['workflow_dispatch', 'push'].includes(env.GITHUB_EVENT_NAME) || env.LIGHTHOUSE_CI_RESULT !== 'failure' || !Number.isSafeInteger(id) || id < 1 || !Number.isSafeInteger(attempt) || attempt < 1) return false;
   const run = await api(`actions/runs/${id}/attempts/${attempt}`);
-  if (run.repository?.full_name !== repository || run.event !== 'workflow_dispatch' || run.head_sha !== env.GITHUB_SHA) return false;
+  if (run.repository?.full_name !== repository || run.event !== env.GITHUB_EVENT_NAME || run.head_sha !== env.GITHUB_SHA) return false;
   const metadata = await api('');
   const config = await api(`contents/.lighthouse/github.json?ref=${metadata.default_branch}`, 'GET', undefined, true);
   if (!config) return false;
@@ -151,7 +153,7 @@ export async function signalCurrentCiRepair(api, repository, env) {
   const targets = [];
   for (const candidate of pulls) {
     const pr = await api(`pulls/${candidate.number}`);
-    if (pr.head?.sha !== run.head_sha || pr.head?.ref !== run.head_branch || pr.base?.ref !== metadata.default_branch) continue;
+    if (!ciRunMatches(run, { number: pr.number, head: pr.head?.sha, branch: pr.head?.ref }) || pr.base?.ref !== metadata.default_branch) continue;
     try { const target = checkImplementationPullRequest(pr, repository); if (policy.issues.includes(target.issue)) targets.push(target); } catch { /* Unrelated candidates cannot request a CI continuation. */ }
   }
   if (targets.length !== 1) return false;

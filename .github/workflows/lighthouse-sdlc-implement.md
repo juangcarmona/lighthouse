@@ -73,7 +73,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 7917a0559f0ed311bf7525fd5e860c3505109eb8
+      ref: 46d422e394fb6b30586c9878d4f68a9790c9fa35
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 7917a0559f0ed311bf7525fd5e860c3505109eb8
+          ref: 46d422e394fb6b30586c9878d4f68a9790c9fa35
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 7917a0559f0ed311bf7525fd5e860c3505109eb8
+          ref: 46d422e394fb6b30586c9878d4f68a9790c9fa35
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -205,6 +205,8 @@ jobs:
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_CI_APP_CLIENT_ID: ${{ vars.LIGHTHOUSE_CI_APP_CLIENT_ID }}
+          LIGHTHOUSE_CI_APP_PRIVATE_KEY: ${{ secrets.LIGHTHOUSE_CI_APP_PRIVATE_KEY }}
         run: node src/packages/sdlc/src/issue-actions.mjs publish
       - name: Preserve authenticated command evidence
         if: always()

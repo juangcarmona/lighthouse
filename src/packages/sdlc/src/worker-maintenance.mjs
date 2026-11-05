@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch } from './stage-dispatch.mjs';
 import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } from './worker-recovery.mjs';
+import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
@@ -94,7 +95,7 @@ async function main(command) {
   if (command !== 'prepare') throw Error('Unknown maintenance command');
   await mkdir(dir, { recursive: true });
   try {
-    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true', Date.now(), undefined, { saveCiRecovery: value => writeFile(join(dir, 'ci-recovery.json'), JSON.stringify(value)), saveCompletionRecovery: value => writeFile(join(dir, 'completion-recovery.json'), JSON.stringify(value)) });
+    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true', Date.now(), undefined, { ciTrigger: githubAppCiTrigger(env), saveCiRecovery: value => writeFile(join(dir, 'ci-recovery.json'), JSON.stringify(value)), saveCompletionRecovery: value => writeFile(join(dir, 'completion-recovery.json'), JSON.stringify(value)) });
     await writeFile(join(dir, 'observations.json'), JSON.stringify(result.observations));
     if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, result.observations.map(o => `- Issue #${o.issue}, ${o.worker}: ${o.state}. ${o.nextAction}`).join('\n') + '\n');
     await output('send', String(!!result.request));

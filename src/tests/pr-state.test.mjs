@@ -123,6 +123,10 @@ test('CI callback accepts only the current configured repository run', () => {
   const context = { id: 123, sha: head, repo, workflows: ['ci.yml'] };
   const run = { id: 123, event: 'workflow_dispatch', head_sha: head, path: '.github/workflows/ci.yml', repository: { full_name: repo } };
   assert.equal(authorizedCiCallback(run, context), true);
+  const pushed = { ...run, event: 'push', head_branch: `lighthouse/verification-34-${head}` };
+  assert.equal(authorizedCiCallback(pushed, context), true);
+  assert.equal(authorizedCiCallback({ ...pushed, head_branch: 'main' }, context), false);
+  assert.equal(authorizedCiCallback({ ...pushed, head_branch: `lighthouse/verification-34-${'c'.repeat(40)}` }, context), false);
   for (const changed of [{ id: 124 }, { event: 'pull_request' }, { head_sha: 'c'.repeat(40) }, { path: '.github/workflows/other.yml' }, { repository: { full_name: 'other/repo' } }]) assert.equal(authorizedCiCallback({ ...run, ...changed }, context), false);
 });
 

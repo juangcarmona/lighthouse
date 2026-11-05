@@ -8,7 +8,7 @@ import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
 
 // Resume verification of a confirmed publication; never replay the agent or branch write.
-export async function reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now = Date.now(), { readArtifact = readActionsJson, readReport = loadStageReport, save = null } = {}) {
+export async function reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now = Date.now(), { readArtifact = readActionsJson, readReport = loadStageReport, save = null, ciTrigger = null } = {}) {
   const { dispatch, run, revision } = observation;
   if (issue.user?.login !== owner) return null;
   if (!dispatch || dispatch.request.stage !== 'implement' || run?.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1) return null;
@@ -78,7 +78,7 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
     await api(`issues/comments/${comment.id}`, 'PATCH', { body: body() });
   };
   try {
-    const result = await dispatchDeliveryChecks(api, revision, pr, { previous, checkpoint, now });
+    const result = await dispatchDeliveryChecks(api, revision, pr, { previous, checkpoint, now, ciTrigger });
     return { ...subject, state: 'reconciled', code: result.every(item => item.state === 'observed') ? 'ci-observed' : 'ci-requested', nextAction: 'Follow the existing candidate CI; no agent or source effect was repeated.' };
   } catch (error) {
     const failure = error.ciRequestFailure;

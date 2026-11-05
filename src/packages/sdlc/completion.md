@@ -17,7 +17,7 @@ In the existing `.lighthouse/github.json`, retain the adopted required checks an
 }
 ```
 
-Use real workflow filenames. Each must support `workflow_dispatch` for post-merge verification and verify its checked-out revision. The publisher also dispatches candidate checks, but GitHub excludes those job checks from required PR rules; configure eligible PR CI separately. Post-merge runs count only when GitHub reports the actual merged SHA, default branch, permitted event and successful completion. Pending, missing and failed results remain distinct from success. A changed default tip stops dispatch rather than checking unrelated code.
+Use real workflow filenames. Each must support `workflow_dispatch` for post-merge verification and verify its checked-out revision. Candidate CI can use the [optional App verification push](github-actions.md#eligible-ci-for-bot-delivery). Legacy candidate dispatch remains execution evidence; GitHub excludes its job checks from required PR rules. Post-merge runs count only when GitHub reports the actual merged SHA, default branch, permitted event and successful completion. Pending, missing and failed results remain distinct from success. A changed default tip stops dispatch rather than checking unrelated code.
 
 The evidence branch must already exist separately from the application tree. Active repository rulesets must prevent deletion and non-fast-forward updates with no bypass actors. Completion verifies these rules before publication; it does not create or weaken them. `publishEvidence` opts into publishing the bounded report and receipt to the repository's audience. It does not authorize copying raw sessions or every implementation artifact.
 

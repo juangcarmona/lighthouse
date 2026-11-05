@@ -368,5 +368,8 @@
     "outcome": "aligned",
     "implementation": "not authorized or dispatched",
     "scope": "Honest no-delta idea entry; the worker did not manufacture a Product Change."
-  }
+  },
+  "archiveUrl": "https://github.com/juangcarmona/lighthouse/blob/19a0deaee49ace7dc3440b1eeac427c9f9dda027/acceptance/20261104-delivery-closeout/evidence-327b107b10d53829dd0afd1a68b4f205b3e6331dc73b51f207e606924a769848.tar.gz",
+  "archiveCommit": "19a0deaee49ace7dc3440b1eeac427c9f9dda027",
+  "archiveGitBlob": "7fff5a57bf678024e75e7dc9e7f7c58982874f79"
 }
