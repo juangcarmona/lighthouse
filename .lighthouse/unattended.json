@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "enabled": true,
   "routes": [
-    "ff"
+    "hotfix"
   ],
   "paths": [
     "src/packages/cli/src/lighthouse.mjs",
     "src/tests/lighthouse.test.mjs",
-    ".changeset/legacy-init-json-preview.md"
+    ".changeset/fresh-git-hook-activation.md"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,
@@ -15,19 +15,29 @@
   "maxCorrections": 2,
   "timeoutSeconds": 3600,
   "hotfix": {
-    "setupCommands": [],
+    "setupCommands": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ]
+    ],
     "testPaths": [
-      "src/tests/fixtures/unattended/regression.test.mjs"
+      "src/tests/lighthouse.test.mjs"
     ],
     "modules": {
-      "acceptance-fixture": [
-        "src/tests/fixtures/unattended/"
+      "cli": [
+        "src/packages/cli/src/",
+        "src/tests/lighthouse.test.mjs",
+        ".changeset/fresh-git-hook-activation.md"
       ]
     },
     "regressionCommand": [
       "node",
       "--test",
-      "src/tests/fixtures/unattended/regression.test.mjs"
+      "--test-name-pattern",
+      "activates installed hooks in a fresh Git repository",
+      "src/tests/lighthouse.test.mjs"
     ],
     "failurePattern": [
       "ERR_ASSERTION"
