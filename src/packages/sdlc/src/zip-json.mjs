@@ -1,7 +1,8 @@
 import { crc32, inflateRawSync } from 'node:zlib';
 
 const ARCHIVE_LIMIT = 2 * 1024 * 1024;
-const MEMBER_LIMIT = 128000;
+// Match the bounded JSON files accepted by the execution artifact producer.
+const MEMBER_LIMIT = ARCHIVE_LIMIT;
 const invalid = () => Error('Invalid or unsupported artifact ZIP');
 
 function range(bytes, offset, length) {

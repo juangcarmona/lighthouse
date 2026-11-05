@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "b5e96ff1574d1061d79142cd10a2fb9c9677ba9398a12dc1dee7433296d69a18",
+  "archiveSha256": "ed01977f0c8c2343b0311fbf213db6a00604de51fc211539dd37ed2655411a6e",
   "failedPilots": [
     {
       "issue": 389,
@@ -69,6 +69,13 @@
       "outcome": "refinement passed; proposal blocked because required whole-model impact and current ProductShape citation outputs were unavailable to the read-only planner",
       "publication": "none",
       "correction": "#416 provides pinned host-generated graph context; no product decision or model approval inferred"
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41961307412",
+      "outcome": "Automatic plan correction accepted at round 1; all four independent host commands passed with authentic v2 receipts; semantic candidate accept rejected for malformed stage evidence. No PR.",
+      "publication": "none",
+      "correction": "#418 host-owned review envelope; #419 bounded whole-file artifact reads"
     }
   ],
   "correction407": {
@@ -95,7 +102,7 @@
       "ui": "0.2.0"
     },
     "coldClone": "passed; no preinstalled dependencies; 44 customization hashes preserved; no tracked diff",
-    "scope": "bootstrap only; native delivery, upgrade and rollback pending",
+    "scope": "Registry bootstrap at recorded cold-clone revision; published baseline upgrade/rollback separately qualified in publishedUpgrade216; final native delivery pending.",
     "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored",
     "configurationRevision": "43df7fb50bdc05dc5af67ffb75845e846671524a",
     "configurationChange": "Narrow invalid shared OpenSpec scope; future execution gets exact per-issue grants. Baseline cold-clone evidence remains bound to the earlier revision."
@@ -116,7 +123,7 @@
   ],
   "bootstrap389": {
     "scope": "explicit maintainer integration and adoption of recovered candidate, plus implementation-stage boundary clarification",
-    "nativeV2Receipt": "pending #390 after adoption",
+    "nativeV2Receipt": "Authentic installed v2 receipt in #390 run 41961307412; four passed host commands and actual request/changes identity validation. See installedReceipt389.",
     "sourceSha256": "8fa35b3a7802798f9cfbb67bb400c0496c177919cc65e844a00db43a63de85e4",
     "verificationSummary": [
       "\u2139 tests 721",
@@ -195,7 +202,7 @@
     },
     "newRegressionFailuresBeforeFix": 5,
     "focusedTestsPassed": 103,
-    "scope": "Bounded planning repair, shared budget and authentic accepted-round evidence; native repaired-plan acceptance pending"
+    "scope": "Actual #390 run 41961307412 corrected a rejected plan automatically and accepted planningRound 1 within the shared budget; post-merge reconstruction remains pending."
   },
   "supervisedComparisonIssue": 391,
   "correction416": {
@@ -218,12 +225,47 @@
     },
     "actualModelUnchanged": true,
     "controls": "7 focused provider-context controls, 14 actual container adapter cases, full verification 726 passed and 9 optional skips",
-    "scope": "Actual pinned provider and adapter qualification; native planning with the installed revision remains pending",
+    "scope": "Installed #390 run 41961307412 prepared the same 137 current artifacts for refinement, proposal and independent review; proposal and repaired planning review passed. Native whole-delivery acceptance remains pending.",
     "cancellation": "Aborting during graph validation fails before context publication; the new control fails before the cancellation guards"
   },
   "serial146": {
     "sourcePr": "https://github.com/juangcarmona/lighthouse/pull/401",
     "fixtureRevision": "a18f37aeef52a8d5648fa40e2c27b36def96ef9d",
     "state": "Source-mode workflows prepared and compiled; automation disabled; final accepted source adoption and two-child native proof pending"
+  },
+  "installedReceipt389": {
+    "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41961307412",
+    "scope": "Actual installed producer emitted schemaVersion 2 with four passed commands; unchanged validateCheckReceipt accepts original request, changes and checks. Not whole-pilot acceptance.",
+    "evidence": "native-fourth-390/canonical.zip",
+    "control": "review-protocol-qualification/419-original-artifact-control.json"
+  },
+  "publishedUpgrade216": {
+    "scope": "Registry baseline 0.12.37/0.20.4 to 0.12.38/0.20.5 and controlled rollback, not final package-mode native delivery",
+    "customizationsPreserved": 44,
+    "modesPreserved": true,
+    "dryRunUnchanged": true,
+    "rollbackMatchesBaseline": true,
+    "artifacts": "published-upgrade-216/",
+    "sourceBundle": "published-upgrade-216/216-published-upgrade.bundle",
+    "finalTupleAndNativeDelivery": "pending"
+  },
+  "correction418419": {
+    "sourceSha256": {
+      "src/packages/sdlc/src/independent-review.mjs": "0d4c20e0a7ee788e5ce954d1225fd457fac8bb95cb26308248ba37e5d935c453",
+      "src/packages/sdlc/src/opencode-execute.mjs": "b7f1e08c4352f0e6298f1772dea4a4475a9730c4892f469d2bab2518cd7ec51d",
+      "src/packages/sdlc/src/unattended-runtime.mjs": "ded826a75a15c4dfb222faf4ca518a63f5e41f146ec75f159cfbd2d08ad7f623",
+      "src/packages/sdlc/src/unattended-actions.mjs": "ff004ff5e2658c06065086d3ec739795f992f57463e44cbcb6005a35798a6ebb",
+      "src/packages/sdlc/src/zip-json.mjs": "14198e430f0175c2320c7223b03e47b4e716ecac1e75d3231e050dc33cb4edec"
+    },
+    "focused": 71,
+    "archiveControls": 5,
+    "actualContainerControls": 20,
+    "fullVerification": {
+      "passed": 729,
+      "optionalSkipped": 9,
+      "siteFiles": 136
+    },
+    "originalArchiveUnchanged": true,
+    "scope": "Host-owned verdict protocol and bounded canonical JSON reader; fresh native execution pending."
   }
 }
