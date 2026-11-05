@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, chmod, cp, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { access, chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -29,6 +29,142 @@ const manifest = {
 };
 async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); return dir; }
 function run(dir, command, args = [], options = {}) { return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8', ...options, env: { ...process.env, ...options.env } }); }
+
+async function initializationSnapshot(dir) {
+  const entries = [];
+  async function visit(path = '') {
+    for (const name of (await readdir(join(dir, path))).sort()) {
+      const relative = join(path, name), info = await lstat(join(dir, relative));
+      entries.push({ path: relative, mode: info.mode, bytes: info.isFile() ? (await readFile(join(dir, relative))).toString('base64') : null });
+      if (info.isDirectory()) await visit(relative);
+    }
+  }
+  await visit();
+  return entries;
+}
+
+async function initializationPreviewFixture() {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-init-preview-'));
+  const env = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0' };
+  for (const args of [['init', '--initial-branch=main'], ['config', '--local', 'core.hooksPath', 'user-hooks']]) {
+    const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8', env: { ...process.env, ...env } });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  for (const file of ['.product/sentinel.json', 'docs/architecture/sentinel.md', 'user-hooks/pre-commit']) {
+    await mkdir(join(dir, file, '..'), { recursive: true });
+    await writeFile(join(dir, file), `User/provider owned: ${file}\n`);
+  }
+  await chmod(join(dir, 'user-hooks/pre-commit'), 0o755);
+  return { dir, env };
+}
+
+function assertTextInitialization(text, report, status) {
+  assert.equal(text.status, status, text.stderr);
+  assert.match(text.stdout, /^Lighthouse initialization plan:\n/);
+  const operations = [...text.stdout.matchAll(/^  (create) (.+)$/gm)].map(([, action, path]) => ({ path, action }));
+  assert.deepEqual(operations, report.operations);
+  const gaps = report.adoptionGaps.map(({ authority, nextAction }) => `  adoption gap ${authority}: ${nextAction}`);
+  assert.deepEqual(text.stdout.trimEnd().split('\n').filter(line => line.startsWith('  adoption gap ')), gaps);
+  assert.equal(text.stderr, report.conflicts.map(conflict => `  conflict ${conflict}\n`).join(''));
+}
+
+test('legacy init JSON previews project the local plan and preserve target bytes, modes and Git configuration', async () => {
+  for (const existing of [false, true]) {
+    const { dir, env } = await initializationPreviewFixture();
+    try {
+      const selected = {
+        ...manifest,
+        product: 'Published delivery consumer',
+        application: { shape: 'frontend', stacks: ['react'] },
+        profiles: ['visual-theme', 'react-web-platform'],
+        packages: { sdlc: { name: sdlcPackage.name, version: sdlcPackage.version }, ui: { name: uiPackage.name, version: uiPackage.version } },
+      };
+      if (existing) await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+      for (const format of [['--format', 'json'], ['--format=json']]) {
+        const before = await initializationSnapshot(dir);
+        const args = ['--name', 'Published delivery consumer', '--dry-run'];
+        const result = run(dir, 'init', [...args, ...format], { env });
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(result.stderr, '');
+        const report = JSON.parse(result.stdout);
+        assert.deepEqual(Object.keys(report).sort(), ['adoptionGaps', 'conflicts', 'manifest', 'operations', 'repository', 'schemaVersion', 'status']);
+        assert.equal(report.schemaVersion, 1);
+        assert.equal(report.status, 'ready');
+        assert.equal(report.manifest.product, 'Published delivery consumer');
+        assert.deepEqual(report.manifest.application, existing ? selected.application : { shape: 'unknown', stacks: [] });
+        assert.deepEqual(report.manifest.profiles, existing ? selected.profiles : []);
+        if (existing) assert.deepEqual(report.manifest, selected);
+        assert.deepEqual(report.repository, report.manifest.repository);
+        assert.deepEqual(report.conflicts, []);
+        assert.deepEqual(report.adoptionGaps, existing ? [] : ['ProductShape', 'ArcShape'].map(authority => ({ authority, nextAction: 'review lighthouse authorities --dry-run, then run lighthouse authorities --apply' })));
+        assert.equal(report.operations.some(operation => operation.path === 'lighthouse.json'), !existing);
+        for (const path of ['src/', 'infra/.gitkeep', 'LIGHTHOUSE.md', '.lighthouse/upgrade.json', '.husky/pre-push']) {
+          assert.ok(report.operations.some(operation => operation.path === path && operation.action === 'create'), path);
+        }
+        for (const operation of report.operations) assert.deepEqual(Object.keys(operation).sort(), ['action', 'path']);
+        assertTextInitialization(run(dir, 'init', args, { env }), report, 0);
+        assert.deepEqual(await initializationSnapshot(dir), before);
+      }
+      // Recorded authorities and public-site selection are context, not new blockers.
+      if (existing) {
+        for (const integrations of [{ productShape: null, arcShape: null }, { productShape: '1.0.0', arcShape: null }, { productShape: '1.0.0', arcShape: '1.0.0' }]) {
+          selected.repository = { ...selected.repository, publicSite: { enabled: true } };
+          selected.integrations = integrations;
+          await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+          const before = await initializationSnapshot(dir);
+          const result = run(dir, 'init', ['--dry-run', '--format=json'], { env });
+          assert.equal(result.status, 0, result.stderr);
+          const report = JSON.parse(result.stdout);
+          assert.deepEqual(report.manifest, selected);
+          assert.equal(report.status, 'ready');
+          assert.deepEqual(report.adoptionGaps.map(gap => gap.authority), Object.entries(integrations).filter(([, version]) => version === null).map(([key]) => key === 'productShape' ? 'ProductShape' : 'ArcShape'));
+          assertTextInitialization(run(dir, 'init', ['--dry-run'], { env }), report, 0);
+          assert.deepEqual(await initializationSnapshot(dir), before);
+        }
+      }
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+});
+
+test('legacy init JSON and text conflicts preserve files and exit one', async () => {
+  for (const collision of ['src', 'LIGHTHOUSE.md']) {
+    const { dir, env } = await initializationPreviewFixture();
+    try {
+      await writeFile(join(dir, collision), 'Existing user work\n');
+      const before = await initializationSnapshot(dir);
+      const args = ['--name', 'Published delivery consumer', '--dry-run'];
+      const result = run(dir, 'init', [...args, '--format=json'], { env });
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.stderr, '');
+      const report = JSON.parse(result.stdout);
+      assert.equal(report.status, 'blocked');
+      assert.deepEqual(report.conflicts, [collision === 'src' ? 'src exists but is not a directory' : 'LIGHTHOUSE.md already exists; refusing to overwrite it']);
+      assert.ok(report.operations.length > 0);
+      assertTextInitialization(run(dir, 'init', args, { env }), report, 1);
+      assert.deepEqual(await initializationSnapshot(dir), before);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+});
+
+test('legacy init rejects every JSON apply mode before writes', async () => {
+  for (const existing of [false, true]) {
+    const { dir, env } = await initializationPreviewFixture();
+    try {
+      if (existing) await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest));
+      const before = await initializationSnapshot(dir);
+      for (const format of [['--format', 'json'], ['--format=json']]) {
+        for (const mode of [[], ['--apply'], ['--apply', '--dry-run']]) {
+          const result = run(dir, 'init', ['--name', 'Published delivery consumer', ...format, ...mode], { env });
+          assert.equal(result.status, 1);
+          assert.equal(result.stdout, '');
+          assert.match(result.stderr, /use --dry-run --format json to preview/);
+          assert.match(result.stderr, /apply in text mode/);
+          assert.deepEqual(await initializationSnapshot(dir), before);
+        }
+      }
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+});
 
 test('init creates a projection and refuses to overwrite product work', async () => {
   const dir = await fixture();
