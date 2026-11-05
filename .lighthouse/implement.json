@@ -86,7 +86,7 @@
     ]
   },
   "389": {
-    "scope": "Implement only #389: carry trusted native execution and intent identity into existing unattended v2 check evidence. Add meaningful mismatch regressions without weakening existing tests. Use the existing receipt machinery; do not change policy, provider/product meaning or merge authority.",
+    "scope": "Implement only #389: carry trusted native execution and intent identity into existing unattended v2 check evidence. Add meaningful mismatch regressions without weakening existing tests. Use the existing receipt machinery; do not change policy, provider/product meaning or merge authority. Plan verification against the configured host command inventory. Distinguish extra agent observations from authoritative independent receipts and later forge CI.",
     "paths": [
       "src/packages/sdlc/src/unattended-actions.mjs",
       "src/tests/unattended-actions.test.mjs",
@@ -103,7 +103,19 @@
         "node",
         "--test",
         "src/tests/unattended-actions.test.mjs",
+        "src/tests/unattended.test.mjs",
+        "src/tests/unattended-planning-evidence.test.mjs",
+        "src/tests/implementation-runtime.test.mjs",
+        "src/tests/implementation.test.mjs",
         "src/tests/implementation-evidence.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
       ]
     ],
     "verification": {

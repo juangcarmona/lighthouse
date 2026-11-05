@@ -140,6 +140,18 @@ test('bounded correction permits repair, then requires fresh review', async () =
   assert.equal(repairs, 2); assert.equal(reviews, 2);
 });
 
+test('escalation retains bounded concrete findings without publishing or inventing product approval', async () => {
+  const finding = 'Missing host receipt for npm run verify';
+  const { host, events } = fixture({ reviewCandidate: async () => ({ accepted: false, verdict: 'escalate', findings: [finding, 'x'.repeat(5000)] }) });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'blocked');
+  assert.match(result.reason, /Missing host receipt for npm run verify/);
+  assert.ok(result.reason.length < 3100);
+  assert.ok(events.includes('stop:' + result.reason));
+  assert.ok(!events.includes('publish'));
+  assert.ok(!events.includes('integrate'));
+});
+
 test('failed host checks can be repaired but cannot be overridden by review', async () => {
   let attempts = 0, reviews = 0;
   const { host } = fixture({
