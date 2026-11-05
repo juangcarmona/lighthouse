@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "runId": "d06e969f99efb338896835187637aa7731526c7bf29593d490a79e13bb121796",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "github-check:127422729256",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42077851652/job/127422729256",
+      "reason": "Required repository check from app 15368 passed on accepted head 3cfc081a58c579f9a4a3dff029c7ddfb96789e34; host identifies its push origin as eligible. This is the only configured forge check gate."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated npm ci --ignore-scripts receipt exited zero. Three low-severity audit findings were reported, not installation failures."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Focused CLI receipt reports 42 passed, zero failed or skipped. Reviewed assertions at src/tests/lighthouse.test.mjs:371-483 against issue acceptance, rather than relying on test names alone."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated configured repository verification command exited zero on the published candidate. The retained excerpt is truncated; no suite totals or omitted assertions are inferred from it."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Citation verification exited zero. Retained original rows bind all four issue-391 plan documents to current FR-AUTHORITY-INITIALIZATION, BR-OWNED-AUTHORITY and BR-FAIL-CLOSED citations; diagnostics are empty. The summary reports zero errors, stale, tampered or unresolved citations."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Pinned OpenSpec strict validation exited zero and reported issue-391-proposal valid. Structural and citation validation supplement, but do not replace, acceptance inspection."
+    },
+    {
+      "id": "integration:acceptance-inspection",
+      "status": "passed",
+      "source": "/workspace/src/packages/cli/src/lighthouse.mjs:1066-1345",
+      "reason": "Inspected provider command definitions, quiet execution, actual preflight projection, nonzero error handling, no-write return and apply guards together with behavioral assertions and the issue's bounded output correction. No unresolved source defect or acceptance discrepancy identified."
+    },
+    {
+      "id": "integration:scope-and-guidance",
+      "status": "passed",
+      "source": "/workspace/.lighthouse/implement.json:352-406",
+      "reason": "All seven changed paths fit the explicit supervised grant, including the required issue plan. Root guidance, CLI guide, delivery/completion guidance, plan and CLI patch changeset preserve provider ownership and separate assessment from actual integration."
+    },
+    {
+      "id": "integration:authorization-and-finalization",
+      "status": "passed",
+      "source": "/input/context.json",
+      "reason": "Host-supplied manual owner dispatch explicitly sets merge true for issue 391, PR 449 and the full accepted head. Required approvals are zero; no current review objection is supplied. Finalization preserves labels, does not close the issue, and delegates reservation cleanup to the host."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current owner authority, accepted head/base and fingerprints, required GitHub checks and reservation, then request the authorized squash merge of PR #449 and retain its actual outcome; request configured post-merge ci.yml only after a confirmed merge.",
+  "output": {
+    "summary": "PR #449 passes integration assessment for issue #391. The bounded authority-initialization JSON preview correction satisfies the inspected acceptance contract. This assessment is not a merge receipt or a completed review.",
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 391,
+      "pr": 449,
+      "head": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+      "base": "bf29b8e35b8f2243fcdcc3def9a3a97c8060ee38",
+      "branch": "main",
+      "intent": "0a688c6daccf2731c72d66db61979044effee7264c8503db54f2efb8d5e8f560",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "908d5ac06313abe293095d89008d426e6c8b5fc24c89a2e667d292e1c9ec8216",
+      "files": "56358a0303f55a9ab1c12a1d9d79d1ae65ac5f31977f9b830b8f9af01f2767a4"
+    },
+    "provenance": {
+      "authority": "Host-authenticated completion context; no independent GitHub or git authentication was attempted by this engine.",
+      "requestId": "d4396b5dd2fbb0e6efa5da5a90c3c36d9fe8573e1341a8f241837c21a35772a6",
+      "requestDigest": "ff3cfd3a4483952da6b00928b7b5aa17c053b52e47d2c62133e6d1b25c340f20",
+      "dispatchCommentId": 6665128141,
+      "routerRunId": "42078326994",
+      "workerRunId": "42078388943",
+      "attempt": "1",
+      "observedAt": "2026-11-05T17:50:02.600Z",
+      "harnessRevision": "6232de829ca819d7827b1282fe5191ee0d36c912",
+      "package": "@juangcarmona/lighthouse-sdlc@0.20.6",
+      "workflowSourceObservation": ".github/workflows/lighthouse-sdlc-router.yml:95-98 pins the harness revision supplied by the host. Source configuration is not a claim about unobserved live repository variables.",
+      "implementationWorkflowRunId": "42067986932",
+      "implementationAttempt": 1,
+      "implementationArtifactSha256": "b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc",
+      "candidateTree": "5b53619adbbe52fe3058177caca06e092cca2042",
+      "sharedVerificationInputs": "Host reports baseline and current bf29b8e35b8f2243fcdcc3def9a3a97c8060ee38 unchanged; the retained command receipts are reusable for this exact candidate."
+    },
+    "integration": {
+      "authorization": {
+        "route": "supervised manual owner dispatch",
+        "issue": 391,
+        "pr": 449,
+        "head": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+        "merge": true,
+        "scope": "Publisher may request integration only after fresh authority and protection checks; this grants no policy exception or broader work."
+      },
+      "action": "prepare authorized squash merge",
+      "mergePerformed": false,
+      "observedMerged": false,
+      "observedMergeable": true,
+      "mergeReceipt": null,
+      "requiredChecks": [
+        {
+          "context": "repository",
+          "app": 15368,
+          "evidenceId": "github-check:127422729256",
+          "status": "passed"
+        }
+      ],
+      "requiredApprovals": 0,
+      "observedReviews": [],
+      "dependencyOrder": "No stacked predecessor or inter-PR dependency is declared. The implementation receipt, in-tree plan and accepted-head required check precede this assessment. References to #185 and #392 are comparison context, not dependencies or unattended qualification.",
+      "protectedDecisions": "GitHub enforces current strict status-check and PR rules. Publisher rechecks the base immediately before its accepted-head merge request; observed mergeability is not a guarantee."
+    },
+    "acceptance": [
+      {
+        "criterion": "Exactly one JSON document with both exact provider identities and actual outcomes, without provider chatter outside stdout JSON",
+        "finding": "satisfied",
+        "source": "src/packages/cli/src/lighthouse.mjs:1116-1140,1292-1325; src/tests/lighthouse.test.mjs:371-405",
+        "reason": "Quiet provider execution captures diagnostics; one JSON.stringify call projects both providers, installed versions, commands, repairs and actual preflight objects. Tests parse the entire stdout, assert exact ProductShape 0.23.0 and ArcShape 0.4.0 identities and successful real outcomes for both format spellings and default preview."
+      },
+      {
+        "criterion": "Missing, failed and conflicting providers remain failures",
+        "finding": "satisfied",
+        "source": "src/packages/cli/src/lighthouse.mjs:1111-1140,1308-1329,1821-1823; src/tests/lighthouse.test.mjs:421-474",
+        "reason": "A nonzero provider exit, existing conflict detection or unavailable executable yields an unsuccessful preflight; both outcomes are projected before the CLI exits one. Fixtures assert exit seven, two zero-exit conflict forms, captured stderr, a successful other provider and missing provider version/status null."
+      },
+      {
+        "criterion": "Text compatibility, provider-owned commands and no-write preview",
+        "finding": "satisfied",
+        "source": "src/packages/cli/src/lighthouse.mjs:1066-1082,1123-1135,1302-1308,1330-1345; src/tests/lighthouse.test.mjs:33-43,371-418,438-481",
+        "reason": "The text branch retains headings, provider diagnostics and dry-run footer. The JSON route executes only existing provider dry-run commands and returns before writes. Whole-consumer snapshots compare bytes, modes and paths, including Git configuration, executable user hook and guidance. No new provider policy or ownership is introduced."
+      },
+      {
+        "criterion": "Refuse JSON apply before provider execution",
+        "finding": "satisfied",
+        "source": "src/packages/cli/src/lighthouse.mjs:1297-1308; src/tests/lighthouse.test.mjs:475-481",
+        "reason": "Conflicting apply/dry-run flags and JSON apply are rejected before preflights; tests assert nonzero status, empty stdout, guard diagnostics and unchanged consumer state. Existing adoption dispatch stays separate at lines 1806-1807."
+      },
+      {
+        "criterion": "Focused regressions, repository verification and bounded release metadata",
+        "finding": "satisfied",
+        "source": ".lighthouse/implement.json:352-406; .changeset/authority-init-json-preview.md; openspec/changes/issue-391-proposal/tasks.md",
+        "reason": "All configured commands have authenticated passed receipts. The one changeset targets the CLI package with a patch and H1. The four plan documents stay within the explicitly authorized proposal root."
+      }
+    ],
+    "guidanceAssessment": {
+      "reviewed": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:23-31,70-78",
+        "src/packages/sdlc/README.md:18-34,48-64,123-129",
+        "src/packages/sdlc/completion.md:26-55",
+        ".lighthouse/github.json",
+        ".lighthouse/implement.json:352-406",
+        "openspec/changes/issue-391-proposal/proposal.md",
+        "openspec/changes/issue-391-proposal/design.md",
+        "openspec/changes/issue-391-proposal/specs/authority-initialization-preview/spec.md",
+        "openspec/changes/issue-391-proposal/tasks.md"
+      ],
+      "finding": "No affected-instruction drift identified for this bounded output correction. No provider-owned projection or workflow file changed.",
+      "productContext": "Read the host-prepared evidence index, FR-AUTHORITY-INITIALIZATION impact report, relevant ownership/failure inspection reports and corresponding model text. Their digests match retained plan citations. These artifacts are draft context, not an approval; the explicit issue grant controls this preservation-only correction. No product meaning or ownership exception is inferred.",
+      "sourceDefects": [],
+      "processLimitations": [
+        "Implementation-authored tests and authenticated execution establish behavioral evidence, not independently proven test integrity. The supervised policy sets reviewRequired false; no unattended planning-review requirement is imported from the null priorPlanningReview.",
+        "The full verification excerpt is truncated. The task-file claim of 823 passed and nine skipped is not independently established from that excerpt; the host-authenticated zero exit is retained without upgrading omitted details to observations.",
+        "No fresh commands were executed in this read-only engine; this assessment relies on authenticated candidate-bound command receipts plus source and assertion inspection. CodeGraph context was unavailable, so direct source inspection was used."
+      ],
+      "nonBlockingObservations": [
+        {
+          "finding": "Installation output reports three low-severity dependency audit findings; no dependency files are in the change list. This is not a demonstrated source defect introduced by #391 or a failed required check.",
+          "owner": "Repository dependency maintainer",
+          "disposition": "Retain for normal dependency triage; no issue, policy change or investigation is initiated by this stage."
+        }
+      ]
+    },
+    "additionalChecks": [
+      {
+        "evidenceId": "github-check:127423889986",
+        "name": "Cloudflare Pages",
+        "status": "passed",
+        "required": false,
+        "usedForAcceptance": false
+      },
+      {
+        "evidenceId": "github-check:127423465208",
+        "name": "reconcile-implementation-pr",
+        "status": "passed",
+        "required": false,
+        "usedForAcceptance": false
+      },
+      {
+        "evidenceId": "github-check:127422731966",
+        "name": "ci-app",
+        "status": "unavailable",
+        "state": "skipped",
+        "required": false,
+        "reason": "Not executed; not a failed check and not an explicit CLI acceptance requirement."
+      },
+      {
+        "evidenceId": "github-check:127423468538",
+        "name": "continue-post-merge-review",
+        "status": "unavailable",
+        "state": "skipped",
+        "required": false,
+        "reason": "Not executed; cannot establish review or post-merge verification and is not an integration blocker."
+      }
+    ],
+    "synchronization": {
+      "executor": "Trusted publisher after current-stage validation",
+      "issue": {
+        "number": 391,
+        "observedState": "open",
+        "observedLabels": [
+          "pr-ready"
+        ],
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "pullRequest": {
+        "number": 449,
+        "observedState": "open",
+        "observedLabels": [],
+        "labels": "preserve"
+      },
+      "reservation": "Host owns agent-working acquisition and releases it for every outcome. Pre-observation label state need not already contain the reservation.",
+      "decision": "Preserve declared issue and PR labels; do not invent a done label, close the issue, or treat finalization effects as already performed. The issue and PR reference the same #391 delivery."
+    },
+    "laterWork": [
+      {
+        "item": "Actual integration and merge receipt",
+        "status": "not-performed",
+        "intendedStage": "integrate",
+        "owner": "Trusted publisher",
+        "reason": "Assessment precedes the authorized host effect; PR is observed unmerged and priorIntegration is null."
+      },
+      {
+        "item": "Post-merge ci.yml on actual merged revision",
+        "status": "not-performed",
+        "intendedStage": "review",
+        "owner": "Trusted publisher and repository CI",
+        "reason": "No merge revision or postMerge observations exist yet; candidate CI is not post-merge proof."
+      },
+      {
+        "item": "Installed-runtime acceptance and post-integration retrospective",
+        "status": "not-performed",
+        "intendedStage": "review",
+        "owner": "Maintainer and separately admitted review worker",
+        "reason": "Plan explicitly retains installed-runtime acceptance as later work. Review requires its own entry and verified integration history; no next stage is started here."
+      },
+      {
+        "item": "Supervised comparison accounting",
+        "status": "incomplete-history",
+        "intendedStage": "review",
+        "owner": "Maintainer and review worker",
+        "reason": "Retain supplied implementation run 42067986932 attempt 1 and current router/worker request identities. The plan reports an installation timeout retry and a strict-validation prose repair, but full stage-request history, elapsed intervals, earlier failed command receipts, costs and human attention are not supplied. Do not infer recurrence, counts or timings; issue #391 remains excluded from the unattended pilot."
+      }
+    ]
+  }
+}

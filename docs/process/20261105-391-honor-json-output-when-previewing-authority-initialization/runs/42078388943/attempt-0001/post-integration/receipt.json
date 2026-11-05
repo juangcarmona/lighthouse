@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "state": "merged",
+  "sha": "3778ebc913002ac4f822b1dd8334aa5b49d768fa",
+  "acceptedHead": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+  "authorization": {
+    "issue": 391,
+    "pr": 449,
+    "head": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+    "merge": true
+  },
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 391,
+    "pr": 449,
+    "head": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+    "base": "bf29b8e35b8f2243fcdcc3def9a3a97c8060ee38",
+    "branch": "main",
+    "intent": "0a688c6daccf2731c72d66db61979044effee7264c8503db54f2efb8d5e8f560",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "prIntent": "908d5ac06313abe293095d89008d426e6c8b5fc24c89a2e667d292e1c9ec8216",
+    "files": "56358a0303f55a9ab1c12a1d9d79d1ae65ac5f31977f9b830b8f9af01f2767a4"
+  },
+  "recovered": false,
+  "postMerge": [
+    {
+      "workflow": "ci.yml",
+      "revision": "3778ebc913002ac4f822b1dd8334aa5b49d768fa",
+      "state": "missing",
+      "status": "unavailable",
+      "runId": null,
+      "url": null
+    }
+  ]
+}
