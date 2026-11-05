@@ -4,7 +4,7 @@ Accepted real-change pilots: **0**. The FF queue is #390, #394 and #392, with #3
 
 Issue #389 is a maintainer bootstrap; its actual installed v2 receipt remains pending. Corrections #402, #407 and #410 have scoped acceptance. Issue #412's separate installed artifacts pass the unchanged authenticated reader.
 
-Issue #390's first attempt stopped at credential-shaped test data; its second stopped at requested plan corrections. Issue #414 repairs FF engineering plans within the shared correction budget; native qualification remains pending.
+Issue #390 stopped at credential-shaped test data, requested plan corrections and missing provider context in three attempts. Issue #414 repairs FF plans within the shared correction budget; #416 supplies host-prepared current product reports. Native qualification remains pending.
 
 The #216 consumer passes registry-only bootstrap and baseline safety controls with all 44 customization hashes preserved. Native delivery, published upgrade and rollback remain pending.
 

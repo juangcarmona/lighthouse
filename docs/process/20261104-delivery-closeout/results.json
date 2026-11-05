@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "2f3beb388ec99237bb09114589f1a39cda70336cf4c43140963700c21236b36f",
+  "archiveSha256": "e76974869a4bea0cf5ae5b01e3cc2072e8876a00f2e8052fe86b92bbc19030d4",
   "failedPilots": [
     {
       "issue": 389,
@@ -62,6 +62,13 @@
       "outcome": "refinement and proposal passed; independent planning reviewer requests artifact scope and metadata instruction corrections",
       "publication": "none",
       "correction": "#414 shares the existing correction budget between FF plans and candidates"
+    },
+    {
+      "issue": 390,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41956529778",
+      "outcome": "refinement passed; proposal blocked because required whole-model impact and current ProductShape citation outputs were unavailable to the read-only planner",
+      "publication": "none",
+      "correction": "#416 provides pinned host-generated graph context; no product decision or model approval inferred"
     }
   ],
   "correction407": {
@@ -190,5 +197,32 @@
     "focusedTestsPassed": 103,
     "scope": "Bounded planning repair, shared budget and authentic accepted-round evidence; native repaired-plan acceptance pending"
   },
-  "supervisedComparisonIssue": 391
+  "supervisedComparisonIssue": 391,
+  "correction416": {
+    "testedSourceSha256": {
+      "opencode-execute.mjs": "1a6c9d15cfe5e24f1a876fb0782bc5f27f7af48d916171a9a961f769888cd876",
+      "product-change.mjs": "66014641f43450be926ae6347a49fd9cf8aaf4d6d371f0c11896c65428af3163"
+    },
+    "provider": {
+      "provider": "@prodshape/core",
+      "version": "0.25.0",
+      "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+      "artifacts": 137,
+      "acceptedModelPath": "/workspace/docs/product/model",
+      "evidenceRoot": "/workspace/.lighthouse-product-evidence"
+    },
+    "providerPackage": {
+      "version": "0.25.0",
+      "resolved": "https://registry.npmjs.org/@prodshape/core/-/core-0.25.0.tgz",
+      "integrity": "sha512-tlP42CGVfi+/XAERDz2+kjgqqPf9Q/BXH3gaE9h6t/VNoFd/Eraqx959StH4UD7jP5h5l85AH7knOXeQ2XvQ3A=="
+    },
+    "actualModelUnchanged": true,
+    "controls": "6 focused provider-context controls, 14 actual container adapter cases, full verification 725 passed and 9 optional skips",
+    "scope": "Actual pinned provider and adapter qualification; native planning with the installed revision remains pending"
+  },
+  "serial146": {
+    "sourcePr": "https://github.com/juangcarmona/lighthouse/pull/401",
+    "fixtureRevision": "a18f37aeef52a8d5648fa40e2c27b36def96ef9d",
+    "state": "Source-mode workflows prepared and compiled; automation disabled; final accepted source adoption and two-child native proof pending"
+  }
 }
