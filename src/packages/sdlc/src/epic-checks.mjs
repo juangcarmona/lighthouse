@@ -2,10 +2,12 @@ import { isDeepStrictEqual } from 'node:util';
 import { loadProfile } from './completion.mjs';
 
 // The caller authenticates the PR and parent lease; checks never authorize a merge.
-export async function ensureEpicChecks({ api, repository, sourceRevision, observation, journal, key, recheck, checks, ciTrigger, wait = () => new Promise(resolve => setTimeout(resolve, 10000)), polls = 60 }) {
-  const { pr, base, candidate } = observation;
+export async function ensureEpicChecks({ api, repository, sourceRevision, observation, journal, key, recheck, checks, ciTrigger, subject = 'candidate', wait = () => new Promise(resolve => setTimeout(resolve, 10000)), polls = 60 }) {
+  const { pr, base } = observation;
+  const candidate = subject === 'head' ? pr?.head?.sha : observation.candidate;
+  const receiptField = subject === 'head' ? 'headChecks' : 'checks';
   const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
-  if (!Number.isSafeInteger(pr?.number) || pr.number < 1 || !sha(pr.head?.sha) || !sha(base) || !sha(candidate) || !sha(sourceRevision) || !Number.isSafeInteger(polls) || polls < 1 || polls > 60) throw Error('Invalid epic check observation');
+  if (!['head', 'candidate'].includes(subject) || !Number.isSafeInteger(pr?.number) || pr.number < 1 || !sha(pr.head?.sha) || !sha(base) || !sha(candidate) || !sha(sourceRevision) || !Number.isSafeInteger(polls) || polls < 1 || polls > 60) throw Error('Invalid epic check observation');
   const verify = async () => {
     if (await recheck() !== true) throw Error('Epic check authority, head or base changed');
     const values = await checks();
@@ -25,9 +27,9 @@ export async function ensureEpicChecks({ api, repository, sourceRevision, observ
   let receipt = await journal.readReceipt(key);
   if (!receipt || receipt.state !== 'linked' || receipt.resource?.id !== pr.id || receipt.resource.number !== pr.number || !['pull-request', 'aggregate'].includes(receipt.correlation?.kind) || receipt.publication && receipt.publication.head !== pr.head.sha) throw Error('Epic checks lack the authenticated PR receipt');
   const identity = { head: pr.head.sha, base, candidate, branch: `lighthouse/verification-${pr.number}-${candidate}`, workflows };
-  let state = receipt.checks;
+  let state = receipt[receiptField];
   if (!state || !isDeepStrictEqual(state.identity, identity)) state = { identity, reference: 'not-sent', requests: {} };
-  const save = async () => { receipt = { ...receipt, checks: structuredClone(state) }; await journal.writeReceipt(key, receipt); };
+  const save = async () => { receipt = { ...receipt, [receiptField]: structuredClone(state) }; await journal.writeReceipt(key, receipt); };
   const refPath = `git/ref/heads/${identity.branch}`;
   let ref = await api(refPath, 'GET', undefined, true);
   if (!ref) {

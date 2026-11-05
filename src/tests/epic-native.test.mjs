@@ -306,6 +306,8 @@ test('owner acceptance merges one authenticated child and leaves the parent open
     if (path === `git/commits/${mergedCommit}`) return { parents: [{ sha }], tree: { sha: tree } };
     if (path.startsWith(`commits/${candidate}/check-runs?`)) return { check_runs: [{ id: 1, name: 'ci', head_sha: candidate, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
     if (path.startsWith(`commits/${candidate}/statuses?`)) return [];
+    if (path.startsWith(`commits/${head}/check-runs?`)) return { check_runs: [{ id: 2, name: 'ci', head_sha: head, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
+    if (path.startsWith(`commits/${head}/statuses?`)) return [];
     if (path === `compare/${mergedCommit}...${mergedCommit}`) return { status: 'identical', merge_base_commit: { sha: mergedCommit } };
     return f.api(path, method, body);
   };

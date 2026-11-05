@@ -174,3 +174,19 @@ test('aggregate remains draft when current merge checks fail', async () => {
   assert.equal(changed, false);
   assert.equal(pr.draft, true);
 });
+
+test('aggregate remains draft when integration passes but the required PR-head check fails', async () => {
+  const f = fixture();
+  await f.run();
+  const pr = f.pulls[0], candidate = '5'.repeat(40), original = f.args.api;
+  Object.assign(pr, { draft: true, mergeable: true, merge_commit_sha: candidate });
+  f.args.api = async (path, method, body) => {
+    if (path === 'pulls/30') return pr;
+    if (path === 'git/ref/heads/main') return { ref: 'refs/heads/main', object: { sha: source } };
+    if (path === `git/commits/${candidate}`) return { parents: [{ sha: source }, { sha: second }] };
+    if (path.startsWith(`commits/${second}/check-runs?`)) return { check_runs: [{ id: 2, name: 'ci', head_sha: second, status: 'completed', conclusion: 'failure', app: { id: 42 } }] };
+    return original(path, method, body);
+  };
+  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { throw Error('must remain draft'); } }), /Epic candidate CI failed/);
+  assert.equal(pr.draft, true);
+});

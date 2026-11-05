@@ -23,13 +23,15 @@ function checkedReceipt(key, receipt, repository, parent) {
   if (refusal !== undefined && (receipt.correlation.kind !== 'pull-request' || receipt.state !== 'linked' || !refusal || refusal.status !== 405 || !sha(refusal.head) || !sha(refusal.base) || !sha(refusal.candidate) || !Number.isSafeInteger(refusal.review) || refusal.review < 1 || Object.keys(refusal).sort().join(',') !== 'base,candidate,head,review,status')) throw Error('Epic refusal receipt is invalid');
   const readiness = receipt.readiness;
   if (readiness !== undefined && (receipt.correlation.kind !== 'aggregate' || receipt.state !== 'linked' || !readiness || !sha(readiness.head) || !sha(readiness.base) || !sha(readiness.candidate) || Object.keys(readiness).sort().join(',') !== 'base,candidate,head')) throw Error('Epic aggregate readiness receipt is invalid');
-  const checks = receipt.checks;
-  if (checks !== undefined) {
+  for (const field of ['checks', 'headChecks']) {
+    const checks = receipt[field];
+    if (checks === undefined) continue;
     const identity = checks?.identity;
+    if (field === 'headChecks' && identity?.candidate !== identity?.head) throw Error('Epic head check identity is invalid');
     if (!['pull-request', 'aggregate'].includes(receipt.correlation.kind) || !resource || !checks || !identity || !sha(identity.head) || !sha(identity.base) || !sha(identity.candidate) || identity.branch !== `lighthouse/verification-${resource.number}-${identity.candidate}` || !Array.isArray(identity.workflows) || !identity.workflows.length || identity.workflows.length > 8 || new Set(identity.workflows).size !== identity.workflows.length || identity.workflows.some(name => !/^[\w.-]+\.ya?ml$/.test(name)) || !['not-sent', 'requested', 'observed'].includes(checks.reference) || !checks.requests || Array.isArray(checks.requests) || typeof checks.requests !== 'object' || Object.keys(checks).sort().join(',') !== 'identity,reference,requests' || Object.keys(identity).sort().join(',') !== 'base,branch,candidate,head,workflows') throw Error('Epic check identity is invalid');
     for (const [name, request] of Object.entries(checks.requests)) if (!identity.workflows.includes(name) || !request || !['requested', 'acknowledged', 'observed'].includes(request.state) || Object.keys(request).sort().join(',') !== (request.state === 'observed' ? 'run,state' : 'state') || request.state === 'observed' && !positive(request.run)) throw Error('Epic CI request is invalid');
   }
-  const expected = [...(checks ? ['checks'] : []), 'correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(readiness ? ['readiness'] : []), ...(refusal ? ['refusal'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
+  const expected = [...(receipt.checks ? ['checks'] : []), ...(receipt.headChecks ? ['headChecks'] : []), 'correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(readiness ? ['readiness'] : []), ...(refusal ? ['refusal'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
   if (Object.keys(receipt).sort().join(',') !== expected) throw Error('Epic receipt has unexpected fields');
   return receipt;
 }

@@ -5,6 +5,8 @@ import { ensureEpicChecks } from '../packages/sdlc/src/epic-checks.mjs';
 const repository = 'owner/repo', sourceRevision = 'a'.repeat(40), head = 'b'.repeat(40), candidate = 'c'.repeat(40);
 const branch = `lighthouse/verification-7-${candidate}`;
 function fixture(options = {}) {
+  const target = options.subject === 'head' ? head : candidate;
+  const branch = `lighthouse/verification-7-${target}`;
   let receipt = { state: 'linked', resource: { id: 70, number: 7 }, correlation: { kind: 'pull-request' }, publication: { head } };
   let ref = null, authorized = true, status = 'unavailable';
   const mutations = [], snapshots = [], runs = [];
@@ -12,7 +14,7 @@ function fixture(options = {}) {
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET', 'GITHUB_TOKEN must not create verification refs or dispatch CI');
     if (path.startsWith('contents/.lighthouse/github.json?')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
-    if (path.startsWith('contents/.github/workflows/')) return { type: 'file', sha: options.changedWorkflow && path.endsWith(candidate) ? head : sourceRevision };
+    if (path.startsWith('contents/.github/workflows/')) return { type: 'file', sha: options.changedWorkflow && path.endsWith(target) ? head : sourceRevision };
     if (path === `git/ref/heads/${branch}`) return ref;
     if (path.startsWith('actions/workflows/ci.yml/runs?')) {
       if (options.moveReference) ref.object.sha = head;
@@ -21,17 +23,17 @@ function fixture(options = {}) {
     throw Error(`Unexpected ${method} ${path}`);
   };
   const ciTrigger = async input => {
-    assert.equal(snapshots.at(-1).checks.reference, 'requested');
+    assert.equal(snapshots.at(-1)[options.subject === 'head' ? 'headChecks' : 'checks'].reference, 'requested');
     await input.beforeWrite();
     mutations.push({ branch: input.branch, head: input.head });
     if (options.setupFailure) throw Object.assign(Error('App setup failed'), { referenceAttempted: false });
     if (!options.unobservedCreate) ref = { ref: 'refs/heads/' + input.branch, object: { sha: input.head } };
-    if (!options.noRun) runs.push({ id: 101, head_sha: candidate, head_branch: branch, path: '.github/workflows/ci.yml', event: options.event ?? 'push', repository: { full_name: options.foreignRun ? 'other/repo' : repository } });
+    if (!options.noRun) runs.push({ id: 101, head_sha: target, head_branch: branch, path: '.github/workflows/ci.yml', event: options.event ?? 'push', repository: { full_name: options.foreignRun ? 'other/repo' : repository } });
     if (!options.pending) status = 'passed';
     if (options.revokeAfterCreate) authorized = false;
     if (options.lostCreate) throw Object.assign(Error('lost create acknowledgement'), { referenceAttempted: true });
   };
-  const args = { api, repository, sourceRevision, ciTrigger, observation: { pr: { id: 70, number: 7, head: { sha: head } }, base: sourceRevision, candidate }, key: 'key',
+  const args = { api, repository, sourceRevision, ciTrigger, ...(options.subject ? { subject: options.subject } : {}), observation: { pr: { id: 70, number: 7, head: { sha: head } }, base: sourceRevision, candidate }, key: 'key',
     journal: { readReceipt: async () => structuredClone(receipt), writeReceipt: async (_key, value) => { receipt = structuredClone(value); snapshots.push(structuredClone(value)); } },
     recheck: async () => authorized, checks: async () => [{ status }], wait: async () => {}, polls: 2 };
   return { args, mutations, snapshots, runs, run: () => ensureEpicChecks(args), setStatus: value => { status = value; } };
@@ -113,4 +115,34 @@ test('disappearing push evidence stops without repeating the effect', async () =
   f.runs.length = 0;
   await assert.rejects(f.run(), /evidence disappeared/);
   assert.equal(f.mutations.length, 1);
+});
+
+test('head and integration CI retain separate intents and never repeat a pending head push', async () => {
+  const integration = fixture(), currentHead = fixture({ subject: 'head', pending: true, lostCreate: true });
+  await integration.run();
+  currentHead.args.journal = { readReceipt: integration.args.journal.readReceipt, writeReceipt: async (key, value) => { await integration.args.journal.writeReceipt(key, value); currentHead.snapshots.push(structuredClone(value)); } };
+  await assert.rejects(currentHead.run(), /checks remain pending/);
+  await assert.rejects(currentHead.run(), /checks remain pending/);
+  assert.deepEqual(currentHead.mutations, [{ branch: `lighthouse/verification-7-${head}`, head }]);
+  const receipt = await integration.args.journal.readReceipt('key');
+  assert.equal(receipt.headChecks.identity.candidate, head);
+  assert.equal(receipt.checks.identity.candidate, candidate);
+  currentHead.setStatus('passed');
+  await currentHead.run();
+  assert.equal(currentHead.mutations.length, 1);
+});
+
+test('PR-head CI retains the same workflow, push-event, uncertainty and pause gates', async () => {
+  for (const [options, message] of [
+    [{ changedWorkflow: true }, /changed a trusted verification workflow/],
+    [{ event: 'workflow_dispatch', pending: true }, /checks remain pending/],
+    [{ revokeAfterCreate: true }, /authority changed/],
+    [{ lostCreate: true, unobservedCreate: true, noRun: true, pending: true }, /lost create acknowledgement/],
+  ]) {
+    const f = fixture({ ...options, subject: 'head' });
+    await assert.rejects(f.run(), message);
+    const writes = f.mutations.length;
+    await assert.rejects(f.run());
+    assert.equal(f.mutations.length, writes);
+  }
 });

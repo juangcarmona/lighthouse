@@ -86,10 +86,10 @@ export async function authenticateEpicPullRequest({ api, repository, owner, chil
   return true;
 }
 
-async function observeEpicChecks(api, { repository, sourceRevision, base, candidate, loadPolicy }) {
+async function observeEpicChecks(api, { repository, sourceRevision, base, head, candidate, loadPolicy }) {
   const policy = loadPolicy ? await loadPolicy() : await requiredPolicy(api, base, await loadProfile(api, repository, sourceRevision));
   if (!Array.isArray(policy?.checks) || !policy.checks.length) return [];
-  return checkCommit(api, candidate, policy.checks);
+  return (await Promise.all([...new Set([head, candidate].filter(Boolean))].map(revision => checkCommit(api, revision, policy.checks)))).flat();
 }
 
 export async function verifyEpicChecks(api, input) {
@@ -106,7 +106,7 @@ export async function verifyAcceptedEpicMerge(api, { repository, owner, sourceRe
   const reviews = await list(api, `pulls/${receipt.resource.number}/reviews`);
   const latest = reviews.filter(review => review.user?.login === owner && review.user.type === 'User' && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)).sort((a, b) => b.id - a.id)[0];
   if (latest?.id !== merged.review || latest.state !== 'APPROVED' || latest.commit_id !== merged.head) throw Error('Epic dependency owner approval was revoked');
-  if (!await verifyEpicChecks(api, { repository, sourceRevision, base, candidate: merged.candidate, loadPolicy })) throw Error('Epic dependency checks are no longer valid');
+  if (!await verifyEpicChecks(api, { repository, sourceRevision, base, head: merged.head, candidate: merged.candidate, loadPolicy })) throw Error('Epic dependency checks are no longer valid');
   return merged;
 }
 
@@ -229,8 +229,8 @@ export async function readyEpicPullRequest({ api, repository, owner, parent, chi
     return { pr, candidate: pr.merge_commit_sha, base, sourceRevision: current.sourceRevision, branch: current.base, key: epicJournalKey(correlation) };
   };
   const first = await observe();
-  const checkInput = { repository, sourceRevision: first.sourceRevision, base: first.branch, candidate: first.candidate, loadPolicy };
-  await ensureEpicChecks({ api, repository, ciTrigger, sourceRevision: first.sourceRevision, observation: first, journal, key: first.key, checks: () => observeEpicChecks(api, checkInput), recheck: async () => (await observe()).candidate === first.candidate });
+  const checkInput = { repository, sourceRevision: first.sourceRevision, base: first.branch, head, candidate: first.candidate, loadPolicy };
+  for (const subject of ['head', 'candidate']) await ensureEpicChecks({ api, repository, ciTrigger, subject, polls: 30, sourceRevision: first.sourceRevision, observation: first, journal, key: first.key, checks: () => observeEpicChecks(api, { ...checkInput, head: undefined, candidate: subject === 'head' ? head : first.candidate }), recheck: async () => (await observe()).candidate === first.candidate });
   if ((await observe()).candidate !== first.candidate) throw Error('Epic readiness evidence changed');
   if (first.pr.draft) {
     try { await setDraft(first.pr, false); }
@@ -367,8 +367,8 @@ export async function readyEpicAggregate({ api, repository, owner, snapshot, jou
   const correlation = epicCorrelation({ repository, parent: snapshot.issue, slice: 'aggregate', planDigest: epicPlanDigest(snapshot.plan), base: `lighthouse/epic-${snapshot.issue}`, dependencies: snapshot.plan.slices.map(slice => slice.id), kind: 'aggregate' });
   const key = epicJournalKey(correlation), receipt = await journal.readReceipt(key);
   if (receipt?.state !== 'linked' || receipt.resource?.id !== first.pr.id || receipt.resource?.number !== first.pr.number || !isDeepStrictEqual(receipt.correlation, correlation)) throw Error('Aggregate readiness journal changed');
-  const checkInput = { repository, sourceRevision: snapshot.sourceRevision, base: snapshot.defaultBranch, candidate: first.candidate, loadPolicy };
-  await ensureEpicChecks({ api, repository, ciTrigger, sourceRevision: snapshot.sourceRevision, observation: first, journal, key, checks: () => observeEpicChecks(api, checkInput), recheck: async () => { const fresh = await observe(); return fresh.head === first.head && fresh.base === first.base && fresh.candidate === first.candidate; } });
+  const checkInput = { repository, sourceRevision: snapshot.sourceRevision, base: snapshot.defaultBranch, head: first.head, candidate: first.candidate, loadPolicy };
+  for (const subject of ['head', 'candidate']) await ensureEpicChecks({ api, repository, ciTrigger, subject, polls: 30, sourceRevision: snapshot.sourceRevision, observation: first, journal, key, checks: () => observeEpicChecks(api, { ...checkInput, head: undefined, candidate: subject === 'head' ? first.head : first.candidate }), recheck: async () => { const fresh = await observe(); return fresh.head === first.head && fresh.base === first.base && fresh.candidate === first.candidate; } });
   if ((await observe()).candidate !== first.candidate) throw Error('Aggregate readiness evidence changed');
   await journal.writeReceipt(key, { ...await journal.readReceipt(key), readiness: { head: first.head, base: first.base, candidate: first.candidate } });
   if (first.pr.draft) {
@@ -410,7 +410,7 @@ export async function acceptEpicAggregate({ api, repository, owner, issue, run, 
     const reviews = await list(api, `pulls/${pr.number}/reviews`);
     const latest = reviews.filter(review => review.user?.login === owner && review.user.type === 'User' && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)).sort((a, b) => b.id - a.id)[0];
     if (latest?.state !== 'APPROVED' || latest.commit_id !== binding.head) throw Error('Aggregate owner approval is missing or revoked');
-    if (!await verifyEpicChecks(api, { repository, sourceRevision: head, base: repo.default_branch, candidate: binding.candidate, loadPolicy })) throw Error('Aggregate checks are no longer valid');
+    if (!await verifyEpicChecks(api, { repository, sourceRevision: head, base: repo.default_branch, head: binding.head, candidate: binding.candidate, loadPolicy })) throw Error('Aggregate checks are no longer valid');
     const compare = await api(`compare/${fresh.merge_commit_sha}...${head}`);
     if (!['identical', 'ahead'].includes(compare.status)) throw Error('Aggregate merge is absent from current main history');
     await verifyEpicBranchHistory(api, snapshot, journal, binding.head, true, loadPolicy);
@@ -509,7 +509,7 @@ export async function runEpicAction({ api, repository, owner, issue, run, journa
     authorizeDecision,
     ...(loadPolicy ? { loadPolicy } : {}),
   });
-  const verifyChecks = binding => verifyEpicChecks(api, { repository, sourceRevision: current.sourceRevision, base: current.base, candidate: binding.candidate, loadPolicy });
+  const verifyChecks = binding => verifyEpicChecks(api, { repository, sourceRevision: current.sourceRevision, base: current.base, head: binding.head, candidate: binding.candidate, loadPolicy });
   const result = await mergeEpicChild(api, { correlation, resource }, { journal, observe, authorize: () => authorizeDecision(decision), verifyChecks });
   if (await authorizeDecision(decision) !== true) throw Error('Epic acceptance authority changed before child completion');
   const fresh = await api(`issues/${child}`);

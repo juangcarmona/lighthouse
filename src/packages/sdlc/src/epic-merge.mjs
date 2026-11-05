@@ -27,7 +27,7 @@ export async function observeEpicMerge(api, { repository, owner, child, epic, de
   if (latest?.id !== decision.review || latest.state !== 'APPROVED' || latest.commit_id !== decision.head) throw Error('Current owner review does not approve this child head');
   const policy = await loadPolicy();
   if (!Array.isArray(policy?.checks) || !policy.checks.length) throw Error('Epic merge has no enforced checks');
-  const checks = await checkCommit(api, pr.merge_commit_sha, policy.checks);
+  const checks = [...await checkCommit(api, decision.head, policy.checks), ...await checkCommit(api, pr.merge_commit_sha, policy.checks)];
   if (checks.some(check => check.status !== 'passed')) throw Error('Epic merge checks are missing, pending or failed');
   if (await authorizeDecision(decision) !== true) throw Error('Epic merge decision was revoked');
   const childAgain = await authenticateChild();
