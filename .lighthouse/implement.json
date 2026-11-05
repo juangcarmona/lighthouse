@@ -137,10 +137,10 @@
     }
   },
   "390": {
-    "scope": "Implement only #390: retain a bounded redacted GitHub denial reason in the existing unattended API helper and meaningful error regressions. Preserve status, endpoint context and terminal failure; do not retry or change authority. Distinguish authoritative host check receipts from additional agent observations; forge CI and post-merge review retain their later gates. Allow 600000 ms for the complete repository verification command; its test and site build exceed the shell tool default.",
+    "scope": "Implement only #390 in the issue-stage GitHub API adapter used by Product Change publication. Retain a bounded redacted denial reason, original HTTP status and terminal failure. Preserve authority, permissions and mutation behavior. Use an H1 after changeset frontmatter. Distinguish independent host receipts, extra agent observations and later CI. Allow 600000 ms for complete repository verification.",
     "paths": [
-      "src/packages/sdlc/src/unattended-actions.mjs",
-      "src/tests/unattended-actions.test.mjs",
+      "src/packages/sdlc/src/issue-actions.mjs",
+      "src/tests/issue-actions.test.mjs",
       ".changeset/bounded-github-denial-message.md"
     ],
     "reviewRequired": false,
@@ -153,7 +153,7 @@
       [
         "node",
         "--test",
-        "src/tests/unattended-actions.test.mjs"
+        "src/tests/issue-actions.test.mjs"
       ],
       [
         "env",
@@ -174,10 +174,10 @@
         ".github/workflows/ci.yml",
         ".lighthouse/implement.json",
         ".lighthouse/unattended.json",
-        "src/tests/unattended-actions.test.mjs"
+        "src/tests/issue-actions.test.mjs"
       ],
       "corrections": {
-        "src/tests/unattended-actions.test.mjs": "Add meaningful regression coverage for this exact issue; preserve existing assertions and validation. For hotfix, author RED before changing production code and keep the accepted RED test bytes unchanged during repair."
+        "src/tests/issue-actions.test.mjs": "Add meaningful Response-based regressions for the admitted GitHub denial-message behavior; preserve existing assertions and authority checks."
       }
     }
   }
