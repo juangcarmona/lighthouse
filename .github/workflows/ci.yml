@@ -44,6 +44,29 @@ jobs:
       - name: Install Chrome for architecture rendering
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
+  continue-post-merge-review:
+    timeout-minutes: 5
+    needs: repository
+    if: always() && needs.repository.result == 'success' && (github.event_name == 'workflow_dispatch' || github.event_name == 'push') && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: c1b58b4564fa4c5626c099fcbf460fbce1509f1b
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Signal post-merge review through the existing router
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_CI_RESULT: ${{ needs.repository.result }}
+        run: node src/packages/sdlc/src/issue-actions.mjs signal-post-merge-review
   reconcile-implementation-pr:
     timeout-minutes: 5
     needs: repository
@@ -61,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: 46d422e394fb6b30586c9878d4f68a9790c9fa35
+          ref: c1b58b4564fa4c5626c099fcbf460fbce1509f1b
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

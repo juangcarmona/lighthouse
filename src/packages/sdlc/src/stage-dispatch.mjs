@@ -153,7 +153,8 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const recovery = !!request.recovery;
   const originPath = recovery ? '.github/workflows/lighthouse-worker-maintenance.yml' : routerPath;
   const originEvent = recovery ? request.routerEventName : request.eventName;
-  const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && Number(request.event.inputs.issue) === issue && (request.stage === 'review' && !request.worker && !request.handoff && request.completionRecovery?.maintenance === Number(request.event.inputs.after_run) || request.stage === 'implement' && request.worker === 'apply-review' && request.ciRepair?.run === Number(request.event.inputs.after_run) && !request.handoff || request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && request.predecessor?.runId === request.event.inputs.after_run || request.worker === 'product-change' && request.productParent?.predecessor?.runId === request.event.inputs.after_run || (!request.worker || request.worker === 'apply-review' && request.productResume?.parent.review) && request.event.inputs.workflow === 'resume-product' && request.productResume?.applyRun?.runId === request.event.inputs.after_run || !request.worker && request.event.inputs.workflow === 'resume-aligned' && request.productAlignment?.alignmentRun?.runId === request.event.inputs.after_run);
+  const reviewContinuation = request.stage === 'review' && !request.worker && !request.handoff && (request.completionRecovery?.maintenance === Number(request.event.inputs.after_run) || !request.completionRecovery && request.completionAuthorization?.issue === issue && request.completionAuthorization?.merge === false && sha(request.completionAuthorization?.head) && positive(request.completionAuthorization?.pr) && request.eventRunId === request.event.inputs.after_run);
+  const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && Number(request.event.inputs.issue) === issue && (reviewContinuation || request.stage === 'implement' && request.worker === 'apply-review' && request.ciRepair?.run === Number(request.event.inputs.after_run) && !request.handoff || request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && request.predecessor?.runId === request.event.inputs.after_run || request.worker === 'product-change' && request.productParent?.predecessor?.runId === request.event.inputs.after_run || (!request.worker || request.worker === 'apply-review' && request.productResume?.parent.review) && request.event.inputs.workflow === 'resume-product' && request.productResume?.applyRun?.runId === request.event.inputs.after_run || !request.worker && request.event.inputs.workflow === 'resume-aligned' && request.productAlignment?.alignmentRun?.runId === request.event.inputs.after_run);
   const epicTriage = !recovery && isBotEpicTriage(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'triage' && !request.handoff && !request.worker && Number(request.event.inputs.issue) === issue && Number(request.event.inputs.epic_parent) === request.epic?.parent;
   const epicRefinement = !recovery && isBotEpicRefinement(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'refine' && !request.handoff && !request.worker && Number(request.event.inputs.issue) === issue && Number(request.event.inputs.epic_parent) === request.epic?.parent;
   const expectedEpicKey = epicTriage ? epicTriageKey(repository, request.epic.parent, issue, request.epic.planDigest) : epicRefinement ? epicRefinementKey(repository, request.epic.parent, issue, request.epic.planDigest, request.event.inputs.epic_run) : undefined;
@@ -174,7 +175,7 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   const parent = await api(`actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt}`);
   const request = await readArtifact(api, repository, receipt.routerRunId, dispatchArtifact(receipt), 'dispatch.json');
   verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue);
-  if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && !request.ciRepair && !request.completionRecovery && !request.productParent && !['resume-product', 'resume-aligned'].includes(request.event?.inputs?.workflow)) {
+  if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage !== 'review' && !request.ciRepair && !request.completionRecovery && !request.productParent && !['resume-product', 'resume-aligned'].includes(request.event?.inputs?.workflow)) {
     const predecessor = await api(`actions/runs/${request.predecessor.runId}`);
     const next = await (await import('./stage-transition.mjs')).refinementAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: predecessor.id, head_sha: predecessor.head_sha } }, readArtifact);
     if (next?.issue !== issue || JSON.stringify(next.predecessor) !== JSON.stringify(request.predecessor)) throw Error('Bot continuation lacks an authenticated refinement');
@@ -207,6 +208,12 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
     const config = await api(`contents/.lighthouse/github.json?ref=${request.sourceRevision}`);
     const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
     if (ci.status !== 'completed' || ci.conclusion !== 'failure' || ci.head_sha !== request.ciRepair.head || ci.repository?.full_name !== repository || !profile.completion?.postMergeWorkflows?.some(name => ci.path === `.github/workflows/${name}`)) throw Error('Bot CI continuation lacks its original adopted failed attempt');
+  }
+  if (request.stage === 'review' && !request.completionRecovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
+    const run = await api(`actions/runs/${request.event.inputs.after_run}`);
+    const next = await (await import('./delivery-events.mjs')).deliveryAfterChecks(api, repository, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } });
+    const { stage, ...authorization } = next ?? {};
+    if (stage !== 'review' || JSON.stringify(authorization) !== JSON.stringify(request.completionAuthorization)) throw Error('Bot review continuation lacks authenticated post-merge CI');
   }
   if (request.completionRecovery) {
     const origin = await api(`actions/runs/${request.completionRecovery.maintenance}`);
@@ -284,7 +291,6 @@ export async function completedEvent(api, event, env, wait = ms => new Promise(r
     if (run.status !== 'completed') throw Error('Maintenance completion timed out; inspect its original execution before replay');
     return (await import('./completion-recovery.mjs')).recoveredCompletionEvent(api, env.GITHUB_REPOSITORY, env.GITHUB_REPOSITORY_OWNER, run, Number(event.inputs.issue));
   }
-  if (bot && event.inputs?.stage === 'review') throw Error('Bot review continuation must reference its native maintenance proof');
   if (bot) {
     let adoptedCi = false;
     if (!['resume-product', 'resume-aligned', 'product-change'].includes(event.inputs?.workflow) && run.path !== stagePath('refine') && run.repository?.full_name === env.GITHUB_REPOSITORY && ['push', 'pull_request', 'workflow_dispatch'].includes(run.event)) {
@@ -293,6 +299,7 @@ export async function completedEvent(api, event, env, wait = ms => new Promise(r
       const profile = config ? JSON.parse(Buffer.from(config.content, 'base64').toString()) : null;
       adoptedCi = run.repository?.full_name === env.GITHUB_REPOSITORY && ['push', 'pull_request', 'workflow_dispatch'].includes(run.event) && profile?.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`);
     }
+    if (event.inputs?.stage === 'review' && !adoptedCi) throw Error('Bot review continuation must reference adopted CI or its native maintenance proof');
     if (event.inputs?.workflow === 'resume-product' ? run.path !== stagePath('apply-product-change') : event.inputs?.workflow === 'resume-aligned' ? run.path !== stagePath('product-change') : event.inputs?.workflow === 'product-change' ? !['triage', 'refine', 'propose', 'implement', 'apply-review'].some(stage => run.path === stagePath(stage)) : run.path !== stagePath('refine') && !adoptedCi) throw Error(event.inputs?.workflow === 'resume-product' ? 'Bot continuation must reference a product apply' : event.inputs?.workflow === 'resume-aligned' ? 'Bot continuation must reference a product alignment' : event.inputs?.workflow === 'product-change' ? 'Bot continuation must reference a supported parent execution' : 'Bot continuation must reference a refinement or adopted CI');
     // The publisher signals before its own workflow has finished its final jobs.
     for (let attempt = 0; run.status !== 'completed' && attempt < 24; attempt++) {

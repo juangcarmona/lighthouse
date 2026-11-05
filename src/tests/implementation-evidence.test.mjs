@@ -10,20 +10,27 @@ import { changesDigest, loadImplementation } from '../packages/sdlc/src/implemen
 import { assertCitedChecks } from '../packages/sdlc/src/completion.mjs';
 import { dispatchId, dispatchArtifact, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
+import { unattendedImplementationPolicy, unattendedDigest } from '../packages/sdlc/src/unattended.mjs';
 
 const revision = 'a'.repeat(40), head = 'b'.repeat(40), tree = 'c'.repeat(40), intent = 'd'.repeat(64);
 const copy = value => structuredClone(value);
-async function fixture() {
+async function fixture({ unattended = false, route = 'ff' } = {}) {
   const repository = 'owner/demo', issue = 18, pr = 23;
   const policy = { scope: 'Fix the specified behavior.', paths: ['src/'], reviewRequired: false, checks: [['node', 'verify.mjs']] };
+  if (unattended) policy.verification = { paths: ['src/tests/'], corrections: {} };
   const file = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
   const state = { native: { id: 700, run_attempt: 1, repository: { full_name: repository }, path: '.github/workflows/lighthouse-sdlc-implement.lock.yml', head_sha: revision, head_branch: 'main', event: 'workflow_dispatch', status: 'completed', conclusion: 'success', actor: { login: 'owner' }, triggering_actor: { login: 'owner' } }, policy, tree, workflow: 'e'.repeat(40), missing: false, expired: false };
   const completion = { binding: { repository, issue, pr, head, intent, branch: 'main' }, currentRevision: revision };
+  state.unattended = unattended;
+  state.grant = { schemaVersion: 1, enabled: true, routes: [route], paths: ['src/value.js'], reviewerProfile: 'fast', allowFivePoint: false, merge: true, maxCorrections: 2, timeoutSeconds: 600,
+    ...(route === 'hotfix' ? { hotfix: { setupCommands: [['node', 'setup.mjs']], regressionCommand: ['node', '--test', 'src/tests/regression.mjs'], testPaths: ['src/tests/'], failurePattern: ['ERR_ASSERTION'], modules: { core: ['src/'] } } } : {}) };
+  if (unattended) state.native.path = '.github/workflows/lighthouse-sdlc-unattended.yml';
   const api = async path => {
     if (path === 'actions/runs/700' || path === 'actions/runs/700/attempts/1') return copy(state.native);
     if (path.startsWith('issues/18/comments?')) return [{ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:${JSON.stringify({ pr, head, complete: true, run: 700, attempt: 1 })} -->` }];
     if (path.startsWith('contents/.lighthouse/implement.json?')) return file({ defaults: state.policy });
     if (path.startsWith('contents/.lighthouse/environment.json?')) return null;
+    if (path.startsWith('contents/.lighthouse/unattended.json?')) return file(state.grant);
     if (path.startsWith('contents/.product/config.yaml?') && state.productRoot) {
       const content = `product-root: "${state.productRoot}"\n`;
       return { sha: '9'.repeat(40), encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') };
@@ -37,19 +44,56 @@ async function fixture() {
     ] };
     throw Error('Unexpected API request: ' + path);
   };
-  const implementation = await loadImplementation(api, issue, 'owner', revision, 'main');
+  const implementation = await loadImplementation(api, issue, 'owner', revision, 'main', unattended ? route : null);
+  if (unattended) implementation.policy = unattendedImplementationPolicy(implementation.policy, state.grant, issue, route);
   const request = { repository, issue, runId: 'f'.repeat(64), sourceRevision: revision, taskDigest: intent, workflowRunId: '700', attempt: 1, implementation };
   const changes = [{ path: 'src/value.js', mode: '100644', content: Buffer.from('export const value = 2;').toString('base64') }];
   const receipt = { schemaVersion: 2, binding: commandEvidenceBinding(request), candidateTree: tree, observedAt: '2026-11-04T12:00:00Z', runId: request.runId, sourceRevision: revision, changesDigest: changesDigest(changes), serviceCleanup: true, checks: implementation.policy.checks.map(command => ({ command, exitCode: 0, execution: { status: 'passed' }, output: retainedCommandOutput('Verification passed\n') })) };
   state.artifact = implementationEvidenceBundle(request, receipt, changes, { pr, head, tree });
+  if (unattended) state.artifact.unattended = { route, policyDigest: unattendedDigest(state.grant) };
   const readArtifact = async (_api, repo, run, name, member, optional) => {
     assert.equal(repo, repository); assert.equal(run, 700);
-    assert.equal(name, 'lighthouse-command-evidence-18-1'); assert.equal(member, 'implementation-evidence.json'); assert.equal(optional, true);
+    assert.equal(name, unattended ? 'lighthouse-unattended-700-1' : 'lighthouse-command-evidence-18-1'); assert.equal(member, 'implementation-evidence.json'); assert.equal(optional, true);
     if (state.expired) throw Error('Required artifact unavailable, ambiguous or too large');
     return state.missing ? null : copy(state.artifact);
   };
   return { state, completion, api, options: { readArtifact, now: Date.parse('2026-11-04T13:00:00Z') }, request, receipt, changes };
 }
+
+test('FF and hotfix host receipts authenticate the admitted scoped policy and canonical native artifact', async () => {
+  for (const route of ['ff', 'hotfix']) {
+    const f = await fixture({ unattended: true, route });
+    const result = await readImplementationEvidence(f.api, f.completion, f.options);
+    assert.equal(result.status, 'passed', result.reason);
+    assert.equal(result.artifact.name, 'lighthouse-unattended-700-1');
+    assert.equal(result.publication.tree, tree);
+    if (route === 'hotfix') assert.deepEqual(result.checks[0].command, ['node', 'setup.mjs']);
+    // Moving the active grant to the next issue does not rewrite an already executed grant.
+    f.completion.currentRevision = '1'.repeat(40);
+    const nextGrantApi = async path => path === 'contents/.lighthouse/unattended.json?ref=' + f.completion.currentRevision ? { content: Buffer.from(JSON.stringify({ enabled: false })).toString('base64') } : f.api(path);
+    assert.equal((await readImplementationEvidence(nextGrantApi, f.completion, f.options)).status, 'passed');
+  }
+});
+
+test('unattended command evidence rejects fabricated authority, changed scope, stale checks and missing original members', async t => {
+  const cases = {
+    'no admitted grant binding': f => { delete f.state.artifact.unattended; },
+    'changed grant': f => { f.state.grant.paths = ['src/other.js']; },
+    'disabled grant': f => { f.state.grant.enabled = false; },
+    'unsupported route': f => { f.state.artifact.unattended.route = 'other'; },
+    'wrong source': f => { f.state.native.head_sha = '3'.repeat(40); },
+    'bot without owner dispatch': f => { f.state.native.actor.login = 'github-actions[bot]'; },
+    'changed verification command': f => { f.state.policy.checks = [['node', 'other.mjs']]; },
+    'wrong tested tree': f => { f.state.tree = '2'.repeat(40); },
+    'altered output': f => { f.state.artifact.receipt.checks[0].output.content += 'forged'; },
+    'missing canonical member': f => { f.state.missing = true; },
+    'expired canonical artifact': f => { f.state.expired = true; },
+  };
+  for (const [name, mutate] of Object.entries(cases)) await t.test(name, async () => {
+    const f = await fixture({ unattended: true }); mutate(f);
+    assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).status, 'unavailable');
+  });
+});
 
 test('a matching host receipt authenticates commands against the current published tree', async () => {
   const f = await fixture();

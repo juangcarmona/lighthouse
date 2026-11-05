@@ -1,8 +1,18 @@
 import { createHash } from 'node:crypto';
 import { withinScope } from './implementation.mjs';
 import { validateStageCompletion } from './contracts.mjs';
+import { proposalRoot } from './proposal.mjs';
 
 export const unattendedDigest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+
+export function unattendedImplementationPolicy(implementation, policy, issue, route) {
+  validateUnattendedPolicy(policy, route);
+  if (policy.paths.some(path => !implementation.paths.some(prefix => prefix === '*' || (prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix)))) throw Error('Unattended paths exceed implementation authority');
+  return { ...implementation, paths: [...policy.paths, ...(route === 'ff' ? [proposalRoot(issue) + '/'] : [])],
+    checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, policy.hotfix.regressionCommand] : []), ...implementation.checks],
+    verification: { ...implementation.verification, paths: [...new Set([...implementation.verification.paths, ...(route === 'hotfix' ? policy.hotfix.testPaths : [])])],
+      corrections: Object.fromEntries(Object.entries(implementation.verification.corrections).filter(([path]) => route !== 'hotfix' || !policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix))) } };
+}
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const boundedPath = path => typeof path === 'string' && path !== '*' && !/[?*\[\]{}]/.test(path) && withinScope(path.replace(/\/$/, ''), { paths: ['*'] }) && !path.startsWith('.github') && !/^docs\/product(?:\/|$)/.test(path) && !/^openspec(?:\/|$)/.test(path);
 const contains = (prefix, path) => prefix.endsWith('/') ? path.startsWith(prefix) : prefix === path;
@@ -142,9 +152,18 @@ export async function runUnattended({ route, policy, host, signal }) {
         if (unattendedDigest(candidate.tests) !== unattendedDigest(red.tests)) throw Error('Hotfix repair changed its regression assertions');
       }
       if (!candidate.receipt?.checks?.length) throw Error('Required candidate checks are unavailable');
+      const completion = candidate.envelope?.result;
+      if (completion && (completion.pendingReview?.length || completion.unavailableChecks?.length)) throw Error('Implementation requires a human decision or unavailable evidence');
       if (candidate.receipt.checks.some(c => c.exitCode !== 0)) {
         candidate.feedback = ['Required host checks failed; preserve regression assertions and repair only the authorized scope.'];
         evidence.push({ kind: 'failed-checks', round, checks: candidate.receipt.checks });
+        continue;
+      }
+      if (completion && completion.status !== 'passed') {
+        const missing = completion.missingEvidence;
+        if (completion.status !== 'blocked' || !Array.isArray(missing) || !missing.length || missing.some(value => typeof value !== 'string' || !value.trim())) throw Error('Implementation stopped without actionable missing evidence');
+        candidate.feedback = ['Complete the missing planned evidence within the existing scope. Do not infer approval or repair an external prerequisite.', ...missing.slice(0, 8).map(value => value.slice(0, 1000))];
+        evidence.push({ kind: 'incomplete-implementation', round, runId: completion.runId, status: completion.status, missingEvidence: [...missing] });
         continue;
       }
       if (route === 'hotfix') assertRegression(candidate.receipt, plan, 'green');
@@ -155,7 +174,7 @@ export async function runUnattended({ route, policy, host, signal }) {
       if (review.verdict !== 'request-changes') throw Error('Independent review stopped delivery: ' + ((review.findings ?? []).join(' ').slice(0, 3000) || 'Inspect the independent review evidence before continuing'));
       candidate.feedback = review.findings;
     }
-    if (!accepted) throw Error('Independent review correction limit exhausted');
+    if (!accepted) throw Error('Unattended correction limit exhausted' + (candidate?.feedback?.length ? ': ' + candidate.feedback.join(' ').slice(0, 3000) : ''));
     await check();
     const published = await host.publish(candidate);
     await check();

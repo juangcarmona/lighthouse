@@ -180,5 +180,61 @@
         "src/tests/issue-actions.test.mjs": "Add meaningful Response-based regressions for the admitted GitHub denial-message behavior; preserve existing assertions and authority checks."
       }
     }
+  },
+  "394": {
+    "scope": "Implement only #394: bounded retries for clearly identified transient immutable artifact GET failures; preserve archive and identity validation, terminal errors and single-effect delivery authority. Allow 600000 ms for the complete repository verification command; its test and site build exceed the shell tool default. Use an H1 after changeset frontmatter. Construct synthetic credential values at runtime; unchanged publication validation rejects literal credential-shaped content.",
+    "paths": [
+      "src/packages/sdlc/src/actions-artifact.mjs",
+      "src/tests/actions-artifact.test.mjs",
+      ".changeset/bounded-artifact-read-retry.md"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "node",
+        "--test",
+        "src/tests/actions-artifact.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        "src/tests/actions-artifact.test.mjs"
+      ],
+      "corrections": {
+        "src/tests/actions-artifact.test.mjs": "Add meaningful regression coverage for bounded artifact read retries and unchanged validation; preserve existing assertions. This is the FF route."
+      }
+    }
   }
 }

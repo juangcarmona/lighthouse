@@ -4,7 +4,8 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { runUnattended, validateUnattendedPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
+import { runUnattended, validateUnattendedPolicy, unattendedImplementationPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
+import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { stageContext, executeUnattendedStage, applyCandidate, candidateInventory, boundedOpenSpecProvider } from './unattended-runtime.mjs';
 import { loadImplementation, createImplementationPullRequest } from './implementation.mjs';
 import { prepareProposal, proposalRoot } from './proposal.mjs';
@@ -216,16 +217,13 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         return { ...result, files: inventory.files, tests: testState(working, inventory.files.map(f => f.path)) };
       },
       implement: async ({ plan, red, previous, round }) => {
-        const selected = { ...implementation.policy, checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, plan.command] : []), ...implementation.policy.checks],
-          verification: { ...implementation.policy.verification, paths: [...new Set([...implementation.policy.verification.paths, ...(route === 'hotfix' ? policy.hotfix.testPaths : [])])],
-            corrections: Object.fromEntries(Object.entries(implementation.policy.verification.corrections).filter(([path]) => route !== 'hotfix' || !policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix))) } };
+        const selected = unattendedImplementationPolicy(implementation.policy, policy, issueNumber, route);
         const result = await step('implement', 'implement',
           'Implement only the reviewed bounded plan. Read /input/context.json and /harness/skills/implement/SKILL.md. ' +
           (route === 'hotfix' ? 'Use the compact hotfix plan; a full OpenSpec feature proposal is not required. Preserve the regression test bytes supplied by the RED phase and repair the root cause. ' : 'Use the supplied OpenSpec plan and update completed tasks accurately. ') +
           'Follow the workspace command slot, run required checks and return output.eligibility with the current admission assessment. Human-only product, visual or architecture decisions remain blockers. Preserve existing work. Write the envelope; the host independently checks the candidate.',
           { plan, refinement: refined, correction: { round, findings: previous?.feedback ?? [] }, regression: red ? { receipt: red.receipt, tests: red.tests } : null }, selected);
-        if (result.envelope.result.pendingReview.length || result.envelope.result.unavailableChecks.length ||
-            result.envelope.result.status !== 'passed' && result.receipt.checks.every(c => c.exitCode === 0)) throw Error(result.envelope.effect.body);
+        if (result.envelope.result.pendingReview.length || result.envelope.result.unavailableChecks.length) throw Error(result.envelope.effect.body);
         working = result.source; lastStep = result;
         const inventory = await candidateInventory(source, working, implementation.policy);
         await writeFile(join(root, 'candidate.json'), JSON.stringify(inventory.changes));
@@ -238,6 +236,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       publish: async candidate => {
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
+        const testedTree = (await api(`git/commits/${published.head.sha}`)).tree.sha;
+        const retainedReceipt = { ...lastStep.receipt, checks: lastStep.receipt.checks.map(({ log, ...check }) => check) };
+        const commandEvidence = { ...implementationEvidenceBundle(lastStep.request, retainedReceipt, lastStep.changes, { pr: published.number, head: published.head.sha, tree: testedTree }), unattended: { route, policyDigest } };
+        await writeFile(join(root, 'implementation-evidence.json'), JSON.stringify(commandEvidence));
         await recheck();
         await projectImplementationPrState(api, issueNumber, true);
         if (await releaseReservation() !== 'released') throw Error('The execution reservation changed before PR handoff; inspect the current issue and PR.');

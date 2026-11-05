@@ -58,6 +58,7 @@ jobs:
           path: |
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/report.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/candidate.json
+            ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/implementation-evidence.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/ci-requests.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/request.json
             ${{ runner.temp }}/lighthouse-unattended-${{ github.run_id }}/*/tmp/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
