@@ -1,0 +1,433 @@
+{
+  "binding": "90d7cbf2121190bd276f9b73a69d3d5c3b063dd98c2718622add80e67e60bd47",
+  "runId": "42027266558",
+  "attempt": "1",
+  "sourceRevision": "f04a0a4875336a50350314e7e975837b564b0ba8",
+  "intent": "dd24c5c627bcf0b7e314e1e35e0b0b53b01154b38bde53961901c2e430004fc6",
+  "policyDigest": "c42e87d0764dd498b6338f7d73c17d188d9bba9f8d7117c1d6930a693e0a57de",
+  "details": {
+    "refined": {
+      "eligibility": {
+        "points": 3,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "At the supplied source revision, issue-actions.mjs:185-194 is one shared API boundary whose non-success branch discards GitHub's message. Product PR creation at product-change-actions.mjs:170, proposal.mjs:117 and implementation.mjs:214 uses this boundary. A local, bounded diagnostic extraction with fail-closed sanitization can preserve the existing error prefix, numeric status and unsuccessful outcome without changing any caller, permission, retry or approval contract. The admitted scope is exactly the adapter, its tests and one SDLC patch changeset. Three points reflect the few-file correction plus adversarial Response tests; no legacy label conversion or five-point exception is used. Existing product handoff meaning already requires actionable missing conditions (FR-WORKFLOW-HANDOFFS:18-22). Rollback is a patch revert with no state migration; authorization and later evidence remain host-owned."
+      },
+      "estimate": {
+        "points": 3,
+        "status": "confirmed",
+        "rationale": {
+          "scope": "A bounded outcome across one issue-stage adapter, its focused tests and one SDLC patch changeset; keep internal extraction/sanitization helpers in the admitted adapter rather than adding an unadmitted helper file.",
+          "dependencies": "Existing fetch/Response APIs and current redaction patterns suffice. Inspected publication callers need no changes. No new package, product decision, repository setting, permission, migration or external service is required to implement or test the correction.",
+          "verification": "Real Response denial and malformed/hostile payload coverage, actual adapter/terminal failure coverage, success/status compatibility, then all four admitted implementation commands and later independent review/forge checks."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "The issue's historical GitHub denial was not replayed live; the diagnostic omission is confirmed by source inspection.",
+          "Implementation and repository verification have not run. Later receipts must identify the actual candidate, commands and outcomes.",
+          "Installed workflow behavior, live hosting rules and required forge CI are not established by this source snapshot; the trusted host must recheck them before integration."
+        ]
+      },
+      "problem": {
+        "summary": "Issue-stage maintainers see only GitHub method/endpoint/status when a request is denied, hiding the actionable provider explanation. Retain a safe, bounded explanation while preserving the original HTTP failure.",
+        "affectedUsers": [
+          "Lighthouse maintainers and adopters diagnosing denied issue-stage GitHub requests, including PR publication"
+        ],
+        "sourceRevision": "f04a0a4875336a50350314e7e975837b564b0ba8",
+        "rootCause": "The !r.ok branch at issue-actions.mjs:188 constructs an Error without inspecting any safe diagnostic field. The surrounding publisher and terminal handler therefore cannot display the permission condition.",
+        "desiredOutcome": "A representative 403 PR-creation denial reports that GitHub Actions is not permitted to create or approve pull requests alongside the unchanged GitHub POST pulls: 403 prefix. Unsafe or unavailable diagnostics yield exactly the existing status-only error."
+      },
+      "plannedFiles": [
+        "src/packages/sdlc/src/issue-actions.mjs",
+        "src/tests/issue-actions.test.mjs",
+        ".changeset/bounded-github-denial-message.md"
+      ],
+      "constraints": [
+        "Change only the admitted three paths. Keep any small internal error helper inside issue-actions.mjs; do not extract or modify host-runtime modules to reuse redaction.",
+        "Read only a bounded JSON error diagnostic and select only a nonempty top-level string message. Never serialize the response, nested errors, headers, request body or arbitrary provider HTML into diagnostics.",
+        "Sanitize before final truncation: remove control/format characters and line breaks, prevent markup/workflow-command injection, redact the exact active token and known credential-shaped strings using the existing redaction behavior as a reference. Reject unsafe/unusable text and retain status-only fallback. Do not import the heavyweight engine adapter solely for its redaction function.",
+        "Bound diagnostic consumption and final output independently. Proposed engineering limits for the plan are 8 KiB diagnostic input and 300 characters of sanitized message; oversized/unparseable input falls back to status-only. Preserve the existing method/path/status prefix outside that suffix limit.",
+        "Diagnostic parsing, streaming or sanitization failure must never mask or replace the original HTTP error/status. Do not attach raw diagnostic payloads or secondary parse exceptions to public errors.",
+        "Preserve optional 404 returning null, other non-success errors with numeric status, successful JSON parsing, 204 null and bounded job-log handling. Preserve failed exit semantics and existing partial-publication uncertainty.",
+        "No retries, permission broadening, repository-setting changes, inferred approval, lifecycle changes or automatic recovery. One @juangcarmona/lighthouse-sdlc patch changeset only."
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC1",
+          "criterion": "Using a real Response with status 403 and JSON message 'GitHub Actions is not permitted to create or approve pull requests.', the actual POST pulls adapter failure includes that permission condition and the existing method/path/403 prefix, retains error.status === 403 and remains a failure. Treat this as a representative test fixture, not an observed live response."
+        },
+        {
+          "id": "AC2",
+          "criterion": "Long and control-character messages stay within the explicit diagnostic bound and produce a single safe line. Bearer strings, GitHub/OpenAI token shapes, JWTs and the exact active credential never appear, including secrets near truncation boundaries. HTML, diagnostic markup and injected workflow-command text cannot be emitted as executable or arbitrary provider markup."
+        },
+        {
+          "id": "AC3",
+          "criterion": "Malformed JSON, null/array/nonobject payloads, missing/nonstring/empty message, HTML bodies, oversized input and unavailable or failing body reads preserve the original method/path/status-only error with its numeric status; they never emit payloads or substitute a diagnostic-read failure."
+        },
+        {
+          "id": "AC4",
+          "criterion": "Real Response tests prove optional 404 still returns null, nonoptional 404 and representative 422/500 remain errors with their original status, successful JSON and 204 retain existing results, and error enrichment performs no second request or retry. Status-based CI failure classification remains unchanged."
+        },
+        {
+          "id": "AC5",
+          "criterion": "Focused tests exercise the wired issue-actions API/CLI path, not merely an unused helper; a child-process case verifies safe diagnostic visibility and unsuccessful exit. No caller receives approval or an inferred no-effects/success result from a denial."
+        },
+        {
+          "id": "AC6",
+          "criterion": "The candidate contains only the admitted implementation files and one SDLC patch changeset, with engineering planning artifacts handled by their existing provider-owned planning path. All admitted implementation checks receive actual receipts before implementation acceptance; later independent review and required forge CI must separately pass."
+        }
+      ],
+      "outOfScope": [
+        "Changing GitHub permissions, Actions PR-creation settings, authentication or repository policy",
+        "Retrying denied publication, reconciling existing branches/PRs or changing uncertain-publication recovery",
+        "Changing product meaning, ProductShape artifacts, CI diagnostic schemas, other API adapters or public error contracts beyond the safe message suffix",
+        "Installing workflows, publishing packages, merging, releasing or deploying"
+      ],
+      "dependencies": [
+        {
+          "name": "Implementation dependencies",
+          "resolved": true,
+          "owner": "Implementation worker",
+          "reason": "Current platform APIs, local test patterns and existing redaction behavior are sufficient; no new external dependency is required."
+        },
+        {
+          "name": "Authority and subsequent delivery gates",
+          "resolved": true,
+          "owner": "Trusted host",
+          "reason": "The supplied context admits this FF refinement and exact scope. Fresh grant/dispatch checks, independent observations and forge evidence remain mandatory later; source review does not replace them."
+        }
+      ],
+      "definitionOfReady": [
+        {
+          "check": "Problem and affected users identified",
+          "satisfied": true,
+          "evidence": "bounded-problem-and-root-cause"
+        },
+        {
+          "check": "Existing product meaning covers the outcome; no ambiguous success or approval meaning",
+          "satisfied": true,
+          "evidence": "product-alignment"
+        },
+        {
+          "check": "Scope, exclusions, estimate and reversible low-risk correction established",
+          "satisfied": true,
+          "evidence": "scope-estimate-and-reversibility"
+        },
+        {
+          "check": "Relevant callers and resolved dependency owners identified",
+          "satisfied": true,
+          "evidence": "callers-and-failure-contract"
+        },
+        {
+          "check": "Testable acceptance criteria and later verification plan established",
+          "satisfied": true,
+          "evidence": "verification-plan-established"
+        }
+      ],
+      "verificationPlan": {
+        "source": "context.unattended.implementationChecks",
+        "executionStatus": "not-run; admitted inventory is not an execution receipt",
+        "workingDirectory": "/workspace in the later implementation verification environment",
+        "commands": [
+          [
+            "npm",
+            "ci",
+            "--ignore-scripts"
+          ],
+          [
+            "node",
+            "--test",
+            "src/tests/issue-actions.test.mjs"
+          ],
+          [
+            "env",
+            "GITHUB_ACTIONS=true",
+            "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+            "npm",
+            "run",
+            "verify"
+          ],
+          [
+            "npx",
+            "--yes",
+            "--package=@fission-ai/openspec@1.15.0",
+            "openspec",
+            "validate",
+            "issue-390-proposal",
+            "--strict",
+            "--no-interactive"
+          ]
+        ],
+        "prerequisites": "Use the host-provisioned Node/npm/Chromium environment. Generate issue-390-proposal through the existing planning provider before its validation; that directory is absent at this baseline. Do not broaden the admitted implementation source scope to compensate for missing planning artifacts.",
+        "additionalAgentObservations": {
+          "performed": [],
+          "planned": [
+            "Separate host-dispatched read-only planning assessment",
+            "Separate candidate assessment of actual before/after source, hostile-input coverage and check receipts"
+          ],
+          "note": "No additional agent was spawned and no independent acceptance is claimed by this refinement. These later assessments do not populate this stage's pendingReview."
+        },
+        "forgeCI": {
+          "status": "not-observed; later gate",
+          "requirement": "The trusted host must observe actual required GitHub checks for the current PR head and recheck hosting rules before any separately delegated integration. Local or host verification and an independent model verdict are not forge CI receipts."
+        },
+        "optionalToolingObservations": [
+          "CodeGraph context lookup returned 'CodeGraph query unavailable'; symbol search found no useful JavaScript redaction symbol. Direct source and caller reads supplied the assessment instead; no required refinement check depends on that service.",
+          "The repository-requested ponytail skill was not present at /harness/skills/ponytail/SKILL.md or among the listed workspace skills. Canonical refine and concise-results skills were read; this optional tooling absence is not a missing product check."
+        ]
+      },
+      "productContext": {
+        "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+        "assessment": "Aligned engineering correction, no Product Change needed. Host-prepared inspect/impact reports identify existing handoff and authority relationships; they grant no approval or scope expansion.",
+        "citations": [
+          "pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\"",
+          "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+          "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\""
+        ]
+      },
+      "rollback": "Revert only the eventual adapter/test/changeset patch to restore status-only diagnostics. There is no migration or permission change. Reverting code does not undo remote branches or publication effects from any earlier failed run; reconcile those separately before an authorized retry.",
+      "nextOwnerDecision": "The trusted host evaluates continuation under the existing unattended grant and independent planning assessment. No new human product decision is needed for this bounded correction; merge and release authority remain separate.",
+      "assessmentLimit": "Source assessment only at the supplied revision; not a claim about deployed workflows, a reproduced live denial, completed implementation, executed verification or accepted integration. The admitted route is ff, so no hotfix regression plan or hotfix RED/GREEN claim is returned."
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-390-proposal/proposal.md",
+          "content": "---\npdac-scope: cited\n---\n\n# Proposal\n\n## Why\n\nIssue #390 reports that a PR-creation failure exposed only `GitHub POST pulls: 403`, hiding the permission condition that a maintainer needed to resolve. Correct that diagnostic omission without changing the denied operation or its outcome.\n\n## What Changes\n\n- Enrich issue-stage API errors with only a safe top-level GitHub JSON `message`, retaining the existing method/endpoint/status prefix and numeric error status.\n- Bound diagnostic input to 8 KiB and the sanitized message to 300 characters; unavailable, malformed, oversized or unsafe diagnostics retain the exact status-only error. Never publish raw bodies, headers, nested error objects or credentials.\n- Add real `Response` adapter tests and a CLI failure regression, and one `@juangcarmona/lighthouse-sdlc` patch changeset.\n- Preserve optional 404, successful JSON, 204, job-log handling, failure classification and partial-publication uncertainty. No retry, setting, permission, lifecycle or approval changes.\n\n## Capabilities\n\n### New Capabilities\n\nNone.\n\n### Modified Capabilities\n\nNone. This is an implementation-level correction of the existing actionable-failure contract, not a new or altered product requirement. The local `openspec/specs/` inventory contains only `.gitkeep`; no capability path is invented. Return `skip_specs: true` and no delta specification.\n\n## Impact\n\nImplementation paths are exactly `src/packages/sdlc/src/issue-actions.mjs`, `src/tests/issue-actions.test.mjs` and `.changeset/bounded-github-denial-message.md`. Any small diagnostic helper stays inside the adapter; there is no new dependency, caller change, data migration or remote-setting mutation. Provider-owned planning artifacts remain under `openspec/changes/issue-390-proposal/`, separate from the three-file implementation scope.\n\n### Product alignment and discovery\n\nBefore drafting, compare issue intent with the complete host-prepared 137-artifact inventory, then inspect the relevant canonical texts and direct/transitive impact reports at `.lighthouse-product-evidence/`. These reports provide context and provider-emitted citation payloads, not approval. Dependencies are:\n\n- `FR-WORKFLOW-HANDOFFS`: existing operational blockers name the missing condition, while failed and uncertain observations remain honest. The diagnostic correction supports that requirement without changing handoff structure or publication order.\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n- `BR-FAIL-CLOSED`: verification results must distinguish failure and unavailable evidence from success; enrichment never turns a denied request or an unexecuted check into a pass.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n- `FR-FAST-FORWARD-DELIVERY`: this admitted three-point correction retains separate independent assessment, candidate-bound evidence and separately delegated integration. The plan changes none of those policies.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\nChecked neighbours left out of the change: `BR-ENTRY-AUTHORITY`, `BR-HUMAN-AUTHORITY`, `BR-STAGE-GATES`, `BR-LABEL-STATE`, `BR-WORKFLOW-STATE`, `UC-RUN-SDLC` and `UC-CONTINUE-AGENT-RUN`. Their authorization, labels, state, recovery and stage rules remain untouched. Wider impact neighbours concerning memory, foundation upgrades, initialization, profiles and public-site projection receive no new behavior from this diagnostic suffix. No canonical product artifact is altered or contradicted; no Product Change or drift resolution is requested.\n\nArchitecture remains owned by `docs/architecture/`; its package and evidence boundaries apply unchanged. OpenSpec owns these planning artifacts, and ProductShape retains product intent. This proposal is not architecture acceptance, product approval or merge authority.\n\n## Completion boundary\n\nImplementation completion requires the bounded candidate, acceptance coverage in design.md, one patch changeset and actual receipts for every admitted command plus the adopter citation check. Returning this plan establishes none of those executions. The trusted host first validates/materializes these files and obtains a separate planning assessment; later candidate review and current-head required forge CI remain explicit delivery gates.\n"
+        },
+        {
+          "path": "openspec/changes/issue-390-proposal/design.md",
+          "content": "---\npdac-scope: cited\n---\n\n# Design\n\n## Context\n\nSee proposal.md for motivation and scope. In `issue-actions.mjs:185-194`, `main` creates the shared fetch adapter: optional 404 returns null, other unsuccessful responses throw a status-only Error with numeric `status`, job logs follow a separate success path, and 204 returns null. The terminal handler at lines 995-996 emits `error.message` and sets exit code 1. Product, proposal and implementation PR publishers all call this boundary.\n\n`opencode-execute.mjs:30-34` already redacts Bearer values, GitHub/OpenAI token shapes and JWTs. Use those patterns as a reference, but do not import the engine runtime or change it. Existing test-file child-process fetch injection supplies the CLI regression pattern. Follow the package and authority boundaries in `docs/architecture/04-solution-strategy/README.md` and `08-crosscutting-concepts/README.md`; no new architectural pattern or authority artifact is needed.\n\n## Goals / Non-Goals\n\n**Goals:** Retain the provider's actionable permission condition when safe; bound consumption and output independently; ensure diagnostic work cannot replace the original HTTP failure. This implements existing actionable blocker meaning, not a new error-result contract.\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n\n**Non-Goals:** General provider diagnostics, reusable runtime refactoring, new error schemas, retries or automatic recovery. No caller, permission, authentication, repository setting, authority, lifecycle or product-model change. A clearer denial cannot establish that earlier publication had no effects.\n\n## Decisions\n\n### 1. One wired adapter, one small local diagnostic helper\n\nKeep all production changes in `issue-actions.mjs`. Make the existing request adapter available through a narrow in-file factory used by both `main` and focused tests; do not add a package export or change its `(path, method, body, optional)` calling convention. Keep at most one small diagnostic extraction/sanitization helper in the same file. This allows real `Response` tests to exercise the actual adapter rather than an unused helper. A new shared module or importing the engine solely for redaction would add coupling and exceed the admitted scope.\n\nConstruct the original `GitHub ${method} ${path}: ${status}` error and numeric status before diagnostic extraction. For non-optional failures only, best-effort append `: ${safeMessage}` when usable; otherwise throw the original unchanged status-only error. Do not attach the response, raw text, headers, nested `errors`, parse exception or a new public cause. Optional 404 bypasses diagnostic reads. No second fetch or retry is introduced. Successful JSON, 204 and the existing job-log path remain unchanged.\n\n### 2. Bounded JSON consumption, not full-body parsing\n\nRead the error body incrementally through its `ReadableStream`, count bytes and retain no more than 8,192 bytes. If a chunk would cross the cap, discard diagnostics, stop reading and cancel best-effort; cancellation failure must not delay or mask the original error. Do not use unbounded `text()`/`json()` followed by slicing or trust Content-Length to enforce the cap. The existing request timeout remains applicable during body reads. Missing/locked/errored/aborted bodies and decode/JSON failures yield no suffix.\n\nDecode a complete within-cap UTF-8 payload and parse JSON. Accept only a non-null, non-array object with a nonempty top-level string `message`; ignore every other field. JSON parsing, not a content-type header alone, determines whether a diagnostic exists. HTML bodies, truncated input and oversized JSON fall back; never extract text from HTML or serialize an object to obtain a message. The 8 KiB limit bounds retained diagnostic input, not upstream network implementation allocations.\n\n### 3. Fail-closed plain text, redaction before truncation\n\nProcess the entire selected bounded string before shortening it. Redact the nonempty exact active `GH_TOKEN` value and known Bearer, GitHub token-family, OpenAI-key and JWT shapes using the existing redaction behavior as the baseline. Include GitHub `ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_` and `github_pat_` forms. Never log the input during processing.\n\nNormalize line breaks and whitespace to a single line and remove control/format characters, including ANSI and bidi/zero-width controls. Recheck/redact after normalization so removal cannot assemble a credential that bypasses filtering; account for normalized active-token text as well as its raw value. Reject markup/link delimiters, workflow-command syntax such as `::`, and encoded line/command escapes rather than trying to render arbitrary provider markup. Empty, markup-bearing or otherwise unusable results get no suffix.\n\nFinally trim and cap the sanitized message at 300 UTF-16 code units, including any ellipsis, without splitting a surrogate pair. The original method/path/status prefix is outside this suffix cap. Final safety checks must reject newly exposed command syntax or credential fragments. Tests cover secrets crossing the truncation boundary so no original partial token is disclosed. This conservative approach can omit useful but unsafe diagnostics; prefer status-only output over attempting to preserve arbitrary text.\n\n### 4. Preserve failure and authority semantics\n\nEnrichment changes only diagnostic text: numeric HTTP status, exception propagation, exit code, CI classification and uncertainty about earlier publication remain intact. Diagnostic failures are swallowed only to preserve the original HTTP error, never to return success or approval. Verification failures/unavailable evidence remain explicit rather than being represented as compliance.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n## Test impact and Definition of Done\n\nAll new tests live in `src/tests/issue-actions.test.mjs`, with real platform `Response`/stream objects and injected fetch returning them; no live GitHub request or actual credential is needed. Keep existing tests.\n\n- **AC1 — actionable denial:** Actual adapter `POST pulls` with a 403 JSON message `GitHub Actions is not permitted to create or approve pull requests.` retains that condition, the unchanged prefix and `error.status === 403`; assert rejection. This sentence is a representative fixture, not an observed live response.\n- **AC2 — hostile text:** Long messages, CR/LF, ANSI/control/format characters, markup, workflow-command and encoded-command payloads stay bounded and inert or fall back. Assert absence of exact synthetic active credentials, Bearer values, GitHub/OpenAI token shapes and JWTs, including normalization-created matches and truncation-boundary secrets. Assert one line and suffix length.\n- **AC3 — unusable diagnostics:** Malformed JSON; null, arrays and scalar payloads; absent/nonstring/empty messages; HTML bodies; unsafe JSON message text; invalid UTF-8; over-cap streams (also without Content-Length); unavailable, locked and failing body reads all retain the exact original status-only message and numeric status. Assert no raw/nested sentinel data or secondary parse/read error is emitted, and that oversized streams stop being read.\n- **AC4 — compatibility:** Optional 404 returns null without reading the diagnostic; nonoptional 404 and representative 422/500 retain numeric status and rejection. Successful JSON and 204 remain unchanged, as do job-log handling and status-based CI failure classification. Count fetch calls to prove enrichment never sends another request.\n- **AC5 — wired CLI:** Use the existing child-process `--import` fetch-injection pattern to reach an actual failing request through `main`, returning real Responses. Assert the safe condition is visible, hostile/raw fields and credentials are absent, and exit code remains 1. The direct adapter test separately covers `POST pulls`; no publication success or inferred no-effects outcome may be introduced.\n- **AC6 — scope and evidence:** Only the admitted three implementation paths change, including exactly one SDLC patch changeset. Planning files are host-materialized separately. Obtain actual candidate-bound receipts for all commands in tasks.md before implementation acceptance; these tests and receipts have not run at proposal time.\n\n## Risks / Trade-offs\n\n- [A denial body is attacker-controlled] → Select one string only, bound reads, redact fully before truncation and reject unsafe syntax. Never emit the raw payload on failure.\n- [Sanitization forms a new secret or splits one] → Redact/check before and after normalization, then truncate only sanitized text; exercise boundary fixtures.\n- [Diagnostic read/cancellation masks the HTTP error] → Keep the prebuilt original error, contain all diagnostic exceptions, retain timeout coverage and make cleanup best-effort.\n- [Conservative filtering hides a useful explanation] → Accept status-only fallback; do not broaden parsing or scope to recover arbitrary provider HTML.\n- [Model or local checks are mistaken for delivery acceptance] → Preserve separate host validation, independent observations and current-head forge receipts.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n## Migration Plan\n\nNo state or data migration. Deliver the adapter/tests with `.changeset/bounded-github-denial-message.md` declaring a patch for `@juangcarmona/lighthouse-sdlc`; do not bump versions, install workflows, publish or release in this issue. Rollback reverts only that three-file patch to restore status-only errors. Reverting code does not undo pre-existing remote branches or publication effects, and authorizes no retry.\n"
+        },
+        {
+          "path": "openspec/changes/issue-390-proposal/tasks.md",
+          "content": "---\npdac-scope: cited\n---\n\n# Tasks\n\n## 1. Bounded diagnostic correction and its regressions\n\nThese tasks implement the existing actionable operational-blocker contract without changing handoff structure or failure meaning. All production work and any small helper stay in the admitted adapter file; all tests stay in its existing test file.\n<!-- pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\" -->\n\n- [ ] 1.1 Wire the existing request adapter through the in-file testable factory and implement best-effort 8 KiB JSON diagnostic extraction with the original error/status preserved; add real Response tests for the representative `POST pulls` 403, invalid payload/body-read cases and over-cap stream cancellation. Verify AC1/AC3 with `node --test src/tests/issue-actions.test.mjs`, including exact status-only fallbacks and no second request.\n- [ ] 1.2 Implement conservative single-line sanitization and active-token/credential-shape redaction before the 300-character suffix cap; add long/control/format, markup/command, encoded-injection, normalization and truncation-boundary fixtures in the same test file. Verify AC2 with the focused command, explicit suffix bounds and assertions that no full or partial synthetic credential is exposed.\n- [ ] 1.3 Add real Response compatibility tests for optional/nonoptional 404, 422/500, JSON success, 204 and existing job-log behavior, plus the wired child-process failure regression. Verify AC4/AC5 with the focused command: numeric status and CI classification unchanged, safe text visible, hostile/raw fields absent, no enrichment retry and exit code 1.\n- [ ] 1.4 Add `.changeset/bounded-github-denial-message.md` documenting the safe denial suffix and unchanged failure semantics with only `\"@juangcarmona/lighthouse-sdlc\": patch` frontmatter. Verify the delivered artifact, no version/dependency/workflow changes and that the implementation diff contains exactly the admitted adapter, test and changeset paths, excluding separately host-owned planning artifacts (AC6).\n\n## 2. Candidate-wide verification\n\nThe following commands are the admitted inventory, not receipts. Failed, unavailable or skipped checks cannot be described as passing or replaced by a generic green result.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n- [ ] 2.1 After the host has materialized the provider plan, obtain actual candidate-bound receipts in `/workspace` for the four commands below, preserving command order, exit outcomes and retained logs; verify all four pass before implementation acceptance. Run in the host-provisioned Node/npm/Chromium environment and do not broaden the implementation scope to compensate for missing planning artifacts.\n\n```sh\nnpm ci --ignore-scripts\nnode --test src/tests/issue-actions.test.mjs\nenv GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify\nnpx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-390-proposal --strict --no-interactive\n```\n\n- [ ] 2.2 Obtain the additional adopter citation-check receipt after dependency installation and provider materialization: `npx --no-install prodshape citations verify --provider openspec --format json`. Verify every current document is explicitly scoped and every citation current; preserve diagnostics and return unrelated baseline failures to the host rather than editing outside scope. No product behavior or canonical digest changes are planned, so no citation refresh is expected; if stale evidence appears, refresh only affected planning citations through current provider inspect/cite payloads and rerun validation.\n\n## Workflow follow-up\n\nThe host binds continuation to current scope, intent, source and policy; separate independent review and forge-protected integration are later gates, not completed checks or missing current proposal reviews.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n- Trusted host validates this envelope and materializes the OpenSpec scaffold, retaining provider metadata and appending only `skip_specs: true`; strict provider validation precedes acceptance of the plan. Obtain the separately dispatched planning assessment before authorized implementation.\n- After implementation and actual checks, obtain a separate read-only candidate assessment using the configured independent model. No independent agent observation or acceptance is claimed by this proposal.\n- Observe actual required forge CI for the current PR head and recheck live hosting rules and separate merge delegation before integration. Local/host tests and an independent model verdict are not forge CI receipts.\n- Archive only through the existing provider workflow after applicable delivery gates, with the adopter's final citation verification. This plan authorizes no workflow installation, permission change, retry, merge, release or deployment.\n"
+        },
+        {
+          "path": "openspec/changes/issue-390-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-05\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "eligibility": {
+          "points": 3,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "At the supplied source revision, issue-actions.mjs:185-194 is one shared API boundary whose non-success branch discards GitHub's message. Product PR creation at product-change-actions.mjs:170, proposal.mjs:117 and implementation.mjs:214 uses this boundary. A local, bounded diagnostic extraction with fail-closed sanitization can preserve the existing error prefix, numeric status and unsuccessful outcome without changing any caller, permission, retry or approval contract. The admitted scope is exactly the adapter, its tests and one SDLC patch changeset. Three points reflect the few-file correction plus adversarial Response tests; no legacy label conversion or five-point exception is used. Existing product handoff meaning already requires actionable missing conditions (FR-WORKFLOW-HANDOFFS:18-22). Rollback is a patch revert with no state migration; authorization and later evidence remain host-owned."
+        },
+        "estimate": {
+          "points": 3,
+          "status": "confirmed",
+          "rationale": {
+            "scope": "A bounded outcome across one issue-stage adapter, its focused tests and one SDLC patch changeset; keep internal extraction/sanitization helpers in the admitted adapter rather than adding an unadmitted helper file.",
+            "dependencies": "Existing fetch/Response APIs and current redaction patterns suffice. Inspected publication callers need no changes. No new package, product decision, repository setting, permission, migration or external service is required to implement or test the correction.",
+            "verification": "Real Response denial and malformed/hostile payload coverage, actual adapter/terminal failure coverage, success/status compatibility, then all four admitted implementation commands and later independent review/forge checks."
+          },
+          "confidence": "high",
+          "uncertainty": [
+            "The issue's historical GitHub denial was not replayed live; the diagnostic omission is confirmed by source inspection.",
+            "Implementation and repository verification have not run. Later receipts must identify the actual candidate, commands and outcomes.",
+            "Installed workflow behavior, live hosting rules and required forge CI are not established by this source snapshot; the trusted host must recheck them before integration."
+          ]
+        },
+        "problem": {
+          "summary": "Issue-stage maintainers see only GitHub method/endpoint/status when a request is denied, hiding the actionable provider explanation. Retain a safe, bounded explanation while preserving the original HTTP failure.",
+          "affectedUsers": [
+            "Lighthouse maintainers and adopters diagnosing denied issue-stage GitHub requests, including PR publication"
+          ],
+          "sourceRevision": "f04a0a4875336a50350314e7e975837b564b0ba8",
+          "rootCause": "The !r.ok branch at issue-actions.mjs:188 constructs an Error without inspecting any safe diagnostic field. The surrounding publisher and terminal handler therefore cannot display the permission condition.",
+          "desiredOutcome": "A representative 403 PR-creation denial reports that GitHub Actions is not permitted to create or approve pull requests alongside the unchanged GitHub POST pulls: 403 prefix. Unsafe or unavailable diagnostics yield exactly the existing status-only error."
+        },
+        "plannedFiles": [
+          "src/packages/sdlc/src/issue-actions.mjs",
+          "src/tests/issue-actions.test.mjs",
+          ".changeset/bounded-github-denial-message.md"
+        ],
+        "constraints": [
+          "Change only the admitted three paths. Keep any small internal error helper inside issue-actions.mjs; do not extract or modify host-runtime modules to reuse redaction.",
+          "Read only a bounded JSON error diagnostic and select only a nonempty top-level string message. Never serialize the response, nested errors, headers, request body or arbitrary provider HTML into diagnostics.",
+          "Sanitize before final truncation: remove control/format characters and line breaks, prevent markup/workflow-command injection, redact the exact active token and known credential-shaped strings using the existing redaction behavior as a reference. Reject unsafe/unusable text and retain status-only fallback. Do not import the heavyweight engine adapter solely for its redaction function.",
+          "Bound diagnostic consumption and final output independently. Proposed engineering limits for the plan are 8 KiB diagnostic input and 300 characters of sanitized message; oversized/unparseable input falls back to status-only. Preserve the existing method/path/status prefix outside that suffix limit.",
+          "Diagnostic parsing, streaming or sanitization failure must never mask or replace the original HTTP error/status. Do not attach raw diagnostic payloads or secondary parse exceptions to public errors.",
+          "Preserve optional 404 returning null, other non-success errors with numeric status, successful JSON parsing, 204 null and bounded job-log handling. Preserve failed exit semantics and existing partial-publication uncertainty.",
+          "No retries, permission broadening, repository-setting changes, inferred approval, lifecycle changes or automatic recovery. One @juangcarmona/lighthouse-sdlc patch changeset only."
+        ],
+        "acceptanceCriteria": [
+          {
+            "id": "AC1",
+            "criterion": "Using a real Response with status 403 and JSON message 'GitHub Actions is not permitted to create or approve pull requests.', the actual POST pulls adapter failure includes that permission condition and the existing method/path/403 prefix, retains error.status === 403 and remains a failure. Treat this as a representative test fixture, not an observed live response."
+          },
+          {
+            "id": "AC2",
+            "criterion": "Long and control-character messages stay within the explicit diagnostic bound and produce a single safe line. Bearer strings, GitHub/OpenAI token shapes, JWTs and the exact active credential never appear, including secrets near truncation boundaries. HTML, diagnostic markup and injected workflow-command text cannot be emitted as executable or arbitrary provider markup."
+          },
+          {
+            "id": "AC3",
+            "criterion": "Malformed JSON, null/array/nonobject payloads, missing/nonstring/empty message, HTML bodies, oversized input and unavailable or failing body reads preserve the original method/path/status-only error with its numeric status; they never emit payloads or substitute a diagnostic-read failure."
+          },
+          {
+            "id": "AC4",
+            "criterion": "Real Response tests prove optional 404 still returns null, nonoptional 404 and representative 422/500 remain errors with their original status, successful JSON and 204 retain existing results, and error enrichment performs no second request or retry. Status-based CI failure classification remains unchanged."
+          },
+          {
+            "id": "AC5",
+            "criterion": "Focused tests exercise the wired issue-actions API/CLI path, not merely an unused helper; a child-process case verifies safe diagnostic visibility and unsuccessful exit. No caller receives approval or an inferred no-effects/success result from a denial."
+          },
+          {
+            "id": "AC6",
+            "criterion": "The candidate contains only the admitted implementation files and one SDLC patch changeset, with engineering planning artifacts handled by their existing provider-owned planning path. All admitted implementation checks receive actual receipts before implementation acceptance; later independent review and required forge CI must separately pass."
+          }
+        ],
+        "outOfScope": [
+          "Changing GitHub permissions, Actions PR-creation settings, authentication or repository policy",
+          "Retrying denied publication, reconciling existing branches/PRs or changing uncertain-publication recovery",
+          "Changing product meaning, ProductShape artifacts, CI diagnostic schemas, other API adapters or public error contracts beyond the safe message suffix",
+          "Installing workflows, publishing packages, merging, releasing or deploying"
+        ],
+        "dependencies": [
+          {
+            "name": "Implementation dependencies",
+            "resolved": true,
+            "owner": "Implementation worker",
+            "reason": "Current platform APIs, local test patterns and existing redaction behavior are sufficient; no new external dependency is required."
+          },
+          {
+            "name": "Authority and subsequent delivery gates",
+            "resolved": true,
+            "owner": "Trusted host",
+            "reason": "The supplied context admits this FF refinement and exact scope. Fresh grant/dispatch checks, independent observations and forge evidence remain mandatory later; source review does not replace them."
+          }
+        ],
+        "definitionOfReady": [
+          {
+            "check": "Problem and affected users identified",
+            "satisfied": true,
+            "evidence": "bounded-problem-and-root-cause"
+          },
+          {
+            "check": "Existing product meaning covers the outcome; no ambiguous success or approval meaning",
+            "satisfied": true,
+            "evidence": "product-alignment"
+          },
+          {
+            "check": "Scope, exclusions, estimate and reversible low-risk correction established",
+            "satisfied": true,
+            "evidence": "scope-estimate-and-reversibility"
+          },
+          {
+            "check": "Relevant callers and resolved dependency owners identified",
+            "satisfied": true,
+            "evidence": "callers-and-failure-contract"
+          },
+          {
+            "check": "Testable acceptance criteria and later verification plan established",
+            "satisfied": true,
+            "evidence": "verification-plan-established"
+          }
+        ],
+        "verificationPlan": {
+          "source": "context.unattended.implementationChecks",
+          "executionStatus": "not-run; admitted inventory is not an execution receipt",
+          "workingDirectory": "/workspace in the later implementation verification environment",
+          "commands": [
+            [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            [
+              "node",
+              "--test",
+              "src/tests/issue-actions.test.mjs"
+            ],
+            [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            [
+              "npx",
+              "--yes",
+              "--package=@fission-ai/openspec@1.15.0",
+              "openspec",
+              "validate",
+              "issue-390-proposal",
+              "--strict",
+              "--no-interactive"
+            ]
+          ],
+          "prerequisites": "Use the host-provisioned Node/npm/Chromium environment. Generate issue-390-proposal through the existing planning provider before its validation; that directory is absent at this baseline. Do not broaden the admitted implementation source scope to compensate for missing planning artifacts.",
+          "additionalAgentObservations": {
+            "performed": [],
+            "planned": [
+              "Separate host-dispatched read-only planning assessment",
+              "Separate candidate assessment of actual before/after source, hostile-input coverage and check receipts"
+            ],
+            "note": "No additional agent was spawned and no independent acceptance is claimed by this refinement. These later assessments do not populate this stage's pendingReview."
+          },
+          "forgeCI": {
+            "status": "not-observed; later gate",
+            "requirement": "The trusted host must observe actual required GitHub checks for the current PR head and recheck hosting rules before any separately delegated integration. Local or host verification and an independent model verdict are not forge CI receipts."
+          },
+          "optionalToolingObservations": [
+            "CodeGraph context lookup returned 'CodeGraph query unavailable'; symbol search found no useful JavaScript redaction symbol. Direct source and caller reads supplied the assessment instead; no required refinement check depends on that service.",
+            "The repository-requested ponytail skill was not present at /harness/skills/ponytail/SKILL.md or among the listed workspace skills. Canonical refine and concise-results skills were read; this optional tooling absence is not a missing product check."
+          ]
+        },
+        "productContext": {
+          "baselineDigest": "e5558efeb5188e821e7e7f5b96315b0d6cd0ab5f819a0ef63e3968c60475e5a0",
+          "assessment": "Aligned engineering correction, no Product Change needed. Host-prepared inspect/impact reports identify existing handoff and authority relationships; they grant no approval or scope expansion.",
+          "citations": [
+            "pdac:cite id=\"FR-WORKFLOW-HANDOFFS\" digest=\"sha256:89c81c96c437f8417aac7fed37f5690a44314051f75fe9a54166b90709df6f0a\"",
+            "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+            "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\""
+          ]
+        },
+        "rollback": "Revert only the eventual adapter/test/changeset patch to restore status-only diagnostics. There is no migration or permission change. Reverting code does not undo remote branches or publication effects from any earlier failed run; reconcile those separately before an authorized retry.",
+        "nextOwnerDecision": "The trusted host evaluates continuation under the existing unattended grant and independent planning assessment. No new human product decision is needed for this bounded correction; merge and release authority remain separate.",
+        "assessmentLimit": "Source assessment only at the supplied revision; not a claim about deployed workflows, a reproduced live denial, completed implementation, executed verification or accepted integration. The admitted route is ff, so no hotfix regression plan or hotfix RED/GREEN claim is returned."
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "e03c29761e441f847de0c579afeeaf9051bf0b9fb058a8bfa3e9a2cd2837f7b8",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "90d7cbf2121190bd276f9b73a69d3d5c3b063dd98c2718622add80e67e60bd47",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "proposalRunId": "b15f1fbb3aad0c91468ccdee578f00dda056a2b25f6540a1881e5c77940b760c",
+  "reviewRunId": "e03c29761e441f847de0c579afeeaf9051bf0b9fb058a8bfa3e9a2cd2837f7b8",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-42027266558-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42027266558"
+}

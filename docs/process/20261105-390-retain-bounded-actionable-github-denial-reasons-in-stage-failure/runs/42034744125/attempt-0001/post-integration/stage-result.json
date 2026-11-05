@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "runId": "d34eb16d2a58fc993704390d93ce72dbdf7f7d2848bd47c1141ef4a13a55183d",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "integration:42027266558:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/c3d15f435f9a21b9fc5b8732fe2ceb953d948a9b/docs/process/20261105-390-retain-bounded-actionable-github-denial-reasons-in-stage-failure/runs/42027266558/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained integration receipt connects accepted head e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51 to merged revision 17406da52da881339d92891d8d3e16c596790545 under the historical explicit merge:true bounded owner delegation. Record SHA-256: e0428c5e1f0c148acfb56cdba7bfa0fc18df206357a774e511689810d2a2fa64. This establishes the recorded merge, not implementation-command details or deployment."
+    },
+    {
+      "id": "github-check:127259131700",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42031589505/job/127259131700",
+      "reason": "Authenticated repository check, app 15368, succeeded at the accepted PR head. This is the configured forge check, not evidence that every separate provider command ran."
+    },
+    {
+      "id": "github-check:127260768468",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42032075125/job/127260768468",
+      "reason": "Authenticated repository check, app 15368, succeeded at the actual merged and current revision. Host postMerge also records the adopted ci.yml workflow passed at that exact revision. The workflow runs npm ci --ignore-scripts and npm run verify; package.json includes the affected test file through npm test. Neither strict OpenSpec validation nor independent adopter citation verification is a step in that workflow."
+    },
+    {
+      "id": "planning-review:90d7cbf2121190bd276f9b73a69d3d5c3b063dd98c2718622add80e67e60bd47",
+      "status": "passed",
+      "source": "/input/context.json#/priorPlanningReview",
+      "reason": "Host-reconstructed planning review accepted the bounded correction, its provider-owned planning artifacts and explicit acceptance criteria. Configured model identifiers are not provider-authenticated model settings."
+    },
+    {
+      "id": "review:390:source-and-acceptance-inspection",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/src/issue-actions.mjs:180-241; /workspace/src/tests/issue-actions.test.mjs:10-140",
+      "reason": "Read-only inspection found the adapter wired into main, 8192-byte diagnostic storage, top-level JSON message selection, redaction before truncation, a 300-code-unit suffix cap and original error/status propagation. Real Response and stream tests cover representative denial, hostile and malformed diagnostics, compatibility, one-request behavior and a failing CLI exit. This is adequacy inspection, not a new execution receipt or exhaustive security proof; no new source defect was established."
+    },
+    {
+      "id": "review:390:scope-guidance-and-finalization",
+      "status": "passed",
+      "source": "/workspace/AGENTS.md; /workspace/src/packages/sdlc/README.md:123; /workspace/src/packages/sdlc/completion.md:38-55; /workspace/openspec/config.yaml; /input/context.json#/completion/finalization",
+      "reason": "The seven host-supplied changed paths comprise the three admitted implementation paths and four separately admitted planning artifacts. One SDLC patch changeset is present. No change-induced instruction conflict was established. The unavailable unattended-to-native command handoff is an explicit documented boundary, not drift. Blocked finalization preserves issue/PR labels and leaves the issue open; reservation cleanup remains host-owned."
+    },
+    {
+      "id": "review:390:implementation-command-evidence",
+      "status": "unavailable",
+      "source": "/input/context.json#/completion/implementationEvidence",
+      "reason": "Host reports: Command producer is not a successful adopted implementation workflow; checks is empty. The task file and PR assert local command success, but authenticated retained command outputs are not supplied. In particular, strict OpenSpec validation and the explicitly required independent adopter citation check cannot be established from the passed repository CI. This is missing verification, not a failed check."
+    }
+  ],
+  "missingEvidence": [
+    "Authenticated candidate-bound result for strict OpenSpec validation of issue-390-proposal, required by the accepted plan; local task/PR success assertions do not establish execution.",
+    "Authenticated candidate-bound independent adopter citation-verification result, including document/citation rows and diagnostics, required by src/packages/sdlc/README.md:123 and the accepted plan. Current citation payload inspection is not a substitute for that command."
+  ],
+  "unavailableChecks": [
+    "Detailed implementation command evidence is unavailable for this unattended producer: completion.implementationEvidence reports 'Command producer is not a successful adopted implementation workflow' and supplies no checks. The separate focused invocation and exact admitted command inventory therefore lack authenticated receipts in this review context, although accepted-head and post-merge repository CI both passed."
+  ],
+  "pendingReview": [],
+  "nextAction": "Workflow maintainer: supply host-authenticated retained verification receipts for #390 from the accepted unattended run, including strict OpenSpec and independent citation verification, or arrange separately authorized verification against the unchanged accepted delivery and applicable inputs; then request review again. Keep #390 open until the missing evidence is resolved. Do not retry integration.",
+  "output": {
+    "summary": "PR #431 is recorded as merged and post-merge repository CI passed. The inspected source and acceptance tests support the intended bounded diagnostic correction, with no new source defect established. Review closure is blocked by unavailable explicit provider-verification evidence, not a failed forge check.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 390,
+      "pullRequest": 431,
+      "acceptedHead": "e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51",
+      "integratedRevision": "17406da52da881339d92891d8d3e16c596790545",
+      "checkedRevision": "17406da52da881339d92891d8d3e16c596790545",
+      "currentRevision": "17406da52da881339d92891d8d3e16c596790545",
+      "taskDigest": "dd24c5c627bcf0b7e314e1e35e0b0b53b01154b38bde53961901c2e430004fc6",
+      "dispatchRequestId": "4629d84db6af28bbee024d11433ee97fe9bf0efd664a773a27ec13b00ff4c2e7",
+      "dispatchDigest": "2bcd360054cc1a5dca901907725426b5806ed601e9ed0b1773e0784e46fbeb5b",
+      "dispatchIntent": "b1a18e2f7e6ca452372718f0bfdef25249e39f72794f4e10d1e0709d12907bd7",
+      "policyFingerprint": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviewsFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntentFingerprint": "be1c53ff34881d9f60f4c8ce8624c2f80ef320f81e37b45b0f5126c7bf72f90b",
+      "filesFingerprint": "2c54c1e8979d092951ac9c75d089bafa867c5524dcc0c28e22932a3e0938cd33",
+      "workflowRunId": "42034744125",
+      "attempt": "1",
+      "currentMergeAuthorization": false,
+      "provenance": "Host-supplied identities and observations; no independent GitHub or git authentication was attempted. Historical merge:true authority belongs to the retained integration receipt, not this review dispatch."
+    },
+    "acceptanceAssessment": [
+      {
+        "criteria": [
+          "AC1",
+          "AC2",
+          "AC3"
+        ],
+        "assessment": "Supported by inspected implementation and meaningful regression assertions, not an exhaustive safety proof.",
+        "evidence": "issue-actions.mjs:180-225; issue-actions.test.mjs:31-105. A synthetic 403 POST pulls fixture retains the permission condition and numeric status. Byte limits, strict decoding, unusable-body fallbacks, normalization, redaction and truncation are exercised by source tests. The fixture is not a replayed live GitHub response."
+      },
+      {
+        "criteria": [
+          "AC4",
+          "AC5"
+        ],
+        "assessment": "Supported by inspected compatibility and wired CLI tests; affected suite is included in repository verification.",
+        "evidence": "issue-actions.test.mjs:12-35,107-140 checks fetch counts, optional 404, other HTTP errors, JSON, 204, job logs, failure classification and CLI exit 1. issue-actions.mjs:241 wires the factory into main; lines 1041-1042 preserve terminal failure. Standalone focused-command receipts remain unavailable."
+      },
+      {
+        "criteria": [
+          "AC6"
+        ],
+        "assessment": "Scope satisfied by the host changed-file list; complete command-evidence requirement unresolved.",
+        "evidence": "Adapter, tests and one package patch changeset plus four admitted OpenSpec planning files only. Authenticated required repository CI and retained integration are present. Provider validation and independent citation-check results are not authenticated in the supplied command evidence."
+      }
+    ],
+    "findings": [
+      {
+        "id": "R1",
+        "classification": "fixed",
+        "kind": "original-source-defect",
+        "owner": "SDLC adapter maintainer",
+        "finding": "The original status-only diagnostic omission is addressed in the inspected source by selecting a safe bounded provider message while preserving rejection and error.status. Full delivery verification remains qualified by R2.",
+        "evidence": [
+          "Host-verified priorPlanningReview root cause",
+          "src/packages/sdlc/src/issue-actions.mjs:180-225",
+          "src/tests/issue-actions.test.mjs:31-35"
+        ],
+        "followUp": "#390 acceptance record and PR #431; no new source correction proposed."
+      },
+      {
+        "id": "R2",
+        "classification": "accepted",
+        "kind": "unresolved-verification-provenance-gap",
+        "owner": "Workflow maintainer / trusted verification host",
+        "finding": "Explicit provider checks have no authenticated results in this review context. Accepted means the evidence-gap finding is recorded, not that an owner waived verification. The documented unsupported producer boundary is not itself a newly established source defect.",
+        "evidence": [
+          "completion.implementationEvidence.status=unavailable and checks=[]",
+          "src/packages/sdlc/README.md:123",
+          "src/packages/sdlc/completion.md:42-55",
+          "openspec/changes/issue-390-proposal/tasks.md:22-35",
+          ".github/workflows/ci.yml:34-46"
+        ],
+        "followUp": "#390 / R2 in this review record: retrieve and authenticate the matching unattended evidence through its supported consumer, or obtain separately authorized verification. Existing command-provenance scope #100 is a reference, not a new assignment or issue."
+      },
+      {
+        "id": "R3",
+        "classification": "fixed",
+        "kind": "reported-local-test-fixture-correction",
+        "owner": "SDLC test maintainer",
+        "finding": "tasks.md reports one failed focused-1 CLI endpoint assertion followed by a corrected expectation and passing focused-2. The current test expects the first comments request. This correction is locally reported, not independently replayed here; it is not a current failed check and does not establish recurrence across work items.",
+        "evidence": [
+          "openspec/changes/issue-390-proposal/tasks.md:35",
+          "src/tests/issue-actions.test.mjs:128-140"
+        ],
+        "followUp": "#390 / R3 in this review record; retain the original failure and correction receipts when resolving R2."
+      }
+    ],
+    "guidanceReview": {
+      "outcome": "No change-induced stale or conflicting guidance established; no guidance rewrite proposed.",
+      "inspected": [
+        "AGENTS.md:3-19 and src/packages/cli/README.md",
+        "src/packages/sdlc/README.md:7,26,86-88,123",
+        "src/packages/sdlc/completion.md:30-55,63",
+        "src/packages/sdlc/unattended.md:35-47,55-61",
+        "openspec/config.yaml and openspec/changes/issue-390-proposal/{proposal.md,design.md,tasks.md,.openspec.yaml}",
+        ".changeset/README.md and .changeset/bounded-github-denial-message.md",
+        "docs/architecture/04-solution-strategy/README.md and docs/architecture/08-crosscutting-concepts/README.md",
+        ".lighthouse-product-evidence/index.json and relevant FR-WORKFLOW-HANDOFFS, BR-FAIL-CLOSED and FR-FAST-FORWARD-DELIVERY inspect/impact reports"
+      ],
+      "notes": [
+        "Runtime files remain inside the package; provider planning artifacts are separately admitted and cite the supplied current product digests. Visual and .NET checks are not applicable to this bounded adapter change.",
+        "The plan design's old line references describe its pre-change context, not a newly established conflicting operating instruction. Task completion marks and local success prose are historical assertions, not authenticated command receipts.",
+        "completion.md:55 explicitly excludes unattended receipts from promotion through the native command reader; review must not manufacture compatibility or infer success. This intended host-specific boundary is not guidance drift.",
+        "Source package version is 0.20.6; installed router checkout pin and this review's host-supplied harness revision are 187bac2cd5b7e9e9c1899f43127c456b37fb15f0. Merging repository source does not prove package publication or uptake by pinned workflows.",
+        "CodeGraph context was unavailable, so direct source reads supplied the assessment. The optional ponytail, writing-for-agents and Humanizer skills were not present in the inspected skill inventories; these are tooling limits, not failed product checks."
+      ]
+    },
+    "finalization": {
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "selectedOutcome": "blocked",
+      "intendedTransition": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "onLaterPassedReview": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true
+      },
+      "executor": "Trusted publisher after fresh authority, check and reservation validation; host cleanup releases agent-working for every outcome.",
+      "appliedByThisAgent": false,
+      "decision": "The existing pr-ready issue label is an observed pre-finalization state, not drift requiring this agent to edit labels. No issue closure, integration, permission change, follow-up issue creation or next-stage dispatch is requested by this blocked review."
+    },
+    "laterStageBoundaries": [
+      {
+        "activity": "Release, deployment and installed-workflow uptake",
+        "status": "not-established",
+        "intendedStage": "separately authorized release/deployment",
+        "reason": "Not required to complete this source-only issue and not implied by merge or CI. No later-stage evidence is promoted into a current review gate."
+      }
+    ],
+    "retrospective": "## What went well\n- The correction stayed within the admitted adapter, tests and one patch changeset; the other four paths are the separately admitted provider plan. The actual API and CLI are covered rather than an unused helper (issue-actions.mjs:180-241; issue-actions.test.mjs:10-140). Owner: SDLC maintainer.\n- Integration identity and separate authority remain traceable: integration:42027266558:1 records the historical merge:true delegation and actual merged revision; github-check:127259131700 and github-check:127260768468 record accepted-head and post-merge repository success. A passed assessment was not used as proof of merge. Owner: trusted publisher.\n\n## What went wrong\n- R2: Review cannot authenticate the explicit strict OpenSpec and independent citation-check results. completion.implementationEvidence is unavailable with no checks; tasks.md:35 and the PR describe local passes but cannot replace receipts. This is a process/evidence gap, not an established adapter defect or failed CI. Owner: workflow maintainer.\n- R3: tasks.md:35 reports one local CLI endpoint assertion failure, then a correction; the current assertion is at issue-actions.test.mjs:137. Its execution history remains unverified here. No recurrence across work items, timing or cost measurement is established. Owner: test maintainer.\n- No new source defect or change-induced guidance drift was established. The original omission is addressed at source level (R1); exhaustive safety and live reproduction are not claimed.\n\n## Start doing\n- Carry authenticated, candidate-bound provider-check results through the supported unattended-to-review evidence path, with output diagnostics and explicit missing states. Resolve R2 for #390 before closing it. Owner: trusted verification host.\n- Preserve original failing and corrected local-test receipts together; label the denial sentence synthetic and keep source adequacy separate from command execution. Owner: SDLC test maintainer.\n\n## Stop doing\n- Do not substitute checked task boxes, local pass prose, an independent verdict or generic repository success for the separately required citation and provider validation receipts. Do not describe skipped ci-app or maintenance jobs as executed acceptance tests. Owner: delivery reviewer / workflow maintainer.\n- Do not treat a retry of one assertion as recurring failures, or a merge as release, deployment or permission to integrate again. Owner: delivery reporter.\n\n## Improvement candidates\n1. **R2 — route-aware receipt continuity.** Observed failure: this review receives no authenticated detailed command results for the accepted unattended producer, despite explicit provider requirements (completion.implementationEvidence; README.md:123; tasks.md:22-35). Owner: SDLC command-evidence maintainer, with workflow maintainer adoption. Smallest useful guard: make the existing review-context boundary preserve supported unattended command provenance or clearly enumerate each unavailable requirement; do not broaden the native reader's trust merely to clear this result. Reproduce before correction in a separately authorized fixture: feed the accepted unattended producer identity with missing/mismatched provider receipts and assert review remains blocked even with green repository CI. Then supply matching retained results and assert only those requirements clear; wrong tree, run, attempt, intent, policy and output hashes must remain unavailable. Preserve the documented legacy boundary (completion.md:55). Any implementation, policy or provider-guidance change needs its own review and regression proof; none is made here. Follow-up: #390/R2; existing command-provenance scope #100.\n2. **R3 — CLI fixture contract clarity.** Observed failure: one locally reported initial endpoint mismatch, not a demonstrated recurring production failure (tasks.md:35). Owner: SDLC test maintainer. Smallest useful guard: retain the corrected first-request assertion and annotate any future fixture correction with the observed call contract, without weakening failure, redaction or status assertions. Reproduce before a proposed guard in an isolated authorized test fixture using the old expectation, confirm that the intended endpoint assertion fails, then confirm the corrected comments-request expectation and denial/exit assertions together. No such reproduction ran in this review; no new guard is accepted merely because it is proposed. Follow-up: #390/R3.\n\nNo product or architecture change is established as necessary. These are learning records, not issue creation, policy adoption, permission changes or authorization to start another stage."
+  }
+}

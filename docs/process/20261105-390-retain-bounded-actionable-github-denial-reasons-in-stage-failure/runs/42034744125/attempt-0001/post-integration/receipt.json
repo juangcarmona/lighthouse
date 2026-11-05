@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "state": "merged-review-blocked",
+  "sha": "17406da52da881339d92891d8d3e16c596790545",
+  "acceptedHead": "e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51",
+  "authorization": {
+    "issue": 390,
+    "pr": 431,
+    "head": "e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51",
+    "merge": false
+  },
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 390,
+    "pr": 431,
+    "head": "e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51",
+    "base": "17406da52da881339d92891d8d3e16c596790545",
+    "branch": "main",
+    "intent": "dd24c5c627bcf0b7e314e1e35e0b0b53b01154b38bde53961901c2e430004fc6",
+    "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+    "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "prIntent": "be1c53ff34881d9f60f4c8ce8624c2f80ef320f81e37b45b0f5126c7bf72f90b",
+    "files": "2c54c1e8979d092951ac9c75d089bafa867c5524dcc0c28e22932a3e0938cd33"
+  },
+  "postMerge": [
+    {
+      "workflow": "ci.yml",
+      "revision": "17406da52da881339d92891d8d3e16c596790545",
+      "state": "passed",
+      "status": "passed",
+      "runId": 42032075125,
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42032075125"
+    }
+  ]
+}
