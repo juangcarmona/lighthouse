@@ -3,7 +3,9 @@ import { readFile, writeFile, appendFile, mkdir, mkdtemp, readdir, copyFile, chm
 import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, execFile, execFileSync } from 'node:child_process';
+import { promisify } from 'node:util';
+import { createRequire } from 'node:module';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
 import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
@@ -15,6 +17,7 @@ import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-r
 import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
+import { prepareProductEvidence, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -56,6 +59,46 @@ export async function installProductEvidence(input, source, expectedBaseline) {
     if (!item.isFile() || item.isSymbolicLink() || item.size > 512 * 1024 || (bytes += item.size) > 17 * 1024 * 1024) throw Error('ProductShape evidence is unsafe or exceeds bounds');
     await copyFile(file, join(destination, name)); await chmod(join(destination, name), 0o444);
   }
+}
+
+export async function preparePlanningProductEvidence(source, runDir, { core, install = promisify(execFile), signal } = {}) {
+  signal?.throwIfAborted();
+  try { await lstat(join(source, '.product/config.yaml')); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  try {
+    const manifest = JSON.parse(await readFile(join(source, 'lighthouse.json'), 'utf8'));
+    if (manifest.integrations?.productShape === null) return null;
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (!core) {
+    const prefix = join(runDir, 'product-provider'), home = join(prefix, 'home');
+    await mkdir(home, { recursive: true });
+    const userConfig = join(home, 'user.npmrc'), globalConfig = join(home, 'global.npmrc');
+    await writeFile(userConfig, '', { flag: 'wx' }); await writeFile(globalConfig, '', { flag: 'wx' });
+    try {
+      await install('npm', ['install', '--prefix', prefix, '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=true', '--save-exact', '--registry=https://registry.npmjs.org', '@prodshape/core@0.25.0'], {
+        cwd: prefix, timeout: 60000, maxBuffer: 1024 * 1024, signal,
+        env: { PATH: process.env.PATH, HOME: home, NPM_CONFIG_USERCONFIG: userConfig, NPM_CONFIG_GLOBALCONFIG: globalConfig, NPM_CONFIG_CACHE: join(home, 'cache'), CI: 'true' },
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      throw Error('ProductShape planning provider setup failed: ' + redactLog(String(error.stderr || error.message)).slice(0, 3000));
+    }
+    core = await loadProductCore({ entry: createRequire(join(prefix, 'package.json')).resolve('@prodshape/core') });
+    await mkdir(join(runDir, 'evidence/host'), { recursive: true });
+    await copyFile(join(prefix, 'package-lock.json'), join(runDir, 'evidence/host/product-provider-lock.json'));
+  }
+  signal?.throwIfAborted();
+  const baselineDigest = await productModelDigest(source), reports = join(runDir, 'evidence/host/product-context');
+  const result = await prepareProductEvidence(source, reports, core, { baselineDigest });
+  signal?.throwIfAborted();
+  await installProductEvidence(reports, source, baselineDigest);
+  const evidence = { provider: '@prodshape/core', version: core.version, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
+  const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
+  context.productEvidence = evidence;
+  context.contract.rules += ' The host prepared current ProductShape inspect, impact and citation reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  signal?.throwIfAborted();
+  await writeFile(path, JSON.stringify(context));
+  return evidence;
 }
 export function acquireEngineSlot(path, seconds = 240) {
   if (!isAbsolute(path ?? '')) throw Error('Operator engine lock must be an absolute path');
@@ -106,7 +149,8 @@ async function main() {
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
   let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
-  const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
+  const preparation = new AbortController();
+  const cancel = (reason = 'cancelled') => { cancelled = true; preparation.abort(); stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
@@ -125,7 +169,7 @@ async function main() {
     if (request.worker === 'product-change') {
       if (!/^[a-f0-9]{64}$/.test(request.baselineDigest ?? '')) throw Error('ProductShape evidence lacks its authenticated baseline');
       await installProductEvidence(join(runDir, 'product-evidence'), source, request.baselineDigest);
-    }
+    } else if (!implementing) runtimeReceipt.productEvidence = await preparePlanningProductEvidence(source, runDir, { signal: preparation.signal });
     baseline = implementing ? await sourceFiles(source) : null;
     trackedSource = baseline ? new Map(baseline) : null;
     if (implementing) {
@@ -180,6 +224,7 @@ async function main() {
       if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
     }, 10000);
     const exit = await new Promise((ok, no) => {
+      if (cancelled) throw Error('Execution cancelled before agent startup');
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
       const consume = line => {
         try {

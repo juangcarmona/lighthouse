@@ -244,8 +244,7 @@ export async function loadProductBridge({ entry = process.env.PRODSHAPE_INTEGRAT
   return bridge;
 }
 
-export async function loadProductCore() {
-  const entry = require.resolve('@prodshape/core');
+export async function loadProductCore({ entry = require.resolve('@prodshape/core') } = {}) {
   const metadata = JSON.parse(await readFile(join(dirname(dirname(entry)), 'package.json'), 'utf8'));
   if (metadata.name !== '@prodshape/core' || metadata.version !== '0.25.0') throw Error('Pinned ProductShape core 0.25.0 is unavailable');
   const core = await import(pathToFileURL(entry).href);
