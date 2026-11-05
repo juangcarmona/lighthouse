@@ -31,6 +31,8 @@ The deterministic failure classifier distinguishes a short execution below five 
 
 Maintenance can restore interrupted read-only triage/refinement label and comment publication from authenticated request/result artifacts. It checks the current source, owner answers, labels and dispatch before applying missing effects. It releases an abandoned read-only reservation only when the retained snapshot and unchanged bot label event identify its owner. It leaves other uncertain effects for the maintainer to reconcile.
 
+Maintenance can finish a partially published final review from its original passed assessment and verified immutable report, including when merge already closed the issue. It rechecks current authority, cited checks and retained evidence before completing missing labels, handoffs and dispatch status. It starts no agent or continuation. The unscoped scan considers unresolved reviews in the latest 100 native review runs; explicit issue scope also supports older retained cases. Missing proof, changed policy, pauses and superseding requests remain stopped.
+
 ## Verification
 
 The deterministic matrix executes production functions and commands with API doubles; it does not create remote Actions runs. Run it with:

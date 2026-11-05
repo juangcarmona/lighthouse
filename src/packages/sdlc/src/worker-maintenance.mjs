@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir, appendFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { dispatchArtifact, sendDispatch } from './stage-dispatch.mjs';
+import { dispatchArtifact, sendDispatch, readDispatchReceipt } from './stage-dispatch.mjs';
 import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } from './worker-recovery.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { publishReports } from './worker-reports.mjs';
@@ -17,6 +17,28 @@ export async function ownerIssues(api, owner) {
     }
   }
   throw Error('Issue inventory exceeds maintenance bounds');
+}
+
+export async function maintenanceIssues(api, owner, repository) {
+  const issues = new Set(await ownerIssues(api, owner));
+  const recent = await api('actions/workflows/lighthouse-sdlc-review.lock.yml/runs?per_page=100', 'GET', undefined, true);
+  if (recent === null) return [...issues];
+  if (!Array.isArray(recent.workflow_runs) || recent.workflow_runs.length > 100) throw Error('Final review inventory exceeds maintenance bounds');
+  const seen = new Set();
+  for (const run of recent.workflow_runs.toSorted((a, b) => b.id - a.id)) {
+    const match = /^review #([1-9][0-9]*) · request ([1-9][0-9]*)$/.exec(run.display_title ?? '');
+    if (!match || run.path !== '.github/workflows/lighthouse-sdlc-review.lock.yml') continue;
+    const number = Number(match[1]);
+    if (seen.has(number) || issues.has(number)) continue;
+    seen.add(number);
+    if (run.status !== 'completed' || !['success', 'failure', 'timed_out'].includes(run.conclusion)) continue;
+    const issue = await api(`issues/${number}`);
+    if (issue.number !== number || issue.state !== 'closed' || issue.user?.login !== owner || issue.pull_request) continue;
+    const receipt = readDispatchReceipt(await api(`issues/comments/${match[2]}`), repository, number);
+    if (receipt.stage === 'review' && String(receipt.workerRunId) === String(run.id) && ['requested', 'running', 'unknown', 'failed'].includes(receipt.status)) issues.add(number);
+  }
+  if (issues.size > 100) throw Error('Maintenance exceeds 100 owner issues');
+  return [...issues];
 }
 
 async function main(command) {
@@ -62,7 +84,7 @@ async function main(command) {
     const requested = event.inputs?.issue;
     if (requested && !/^[1-9][0-9]*$/.test(requested)) throw Error('Issue must be a canonical positive integer');
     if (requested && scope && !scope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
-    const issues = requested ? [Number(requested)] : scope ?? await ownerIssues(api, owner);
+    const issues = requested ? [Number(requested)] : scope ?? await maintenanceIssues(api, owner, repository);
     await output('issues', JSON.stringify(issues)); return;
   }
   const issue = Number(env.LIGHTHOUSE_ISSUE);
@@ -85,6 +107,7 @@ async function main(command) {
     let proof;
     try { proof = JSON.parse(await readFile(join(dir, 'completion-recovery.json'), 'utf8')); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
     if (proof.schemaVersion !== 1 || proof.issue !== issue) throw Error('Recovered completion differs from this issue');
+    if (proof.stage === 'review') return;
     await api('actions/workflows/lighthouse-sdlc-router.yml/dispatches', 'POST', { ref: parent.head_branch, inputs: { issue: String(issue), stage: 'review', workflow: 'stage', after_run: String(parent.id) } });
     return;
   }

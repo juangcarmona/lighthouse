@@ -1,16 +1,71 @@
-import { fingerprint, inspectCompletion, postMergeRuns } from './completion.mjs';
+import { fingerprint, inspectCompletion, postMergeRuns, assertFresh, assertChecks, assertCitedChecks, completionEffects } from './completion.mjs';
 import { completionBundle, publishProcessBundle, readPublishedBundle } from './process-publication.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
-import { issueComments, loadDispatch, finishDispatch } from './stage-dispatch.mjs';
+import { issueComments, loadDispatch, finishDispatch, assertCurrentDispatch } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff, pendingQuestion, visibleNextAction } from './handoff.mjs';
+import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
 
 const stableBinding = binding => Object.fromEntries(['repository', 'issue', 'pr', 'head', 'intent', 'policy', 'reviews', 'prIntent', 'files'].map(key => [key, binding[key]]));
+
+async function reconcileFinalReview(api, repository, owner, issue, observation, parent, enabled, { readArtifact, save, inspect, postMerge, readPublication, readIntegration }) {
+  const { dispatch, run } = observation;
+  if (run.status !== 'completed' || run.run_attempt !== 1 || !['success', 'failure', 'timed_out'].includes(run.conclusion) || observation.jobs?.find(job => job.name === 'agent')?.conclusion !== 'success' || ['blocked', 'waiting', 'cancelled'].includes(dispatch.receipt.status)) return null;
+  if (dispatch.receipt.status === 'completed') return { state: 'reconciled', code: 'final-review-present', nextAction: 'The admitted final review is already complete; no effect was repeated.' };
+  if (!['open', 'closed'].includes(issue.state) || issue.state_reason === 'not_planned' || issue.user?.login !== owner || issue.pull_request || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name))) return null;
+  const stopped = nextAction => ({ state: 'uncertain', code: 'finalization-unconfirmed', nextAction });
+  const name = `lighthouse-completion-${issue.number}-${run.run_attempt}`;
+  const request = await readArtifact(api, repository, run.id, `lighthouse-input-${issue.number}-${run.run_attempt}`, 'request.json');
+  const envelope = await readArtifact(api, repository, run.id, `lighthouse-result-${issue.number}-${run.run_attempt}`, 'envelope.json');
+  const receipt = await readArtifact(api, repository, run.id, name, 'integration-receipt.json', true);
+  const publication = await readArtifact(api, repository, run.id, name, 'publication-receipt.json', true);
+  const id = fingerprint({ repository, stage: 'review', issue: issue.number, run: String(run.id), attempt: String(run.run_attempt) });
+  if (request.runId !== id || request.issue !== issue.number || String(request.workflowRunId) !== String(run.id) || Number(request.attempt) !== 1 || request.stage !== 'review' || request.dispatch?.requestId !== dispatch.request.id || request.dispatch.digest !== dispatch.receipt.digest || request.dispatch.commentId !== dispatch.commentId || request.taskDigest !== dispatch.request.taskDigest || request.authorization?.merge !== false || request.authorization.issue !== issue.number || request.completion?.binding.repository !== repository || request.completion.binding.issue !== issue.number || request.completion.binding.pr !== request.authorization.pr || request.completion.binding.head !== request.authorization.head || request.completion.binding.intent !== request.taskDigest || validateStageEnvelope(envelope, request).length || envelope.result.status !== 'passed') return stopped('The original passed final review does not match its authenticated request.');
+  if (!receipt || receipt.schemaVersion !== 1 || receipt.state !== 'merged' || receipt.acceptedHead !== request.authorization.head || fingerprint(receipt.authorization) !== fingerprint(request.authorization) || fingerprint(receipt.binding) !== fingerprint(request.completion.binding) || !publication) return stopped('The original confirmed merge and review publication receipts are unavailable.');
+  const effects = completionEffects('review', 'passed');
+  if (fingerprint(request.completion.finalization?.onPassed) !== fingerprint(effects)) return stopped('The declared finalization policy changed.');
+  const claim = request.dispatch;
+  const recheck = async () => {
+    await assertCurrentDispatch(api, repository, issue.number, claim, run.id);
+    const currentIssue = await api(`issues/${issue.number}`);
+    if (!['open', 'closed'].includes(currentIssue.state) || currentIssue.state_reason === 'not_planned' || currentIssue.user?.login !== owner || currentIssue.pull_request || currentIssue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name))) throw Error('Final review recovery was paused or revoked');
+    const current = await inspect(api, repository, owner, request.authorization, 'review', run.id);
+    assertFresh(request.completion, current); assertChecks(current); assertCitedChecks(envelope, request.completion, current);
+    if (!current.merged || current.merge !== receipt.sha || (await postMerge(api, current, current.merge)).some(check => check.status !== 'passed')) throw Error('Final review recovery authority or verification changed');
+    return currentIssue;
+  };
+  const fresh = await recheck();
+  if (request.priorIntegration) {
+    const current = await inspect(api, repository, owner, request.authorization, 'review', run.id);
+    const prior = await readIntegration(api, current, request.priorIntegration);
+    if (!prior) return stopped('The original integration evidence is unavailable.');
+    if (request.priorPlanningReview && fingerprint(await readUnattendedPlanningReview(api, current, prior, readArtifact)) !== fingerprint(request.priorPlanningReview)) return stopped('The original planning and regression evidence is unavailable or changed.');
+  }
+  const files = completionBundle(request, envelope, receipt);
+  const retained = await readPublication(api, request, files, publication);
+  if (!enabled || !save) return { state: 'observed', code: 'completion-recovery-disabled', nextAction: 'Enable scoped recovery before finishing the retained final review.' };
+  await save({ schemaVersion: 1, stage: 'review', repository, issue: issue.number, originalRun: String(run.id), originalAttempt: run.run_attempt, recovery: { runId: String(parent.id), attempt: parent.run_attempt, revision: parent.head_sha }, publication: retained, recordSha256: digest(files['evidence-record.json']), receiptDigest: fingerprint(receipt) });
+  for (const label of effects.remove) if (fresh.labels.some(item => item.name === label)) {
+    await recheck(); await api(`issues/${issue.number}/labels/${label}`, 'DELETE', undefined, true);
+  }
+  const marker = `<!-- lighthouse-completion:${request.runId} -->`;
+  const body = handoff({ status: 'completed', stage: 'review', happened: envelope.effect.body, action: 'None.', next: 'The original final review is retained; no further stage is requested.', link: `[Report and retrospective](${retained.url})`, details: `[Original execution](${request.runUrl})\n\n${marker}` });
+  for (const target of new Set([issue.number, request.authorization.pr])) {
+    const comments = await issueComments(api, target);
+    if (!comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) {
+      await recheck(); await api(`issues/${target}/comments`, 'POST', { body });
+    }
+  }
+  if ((await recheck()).state === 'open') await api(`issues/${issue.number}`, 'PATCH', { state: 'closed', state_reason: 'completed' });
+  await recheck(); await finishDispatch(api, repository, issue.number, dispatch.commentId, run.id, 'passed');
+  return { state: 'reconciled', code: 'final-review-restored', nextAction: 'The original passed review was finalized; no agent execution or continuation was repeated.' };
+}
 
 // A confirmed merge may need publication and review; it must never enter merge again.
 export async function reconcileCompletion(api, repository, owner, issue, observation, parent, enabled, { readArtifact = readActionsJson, save = null, inspect = inspectCompletion, readIntegration = readIntegrationEvidence, publish = publishProcessBundle, postMerge = postMergeRuns, readPublication = readPublishedBundle } = {}) {
   const { dispatch, run } = observation;
+  if (dispatch?.request.stage === 'review') return reconcileFinalReview(api, repository, owner, issue, observation, parent, enabled, { readArtifact, save, inspect, postMerge, readPublication, readIntegration });
   if (!dispatch || dispatch.request.stage !== 'integrate' || run.status !== 'completed' || run.run_attempt !== 1 || !['success', 'failure', 'timed_out'].includes(run.conclusion)) return null;
   if (observation.jobs?.find(job => job.name === 'agent')?.conclusion !== 'success') return null;
   const stopped = nextAction => ({ state: 'uncertain', code: 'completion-unconfirmed', nextAction });
