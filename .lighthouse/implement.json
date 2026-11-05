@@ -137,7 +137,7 @@
     }
   },
   "390": {
-    "scope": "Implement only #390 in the issue-stage GitHub API adapter used by Product Change publication. Retain a bounded redacted denial reason, original HTTP status and terminal failure. Preserve authority, permissions and mutation behavior. Use an H1 after changeset frontmatter. Distinguish independent host receipts, extra agent observations and later CI. Allow 600000 ms for complete repository verification.",
+    "scope": "Implement only #390 in the issue-stage GitHub API adapter used by Product Change publication. Retain a bounded redacted denial reason, original HTTP status and terminal failure. Preserve authority, permissions and mutation behavior. Use an H1 after changeset frontmatter. Distinguish independent host receipts, extra agent observations and later CI. Allow 600000 ms for complete repository verification. Construct synthetic credential values at runtime, as existing redaction tests do: literal credential-shaped content is rejected by unchanged candidate publication validation.",
     "paths": [
       "src/packages/sdlc/src/issue-actions.mjs",
       "src/tests/issue-actions.test.mjs",
