@@ -33,10 +33,18 @@ test('strict provider warnings remain failures and retain the actual validation 
     assert.equal(error.status, 1);
     assert.equal(error.proposalValidation.status, 'failed');
     assert.match(error.proposalValidation.findings.join(' '), /very long/);
+    assert.match(error.message, /Requirement text is very long/);
     assert.equal(JSON.parse(error.proposalValidation.output).items[0].valid, false);
     return true;
   });
   assert.equal((await prepareProposal(18, files, provider)).length, files.length + 1);
+});
+
+test('unknown provider failures preserve their original error object and operator message', async () => {
+  const error = Object.assign(Error('Provider unavailable'), { code: 1, stdout: 'npm could not contact the registry' });
+  await assert.rejects(prepareProposal(18, files, async (_cwd, args) => { if (args[0] === 'validate') throw error; return ''; }), observed => {
+    assert.equal(observed, error); assert.equal(observed.message, 'Provider unavailable'); assert.equal(observed.proposalValidation, undefined); return true;
+  });
 });
 
 test('proposal boundaries reject traversal, executable/config files, duplicates, missing artifacts and completed tasks', () => {

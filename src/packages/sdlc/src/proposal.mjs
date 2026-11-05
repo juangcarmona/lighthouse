@@ -71,7 +71,10 @@ export async function prepareProposal(issue, files, provider = openspec) {
     try { await provider(dir, ['validate', name, '--strict', '--no-interactive', '--json']); }
     catch (error) {
       const validation = proposalValidationFailure(error, issue);
-      if (validation) error.proposalValidation = validation;
+      if (validation) {
+        error.proposalValidation = validation;
+        error.message += '\nOpenSpec validation: ' + validation.findings.join('; ').slice(0, 3000);
+      }
       throw error;
     }
     const status = JSON.parse(await provider(dir, ['status', '--change', name, '--json']));
