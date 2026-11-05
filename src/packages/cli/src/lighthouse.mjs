@@ -894,6 +894,10 @@ function printReconciliationPlan(plan) {
 async function initialize(args) {
   const planFile = valueFromArgs(args, '--plan-file');
   if (planFile) return initializeFromPlan(args, planFile);
+  const format = formatFromArgs(args);
+  if (format === 'json' && (!args.includes('--dry-run') || args.includes('--apply'))) {
+    throw new Error('--format json is available only for initialization previews; use --dry-run --format json to preview, or omit --format json and --dry-run to apply in text mode.');
+  }
   let manifest = await readManifest();
   const manifestMissing = !manifest;
   const selectedProfiles = profileArguments(args);
@@ -905,12 +909,31 @@ async function initialize(args) {
   const problems = validate(manifest);
   if (problems.length) throw new Error(problems.map((problem) => `Invalid lighthouse.json: ${problem}`).join('\n'));
   const plan = await planInitialization(manifest, manifestMissing);
-  console.log('Lighthouse initialization plan:');
-  for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
-  for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
-  if (normalizeRepository(manifest.repository).publicSite.enabled) {
-    if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
-    if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+  if (format === 'json') {
+    const repository = normalizeRepository(manifest.repository);
+    const adoptionGaps = [];
+    if (repository.publicSite.enabled) {
+      for (const [integration, authority] of [['productShape', 'ProductShape'], ['arcShape', 'ArcShape']]) {
+        if (manifest.integrations[integration] === null) adoptionGaps.push({ authority, nextAction: 'review lighthouse authorities --dry-run, then run lighthouse authorities --apply' });
+      }
+    }
+    console.log(JSON.stringify({
+      schemaVersion: 1,
+      status: plan.conflicts.length ? 'blocked' : 'ready',
+      manifest,
+      repository,
+      operations: plan.operations.map(({ path, action }) => ({ path, action })),
+      conflicts: plan.conflicts,
+      adoptionGaps,
+    }, null, 2));
+  } else {
+    console.log('Lighthouse initialization plan:');
+    for (const operation of plan.operations) console.log(`  ${operation.action} ${operation.path}`);
+    for (const conflict of plan.conflicts) console.error(`  conflict ${conflict}`);
+    if (normalizeRepository(manifest.repository).publicSite.enabled) {
+      if (manifest.integrations.productShape === null) console.log('  adoption gap ProductShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+      if (manifest.integrations.arcShape === null) console.log('  adoption gap ArcShape: review lighthouse authorities --dry-run, then run lighthouse authorities --apply');
+    }
   }
   if (args.includes('--dry-run')) {
     if (plan.conflicts.length) process.exitCode = 1;
@@ -1090,9 +1113,14 @@ function providerHasConflict(output) {
     || /Conflicts\s*\(\s*[1-9]\d*\s*\)/i.test(output);
 }
 
-function runAuthorityCommand(authority, dryRun) {
+function runAuthorityCommand(authority, dryRun, quiet = false) {
   const initArgs = dryRun ? authority.initArgs : (authority.applyArgs ?? authority.initArgs);
-  const args = [providerExecutable(authority), ...initArgs];
+  let executable;
+  try { executable = providerExecutable(authority); } catch (error) {
+    if (!quiet) throw error;
+    return { ok: false, output: error.message, status: null };
+  }
+  const args = [executable, ...initArgs];
   if (dryRun) args.push('--dry-run');
   const result = spawnSync(process.execPath, args, {
     cwd: root,
@@ -1100,9 +1128,11 @@ function runAuthorityCommand(authority, dryRun) {
     stdio: ['pipe', 'pipe', 'pipe'],
   });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
-  console.log(`\n${authority.label} ${dryRun ? 'preflight' : 'apply'}:`);
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
+  if (!quiet) {
+    console.log(`\n${authority.label} ${dryRun ? 'preflight' : 'apply'}:`);
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+  }
   return {
     ok: result.status === 0 && !providerHasConflict(output),
     output,
@@ -1267,17 +1297,38 @@ async function authorities(args) {
   const apply = args.includes('--apply');
   const dryRun = args.includes('--dry-run') || !apply;
   if (args.includes('--apply') && args.includes('--dry-run')) throw new Error('--apply and --dry-run cannot be used together.');
-  console.log('Lighthouse authority plan:');
-  console.log('  ProductShape: initialize the full ProductShape layout without an SDD integration');
-  console.log('  ArcShape: initialize arc42 documentation without installing agent capabilities');
-  console.log('  Provider-owned files remain under provider control; Lighthouse records only exact versions.');
-  const preflights = authorityCommands.map((authority) => ({ authority, result: runAuthorityCommand(authority, true) }));
+  const format = formatFromArgs(args);
+  if (format === 'json' && apply) throw new Error('--format json is available for authority initialization dry runs; omit it when applying.');
+  if (format !== 'json') {
+    console.log('Lighthouse authority plan:');
+    console.log('  ProductShape: initialize the full ProductShape layout without an SDD integration');
+    console.log('  ArcShape: initialize arc42 documentation without installing agent capabilities');
+    console.log('  Provider-owned files remain under provider control; Lighthouse records only exact versions.');
+  }
+  const preflights = authorityCommands.map((authority) => ({ authority, result: runAuthorityCommand(authority, true, format === 'json') }));
   const failed = preflights.filter(({ result }) => !result.ok);
+  if (format === 'json') {
+    console.log(JSON.stringify({
+      schemaVersion: 1,
+      command: 'lighthouse authorities',
+      dryRun: true,
+      status: failed.length ? 'blocked' : 'ready',
+      authorities: preflights.map(({ authority, result }) => ({
+        label: authority.label,
+        provider: authority.packageName,
+        version: installedPackageVersion(authority.packageName, 'package.json'),
+        command: `${authority.command} ${[...authority.initArgs, '--dry-run'].join(' ')}`,
+        repair: authority.repair,
+        preflight: result,
+      })),
+      apply: 'lighthouse authorities --apply',
+    }, null, 2));
+  }
   if (failed.length) {
     throw new Error(failed.map(({ authority }) => `${authority.label} preflight failed; repair with: ${authority.repair}`).join('\n'));
   }
   if (dryRun) {
-    console.log('Dry run: nothing was changed. Re-run with --apply to apply both provider plans.');
+    if (format !== 'json') console.log('Dry run: nothing was changed. Re-run with --apply to apply both provider plans.');
     return;
   }
   await ensureProjectionReady(manifest);
