@@ -264,6 +264,26 @@ test('duplicate completion events retain the same request ID across router execu
   assert.throws(() => verifyDispatchOrigin(edited, { ...receipt, digest: digest(JSON.stringify(edited)) }, parent, f.worker, repo, owner, issue), /event identity/);
 });
 
+test('post-merge review signals share native completion identity and cannot fabricate CI authority', async () => {
+  const f = fixture('review'), runId = '50';
+  const authorization = { issue, pr: 7, head: 'd'.repeat(40), merge: false };
+  const native = { ...f.request, eventName: 'workflow_run', event: { action: 'completed', workflow_run: { id: 50 } }, eventRunId: runId, id: dispatchId(repo, runId, 'review'), completionAuthorization: authorization };
+  await recordDispatch(f.api, repo, native);
+  const request = { ...native, eventName: 'workflow_dispatch', event: { inputs: { issue: '18', stage: 'review', workflow: 'stage', after_run: runId } } };
+  assert.equal((await recordDispatch(f.api, repo, request)).send, false);
+  const parent = { ...f.parent, actor: { login: 'github-actions[bot]' }, triggering_actor: { login: 'github-actions[bot]' } };
+  const receipt = { ...f.receipt, id: request.id, eventRunId: runId, digest: digest(JSON.stringify(request)) };
+  assert.doesNotThrow(() => verifyDispatchOrigin(request, receipt, parent, f.worker, repo, owner, issue));
+  for (const patch of [{ merge: true }, { issue: 19 }, { head: 'bad' }, { pr: 0 }]) {
+    const changed = { ...request, completionAuthorization: { ...authorization, ...patch } };
+    assert.throws(() => verifyDispatchOrigin(changed, { ...receipt, digest: digest(JSON.stringify(changed)) }, parent, f.worker, repo, owner, issue), /authorized router/);
+  }
+  Object.assign(f.request, request); Object.assign(f.parent, parent);
+  f.comment.body = dispatchReceiptBody(repo, receipt);
+  const api = async (...args) => args[0] === 'actions/runs/50' ? { id: 50, head_sha: 'a'.repeat(40), status: 'completed', conclusion: 'failure' } : f.api(...args);
+  await assert.rejects(loadDispatch(api, repo, owner, issue, 30, f.worker, f.readArtifact), /authenticated post-merge CI/);
+});
+
 
 test('owner PR feedback may queue behind a confirmed worker while uncertain dispatch remains blocked', async () => {
   const f = fixture();

@@ -4,7 +4,7 @@ import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource, ciRequestFailure, ciFailureSummary } from './delivery-events.mjs';
+import { deliveryAfterChecks, dispatchDeliveryChecks, completionSource, signalCurrentPostMergeReview, ciRequestFailure, ciFailureSummary } from './delivery-events.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { implementationContinuation, consumeReconciledLabel } from './delivery-request.mjs';
 import { readFile, writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -241,6 +241,10 @@ async function main(command) {
   const api = createIssueApi(repo, env);
   const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  if (command === 'signal-post-merge-review') {
+    const sent = await signalCurrentPostMergeReview(api, repo, env);
+    await summary(sent ? 'Post-merge CI signalled the existing router; terminal CI and retained integration are rechecked before review.' : 'No eligible post-merge review continuation.'); return;
+  }
   if (command === 'signal-ci-failure') {
     const sent = await signalCurrentCiRepair(api, repo, env);
     await summary(sent ? 'Failed candidate CI signalled the existing router; current authority is rechecked before any correction.' : 'No eligible failed candidate CI continuation.'); return;
