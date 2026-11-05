@@ -9,98 +9,108 @@ function fixture(options = {}) {
   let ref = null, authorized = true, status = 'unavailable';
   const mutations = [], snapshots = [], runs = [];
   const profile = { schemaVersion: 1, profileVersion: 1, repository, intake: 'collaborators', requiredChecks: [{ context: 'repository', integrationId: 15368 }], requiredApprovals: 0, evidenceBranch: 'process/retrospectives', releaseWorkflowReady: true, completion: { publishEvidence: true, postMergeWorkflows: ['ci.yml'] } };
-  const api = async (path, method = 'GET', body) => {
-    if (method !== 'GET') mutations.push({ path, method, body });
+  const api = async (path, method = 'GET') => {
+    assert.equal(method, 'GET', 'GITHUB_TOKEN must not create verification refs or dispatch CI');
     if (path.startsWith('contents/.lighthouse/github.json?')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
     if (path.startsWith('contents/.github/workflows/')) return { type: 'file', sha: options.changedWorkflow && path.endsWith(candidate) ? head : sourceRevision };
     if (path === `git/ref/heads/${branch}`) return ref;
-    if (path === 'git/refs' && method === 'POST') {
-      assert.equal(snapshots.at(-1).checks.reference, 'requested');
-      ref = { ref: body.ref, object: { sha: body.sha } };
-      if (options.revokeAfterCreate) authorized = false;
-      if (options.lostCreate) throw Error('lost create acknowledgement');
-      return ref;
-    }
     if (path.startsWith('actions/workflows/ci.yml/runs?')) {
       if (options.moveReference) ref.object.sha = head;
-      return { total_count: options.incompleteInventory ? 1 : runs.length, workflow_runs: runs };
-    }
-    if (path === 'actions/workflows/ci.yml/dispatches' && method === 'POST') {
-      assert.equal(snapshots.at(-1).checks.requests['ci.yml'].state, 'requested');
-      assert.equal(body.ref, branch);
-      if (!options.unobservedDispatch) runs.push({ id: 101, head_sha: candidate, head_branch: branch, path: '.github/workflows/ci.yml', event: 'workflow_dispatch', repository: { full_name: repository } });
-      if (!options.pending) status = 'passed';
-      if (options.lostDispatch) throw Error('lost dispatch acknowledgement');
-      return null;
+      return { total_count: options.incompleteInventory ? runs.length + 1 : runs.length, workflow_runs: runs };
     }
     throw Error(`Unexpected ${method} ${path}`);
   };
-  const args = { api, repository, sourceRevision, observation: { pr: { id: 70, number: 7, head: { sha: head } }, base: sourceRevision, candidate }, key: 'key',
+  const ciTrigger = async input => {
+    assert.equal(snapshots.at(-1).checks.reference, 'requested');
+    await input.beforeWrite();
+    mutations.push({ branch: input.branch, head: input.head });
+    if (options.setupFailure) throw Object.assign(Error('App setup failed'), { referenceAttempted: false });
+    if (!options.unobservedCreate) ref = { ref: 'refs/heads/' + input.branch, object: { sha: input.head } };
+    if (!options.noRun) runs.push({ id: 101, head_sha: candidate, head_branch: branch, path: '.github/workflows/ci.yml', event: options.event ?? 'push', repository: { full_name: options.foreignRun ? 'other/repo' : repository } });
+    if (!options.pending) status = 'passed';
+    if (options.revokeAfterCreate) authorized = false;
+    if (options.lostCreate) throw Object.assign(Error('lost create acknowledgement'), { referenceAttempted: true });
+  };
+  const args = { api, repository, sourceRevision, ciTrigger, observation: { pr: { id: 70, number: 7, head: { sha: head } }, base: sourceRevision, candidate }, key: 'key',
     journal: { readReceipt: async () => structuredClone(receipt), writeReceipt: async (_key, value) => { receipt = structuredClone(value); snapshots.push(structuredClone(value)); } },
     recheck: async () => authorized, checks: async () => [{ status }], wait: async () => {}, polls: 2 };
-  return { args, mutations, snapshots, run: () => ensureEpicChecks(args), setStatus: value => { status = value; } };
+  return { args, mutations, snapshots, runs, run: () => ensureEpicChecks(args), setStatus: value => { status = value; } };
 }
 
-test('CI checks the exact integration commit with unchanged trusted workflows and durable effect intent', async () => {
+test('App push checks the exact integration commit with unchanged workflows and durable intent', async () => {
   const f = fixture();
   await f.run();
-  assert.deepEqual(f.mutations.map(value => value.path), ['git/refs', 'actions/workflows/ci.yml/dispatches']);
-  assert.equal(f.mutations[0].body.sha, candidate);
+  assert.deepEqual(f.mutations, [{ branch, head: candidate }]);
   assert.equal(f.snapshots.at(-1).checks.identity.head, head);
   assert.equal(f.snapshots.at(-1).checks.identity.base, sourceRevision);
+  assert.equal(f.snapshots.at(-1).checks.requests['ci.yml'].run, 101);
   await f.run();
-  assert.equal(f.mutations.length, 2);
+  assert.equal(f.mutations.length, 1);
 });
 
-test('successful dispatch is not successful validation', async () => {
+test('successful push is not successful validation and fresh readiness cannot repeat it', async () => {
   const f = fixture({ pending: true });
   await assert.rejects(f.run(), /checks remain pending/);
-  assert.equal(f.mutations.length, 2);
   f.setStatus('passed');
   await f.run();
-  assert.equal(f.mutations.length, 2);
+  assert.equal(f.mutations.length, 1);
 });
 
-test('a changed validation workflow or failed checks cannot request a new CI effect', async () => {
-  const f = fixture({ changedWorkflow: true });
-  await assert.rejects(f.run(), /changed a trusted verification workflow/);
-  assert.equal(f.mutations.length, 0);
+test('changed workflows, failed checks and absent App setup cannot write a reference', async () => {
+  const changed = fixture({ changedWorkflow: true });
+  await assert.rejects(changed.run(), /changed a trusted verification workflow/);
   const failed = fixture(); failed.setStatus('failed');
   await assert.rejects(failed.run(), /candidate CI failed/);
-  assert.equal(failed.mutations.length, 0);
+  const missing = fixture(); delete missing.args.ciTrigger;
+  await assert.rejects(missing.run(), /LIGHTHOUSE_CI_APP_CLIENT_ID and LIGHTHOUSE_CI_APP_PRIVATE_KEY/);
+  for (const f of [changed, failed, missing]) assert.equal(f.mutations.length, 0);
 });
 
-test('a lost reference response reconciles its immutable SHA without a second creation', async () => {
-  const f = fixture({ lostCreate: true });
-  await f.run();
-  assert.equal(f.mutations.filter(value => value.path === 'git/refs').length, 1);
-});
-
-test('lost CI acknowledgement reconciles an observed run without redispatch', async () => {
-  const f = fixture({ lostDispatch: true, pending: true });
-  await assert.rejects(f.run(), /lost dispatch acknowledgement/);
+test('lost reference response reconciles the observed native push without another effect', async () => {
+  const f = fixture({ lostCreate: true, pending: true });
+  await assert.rejects(f.run(), /checks remain pending/);
   await assert.rejects(f.run(), /checks remain pending/);
   assert.equal(f.snapshots.at(-1).checks.requests['ci.yml'].run, 101);
-  assert.equal(f.mutations.filter(value => value.path.endsWith('/dispatches')).length, 1);
+  assert.equal(f.mutations.length, 1);
 });
 
-test('unobserved CI dispatch remains stopped across a fresh readiness request', async () => {
-  const f = fixture({ lostDispatch: true, unobservedDispatch: true, pending: true });
-  await assert.rejects(f.run(), /lost dispatch acknowledgement/);
-  await assert.rejects(f.run(), /dispatch is unconfirmed/);
-  assert.equal(f.mutations.filter(value => value.path.endsWith('/dispatches')).length, 1);
+test('an unobserved reference write stops across fresh readiness requests', async () => {
+  const f = fixture({ lostCreate: true, unobservedCreate: true, noRun: true, pending: true });
+  await assert.rejects(f.run(), /lost create acknowledgement/);
+  await assert.rejects(f.run(), /creation is unconfirmed/);
+  assert.equal(f.mutations.length, 1);
 });
 
-test('a pause after reference creation prevents dependent CI dispatch', async () => {
+test('a known App setup failure does not falsely consume the reference effect', async () => {
+  const f = fixture({ setupFailure: true });
+  await assert.rejects(f.run(), /App setup failed/);
+  assert.equal(f.snapshots.at(-1).checks.reference, 'not-sent');
+});
+
+test('a pause after reference creation prevents readiness', async () => {
   const f = fixture({ revokeAfterCreate: true });
-  await assert.rejects(f.run(), /authority changed before CI dispatch/);
-  assert.deepEqual(f.mutations.map(value => value.path), ['git/refs']);
+  await assert.rejects(f.run(), /authority changed while observing/);
+  assert.equal(f.mutations.length, 1);
 });
 
-test('a moved verification reference or incomplete run inventory cannot launch CI', async () => {
-  for (const options of [{ moveReference: true }, { incompleteInventory: true }]) {
+test('moved references, foreign runs and incomplete inventories cannot establish readiness', async () => {
+  for (const options of [{ moveReference: true }, { incompleteInventory: true }, { foreignRun: true }]) {
     const f = fixture(options);
-    await assert.rejects(f.run(), /reference or authority changed|inventory is incomplete/);
-    assert.deepEqual(f.mutations.map(value => value.path), ['git/refs']);
+    await assert.rejects(f.run(), /reference changed|inventory is incomplete|checks remain pending/);
+    assert.equal(f.mutations.length, 1);
   }
+});
+
+test('green workflow_dispatch cannot substitute for the verification push event', async () => {
+  const f = fixture({ event: 'workflow_dispatch' });
+  await assert.rejects(f.run(), /checks remain pending/);
+  assert.equal(f.snapshots.at(-1).checks.requests['ci.yml'], undefined);
+});
+
+test('disappearing push evidence stops without repeating the effect', async () => {
+  const f = fixture({ pending: true });
+  await assert.rejects(f.run(), /checks remain pending/);
+  f.runs.length = 0;
+  await assert.rejects(f.run(), /evidence disappeared/);
+  assert.equal(f.mutations.length, 1);
 });

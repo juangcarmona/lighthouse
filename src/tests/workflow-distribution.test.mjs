@@ -41,12 +41,12 @@ test('package-mode installer preserves existing provider files, hooks and agent 
 });
 
 test('CI App secrets are confined to trusted publishing and recovery steps', async () => {
-  for (const name of ['lighthouse-sdlc-implement.md', 'lighthouse-sdlc-apply-review.md', 'lighthouse-sdlc-unattended.yml', 'lighthouse-worker-maintenance.yml']) {
+  for (const name of ['lighthouse-sdlc-implement.md', 'lighthouse-sdlc-apply-review.md', 'lighthouse-sdlc-unattended.yml', 'lighthouse-worker-maintenance.yml', 'lighthouse-sdlc-epic.yml']) {
     const source = await readFile(new URL('../packages/sdlc/workflows/' + name, import.meta.url), 'utf8');
     const blocks = source.split('      - name: ');
     const credential = blocks.filter(block => block.includes('LIGHTHOUSE_CI_APP_PRIVATE_KEY:'));
     assert.equal(credential.length, 1, name);
-    assert.match(credential[0], /^(?:Recheck authority and publish the validated result|Execute the authorized bounded composition|Reconcile and record one bounded retry)/);
+    assert.match(credential[0], /^(?:Recheck authority and publish the validated result|Execute the authorized bounded composition|Reconcile and record one bounded retry|Reconcile native child issues)/);
     assert.ok(credential[0].includes('LIGHTHOUSE_CI_APP_CLIENT_ID: ${{ vars.LIGHTHOUSE_CI_APP_CLIENT_ID }}'));
     assert.ok(credential[0].includes('LIGHTHOUSE_CI_APP_PRIVATE_KEY: ${{ secrets.LIGHTHOUSE_CI_APP_PRIVATE_KEY }}'));
   }
