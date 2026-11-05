@@ -1,0 +1,20 @@
+## What went well
+- The bounded fix reused provider execution and failure rules rather than inventing another initialization authority. Real-provider and isolated-provider assertions cover parseable stdout, exact identities, failure/conflict/missing outcomes, text compatibility, state preservation and JSON apply refusal (`lighthouse.mjs:1116-1140,1292-1346`; `lighthouse.test.mjs:371-484`). Owner: CLI maintainers.
+- Host-verified focused tests, repository verification, citations and strict plan validation passed. An exact-head owner-authorized merge receipt and authenticated post-merge CI establish delivery separately from the agent's assessment. Owner: delivery maintainer.
+
+## What went wrong
+- The first review was blocked for missing chronology, despite a successful workflow. The later historical record supplies the supervised direct-implement route and recovery detail (PR review 5789791920). This was an evidence gap, not a delivered CLI defect.
+- That history records an installation timeout, one strict-plan rejection and an initially unsent CI attempt requiring scoped recovery on the same candidate. Historical router job 127439352211 also failed; its cause is unknown here. These events within #391 do not establish recurrence across work items.
+- No new source defect or affected-guidance conflict was established. Three low-severity dependency audit notices lack advisory detail; attention time, authenticated billing and production escaped-defect rate remain unknown.
+
+## Start doing
+- Carry the request/worker/recovery chronology into the first review input for supervised comparisons; preserve entry-route distinctions and unknown measurements. Owner: delivery maintainer; evidence: F2 and the supplied history.
+
+## Stop doing
+- Do not treat green workflow status as proof of a passed assessment, a merge, missing stage approvals or complete acceptance. Do not count retries or operational interventions as separate unattended pilots. Owner: #185 comparison owner; evidence: first review's blocked assessment, documented direct-implement entry and exact-head integration receipt.
+
+## Improvement candidates
+- **I1 — review-input chronology guard (deferred, owner: SDLC maintainers).** Observed failure: the first review could not complete #391's explicit comparison chronology. Evidence: run 42079817069 and PR review 5789791920. Smallest useful guard: for work items explicitly requiring a comparison history, prepare a bounded table of authenticated stage requests, worker outcomes, recoveries and unresolved measurements before review dispatch. Reproduce first with the original review input lacking the chronology and assert the named evidence blocker; then add the supplied history and assert the blocker clears without fabricating earlier Ready/Planned approvals or measured cost. Any guard needs separate review and regression proof; none was implemented here. Follow-up reference: this review, I1, under #391/#185.
+- **I2 — early plan-constraint feedback (deferred, owner: implementation-skill maintainers).** Observed failure: the recorded strict OpenSpec validation rejected a requirement longer than 500 characters before correction (`tasks.md:18`; PR review 5789791920). Smallest useful guard: validate the authored plan with the existing strict validator before production edits. Reproduce the recorded overlong requirement in an isolated fixture, assert its specific validation failure, then shorten it and verify acceptance with unchanged intended behavior and current citations. Review this process change separately; no new checker or policy is authorized. Follow-up reference: this review, I2.
+
+No cross-issue recurrence, comparative cost advantage or new product/architecture follow-up is established. Existing CI recovery controls were used; this review does not propose broadening their scope or weakening checks.

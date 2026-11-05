@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "runId": "83011c5c77ba9044632447662cfcdd09aedb9260e87d85dddeee325a706366a5",
+  "stage": "review",
+  "status": "passed",
+  "gate": null,
+  "evidence": [
+    {
+      "id": "review:source-and-acceptance",
+      "status": "passed",
+      "source": "src/packages/cli/src/lighthouse.mjs:1103-1141,1292-1346; src/tests/lighthouse.test.mjs:371-484",
+      "reason": "Inspected JSON projection, shared provider execution, failure propagation, apply guards and real-provider/isolated-provider regressions against issue #391. No new source defect established. This is source review, not a new local test execution."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Host-verified dependency installation receipt: exit 0. Three low-severity audit notices are informational, not proof of a defect introduced by this change."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Host-verified focused CLI suite: 42 passed, zero failed or skipped; inspected assertions cover the requested JSON, failure, compatibility and state-preservation behavior."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Host-verified repository verification command exited 0 at the accepted candidate. The excerpt is truncated; no omitted individual result is inferred. Host reports shared verification inputs unchanged at the integrated revision."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Citation verification exited 0. Retained provider rows bind all four issue-plan documents to FR-AUTHORITY-INITIALIZATION, BR-OWNED-AUTHORITY and BR-FAIL-CLOSED with current digests and no diagnostics; complete-output summary reports zero errors, stale, tampered or unresolved citations."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Host-verified strict OpenSpec validation of issue-391-proposal exited 0. This validates the plan, not a separate human planning approval."
+    },
+    {
+      "id": "github-check:127422729256",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42077851652/job/127422729256",
+      "reason": "Authenticated required repository check from app 15368 passed on accepted head 3cfc081a58c579f9a4a3dff029c7ddfb96789e34."
+    },
+    {
+      "id": "integration:42078388943:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/7aaec87259ae12e0dc0a8ef03b250fffd998c2a8/docs/process/20261105-391-honor-json-output-when-previewing-authority-initialization/runs/42078388943/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected retained receipt records the exact accepted head, owner dispatch with merge:true and actual merged SHA 3778ebc913002ac4f822b1dd8334aa5b49d768fa. Record SHA256 fb218e871b1d32ca457ab1ed421db68883eb391e2ec61bf448906e4805bb5015. The historical assessment alone is not merge proof; the merged receipt is."
+    },
+    {
+      "id": "github-check:127427958288",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42079341154/job/127427958288",
+      "reason": "Authenticated repository check from app 15368 passed at actual merged revision 3778ebc913002ac4f822b1dd8334aa5b49d768fa; host postMerge observation records adopted ci.yml run 42079341154 passed. Resolves the integration receipt's then-missing post-merge result without rewriting history."
+    },
+    {
+      "id": "review:chronology-record",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/pull/449#pullrequestreview-5789791920",
+      "reason": "Supplied historical delivery record now identifies admitted requests, actor/time intervals, one candidate, local repairs, scoped CI recovery, merge and first blocked review. Accepted as attributed historical evidence, distinct from independently host-verified current command/CI/merge observations. Direct supervised implementation is documented in src/packages/sdlc/README.md:18,32 and skills/implement/SKILL.md:13."
+    },
+    {
+      "id": "review:guidance-and-finalization",
+      "status": "passed",
+      "source": "AGENTS.md; src/packages/cli/README.md:25-31; src/packages/sdlc/README.md; src/packages/sdlc/completion.md:26-38; .lighthouse/github.json",
+      "reason": "Affected guidance preserves provider ownership, supervised planning and explicit merge authority. No conflicting guidance established. Host finalization matches completion policy: on passed review close issue and remove delivery labels, preserve PR labels; host releases reservation."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, cited evidence and reservation, publish this review, then apply the adopted issue closure and delivery-label cleanup; do not request another merge or delivery stage.",
+  "output": {
+    "summary": "Review passed for issue #391 / PR #449. Inspected behavior and acceptance evidence support the bounded JSON authority-preview correction. The host-verified integration receipt establishes an authorized merge, and authenticated post-merge ci.yml passed. The supplied historical record resolves the earlier chronology gap; the earlier blocked result remains unchanged.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 391,
+      "pullRequest": 449,
+      "acceptedHead": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+      "integratedRevision": "3778ebc913002ac4f822b1dd8334aa5b49d768fa",
+      "intent": "0a688c6daccf2731c72d66db61979044effee7264c8503db54f2efb8d5e8f560",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "filesFingerprint": "56358a0303f55a9ab1c12a1d9d79d1ae65ac5f31977f9b830b8f9af01f2767a4",
+      "reviewRequest": "be1bc8f1f45abd11884fddb93cf4a3abda98af24c6df4afdf81c7c9e58a3be95",
+      "reviewRequestDigest": "620a2dfa9253944d05a3c860b669e1bdaa847a87cfb5edd0a631604835c32309",
+      "workflowRunId": "42082847892",
+      "currentAuthorizationMerge": false,
+      "provenance": "Host-supplied identities. Historical integration separately carried merge:true for the accepted head; this review neither grants merge authority nor performs integration."
+    },
+    "acceptance": [
+      {
+        "criterion": "Exactly one JSON document with both provider identities and actual outcomes",
+        "assessment": "satisfied",
+        "basis": "lighthouse.mjs:1308-1325 collects both preflights in quiet mode and serializes once. Tests:385-405 parse complete stdout and assert exact ProductShape/ArcShape identities, installed versions, commands, nonempty successful results and both format spellings."
+      },
+      {
+        "criterion": "Failed, conflicting and missing providers remain failures",
+        "assessment": "satisfied",
+        "basis": "lighthouse.mjs:1116-1140 retains process status and existing conflict rules; resolution errors become unsuccessful quiet results. Tests:439-473 exercise exit 7, both conflict forms and missing providers, assert blocked JSON and nonzero CLI status while retaining both results."
+      },
+      {
+        "criterion": "Text compatibility and provider commands remain intact",
+        "assessment": "satisfied",
+        "basis": "Shared runner keeps its nonquiet path and original provider commands. Tests:407-416 check default/explicit text previews, existing headings, provider output and dry-run footer; isolated failure text remains unsuccessful. The text apply path remains separate and unchanged in intent; no new live apply acceptance is claimed."
+      },
+      {
+        "criterion": "Preview preserves consumer files, hooks, modes and Git configuration; JSON apply refused",
+        "assessment": "satisfied",
+        "basis": "Real-provider test snapshots the initialized consumer, custom AGENTS.md, executable hook and local Git configuration before/after every preview. Isolated tests preserve customized LIGHTHOUSE.md. Guards at lighthouse.mjs:1299-1301 precede provider execution, with three rejection variants asserted at tests:475-481."
+      },
+      {
+        "criterion": "Bounded scope, plan, patch changeset and completion path",
+        "assessment": "satisfied",
+        "basis": "Host changed paths comprise the authorized CLI module, existing tests, one CLI patch changeset and four issue-specific OpenSpec plan documents. Plan artifacts are permitted by the installed direct-implement composition. No provider policy, accepted model, workflow or initialization authority changes. Authenticated candidate verification, exact-head authorized integration and current post-merge CI are supplied."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "summary": "Original initialization route ignored JSON output; delivered code now projects actual provider preflights without stdout chatter.",
+        "owner": "CLI maintainers",
+        "followUp": "PR #449 / src/tests/lighthouse.test.mjs:371-484",
+        "disposition": "Accepted correction; no additional source defect established by this review."
+      },
+      {
+        "id": "F2",
+        "classification": "fixed",
+        "kind": "process-evidence-gap",
+        "summary": "The first review lacked the requested supervised delivery chronology. The supplied PR history now records the documented direct-implement entry, requests, intervals, repairs and recovery.",
+        "owner": "Delivery maintainer (juangcarmona)",
+        "followUp": "PR #449 review 5789791920; improvement candidate I1",
+        "disposition": "Resolved for this review, without changing the first blocked review or inventing earlier planning-stage approvals. Original archive is linked by the historical record; it was not independently downloaded in this engine."
+      },
+      {
+        "id": "F3",
+        "classification": "fixed",
+        "kind": "operational-interruption",
+        "summary": "Historical installation timeout, strict-plan length rejection and initial unsent CI request required recovery within this one work item.",
+        "owner": "Implementation worker and delivery operator",
+        "followUp": "PR #449 review 5789791920; implementation receipts; CI run 42077851652",
+        "disposition": "History records completed retry/correction and scoped operational recovery; current receipts verify final successful commands and CI. No recurring cross-issue failure or new CLI defect is inferred."
+      },
+      {
+        "id": "F4",
+        "classification": "accepted",
+        "kind": "non-gating-historical-check-failure",
+        "summary": "Historical route check github-check:127439352211 failed on the candidate; associated dispatch/pr-state/epic-triage jobs were skipped.",
+        "owner": "Delivery maintainer",
+        "followUp": "https://github.com/juangcarmona/lighthouse/actions/runs/42082626681/job/127439352211",
+        "disposition": "Retain as a real failure with cause and precise interval unknown; it is not the repository check required by completion.policy.checks and does not establish a CLI defect. Current review dispatch was admitted and required candidate/post-merge CI passed. No recovery or root-cause claim is made for this route check."
+      },
+      {
+        "id": "F5",
+        "classification": "accepted",
+        "kind": "measurement-limit",
+        "summary": "Human attention, provider-authenticated cost and production escaped-defect rate are unmeasured. Separate earlier triage/refine/propose workers and independent planning review are not supplied; historical inventory reports none for the supervised entry.",
+        "owner": "#185 comparison owner (juangcarmona)",
+        "followUp": "Issue #391 comparison requirement; PR #449 review 5789791920",
+        "disposition": "Keep unknowns explicit. This supervised case is excluded from unattended pilot counts. Null priorPlanningReview is not a passed independent review and is not required by this supervised route."
+      },
+      {
+        "id": "F6",
+        "classification": "deferred",
+        "kind": "dependency-audit-observation",
+        "summary": "Successful installation reported three low-severity vulnerabilities without advisory details in the supplied receipt.",
+        "owner": "Dependency maintainers",
+        "followUp": "Implementation command receipt :1 in run 42067986932",
+        "disposition": "Informational dependency triage outside the output-only fix; no dependency files changed and no exploitability or introduced regression is established. No issue opened or audit executed by this review."
+      }
+    ],
+    "guidanceReview": {
+      "result": "No stale or conflicting affected guidance established.",
+      "references": [
+        "AGENTS.md:15-19 preserves authority ownership and distinguishes workflow failure from configured merge protection.",
+        "src/packages/cli/README.md:25-31 matches provider-owned initialization and preview behavior; omission of a JSON example is not a conflicting instruction.",
+        "src/packages/sdlc/README.md:18,32 and skills/implement/SKILL.md:13 allow planning inside direct supervised implementation.",
+        "src/packages/sdlc/completion.md:32-38 requires explicit integration authority and places closure/label cleanup after passed review.",
+        "openspec/changes/issue-391-proposal/{proposal,design,tasks}.md preserve historical future-stage statements; those statements are not current missing results when later authenticated receipts exist."
+      ],
+      "productContext": "Current ProductShape reports match the plan's three preservation citations. Their inspected model status is draft; citation validity is not new product approval. This bounded correction preserves existing behavior and changes no product model or provider policy.",
+      "runtimeContext": "Source SDLC package version 0.20.6 and router source pin 6232de829ca819d7827b1282fe5191ee0d36c912 match supplied harness identity. Current revision/branch authority comes from host observations, not an independent engine GitHub check. Host-specific completion signaling differs intentionally from generic safe-output transport instructions; the engine writes only this envelope."
+    },
+    "deliveryHistory": {
+      "source": "PR #449 review 5789791920, attributed historical capture at 2026-11-05T18:13:02.777583+00:00; current request supplied separately by host",
+      "historicalArchive": {
+        "url": "https://github.com/juangcarmona/lighthouse/blob/7aaec87259ae12e0dc0a8ef03b250fffd998c2a8/acceptance/20261105-real-fast-forward/native-391-supervised-history-51fefc533f3225f29cfa1578b09ea78160c1eb473801f802aa1208976d1e81ec.tar.gz",
+        "reportedSha256": "51fefc533f3225f29cfa1578b09ea78160c1eb473801f802aa1208976d1e81ec",
+        "engineVerifiedArchiveBytes": false
+      },
+      "intervalsUtc20261105": [
+        {
+          "event": "Implement request",
+          "run": "42067891967",
+          "actor": "juangcarmona",
+          "start": "16:46:28",
+          "end": "16:47:06"
+        },
+        {
+          "event": "Implementation; host checks passed; CI not sent",
+          "run": "42067986932",
+          "actor": "github-actions[bot]",
+          "start": "16:47:02",
+          "end": "17:16:06"
+        },
+        {
+          "event": "Operational CI recovery, separate from ordinary stage requests",
+          "run": "42077741964",
+          "actor": "juangcarmona",
+          "start": "17:45:35",
+          "end": "17:46:25"
+        },
+        {
+          "event": "Native App push CI",
+          "run": "42077851652",
+          "actor": "lighthouse-sdlc[bot]",
+          "start": "17:46:16",
+          "end": "17:47:51"
+        },
+        {
+          "event": "Exact-head merge-authorizing integration request",
+          "run": "42078326994",
+          "actor": "juangcarmona",
+          "start": "17:49:14",
+          "end": "17:49:41"
+        },
+        {
+          "event": "Integration and confirmed merge",
+          "run": "42078388943",
+          "actor": "github-actions[bot]",
+          "start": "17:49:38",
+          "end": "17:56:34"
+        },
+        {
+          "event": "Post-merge CI",
+          "run": "42079341154",
+          "actor": "github-actions[bot]",
+          "start": "17:55:39",
+          "end": "17:57:53"
+        },
+        {
+          "event": "Automatic review request",
+          "run": "42079678016",
+          "actor": "github-actions[bot]",
+          "start": "17:57:49",
+          "end": "17:58:47"
+        },
+        {
+          "event": "First review; workflow success, assessment blocked for chronology",
+          "run": "42079817069",
+          "actor": "github-actions[bot]",
+          "start": "17:58:44",
+          "end": "18:06:12"
+        }
+      ],
+      "currentReview": "Owner workflow_dispatch router 42082773666 requested review of PR #449 at the accepted head, merge:false; worker 42082847892. Host observation time 2026-11-05T18:18:11.675Z is not the worker's completed interval.",
+      "requestAccounting": "Historical capture reports three admitted receipts through the first review: implementation, integration and automatic review. Recovery is separately recorded. Current owner review is a subsequent supplied request. Failed router run 42082626681 is retained as a failed attempt, not inferred to be an admitted stage worker; its actor, cause and timestamps are not supplied here.",
+      "revisions": "One published candidate 3cfc081a58c579f9a4a3dff029c7ddfb96789e34; original baseline bf29b8e35b8f2243fcdcc3def9a3a97c8060ee38; actual squash merge 3778ebc913002ac4f822b1dd8334aa5b49d768fa. No additional candidate revision inferred from retries.",
+      "recovery": "Historical capture records installation cancelled at 120000ms with SIGKILL/137, followed by a successful 600000ms retry; strict OpenSpec requirement-length failure corrected before final validation. CI inventory GET failed before sending: attempt1 not-sent at 17:15:20.274; installed earliest retry 17:45:20.274; attempt2 acknowledged 17:45:55.384, producing one App verification ref and native CI using the same candidate. Three scoped temporary variable creations, one maintenance dispatch and three deletions are recorded, with original absence restored 17:48:40.539. These are historical observations, not actions taken or permissions granted by this review.",
+      "measurementLimits": "Intervals above are attributed native run/job metadata, not human attention or model billing. Do not sum overlapping runs as labor or cost. Unattended comparative performance and cross-issue recurrence are not established."
+    },
+    "checkDisposition": {
+      "required": "Only repository from app 15368 is the configured forge check; passed on candidate and integrated revision.",
+      "postMerge": "Adopted ci.yml passed on the actual merge. Its missing status in the older integration receipt was a then-current absence, not a failed execution.",
+      "additional": "Historical failed route check remains failed; skipped dispatch, epic-triage, pr-state and ci-app jobs remain unavailable/skipped, not passed. They are unrelated optional observations rather than current acceptance gates. A successful first review workflow did not turn its blocked assessment into a pass."
+    },
+    "finalization": {
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "executor": "trusted publisher after fresh validation",
+        "closeIssue": true,
+        "addLabels": [],
+        "removeLabels": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "pullRequestLabels": "preserve",
+        "reservation": "Host releases agent-working on every outcome."
+      },
+      "alreadyAppliedByEngine": false,
+      "reason": "Matches the adopted finalization observation and completion.md:38. Existing pr-ready before host finalization is not a defect or prerequisite to remove manually. No new permission, issue, stage or merge is requested."
+    },
+    "retrospective": "## What went well\n- The bounded fix reused provider execution and failure rules rather than inventing another initialization authority. Real-provider and isolated-provider assertions cover parseable stdout, exact identities, failure/conflict/missing outcomes, text compatibility, state preservation and JSON apply refusal (`lighthouse.mjs:1116-1140,1292-1346`; `lighthouse.test.mjs:371-484`). Owner: CLI maintainers.\n- Host-verified focused tests, repository verification, citations and strict plan validation passed. An exact-head owner-authorized merge receipt and authenticated post-merge CI establish delivery separately from the agent's assessment. Owner: delivery maintainer.\n\n## What went wrong\n- The first review was blocked for missing chronology, despite a successful workflow. The later historical record supplies the supervised direct-implement route and recovery detail (PR review 5789791920). This was an evidence gap, not a delivered CLI defect.\n- That history records an installation timeout, one strict-plan rejection and an initially unsent CI attempt requiring scoped recovery on the same candidate. Historical router job 127439352211 also failed; its cause is unknown here. These events within #391 do not establish recurrence across work items.\n- No new source defect or affected-guidance conflict was established. Three low-severity dependency audit notices lack advisory detail; attention time, authenticated billing and production escaped-defect rate remain unknown.\n\n## Start doing\n- Carry the request/worker/recovery chronology into the first review input for supervised comparisons; preserve entry-route distinctions and unknown measurements. Owner: delivery maintainer; evidence: F2 and the supplied history.\n\n## Stop doing\n- Do not treat green workflow status as proof of a passed assessment, a merge, missing stage approvals or complete acceptance. Do not count retries or operational interventions as separate unattended pilots. Owner: #185 comparison owner; evidence: first review's blocked assessment, documented direct-implement entry and exact-head integration receipt.\n\n## Improvement candidates\n- **I1 — review-input chronology guard (deferred, owner: SDLC maintainers).** Observed failure: the first review could not complete #391's explicit comparison chronology. Evidence: run 42079817069 and PR review 5789791920. Smallest useful guard: for work items explicitly requiring a comparison history, prepare a bounded table of authenticated stage requests, worker outcomes, recoveries and unresolved measurements before review dispatch. Reproduce first with the original review input lacking the chronology and assert the named evidence blocker; then add the supplied history and assert the blocker clears without fabricating earlier Ready/Planned approvals or measured cost. Any guard needs separate review and regression proof; none was implemented here. Follow-up reference: this review, I1, under #391/#185.\n- **I2 — early plan-constraint feedback (deferred, owner: implementation-skill maintainers).** Observed failure: the recorded strict OpenSpec validation rejected a requirement longer than 500 characters before correction (`tasks.md:18`; PR review 5789791920). Smallest useful guard: validate the authored plan with the existing strict validator before production edits. Reproduce the recorded overlong requirement in an isolated fixture, assert its specific validation failure, then shorten it and verify acceptance with unchanged intended behavior and current citations. Review this process change separately; no new checker or policy is authorized. Follow-up reference: this review, I2.\n\nNo cross-issue recurrence, comparative cost advantage or new product/architecture follow-up is established. Existing CI recovery controls were used; this review does not propose broadening their scope or weakening checks.",
+    "limits": [
+      "No commands or tests were executed by this review engine; execution claims rely on exact host-verified receipts. Static inspection assesses adequacy separately.",
+      "CodeGraph context retrieval was unavailable; direct source reads supplied the relevant code and tests. This optional navigation limitation did not prevent review.",
+      "Historical chronology and archive hash are attributed to the supplied PR record, not independently authenticated archive contents by this engine. Missing historical timestamps and measurements remain explicit, not failed product checks.",
+      "No separate human planning approval, independent planning-review result, live JSON apply, production acceptance or provider-authenticated cost is claimed.",
+      "Only /output/envelope.json is written. The host validates and publishes the record, applies adopted finalization and records the terminal noop; no safeoutputs CLI invocation is made in this adapter."
+    ]
+  }
+}
