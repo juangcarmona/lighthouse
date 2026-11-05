@@ -34,8 +34,11 @@ export async function readUnattendedPlanningReview(api, completion, priorIntegra
     if (!Array.isArray(original) || !original.length || original.length > 32 || !Array.isArray(candidate) || candidate.length > 512) return null;
     const metadataPath = `openspec/changes/issue-${issue}-proposal/.openspec.yaml`;
     const metadata = candidate.filter(file => file.path === metadataPath);
-    if (metadata.length !== 1 || typeof metadata[0].content !== 'string' || metadata[0].content.length > 131072 || original.filter(file => file.path === metadataPath).length !== 1) return null;
-    const files = original.map(file => file.path === metadataPath ? { ...file, content: Buffer.from(metadata[0].content, 'base64').toString('utf8') } : file);
+    const declarations = original.filter(file => file.path === metadataPath);
+    if (metadata.length !== 1 || typeof metadata[0].content !== 'string' || metadata[0].content.length > 131072 || declarations.length > 1 ||
+        !declarations.length && !original.some(file => file.path.startsWith(`openspec/changes/issue-${issue}-proposal/specs/`) && file.path.endsWith('/spec.md'))) return null;
+    // prepareProposal appends provider metadata after the original model files.
+    const files = [...original.filter(file => file.path !== metadataPath), { path: metadataPath, content: Buffer.from(metadata[0].content, 'base64').toString('utf8') }];
     const refined = refinement.result.output, plan = { files, refinement: refined };
     const binding = unattendedDigest({ revision: run.head_sha, intent, policyDigest: authorization.policyDigest, purpose: 'plan', details: { refined, plan } });
     assertIndependentReview(review.result, binding, { model: producer.model, runId: proposalId }, { model: reviewer.model, runId: reviewId });

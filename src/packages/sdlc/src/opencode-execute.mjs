@@ -188,8 +188,8 @@ async function main() {
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
     if (reviewOutput) {
-      await writeFile(join(output, 'review.json'), JSON.stringify(reviewTemplate(reviewOutput)));
-      await chmod(join(output, 'review.json'), 0o666);
+      await writeFile(join(output, 'envelope.json'), JSON.stringify(reviewTemplate(reviewOutput)));
+      await chmod(join(output, 'envelope.json'), 0o666);
     } else if (request.worker === 'independent-review') {
       const template = JSON.parse(await readFile(context, 'utf8')).contract?.envelope;
       completionOutput(template, request);
@@ -199,7 +199,7 @@ async function main() {
       await chmod(join(output, 'envelope.json'), 0o666);
     }
     const prompt = join(dir, 'prompt.txt');
-    const completionBoundary = reviewOutput ? '\n\n# Completion in this custom engine adapter\nWrite only /output/review.json using contract.review. The host validates the binding, verdict and findings and constructs the stage envelope and terminal noop. Stop after writing the review; safeoutputs is a host duty.\n' : '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
+    const completionBoundary = reviewOutput ? '\n\n# Completion in this custom engine adapter\nWrite only /output/envelope.json using contract.review. The host validates the binding, verdict and findings and constructs the stage envelope and terminal noop. Stop after writing the review; safeoutputs is a host duty.\n' : '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
     codegraph = codegraphSelection(config, implementing);
     if (codegraph.status === 'pending') codegraph = await startCodegraph({ config, source, harness, dir, name, docker });
@@ -259,7 +259,7 @@ async function main() {
     restoreWorkspaceOwnership(dir, config);
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
     if (runtimeReceipt.execution.status !== 'passed') { phase = 'execution'; throw Error(executionFailure(runtimeReceipt.execution)); }
-    const result = join(output, reviewOutput ? 'review.json' : 'envelope.json'), stat = await lstat(result);
+    const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
     const rawEnvelope = await readFile(result, 'utf8');
     let envelope;

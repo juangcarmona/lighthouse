@@ -10,7 +10,7 @@ const decision = { binding: request.reviewOutput.binding, verdict: 'accept', fin
 test('host builds review envelopes from strict decisions and authenticated identity', () => {
   const context = stageContext(request, {});
   assert.deepEqual(Object.keys(context.contract).sort(), ['review', 'rules']);
-  assert.match(context.contract.rules, /only \/output\/review.json/);
+  assert.match(context.contract.rules, /only \/output\/envelope.json/);
   const accepted = reviewEnvelope(decision, request);
   assert.equal(accepted.result.status, 'passed');
   assert.equal(accepted.result.runId, request.runId);
