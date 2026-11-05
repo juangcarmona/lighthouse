@@ -8,7 +8,7 @@ function transientDownload(error) {
     && (stderr.match(/\bHTTP\b/g) ?? []).length === 1;
 }
 
-export async function readActionsJson(api, repository, runId, name, file, optional = false) {
+async function readActionsArchive(api, repository, runId, name, optional = false) {
   const artifacts = await api(`actions/runs/${runId}/artifacts?per_page=100`);
   if (artifacts.total_count > 100) throw Error('Artifact collection exceeds its bound');
   if (!Array.isArray(artifacts.artifacts) || artifacts.total_count !== artifacts.artifacts.length) throw Error('Incomplete artifact inventory');
@@ -24,5 +24,15 @@ export async function readActionsJson(api, repository, runId, name, file, option
       if (attempt === 3 || !transientDownload(error)) throw error;
     }
   }
-  return readZipJson(bytes, file, optional);
+  return bytes;
+}
+
+export async function readActionsJson(api, repository, runId, name, file, optional = false) {
+  const bytes = await readActionsArchive(api, repository, runId, name, optional);
+  return bytes === null ? null : readZipJson(bytes, file, optional);
+}
+
+export async function createActionsJsonReader(api, repository, runId, name) {
+  const bytes = await readActionsArchive(api, repository, runId, name);
+  return (file, optional = false) => readZipJson(bytes, file, optional);
 }
