@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "c2f8df5dea76a5166f6f9407b74e43354f22b87b6a02e2118e1974b02a2a0353",
+  "archiveSha256": "050f2e0e557cc59da24f4f5545572569bcfddfc161964917d87774d5c4a2a7c2",
   "failedPilots": [
     {
       "issue": 389,
@@ -40,6 +40,13 @@
       "outcome": "host checks and native build passed; review escalated because admitted host commands omitted planned full verification and six-file compatibility",
       "publication": "none",
       "correction": "#410 and aligned owner-controlled #389 grant"
+    },
+    {
+      "issue": 389,
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41944081446",
+      "outcome": "all four independent host commands passed; model blocked on receipts from the not-yet-installed corrected host",
+      "publication": "none",
+      "classification": "recovered candidate becomes reviewed host bootstrap; excluded from unattended pilot acceptance"
     }
   ],
   "correction407": {
@@ -76,6 +83,22 @@
     },
     "focusedRegressions": "46 passed; both new controls failed before correction",
     "grant389": "independent six-file compatibility and complete repository verification now admitted",
-    "nativeRollout": "pending"
+    "nativeRollout": "original planning contexts expose all four commands; fourth attempt completed all four independent host checks"
+  },
+  "cleanPilotQueue": [
+    390,
+    394,
+    392
+  ],
+  "bootstrap389": {
+    "scope": "explicit maintainer integration and adoption of recovered candidate, plus implementation-stage boundary clarification",
+    "nativeV2Receipt": "pending #390 after adoption",
+    "sourceSha256": "8fa35b3a7802798f9cfbb67bb400c0496c177919cc65e844a00db43a63de85e4",
+    "verificationSummary": [
+      "\u2139 tests 721",
+      "\u2139 pass 712",
+      "\u2139 fail 0",
+      "\u2139 skipped 9"
+    ]
   }
 }

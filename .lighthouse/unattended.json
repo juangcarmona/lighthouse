@@ -5,9 +5,9 @@
     "ff"
   ],
   "paths": [
-    "src/packages/sdlc/src/unattended-actions.mjs",
-    "src/tests/unattended-actions.test.mjs",
-    ".changeset/unattended-native-check-binding.md"
+    "src/packages/sdlc/src/issue-actions.mjs",
+    "src/tests/issue-actions.test.mjs",
+    ".changeset/bounded-github-denial-message.md"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,
