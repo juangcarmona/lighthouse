@@ -14,7 +14,8 @@ async function readCiInventory(api, path) {
   for (let attempt = 0; ; attempt++) {
     try { return await api(path); }
     catch (error) {
-      if (attempt >= 2 || error?.name === 'AbortError' || !([502, 503, 504].includes(error?.status) || error?.name === 'TimeoutError' || transportFailureCode(error))) throw error;
+      const transient = Number.isInteger(error?.status) ? [502, 503, 504].includes(error.status) : error?.name === 'TimeoutError' || transportFailureCode(error);
+      if (attempt >= 2 || error?.name === 'AbortError' || !transient) throw error;
     }
   }
 }

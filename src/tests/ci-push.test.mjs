@@ -130,7 +130,7 @@ test('exhausted read retries preserve the original error, safe diagnostics and a
 });
 
 test('terminal, malformed, cancelled and post-send failures keep their existing stops', async t => {
-  for (const failure of [Object.assign(Error('terminal'), { status: 401 }), Object.assign(Error('terminal'), { status: 403 }), Object.assign(Error('terminal'), { status: 404 }), Object.assign(Error('terminal'), { status: 500 }), new SyntaxError('invalid inventory'), Object.assign(Error('cancelled'), { name: 'AbortError', cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }), Object.assign(Error('certificate'), { code: 'CERT_HAS_EXPIRED' }), Error('unknown')]) await t.test(String(failure.status ?? failure.code ?? failure.name), async () => {
+  for (const failure of [Object.assign(Error('terminal'), { status: 401 }), Object.assign(Error('terminal'), { status: 403 }), Object.assign(Error('terminal'), { status: 403, name: 'TimeoutError', cause: { code: 'ETIMEDOUT' } }), Object.assign(Error('terminal'), { status: 404 }), Object.assign(Error('terminal'), { status: 500 }), new SyntaxError('invalid inventory'), Object.assign(Error('cancelled'), { name: 'AbortError', cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } }), Object.assign(Error('certificate'), { code: 'CERT_HAS_EXPIRED' }), Error('unknown')]) await t.test(String(failure.status ?? failure.code ?? failure.name), async () => {
     const f = fixture(); f.state.inventoryErrors = [failure];
     await assert.rejects(f.dispatch(), error => error === failure);
     assert.equal(f.state.inventoryCalls, 1); assert.equal(f.state.calls, 0);
