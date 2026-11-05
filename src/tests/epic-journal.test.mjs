@@ -106,6 +106,13 @@ test('integration CI intent survives a new owner run and rejects malformed workf
     const invalid = structuredClone(checks); change(invalid);
     await assert.rejects(next.writeReceipt(prKey, { ...linked, checks: invalid }), /Epic (check identity|CI request) is invalid/);
   }
+  const headChecks = { ...structuredClone(checks), identity: { ...checks.identity, candidate: revision, branch: `lighthouse/verification-7-${revision}` } };
+  await next.writeReceipt(prKey, { ...linked, headChecks });
+  await f.finish(101);
+  const retained = await (await f.open(102)).readReceipt(prKey);
+  assert.deepEqual(retained.headChecks, headChecks);
+  assert.deepEqual(retained.checks, checks);
+  await assert.rejects(next.writeReceipt(prKey, { ...linked, headChecks: checks }), /Epic head check identity is invalid/);
 });
 
 test('merge intent binds the exact reviewed head and base through acceptance', async t => {

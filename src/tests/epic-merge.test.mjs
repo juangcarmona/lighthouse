@@ -10,6 +10,7 @@ function fixture() {
   const pr = { number: 7, state: 'open', merged: false, draft: false, mergeable: true, merge_commit_sha: merge, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { ref: `lighthouse/implement-18-${marker.slice(0, 12)}`, sha: head, repo: { full_name: 'owner/repo' } }, base: { ref: epic.base, repo: { full_name: 'owner/repo' } }, body: `<!-- lighthouse-implementation:${marker} -->` };
   const review = { id: 9, user: { login: 'owner', type: 'User' }, state: 'APPROVED', commit_id: head };
   const data = { branch: { ref: `refs/heads/${epic.base}`, object: { sha: base } }, pr, merge: { parents: [{ sha: base }, { sha: head }] }, reviews: [review], checks: [{ id: 1, name: 'ci', head_sha: merge, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
+  data.headChecks = data.checks.map(check => ({ ...check, head_sha: head }));
   const api = async path => {
     if (path === `git/ref/heads/${epic.base}`) return data.branch;
     if (path === 'pulls/7') return data.pr;
@@ -17,6 +18,8 @@ function fixture() {
     if (path.startsWith('pulls/7/reviews?')) return data.reviews;
     if (path.startsWith(`commits/${merge}/check-runs?`)) return { check_runs: data.checks };
     if (path.startsWith(`commits/${merge}/statuses?`)) return [];
+    if (path.startsWith(`commits/${head}/check-runs?`)) return { check_runs: data.headChecks };
+    if (path.startsWith(`commits/${head}/statuses?`)) return [];
     throw Error(`Unexpected ${path}`);
   };
   const options = { authenticateChild: async () => epic, authenticatePullRequest: async () => true, authorizeDecision: async () => true, loadPolicy: async () => ({ checks: [{ context: 'ci', app: 42 }] }) };
@@ -56,6 +59,18 @@ test('epic merge observation notices an owner objection added while checks are r
     return f.api(path);
   };
   await assert.rejects(observeEpicMerge(api, { repository: 'owner/repo', owner: 'owner', child: 18, epic: f.epic, decision: f.decision }, f.options), /changed while checking/);
+});
+
+test('green integration CI cannot replace missing, failed or foreign-app PR-head checks', async () => {
+  for (const mutate of [
+    f => { f.data.headChecks = []; },
+    f => { f.data.headChecks[0].conclusion = 'failure'; },
+    f => { f.data.headChecks[0].head_sha = merge; },
+    f => { f.data.headChecks[0].app.id = 99; },
+  ]) {
+    const f = fixture(); mutate(f);
+    await assert.rejects(f.run(), /checks are missing, pending or failed/);
+  }
 });
 
 test('epic merge records intent and reconciles a lost response without merging twice', async () => {

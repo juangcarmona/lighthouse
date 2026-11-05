@@ -22,6 +22,8 @@ function fixture() {
     if (path === `git/commits/${candidate}`) return data.candidate;
     if (path.startsWith(`commits/${candidate}/check-runs?`)) return { check_runs: [{ id: 1, name: 'ci', head_sha: candidate, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
     if (path.startsWith(`commits/${candidate}/statuses?`)) return [];
+    if (path.startsWith(`commits/${head}/check-runs?`)) return { check_runs: [{ id: 2, name: 'ci', head_sha: head, status: 'completed', conclusion: 'success', app: { id: 42 } }] };
+    if (path.startsWith(`commits/${head}/statuses?`)) return [];
     if (path.startsWith('pulls/20/reviews?')) return data.reviews;
     if (path === `compare/${commit}...${baseSha}`) return data.comparison;
     if (path.startsWith('issues/11/dependencies/blocked_by?')) return data.native;
