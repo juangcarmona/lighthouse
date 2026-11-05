@@ -46,9 +46,11 @@ function fixture() {
     [member(red, 'request.json'), redRequest], [member(red, 'checks.json'), redReceipt], [member(red, 'changes.json'), changes],
     [member(red, 'runtime.json'), { model: 'openai/producer', execution: { status: 'passed' } }],
   ]);
+  // Native artifact members are serialized independently; mutations must not share fixture objects.
+  for (const [name, value] of files) files.set(name, structuredClone(value));
   const api = async path => path.startsWith('contents/.lighthouse/unattended.json?') ? { content: Buffer.from(JSON.stringify(grant)).toString('base64') } : run;
   const read = async (_api, repo, value, name, file) => { assert.equal(repo, repository); assert.equal(value, runId); assert.equal(name, 'lighthouse-unattended-123-1'); if (!files.has(file)) throw Error('Missing artifact'); return structuredClone(files.get(file)); };
-  return { completion, prior, run, files, api, read, member, review, triage, red, report, binding, grant };
+  return { completion, prior, run, files, api, read, member, review, triage, red, report: files.get('report.json'), binding, grant };
 }
 
 test('compact hotfix plan review retains expected RED failure, authenticated GREEN and unchanged regression bytes', async () => {
