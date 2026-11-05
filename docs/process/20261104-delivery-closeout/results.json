@@ -12,7 +12,7 @@
     "independentChecks": "4 passed on exact executor image",
     "cleanup": "clean"
   },
-  "archiveSha256": "8aee04d28e7290eb29f2a3a592c8e40088e3b4ceb7b979ce95c230e7c347a1bd",
+  "archiveSha256": "ac762fa15479ad5e83b414cddc1b13034fdcb9960730b391b47919d8444500e4",
   "failedPilots": [
     {
       "issue": 389,
@@ -34,7 +34,13 @@
     },
     "image": "sha256:59a2aee444ed0d40c490fc468f9b632f7ce4e4f6b0a91aba3fe134197aeb169b",
     "adapterRegression": "original adapter fails all three review controls; corrected adapter passes 14 tests with real containers",
-    "validation": "untouched review remains blocked; stale identity rejected; redacted diagnostic and events retained"
+    "validation": "untouched review remains blocked; stale identity rejected; redacted diagnostic and events retained",
+    "nativeReview": {
+      "run": "https://github.com/juangcarmona/lighthouse/actions/runs/41938501442",
+      "reviewRunId": "9c543a249d03c9bcbd1c24781b683f5c11c4f737dd7c2183f128298cfad3f0a7",
+      "result": "accepted with exact admitted identity and binding; cleanup clean",
+      "scope": "independent planning review only; complete #389 delivery still running"
+    }
   },
   "consumer216": {
     "repository": "juangcarmona/lighthouse-published-consumer-20261104",
@@ -45,6 +51,7 @@
       "ui": "0.2.0"
     },
     "coldClone": "passed; no preinstalled dependencies; 44 customization hashes preserved; no tracked diff",
-    "scope": "bootstrap only; native delivery, upgrade and rollback pending"
+    "scope": "bootstrap only; native delivery, upgrade and rollback pending",
+    "safetyControls": "dry-run writes none; missing ownership and mismatched baseline reject apply; controlled mutation restored"
   }
 }
