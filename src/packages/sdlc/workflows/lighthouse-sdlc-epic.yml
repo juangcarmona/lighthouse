@@ -1,4 +1,4 @@
-# Not installed until child delivery and aggregate publication are connected.
+# Optional serial child delivery; owner decisions remain explicit for each merge.
 name: Lighthouse epic reconciliation
 on:
   workflow_dispatch:
@@ -43,13 +43,14 @@ concurrency:
   queue: max
 permissions:
   contents: write
-  actions: read
+  actions: write
   issues: write
   pull-requests: write
   checks: read
   statuses: read
 jobs:
   reconcile:
+    timeout-minutes: 20
     if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_EPIC_ENABLED == 'true' && github.actor == github.repository_owner
     runs-on: ubuntu-24.04
     env:
@@ -59,16 +60,20 @@ jobs:
         with:
           repository: juangcarmona/lighthouse
           ref: __LIGHTHOUSE_REF__
+          path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24
       - name: Install the pinned harness
+        working-directory: .lighthouse-harness
         run: npm ci --ignore-scripts
       - name: Reconcile native child issues
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/epic-native.mjs
+          LIGHTHOUSE_CI_APP_CLIENT_ID: ${{ vars.LIGHTHOUSE_CI_APP_CLIENT_ID }}
+          LIGHTHOUSE_CI_APP_PRIVATE_KEY: ${{ secrets.LIGHTHOUSE_CI_APP_PRIVATE_KEY }}
+        run: node .lighthouse-harness/src/packages/sdlc/src/epic-native.mjs
       - name: Preserve the epic journal
         if: always() && inputs.action != 'accept-aggregate'
         uses: actions/upload-artifact@v7

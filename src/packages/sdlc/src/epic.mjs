@@ -7,11 +7,11 @@ const sha = value => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
 const positive = value => Number.isSafeInteger(value) && value > 0;
 
 // Refinement proposes work; neither a valid plan nor its digest is authority to execute.
-export function assessDecomposition(output) {
+export function assessDecomposition(output, { requested = false } = {}) {
   const errors = validateEstimate(output?.estimate);
   if (output?.estimate?.status !== 'confirmed') errors.push('refinement estimate must be confirmed');
   if (errors.length) return { status: 'invalid', required: false, errors };
-  if (output.estimate.points <= 8) return { status: 'not-required', required: false, errors: [] };
+  if (output.estimate.points <= 8 && requested !== true) return { status: 'not-required', required: false, errors: [] };
   const split = output.decomposition;
   if (text(split?.noSafeSplitReason) && text(split?.question)) return { status: 'blocked', required: true, reason: split.noSafeSplitReason, question: split.question, errors: [] };
   const plan = buildDecompositionPlan(split);

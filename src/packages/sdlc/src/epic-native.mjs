@@ -18,6 +18,8 @@ import { createHash } from 'node:crypto';
 import { list, loadProfile, requiredPolicy, checkCommit } from './completion.mjs';
 import { observeEpicMerge, mergeEpicChild } from './epic-merge.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
+import { ensureEpicChecks } from './epic-checks.mjs';
+import { githubAppCiTrigger } from './github-app-ci.mjs';
 
 const isOwnerAnswer = (comment, owner) => comment.user?.login === owner && !comment.body?.includes('<!-- lighthouse-run:') && !comment.body?.includes('<!-- lighthouse-actions:');
 const paused = issue => issue.state !== 'open' || issue.pull_request || issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info', 'waiting-review', 'execution-failed', 'triage', 'refine', 'propose', 'implement'].includes(label.name));
@@ -31,8 +33,9 @@ export async function prepareNativeEpic(api, repository, owner, issueNumber, loa
   const current = { owner, issue: issueNumber, sourceRevision, taskDigest: taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, owner))) };
   const evidence = await load(api, repository, comments, current);
   if (evidence.request?.issue !== issueNumber || evidence.request.stage !== 'refine' || evidence.request.sourceRevision !== sourceRevision || evidence.request.taskDigest !== current.taskDigest || validateStageEnvelope(evidence.envelope, evidence.request).length) throw Error('Epic refinement result is invalid or stale');
-  const assessment = assessDecomposition(evidence.envelope.result.output);
-  if (assessment.status !== 'planned') throw Error('Epic refinement has no valid oversized plan');
+  // An owner epic action selects an existing plan; automatic refinement keeps its size threshold.
+  const assessment = assessDecomposition(evidence.envelope.result.output, { requested: true });
+  if (assessment.status !== 'planned') throw Error('Epic refinement has no valid decomposition plan');
   const parentNumber = assessment.plan.parent.number ?? assessment.plan.parent.id.match(/^(?:GH-)?([1-9]\d*)$/)?.[1];
   if (String(parentNumber) !== String(issueNumber)) throw Error('Epic plan targets a different parent');
   const report = comments.find(comment => comment.html_url === evidence.report);
@@ -83,10 +86,15 @@ export async function authenticateEpicPullRequest({ api, repository, owner, chil
   return true;
 }
 
-export async function verifyEpicChecks(api, { repository, sourceRevision, base, candidate, loadPolicy }) {
+async function observeEpicChecks(api, { repository, sourceRevision, base, candidate, loadPolicy }) {
   const policy = loadPolicy ? await loadPolicy() : await requiredPolicy(api, base, await loadProfile(api, repository, sourceRevision));
-  if (!Array.isArray(policy?.checks) || !policy.checks.length) return false;
-  return (await checkCommit(api, candidate, policy.checks)).every(check => check.status === 'passed');
+  if (!Array.isArray(policy?.checks) || !policy.checks.length) return [];
+  return checkCommit(api, candidate, policy.checks);
+}
+
+export async function verifyEpicChecks(api, input) {
+  const checks = await observeEpicChecks(api, input);
+  return checks.length > 0 && checks.every(check => check.status === 'passed');
 }
 
 export async function verifyAcceptedEpicMerge(api, { repository, owner, sourceRevision, base, receipt, loadPolicy }) {
@@ -201,7 +209,7 @@ export async function reconcileEpicPullRequest({ api, repository, owner, child, 
   return { status: 'linked', pullRequest: pr.number, head: published.head };
 }
 
-export async function readyEpicPullRequest({ api, repository, owner, parent, child, number, head, base, journal, authorize, load, loadPolicy, readArtifact, setDraft }) {
+export async function readyEpicPullRequest({ api, repository, owner, parent, child, number, head, base, journal, authorize, load, loadPolicy, readArtifact, setDraft, ciTrigger }) {
   if (!Number.isSafeInteger(number) || number < 1 || !/^[a-f0-9]{40}$/.test(head ?? '') || !/^[a-f0-9]{40}$/.test(base ?? '') || typeof setDraft !== 'function') throw Error('Invalid epic readiness request');
   const observe = async () => {
     const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact });
@@ -214,17 +222,22 @@ export async function readyEpicPullRequest({ api, repository, owner, parent, chi
     if (target.issue !== child || target.base !== current.base || target.head !== head || pr.mergeable !== true || !/^[a-f0-9]{40}$/.test(pr.merge_commit_sha ?? '')) throw Error('Epic PR changed before readiness');
     await authenticateEpicPullRequest({ api, repository, owner, child, pr, load, readArtifact, journal });
     const candidate = await api(`git/commits/${pr.merge_commit_sha}`);
-    if (!Array.isArray(candidate.parents) || candidate.parents.length !== 2 || candidate.parents[0].sha !== base || candidate.parents[1].sha !== head || !await verifyEpicChecks(api, { repository, sourceRevision: current.sourceRevision, base: current.base, candidate: pr.merge_commit_sha, loadPolicy })) throw Error('Epic readiness checks do not bind the current head and base');
+    if (!Array.isArray(candidate.parents) || candidate.parents.length !== 2 || candidate.parents[0].sha !== base || candidate.parents[1].sha !== head) throw Error('Epic readiness checks do not bind the current head and base');
     if (await authorize() !== true) throw Error('Epic readiness authority changed');
-    return { pr, candidate: pr.merge_commit_sha };
+    const marker = readEpicMarker(issue.body);
+    const correlation = epicCorrelation({ repository, parent, slice: current.slice, planDigest: current.planDigest, base: current.base, dependencies: marker.dependencies, kind: 'pull-request' });
+    return { pr, candidate: pr.merge_commit_sha, base, sourceRevision: current.sourceRevision, branch: current.base, key: epicJournalKey(correlation) };
   };
   const first = await observe();
+  const checkInput = { repository, sourceRevision: first.sourceRevision, base: first.branch, candidate: first.candidate, loadPolicy };
+  await ensureEpicChecks({ api, repository, ciTrigger, sourceRevision: first.sourceRevision, observation: first, journal, key: first.key, checks: () => observeEpicChecks(api, checkInput), recheck: async () => (await observe()).candidate === first.candidate });
+  if ((await observe()).candidate !== first.candidate) throw Error('Epic readiness evidence changed');
   if (first.pr.draft) {
     try { await setDraft(first.pr, false); }
     catch (error) { if ((await api(`pulls/${number}`)).draft) throw error; }
   }
   const fresh = await observe();
-  if (fresh.pr.draft || fresh.candidate !== first.candidate) throw Error('Epic readiness outcome is uncertain');
+  if (fresh.pr.draft || fresh.candidate !== first.candidate || !await verifyEpicChecks(api, checkInput)) throw Error('Epic readiness outcome is uncertain');
   await projectImplementationPrState(api, child, false);
   return { status: 'ready', pullRequest: number, head, base };
 }
@@ -339,7 +352,7 @@ export async function publishEpicAggregate({ api, repository, owner, snapshot, j
   return { status: 'published', pullRequest: pr.number, head, parent: 'open' };
 }
 
-export async function readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft, findCandidates, authenticate }) {
+export async function readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft, findCandidates, authenticate, ciTrigger }) {
   if (typeof setDraft !== 'function') throw Error('Aggregate readiness requires a draft updater');
   const observe = async () => {
     const published = await publishEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, ...(findCandidates ? { findCandidates } : {}), ...(authenticate ? { authenticate } : {}) });
@@ -347,20 +360,23 @@ export async function readyEpicAggregate({ api, repository, owner, snapshot, jou
     const base = await api(`git/ref/heads/${snapshot.defaultBranch}`);
     if (base.ref !== `refs/heads/${snapshot.defaultBranch}` || !/^[a-f0-9]{40}$/.test(base.object?.sha ?? '') || pr.head?.sha !== published.head || pr.base?.ref !== snapshot.defaultBranch || pr.mergeable !== true || !/^[a-f0-9]{40}$/.test(pr.merge_commit_sha ?? '')) throw Error('Aggregate readiness evidence is unavailable');
     const candidate = await api(`git/commits/${pr.merge_commit_sha}`);
-    if (!Array.isArray(candidate?.parents) || candidate.parents.length !== 2 || candidate.parents[0].sha !== base.object.sha || candidate.parents[1].sha !== published.head || !await verifyEpicChecks(api, { repository, sourceRevision: snapshot.sourceRevision, base: snapshot.defaultBranch, candidate: pr.merge_commit_sha, loadPolicy }) || await authorize() !== true) throw Error('Aggregate checks do not bind the current head and base');
+    if (!Array.isArray(candidate?.parents) || candidate.parents.length !== 2 || candidate.parents[0].sha !== base.object.sha || candidate.parents[1].sha !== published.head || await authorize() !== true) throw Error('Aggregate checks do not bind the current head and base');
     return { pr, head: published.head, base: base.object.sha, candidate: pr.merge_commit_sha };
   };
   const first = await observe();
   const correlation = epicCorrelation({ repository, parent: snapshot.issue, slice: 'aggregate', planDigest: epicPlanDigest(snapshot.plan), base: `lighthouse/epic-${snapshot.issue}`, dependencies: snapshot.plan.slices.map(slice => slice.id), kind: 'aggregate' });
   const key = epicJournalKey(correlation), receipt = await journal.readReceipt(key);
   if (receipt?.state !== 'linked' || receipt.resource?.id !== first.pr.id || receipt.resource?.number !== first.pr.number || !isDeepStrictEqual(receipt.correlation, correlation)) throw Error('Aggregate readiness journal changed');
-  await journal.writeReceipt(key, { ...receipt, readiness: { head: first.head, base: first.base, candidate: first.candidate } });
+  const checkInput = { repository, sourceRevision: snapshot.sourceRevision, base: snapshot.defaultBranch, candidate: first.candidate, loadPolicy };
+  await ensureEpicChecks({ api, repository, ciTrigger, sourceRevision: snapshot.sourceRevision, observation: first, journal, key, checks: () => observeEpicChecks(api, checkInput), recheck: async () => { const fresh = await observe(); return fresh.head === first.head && fresh.base === first.base && fresh.candidate === first.candidate; } });
+  if ((await observe()).candidate !== first.candidate) throw Error('Aggregate readiness evidence changed');
+  await journal.writeReceipt(key, { ...await journal.readReceipt(key), readiness: { head: first.head, base: first.base, candidate: first.candidate } });
   if (first.pr.draft) {
     try { await setDraft(first.pr, false); }
     catch (error) { if ((await api(`pulls/${first.pr.number}`)).draft) throw error; }
   }
   const fresh = await observe();
-  if (fresh.pr.draft || fresh.head !== first.head || fresh.base !== first.base || fresh.candidate !== first.candidate) throw Error('Aggregate readiness outcome is uncertain');
+  if (fresh.pr.draft || fresh.head !== first.head || fresh.base !== first.base || fresh.candidate !== first.candidate || !await verifyEpicChecks(api, checkInput)) throw Error('Aggregate readiness outcome is uncertain');
   return { status: 'ready', pullRequest: fresh.pr.number, head: fresh.head, base: fresh.base, parent: 'open' };
 }
 
@@ -450,7 +466,7 @@ export async function runNativeEpic({ api, repository, owner, issue, run, journa
   return reconcileEpicChildren(snapshot.plan, { repository, parent: issue, base: `lighthouse/epic-${issue}` }, host);
 }
 
-export async function runEpicAction({ api, repository, owner, issue, run, journalPath, authorizationPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, observeRefinement, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
+export async function runEpicAction({ api, repository, owner, issue, run, journalPath, authorizationPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, observeRefinement, ciTrigger, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
   if (action === 'reconcile') return runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load, loadPolicy });
   if (action === 'accept-aggregate') return acceptEpicAggregate({ api, repository, owner, issue, run, load, loadPolicy, readArtifact });
   if (!['refine-child', 'register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
@@ -468,13 +484,13 @@ export async function runEpicAction({ api, repository, owner, issue, run, journa
     return { status: 'authorized', child, parent: issue };
   }
   if (action === 'publish-aggregate') return publishEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact });
-  if (action === 'ready-aggregate') return readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft });
+  if (action === 'ready-aggregate') return readyEpicAggregate({ api, repository, owner, snapshot, journal, authorize, load, loadPolicy, readArtifact, setDraft, ciTrigger });
   if (action === 'register-pr') {
     const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact });
     if (current.parent !== issue) throw Error('Epic child belongs to another parent');
     return reconcileEpicPullRequest({ api, repository, owner, child, runId: implementationRun, journal, authorize, load, ...(readArtifact ? { readArtifact } : {}) });
   }
-  if (action === 'ready-child') return readyEpicPullRequest({ api, repository, owner, parent: issue, child, number: decision?.pr, head: decision?.head, base: decision?.base, journal, authorize, load, loadPolicy, readArtifact, setDraft });
+  if (action === 'ready-child') return readyEpicPullRequest({ api, repository, owner, parent: issue, child, number: decision?.pr, head: decision?.head, base: decision?.base, journal, authorize, load, loadPolicy, readArtifact, setDraft, ciTrigger });
   if (!decision || !Number.isSafeInteger(decision.pr) || !Number.isSafeInteger(decision.review) || !/^[a-f0-9]{40}$/.test(decision.head ?? '') || !/^[a-f0-9]{40}$/.test(decision.base ?? '')) throw Error('Epic acceptance needs a PR, review, head and base');
   const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact, allowClosed: true });
   if (current.parent !== issue) throw Error('Epic child belongs to another parent');
@@ -521,7 +537,7 @@ async function main() {
   const positive = value => /^[1-9][0-9]*$/.test(value ?? '') && Number.isSafeInteger(Number(value));
   const action = inputs.action || 'reconcile';
   if (['refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
-  const result = await runEpicAction({ api, repository, owner, issue, run, journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
+  const result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
   console.log(JSON.stringify(result));
   if (!['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');
 }

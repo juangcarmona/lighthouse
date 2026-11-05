@@ -170,7 +170,7 @@ test('aggregate remains draft when current merge checks fail', async () => {
     return original(path, method, body);
   };
   let changed = false;
-  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { changed = true; } }), /Aggregate checks do not bind/);
+  await assert.rejects(readyEpicAggregate({ ...f.args, setDraft: async () => { changed = true; } }), /Epic candidate CI failed/);
   assert.equal(changed, false);
   assert.equal(pr.draft, true);
 });

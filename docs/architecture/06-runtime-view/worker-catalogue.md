@@ -39,6 +39,7 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `--with-product-change` | Adds `product-change` and `apply-product-change` |
 | `--with-maintenance` | Adds deterministic observation, reconciliation and optional reports |
 | `--with-unattended` | Adds `ff` and `hotfix` compositions plus completion workers; initial policy is disabled |
+| `--with-epic` | Adds the [serial epic workflow](../../../src/packages/sdlc/workflows/lighthouse-sdlc-epic.yml) and completion workers; activation remains separate |
 | `LIGHTHOUSE_AUTOMATION_ENABLED` | Repository admission switch; does not supply missing policy or approval |
 | `LIGHTHOUSE_ENABLED_STAGES` | Installer-selected lifecycle stages in the reviewed router |
 | `LIGHTHOUSE_AUTO_IMPLEMENT` | Allows authorized refinement to request implementation; `future` still pauses it |
@@ -49,12 +50,12 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `LIGHTHOUSE_RECOVERY_ENABLED` | Separately permits bounded retries and confirmed-effect recovery; checked again at worker admission |
 | `LIGHTHOUSE_REPORT_INDEX_ISSUE` | Selects an open owner-authored report index; absence disables reports |
 | `LIGHTHOUSE_CI_APP_CLIENT_ID` | Optional eligible CI connection, paired with the `LIGHTHOUSE_CI_APP_PRIVATE_KEY` Actions secret; grants no delivery or merge authority |
-| `LIGHTHOUSE_EPIC_ENABLED` | Gates existing epic continuation hooks; does not install the epic workflow or establish aggregate acceptance |
-| `LIGHTHOUSE_EPIC_CAPACITY` | Bounds child admission through existing epic hooks; default one, without installing aggregate delivery |
+| `LIGHTHOUSE_EPIC_ENABLED` | Gates installed epic reconciliation and continuation; does not establish aggregate acceptance |
+| `LIGHTHOUSE_EPIC_CAPACITY` | Bounds child admission; initial serial qualification uses one |
 | `completion.ciRepair` in `.lighthouse/github.json` | Separately selects CI correction issues and budget; no global repair by default |
 | `.lighthouse/unattended.json` | Selects enabled composition routes and budgets; merge delegation is separate |
 
-Stage selection and router feature flags live in the reviewed workflow; the global automation and maintenance/report switches are repository variables. Installer defaults do not describe an adopter's existing policy: the installer preserves it. Changing an installed file or policy requires its normal review. The packaged epic workflow is not selected by this installer; [epic delivery](../../../src/packages/sdlc/epic-delivery.md) retains its own incomplete acceptance boundary.
+Stage selection and router feature flags live in the reviewed workflow; the global automation and maintenance/report switches are repository variables. Installer defaults do not describe an adopter's existing policy: the installer preserves it. Changing an installed file or policy requires its normal review. The optional [epic delivery workflow](../../../src/packages/sdlc/epic-delivery.md) retains explicit child and aggregate merge decisions; [issue #146](https://github.com/juangcarmona/lighthouse/issues/146) tracks its serial native acceptance.
 
 ## Router and supported requests
 

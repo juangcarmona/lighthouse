@@ -26,6 +26,14 @@ test('only a confirmed estimate strictly greater than eight requires decompositi
   assert.equal(assessDecomposition({ estimate: estimate('13') }).status, 'invalid');
 });
 
+test('an explicit host request can select a useful small plan without falsifying its estimate', () => {
+  const output = { estimate: estimate(3), decomposition: input(), requested: true };
+  assert.equal(assessDecomposition(output).status, 'not-required');
+  assert.equal(assessDecomposition(output, { requested: true }).status, 'planned');
+  assert.equal(assessDecomposition({ estimate: estimate(3) }, { requested: true }).status, 'invalid');
+  assert.equal(assessDecomposition({ ...output, estimate: { ...estimate(3), status: 'provisional' } }, { requested: true }).status, 'invalid');
+});
+
 test('no safe split retains the explanation and question and cannot pass readiness', () => {
   const output = { estimate: estimate(13), decomposition: { noSafeSplitReason: 'Outcomes cannot be verified independently', question: 'Should we retain one bounded change?' } };
   assert.equal(assessDecomposition(output).status, 'blocked');
