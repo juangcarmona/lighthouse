@@ -68,6 +68,92 @@ function assertTextInitialization(text, report, status) {
   assert.equal(text.stderr, report.conflicts.map(conflict => `  conflict ${conflict}\n`).join(''));
 }
 
+async function hookInitializationFixture(entry) {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-init-hooks-'));
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
+  Object.assign(env, { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: join(dir, 'global.gitconfig'), GIT_CONFIG_COUNT: '0' });
+  await writeFile(env.GIT_CONFIG_GLOBAL, '');
+  const git = (cwd, args) => spawnSync('git', args, { cwd, encoding: 'utf8', env });
+  const args = entry === 'legacy' ? ['--name', 'Hook contract probe'] : ['--plan-file', join(dir, 'init-plan.json')];
+  if (entry === 'semantic') await writeFile(args[1], JSON.stringify({
+    schemaVersion: 1, product: 'Hook contract probe', intent: 'Activate installed baseline hooks.',
+    application: { shape: 'unknown', stacks: [] }, profiles: [], openQuestions: [],
+  }));
+  const initialize = (cwd, preview = false) => spawnSync(process.execPath, [tool, 'init', ...args,
+    ...(preview ? ['--dry-run'] : entry === 'semantic' ? ['--apply'] : [])], { cwd, encoding: 'utf8', env });
+  return { dir, env, git, initialize };
+}
+
+for (const entry of ['legacy', 'semantic']) {
+  test(`${entry} init activates installed hooks in a fresh Git repository`, async () => {
+    const { dir, git, initialize } = await hookInitializationFixture(entry);
+    try {
+      const created = git(dir, ['init', '--initial-branch=main']);
+      assert.equal(created.status, 0, created.stderr);
+      assert.equal(git(dir, ['config', '--get', 'core.hooksPath']).status, 1);
+      const before = await initializationSnapshot(dir);
+      const preview = initialize(dir, true);
+      assert.equal(preview.status, 0, preview.stderr);
+      assert.deepEqual(await initializationSnapshot(dir), before);
+      const initialized = initialize(dir);
+      assert.equal(initialized.status, 0, initialized.stderr);
+      for (const hook of ['commit-msg', 'pre-push']) {
+        const installed = await stat(join(dir, '.husky', hook));
+        assert.equal(installed.isFile(), true);
+        assert.equal(installed.mode & 0o111, 0o111);
+      }
+      const configured = git(dir, ['config', '--get', 'core.hooksPath']);
+      assert.equal(configured.stdout.trim(), '.husky', 'Initialization activates installed hooks in a fresh Git repository by setting core.hooksPath to .husky');
+      assert.equal(configured.status, 0, configured.stderr);
+      assert.equal(git(dir, ['config', '--local', '--get', 'core.hooksPath']).stdout.trim(), '.husky');
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+
+  for (const scope of ['--local', '--global']) for (const value of ['', 'user-hooks']) {
+    test(`${entry} init preserves ${scope} ${JSON.stringify(value)} hooksPath and owner files`, async () => {
+      const { dir, env, git, initialize } = await hookInitializationFixture(entry);
+      try {
+        assert.equal(git(dir, ['init', '--initial-branch=main']).status, 0);
+        assert.equal(git(dir, ['config', scope, 'core.hooksPath', value]).status, 0);
+        const hook = join(dir, value || '.git/hooks', 'pre-push');
+        await mkdir(join(hook, '..'), { recursive: true });
+        await writeFile(hook, '#!/bin/sh\n# Owner hook\nexit 0\n');
+        await chmod(hook, 0o751);
+        const before = await Promise.all([join(dir, '.git/config'), env.GIT_CONFIG_GLOBAL, hook].map(async path => ({
+          path, bytes: await readFile(path), mode: (await stat(path)).mode,
+        })));
+        const initialized = initialize(dir);
+        assert.equal(initialized.status, 0, initialized.stderr);
+        const configured = git(dir, ['config', '--get', 'core.hooksPath']);
+        assert.equal(configured.status, 0, configured.stderr);
+        assert.equal(configured.stdout, `${value}\n`);
+        for (const saved of before) {
+          assert.deepEqual(await readFile(saved.path), saved.bytes);
+          assert.equal((await stat(saved.path)).mode, saved.mode);
+        }
+      } finally { await rm(dir, { recursive: true, force: true }); }
+    });
+  }
+
+  for (const nested of [false, true]) {
+    test(`${entry} init supports ${nested ? 'a nested target without changing parent Git configuration' : 'a non-Git target'}`, async () => {
+      const { dir, git, initialize } = await hookInitializationFixture(entry);
+      try {
+        const target = join(dir, 'consumer');
+        await mkdir(target);
+        if (nested) assert.equal(git(dir, ['init', '--initial-branch=main']).status, 0);
+        const config = nested ? await readFile(join(dir, '.git/config')) : null;
+        const initialized = initialize(target);
+        assert.equal(initialized.status, 0, initialized.stderr);
+        await access(join(target, '.husky/pre-push'));
+        if (nested) assert.deepEqual(await readFile(join(dir, '.git/config')), config);
+        assert.equal(git(target, ['config', '--get', 'core.hooksPath']).status, 1);
+        await assert.rejects(access(join(target, '.git')), { code: 'ENOENT' });
+      } finally { await rm(dir, { recursive: true, force: true }); }
+    });
+  }
+}
+
 test('legacy init JSON previews project the local plan and preserve target bytes, modes and Git configuration', async () => {
   for (const existing of [false, true]) {
     const { dir, env } = await initializationPreviewFixture();
