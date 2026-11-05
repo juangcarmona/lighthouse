@@ -224,8 +224,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           (route === 'hotfix' ? 'Use the compact hotfix plan; a full OpenSpec feature proposal is not required. Preserve the regression test bytes supplied by the RED phase and repair the root cause. ' : 'Use the supplied OpenSpec plan and update completed tasks accurately. ') +
           'Follow the workspace command slot, run required checks and return output.eligibility with the current admission assessment. Human-only product, visual or architecture decisions remain blockers. Preserve existing work. Write the envelope; the host independently checks the candidate.',
           { plan, refinement: refined, correction: { round, findings: previous?.feedback ?? [] }, regression: red ? { receipt: red.receipt, tests: red.tests } : null }, selected);
-        if (result.envelope.result.pendingReview.length || result.envelope.result.unavailableChecks.length ||
-            result.envelope.result.status !== 'passed' && result.receipt.checks.every(c => c.exitCode === 0)) throw Error(result.envelope.effect.body);
+        if (result.envelope.result.pendingReview.length || result.envelope.result.unavailableChecks.length) throw Error(result.envelope.effect.body);
         working = result.source; lastStep = result;
         const inventory = await candidateInventory(source, working, implementation.policy);
         await writeFile(join(root, 'candidate.json'), JSON.stringify(inventory.changes));

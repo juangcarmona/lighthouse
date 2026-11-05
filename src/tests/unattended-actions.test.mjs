@@ -267,6 +267,32 @@ test('native adapter connects triage, independent planning, RED, repair, review 
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
+test('native technical blockage with green host checks repairs missing evidence before one reviewed publication', async () => {
+  const f = await fixture({ route: 'ff' }), execute = f.execute;
+  let attempts = 0, reviews = 0;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.stage === 'implement') {
+      if (++attempts === 1) {
+        result.envelope.result.status = 'blocked';
+        result.envelope.result.missingEvidence = ['Complete optional 404 and job-log regressions'];
+        result.envelope.effect.body = 'Planned regression coverage remains incomplete';
+      } else {
+        assert.ok(options.context.correction.findings.some(value => value.includes('optional 404')));
+        assert.equal(options.context.correction.round, 1);
+      }
+    }
+    if (options.context.review?.purpose === 'candidate') { reviews++; assert.equal(attempts, 2); }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'waiting-human', result.reason);
+    assert.equal(attempts, 2); assert.equal(reviews, 1); assert.equal(f.writes.filter(write => write.path === 'pulls').length, 1);
+    assert.equal(result.evidence.filter(item => item.kind === 'incomplete-implementation').length, 1);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test('planning sees admitted command inventory and escalation reports actual missing evidence', async () => {
   const f = await fixture(), execute = f.execute;
   f.execute = async options => {
