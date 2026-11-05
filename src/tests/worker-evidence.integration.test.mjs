@@ -41,13 +41,13 @@ if(scenario==='symlink') fs.symlinkSync('/input/context.json','/output/evidence/
 if(scenario==='oversized') {fs.writeFileSync('/output/evidence/b-large','');fs.truncateSync('/output/evidence/b-large',64*1024*1024+1);}
 let envelope={schemaVersion:1,result:{schemaVersion:1,runId:request.runId,stage:request.stage,gate:'done',status:'passed',evidence:[{id:'fixture',status:'passed'}],missingEvidence:[],unavailableChecks:[],pendingReview:[],nextAction:'Review the candidate.',...(scopeProbe?{output:{scopeProbe}}:{})},effect:{type:'issue-comment',body:'Deterministic runtime fixture; no model invoked.'}};
 if(scenario.startsWith('readonly-payload-')) {
-  const payload=JSON.parse(fs.readFileSync('/output/review.json'));
+  const payload=JSON.parse(fs.readFileSync('/output/envelope.json'));
   assert.equal(payload.binding,request.reviewOutput.binding);
   assert.equal(payload.verdict,'escalate');
   if(scenario!=='readonly-payload-untouched') {payload.verdict=scenario==='readonly-payload-changes'?'request-changes':'accept';payload.findings=payload.verdict==='accept'?[]:['Regression misses an original acceptance boundary.'];}
   if(scenario==='readonly-payload-stale') payload.binding='f'.repeat(64);
   if(scenario==='readonly-payload-extra') payload.evidence=['fabricated'];
-  fs.writeFileSync('/output/review.json',JSON.stringify(payload));
+  fs.writeFileSync('/output/envelope.json',JSON.stringify(payload));
 } else if(scenario.startsWith('readonly-')) {
   envelope=JSON.parse(fs.readFileSync('/output/envelope.json'));
   assert.equal(envelope.result.runId,request.runId);
@@ -60,7 +60,7 @@ if(scenario.startsWith('readonly-payload-')) {
   if(scenario==='readonly-stale') {envelope.result.runId='f'.repeat(64);envelope.effect.body='Bearer private-token';}
 }
 if(scenario==='zero-blocked') { envelope.result.status='blocked'; envelope.result.pendingReview.push('Owner decision remains required.'); }
-fs.writeFileSync('/output/envelope.json',JSON.stringify(envelope),{mode:0o600});
+if(!scenario.startsWith('readonly-payload-')) fs.writeFileSync('/output/envelope.json',JSON.stringify(envelope),{mode:0o600});
 if(scenario==='engine-failed') process.exit(7);
 console.log(JSON.stringify({type:'text',part:{text:'Private final evidence written.'}}));
 `);
