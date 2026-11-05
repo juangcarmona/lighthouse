@@ -236,5 +236,61 @@
         "src/tests/actions-artifact.test.mjs": "Add meaningful regression coverage for bounded artifact read retries and unchanged validation; preserve existing assertions. This is the FF route."
       }
     }
+  },
+  "392": {
+    "scope": "Implement only #392: make the accepted legacy init JSON mode produce one parseable plan/result while preserving text mode, conflict status, semantic initialization and dry-run no-write behavior. Preserve provider authority. Use an H1 after changeset frontmatter and allow 600000 ms for complete repository verification. Construct synthetic credential values at runtime; unchanged publication validation rejects literal credential-shaped content.",
+    "paths": [
+      "src/packages/cli/src/lighthouse.mjs",
+      "src/tests/lighthouse.test.mjs",
+      ".changeset/legacy-init-json-preview.md"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "node",
+        "--test",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "corrections": {
+        "src/tests/lighthouse.test.mjs": "Add meaningful real CLI JSON/text/conflict/dry-run regressions for this issue; preserve existing assertions and provider boundaries."
+      }
+    }
   }
 }
