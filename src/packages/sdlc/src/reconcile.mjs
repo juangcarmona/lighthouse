@@ -92,6 +92,9 @@ export function buildLabelReconciliationPlan(declaration, existingLabels, previo
     dimension: label.dimension,
     value: label.value,
   })).sort((left, right) => left.name.localeCompare(right.name));
+  for (const label of desired) {
+    if (label.description !== null && (typeof label.description !== 'string' || [...label.description].length > 100)) errors.push(issue('labels.description', `GitHub label ${label.name} description must be a string of at most 100 characters`, `labels.${label.name}.description`));
+  }
   const existingByName = new Map(existing.labels.map((label) => [label.name, label]));
   const existingByComparableName = new Map();
   for (const label of existing.labels) {

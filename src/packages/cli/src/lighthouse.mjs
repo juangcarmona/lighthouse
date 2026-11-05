@@ -1708,6 +1708,7 @@ async function capabilities(args) {
     if (!sdlcReconcile || !sdlcGithub) throw new Error('The installed SDLC package does not publish the capability adoption contract; upgrade it before applying adoption.');
     const current = await sdlcGithub.readGithubLabels(plan.repository.repo);
     let reconciliation = sdlcReconcile.buildLabelReconciliationPlan(plan.declaration, current, plan.reconciliation.record);
+    if (!reconciliation.canApply) throw new Error(`Capability reconciliation is blocked: ${reconciliation.errors.map(error => error.message).join('; ')}`);
     const originalOperations = new Set(plan.reconciliation.operations.map((operation) => operation.name));
     const plannedTarget = new Map((plan.reconciliation.target ?? []).map((label) => [label.name, JSON.stringify(label)]));
     const outsidePlanDrift = current.some((label) => !plannedTarget.has(label.name) || (plannedTarget.has(label.name) && !originalOperations.has(label.name) && JSON.stringify(label) !== plannedTarget.get(label.name)));

@@ -438,6 +438,28 @@ test('label reconciliation preserves existing values, adds only missing labels a
   assert.equal(second.drift.status, 'none');
 });
 
+test('GitHub label descriptions are validated before any adoption can apply', () => {
+  const declaration = description => ({ schemaVersion: 1, capabilities: [{ id: 'labels', provider: 'github', version: '1', configuration: { labels: [{ name: 'a-valid', role: 'state', description: 'Valid earlier operation.' }, { name: 'z-invalid', role: 'command', description }], transitions: [] } }] });
+  for (const description of ['x'.repeat(101), '🔦'.repeat(101), 42]) {
+    const plan = buildLabelReconciliationPlan(declaration(description), []);
+    assert.equal(plan.canApply, false);
+    assert.ok(plan.errors.some(error => error.code === 'labels.description' && error.message.includes('z-invalid')));
+    assert.throws(() => applyLabelReconciliationPlan(plan, []), /not ready to apply/);
+  }
+  for (const description of ['', 'x'.repeat(100), '🔦'.repeat(100)]) {
+    const plan = buildLabelReconciliationPlan(declaration(description), []);
+    assert.equal(plan.canApply, true, JSON.stringify(plan.errors));
+    assert.equal(applyLabelReconciliationPlan(plan, []).find(label => label.name === 'z-invalid').description, description);
+  }
+});
+
+test('the published default label declaration fits GitHub description limits', async () => {
+  const declaration = declarationFromCatalog(await readCapabilityCatalog(), 'labels');
+  const labels = declaration.capabilities[0].configuration.labels;
+  assert.ok(labels.every(label => typeof label.description === 'string' && [...label.description].length <= 100));
+  assert.equal(buildLabelReconciliationPlan(declaration, []).canApply, true);
+});
+
 test('label reconciliation blocks unsupported providers and malformed declarations', () => {
   const plan = buildLabelReconciliationPlan({ schemaVersion: 1, capabilities: [{ id: 'labels', provider: 'gitlab', version: '1', configuration: { labels: [], transitions: [] } }] }, []);
   assert.equal(plan.canApply, false);

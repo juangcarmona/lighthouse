@@ -1017,6 +1017,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
   const name = args.find((item) => item.startsWith('name='))?.slice(5);
   const color = args.find((item) => item.startsWith('color='))?.slice(6);
   const description = args.find((item) => item.startsWith('description='))?.slice(12) ?? '';
+  if ([...description].length > 100) { console.error('GitHub label description exceeds 100 characters'); process.exit(1); }
   if (!labels.some((label) => label.name === name)) labels.push({ name, color, description });
   writeFileSync(file, JSON.stringify(labels));
   console.log(JSON.stringify({ name, color, description }));
@@ -1031,6 +1032,15 @@ if (args[1] === '--method' && args[2] === 'POST') {
     assert.equal(planned.status, 0, planned.stderr);
     const plan = JSON.parse(planned.stdout);
     const catalog = JSON.parse(await readFile(new URL('../packages/sdlc/capabilities.json', import.meta.url), 'utf8'));
+    const invalid = { schemaVersion: 1, capabilities: [structuredClone(catalog.capabilities.find(item => item.id === 'labels'))] };
+    invalid.capabilities[0].configuration.labels.find(label => label.name === 'integrate').description = 'x'.repeat(101);
+    await writeFile(join(dir, 'invalid-labels.json'), JSON.stringify(invalid));
+    const rejected = run(dir, 'capabilities', ['plan', '--id', 'labels', '--provider', 'github', '--repo', 'juan/demo', '--input', 'invalid-labels.json', '--plan-file', '.lighthouse/reconciliation/invalid-labels.plan.json', '--format', 'json'], { env: environment });
+    assert.equal(rejected.status, 1);
+    const blocked = JSON.parse(rejected.stdout);
+    assert.ok(blocked.reconciliation.errors.some(error => error.message.includes('integrate') && error.code === 'labels.description'));
+    assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/invalid-labels.plan.json', '--authorize', blocked.authorization.planHash], { env: environment }).status, 1);
+    assert.deepEqual(JSON.parse(await readFile(labelsPath, 'utf8')), [{ name: 'triage', color: '8B949E', description: 'project-owned' }]);
     assert.equal(plan.reconciliation.operations.length, catalog.capabilities.find((item) => item.id === 'labels').configuration.labels.length - 1);
     assert.equal(run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', 'wrong'], { env: environment }).status, 1);
     const applied = run(dir, 'capabilities', ['apply', '--plan-file', '.lighthouse/reconciliation/labels.plan.json', '--authorize', plan.authorization.planHash, '--format', 'json'], { env: environment });
