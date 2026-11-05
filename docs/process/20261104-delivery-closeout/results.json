@@ -20,7 +20,7 @@
       "scope": "actual agent command observation, additional to the four independent container checks"
     }
   },
-  "archiveSha256": "050f2e0e557cc59da24f4f5545572569bcfddfc161964917d87774d5c4a2a7c2",
+  "archiveSha256": "e4780e9fd1f2ea92ab2dde823c9f0247d9043198ab4d04234cc7e0b6de5149e0",
   "failedPilots": [
     {
       "issue": 389,
@@ -100,5 +100,18 @@
       "\u2139 fail 0",
       "\u2139 skipped 9"
     ]
+  },
+  "artifactPartition412": {
+    "sourceSha256": "8164d43fea7c1eb005685e56b8472864b252aa119b396defb2496518b5098fdb",
+    "originalBytes": 2173001,
+    "canonicalBytes": 113778,
+    "omittedWorkspaceMembers": 539,
+    "scope": "Repartition control only; failed native run remains failed and grants no acceptance",
+    "reader": "Original oversized ZIP rejected; all 27 canonical members read unchanged within existing limits",
+    "transportControl": "Original oversized metadata rejected before download; controlled gh transport reads unchanged canonical JSON",
+    "canonicalMembers": 27,
+    "diagnosticMembers": 55,
+    "templateSha256": "e0de8eb2165379aff8f571cd49252e96de4bc9e5a7d795eb378636670c2f0275",
+    "nativeLayoutQualification": "pending a subsequent native pilot; active #390 is unchanged"
   }
 }
