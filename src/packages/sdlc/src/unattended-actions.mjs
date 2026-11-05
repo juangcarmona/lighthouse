@@ -200,7 +200,14 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           'Prepare the smallest engineering plan through context.proposal.instructions. Read the adopter rules in /workspace/openspec/config.yaml and follow their document scope and citation requirements. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, the returned .openspec.yaml payload contains only skip_specs: true; the final file also includes host-owned provider metadata. When context.correction is present, repair its concrete findings against the previous plan without expanding the authorized issue. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
           { proposal, refinement: refined, ...(correction ? { correction } : {}) });
         planProducer = result;
-        const files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider);
+        let files;
+        try { files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider); }
+        catch (error) {
+          if (!error.proposalValidation) throw error;
+          // Reserve the rejected plan's unused review slot; retained stage identities stay stable.
+          sequence++;
+          return { files: result.envelope.result.output.files, refinement: refined, validation: error.proposalValidation };
+        }
         working = applyCandidate(source, files.map(f => ({ path: f.path, content: Buffer.from(f.content).toString('base64'), mode: '100644' })));
         return { files, refinement: refined };
       },

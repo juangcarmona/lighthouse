@@ -11,7 +11,7 @@ import { implementationPrProof, reconcileImplementationPr } from '../packages/sd
 import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
-async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
+async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0 } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
   await mkdir(join(sourceRoot, 'src/feature'), { recursive: true });
   await writeFile(join(sourceRoot, 'src/feature/rule.mjs'), 'export const eligible = value => value > 2;\n');
@@ -113,6 +113,15 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
     await writeFile(join(bin, 'npx'), `#!${process.execPath}
 const fs = require('node:fs');
 const args = process.argv.slice(process.argv.indexOf('openspec') + 1);
+if (args[0] === 'validate' && ${rejectValidation} > 0) {
+  const counter = process.env.HOME + '/validation-count';
+  const count = fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0;
+  fs.writeFileSync(counter, String(count + 1));
+  if (count < ${rejectValidation}) {
+    console.log(JSON.stringify({ version: '1.0', items: [{ id: args[1], type: 'change', valid: false, issues: [{ level: 'WARNING', path: 'spec.md', message: 'Split the overlong requirement' }] }], summary: { totals: { items: 1, passed: 0, failed: 1 } } }));
+    process.exit(1);
+  }
+}
 if (args[0] === 'new') {
   const dir = 'openspec/changes/' + args[2]; fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(dir + '/.openspec.yaml', 'schema: spec-driven\\ncreated: 2026-11-05\\n');
@@ -196,6 +205,36 @@ test('a published tree that differs from the checked tree cannot produce command
     assert.equal(f.writes.filter(w => w.path === 'pulls').length, 1);
     assert.equal(f.writes.filter(w => w.path.endsWith('/merge') || w.path.endsWith('/dispatches')).length, 0);
     await assert.rejects(readFile(join(f.root, 'lighthouse-unattended-123/implementation-evidence.json')), { code: 'ENOENT' });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('provider validation repair preserves stage identities and never reviews rejected files', async () => {
+  const f = await fixture({ route: 'ff', rejectValidation: 1 });
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'waiting-human', result.reason);
+    assert.equal(result.planningRound, 1);
+    assert.deepEqual(f.executions.map(execution => execution.request.stage), ['refine', 'propose', 'propose', 'integrate', 'implement', 'integrate']);
+    assert.deepEqual(f.executions[2].context.correction.findings, ['spec.md: Split the overlong requirement']);
+    const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+    const runId = digest({ repository: 'owner/repo', issue: 1, route: 'ff', run: '123' });
+    assert.equal(f.executions[2].request.runId, digest({ runId, sequence: 4, stage: 'propose', worker: 'propose' }));
+    assert.equal(f.executions[3].request.runId, digest({ runId, sequence: 5, stage: 'integrate', worker: 'independent-review' }));
+    assert.equal(result.evidence[0].kind, 'proposal-validation');
+    assert.equal(result.evidence[0].files.length, 4);
+    const output = await readFile(join(f.root, 'lighthouse-unattended-123/provider-commands/provider-7.stdout.log'), 'utf8');
+    assert.equal(JSON.parse(output).items[0].valid, false);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test('repeated provider validation rejection exhausts without review, code edits or publication', async () => {
+  const f = await fixture({ route: 'ff', rejectValidation: 3 });
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked'); assert.match(result.reason, /limit exhausted.*overlong/);
+    assert.deepEqual(f.executions.map(execution => execution.request.stage), ['refine', 'propose', 'propose']);
+    assert.equal(result.evidence.filter(item => item.kind === 'proposal-validation').length, 2);
+    assert.equal(f.writes.filter(write => write.path === 'pulls').length, 0);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
