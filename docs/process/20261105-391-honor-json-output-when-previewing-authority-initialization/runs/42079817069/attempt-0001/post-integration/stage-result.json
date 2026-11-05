@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "runId": "8cbacca3b4dea260cf998605856f957a1833347878bc8c5344869f17aefaa435",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated focused CLI execution passed all 42 tests. Inspected lighthouse.test.mjs:371-483 for real-provider JSON/text previews, consumer snapshots, unsuccessful/conflicting/missing providers and JSON apply refusal. This is acceptance-specific evidence, not merely a green job."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated npm run verify exited zero for the accepted candidate. The retained excerpt is truncated; it does not independently establish omitted assertion details or the full suite count."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated citation verification exited zero. Retained provider rows bind all four issue-391 plan documents to current FR-AUTHORITY-INITIALIZATION, BR-OWNED-AUTHORITY and BR-FAIL-CLOSED citations; diagnostics are empty. Current read-only ProductShape reports match these digests. Draft product context is not a new approval."
+    },
+    {
+      "id": "implementation:42067986932:1:b9e0e362f010c9a554dc96219f09cf1c9e9f83cb148ccd88d639b48bdddaffbc:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42067986932/attempts/1",
+      "reason": "Authenticated strict OpenSpec validation passed for issue-391-proposal."
+    },
+    {
+      "id": "github-check:127422729256",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42077851652/job/127422729256",
+      "reason": "Host-authenticated required repository check from app 15368 passed at accepted head 3cfc081a58c579f9a4a3dff029c7ddfb96789e34."
+    },
+    {
+      "id": "integration:42078388943:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/d7087459688e87e206b8450513e282a635213f9d/docs/process/20261105-391-honor-json-output-when-previewing-authority-initialization/runs/42078388943/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained receipt confirms the accepted head was merged as 3778ebc913002ac4f822b1dd8334aa5b49d768fa after an explicit owner dispatch with merge:true. This receipt, rather than an assessment or green check alone, establishes integration."
+    },
+    {
+      "id": "github-check:127427958288",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42079341154/job/127427958288",
+      "reason": "Required repository check passed at the actual merged revision. Host postMerge observations also confirm adopted ci.yml run 42079341154 passed at that revision. The earlier integration-time missing observation is historical absence, not a failed check."
+    },
+    {
+      "id": "review:source-and-guidance",
+      "status": "passed",
+      "source": "/workspace/src/packages/cli/src/lighthouse.mjs:1116-1141,1292-1346",
+      "reason": "Inspected quiet runner, single JSON projection, existing failure/conflict calculation and pre-provider apply guard against plan and tests. Affected contributor, CLI, initialization and completion guidance remains compatible. No delivered source defect or conflicting guidance established."
+    },
+    {
+      "id": "review:supervised-comparison-history",
+      "status": "unavailable",
+      "source": "/input/context.json",
+      "reason": "The work item explicitly requires every maintainer/coding-agent stage request and elapsed interval. Supplied receipts cover implementation identity, authorized integration and current review, but do not contain the complete earlier stage-request history or start/end timestamps. No owner acceptance or deferral of that requirement is supplied."
+    }
+  ],
+  "missingEvidence": [
+    "Complete authenticated supervised stage-request chronology and elapsed intervals required by #391, including earlier planning/refinement requests and any intervening check failures, revisions and recovery. Available receipts do not establish the complete sequence or its timing bounds."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Delivery-evidence maintainer: supply the authenticated #391 stage-request history with request actors/identities, start/end timestamps and failure/recovery references, explicitly marking unavailable measurements; then complete review of the supervised comparison without changing the merged source or granting new permissions.",
+  "output": {
+    "summary": "PR #449's delivered behavior satisfies the inspected JSON-preview criteria and authenticated candidate/post-merge checks passed. Review is blocked only on the work item's unresolved supervised-comparison history requirement; no delivered source defect was established.",
+    "delivery": {
+      "issue": 391,
+      "pullRequest": 449,
+      "route": "supervised; excluded from #185 unattended pilot count and allowlist",
+      "acceptedHead": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+      "implementationBaseline": "bf29b8e35b8f2243fcdcc3def9a3a97c8060ee38",
+      "mergedRevision": "3778ebc913002ac4f822b1dd8334aa5b49d768fa",
+      "checkedRevision": "3778ebc913002ac4f822b1dd8334aa5b49d768fa",
+      "intent": "0a688c6daccf2731c72d66db61979044effee7264c8503db54f2efb8d5e8f560",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "changedPathsFingerprint": "56358a0303f55a9ab1c12a1d9d79d1ae65ac5f31977f9b830b8f9af01f2767a4",
+      "integrationReceiptRecordSha256": "fb218e871b1d32ca457ab1ed421db68883eb391e2ec61bf448906e4805bb5015",
+      "currentAuthorization": "review only; merge:false",
+      "integrationAuthorization": "Retained owner dispatch d4396b5dd2fbb0e6efa5da5a90c3c36d9fe8573e1341a8f241837c21a35772a6 authorized PR 449, exact accepted head, merge:true. Receipt state is merged; recovered:false.",
+      "scope": "Seven host-observed paths: the CLI module, existing CLI tests, one CLI patch changeset and four issue-local OpenSpec plan files. No provider policy, product model, dependencies or workflow activation changed. The supervised implementation guide includes in-workspace planning; these plan artifacts do not expand product meaning."
+    },
+    "acceptance": [
+      {
+        "criterion": "Exactly one JSON document with both provider identities and actual preflight outcomes",
+        "assessment": "satisfied",
+        "basis": "lighthouse.mjs:1308-1325 collects both quiet results and serializes once. Tests:385-405 parse all stdout, assert the report fields, ProductShape @prodshape/cli 0.23.0 and ArcShape @arcshape/cli 0.4.0, exact commands and actual successful statuses."
+      },
+      {
+        "criterion": "Missing, failed and conflicting providers remain failures",
+        "assessment": "satisfied",
+        "basis": "lighthouse.mjs:1116-1141 preserves process status/conflict checks; quiet resolution errors produce unsuccessful results. Tests:439-473 assert exit 1, blocked JSON and both outcomes for unsuccessful execution, both conflict forms and missing packages."
+      },
+      {
+        "criterion": "Text compatibility and no-write preview preserve hooks/guidance",
+        "assessment": "satisfied",
+        "basis": "Tests:371-418 initialize a clean consumer, add user hooks and AGENTS.md, snapshot bytes/modes/Git configuration, and compare after explicit/default JSON and text previews. Existing text headings and provider output are asserted."
+      },
+      {
+        "criterion": "JSON apply is refused",
+        "assessment": "satisfied",
+        "basis": "lighthouse.mjs:1299-1301 rejects combined apply/dry-run or JSON apply before provider execution. Tests:475-481 assert nonzero exit, empty stdout and unchanged consumer state. No new mutation mode was introduced."
+      },
+      {
+        "criterion": "Focused tests, repository verification, plan validation, authorized integration and post-integration review",
+        "assessment": "delivery checks satisfied; review record blocked on comparison evidence",
+        "basis": "Exact authenticated command/check receipts are cited above. Review does not claim a separate installed release smoke test, independent planning review or provider-authenticated cost measurement. None is inferred from CI."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "kind": "source defect originally reported",
+        "classification": "fixed",
+        "owner": "CLI package maintainer",
+        "followUpReference": "PR #449; src/tests/lighthouse.test.mjs:371-483",
+        "decision": "The previously ignored JSON format now projects actual provider evidence through the existing runner. Inspection plus authenticated focused regressions supports the fix; no remaining delivered source defect established."
+      },
+      {
+        "id": "F2",
+        "kind": "current-stage process/evidence gap",
+        "classification": "accepted",
+        "resolution": "unresolved; reviewer finding accepted, not an owner-approved waiver",
+        "owner": "Delivery-evidence maintainer",
+        "followUpReference": "#391 supervised comparison requirement; this review record",
+        "decision": "Do not close the required comparison record with invented chronology or timings. Supply the missing authenticated history. This gap blocks review, not the already merged product behavior."
+      }
+    ],
+    "guidanceReview": {
+      "reviewed": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:25-31,50-60,70-78",
+        "src/packages/cli/assets/skills/init/SKILL.md:22-30",
+        "src/packages/sdlc/README.md:18,26,48-66,123-129",
+        "src/packages/sdlc/completion.md:20,30-55,59-65",
+        ".lighthouse/github.json",
+        ".changeset/README.md",
+        "openspec/changes/issue-391-proposal/{proposal.md,design.md,tasks.md,specs/authority-initialization-preview/spec.md}"
+      ],
+      "decision": "No stale/conflicting affected instruction established. CLI guidance retains provider-owned commands and preview/apply separation; the plan and patch changeset describe the JSON correction. Plan notes that installed-runtime acceptance was later work; no separate release acceptance is claimed here. SDLC guidance permits planning inside supervised implementation. Draft ProductShape artifacts are preservation context, not broader approval.",
+      "hostBoundary": "The custom adapter's host-owned completion signal is an intentional host-specific difference, not guidance drift. Source stayed read-only and no safeoutputs command, external service or subsequent stage was invoked.",
+      "runtimeProvenance": "Host supplies source distribution @juangcarmona/lighthouse-sdlc 0.20.6 and harness revision 6232de829ca819d7827b1282fe5191ee0d36c912; router source pin matches. Host-authenticated checked source is the merged revision on main."
+    },
+    "comparisonRecord": {
+      "knownExecutions": [
+        {
+          "stage": "implement (includes plan)",
+          "run": "42067986932",
+          "attempt": 1,
+          "candidate": "3cfc081a58c579f9a4a3dff029c7ddfb96789e34",
+          "evidence": "Authenticated retained implementation command artifact; publication PR #449. Complete original stage request and elapsed interval are not supplied."
+        },
+        {
+          "stage": "integrate",
+          "request": "d4396b5dd2fbb0e6efa5da5a90c3c36d9fe8573e1341a8f241837c21a35772a6",
+          "requestActor": "juangcarmona",
+          "routerRun": "42078326994",
+          "workerRun": "42078388943",
+          "attempt": 1,
+          "outcome": "Authorized merge confirmed by retained receipt; elapsed interval unavailable."
+        },
+        {
+          "stage": "post-merge verification",
+          "run": "42079341154",
+          "outcome": "ci.yml passed at actual merge revision. Initial integration receipt recorded it missing; subsequent success resolves that observation, not a failed-test recovery."
+        },
+        {
+          "stage": "review",
+          "request": "c832670ae4da767a1661d59f3bd904a41de68c854c04c96bbf65e7ada1c4b0a6",
+          "requestActor": "github-actions[bot] via post-merge continuation",
+          "routerRun": "42079678016",
+          "workerRun": "42079817069",
+          "attempt": 1,
+          "outcome": "Current assessment; no completed execution duration available."
+        }
+      ],
+      "historicalRecovery": "tasks.md:18 reports an installation timeout retry and shortening requirement prose before strict validation succeeded. Successful terminal commands are authenticated; original failed attempts, their timestamps and complete technical recovery logs are not supplied. Treat those failures as reported history, not independently established failed checks or cross-work-item recurrence.",
+      "measurements": "Focused test runner reports 31.272452485 seconds for 42 tests. This is command-suite duration, not stage elapsed time or human attention. Complete request-to-result intervals, provider-authenticated cost and human attention are unknown. No unattended comparison outcome for #392 is supplied; do not infer it or count #391 as a pilot.",
+      "otherLimits": "priorPlanningReview is null: no independent planning-review proof is claimed and none is configured as a required approval for this supervised review. No new tests were executed in this engine; assessment uses inspected source and host-authenticated receipts. CodeGraph context was unavailable, so source was read directly."
+    },
+    "optionalCheckObservations": {
+      "decision": "Skipped optional ci-app, routing and reconciliation jobs are not product failures or new acceptance gates. Cloudflare success is not used to establish CLI correctness. Required repository check and adopted post-merge ci.yml passed.",
+      "source": "completion.observedChecks, completion.policy.checks, postMerge"
+    },
+    "finalization": {
+      "policySource": "src/packages/sdlc/completion.md:38 and host completion.finalization",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": "Blocked: keep issue open, add/remove no delivery labels, preserve PR labels. Host cleanup releases agent-working reservation for this outcome. Current label retention is expected pending validated review, not a source defect.",
+      "conditionalPassedTransition": "Only after a validated passed review, trusted publisher closes #391 and removes waiting-review, ready, pr-draft, pr-ready, integrate and review; add no labels and preserve PR labels. Publisher rechecks authority, checks and reservation. These effects have not occurred in this engine."
+    },
+    "retrospective": "## What went well\n- The bounded correction reused provider execution and conflict semantics instead of inventing a provider policy. Real-provider tests and failure fixtures cover JSON, text and read-only consumer state (lighthouse.mjs:1116-1141,1292-1346; lighthouse.test.mjs:371-483; authenticated focused receipt: 42 passed). Owner-authorized integration and actual post-merge CI have distinct retained evidence.\n\n## What went wrong\n- The original CLI ignored its JSON format flag; PR #449 fixes that source defect (F1, owner: CLI maintainer). No remaining delivered source defect or conflicting guidance was established.\n- The supplied comparison record lacks the complete stage-request chronology and timing bounds required by #391 (F2, owner: delivery-evidence maintainer). This is an unresolved process/evidence gap, not a failed check. tasks.md:18 reports installation/validation recovery, but failed-attempt receipts are absent. One issue's retries do not demonstrate recurrence across issues.\n\n## Start doing\n- Delivery-evidence maintainer: retain an authenticated request-to-result ledger for this supervised comparison, including actor, request identity, revision, attempt, timestamps and recovery references. Mark unknown measurements explicitly; use #391 and this review's comparisonRecord as the follow-up reference.\n\n## Stop doing\n- Do not substitute terminal success or workflow IDs for missing request history and elapsed intervals. Do not equate integration-time missing post-merge evidence with a failed check, or claim cost/human attention from test duration. No claim is made that these mistakes recur.\n\n## Improvement candidates\n- **Evidence-ledger completeness guard (proposal only).** Observed failure: this input can establish delivered behavior but cannot complete #391's required supervised comparison. Evidence: workItem.body versus the partial implementation/integration/review receipts and absent timing bounds in /input/context.json. Owner: delivery-evidence maintainer. Smallest useful guard: a completeness check for explicitly requested comparison fields, preserving unknowns and a precise missing-evidence result without changing merge permission. Reproduce first with this partial-history fixture and confirm the missing chronology/intervals are reported; then supply authenticated request/start/end and recovery rows and verify only supported intervals appear, unknown cost/attention stay unknown and merge authority remains unchanged. Any guard or policy change requires its own review and regression proof; none was implemented here.\n- No additional product, architecture or provider-guidance change is justified by this review. Human attention, provider-authenticated cost, full elapsed delivery time and cross-item recurrence remain unknown."
+  }
+}
