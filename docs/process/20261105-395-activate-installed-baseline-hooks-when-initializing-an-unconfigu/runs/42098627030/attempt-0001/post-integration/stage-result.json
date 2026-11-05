@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "runId": "c684db3e565cfc67abae9d3dbd8ffe377e8f3551f7ee1d114ed874ae70803985",
+  "stage": "review",
+  "gate": null,
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "hotfix-regression:fd4662f53d5791375fb7ff6c4a1528fe912916790d97fda4ed8089b74a5a4c6d",
+      "status": "passed",
+      "source": "context.priorPlanningReview.regression",
+      "reason": "Host-verified RED failed with exit 1 at the required hook-activation assertion for both initializers, not setup. The host verifies unchanged regression-test bytes against the published candidate; frozen test SHA-256 cf75f66a7552c8bbe530935aad28cbf28b7885c62f550fd35e551e6004723f93. This passes the RED-evidence requirement; the RED tests themselves failed as intended."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Exact admitted activation command passed both legacy and semantic tests at accepted head 3c5b00ab20c462605ba8bafca6d41f18e9185f7d."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Initializer suite exited zero. Retained output explicitly shows local/global empty/custom preservation, both non-Git and nested-target cases, and preview checks. Broader output is excerpt-truncated; no omitted assertions are inferred."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Host-verified repository verification command exited zero. Capture excerpt is truncated; the receipt establishes execution and outcome, not additional unspecified behavioral acceptance."
+    },
+    {
+      "id": "implementation:42092952168:1:213493ac21b80e48bdbfcb91409a97d52291c2b9f53ee2b668acf2330db63824:5",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42092952168/attempts/1",
+      "reason": "Independent OpenSpec citation check exited zero; retained summary reports 481 current citations, zero stale/tampered/unresolved citations and zero errors or warnings. No omitted provider rows are inferred."
+    },
+    {
+      "id": "independent-review:b712e40c62e033b30282fd0d010fe46c6966c78feb49bd7de2b4907c2bd36752",
+      "status": "passed",
+      "source": "context.priorIntegration.receipt.authorization.unattended.review",
+      "reason": "Host-retained independently bound candidate review accepted with no findings. Planning review binding 8799e206075e0e85984464c4c0f12d512ea088cbb0aa425b77dda6ecfaff2c19 also accepted. Configured model identifiers do not authenticate provider settings."
+    },
+    {
+      "id": "integration:42092952168:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/c2644f4c9e6a20c413a6c0649ada2bb9c9c0c0d4/docs/process/20261105-395-activate-installed-baseline-hooks-when-initializing-an-unconfigu/runs/42092952168/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified protected-branch record d32ea797c7f3ae5c567bdb018021a79324234274da923b8f3367f204f779e776 records accepted head 3c5b00ab20c462605ba8bafca6d41f18e9185f7d merged as 7b30832a6510d9937183853a48e21ef05e3ba2b9 under explicit owner delegation with merge:true. This is merge evidence separate from an assessment."
+    },
+    {
+      "id": "github-check:127491584305",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42097586406/job/127491584305",
+      "reason": "Authenticated required repository check from app 15368 passed at the accepted PR head."
+    },
+    {
+      "id": "github-check:127493421089",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098112951/job/127493421089",
+      "reason": "Authenticated required repository check from app 15368 passed at integrated revision 7b30832a6510d9937183853a48e21ef05e3ba2b9. Host postMerge receipt records adopted ci.yml run 42098112951 passed at that same revision."
+    },
+    {
+      "id": "review:source-and-guidance",
+      "status": "passed",
+      "source": "/workspace/src/packages/cli/src/lighthouse.mjs:783-840,906-967; /workspace/src/tests/lighthouse.test.mjs:71-155",
+      "reason": "Read-only inspection confirms the shared root-identity and absent-setting guards, calls only after apply writes, real-Git fixtures, executable hooks and preservation assertions. Affected guidance and finalization policy were inspected; no conflicting instruction was established."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck current authority, cited evidence and reservation, then publish this review on the adopted evidence branch and apply the declared final-label cleanup without starting another stage.",
+  "output": {
+    "summary": "Accepted post-merge review for issue #395 and PR #458. The hook-activation defect and its behavioral coverage gap are fixed; no unresolved current-stage finding was established.",
+    "delivery": {
+      "issue": 395,
+      "pullRequest": 458,
+      "acceptedHead": "3c5b00ab20c462605ba8bafca6d41f18e9185f7d",
+      "integratedRevision": "7b30832a6510d9937183853a48e21ef05e3ba2b9",
+      "checkedRevision": "7b30832a6510d9937183853a48e21ef05e3ba2b9",
+      "intent": "84ec41709e66be40311fedb5418af7efafaaca2d7a1d2e12e1aa1f99d9bc7e58",
+      "currentPolicyFingerprint": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "changedPaths": [
+        ".changeset/fresh-git-hook-activation.md",
+        "src/packages/cli/src/lighthouse.mjs",
+        "src/tests/lighthouse.test.mjs"
+      ],
+      "scopeAssessment": "Host-supplied changed paths match the three-file hotfix plan: one production module, existing tests and one CLI patch changeset. No Git metadata or new provider policy is listed. Numeric production-line accounting is delegated to the retained host admission; this read-only review did not independently reconstruct the historical diff.",
+      "authority": "Current dispatch merge:false grants no integration authority. The historical authenticated integration receipt separately records owner juangcarmona's bounded merge:true delegation and an actual merged result. No manual fallback or new integration is performed by this review."
+    },
+    "acceptanceAssessment": [
+      {
+        "requirement": "Behavioral RED first for both initialization entry paths, then GREEN with unchanged test bytes",
+        "outcome": "satisfied",
+        "basis": "Host-verified regression record shows two ERR_ASSERTION failures at the exact named activation assertion on unchanged production, followed by two passing tests on the candidate and a preserved frozen test digest."
+      },
+      {
+        "requirement": "Activate installed hooks in a fresh unconfigured real Git repository",
+        "outcome": "satisfied",
+        "basis": "Tests first establish absent hooksPath, successful initialization and executable commit-msg/pre-push files; then assert effective and local hooksPath=.husky. Source calls the same guarded helper from both successful apply paths."
+      },
+      {
+        "requirement": "Preserve explicit empty/custom and inherited settings and associated owner files",
+        "outcome": "satisfied",
+        "basis": "Both entry paths exercise local and isolated global empty/custom values, retain effective values and compare configuration and hook bytes/modes. Production uses Git exit status 1 for absence rather than truthiness and writes only --local."
+      },
+      {
+        "requirement": "Support non-Git and nested targets without parent changes; preserve previews",
+        "outcome": "satisfied",
+        "basis": "Both entry paths test non-Git success and unchanged parent configuration for nested targets. Fresh-repository previews compare complete target snapshots. Source checks canonical worktree-root identity and returns before activation on previews."
+      },
+      {
+        "requirement": "Independent review, delegated integration and adopted post-merge verification",
+        "outcome": "satisfied",
+        "basis": "Bound independent planning/candidate reviews accepted, historical authorized merge receipt matches the accepted head and integrated revision, and adopted ci.yml passed at the integrated revision. This result supplies the requested current review assessment, subject to host validation/publication."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "kind": "source-defect",
+        "classification": "fixed",
+        "owner": "juangcarmona (CLI maintainer)",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/458",
+        "finding": "Legacy initialization treated an absent Git key as an exception and semantic initialization omitted activation. The delivered shared helper activates .husky only at the target worktree root when the effective setting is absent.",
+        "evidence": "Issue #395; retained RED/GREEN receipts; lighthouse.mjs:783-792,839,966.",
+        "remainingAction": "None for this accepted defect. Release remains a separate authorized workflow."
+      },
+      {
+        "id": "F2",
+        "kind": "verification-gap",
+        "classification": "fixed",
+        "owner": "juangcarmona (CLI test maintainer)",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/issues/395",
+        "finding": "Installing hook files did not establish that Git selected them. The new frozen real-Git activation assertions cover both entry paths, with adjacent ownership and preview checks.",
+        "evidence": "priorPlanningReview verification observations; retained RED assertion; lighthouse.test.mjs:71-155.",
+        "remainingAction": "Retain the delivered behavioral matrix when changing initialization. This is a closed coverage gap, not evidence of a failed delivery process or recurrence across work items."
+      }
+    ],
+    "guidanceReview": {
+      "outcome": "No stale or conflicting affected instruction established.",
+      "references": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:7-31,50-58",
+        "src/packages/cli/assets/skills/init/SKILL.md:22-30",
+        "src/packages/sdlc/README.md:19-26,86-88,123-129",
+        "src/packages/sdlc/completion.md:30-38,42-55",
+        "src/packages/sdlc/unattended.md:35-59",
+        ".changeset/README.md",
+        ".changeset/fresh-git-hook-activation.md",
+        "docs/product/model/requirements/functional/fr-semantic-initialization.md:19-21",
+        "docs/product/model/requirements/functional/fr-initialize-foundation.md:16-22",
+        ".lighthouse/github.json:6-19",
+        ".github/workflows/ci.yml:34-50"
+      ],
+      "reason": "The correction preserves ownership and preview/apply boundaries and implements the requested local guardrail behavior. The CLI patch changeset names the actual package. ProductShape reports identify relevant model context but mark both inspected requirements draft; they are not independent product approval. Acceptance comes from the host-bound work item and delivery evidence. Host-specific publication duties are not repository drift. No guidance was edited."
+    },
+    "finalization": {
+      "policyReference": "src/packages/sdlc/completion.md:38; context.completion.finalization",
+      "observedIssue": {
+        "state": "closed",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": {
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "closeIssue": true,
+        "pullRequestLabels": "preserve"
+      },
+      "reason": "Passed review permits host cleanup. Removing the observed pr-ready label is still pending publication, not missing acceptance evidence. Closing an already closed issue is idempotent. No done label is invented. Host releases agent-working reservation for every outcome.",
+      "executor": "Trusted publisher after current-stage validation; no final-label effect has been performed by the engine."
+    },
+    "limits": [
+      "This review used host-authenticated command, review, GitHub and integration receipts plus read-only source inspection; it did not rerun tests or independently query GitHub.",
+      "CodeGraph context was unavailable; direct inspection covered the shared helper, both apply paths, generated hook ownership, regression tests and affected guidance. This optional tool failure is not an unavailable product check.",
+      "The guessed package skill path did not exist; managedFiles resolves the actual source to assets/skills/init/SKILL.md, which was inspected. No missing guidance was inferred from that lookup.",
+      "Suite and verification excerpts are truncated. The authenticated exit outcomes remain available; omitted output and absent provider rows do not establish extra details.",
+      "Skipped ci-app and unrelated routing/reconciliation jobs are optional or event-inapplicable, not failed required checks. Only repository/app 15368 is the supplied forge check gate; adopted ci.yml post-merge verification is also satisfied.",
+      "The dependency setup log reported three low-severity audit warnings. Their causes, introduction and remediation were not established; no dependency change appears in the accepted file list and no new source-defect conclusion is drawn.",
+      "No release, deployed artifact, linked-worktree runtime test, human visual acceptance, provider-authenticated model settings, attention-time or cost measurement is claimed. None is an unresolved acceptance requirement for this bounded review."
+    ],
+    "laterStageEvidence": [
+      {
+        "check": "Package release and consumer deployment",
+        "status": "not-run",
+        "intendedStage": "separately authorized release/deployment",
+        "reason": "The patch changeset prepares release; merged source and passed review do not prove publication or deployment."
+      }
+    ],
+    "retrospective": "## What went well\n- Both entry paths have genuine behavioral RED, unchanged frozen tests and GREEN. Adjacent checks preserve explicit/inherited settings, owner files, previews and parent repositories (F1/F2; `src/tests/lighthouse.test.mjs:71-155`).\n- Independent review, explicit bounded merge delegation and a retained merge receipt remain separate from post-merge CI. Adopted `ci.yml` passed at the actual integrated revision (`github-check:127493421089`).\n\n## What went wrong\n- Hook files were installed without Git selecting them: legacy init conflated an absent key with failure, and semantic init omitted activation (issue #395; retained RED). This actual source defect is fixed by PR #458.\n- Prior coverage did not assert effective activation. That verification gap is now fixed; no unresolved current-stage process failure or affected-guidance drift was established. One issue's RED/GREEN sequence is not recurrence across work items.\n\n## Start doing\n- Keep configuration-state and ownership assertions alongside file-generation assertions when maintaining initialization. Owner: CLI test maintainer, juangcarmona; reference: F2 / PR #458.\n\n## Stop doing\n- Do not use installed executable hook files, a generic green check or a passed assessment alone as proof of active Git hooks, merge, release or deployment. The retained evidence here distinguishes those claims. Owner: CLI and delivery maintainers, juangcarmona.\n\n## Improvement candidates\n- **Retain the delivered real-Git matrix as the smallest useful guard (already implemented, F2).** Observed failure: installed hooks were inactive. Evidence: the exact assertion failed for both initializers before production repair, then passed with frozen test digest `cf75f66a7552c8bbe530935aad28cbf28b7885c62f550fd35e551e6004723f93`. Owner: juangcarmona, CLI test maintainer; follow-up: PR #458 / issue #395. Reproduce before correction with the admitted activation command against unchanged production and isolated fresh Git fixtures, require the named assertion failure, then run the same bytes against the correction plus preservation checks. The host already retained this proof; no rerun or new policy change is requested here.\n- No additional product, architecture or policy guard is justified by a demonstrated unresolved failure in this review. Any future guard or provider-owned guidance change needs its own reviewed scope and regression proof; this review grants no permission, opens no issue and starts no stage."
+  }
+}
