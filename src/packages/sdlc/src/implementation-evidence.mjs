@@ -4,6 +4,7 @@ import { implementationPrProof } from './pr-state.mjs';
 import { loadImplementation, changesDigest, validateCheckReceipt } from './implementation.mjs';
 import { loadDispatch } from './stage-dispatch.mjs';
 import { checkProposal, reviewThread } from './proposal-review.mjs';
+import { unattendedImplementationPolicy, validateUnattendedPolicy, unattendedDigest } from './unattended.mjs';
 import { productModelDirectoryFromConfig } from './product-change.mjs';
 
 const hash = text => createHash('sha256').update(text).digest('hex');
@@ -97,11 +98,20 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     if (!positive(attempt) || run.run_attempt !== Number(attempt)) throw Error('Implementation run attempt changed');
     const native = await api(`actions/runs/${proof.run}/attempts/${attempt}`);
     const owner = repository.split('/')[0], path = native.path;
-    if (String(native.id) !== String(proof.run) || native.run_attempt !== Number(attempt) || !sha(native.head_sha) || native.repository?.full_name !== repository || !['.github/workflows/lighthouse-sdlc-implement.lock.yml', '.github/workflows/lighthouse-sdlc-apply-review.lock.yml'].includes(path) || native.event !== 'workflow_dispatch' || native.head_branch !== completion.binding.branch || native.status !== 'completed' || native.conclusion !== 'success' || ![owner, 'github-actions[bot]'].includes(native.actor?.login) || ![owner, 'github-actions[bot]'].includes(native.triggering_actor?.login)) throw Error('Command producer is not a successful adopted implementation workflow');
-    const artifact = await readArtifact(api, repository, native.id, `lighthouse-command-evidence-${issue}-${attempt}`, 'implementation-evidence.json', true);
+    const unattended = path === '.github/workflows/lighthouse-sdlc-unattended.yml';
+    const artifactName = unattended ? `lighthouse-unattended-${native.id}-${attempt}` : `lighthouse-command-evidence-${issue}-${attempt}`;
+    if (String(native.id) !== String(proof.run) || native.run_attempt !== Number(attempt) || !sha(native.head_sha) || native.repository?.full_name !== repository || !['.github/workflows/lighthouse-sdlc-implement.lock.yml', '.github/workflows/lighthouse-sdlc-apply-review.lock.yml', '.github/workflows/lighthouse-sdlc-unattended.yml'].includes(path) || native.event !== 'workflow_dispatch' || native.head_branch !== completion.binding.branch || native.status !== 'completed' || native.conclusion !== 'success' || ![owner, 'github-actions[bot]'].includes(native.actor?.login) || ![owner, 'github-actions[bot]'].includes(native.triggering_actor?.login)) throw Error('Command producer is not a successful adopted implementation workflow');
+    const artifact = await readArtifact(api, repository, native.id, artifactName, 'implementation-evidence.json', true);
     if (!artifact) return unavailable('Command evidence artifact is absent; revalidate the candidate');
     const { binding, receipt, publication } = artifact;
     if (artifact.schemaVersion !== 1 || artifact.producer !== 'lighthouse-implementation-host' || binding?.repository !== repository || binding.issue !== issue || binding.intent !== intent || String(binding.workflowRunId) !== String(native.id) || binding.attempt !== Number(attempt) || publication?.pr !== pr || publication.head !== head || digest(binding) !== digest(receipt?.binding) || !hex(artifact.changesDigest) || receipt.changesDigest !== artifact.changesDigest || receipt.runId !== binding.runId || receipt.sourceRevision !== binding.sourceRevision || receipt.schemaVersion !== 2) throw Error('Command receipt identity, criteria or publication binding changed');
+    let grant;
+    if (unattended) {
+      if (native.actor.login !== owner || native.triggering_actor.login !== owner || binding.sourceRevision !== native.head_sha || binding.policyRevision !== native.head_sha || artifact.dispatch) throw Error('Unattended commands lack their original owner admission');
+      const file = await api(`contents/.lighthouse/unattended.json?ref=${native.head_sha}`);
+      grant = validateUnattendedPolicy(JSON.parse(Buffer.from(file.content, 'base64').toString()), artifact.unattended?.route);
+      if (unattendedDigest(grant) !== artifact.unattended?.policyDigest) throw Error('Unattended command grant changed');
+    }
     const expected = commandEvidenceBinding({ ...binding, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference });
     if (digest(expected) !== digest(binding)) throw Error('Command policy or plan binding changed');
     if (artifact.dispatch) {
@@ -110,10 +120,11 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     } else if (native.actor.login !== owner || native.triggering_actor.login !== owner) throw Error('Bot command producer has no authenticated dispatch origin');
     const [installed, executed, commit, implementation] = await Promise.all([
       api(`contents/${path}?ref=${completion.currentRevision}`), api(`contents/${path}?ref=${native.head_sha}`),
-      api(`git/commits/${head}`), loadImplementation(api, issue, owner, completion.currentRevision, completion.binding.branch),
+      api(`git/commits/${head}`), loadImplementation(api, issue, owner, completion.currentRevision, completion.binding.branch, unattended ? artifact.unattended.route : null),
     ]);
     if (!installed.sha || installed.sha !== executed.sha) throw Error('Command workflow changed; revalidation is required');
     if (!sha(receipt.candidateTree) || commit.tree?.sha !== receipt.candidateTree || publication.tree !== receipt.candidateTree) throw Error('Candidate code or plan tree changed');
+    if (unattended) implementation.policy = unattendedImplementationPolicy(implementation.policy, grant, issue, artifact.unattended.route);
     if (digest(implementation) !== binding.policy) throw Error('Applicable implementation policy changed');
     const verificationInputs = await verificationInputsCurrent(api, binding.policyRevision, completion.currentRevision, head);
     if (artifact.planningReference) {
@@ -131,6 +142,6 @@ export async function readImplementationEvidence(api, completion, { readArtifact
       const status = !output || !check.execution ? 'unavailable' : check.exitCode === 0 && check.execution.status === 'passed' && !check.reason && receipt.serviceCleanup !== false ? 'passed' : 'failed';
       return { evidenceId: `${evidenceId}:${index + 1}`, name: check.command.join(' '), command: check.command, revision: head, status, state: status, exitCode: check.exitCode, output: output ?? null, url: `https://github.com/${repository}/actions/runs/${native.id}/attempts/${attempt}` };
     });
-    return { status: checks.some(c => c.status === 'unavailable') ? 'unavailable' : checks.some(c => c.status === 'failed') ? 'failed' : 'passed', evidenceId, binding, publication, verificationInputs, artifact: { name: `lighthouse-command-evidence-${issue}-${attempt}`, member: 'implementation-evidence.json', sha256: digest(artifact) }, observedAt: receipt.observedAt, verifiedAt: new Date(now).toISOString(), producer: { repository, workflow: path, revision: native.head_sha, runId: String(native.id), attempt: Number(attempt) }, checks };
+    return { status: checks.some(c => c.status === 'unavailable') ? 'unavailable' : checks.some(c => c.status === 'failed') ? 'failed' : 'passed', evidenceId, binding, publication, verificationInputs, artifact: { name: artifactName, member: 'implementation-evidence.json', sha256: digest(artifact) }, observedAt: receipt.observedAt, verifiedAt: new Date(now).toISOString(), producer: { repository, workflow: path, revision: native.head_sha, runId: String(native.id), attempt: Number(attempt) }, checks };
   } catch (error) { return unavailable(error.message); }
 }

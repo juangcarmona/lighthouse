@@ -56,6 +56,7 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
     if (path.startsWith('issues/1/labels/') && method === 'DELETE') { const label = path.slice('issues/1/labels/'.length), index = labels.indexOf(label); if (index >= 0) labels.splice(index, 1); return null; }
     if (path.startsWith('pulls?state=open')) return [];
     if (path === 'git/commits/' + revision) return { tree: { sha: 'tree' } };
+    if (path === 'git/commits/' + 'b'.repeat(40)) return { tree: { sha: 'b'.repeat(40) } };
     if (path === 'git/blobs' || path === 'git/trees' || path === 'git/commits') return { sha: 'b'.repeat(40) };
     if (path === 'git/refs') return { object: { sha: 'b'.repeat(40) } };
     if (path === 'pulls' && method === 'POST') return publishedPr = { number: 3, state: 'open', html_url: 'https://github.com/owner/repo/pull/3', head: { sha: 'b'.repeat(40), ref: body.head } };
@@ -97,6 +98,7 @@ async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
       receipt = { checks: options.request.implementation.policy.checks.map(command => ({ command, exitCode: 0, log: 'passed', execution: { status: 'passed', exitCode: 0, signal: null } })) };
       envelope.result.output.eligibility = eligibility;
     }
+    if (receipt) receipt = { ...syntheticReceipt(options.request, changes, receipt.checks), ...receipt };
     return { request: options.request, envelope, receipt, changes, source: applyCandidate(options.source, changes), runtime: {
       model: options.request.worker === 'independent-review' ? 'openai/reviewer' : 'openai/implementation',
       modelExecution: { providerReported: { status: 'unverified' } }, execution: { status: 'passed' },
@@ -170,8 +172,31 @@ test('every FF/hotfix stage and correction retains authenticated rerun and initi
       assertHostIdentity(f, intent, 3);
       assert.equal(f.writes.filter(w => w.path === 'pulls').length, 1);
       assert.equal(candidateReviews, 2);
+      const retained = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/implementation-evidence.json'), 'utf8'));
+      const implementation = f.executions.filter(e => e.request.stage === 'implement').at(-1).request;
+      assert.equal(retained.binding.runId, implementation.runId);
+      assert.equal(retained.binding.intent, intent);
+      assert.equal(retained.binding.attempt, 3);
+      assert.equal(retained.publication.head, 'b'.repeat(40));
+      assert.equal(retained.receipt.candidateTree, retained.publication.tree);
+      assert.equal(retained.changesDigest, changesDigest([{ path: 'src/feature/rule.mjs', mode: '100644', content: Buffer.from('export const eligible = value => value >= 2;\n').toString('base64') }]));
+      assert.equal(retained.unattended.route, route);
+      assert.ok(retained.receipt.checks.every(check => !('log' in check)));
     } finally { await rm(f.root, { recursive: true, force: true }); }
   });
+});
+
+test('a published tree that differs from the checked tree cannot produce command evidence or continue delivery', async () => {
+  const f = await fixture(), api = f.api;
+  f.api = async (...args) => args[0] === 'git/commits/' + 'b'.repeat(40) ? { tree: { sha: 'c'.repeat(40) } } : api(...args);
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(result.status, 'blocked');
+    assert.match(result.reason, /tested and published trees/);
+    assert.equal(f.writes.filter(w => w.path === 'pulls').length, 1);
+    assert.equal(f.writes.filter(w => w.path.endsWith('/merge') || w.path.endsWith('/dispatches')).length, 0);
+    await assert.rejects(readFile(join(f.root, 'lighthouse-unattended-123/implementation-evidence.json')), { code: 'ENOENT' });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
 test('native admission rejects malformed/unsafe attempts and mismatched authenticated workflows', async t => {

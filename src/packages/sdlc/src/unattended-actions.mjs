@@ -4,7 +4,8 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { runUnattended, validateUnattendedPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
+import { runUnattended, validateUnattendedPolicy, unattendedImplementationPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
+import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { stageContext, executeUnattendedStage, applyCandidate, candidateInventory, boundedOpenSpecProvider } from './unattended-runtime.mjs';
 import { loadImplementation, createImplementationPullRequest } from './implementation.mjs';
 import { prepareProposal, proposalRoot } from './proposal.mjs';
@@ -216,9 +217,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         return { ...result, files: inventory.files, tests: testState(working, inventory.files.map(f => f.path)) };
       },
       implement: async ({ plan, red, previous, round }) => {
-        const selected = { ...implementation.policy, checks: [...(route === 'hotfix' ? [...policy.hotfix.setupCommands, plan.command] : []), ...implementation.policy.checks],
-          verification: { ...implementation.policy.verification, paths: [...new Set([...implementation.policy.verification.paths, ...(route === 'hotfix' ? policy.hotfix.testPaths : [])])],
-            corrections: Object.fromEntries(Object.entries(implementation.policy.verification.corrections).filter(([path]) => route !== 'hotfix' || !policy.hotfix.testPaths.some(prefix => prefix.endsWith('/') ? path.startsWith(prefix) : path === prefix))) } };
+        const selected = unattendedImplementationPolicy(implementation.policy, policy, issueNumber, route);
         const result = await step('implement', 'implement',
           'Implement only the reviewed bounded plan. Read /input/context.json and /harness/skills/implement/SKILL.md. ' +
           (route === 'hotfix' ? 'Use the compact hotfix plan; a full OpenSpec feature proposal is not required. Preserve the regression test bytes supplied by the RED phase and repair the root cause. ' : 'Use the supplied OpenSpec plan and update completed tasks accurately. ') +
@@ -237,6 +236,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       publish: async candidate => {
         const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
+        const testedTree = (await api(`git/commits/${published.head.sha}`)).tree.sha;
+        const retainedReceipt = { ...lastStep.receipt, checks: lastStep.receipt.checks.map(({ log, ...check }) => check) };
+        const commandEvidence = { ...implementationEvidenceBundle(lastStep.request, retainedReceipt, lastStep.changes, { pr: published.number, head: published.head.sha, tree: testedTree }), unattended: { route, policyDigest } };
+        await writeFile(join(root, 'implementation-evidence.json'), JSON.stringify(commandEvidence));
         await recheck();
         await projectImplementationPrState(api, issueNumber, true);
         if (await releaseReservation() !== 'released') throw Error('The execution reservation changed before PR handoff; inspect the current issue and PR.');
