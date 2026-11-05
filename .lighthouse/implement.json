@@ -137,7 +137,7 @@
     }
   },
   "390": {
-    "scope": "Implement only #390: retain a bounded redacted GitHub denial reason in the existing unattended API helper and meaningful error regressions. Preserve status, endpoint context and terminal failure; do not retry or change authority. Distinguish authoritative host check receipts from additional agent observations; forge CI and post-merge review retain their later gates.",
+    "scope": "Implement only #390: retain a bounded redacted GitHub denial reason in the existing unattended API helper and meaningful error regressions. Preserve status, endpoint context and terminal failure; do not retry or change authority. Distinguish authoritative host check receipts from additional agent observations; forge CI and post-merge review retain their later gates. Allow 600000 ms for the complete repository verification command; its test and site build exceed the shell tool default.",
     "paths": [
       "src/packages/sdlc/src/unattended-actions.mjs",
       "src/tests/unattended-actions.test.mjs",
