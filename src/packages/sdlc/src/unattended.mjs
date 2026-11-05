@@ -122,12 +122,20 @@ export async function runUnattended({ route, policy, host, signal }) {
     let plan = route === 'hotfix' ? regressionPlan(refined.hotfix) : await host.propose(refined), planningRound = 0;
     for (;;) {
       await check();
-      const review = await host.reviewPlan({ refined, plan });
-      evidence.push({ kind: 'planning', round: planningRound, review });
+      let review;
+      if (plan.validation) {
+        const validation = plan.validation;
+        if (route !== 'ff' || validation.provider !== '@fission-ai/openspec@1.15.0' || validation.status !== 'failed' || !Array.isArray(validation.findings) || !validation.findings.length || validation.findings.some(finding => typeof finding !== 'string' || !finding.trim())) throw Error('Planning validation is unavailable or unsupported');
+        evidence.push({ kind: 'proposal-validation', round: planningRound, files: plan.files, validation });
+        review = { accepted: false, verdict: 'request-changes', findings: validation.findings };
+      } else {
+        review = await host.reviewPlan({ refined, plan });
+        evidence.push({ kind: 'planning', round: planningRound, review });
+      }
       if (review?.accepted === true) break;
       const findings = (review?.findings ?? []).join(' ').slice(0, 3000);
       if (route !== 'ff' || review?.verdict !== 'request-changes' || !findings) throw Error('Independent planning review stopped delivery: ' + (findings || 'Missing accepted assessment'));
-      if (planningRound >= policy.maxCorrections) throw Error('Independent planning review correction limit exhausted: ' + findings);
+      if (planningRound >= policy.maxCorrections) throw Error('Unattended planning correction limit exhausted: ' + findings);
       await check();
       plan = await host.propose(refined, { previous: plan, findings: review.findings, round: ++planningRound });
     }

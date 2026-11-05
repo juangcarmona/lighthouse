@@ -237,6 +237,62 @@
       }
     }
   },
+  "437": {
+    "scope": "Implement only #437: do not present skipped or neutral native checks as successful executed verification evidence. Preserve configured hosting and required-check eligibility semantics. Add meaningful observation/citation regressions without weakening existing assertions. Allow 600000 ms for complete repository verification; use an H1 after changeset frontmatter.",
+    "paths": [
+      "src/packages/sdlc/src/completion.mjs",
+      "src/tests/completion.test.mjs",
+      ".changeset/skipped-check-evidence.md"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "node",
+        "--test",
+        "src/tests/completion.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        "src/tests/completion.test.mjs"
+      ],
+      "corrections": {
+        "src/tests/completion.test.mjs": "Extend observed-check and cited-evidence coverage for skipped/neutral outcomes. Preserve all existing required-check, hosting-policy and receipt assertions."
+      }
+    }
+  },
   "392": {
     "scope": "Implement only #392: make the accepted legacy init JSON mode produce one parseable plan/result while preserving text mode, conflict status, semantic initialization and dry-run no-write behavior. Preserve provider authority. Use an H1 after changeset frontmatter and allow 600000 ms for complete repository verification. Construct synthetic credential values at runtime; unchanged publication validation rejects literal credential-shaped content.",
     "paths": [

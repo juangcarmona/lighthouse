@@ -48,11 +48,18 @@ export function boundedOpenSpecProvider({ root, signal, deadline, env = process.
     const remaining = deadline - Date.now();
     if (remaining <= 0 || signal?.aborted) throw Error('Provider execution deadline exceeded');
     const home = join(root, 'provider-home'); await mkdir(home, { recursive: true });
-    const { stdout } = await promisify(execFile)(process.execPath,
-      [fileURLToPath(new URL('./managed-command.mjs', import.meta.url)), 'run', join(root, 'provider-commands'), 'provider-' + (++attempt), '--', 'npx', '--yes', '--package', '@fission-ai/openspec@1.15.0', 'openspec', ...args],
-      { cwd, encoding: 'utf8', signal, timeout: remaining, maxBuffer: 1024 * 1024,
-        env: { PATH: env.PATH, HOME: home, NPM_CONFIG_CACHE: join(home, 'cache'), OPENSPEC_TELEMETRY: '0', CI: 'true' } });
-    return stdout;
+    const directory = join(root, 'provider-commands'), id = 'provider-' + (++attempt);
+    await mkdir(directory, { recursive: true });
+    const retain = result => Promise.all(['stdout', 'stderr'].map(name => writeFile(join(directory, id + '.' + name + '.log'), result[name] ?? '')));
+    let result;
+    try {
+      result = await promisify(execFile)(process.execPath,
+        [fileURLToPath(new URL('./managed-command.mjs', import.meta.url)), 'run', directory, id, '--', 'npx', '--yes', '--package', '@fission-ai/openspec@1.15.0', 'openspec', ...args],
+        { cwd, encoding: 'utf8', signal, timeout: remaining, maxBuffer: 1024 * 1024,
+          env: { PATH: env.PATH, HOME: home, NPM_CONFIG_CACHE: join(home, 'cache'), OPENSPEC_TELEMETRY: '0', CI: 'true' } });
+    } catch (error) { await retain(error); throw error; }
+    await retain(result);
+    return result.stdout;
   };
 }
 
