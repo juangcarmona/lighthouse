@@ -1,0 +1,18 @@
+## What went well
+- The accepted delivery stayed within the three declared paths; both initializers share a small activation helper and meaningful isolated real-Git assertions cover preservation and preview behavior (lighthouse.mjs:783-792,839,966; lighthouse.test.mjs:71-155).
+- A host-verified merge receipt links the accepted head to the actual integrated revision; authenticated repository CI passed at both revisions (integration:42092952168:1; github-check:127491584305; github-check:127493421089). Owner: CLI and SDLC maintainers.
+
+## What went wrong
+- R1: review cannot establish the required assertion-first history and test-byte continuity: priorPlanningReview is null and implementation command evidence explicitly requires workflow revalidation. This is an evidence/process gap, not an established new source defect or proof that checks failed. Owner: SDLC evidence maintainer with juangcarmona.
+- R2: the release job failed even though its conclusion job passed (github-check:127498911251 versus 127499699066). Cause and product impact remain unknown; release is outside this review gate. Owner: release maintainer.
+- No affected-guidance drift or new source defect was established. The original issue's fix is present structurally, but its historical acceptance is not independently reconstructed here.
+
+## Start doing
+- Recover and bind the hotfix regression/review bundle alongside the integration receipt before closing #395; revalidate current command evidence separately. Preserve historical unavailable states instead of replacing them with new GREEN results. Owner: SDLC evidence maintainer; follow-up: R1 / #395 / run 42092952168 attempt 1.
+
+## Stop doing
+- Do not use generic green CI, the PR's five-check claim or a successful aggregate conclusion as substitutes for assertion-specific provenance or a failed constituent job. Do not infer recurrence from repeated routing attempts for this issue. Evidence here establishes one delivery's gap, not recurrence across work items.
+
+## Improvement candidates
+- **Bounded hotfix proof handoff (R1).** Observed failure: accepted delivery reaches review without usable RED/snapshot/planning proof or workflow-current command receipts. Evidence: null priorPlanningReview and the explicit workflow-change unavailability reason. Owner: SDLC evidence maintainer. Smallest useful guard to evaluate: a review-context completeness diagnostic naming missing hotfix proof separately from stale command receipts, without changing merge authority or discarding retained historical evidence. Reproduce first with this sanitized context shape (merged receipt and green CI, null planning review, unavailable command evidence); require a blocked review with the precise gaps. Then test a complete matching bundle, stale workflow, altered test bytes and dependency-only RED failure to prove correct acceptance/rejection. This is a candidate, not an assertion that an existing guard is defective; any implementation or policy/provider-guidance change needs its own review and regression proof.
+- **Release outcome clarity (R2).** Observed failure: failed release job alongside successful conclusion; no cause inferred. Owner: release maintainer. Smallest useful guard to evaluate: retain constituent release status in the human summary without making release a new merge gate. Reproduce first with the supplied failed-job/passed-conclusion pair; then check mixed, all-passed and skipped fixtures. Inspect the existing release report before deciding a new guard is needed. Separate review and regression proof are required; no source or policy change is made here.

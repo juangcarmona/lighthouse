@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "runId": "96c97f3c27b61d663a2311676879e9f8c57bd729e63c409a8b9febfabbda5eca",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "integration:42092952168:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/62d38d8d58c0191c0528472bc7e7555e33f29e26/docs/process/20261105-395-activate-installed-baseline-hooks-when-initializing-an-unconfigu/runs/42092952168/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained integration receipt records authorized merge of accepted head 3c5b00ab20c462605ba8bafca6d41f18e9185f7d as 7b30832a6510d9937183853a48e21ef05e3ba2b9; includes an independent integration accept verdict. This establishes integration, not the missing detailed regression proof."
+    },
+    {
+      "id": "github-check:127491584305",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42097586406/job/127491584305",
+      "reason": "Authenticated repository check at the accepted PR head."
+    },
+    {
+      "id": "github-check:127493421089",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098112951/job/127493421089",
+      "reason": "Authenticated required repository check at the actual merged revision; host also reports adopted post-merge ci.yml run 42098112951 passed. Does not establish test-first chronology, unchanged test bytes or independent provider command execution."
+    },
+    {
+      "id": "review:source-and-guidance",
+      "status": "passed",
+      "source": "/workspace/src/packages/cli/src/lighthouse.mjs:783-792",
+      "reason": "Read-only inspection found a shared activation helper called after both apply paths and after preview returns. Tests at src/tests/lighthouse.test.mjs:71-155 cover the stated behavior and preservation cases. No new source defect or affected-guidance conflict established; this is static inspection, not a local execution receipt."
+    },
+    {
+      "id": "review:hotfix-regression-provenance",
+      "status": "unavailable",
+      "source": "/input/context.json#priorPlanningReview",
+      "reason": "priorPlanningReview is null. Supplied integration history does not expose the assertion-specific RED output, frozen test snapshot, GREEN comparison or compact planning review needed to establish the issue's explicit test-first acceptance."
+    },
+    {
+      "id": "review:implementation-command-evidence",
+      "status": "unavailable",
+      "source": "/input/context.json#completion/implementationEvidence",
+      "reason": "Host reports: Command workflow changed; revalidation is required. No verified command checks are supplied. Historical PR claims and generic green CI cannot substitute for these receipts."
+    }
+  ],
+  "missingEvidence": [
+    "Authenticated historical hotfix proof for #395: the actual hook-activation assertion failing against unchanged production code for both entry paths, the accepted RED test snapshot and byte comparison through GREEN at the published candidate, and the bound independent planning/regression review. priorPlanningReview is null; a new GREEN run alone cannot recreate historical RED chronology.",
+    "Current host-validated command receipts for the accepted delivery, including the CLI regression/adjacent tests and applicable independent citation verification. completion.implementationEvidence has no checks and explicitly requires workflow revalidation."
+  ],
+  "unavailableChecks": [
+    "Accepted-delivery implementation command evidence is unavailable because the command workflow changed; the host requires revalidation. This is missing verification, not an executed command failure."
+  ],
+  "pendingReview": [],
+  "nextAction": "Repository owner juangcarmona and the SDLC evidence maintainer must restore and authenticate the retained hotfix RED/test-snapshot/GREEN and independent planning-review bundle from run 42092952168 attempt 1, then supply authorized workflow-current command revalidation for the accepted delivery before requesting review again. If historical proof cannot be recovered, report that limit rather than infer it from CI. Do not repeat integration or start a new delivery stage from this result.",
+  "output": {
+    "summary": "PR #458 is merged and adopted post-merge CI passed, but review remains blocked by unavailable explicit test-first acceptance and current command evidence. No new source defect was established by static inspection.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 395,
+      "pr": 458,
+      "head": "3c5b00ab20c462605ba8bafca6d41f18e9185f7d",
+      "merge": "7b30832a6510d9937183853a48e21ef05e3ba2b9",
+      "currentRevision": "fe64fb388cf2f32d49955a9c8ae700ef41afd914",
+      "intent": "84ec41709e66be40311fedb5418af7efafaaca2d7a1d2e12e1aa1f99d9bc7e58",
+      "policy": "5523fdaf39f43561115fb147c175dc75226e449619345d1456cc353f3233c207",
+      "reviews": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "prIntent": "d259968e946e98d52c849fd5dd477c7e86790ce95fde6e5c11c3b2124d881ce4",
+      "files": "e682ac2b63cfef0100021b60ed06f082af59deab5969ab5c0aad42758ea7232e",
+      "dispatchRequest": "7e91dd88b07b2c7899877145b37f57341ca9b317d991dbd07e7994598ee01c32",
+      "integrationRecordSha256": "d32ea797c7f3ae5c567bdb018021a79324234274da923b8f3367f204f779e776",
+      "provenance": "Identity and GitHub observations are host supplied. No independent API or git identity authentication was performed by the engine. Current merge:false requests review only; historical merge:true authorization belongs to the retained integration receipt."
+    },
+    "deliveryReview": {
+      "integration": "Established by the host-verified merged receipt and current merged PR observation, not by a passed assessment alone. No manual fallback is indicated by supplied evidence.",
+      "independentReview": "Retained integration review binding b712e40c62e033b30282fd0d010fe46c6966c78feb49bd7de2b4907c2bd36752 has verdict accept and no findings. It does not expose the missing planning/regression artifacts. Empty GitHub reviews are not a new approval blocker: hosting policy requires zero approvals and retained bounded delegation records the historical merge authorization.",
+      "scope": "Host changed-file list contains exactly the allowed CLI module, existing test surface and one CLI patch changeset. No .git data or policy path appears in that list. Current unattended policy maps all three paths to cli. Exact before/after production-line accounting is not supplied and is not independently claimed here.",
+      "source": [
+        "src/packages/cli/src/lighthouse.mjs:783-792 distinguishes Git config exit 1 (unset) from successful explicit empty/custom/inherited values, limits writes to --local, and compares real worktree roots before activation.",
+        "src/packages/cli/src/lighthouse.mjs:829-840 and 950-967 return from previews before writes and invoke the same helper only after installing hooks.",
+        "src/tests/lighthouse.test.mjs:71-155 creates isolated real Git fixtures for legacy and semantic entry paths, asserts .husky activation and executable hooks, preserves local/global empty/custom values and file bytes/modes, and checks non-Git/nested behavior and write-free previews.",
+        ".changeset/fresh-git-hook-activation.md declares the CLI patch and correctly describes the bounded behavior."
+      ],
+      "acceptance": [
+        {
+          "criterion": "Both initialization entry paths activate installed hooks in fresh Git repositories",
+          "assessment": "Static source and meaningful assertions present; accepted-head and merge CI passed. Detailed current command receipts unavailable."
+        },
+        {
+          "criterion": "Assertion-first RED, unchanged production during RED and exact test bytes preserved through GREEN",
+          "assessment": "Unresolved historical verification; no authenticated RED/snapshot comparison is supplied. Not classified as a failed test."
+        },
+        {
+          "criterion": "Custom/explicitly empty settings and files preserved; outside Git supported; parent configuration untouched",
+          "assessment": "Covered by source and real-Git test assertions for both paths; no local execution claimed. Detailed adjacent-check receipts unavailable."
+        },
+        {
+          "criterion": "Independent review and authorized integration with post-merge verification",
+          "assessment": "Historical independent integration acceptance, authorized merged receipt and successful adopted post-merge CI established; separate planning/regression proof remains unavailable."
+        }
+      ],
+      "localExecution": "No commands or tests were run in this read-only review. CodeGraph context query was unavailable; direct source reads completed inspection. That optional navigation failure is not a product or acceptance check failure."
+    },
+    "findings": [
+      {
+        "id": "R1",
+        "classification": "accepted",
+        "kind": "process-evidence-gap",
+        "blocking": true,
+        "summary": "Explicit hotfix test-first proof and workflow-current command evidence are not available to close the delivery record.",
+        "owner": "SDLC evidence maintainer, coordinated by repository owner juangcarmona",
+        "evidence": [
+          "priorPlanningReview=null",
+          "completion.implementationEvidence.status=unavailable: Command workflow changed; revalidation is required",
+          "Issue #395 acceptance",
+          "src/packages/sdlc/unattended.md:49-53",
+          "src/packages/sdlc/completion.md:40-55"
+        ],
+        "followUp": "#395, retained run 42092952168 attempt 1 and this review record; recover historical regression/review artifacts and obtain authorized current command revalidation. No new issue or stage started.",
+        "limit": "Accepted means the evidence gap is recorded by this assessment, not that the owner waived acceptance. It does not prove tests failed or were never run."
+      },
+      {
+        "id": "R2",
+        "classification": "accepted",
+        "kind": "non-gating-release-check-failure",
+        "blocking": false,
+        "summary": "Validate, publish and release failed at the merged revision; a successful conclusion job does not negate this actual job failure.",
+        "owner": "Repository release maintainer",
+        "evidence": [
+          "github-check:127498911251",
+          "github-check:127499699066",
+          "completion.policy.checks requires repository only",
+          "src/packages/sdlc/unattended.md:59"
+        ],
+        "followUp": "Existing release run 42098627030, job 127498911251; release maintainer to inspect through its separately authorized path. No release retry requested here.",
+        "limit": "Failure cause, published package outcome and relationship to the CLI change are unknown. Release is not an explicit #395 acceptance or adopted review gate, so this is recorded separately rather than promoted to a blocker. No owner-approved waiver or deferral is inferred."
+      }
+    ],
+    "guidanceReview": {
+      "inspected": [
+        "AGENTS.md:3-19",
+        "src/packages/cli/README.md:7-11,50-54",
+        "src/packages/cli/assets/skills/init/SKILL.md:22-30",
+        "src/packages/sdlc/README.md:26-28,86-88,123",
+        "src/packages/sdlc/completion.md:30-55",
+        "src/packages/sdlc/unattended.md:49-61",
+        "src/packages/sdlc/skills/review/SKILL.md",
+        ".lighthouse/implement.json:409-457",
+        ".lighthouse/unattended.json",
+        ".lighthouse/github.json"
+      ],
+      "conclusion": "No stale or conflicting affected repository instruction established. Hook installation guidance remains consistent with activation; semantic preview/apply boundaries are preserved. Portable os.tmpdir fixtures are expressly required by issue-specific policy and are not drift from this engine's host-specific output-only constraint. The packaged review skill matches the supplied harness skill. PR-body next-step text is historical and does not supersede the authenticated merged receipt.",
+      "productContext": "Read the host-prepared index and FR-INITIALIZE-FOUNDATION / FR-SEMANTIC-INITIALIZATION inspect, impact and citation reports under .lighthouse-product-evidence. Both inspected requirement statuses are draft. These reports provide context, not additional approval or scope. No provider guidance or product/architecture policy change is proposed as part of this stage."
+    },
+    "additionalChecks": [
+      {
+        "id": "github-check:127498911251",
+        "name": "Validate, publish and release",
+        "status": "failed",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098627030/job/127498911251",
+        "intendedStage": "separately authorized release",
+        "requiredForThisReview": false,
+        "reason": "Actual failed additional check, not missing verification. Cause and release effect unknown."
+      },
+      {
+        "id": "github-check:127499699066",
+        "name": "conclusion",
+        "status": "passed",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098627030/job/127499699066",
+        "requiredForThisReview": false,
+        "reason": "Does not establish success of the failed release job."
+      },
+      {
+        "id": "github-check:127493424191",
+        "name": "ci-app",
+        "status": "unavailable",
+        "source": "https://github.com/juangcarmona/lighthouse/actions/runs/42098112951/job/127493424191",
+        "requiredForThisReview": false,
+        "reason": "Skipped optional App diagnostic, not failed or successful verification. Other skipped routing/reconciliation observations likewise are not adopted acceptance gates."
+      }
+    ],
+    "finalization": {
+      "policySources": [
+        "completion.finalization",
+        "src/packages/sdlc/completion.md:38",
+        ".lighthouse/github.json"
+      ],
+      "observedIssue": {
+        "state": "closed",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedCurrentTransition": {
+        "outcome": "blocked",
+        "add": [],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "explanation": "Blocked review requests no final-label changes and no close operation; it does not reopen an already closed issue. If review later passes, the supplied policy removes waiting-review, ready, pr-draft, pr-ready, integrate and review from the issue and closes it, preserving PR labels. These are future trusted publisher effects, not already performed actions. Host cleanup releases agent-working for every outcome. No new permission or merge authorization is granted."
+    },
+    "retrospective": "## What went well\n- The accepted delivery stayed within the three declared paths; both initializers share a small activation helper and meaningful isolated real-Git assertions cover preservation and preview behavior (lighthouse.mjs:783-792,839,966; lighthouse.test.mjs:71-155).\n- A host-verified merge receipt links the accepted head to the actual integrated revision; authenticated repository CI passed at both revisions (integration:42092952168:1; github-check:127491584305; github-check:127493421089). Owner: CLI and SDLC maintainers.\n\n## What went wrong\n- R1: review cannot establish the required assertion-first history and test-byte continuity: priorPlanningReview is null and implementation command evidence explicitly requires workflow revalidation. This is an evidence/process gap, not an established new source defect or proof that checks failed. Owner: SDLC evidence maintainer with juangcarmona.\n- R2: the release job failed even though its conclusion job passed (github-check:127498911251 versus 127499699066). Cause and product impact remain unknown; release is outside this review gate. Owner: release maintainer.\n- No affected-guidance drift or new source defect was established. The original issue's fix is present structurally, but its historical acceptance is not independently reconstructed here.\n\n## Start doing\n- Recover and bind the hotfix regression/review bundle alongside the integration receipt before closing #395; revalidate current command evidence separately. Preserve historical unavailable states instead of replacing them with new GREEN results. Owner: SDLC evidence maintainer; follow-up: R1 / #395 / run 42092952168 attempt 1.\n\n## Stop doing\n- Do not use generic green CI, the PR's five-check claim or a successful aggregate conclusion as substitutes for assertion-specific provenance or a failed constituent job. Do not infer recurrence from repeated routing attempts for this issue. Evidence here establishes one delivery's gap, not recurrence across work items.\n\n## Improvement candidates\n- **Bounded hotfix proof handoff (R1).** Observed failure: accepted delivery reaches review without usable RED/snapshot/planning proof or workflow-current command receipts. Evidence: null priorPlanningReview and the explicit workflow-change unavailability reason. Owner: SDLC evidence maintainer. Smallest useful guard to evaluate: a review-context completeness diagnostic naming missing hotfix proof separately from stale command receipts, without changing merge authority or discarding retained historical evidence. Reproduce first with this sanitized context shape (merged receipt and green CI, null planning review, unavailable command evidence); require a blocked review with the precise gaps. Then test a complete matching bundle, stale workflow, altered test bytes and dependency-only RED failure to prove correct acceptance/rejection. This is a candidate, not an assertion that an existing guard is defective; any implementation or policy/provider-guidance change needs its own review and regression proof.\n- **Release outcome clarity (R2).** Observed failure: failed release job alongside successful conclusion; no cause inferred. Owner: release maintainer. Smallest useful guard to evaluate: retain constituent release status in the human summary without making release a new merge gate. Reproduce first with the supplied failed-job/passed-conclusion pair; then check mixed, all-passed and skipped fixtures. Inspect the existing release report before deciding a new guard is needed. Separate review and regression proof are required; no source or policy change is made here."
+  }
+}
