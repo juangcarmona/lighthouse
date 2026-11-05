@@ -125,7 +125,7 @@
     }
   },
   "390": {
-    "scope": "Implement only #390: retain a bounded redacted GitHub denial reason in the existing unattended API helper and meaningful error regressions. Preserve status, endpoint context and terminal failure; do not retry or change authority.",
+    "scope": "Implement only #390: retain a bounded redacted GitHub denial reason in the existing unattended API helper and meaningful error regressions. Preserve status, endpoint context and terminal failure; do not retry or change authority. Distinguish authoritative host check receipts from additional agent observations; forge CI and post-merge review retain their later gates.",
     "paths": [
       "src/packages/sdlc/src/unattended-actions.mjs",
       "src/tests/unattended-actions.test.mjs",
@@ -142,6 +142,14 @@
         "node",
         "--test",
         "src/tests/unattended-actions.test.mjs"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
       ]
     ],
     "verification": {
