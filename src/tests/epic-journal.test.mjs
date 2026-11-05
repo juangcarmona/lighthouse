@@ -147,6 +147,43 @@ test('aggregate readiness is retained with the authenticated journal and rejects
   await assert.rejects(readEpicAggregateReceipt(input), /origin is not trusted/);
 });
 
+test('only a bound refusal can release merge intent and survives authenticated retention', async t => {
+  const f = await fixture(t), journal = await f.open(100);
+  const prCorrelation = epicCorrelation({ ...correlation, kind: 'pull-request' }), prKey = epicJournalKey(prCorrelation);
+  const resource = { id: 88, number: 7 }, publication = { run: '100', attempt: 1, head: 'c'.repeat(40) };
+  const merge = { head: publication.head, base: revision, candidate: 'd'.repeat(40), review: 9 };
+  await journal.readReceipt(prKey);
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'intent', correlation: prCorrelation });
+  await journal.writeReceipt(prKey, { schemaVersion: 1, state: 'created', correlation: prCorrelation, resource, publication });
+  const linked = { schemaVersion: 1, state: 'linked', correlation: prCorrelation, resource, publication };
+  const refused = { ...linked, refusal: { ...merge, status: 405 } };
+  await assert.rejects(journal.writeReceipt(prKey, refused), /refusal identity changed/);
+  await journal.writeReceipt(prKey, linked);
+  await journal.writeReceipt(prKey, { ...linked, state: 'merging', merge });
+  await assert.rejects(journal.writeReceipt(prKey, linked), /transition is invalid/);
+  for (const mutate of [
+    r => { r.refusal.status = 500; },
+    r => { r.refusal.head = revision; },
+    r => { r.refusal.review++; },
+    r => { r.refusal.candidate = revision; },
+    r => { r.refusal.extra = true; },
+    r => { r.publication.run = '101'; },
+  ]) {
+    const invalid = structuredClone(refused); mutate(invalid);
+    await assert.rejects(journal.writeReceipt(prKey, invalid), /receipt is invalid|transition is invalid/);
+  }
+  await journal.writeReceipt(prKey, refused);
+  await f.finish(100);
+  const next = await f.open(101);
+  assert.deepEqual(await next.readReceipt(prKey), refused);
+  await next.writeReceipt(prKey, { ...linked, state: 'merging', merge: { ...merge, candidate: 'e'.repeat(40), review: 10 } });
+  assert.equal((await next.readReceipt(prKey)).refusal, undefined);
+  await f.finish(101);
+  f.artifacts.get('100').entries[prKey].receipt.refusal.status = 500;
+  // The earlier retained original remains separate from the new acceptance intent.
+  assert.equal((await (await f.open(102)).readReceipt(prKey)).state, 'merging');
+});
+
 test('uncertain or forged journal writes never authorize another transition', async t => {
   const f = await fixture(t), journal = await f.open(100);
   await assert.rejects(journal.writeReceipt(key, { schemaVersion: 1, state: 'intent', correlation }), /must be read/);
