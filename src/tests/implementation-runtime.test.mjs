@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat, r
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks, copyEvidence, restoreWorkspaceOwnership } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { candidateOrigin, prepareWorkspace, prepareImplementationWorkspace, runImplementationChecks, copyEvidence, restoreWorkspaceOwnership } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 test('browser preview evidence fits while byte and file budgets remain bounded', async () => {
   const root = await mkdtemp(join(tmpdir(), 'browser-evidence-'));
@@ -77,6 +77,28 @@ test('workspace preparation rejects links before changing ownership', async () =
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('candidate Git exposes only a declared credential-free origin and rejects malformed identities before allocation', async () => {
+  assert.equal(candidateOrigin('owner/.github'), 'https://github.com/owner/.github.git');
+  const root = await mkdtemp(join(tmpdir(), 'workspace-origin-')), previousPath = process.env.PATH;
+  try {
+    const bin = join(root, 'bin'), workspace = join(root, 'source'), calls = join(root, 'docker-calls');
+    await mkdir(bin); await mkdir(workspace);
+    await writeFile(join(bin, 'docker'), `#!/bin/sh\nprintf allocated >> '${calls}'\n`, { mode: 0o755 });
+    process.env.PATH = `${bin}:${previousPath}`;
+    await prepareImplementationWorkspace(workspace, { image: 'fixture', uid: process.getuid() }, 53, 'owner/repo');
+    assert.equal(execFileSync('git', ['-C', workspace, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim(), 'https://github.com/owner/repo.git');
+    assert.equal(execFileSync('git', ['-C', workspace, 'rev-list', '--all', '--count'], { encoding: 'utf8' }).trim(), '1');
+    await assert.rejects(lstat(join(workspace, '.git/hooks')), { code: 'ENOENT' });
+    const before = (await stat(calls)).size;
+    for (const repository of ['https://user:secret@example.invalid/repo', '../repo', 'owner/repo --upload-pack=other', 'owner/..', '']) {
+      const invalid = join(root, 'invalid'); await mkdir(invalid, { recursive: true });
+      await assert.rejects(prepareImplementationWorkspace(invalid, {}, 53, repository), /Invalid repository identity/);
+      await assert.rejects(lstat(join(invalid, '.git')), { code: 'ENOENT' });
+    }
+    assert.equal((await stat(calls)).size, before);
+  } finally { process.env.PATH = previousPath; await rm(root, { recursive: true, force: true }); }
+});
+
 test('container checks install workspace bins and execute temporary tools', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async () => {
   const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'workspace-checks-'));
   const workspace = join(root, 'source');
@@ -84,18 +106,19 @@ test('container checks install workspace bins and execute temporary tools', { sk
   const config = { image, uid: 20003 };
   try {
     await mkdir(join(workspace, 'packages/tool'), { recursive: true });
+    await writeFile(join(workspace, '.gitignore'), 'node_modules/\n');
     await writeFile(join(workspace, 'package.json'), JSON.stringify({ name: 'workspace-check', private: true, workspaces: ['packages/*'] }));
     await writeFile(join(workspace, 'packages/tool/package.json'), JSON.stringify({ name: 'workspace-tool', version: '1.0.0', bin: { 'workspace-tool': 'tool.js' } }));
-    await writeFile(join(workspace, 'packages/tool/tool.js'), '#!/usr/bin/env node\nconsole.log("workspace tool ran");\n');
+    await writeFile(join(workspace, 'packages/tool/tool.js'), '#!/usr/bin/env node\nconsole.log("workspace tool ran");\n', { mode: 0o755 });
     execFileSync('npm', ['install', '--package-lock-only', '--ignore-scripts'], { cwd: workspace, stdio: 'pipe' });
     const checks = [
       ['npm', 'ci', '--ignore-scripts'],
       ['./node_modules/.bin/workspace-tool'],
-      ['node', '-e', 'const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["branch","--show-current"],{encoding:"utf8"}).trim(),"fix/53-validation"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote"],{encoding:"utf8"}).trim(),""); assert.equal(require("node:fs").existsSync(".git/hooks"),false);'],
+      ['node', '-e', 'const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["branch","--show-current"],{encoding:"utf8"}).trim(),"fix/53-validation"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote","get-url","origin"],{encoding:"utf8"}).trim(),"https://github.com/owner/repo.git"); assert.equal(require("node:fs").existsSync(".git/hooks"),false);'],
       ['node', '-e', 'require("node:fs").writeFileSync("/tmp/tool", "#!/bin/sh\\nexit 0\\n", {mode:0o755}); require("node:child_process").execFileSync("/tmp/tool");'],
     ];
-    const receipt = await runImplementationChecks({ config, request: { issue: 53, runId: 'workspace-test', sourceRevision: 'test', implementation: { policy: { checks } } }, changes: [], workspace, output: join(root, 'output'), name: `workspace-test-${process.pid}`, redact: text => text, cancelled: () => false });
-    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0]);
+    const receipt = await runImplementationChecks({ config, request: { repository: 'owner/repo', issue: 53, runId: 'workspace-test', sourceRevision: 'test', implementation: { policy: { checks } } }, changes: [], workspace, output: join(root, 'output'), name: `workspace-test-${process.pid}`, redact: text => text, cancelled: () => false });
+    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0], JSON.stringify(receipt.checks.map(check => check.reason)));
   } finally {
     execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']);
     await rm(root, { recursive: true, force: true });

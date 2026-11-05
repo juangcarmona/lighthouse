@@ -5,7 +5,7 @@ import { openSync, closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
-import { prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
+import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
@@ -75,6 +75,8 @@ async function main() {
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
   const implementing = request.stage === 'implement' && request.worker !== 'product-change';
+  const repository = request.repository ?? env.GITHUB_REPOSITORY;
+  if (implementing) candidateOrigin(repository);
   const limits = executionLimits(config, implementing);
   let projectModels = null;
   try {
@@ -103,7 +105,7 @@ async function main() {
   let phase = 'preflight', evidenceRetained = false;
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, cancelled = false, stopReason = null;
+  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const cancel = (reason = 'cancelled') => { cancelled = true; stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
@@ -134,10 +136,18 @@ async function main() {
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
       }
-      await prepareImplementationWorkspace(source, config, request.issue);
+      await prepareImplementationWorkspace(source, config, request.issue, repository);
     }
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
+    if (request.worker === 'independent-review') {
+      const template = JSON.parse(await readFile(context, 'utf8')).contract?.envelope;
+      completionOutput(template, request);
+      template.result = { ...template.result, status: 'blocked', evidence: [], missingEvidence: ['Independent reviewer must complete the assessment'], unavailableChecks: [], pendingReview: [], output: {}, nextAction: 'Independent reviewer: complete the supplied review assessment' };
+      template.effect.body = 'Independent review has not been completed.';
+      await writeFile(join(output, 'envelope.json'), JSON.stringify(template));
+      await chmod(join(output, 'envelope.json'), 0o666);
+    }
     const prompt = join(dir, 'prompt.txt');
     const completionBoundary = '\n\n# Completion in this custom engine adapter\nThe trusted host, outside this container, records the gh-aw terminal noop after validating /output/envelope.json. The safeoutputs CLI and /tmp/gh-aw/agent instructions describe host duties in this integration. Their absence inside the engine is expected, not an unavailable product check. Read /harness/skills/concise-results/SKILL.md when writing effect.body. Write the envelope and stop; do not install or invoke safeoutputs.\n';
     await writeFile(prompt, await readFile(env.GH_AW_PROMPT, 'utf8') + completionBoundary, { mode: 0o444 });
@@ -151,7 +161,7 @@ async function main() {
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`, '--mount', `type=bind,src=${codegraph.workerConfigPath},dst=/etc/opencode/opencode.json,readonly`] : []),
       '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
-    const eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
+    eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
     const started = Date.now();
@@ -200,9 +210,15 @@ async function main() {
     if (runtimeReceipt.execution.status !== 'passed') { phase = 'execution'; throw Error(executionFailure(runtimeReceipt.execution)); }
     const result = join(output, 'envelope.json'), stat = await lstat(result);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
-    const envelope = JSON.parse(await readFile(result, 'utf8'));
+    const rawEnvelope = await readFile(result, 'utf8');
+    let envelope;
+    try { envelope = JSON.parse(rawEnvelope); completionOutput(envelope, request); }
+    catch (error) {
+      await mkdir(join(runDir, 'evidence/host'), { recursive: true });
+      await writeFile(join(runDir, 'evidence/host/rejected-envelope.txt'), redact(rawEnvelope).slice(0, 128000));
+      throw error;
+    }
     clearTimeout(timer);
-    completionOutput(envelope, request);
     if (implementing) {
       const candidateFiles = await sourceFiles(source, trackedSource);
       const changes = collectChanges(baseline, candidateFiles, request.implementation.policy);
@@ -216,7 +232,7 @@ async function main() {
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
-      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected });
+      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected, repository });
       receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
@@ -260,6 +276,10 @@ async function main() {
     }
     throw error;
   } finally {
+    if (eventsPath) {
+      try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(eventsPath, join(runDir, 'evidence/host/engine-events.jsonl')); }
+      catch { console.error('Engine events could not be retained; inspect the runner diagnostics.'); }
+    }
     clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
     try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
     stopCodegraph(codegraph?.sidecar, config);
