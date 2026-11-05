@@ -140,6 +140,61 @@ test('bounded correction permits repair, then requires fresh review', async () =
   assert.equal(repairs, 2); assert.equal(reviews, 2);
 });
 
+test('a blocked technical implementation needs a corrected result before candidate review or publication', async () => {
+  let attempts = 0, reviews = 0;
+  const { host } = fixture({
+    implement: async ({ previous }) => {
+      if (++attempts === 2) assert.ok(previous.feedback.some(finding => finding.includes('optional 404')));
+      return { eligibility: eligible(), receipt: check(), envelope: { result: {
+        runId: String(attempts), status: attempts === 1 ? 'blocked' : 'passed', pendingReview: [], unavailableChecks: [],
+        missingEvidence: attempts === 1 ? ['Complete the planned optional 404 regression'] : [],
+      } } };
+    },
+    reviewCandidate: async candidate => { reviews++; assert.equal(candidate.envelope.result.status, 'passed'); return { accepted: true }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: policy(), host });
+  assert.equal(result.status, 'passed'); assert.equal(attempts, 2); assert.equal(reviews, 1);
+  assert.equal(result.evidence.find(item => item.kind === 'incomplete-implementation').runId, '1');
+});
+
+test('incomplete implementation consumes the same budget as planning repairs', async () => {
+  let plans = 0, attempts = 0;
+  const { host, events } = fixture({
+    reviewPlan: async () => ++plans === 1 ? { accepted: false, verdict: 'request-changes', findings: ['Correct the plan'] } : { accepted: true },
+    implement: async () => { attempts++; return { eligibility: eligible(), receipt: check(), envelope: { result: {
+      runId: 'incomplete', status: 'blocked', pendingReview: [], unavailableChecks: [], missingEvidence: ['Missing regression'],
+    } } }; },
+  });
+  const result = await runUnattended({ route: 'ff', policy: { ...policy(), maxCorrections: 1 }, host });
+  assert.equal(result.status, 'blocked'); assert.equal(attempts, 1); assert.match(result.reason, /correction limit.*Missing regression/);
+  assert.ok(!events.includes('review-candidate')); assert.ok(!events.includes('publish'));
+});
+
+test('a failed-check correction cannot reset a budget already consumed by incomplete implementation', async () => {
+  let attempts = 0;
+  const { host, events } = fixture({ implement: async () => ({ eligibility: eligible(), receipt: check(++attempts === 1 ? 0 : 1), envelope: { result: {
+    runId: String(attempts), status: 'blocked', pendingReview: [], unavailableChecks: [], missingEvidence: ['Missing regression'],
+  } } }) });
+  const result = await runUnattended({ route: 'ff', policy: { ...policy(), maxCorrections: 1 }, host });
+  assert.equal(result.status, 'blocked'); assert.equal(attempts, 2);
+  assert.equal(result.evidence.filter(item => item.kind === 'incomplete-implementation').length, 1);
+  assert.equal(result.evidence.filter(item => item.kind === 'failed-checks').length, 1);
+  assert.ok(!events.includes('publish'));
+});
+
+test('a human gate, unavailable prerequisite or unactionable blocked result cannot enter technical correction', async () => {
+  for (const change of [{ pendingReview: ['Owner decision'] }, { unavailableChecks: ['Provider unavailable'] }, { missingEvidence: [] }, { status: 'failed' }]) {
+    let attempts = 0;
+    const { host, events } = fixture({ implement: async () => {
+      attempts++; return { eligibility: eligible(), receipt: check(), envelope: { result: {
+        status: 'blocked', pendingReview: [], unavailableChecks: [], missingEvidence: ['Complete a regression'], ...change,
+      } } };
+    } });
+    assert.equal((await runUnattended({ route: 'ff', policy: policy(), host })).status, 'blocked');
+    assert.equal(attempts, 1); assert.ok(!events.includes('publish'));
+  }
+});
+
 test('a rejected FF plan is corrected and independently reviewed before production edits', async () => {
   let proposals = 0, reviews = 0, implementations = 0;
   const { host } = fixture({
