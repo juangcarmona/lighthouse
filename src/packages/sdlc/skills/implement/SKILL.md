@@ -18,7 +18,7 @@ Deliver the issue in one branch, including its OpenSpec plan.
 
 ## Completion
 
-The plan and code are ready to review together, with passing checks. Merge remains subject to repository policy and reviewer authorization.
+Return `passed` when the bounded candidate is ready and its available workspace checks complete. The host runs independent checks after you return; independent review, forge CI, integration and installed-runtime acceptance follow under their own authority. Record those future requirements in `result.output` and `nextAction`; their future receipts cannot already exist, and must never be claimed as passed. Current-stage failed checks, missing product decisions and unavailable required tools remain blockers. Merge remains subject to repository policy and reviewer authorization.
 
 ## Workspace command slot
 

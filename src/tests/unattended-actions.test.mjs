@@ -4,11 +4,14 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { commandEvidenceBinding } from '../packages/sdlc/src/implementation-evidence.mjs';
+import { changesDigest, validateCheckReceipt } from '../packages/sdlc/src/implementation.mjs';
 import { implementationPrProof, reconcileImplementationPr } from '../packages/sdlc/src/pr-state.mjs';
 import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
-async function fixture() {
+async function fixture({ route = 'hotfix', attempt = 1 } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
   await mkdir(join(sourceRoot, 'src/feature'), { recursive: true });
   await writeFile(join(sourceRoot, 'src/feature/rule.mjs'), 'export const eligible = value => value > 2;\n');
@@ -16,14 +19,14 @@ async function fixture() {
     env: { ...process.env, GIT_AUTHOR_NAME: 'Fixture', GIT_AUTHOR_EMAIL: 'fixture@localhost', GIT_COMMITTER_NAME: 'Fixture', GIT_COMMITTER_EMAIL: 'fixture@localhost' } });
   git(['init', '--template=', '--initial-branch=main']); git(['add', '.']); git(['commit', '-m', 'Fixture']);
   const revision = git(['rev-parse', 'HEAD']).trim(), eventPath = join(root, 'event.json'), configPath = join(root, 'engine.json');
-  await writeFile(eventPath, JSON.stringify({ inputs: { issue: '1', route: 'hotfix' } }));
+  await writeFile(eventPath, JSON.stringify({ inputs: { issue: '1', route } }));
   await writeFile(configPath, JSON.stringify({ modelProfiles: { schemaVersion: 1, enabled: true, defaultProfile: 'build', profiles: {
     build: { model: 'openai/implementation', reasoningEffort: 'medium' }, plan: { model: 'openai/reviewer', reasoningEffort: 'high' },
   } }, modelCapabilities: {
     'openai/implementation': { available: true, tools: true, reasoningEfforts: ['medium'] },
     'openai/reviewer': { available: true, tools: true, reasoningEfforts: ['high'] },
   } }));
-  const policy = { schemaVersion: 1, enabled: true, routes: ['hotfix'], paths: ['src/feature/', 'tests/'], reviewerProfile: 'plan', allowFivePoint: false,
+  const policy = { schemaVersion: 1, enabled: true, routes: [route], paths: ['src/feature/', 'tests/'], reviewerProfile: 'plan', allowFivePoint: false,
     merge: false, maxCorrections: 1, timeoutSeconds: 60, hotfix: { modules: { feature: ['src/feature/', 'tests/'] },
       setupCommands: [], testPaths: ['tests/'], regressionCommand: ['node', '--test', 'tests/edge.test.mjs'], failurePattern: ['ERR_ASSERTION'] } };
   const eligibility = { points: 1, risk: 'low', reversible: true, dependenciesResolved: true, scopeKnown: true, productChangeNeeded: false,
@@ -39,7 +42,7 @@ async function fixture() {
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha: revision };
     if (path === 'actions/runs/123') return { event: 'workflow_dispatch', actor: { login: 'owner' }, triggering_actor: { login: 'owner' },
-      repository: { full_name: 'owner/repo' }, head_sha: revision, head_branch: 'main', path: '.github/workflows/lighthouse-sdlc-unattended.yml', run_attempt: 1 };
+      repository: { full_name: 'owner/repo' }, head_sha: revision, head_branch: 'main', path: '.github/workflows/lighthouse-sdlc-unattended.yml', run_attempt: attempt };
     if (path.startsWith('contents/.lighthouse/unattended.json')) return encode(policy);
     if (path.startsWith('contents/.lighthouse/implement.json')) return encode({ defaults: { scope: 'The isolated issue', paths: ['src/feature/', 'tests/'],
       checks: [['node', '--test', 'tests/edge.test.mjs']], reviewRequired: false, verification: { paths: ['tests/'], corrections: {} } } });
@@ -65,17 +68,23 @@ async function fixture() {
     executions.push(options);
     const envelope = stageContext(options.request, issue()).contract.envelope;
     let changes = [], receipt = null;
-    if (options.request.stage === 'triage') envelope.result.output = { eligibility, hotfix: plan };
+    if (['triage', 'refine'].includes(options.request.stage)) envelope.result.output = { eligibility, hotfix: plan };
+    else if (options.request.stage === 'propose') envelope.result.output.files = [
+      ...['proposal.md', 'design.md', 'tasks.md'].map(name => ({ path: 'openspec/changes/issue-1-proposal/' + name, content: name === 'tasks.md' ? '- [ ] Implement boundary correction\n' : '# Synthetic adapter plan\n' })),
+      { path: 'openspec/changes/issue-1-proposal/.openspec.yaml', content: 'skip_specs: true' },
+    ];
     else if (options.request.worker === 'independent-review') {
       if (options.context.review.purpose === 'candidate') {
-        assert.deepEqual(options.context.review.details.scope, { implementationPaths: policy.paths, planningRoots: [] });
+        assert.deepEqual(options.context.review.details.scope, { implementationPaths: policy.paths, planningRoots: route === 'ff' ? ['openspec/changes/issue-1-proposal/'] : [] });
         assert.match(options.prompt, /findings as an array of plain strings/);
-        assert.match(options.context.review.details.red.receipt.checks.find(c => c.exitCode !== 0).log, /ERR_ASSERTION/);
-        assert.ok(options.context.review.details.red.tests['tests/edge.test.mjs']);
+        if (route === 'hotfix') {
+          assert.match(options.context.review.details.red.receipt.checks.find(c => c.exitCode !== 0).log, /ERR_ASSERTION/);
+          assert.ok(options.context.review.details.red.tests['tests/edge.test.mjs']);
+        }
         assert.match(Buffer.from(options.context.review.details.originalFiles['src/feature/rule.mjs'], 'base64').toString(), /value > 2/);
       }
       envelope.result.output.review = { binding: options.context.review.binding, verdict: 'accept', findings: [] };
-    } else if (!options.source.has('tests/edge.test.mjs')) {
+    } else if (route === 'hotfix' && !options.source.has('tests/edge.test.mjs')) {
       changes = [{ path: 'tests/edge.test.mjs', mode: '100644', content: Buffer.from('assert.equal(eligible(2), true);\n').toString('base64') }];
       receipt = { checks: [{ command: plan.command, exitCode: 1, log: 'ERR_ASSERTION: Expected inclusive boundary', execution: { status: 'failed', exitCode: 1, signal: null } }] };
       envelope.result.status = 'blocked';
@@ -91,10 +100,155 @@ async function fixture() {
     } };
   };
   const env = { ...process.env, GITHUB_EVENT_PATH: eventPath, GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_ACTOR: 'owner', GITHUB_TRIGGERING_ACTOR: 'owner',
-    GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1',
+    GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: String(attempt),
     LIGHTHOUSE_SOURCE_ROOT: sourceRoot, LIGHTHOUSE_ENGINE_CONFIG: configPath, RUNNER_TEMP: root };
-  return { root, api, env, execute, executions, writes, labels, comments, policy };
+  if (route === 'ff') {
+    // Synthetic provider transport only: this is not OpenSpec validation evidence.
+    const bin = join(root, 'bin'); await mkdir(bin);
+    await writeFile(join(bin, 'npx'), `#!${process.execPath}
+const fs = require('node:fs');
+const args = process.argv.slice(process.argv.indexOf('openspec') + 1);
+if (args[0] === 'new') {
+  const dir = 'openspec/changes/' + args[2]; fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(dir + '/.openspec.yaml', 'schema: spec-driven\\ncreated: 2026-11-05\\n');
 }
+console.log(JSON.stringify(args[0] === 'status' ? { isPlanningComplete: true } : { outputPath: args[1], instruction: 'Synthetic fixture', template: '' }));
+`, { mode: 0o755 });
+    env.PATH = bin + ':' + process.env.PATH;
+  }
+  return { root, api, env, execute, executions, writes, labels, comments, policy, revision, issue };
+}
+
+function assertHostIdentity(f, intent, attempt) {
+  assert.equal(new Set(f.executions.map(e => e.request.runId)).size, f.executions.length);
+  for (const { request, context } of f.executions) {
+    for (const value of [request, context.request]) {
+      assert.equal(value.repository, 'owner/repo');
+      assert.equal(value.sourceRevision, f.revision);
+      assert.equal(value.workflowRunId, '123');
+      assert.equal(value.attempt, attempt);
+      assert.equal(value.taskDigest, intent);
+    }
+  }
+}
+
+// Contract fixture only, never an independent host execution receipt.
+function syntheticReceipt(request, changes, checks) {
+  return { schemaVersion: 2, runId: request.runId, sourceRevision: request.sourceRevision,
+    changesDigest: changesDigest(changes), candidateTree: 'b'.repeat(40), binding: commandEvidenceBinding(request), checks };
+}
+
+test('every FF/hotfix stage and correction retains authenticated rerun and initial owner intent', async t => {
+  for (const route of ['ff', 'hotfix']) await t.test(route, async () => {
+    const f = await fixture({ route, attempt: 3 }), execute = f.execute;
+    const answer = { id: 1, body: 'Keep the inclusive edge.', updated_at: '2026-11-05T00:00:00Z', user: { login: 'owner' } };
+    f.comments.push(answer);
+    const intent = createHash('sha256').update(JSON.stringify({ title: f.issue().title, body: f.issue().body,
+      comments: [{ id: answer.id, body: answer.body, updated_at: answer.updated_at }] })).digest('hex');
+    let candidateReviews = 0;
+    f.execute = async options => {
+      const result = await execute(options);
+      if (options.request.stage === 'implement') assert.equal(validateCheckReceipt(syntheticReceipt(options.request, result.changes, result.receipt.checks),
+        options.request, result.changes), result.receipt.checks.every(c => c.exitCode === 0));
+      // Model-returned identity is untrusted and must never seed a subsequent request.
+      Object.assign(result.envelope.result.output, { workflowRunId: '999', attempt: 99, taskDigest: 'f'.repeat(64) });
+      if (options.context.review?.purpose === 'candidate' && ++candidateReviews === 1) {
+        result.envelope.result.status = 'blocked';
+        result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Retain the edge correction.'] };
+      }
+      return result;
+    };
+    try {
+      const result = await runGithubUnattended(f);
+      assert.equal(result.status, 'waiting-human', result.reason);
+      assert.deepEqual(f.executions.map(e => e.request.stage), route === 'ff'
+        ? ['refine', 'propose', 'integrate', 'implement', 'integrate', 'implement', 'integrate']
+        : ['triage', 'integrate', 'implement', 'implement', 'integrate', 'implement', 'integrate']);
+      assertHostIdentity(f, intent, 3);
+      assert.equal(f.writes.filter(w => w.path === 'pulls').length, 1);
+      assert.equal(candidateReviews, 2);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+});
+
+test('native admission rejects malformed/unsafe attempts and mismatched authenticated workflows', async t => {
+  for (const attempt of [0, -1, 1.5, 'NaN', '1x', Number.MAX_SAFE_INTEGER + 1]) await t.test('attempt ' + attempt, async () => {
+    const f = await fixture({ attempt });
+    try {
+      await assert.rejects(runGithubUnattended(f), /attempt|identity/);
+      assert.equal(f.executions.length, 0); assert.equal(f.writes.length, 0);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+  for (const [key, value] of [['event', 'push'], ['repository', { full_name: 'other/repo' }], ['head_sha', 'f'.repeat(40)],
+    ['path', '.github/workflows/other.yml'], ['run_attempt', 2], ['actor', { login: 'other' }], ['triggering_actor', { login: 'other' }]]) await t.test(key, async () => {
+    const f = await fixture(), api = f.api;
+    f.api = async (...args) => { const result = await api(...args); return args[0] === 'actions/runs/123' ? { ...result, [key]: value } : result; };
+    try {
+      await assert.rejects(runGithubUnattended(f), /workflow identity/);
+      assert.equal(f.executions.length, 0); assert.equal(f.writes.length, 0);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+});
+
+test('source, title, body and retained owner answer changes stop before the next engine or publication', async t => {
+  for (const mutation of ['source', 'title', 'body', 'answer']) await t.test(mutation, async () => {
+    const f = await fixture(), api = f.api, execute = f.execute;
+    f.comments.push({ id: 1, body: 'Initial answer', updated_at: '2026-11-05T00:00:00Z', user: { login: 'owner' } });
+    let changed = false;
+    f.api = async (...args) => {
+      const result = await api(...args);
+      if (changed && mutation === 'source' && args[0] === 'commits/main') return { sha: 'f'.repeat(40) };
+      if (changed && ['title', 'body'].includes(mutation) && args[0] === 'issues/1') return { ...result, [mutation]: 'Changed authorized intent' };
+      return result;
+    };
+    f.execute = async options => {
+      const result = await execute(options); changed = true;
+      if (mutation === 'answer') f.comments[0].body = 'Changed answer';
+      return result;
+    };
+    try {
+      const result = await runGithubUnattended(f);
+      assert.equal(result.status, 'blocked');
+      assert.match(result.reason, mutation === 'source' ? /base or policy changed/ : /owner authorization changed/);
+      assert.equal(f.executions.length, 1);
+      assert.ok(!f.writes.some(w => ['git/refs', 'pulls'].includes(w.path)));
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+});
+
+test('synthetic v2 receipts bind captured implementation requests and reject identity/replay mismatches', async t => {
+  const captures = [];
+  for (const attempt of [1, 2]) {
+    const f = await fixture({ attempt }), execute = f.execute;
+    f.execute = async options => {
+      const result = await execute(options);
+      if (options.request.stage === 'implement') captures.push({ request: options.request, changes: result.changes, checks: result.receipt.checks });
+      return result;
+    };
+    try { const result = await runGithubUnattended(f); assert.equal(result.status, 'waiting-human', result.reason); }
+    finally { await rm(f.root, { recursive: true, force: true }); }
+  }
+  // Contract fixtures, not independent command execution or an actual host checks.json.
+  const synthetic = ({ request, changes, checks }) => syntheticReceipt(request, changes, checks);
+  for (const capture of captures) assert.equal(validateCheckReceipt(synthetic(capture), capture.request, capture.changes), capture.checks.every(c => c.exitCode === 0));
+  const green = captures[1], receipt = synthetic(green);
+  for (const [field, value] of [['repository', 'other/repo'], ['issue', 2], ['runId', 'f'.repeat(64)], ['workflowRunId', '124'], ['attempt', 2],
+    ['sourceRevision', 'f'.repeat(40)], ['policyRevision', 'e'.repeat(40)], ['intent', 'f'.repeat(64)], ['policy', 'f'.repeat(64)], ['planning', 'f'.repeat(64)]]) await t.test(field, () => {
+    assert.notEqual(receipt.binding[field], value);
+    assert.throws(() => validateCheckReceipt({ ...receipt, binding: { ...receipt.binding, [field]: value } }, green.request, green.changes), /producer or input mismatch/);
+  });
+  for (const [name, altered] of [
+    ['policy revision', { ...green.request, baseRevision: 'e'.repeat(40) }],
+    ['selected policy', { ...green.request, implementation: { ...green.request.implementation, policy: { ...green.request.implementation.policy, scope: 'Other scope' } } }],
+    ['planning reference', { ...green.request, planningReference: { runId: 'f'.repeat(64) } }],
+  ]) await t.test(name, () => assert.throws(() => validateCheckReceipt(receipt, altered, green.changes), /producer or input mismatch/));
+  // Keep all outer receipt identity, argv, tree and change digests valid; replay only the foreign producer binding.
+  for (const [name, foreign, field] of [['cross-stage', captures[0], 'runId'], ['cross-attempt', captures[3], 'attempt']]) await t.test(name, () => {
+    const replayed = commandEvidenceBinding(foreign.request)[field];
+    assert.notEqual(replayed, receipt.binding[field]);
+    assert.throws(() => validateCheckReceipt({ ...receipt, binding: { ...receipt.binding, [field]: replayed } }, green.request, green.changes), /producer or input mismatch/);
+  });
+});
 
 test('native adapter connects triage, independent planning, RED, repair, review and one PR', async () => {
   const f = await fixture();

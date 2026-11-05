@@ -6,6 +6,8 @@ The [second attempt](https://github.com/juangcarmona/lighthouse/actions/runs/419
 
 The [third attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41938501442) stopped in candidate review: its plan required commands absent from the admitted host inventory. #410 exposes the planned inventory and preserves the concrete escalation findings; the next #389 grant admits those commands. This attempt published no PR.
 
+The [fourth attempt](https://github.com/juangcarmona/lighthouse/actions/runs/41944081446) completes all four independent host commands but waits for a receipt from the corrected host before installation. #389 is now a reviewed maintainer bootstrap, with installed v2 acceptance pending on #390. The clean FF pilot queue is #390, #394 and #392; accepted pilots remain zero.
+
 The #216 consumer passes clean registry-only bootstrap and baseline safety controls with all 44 customization hashes preserved. No complete real-change pilot or consumer delivery is accepted yet.
 
 Original evidence is compressed in the [archive](evidence.tar.gz), bound by the [index](results.json). Native qualification continues after the technical corrections.
