@@ -3,7 +3,7 @@ import { readActionsJson } from './actions-artifact.mjs';
 import { implementationPrProof } from './pr-state.mjs';
 import { loadImplementation, changesDigest, validateCheckReceipt } from './implementation.mjs';
 import { loadDispatch } from './stage-dispatch.mjs';
-import { checkProposal, reviewThread } from './proposal-review.mjs';
+import { checkProposal, checkImplementationPullRequest, reviewThread } from './proposal-review.mjs';
 import { unattendedImplementationPolicy, validateUnattendedPolicy, unattendedDigest } from './unattended.mjs';
 import { productModelDirectoryFromConfig } from './product-change.mjs';
 
@@ -91,7 +91,12 @@ export async function readImplementationEvidence(api, completion, { readArtifact
       if (batch.length < 100) break;
       if (page === 10) throw Error('Implementation receipt inventory exceeds bounds');
     }
-    const proof = implementationPrProof(comments, { number: pr, head: { sha: head, repo: { full_name: repository } } });
+    const current = await api(`pulls/${pr}`);
+    if (current.number !== pr || current.head?.sha !== head || current.base?.ref !== completion.binding.branch || (completion.merged ? current.merged !== true || current.merge_commit_sha !== completion.merge : current.state !== 'open' || current.merged)) throw Error('Implementation PR differs from the completion subject');
+    // Post-merge review authenticates the same accepted implementation identity.
+    const subject = { ...current, state: 'open', merged: false };
+    if (checkImplementationPullRequest(subject, repository).issue !== issue) throw Error('Implementation PR belongs to another issue');
+    const proof = implementationPrProof(comments, subject);
     if (!proof) return unavailable('No current-head implementation receipt');
     const run = await api(`actions/runs/${proof.run}`);
     const attempt = proof.attempt ?? run.run_attempt;
