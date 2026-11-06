@@ -6,13 +6,13 @@ const head = 'a'.repeat(40), revision = 'b'.repeat(40), blob = 'c'.repeat(40), r
 const pr = { number: 12, state: 'open', head: { sha: head, ref: 'lighthouse/implement-9', repo: { full_name: repository } }, base: { sha: revision, ref: 'main', repo: { full_name: repository } } };
 const branch = 'lighthouse/verification-12-' + head, now = Date.parse('2026-11-05T06:00:00Z');
 function fixture() {
-  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null, inventoryCalls: 0, inventoryErrors: [], afterWriteError: null };
+  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null, inventoryCalls: 0, inventoryErrors: [], workflowErrors: [], workflowReads: 0, afterWriteError: null };
   const checkpoint = async requests => { state.saved = structuredClone(requests); state.checkpoints.push(state.saved); };
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET', 'Only the narrow App trigger may write');
     if (path.startsWith('contents/.lighthouse/')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['ci.yml', 'package.yml'] } })).toString('base64') };
     if (path === 'pulls/12') return { ...pr, ...(state.changed === 'head' ? { head: { ...pr.head, sha: 'd'.repeat(40) } } : {}), ...(state.changed === 'base' ? { base: { ...pr.base, sha: 'd'.repeat(40) } } : {}) };
-    if (path.startsWith('contents/.github/workflows/')) return { type: 'file', sha: state.changed === 'workflow' && path.endsWith(head) ? 'd'.repeat(40) : blob };
+    if (path.startsWith('contents/.github/workflows/')) { state.workflowReads++; if (state.workflowErrors.length) throw state.workflowErrors.shift(); return { type: 'file', sha: state.changed === 'workflow' && path.endsWith(head) ? 'd'.repeat(40) : blob }; }
     if (path.startsWith('git/ref/heads/')) { assert.equal(path, 'git/ref/heads/' + branch); return state.ref; }
     const workflow = path.match(/^actions\/workflows\/(ci|package)\.yml\/runs\?head_sha=/)?.[1];
     assert.ok(workflow, path);
@@ -158,4 +158,15 @@ test('terminal, malformed, cancelled and post-send failures keep their existing 
   await assert.rejects(unknown.dispatch({ previous: uncertain }));
   assert.equal(unknown.state.inventoryCalls, reads + 1); assert.equal(unknown.state.calls, 1);
   assert.ok(unknown.state.saved.every(row => row.state === 'unknown'));
+});
+
+
+test('publication CI workflow reads use the same bounded retry without another launch', async () => {
+  const f = fixture(); f.state.workflowErrors = [Object.assign(Error('temporary'), { status: 502 }), Object.assign(Error('temporary'), { status: 503 })];
+  const result = await f.dispatch();
+  assert.equal(f.state.workflowReads, 6); assert.equal(f.state.calls, 1);
+  assert.ok(result.every(row => row.state === 'observed' && row.attempt === 1));
+  const denied = fixture(); denied.state.workflowErrors = [Object.assign(Error('denied'), { status: 403 })];
+  await assert.rejects(denied.dispatch(), failure => failure.status === 403);
+  assert.equal(denied.state.workflowReads, 1); assert.equal(denied.state.calls, 0);
 });

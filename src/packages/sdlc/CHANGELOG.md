@@ -2,6 +2,8 @@
 
 ## 0.20.8
 
+- Reuse the existing bounded CI preflight read retry for trusted and candidate workflow content, preserving exact identity checks and single-reference effects.
+
 - Refresh verification-only PR summaries without changing Git history; preserve product identities, reconcile a confirmed lost metadata acknowledgement, and retain checked same-head recovery.
 
 - Retain typed epic action outcomes so completion callbacks distinguish child creation/refinement from recovery and acceptance; bind controller and delivery revisions independently.
