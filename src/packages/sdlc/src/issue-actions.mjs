@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
-import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection } from './implementation.mjs';
+import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection, observeImplementationPublication } from './implementation.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { digest, validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
@@ -984,7 +984,7 @@ async function main(command) {
           await recheckPublication();
         };
         const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite);
-        const currentPr = await api(`pulls/${pr.number}`);
+        const currentPr = await observeImplementationPublication(api, snapshot, pr);
         if (currentPr.number !== pr.number || currentPr.head?.sha !== pr.head.sha || currentPr.head?.ref !== pr.head.ref) throw Error('Implementation changed after publication');
         publishedPr = structuredClone(currentPr);
         if (receipt.schemaVersion === 2) {
