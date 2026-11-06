@@ -14,7 +14,7 @@ async function fixture(scenario) {
   const repository = 'owner/repo', head = 'a'.repeat(40), base = 'b'.repeat(40), identity = 'c'.repeat(64);
   const bot = { login: 'github-actions[bot]', type: 'Bot' };
   const issue = { number: 7, title: 'Existing implementation', body: 'Revalidate the bounded candidate.', state: 'open', labels: [{ name: 'agent-working' }] };
-  const pr = { number: 8, state: 'open', merged: false, draft: true, user: bot, head: { sha: head, ref: `lighthouse/implement-7-${identity.slice(0, 12)}`, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${identity} -->`, html_url: 'https://github.com/owner/repo/pull/8' };
+  const pr = { id: 800, number: 8, state: 'open', merged: false, draft: true, user: bot, head: { sha: head, ref: `lighthouse/implement-7-${identity.slice(0, 12)}`, repo: { full_name: repository } }, base: { sha: base, ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${identity} -->`, html_url: 'https://github.com/owner/repo/pull/8' };
   const feedback = { id: 10, body: 'Check the same head without editing source.', user: { login: 'owner', type: 'User' }, updated_at: '2026-11-03T00:00:00Z' };
   const policy = { defaults: { scope: 'Only this candidate.', paths: ['src/'], checks: [['node', '--version']], reviewRequired: false } };
   const content = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
