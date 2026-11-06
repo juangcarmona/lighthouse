@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Supply host-verified dependency acceptance, review, check and history evidence to child workers so an accepted prerequisite does not become an artificial model blocker.
+
 - Refine dependent epic children against the authenticated accepted integration base. Keep main-bound policy and triage evidence separate, recheck dependency inclusion before publication, and reject changed or revoked prerequisites.
 
 - 9851570: # Resume confirmed epic merge refusals

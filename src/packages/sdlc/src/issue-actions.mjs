@@ -576,6 +576,7 @@ async function main(command) {
     const baseRevision = (await api(`commits/${repository.default_branch}`)).sha;
     const epicImplementation = !!dispatch?.request.epic && route.stage === 'implement';
     const epicSource = !!dispatch?.request.epic && ['refine', 'implement'].includes(route.stage);
+    let epicPrerequisites;
     if (dispatch?.request.epic) {
       const { baseSha, ...epic } = dispatch.request.epic;
       const native = await import('./epic-native.mjs');
@@ -584,6 +585,7 @@ async function main(command) {
         const observed = await native.inspectEpicDependencies({ api, repository: repo, owner, child: issueNumber, current: epic });
         if (observed.baseSha !== baseSha) throw Error('Epic base changed before stage preparation');
         if (epicImplementation) await native.checkEpicCapacity({ api, repository: repo, owner, child: issueNumber, current: epic, capacity: Number(env.LIGHTHOUSE_EPIC_CAPACITY || '1'), excludeRequest: dispatch.request.id });
+        epicPrerequisites = { status: 'verified', verifiedBy: 'trusted-host', base: epic.base, baseSha, dependencies: observed.dependencies };
       } else if (baseSha !== undefined) throw Error('Unexpected epic implementation base');
     }
     const revision = { sha: productResume ? productResume.head : alignedPr ? alignedPr.head : implementationReview ? implementationReview.head : epicSource ? dispatch.request.epic.baseSha : proposalReview?.productProposal ? proposalReview.head : baseRevision };
@@ -667,12 +669,17 @@ async function main(command) {
     const snapshot = { ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
+    if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
     await output('source_revision', revision.sha);
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
+    if (epicPrerequisites) {
+      context.epicPrerequisites = epicPrerequisites;
+      context.contract.rules += ' context.epicPrerequisites contains the trusted host verification of accepted dependency heads, current owner reviews, checks and inclusion in the supplied epic base. Use this evidence for the current authorized stage. The host rechecks it before publication; merge and release retain their separate authorization.';
+    }
     if (productResume) { context.productResume = productResume; context.contract.rules += ' The approved Product Change was applied to the supplied issue branch. Resume only the original parent stage and its existing authorization. Preserve the applied product files and branch; product approval does not authorize merge or broaden implementation scope.'; }
     if (snapshot.productAlignment) { context.productAlignment = snapshot.productAlignment; context.contract.rules += ' The authenticated Product Change worker found that accepted product intent already covers this request. Resume only the original parent stage and its existing authorization. This observation grants no new product decision, implementation scope or merge authority.'; }
     if (alignedPr) context.contract.rules += ' Continue the existing draft implementation PR from its authenticated head. Preserve its content and the authorized scope.';
