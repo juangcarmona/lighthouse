@@ -98,3 +98,11 @@ jobs:
           path: ${{ runner.temp }}/lighthouse-epic-${{ github.run_id }}-${{ inputs.issue }}/recovery.json
           if-no-files-found: error
           retention-days: 14
+      - name: Preserve the native action result
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-epic-action-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-epic-${{ github.run_id }}-${{ inputs.issue }}/result.json
+          if-no-files-found: error
+          retention-days: 14

@@ -2,6 +2,8 @@
 
 ## 0.20.8
 
+- Retain typed epic action outcomes so completion callbacks distinguish child creation/refinement from recovery and acceptance; bind controller and delivery revisions independently.
+
 - Authenticate owner-selected epic controller workflows separately from the frozen delivery source, preserving legacy journal validation.
 
 - Reconcile confirmed partial epic corrections before releasing their uncertain reservations; retain failed producers and accept authenticated verification-only receipts.
