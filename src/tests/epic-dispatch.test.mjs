@@ -108,3 +108,30 @@ test('bot epic refinement is bound to one owner authorization execution', () => 
   assert.throws(() => verifyDispatchOrigin({ ...request, epicKey: 'd'.repeat(64) }, receipt, parent, worker, repository, owner, 10));
   assert.notEqual(key, epicRefinementKey(repository, 146, 10, planDigest, '501'));
 });
+
+
+test('completed recovery and acceptance actions do not request child triage', async () => {
+  for (const legacy of [true, false]) {
+    const f = fixture(); f.run.head_sha = 'c'.repeat(40); f.run.head_branch = 'codex/reviewed-controller';
+    const name = `lighthouse-epic-${legacy ? 'recovery' : 'action'}-146-1`;
+    const artifact = legacy
+      ? { schemaVersion: 1, repository, child: 10, kind: 'partial-publication-recovery', state: 'confirmed', status: 'reconciled', recoveryRun: '500', workflowRevision: f.run.head_sha }
+      : { schemaVersion: 1, repository, parent: 146, runId: '500', attempt: 1, workflowRevision: f.run.head_sha, workflowRef: f.run.head_branch, action: 'accept-aggregate', result: { status: 'accepted' } };
+    const api = (path, ...args) => path.endsWith('/artifacts?per_page=100') ? { total_count: 1, artifacts: [{ name, expired: false }] } : f.api(path, ...args);
+    const execute = () => dispatchEpicTriage(api, { repository, owner, runId: 500 }, { readArtifact: async () => artifact });
+    assert.deepEqual((await execute()).children, []); assert.equal(f.posts.length, 0);
+    artifact.workflowRevision = revision; await assert.rejects(execute(), /action origin/);
+  }
+});
+
+test('child callbacks bind the selected controller while retaining the current delivery revision', async () => {
+  const f = fixture(); f.run.head_sha = 'c'.repeat(40); f.run.head_branch = 'codex/reviewed-controller';
+  f.journal.workflowRevision = f.run.head_sha; f.journal.workflowRef = f.run.head_branch;
+  const args = { repository, owner, child: 10, parent: 146, runId: 500 };
+  const opts = { readArtifact: f.readArtifact, authenticate: f.authenticate };
+  assert.equal((await verifyEpicTriageOrigin(f.api, args, opts)).current.sourceRevision, revision);
+  const current = { child: 10, epic: await f.authenticate({ child: 10 }), taskDigest: 'd'.repeat(64) };
+  const artifact = { schemaVersion: 1, repository, parent: 146, runId: '500', attempt: 1, revision, observation: current };
+  assert.equal((await verifyEpicRefinementOrigin(f.api, args, { readArtifact: async () => artifact, observe: async () => current })).current.child, 10);
+  f.journal.workflowRef = 'copied'; await assert.rejects(verifyEpicTriageOrigin(f.api, args, opts), /journal is invalid/);
+});

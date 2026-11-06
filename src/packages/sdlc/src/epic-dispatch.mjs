@@ -12,11 +12,12 @@ const positive = value => /^[1-9][0-9]*$/.test(String(value));
 export async function verifyEpicRefinementOrigin(api, { repository, owner, child, parent, runId }, { readArtifact = readActionsJson, observe = observeEpicRefinement } = {}) {
   if (![child, parent, runId].every(positive)) throw Error('Invalid epic refinement origin');
   const run = await api(`actions/runs/${runId}`), repo = await api('');
-  if (String(run.id) !== String(runId) || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || run.head_branch !== repo.default_branch || run.head_sha !== (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha) throw Error('Epic refinement origin is not an authenticated current owner execution');
+  if (String(run.id) !== String(runId) || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || !/^[a-f0-9]{40}$/.test(run.head_sha ?? '') || typeof run.head_branch !== 'string' || !run.head_branch) throw Error('Epic refinement origin is not an authenticated current owner execution');
   const artifact = await readArtifact(api, repository, run.id, `lighthouse-epic-refinement-${parent}-${child}-1`, 'refinement.json');
   const current = await observe({ api, repository, owner, child: Number(child), allowWorking: true, readArtifact });
-  const expected = { schemaVersion: 1, repository, parent: Number(parent), runId: String(run.id), attempt: 1, revision: run.head_sha, observation: current };
-  if (current.epic.parent !== Number(parent) || current.epic.sourceRevision !== run.head_sha || !isDeepStrictEqual(artifact, expected)) throw Error('Epic refinement authorization or triage changed');
+  const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
+  const expected = { schemaVersion: 1, repository, parent: Number(parent), runId: String(run.id), attempt: 1, revision, observation: current };
+  if (current.epic.parent !== Number(parent) || current.epic.sourceRevision !== revision || !isDeepStrictEqual(artifact, expected)) throw Error('Epic refinement authorization or triage changed');
   return { run, current };
 }
 
@@ -30,9 +31,9 @@ export async function dispatchEpicRefinement(api, { repository, owner, runId, pa
 export async function verifyEpicTriageOrigin(api, { repository, owner, child, parent, runId }, { readArtifact = readActionsJson, authenticate = authenticateEpicChild } = {}) {
   if (![child, parent, runId].every(positive)) throw Error('Invalid epic triage origin');
   const run = await api(`actions/runs/${runId}`), repo = await api('');
-  if (String(run.id) !== String(runId) || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || run.head_branch !== repo.default_branch || run.head_sha !== (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha) throw Error('Epic triage origin is not an authenticated current owner execution');
+  if (String(run.id) !== String(runId) || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || !/^[a-f0-9]{40}$/.test(run.head_sha ?? '') || typeof run.head_branch !== 'string' || !run.head_branch) throw Error('Epic triage origin is not an authenticated current owner execution');
   const journal = await readArtifact(api, repository, run.id, `lighthouse-epic-journal-${parent}-${run.run_attempt}`, 'journal.json');
-  if (journal?.schemaVersion !== 1 || journal.repository !== repository || journal.parent !== Number(parent) || journal.revision !== run.head_sha || String(journal.runId) !== String(run.id) || journal.attempt !== run.run_attempt || !journal.entries || typeof journal.entries !== 'object') throw Error('Epic triage journal is invalid');
+  if (journal?.schemaVersion !== 1 || journal.repository !== repository || journal.parent !== Number(parent) || journal.revision !== (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha || (journal.workflowRevision !== undefined) !== (journal.workflowRef !== undefined) || (journal.workflowRevision ?? journal.revision) !== run.head_sha || (journal.workflowRef ?? repo.default_branch) !== run.head_branch || String(journal.runId) !== String(run.id) || journal.attempt !== run.run_attempt || !journal.entries || typeof journal.entries !== 'object') throw Error('Epic triage journal is invalid');
   const current = await authenticate({ api, repository, owner, child: Number(child), readArtifact });
   if (current.parent !== Number(parent)) throw Error('Epic triage parent changed');
   const matches = Object.values(journal.entries).filter(entry => entry?.receipt?.state === 'linked' && entry.receipt.correlation?.kind === 'child' && entry.receipt.correlation.parent === Number(parent) && entry.receipt.correlation.slice === current.slice && entry.receipt.correlation.planDigest === current.planDigest && entry.receipt.resource?.number === Number(child));
@@ -44,6 +45,16 @@ export async function dispatchEpicTriage(api, { repository, owner, runId }, { re
   if (!positive(runId)) throw Error('Invalid epic execution');
   const run = await api(`actions/runs/${runId}`), inventory = await api(`actions/runs/${runId}/artifacts?per_page=100`);
   if (!Array.isArray(inventory.artifacts) || inventory.total_count !== inventory.artifacts.length || inventory.total_count > 100) throw Error('Epic artifact inventory is incomplete');
+  const actions = inventory.artifacts.filter(item => /^lighthouse-epic-(?:action|recovery)-[1-9][0-9]*-1$/.test(item.name));
+  if (actions.some(item => item.expired) || actions.filter(item => item.name.startsWith('lighthouse-epic-action-')).length > 1 || actions.filter(item => item.name.startsWith('lighthouse-epic-recovery-')).length > 1) throw Error('Epic action evidence is expired or ambiguous');
+  const action = actions.find(item => item.name.startsWith('lighthouse-epic-action-')) ?? actions[0];
+  if (action) {
+    const recovery = action.name.startsWith('lighthouse-epic-recovery-');
+    const parent = Number(action.name.match(/-([1-9][0-9]*)-1$/)[1]);
+    const record = await readArtifact(api, repository, runId, action.name, recovery ? 'recovery.json' : 'result.json');
+    if (run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'completed' || run.conclusion !== 'success' || run.run_attempt !== 1 || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.repository?.full_name !== repository || record?.schemaVersion !== 1 || record.repository !== repository || record.workflowRevision !== run.head_sha || (recovery ? record.recoveryRun !== String(run.id) || record.kind !== 'partial-publication-recovery' || record.state !== 'confirmed' || record.status !== 'reconciled' : record.runId !== String(run.id) || record.attempt !== 1 || record.parent !== parent || record.workflowRef !== run.head_branch || !['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(record.result?.status) || !['reconcile', 'refine-child', 'register-pr', 'recover-publication', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate', 'accept-aggregate'].includes(record.action))) throw Error('Epic action origin is not authenticated');
+    if (recovery || !['reconcile', 'refine-child'].includes(record.action)) return { status: 'settled', parent, children: [] };
+  }
   const names = inventory.artifacts.filter(item => !item.expired).map(item => item.name).filter(name => /^lighthouse-epic-journal-[1-9][0-9]*-1$/.test(name));
   const refinementArtifacts = inventory.artifacts.filter(item => /^lighthouse-epic-refinement-[1-9][0-9]*-[1-9][0-9]*-1$/.test(item.name));
   if (refinementArtifacts.some(item => item.expired)) throw Error('Epic refinement authorization expired');

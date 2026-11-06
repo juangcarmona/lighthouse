@@ -576,15 +576,15 @@ async function main() {
   const positive = value => /^[1-9][0-9]*$/.test(value ?? '') && Number.isSafeInteger(Number(value));
   const action = inputs.action || 'reconcile';
   if (['refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
+  let result;
   if (action === 'recover-publication') {
     if (!positive(inputs.child) || !positive(inputs.run) || !positive(inputs['pull-request']) || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'in_progress' || run.repository?.full_name !== repository || run.head_sha !== env.GITHUB_SHA) throw Error('Partial publication recovery requires an authenticated owner workflow');
     const current = await authenticateEpicChild({ api, repository, owner, child: Number(inputs.child) });
     if (current.parent !== issue) throw Error('Partial publication recovery targets another parent');
     await checkEpicLeaseConfiguration(api, current.sourceRevision);
-    const result = await recoverEpicCorrection({ api, repository, owner, child: Number(inputs.child), runId: inputs.run, number: Number(inputs['pull-request']), head: inputs.head, base: inputs.base, save: value => writeFile(join(dir, 'recovery.json'), JSON.stringify({ ...value, recoveryRun: String(run.id), workflowRevision: run.head_sha })) });
-    console.log(JSON.stringify(result)); return;
-  }
-  const result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
+    result = await recoverEpicCorrection({ api, repository, owner, child: Number(inputs.child), runId: inputs.run, number: Number(inputs['pull-request']), head: inputs.head, base: inputs.base, save: value => writeFile(join(dir, 'recovery.json'), JSON.stringify({ ...value, recoveryRun: String(run.id), workflowRevision: run.head_sha })) });
+  } else result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
+  await writeFile(join(dir, 'result.json'), JSON.stringify({ schemaVersion: 1, repository, parent: issue, runId: String(run.id), attempt: run.run_attempt, workflowRevision: run.head_sha, workflowRef: run.head_branch, action, result }));
   console.log(JSON.stringify(result));
   if (!['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');
 }
