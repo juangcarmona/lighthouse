@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.9
+
+### Patch Changes
+
+- d88a473: # Observed engine ownership
+
+  Persist verified asynchronous engine ownership before reporting its output, so stopped-worker recovery can distinguish an observed engine from a lost create acknowledgement.
+
+- 1d0a8e1: # Engine image preflight
+
+  Validate the selected engine image before allocating runtime helpers, so a missing or invalid image reports its preflight error without leaving pending resource intents.
+
 ## 0.20.8
 
 - Reuse the existing bounded CI preflight read retry for trusted and candidate workflow content, preserving exact identity checks and single-reference effects.
