@@ -9,12 +9,12 @@ function fixture(options = {}) {
   const branch = `lighthouse/verification-7-${target}`;
   let receipt = { state: 'linked', resource: { id: 70, number: 7 }, correlation: { kind: 'pull-request' }, publication: { head } };
   let ref = null, authorized = true, status = 'unavailable';
-  const mutations = [], snapshots = [], runs = [];
+  const mutations = [], snapshots = [], runs = [], workflowReads = [];
   const profile = { schemaVersion: 1, profileVersion: 1, repository, intake: 'collaborators', requiredChecks: [{ context: 'repository', integrationId: 15368 }], requiredApprovals: 0, evidenceBranch: 'process/retrospectives', releaseWorkflowReady: true, completion: { publishEvidence: true, postMergeWorkflows: ['ci.yml'] } };
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET', 'GITHUB_TOKEN must not create verification refs or dispatch CI');
     if (path.startsWith('contents/.lighthouse/github.json?')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
-    if (path.startsWith('contents/.github/workflows/')) return { type: 'file', sha: options.changedWorkflow && path.endsWith(target) ? head : sourceRevision };
+    if (path.startsWith('contents/.github/workflows/')) { workflowReads.push(path); if (options.workflowErrors?.length) throw options.workflowErrors.shift(); return { type: 'file', sha: options.changedWorkflow && path.endsWith(target) ? head : sourceRevision }; }
     if (path === `git/ref/heads/${branch}`) return ref;
     if (path.startsWith('actions/workflows/ci.yml/runs?')) {
       if (options.moveReference) ref.object.sha = head;
@@ -36,7 +36,7 @@ function fixture(options = {}) {
   const args = { api, repository, sourceRevision, ciTrigger, ...(options.subject ? { subject: options.subject } : {}), observation: { pr: { id: 70, number: 7, head: { sha: head } }, base: sourceRevision, candidate }, key: 'key',
     journal: { readReceipt: async () => structuredClone(receipt), writeReceipt: async (_key, value) => { receipt = structuredClone(value); snapshots.push(structuredClone(value)); } },
     recheck: async () => authorized, checks: async () => [{ status }], wait: async () => {}, polls: 2 };
-  return { args, mutations, snapshots, runs, run: () => ensureEpicChecks(args), setStatus: value => { status = value; } };
+  return { args, mutations, snapshots, runs, workflowReads, run: () => ensureEpicChecks(args), setStatus: value => { status = value; } };
 }
 
 test('App push checks the exact integration commit with unchanged workflows and durable intent', async () => {
@@ -144,5 +144,24 @@ test('PR-head CI retains the same workflow, push-event, uncertainty and pause ga
     const writes = f.mutations.length;
     await assert.rejects(f.run());
     assert.equal(f.mutations.length, writes);
+  }
+});
+
+
+test('transient CI workflow-content reads recover within the existing bound before one App reference', async () => {
+  const f = fixture({ workflowErrors: [Object.assign(Error('upstream'), { status: 502 }), Object.assign(Error('upstream'), { status: 503 })] });
+  await f.run();
+  assert.equal(f.workflowReads.length, 4);
+  assert.equal(f.mutations.length, 1);
+});
+
+test('exhausted, terminal and cancelled workflow reads preserve a no-effect stop', async () => {
+  for (const scenario of ['exhausted', 'authentication', 'authorization', 'terminal', 'cancelled']) {
+    const status = scenario === 'authentication' ? 401 : scenario === 'authorization' ? 403 : scenario === 'terminal' ? 500 : 502;
+    const error = Object.assign(Error('upstream'), { status, ...(scenario === 'cancelled' ? { name: 'AbortError' } : {}) });
+    const f = fixture({ workflowErrors: [error, error, error, error] });
+    await assert.rejects(f.run(), failure => failure === error);
+    assert.equal(f.workflowReads.length, scenario === 'exhausted' ? 3 : 1);
+    assert.equal(f.mutations.length, 0); assert.equal(f.snapshots.length, 0);
   }
 });

@@ -10,7 +10,7 @@ function transportFailureCode(error) {
   return code === 'ECONNRESET' ? 'connection-reset' : code === 'EAI_AGAIN' ? 'dns-temporary' : null;
 }
 
-async function readCiInventory(api, path) {
+export async function readCiPreflight(api, path) {
   for (let attempt = 0; ; attempt++) {
     try { return await api(path); }
     catch (error) {
@@ -143,7 +143,7 @@ export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = a
       if (current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || current.state !== 'open') { stop('head-changed'); throw Error('PR changed before checks could start'); }
       operation.path = `actions/workflows/${workflow}/runs`;
       const path = `actions/workflows/${workflow}/runs?head_sha=${pr.head.sha}&per_page=100`;
-      const found = await (!prior || ['not-sent', 'rejected'].includes(prior.state) ? readCiInventory(api, path) : api(path));
+      const found = await (!prior || ['not-sent', 'rejected'].includes(prior.state) ? readCiPreflight(api, path) : api(path));
       if (!Array.isArray(found.workflow_runs) || found.total_count > 100) { stop('inventory-incomplete'); throw Error('CI request inventory exceeds bounds'); }
       const existing = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === pr.head.ref && run.repository?.full_name === current.head.repo?.full_name && run.path === `.github/workflows/${workflow}` && ['push', 'workflow_dispatch'].includes(run.event)).sort((a, b) => b.id - a.id)[0];
       if (existing) { Object.assign(request, { state: 'observed', run: existing.id }); await checkpoint(requests); continue; }
@@ -192,7 +192,7 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
     };
     for (const workflow of workflows) {
       const path = `contents/.github/workflows/${workflow}?ref=`;
-      const trusted = await api(path + revision), candidate = await api(path + pr.head.sha);
+      const trusted = await readCiPreflight(api, path + revision), candidate = await readCiPreflight(api, path + pr.head.sha);
       if (trusted.type !== 'file' || !sha(trusted.sha) || candidate.type !== 'file' || trusted.sha !== candidate.sha) { operation.code = 'workflow-changed'; throw Error('CI definition changed'); }
       const identity = { schemaVersion: 2, trigger: 'app-push', pr: pr.number, head: pr.head.sha, sourceBranch: pr.head.ref, base, baseBranch, branch, workflow, workflowSha: trusted.sha, revision };
       const prior = previous?.find(item => item.workflow === workflow);
@@ -204,7 +204,7 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
       for (const request of requests) {
         operation = { method: 'GET', path: `actions/workflows/${request.workflow}/runs` };
         const path = `${operation.path}?head_sha=${pr.head.sha}&per_page=100`;
-        const found = await (retryRead ? readCiInventory(api, path) : api(path));
+        const found = await (retryRead ? readCiPreflight(api, path) : api(path));
         if (!Array.isArray(found.workflow_runs) || !Number.isSafeInteger(found.total_count) || found.total_count !== found.workflow_runs.length || found.total_count > 100) { operation.code = 'inventory-incomplete'; throw Error('CI push inventory is incomplete'); }
         const run = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === branch && run.repository?.full_name === repository && run.path === `.github/workflows/${request.workflow}` && run.event === 'push').sort((a, b) => b.id - a.id)[0];
         if (run) Object.assign(request, { state: 'observed', run: run.id });

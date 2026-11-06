@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { loadProfile } from './completion.mjs';
+import { readCiPreflight } from './delivery-events.mjs';
 
 // The caller authenticates the PR and parent lease; checks never authorize a merge.
 export async function ensureEpicChecks({ api, repository, sourceRevision, observation, journal, key, recheck, checks, ciTrigger, subject = 'candidate', wait = () => new Promise(resolve => setTimeout(resolve, 10000)), polls = 60 }) {
@@ -21,7 +22,7 @@ export async function ensureEpicChecks({ api, repository, sourceRevision, observ
   if (!Array.isArray(workflows) || !workflows.length || workflows.length > 8 || new Set(workflows).size !== workflows.length || workflows.some(name => !/^[\w.-]+\.ya?ml$/.test(name))) throw Error('Epic candidate checks require configured verification push workflows');
   for (const name of workflows) {
     const path = `contents/.github/workflows/${name}?ref=`;
-    const trusted = await api(path + sourceRevision), proposed = await api(path + candidate);
+    const trusted = await readCiPreflight(api, path + sourceRevision), proposed = await readCiPreflight(api, path + candidate);
     if (trusted.type !== 'file' || !sha(trusted.sha) || proposed.type !== 'file' || proposed.sha !== trusted.sha) throw Error('Epic candidate changed a trusted verification workflow');
   }
   let receipt = await journal.readReceipt(key);
