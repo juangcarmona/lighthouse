@@ -157,11 +157,32 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const checkEpicBase = async () => {
     if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');
   };
+  const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
+  const reviewBody = (current, head) => {
+    const proof = productImplementationProof(current), marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
+    if (!marker && !proof) throw Error('Implementation PR marker missing during update');
+    if (!proof) return description(marker);
+    const prior = current.body.replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/g, '');
+    const evidence = `${body.trim()}\n\n[Implementation evidence](${runUrl}).`;
+    if (proof.runId === snapshot.runId && proof.head === head && prior.trimEnd().endsWith(evidence)) return current.body;
+    return `${prior}\n\n${evidence}\n\n<!-- lighthouse-product-implementation:${JSON.stringify({ ...proof, runId: snapshot.runId, head })} -->`;
+  };
   await checkEpicBase();
   if (!changes.length) {
     await beforeWrite();
     await checkEpicBase();
-    return checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
+    const current = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
+    const revised = reviewBody(current, snapshot.sourceRevision);
+    if (current.body !== revised) {
+      try { await api(`pulls/${current.number}`, 'PATCH', { body: revised }); }
+      catch (error) {
+        const observed = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
+        if (observed.body !== revised) throw error;
+        await beforeWrite(); await checkEpicBase();
+        return observed;
+      }
+    }
+    return { ...current, body: revised };
   }
   const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
   for (const file of changes) {
@@ -172,7 +193,6 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
   await checkEpicBase();
-  const description = marker => `${body.trim()}\n\nRefs #${snapshot.issue}.\n\nNext: ${draft ? 'complete the candidate and its checks' : 'wait for required CI, then review this PR'}. [Run and evidence](${runUrl}).\n\n<!-- lighthouse-implementation:${marker} -->`;
   if (snapshot.productAlignment?.parent.pullRequest) {
     const prior = snapshot.productAlignment.parent.pullRequest;
     const current = await api(`pulls/${prior.number}`);
@@ -197,9 +217,7 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     const current = await api(`pulls/${snapshot.implementationReview.number}`);
     if (current.head?.sha !== snapshot.sourceRevision) throw Error('Implementation PR changed before update');
     await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
-    const productProof = productImplementationProof(current);
-    const marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
-    if (!marker && !productProof) throw Error('Implementation PR marker missing during update');
+    const revised = reviewBody(current, created.sha);
     if (epic) {
       for (let attempt = 0; ; attempt++) {
         const updated = await api(`pulls/${snapshot.implementationReview.number}`);
@@ -211,7 +229,6 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
       }
       await afterRefWrite();
     }
-    const revised = productProof ? `${current.body.replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/g, '')}\n\n${body.trim()}\n\n[Implementation evidence](${runUrl}).\n\n<!-- lighthouse-product-implementation:${JSON.stringify({ ...productProof, runId: snapshot.runId, head: created.sha })} -->` : description(marker);
     await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: revised });
     return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
   }

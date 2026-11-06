@@ -325,7 +325,7 @@ test('verification-only owner correction returns the same PR and never writes Gi
     if (scenario === 'identity') pr.body = `<!-- lighthouse-implementation:${'a'.repeat(63)}b -->`;
     const api = async (path, method = 'GET', body) => {
       calls.push({ path, method, body });
-      if (path === 'pulls/34') return pr;
+      if (path === 'pulls/34') { if (method === 'PATCH') pr.body = body.body; return pr; }
       if (path === review.path) return scenario === 'feedback' ? { ...feedback, body: 'Revoked' } : feedback;
       throw Error('Unexpected API: ' + path);
     };
@@ -334,8 +334,10 @@ test('verification-only owner correction returns the same PR and never writes Gi
     if (scenario === 'passed') {
       assert.equal((await publish()).head.sha, current.head.sha);
       assert.equal((await publish()).number, 34);
+      assert.match(pr.body, /Checked/);
+      assert.equal(calls.filter(call => call.method === 'PATCH').length, 1);
     } else await assert.rejects(publish(), /changed|revoked|No implementation changes/);
-    assert.equal(calls.some(call => call.method !== 'GET'), false, scenario);
+    assert.equal(calls.some(call => call.method !== 'GET' && !(scenario === 'passed' && call.method === 'PATCH' && call.path === 'pulls/34')), false, scenario);
   }
 });
 
@@ -364,5 +366,41 @@ test('epic correction reconciles delayed PR readback without repeating a ref wri
     assert.equal(descriptions, scenario === 'delayed' ? 1 : 0);
     assert.equal(checked, ['delayed', 'revoked'].includes(scenario));
     assert.ok(reads <= 4);
+  }
+});
+
+
+test('verification-only metadata preserves product provenance and reconciles only a confirmed lost acknowledgement', async () => {
+  const { digest } = await import('../packages/sdlc/src/host-contract.mjs');
+  const { checkImplementationPullRequest } = await import('../packages/sdlc/src/proposal-review.mjs');
+  for (const scenario of ['standard', 'product', 'ack-lost', 'ack-unconfirmed', 'ack-revoked']) {
+    const repository = 'owner/repo', branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+    const proof = { schemaVersion: 1, issue: 18, runId: 'b'.repeat(64), applyIntent: 'c'.repeat(64), head: request.sourceRevision };
+    const parent = { issue: 18, stage: 'implement', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Issue scope' }, sourceRevision: 'e'.repeat(40), baseRevision: 'e'.repeat(40), taskDigest: 'f'.repeat(64), autoImplement: false };
+    const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity: { repository, issue: 18, parentRunId: '200', authorizationDigest: '1'.repeat(64), policyDigest: '2'.repeat(64), workflowRevision: '3'.repeat(40), head: request.sourceRevision }, requestDigest: '4'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '5'.repeat(64), baselineDigest: '6'.repeat(64), state: 'applied', effectIds: [`apply:${proof.applyIntent}:${request.sourceRevision}`], parent };
+    const pr = { number: 34, state: 'open', merged: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: request.sourceRevision, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: scenario === 'product' ? `Product decision retained.\n<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->\n<!-- lighthouse-product-implementation:${JSON.stringify(proof)} -->` : `Previously blocked.\n<!-- lighthouse-implementation:${request.runId} -->` };
+    const feedback = { user: { login: 'owner', type: 'User' }, body: 'Revalidate.' };
+    const identity = checkImplementationPullRequest(pr, repository).implementationIdentity;
+    const review = { number: 34, issue: 18, head: request.sourceRevision, branch, base: 'main', implementationIdentity: identity, path: 'issues/comments/10', feedbackDigest: digest(JSON.stringify(feedback)), approved: false };
+    const snapshot = { ...request, repository, stage: 'implement', worker: 'apply-review', baseRevision: 'd'.repeat(40), implementationReview: review };
+    const calls = []; let writes = 0, authorities = 0;
+    const api = async (path, method = 'GET', payload) => {
+      calls.push({ path, method });
+      if (path === review.path) return scenario === 'ack-revoked' && writes ? { ...feedback, body: 'Revoked' } : feedback;
+      if (path !== 'pulls/34') throw Error('No Git resource may be requested');
+      if (method === 'PATCH') { writes++; if (scenario !== 'ack-unconfirmed') pr.body = payload.body; if (scenario.startsWith('ack-')) throw Error('lost ack'); }
+      return structuredClone(pr);
+    };
+    const publish = () => createImplementationPullRequest(api, snapshot, [], 'All current checks passed.', 'https://example.test/fresh-run', false, async () => { authorities++; });
+    if (['ack-unconfirmed', 'ack-revoked'].includes(scenario)) await assert.rejects(publish(), /lost ack|feedback changed/);
+    else {
+      assert.equal((await publish()).head.sha, request.sourceRevision);
+      assert.match(pr.body, /All current checks passed/); assert.match(pr.body, /fresh-run/);
+      assert.equal(checkImplementationPullRequest(pr, repository).implementationIdentity, identity);
+      if (scenario === 'product') assert.match(pr.body, /Product decision retained/);
+      await publish(); assert.equal(writes, 1);
+    }
+    assert.ok(authorities >= 1); assert.equal(writes, 1);
+    assert.ok(calls.every(call => call.method === 'GET' || call.path === 'pulls/34' && call.method === 'PATCH'));
   }
 });

@@ -188,7 +188,7 @@ async function inspectEpicPublication({ api, repository, owner, child, runId, lo
   if (partial && target.implementationIdentity !== snapshot.implementationReview.implementationIdentity) throw Error('Partial epic correction identity changed');
   const commit = await api(`git/commits/${published.head}`);
   if (changes.length && (!Array.isArray(commit.parents) || commit.parents.length !== 1 || commit.parents[0].sha !== snapshot.sourceRevision)) throw Error('Epic implementation commit has an unexpected base');
-  if (partial && (!changes.length || commit.tree?.sha !== checks.candidateTree || !/^[a-f0-9]{40}$/.test(checks.candidateTree ?? ''))) throw Error('Partial epic correction differs from its checked tree');
+  if (partial && (commit.tree?.sha !== checks.candidateTree || !/^[a-f0-9]{40}$/.test(checks.candidateTree ?? ''))) throw Error('Partial epic correction differs from its checked tree');
   const trees = [];
   for (const revision of [snapshot.sourceRevision, published.head]) {
     const tree = await api(`git/trees/${revision}?recursive=1`);
