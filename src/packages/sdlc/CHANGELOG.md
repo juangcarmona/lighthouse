@@ -1,5 +1,33 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.8
+
+### Patch Changes
+
+- 9851570: # Resume confirmed epic merge refusals
+
+  Retain confirmed HTTP405 epic merge refusals so a later authorized acceptance can retry after fresh checks. Keep uncertain merge outcomes reconciliation-only and preserve the refused head, base, candidate and review in the authenticated journal.
+
+- a98affa: # Qualify epic PR-head checks
+
+  Run trusted App push CI for both the current PR head and its exact integration candidate before epic readiness. Retain separate request receipts, require both sets of hosting checks during acceptance and dependency verification, and preserve pause, review and current-base checks.
+
+- c014bef: # Validate GitHub label descriptions
+
+  Validate GitHub label descriptions before adoption writes and shorten the default integration label description to fit the provider limit. Recheck older authorized plans against current validation while preserving existing labels and partial-effect evidence.
+
+- fe0bdce: # Preserve CI authority after PR updates
+
+  Bind CI to the validated publication after a review correction, product apply or aligned resumption updates its existing PR. Preserve original feedback and product checkpoints, current owner intent and competing-PR checks, while keeping old-head authorization strict before publication.
+
+- 4d10ee7: # Start CI for a freshly published implementation
+
+  Allow the exact newly published implementation PR through its original authority guard when starting App push CI. Revalidate its resource, provenance, head and base while preserving owner intent, source, dispatch, policy and competing-PR checks.
+
+- dd66b3c: # Reconcile repeated child triage
+
+  Observe an existing authenticated epic-child triage request before rejecting its active reservation. Retain current plan, source and intent binding, pause gates and uncertain outcomes without another dispatch.
+
 ## 0.20.7
 
 ### Patch Changes
