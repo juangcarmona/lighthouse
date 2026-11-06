@@ -1,5 +1,21 @@
 # @juangcarmona/lighthouse
 
+## 0.12.44
+
+### Patch Changes
+
+- 74aeb3f: # Authenticate current PR command evidence
+
+  Authenticate command receipts against the complete current pull request identity, including product-backed corrections and accepted post-merge review.
+
+- 1893a38: # Verify delivery against the current merge tree
+
+  When a delivery branch is behind its admitted base, verify GitHub's current merge commit through a separately retained App push and resume integration only while the exact head approval and both parents remain current.
+
+- Updated dependencies [74aeb3f]
+- Updated dependencies [1893a38]
+  - @juangcarmona/lighthouse-sdlc@0.20.11
+
 ## 0.12.43
 
 ### Patch Changes
