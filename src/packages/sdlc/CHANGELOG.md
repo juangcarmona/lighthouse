@@ -2,6 +2,8 @@
 
 ## 0.20.8
 
+- Refresh verification-only PR summaries without changing Git history; preserve product identities, reconcile a confirmed lost metadata acknowledgement, and retain checked same-head recovery.
+
 - Retain typed epic action outcomes so completion callbacks distinguish child creation/refinement from recovery and acceptance; bind controller and delivery revisions independently.
 
 - Authenticate owner-selected epic controller workflows separately from the frozen delivery source, preserving legacy journal validation.

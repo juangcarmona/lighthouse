@@ -329,6 +329,10 @@ test('child PR reconciliation authenticates the dispatch, retained checks and ex
   assert.equal(reservationWrites, 1); assert.equal(saved.at(-1).state, 'confirmed');
   assert.equal((await recover()).status, 'reconciled'); assert.equal(reservationWrites, 1);
   assert.equal(saved.at(-1).reservation, 'failed');
+  snapshot.sourceRevision = checks.sourceRevision = checks.binding.sourceRevision = snapshot.implementationReview.head = head;
+  changes.length = 0; checks.changesDigest = changesDigest(changes);
+  assert.equal((await recover()).status, 'reconciled');
+  assert.equal(reservationWrites, 1);
 });
 
 test('owner acceptance merges one authenticated child and leaves the parent open', async t => {
