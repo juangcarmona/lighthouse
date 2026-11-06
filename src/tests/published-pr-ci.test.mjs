@@ -34,6 +34,7 @@ function fixture(epic = false) {
     if (path.startsWith('git/ref/heads/lighthouse/implement-')) return { object: { sha: f.pulls[0].head.sha } };
     if (path.startsWith('git/commits/') && method === 'GET') return { tree: { sha: base } };
     if (path === 'git/ref/heads/main' || path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: f.baseReference } };
+    if (path.startsWith('compare/')) return { base_commit: { sha: f.baseReference }, behind_by: 0 };
     if (path === 'git/commits' && method === 'POST') return { sha: head };
     if (path.startsWith('git/') && method === 'POST') return { sha: base };
     if (path.startsWith('contents/.lighthouse/github.json?')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['ci.yml'] } })).toString('base64') };
