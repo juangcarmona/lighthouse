@@ -11,8 +11,8 @@ import { createEpicJournal, readEpicAggregateReceipt, readEpicChildReceipt, read
 import { isDeepStrictEqual } from 'node:util';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { loadDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
-import { validateChanges, validateCheckReceipt } from './implementation.mjs';
+import { loadDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
+import { validateChanges, validateCheckReceipt, isVerificationOnlyCorrection } from './implementation.mjs';
 import { digest } from './host-contract.mjs';
 import { createHash } from 'node:crypto';
 import { list, loadProfile, requiredPolicy, checkCommit } from './completion.mjs';
@@ -160,8 +160,8 @@ export async function checkEpicCapacity({ api, repository, owner, child, current
   return { occupied, capacity };
 }
 
-export async function reconcileEpicPullRequest({ api, repository, owner, child, runId, journal, authorize, load, readArtifact = readActionsJson }) {
-  if (!Number.isSafeInteger(child) || child < 1 || !/^[1-9][0-9]*$/.test(String(runId)) || typeof authorize !== 'function') throw Error('Invalid epic publication identity');
+async function inspectEpicPublication({ api, repository, owner, child, runId, load, readArtifact = readActionsJson, partial = false }) {
+  if (!Number.isSafeInteger(child) || child < 1 || !/^[1-9][0-9]*$/.test(String(runId))) throw Error('Invalid epic publication identity');
   const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact });
   const run = await api(`actions/runs/${runId}`);
   if (String(run.id) !== String(runId) || run.status !== 'completed' || run.run_attempt !== 1 || !['.github/workflows/lighthouse-sdlc-implement.lock.yml', '.github/workflows/lighthouse-sdlc-apply-review.lock.yml'].includes(run.path) || run.event !== 'workflow_dispatch' || run.repository?.full_name !== repository) throw Error('Epic implementation run is not eligible for reconciliation');
@@ -170,18 +170,25 @@ export async function reconcileEpicPullRequest({ api, repository, owner, child, 
   const envelope = await readArtifact(api, repository, run.id, resultName, 'envelope.json');
   const changes = await readArtifact(api, repository, run.id, resultName, 'changes.json');
   const checks = await readArtifact(api, repository, run.id, resultName, 'checks.json');
-  const published = await readArtifact(api, repository, run.id, `lighthouse-implement-publication-${child}-1`, 'published-pr.json');
+  let published = await readArtifact(api, repository, run.id, `lighthouse-implement-publication-${child}-1`, 'published-pr.json', partial);
+  if (partial && (published !== null || !snapshot.implementationReview || run.conclusion !== 'failure' || snapshot.worker !== 'apply-review' || checks.schemaVersion !== 2)) throw Error('No eligible partial epic correction');
+  if (partial) {
+    const actual = await api(`pulls/${snapshot.implementationReview.number}`);
+    published = { number: actual.number, head: actual.head?.sha };
+  }
   if (snapshot?.issue !== child || snapshot.stage !== 'implement' || snapshot.runId !== digest(`${repository}:${child}:implement:${run.id}:1`) || String(snapshot.workflowRunId) !== String(run.id) || snapshot.epic?.parent !== current.parent || snapshot.epic?.slice !== current.slice || snapshot.epic?.planDigest !== current.planDigest || snapshot.epic?.base !== current.base || snapshot.epic?.sourceRevision !== current.sourceRevision || snapshot.baseRevision !== current.sourceRevision || (snapshot.implementationReview ? snapshot.implementationReview.head !== snapshot.sourceRevision || snapshot.implementationReview.base !== current.base || run.path !== '.github/workflows/lighthouse-sdlc-apply-review.lock.yml' : snapshot.epic?.baseSha !== snapshot.sourceRevision || run.path !== '.github/workflows/lighthouse-sdlc-implement.lock.yml') || validateStageEnvelope(envelope, snapshot).length || envelope.result.status !== 'passed') throw Error('Epic implementation evidence is invalid or stale');
   const dispatch = await loadDispatch(api, repository, owner, child, snapshot.dispatch?.commentId, run, readArtifact);
   const { baseSha: dispatchedBase, ...dispatchedEpic } = dispatch.request.epic ?? {};
   if (dispatch.request.id !== snapshot.dispatch.requestId || dispatch.receipt.digest !== snapshot.dispatch.digest || dispatch.request.stage !== 'implement' || dispatch.request.workflowRevision !== snapshot.workflowRevision || dispatch.request.taskDigest !== snapshot.taskDigest || dispatchedBase !== snapshot.epic.baseSha || !isDeepStrictEqual(dispatchedEpic, current) || !isDeepStrictEqual(dispatch.request.epic, snapshot.epic)) throw Error('Epic implementation dispatch changed');
   await checkDispatchClaim(api, repository, child, snapshot.dispatch, run.id);
   validateChanges(changes, snapshot.implementation.policy);
-  if (!changes.length || !validateCheckReceipt(checks, snapshot, changes) || !Number.isSafeInteger(published?.number) || published.number < 1 || !/^[a-f0-9]{40}$/.test(published.head ?? '')) throw Error('Epic implementation checks or publication receipt are invalid');
+  if ((!changes.length && (!isVerificationOnlyCorrection(snapshot) || published?.head !== snapshot.sourceRevision)) || !validateCheckReceipt(checks, snapshot, changes) || !Number.isSafeInteger(published?.number) || published.number < 1 || !/^[a-f0-9]{40}$/.test(published.head ?? '')) throw Error('Epic implementation checks or publication receipt are invalid');
   const pr = await api(`pulls/${published.number}`), target = checkImplementationPullRequest(pr, repository);
   if (target.issue !== child || target.base !== current.base || target.head !== published.head || (snapshot.implementationReview ? target.number !== snapshot.implementationReview.number || target.branch !== snapshot.implementationReview.branch : !pr.body.includes(`<!-- lighthouse-implementation:${snapshot.runId} -->`)) || !Number.isSafeInteger(pr.id) || pr.id < 1) throw Error('Epic implementation PR does not match its publication receipt');
+  if (partial && target.implementationIdentity !== snapshot.implementationReview.implementationIdentity) throw Error('Partial epic correction identity changed');
   const commit = await api(`git/commits/${published.head}`);
-  if (!Array.isArray(commit.parents) || commit.parents.length !== 1 || commit.parents[0].sha !== snapshot.sourceRevision) throw Error('Epic implementation commit has an unexpected base');
+  if (changes.length && (!Array.isArray(commit.parents) || commit.parents.length !== 1 || commit.parents[0].sha !== snapshot.sourceRevision)) throw Error('Epic implementation commit has an unexpected base');
+  if (partial && (!changes.length || commit.tree?.sha !== checks.candidateTree || !/^[a-f0-9]{40}$/.test(checks.candidateTree ?? ''))) throw Error('Partial epic correction differs from its checked tree');
   const trees = [];
   for (const revision of [snapshot.sourceRevision, published.head]) {
     const tree = await api(`git/trees/${revision}?recursive=1`);
@@ -197,6 +204,13 @@ export async function reconcileEpicPullRequest({ api, repository, owner, child, 
     const expected = createHash('sha1').update(`blob ${content.length}\0`).update(content).digest('hex');
     if (actual?.type !== 'blob' || actual.mode !== change.mode || actual.sha !== expected) throw Error('Epic implementation file differs from validated content');
   }
+  return { current, snapshot, run, dispatch, published, pr };
+}
+
+export async function reconcileEpicPullRequest(args) {
+  const { api, repository, child, journal, authorize } = args;
+  if (typeof authorize !== 'function') throw Error('Invalid epic publication authority');
+  const { current, run, published, pr } = await inspectEpicPublication(args);
   const marker = readEpicMarker((await api(`issues/${child}`)).body);
   const correlation = epicCorrelation({ repository, parent: current.parent, slice: current.slice, planDigest: current.planDigest, base: current.base, dependencies: marker.dependencies, kind: 'pull-request' });
   const key = epicJournalKey(correlation), resource = { id: pr.id, number: pr.number }, publication = { run: String(run.id), attempt: run.run_attempt, head: published.head };
@@ -208,6 +222,35 @@ export async function reconcileEpicPullRequest({ api, repository, owner, child, 
   if (['created', 'linked'].includes(receipt.state) && !isDeepStrictEqual(receipt.publication, publication)) { receipt = { ...receipt, publication }; await journal.writeReceipt(key, receipt); }
   if (receipt.state === 'created') { receipt = { ...receipt, state: 'linked' }; await journal.writeReceipt(key, receipt); }
   return { status: 'linked', pullRequest: pr.number, head: published.head };
+}
+
+// Reconcile a known partial effect; never turn its failed producer into success.
+export async function recoverEpicCorrection({ api, repository, owner, child, runId, number, head, base, save, load, readArtifact = readActionsJson }) {
+  if (!Number.isSafeInteger(number) || number < 1 || !/^[a-f0-9]{40}$/.test(head ?? '') || !/^[a-f0-9]{40}$/.test(base ?? '') || typeof save !== 'function') throw Error('Recovery requires the exact PR, head, base and retained observation');
+  const observed = await inspectEpicPublication({ api, repository, owner, child, runId, load, readArtifact, partial: true });
+  const { snapshot, run, dispatch, pr, current } = observed;
+  if (pr.number !== number || pr.head.sha !== head || !['unknown', 'failed'].includes(dispatch.receipt.status)) throw Error('Partial epic correction or reservation changed');
+  const runtime = await readArtifact(api, repository, run.id, `lighthouse-implement-result-${child}-1`, 'runtime.json');
+  const cleanup = runtime?.cleanup;
+  if (cleanup?.status !== 'clean' || cleanup.identity?.runId !== snapshot.runId || cleanup.identity?.repository !== repository || String(cleanup.identity?.workflowRunId) !== String(run.id) || cleanup.identity?.attempt !== 1 || !Array.isArray(cleanup.remaining) || cleanup.remaining.length || cleanup.removalErrors !== 0) throw Error('Partial epic correction cleanup is unconfirmed');
+  const verify = async () => {
+    const issue = await api(`issues/${child}`), comments = await issueComments(api, child);
+    if (issue.state !== 'open' || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info'].includes(label.name)) || taskDigest(issue, comments.filter(comment => isOwnerAnswer(comment, owner))) !== snapshot.taskDigest) throw Error('Partial epic correction intent changed or is reserved');
+    const dependencies = await inspectEpicDependencies({ api, repository, owner, child, current, load, readArtifact });
+    const fresh = await api(`pulls/${number}`);
+    if (dependencies.baseSha !== base || snapshot.epic.baseSha !== base || fresh.head?.sha !== head || fresh.head?.ref !== pr.head.ref || fresh.head.repo?.full_name !== repository || fresh.base?.repo?.full_name !== repository || (await api(`git/ref/heads/${pr.head.ref}`)).object?.sha !== head || fresh.id !== pr.id || fresh.state !== 'open' || fresh.base?.ref !== current.base) throw Error('Partial epic correction source or PR changed');
+    await checkDispatchClaim(api, repository, child, snapshot.dispatch, run.id);
+    if (!['unknown', 'failed'].includes(readDispatchReceipt(await api(`issues/comments/${snapshot.dispatch.commentId}`), repository, child).status)) throw Error('Partial epic reservation state changed');
+  };
+  await verify();
+  const result = { schemaVersion: 1, status: 'reconciled', kind: 'partial-publication-recovery', originalRun: String(run.id), originalConclusion: run.conclusion, repository, child, pullRequest: number, head, base, reservation: 'failed', effects: 'Existing checked commit and PR confirmed; no agent, Git ref, PR, CI or merge replayed.' };
+  await save({ ...result, state: 'intent' });
+  await verify();
+  if (dispatch.receipt.status !== 'failed') await finishDispatch(api, repository, child, snapshot.dispatch.commentId, run.id, 'failed');
+  const receipt = readDispatchReceipt(await api(`issues/comments/${snapshot.dispatch.commentId}`), repository, child);
+  if (receipt.status !== 'failed') throw Error('Partial epic reservation reconciliation is unconfirmed');
+  await save({ ...result, state: 'confirmed' });
+  return result;
 }
 
 export async function readyEpicPullRequest({ api, repository, owner, parent, child, number, head, base, journal, authorize, load, loadPolicy, readArtifact, setDraft, ciTrigger }) {
@@ -533,6 +576,14 @@ async function main() {
   const positive = value => /^[1-9][0-9]*$/.test(value ?? '') && Number.isSafeInteger(Number(value));
   const action = inputs.action || 'reconcile';
   if (['refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
+  if (action === 'recover-publication') {
+    if (!positive(inputs.child) || !positive(inputs.run) || !positive(inputs['pull-request']) || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'in_progress' || run.repository?.full_name !== repository || run.head_sha !== env.GITHUB_SHA) throw Error('Partial publication recovery requires an authenticated owner workflow');
+    const current = await authenticateEpicChild({ api, repository, owner, child: Number(inputs.child) });
+    if (current.parent !== issue) throw Error('Partial publication recovery targets another parent');
+    await checkEpicLeaseConfiguration(api, current.sourceRevision);
+    const result = await recoverEpicCorrection({ api, repository, owner, child: Number(inputs.child), runId: inputs.run, number: Number(inputs['pull-request']), head: inputs.head, base: inputs.base, save: value => writeFile(join(dir, 'recovery.json'), JSON.stringify({ ...value, recoveryRun: String(run.id), workflowRevision: run.head_sha })) });
+    console.log(JSON.stringify(result)); return;
+  }
   const result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
   console.log(JSON.stringify(result));
   if (!['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');

@@ -216,3 +216,31 @@ test('a copied, duplicate or untrusted workflow journal is rejected', async t =>
   f.comments.pop(); f.origins.get('100').actor.login = 'other';
   await assert.rejects((await f.open(102)).readReceipt(key), /origin is not trusted/);
 });
+
+
+test('an owner workflow branch retains its own origin separately from the frozen delivery source', async t => {
+  const f = await fixture(t), first = await f.open(100);
+  const intent = { schemaVersion: 1, state: 'intent', correlation };
+  await first.readReceipt(key); await first.writeReceipt(key, intent); await f.finish(100);
+  const workflow = { ...run(101), head_sha: 'c'.repeat(40), head_branch: 'codex/reviewed-epic-recovery' };
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-epic-workflow-origin-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const path = join(dir, 'journal.json');
+  const second = await createEpicJournal({ api: f.api, repository, owner, parent, sourceRevision: revision, defaultBranch: 'main', run: workflow, path, authorize: async () => true, readArtifact: f.readArtifact });
+  assert.equal((await second.readReceipt(key)).state, 'intent');
+  const linked = { ...intent, state: 'linked', resource: { id: 123, number: 9 } };
+  await second.writeReceipt(key, { ...linked, state: 'created' }); await second.writeReceipt(key, linked);
+  const retained = JSON.parse(await readFile(path, 'utf8'));
+  f.origins.set('101', { ...workflow, status: 'completed' }); f.artifacts.set('101', retained);
+  assert.equal(retained.revision, revision); assert.equal(retained.workflowRevision, workflow.head_sha); assert.equal(retained.workflowRef, workflow.head_branch);
+  assert.equal((await (await f.open(102)).readReceipt(key)).state, 'linked');
+  const args = { api: f.api, repository, owner, correlation, sourceRevision: revision, defaultBranch: 'main', resource: linked.resource, readArtifact: f.readArtifact };
+  assert.equal((await readEpicResourceReceipt(args)).state, 'linked');
+  f.origins.get('101').head_sha = revision;
+  await assert.rejects(readEpicResourceReceipt(args), /origin is not trusted/);
+  f.origins.get('101').head_sha = workflow.head_sha;
+  retained.workflowRef = 'copied';
+  await assert.rejects(readEpicResourceReceipt(args), /artifact is missing or differs/);
+  retained.workflowRef = workflow.head_branch;
+  retained.revision = 'd'.repeat(40);
+  await assert.rejects(readEpicResourceReceipt(args), /artifact is missing or differs/);
+});
