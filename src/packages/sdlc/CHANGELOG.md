@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.10
+
+### Patch Changes
+
+- ece9c23: # Confirm live implementation base references
+
+  Confirm implementation publication and CI authority against the live target branch ref when GitHub retains an older PR base snapshot.
+
 ## 0.20.9
 
 ### Patch Changes
