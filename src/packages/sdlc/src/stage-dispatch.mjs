@@ -201,7 +201,8 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   }
   if (isBotEpicRefinement(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
     const verified = await (await import('./epic-dispatch.mjs')).verifyEpicRefinementOrigin(api, { repository, owner, child: issue, parent: Number(request.event.inputs.epic_parent), runId: request.event.inputs.epic_run }, { readArtifact });
-    if (!isDeepStrictEqual(verified.current.epic, request.epic) || verified.current.taskDigest !== request.taskDigest) throw Error('Epic refinement authority changed');
+    const { baseSha, ...epic } = request.epic;
+    if (baseSha !== undefined && !sha(baseSha) || !isDeepStrictEqual(verified.current.epic, epic) || verified.current.taskDigest !== request.taskDigest) throw Error('Epic refinement authority changed');
   }
   if (request.ciRepair && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) {
     const ci = await api(`actions/runs/${request.ciRepair.run}/attempts/${request.ciRepair.runAttempt}`);

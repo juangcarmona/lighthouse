@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Refine dependent epic children against the authenticated accepted integration base. Keep main-bound policy and triage evidence separate, recheck dependency inclusion before publication, and reject changed or revoked prerequisites.
+
 - 9851570: # Resume confirmed epic merge refusals
 
   Retain confirmed HTTP405 epic merge refusals so a later authorized acceptance can retry after fresh checks. Keep uncertain merge outcomes reconciliation-only and preserve the refused head, base, candidate and review in the authenticated journal.
