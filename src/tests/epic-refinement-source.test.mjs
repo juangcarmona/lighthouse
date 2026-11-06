@@ -51,7 +51,7 @@ registerHooks({ load(url, context, next) {
   return { format:'module', shortCircuit:true, source:'import { readFileSync } from "node:fs"; const file='+JSON.stringify(file)+'; export * from '+original+'; '+extra };
 }});
 `);
-  const run = (command = 'prepare') => spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, command], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repository, GITHUB_REPOSITORY_OWNER: owner, GITHUB_ACTOR: owner, GITHUB_TRIGGERING_ACTOR: owner, GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_SHA: workflow, GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: String(child), LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_EPIC_ENABLED: 'true', RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
+  const run = (command = 'prepare') => spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, command], { encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: repository, GITHUB_REPOSITORY_OWNER: owner, GITHUB_ACTOR: owner, GITHUB_TRIGGERING_ACTOR: owner, GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_EVENT_PATH: join(dir, 'event.json'), GITHUB_OUTPUT: join(dir, 'outputs'), GITHUB_STEP_SUMMARY: join(dir, 'summary'), GITHUB_SHA: workflow, GITHUB_RUN_ID: '200', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_ISSUE: String(child), LIGHTHOUSE_RUN_DIR: dir, LIGHTHOUSE_EPIC_ENABLED: 'true', RUNNER_TEMP: dir, GH_TOKEN: 'fixture' } });
   return { dir, run };
 }
 
