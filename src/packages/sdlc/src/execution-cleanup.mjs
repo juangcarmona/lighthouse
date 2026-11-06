@@ -102,6 +102,7 @@ function openOwner(path, record, run) {
         if (resource && row.owner === record.key) resource.pending = false;
       }
       persist(path, record);
+      return record.resources.every(resource => !resource.pending);
     },
     cleanup() {
       const receipt = { schemaVersion: 1, identity: record.identity, owner: record.key, observedAt: new Date().toISOString(), status: 'unknown', resources: record.resources, remaining: [], removalErrors: 0 };
