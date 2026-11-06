@@ -12,7 +12,7 @@ function fixture(epic = false) {
   const issue = { title: 'Bounded summary', body: 'Classify the supplied observations.', state: 'open', labels: [{ name: 'agent-working' }] };
   const snapshot = { issue: 18, repository, title: issue.title, runId, sourceRevision: base, defaultBranch: 'main', taskDigest: taskDigest(issue, []), implementation: { policy: { scope: 'Only the summary', paths: ['src/'], checks: [['npm', 'test']], reviewRequired: false } } };
   if (epic) snapshot.epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: base };
-  const f = { issue, snapshot, pulls: [], pushes: [], requests: [], source: base, reference: null, published: null };
+  const f = { issue, snapshot, pulls: [], pushes: [], requests: [], source: base, reference: null, published: null, baseReference: base };
   f.check = async () => {
     checkPublication(snapshot, issue, [], f.source);
     const published = { publishedHead: f.published?.head.sha };
@@ -23,7 +23,7 @@ function fixture(epic = false) {
     }
     if (snapshot.productResume) checkProductResumePullRequest(await f.api('pulls/7'), repository, snapshot.productResume, published);
     if (snapshot.productAlignment) checkAlignedImplementationPullRequest(await f.api('pulls/7'), repository, snapshot.productAlignment, published);
-    checkImplementationPrInventory(f.pulls, snapshot, f.published);
+    checkImplementationPrInventory(f.pulls, snapshot, f.published, f.published ? (await f.api(`git/ref/heads/${snapshot.epic?.base ?? snapshot.defaultBranch}`))?.object?.sha : undefined);
   };
   f.api = async (path, method = 'GET', body) => {
     if (path === 'pulls' && method === 'POST') {
@@ -33,7 +33,7 @@ function fixture(epic = false) {
     if (path === 'pulls/7') return structuredClone(f.pulls[0]);
     if (path.startsWith('git/ref/heads/lighthouse/implement-')) return { object: { sha: f.pulls[0].head.sha } };
     if (path.startsWith('git/commits/') && method === 'GET') return { tree: { sha: base } };
-    if (path === 'git/ref/heads/lighthouse/epic-146') return { ref: 'refs/heads/lighthouse/epic-146', object: { sha: f.source } };
+    if (path === 'git/ref/heads/main' || path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: f.baseReference } };
     if (path === 'git/commits' && method === 'POST') return { sha: head };
     if (path.startsWith('git/') && method === 'POST') return { sha: base };
     if (path.startsWith('contents/.lighthouse/github.json?')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['ci.yml'] } })).toString('base64') };
@@ -100,7 +100,7 @@ test('publication does not admit competing PRs, changed candidates or revoked ow
     f => { f.pulls[0].id++; },
     f => { f.pulls[0].head.sha = base; },
     f => { f.pulls[0].base.ref = 'other'; },
-    f => { f.pulls[0].base.sha = head; },
+    f => { f.baseReference = head; },
     f => { f.pulls[0].head.repo.full_name = 'other/repo'; },
     f => { f.pulls[0].body = ''; },
     f => { f.pulls[0].merged = true; f.pulls[0].state = 'closed'; },
@@ -146,7 +146,7 @@ test('updated publications reject competing PRs, changed identity and revoked in
       f => { f.pulls.push({ ...structuredClone(f.pulls[0]), id: 701, number: 8 }); },
       f => { f.pulls[0].id++; },
       f => { f.pulls[0].head.sha = base; },
-      f => { f.pulls[0].base.sha = head; },
+      f => { f.baseReference = head; },
       f => { f.pulls[0].base.ref = 'other'; },
       f => { f.pulls[0].state = 'closed'; },
       f => { f.pulls[0].head.repo.full_name = 'other/repo'; },
@@ -192,18 +192,20 @@ test('a lost publication readback cannot cause another PR or CI push', async () 
 
 test('implementation publication waits only for its known old head before starting CI once', async () => {
   for (const role of ['review', 'product', 'product-review', 'aligned']) {
-    for (const scenario of ['delayed', 'never', 'foreign-head', 'foreign-base', 'foreign-repo', 'foreign-base-repo', 'foreign-base-branch', 'foreign-number', 'foreign-branch', 'moved-ref', 'closed']) {
+    for (const scenario of ['delayed', 'never', 'foreign-head', 'stale-base-snapshot', 'refreshed-base-snapshot', 'foreign-base', 'missing-base-ref', 'malformed-base-snapshot', 'foreign-repo', 'foreign-base-repo', 'foreign-base-branch', 'foreign-number', 'foreign-branch', 'moved-ref', 'closed']) {
       const f = await updateFixture(role), original = f.api, previous = f.snapshot.sourceRevision;
       let writes = 0, reads = 0;
       f.api = async (path, method = 'GET', body) => {
         if (path.startsWith('git/refs/heads/') && method === 'PATCH') writes++;
+        if (path === 'git/ref/heads/main') return scenario === 'missing-base-ref' ? null : { object: { sha: scenario === 'foreign-base' ? previous : base } };
         if (path === `git/ref/heads/${f.pulls[0].head.ref}`) return { object: { sha: scenario === 'moved-ref' ? base : head } };
         const value = await original(path, method, body);
         if (path === 'pulls/7' && method === 'GET' && writes) {
           reads++;
           if (scenario === 'never' || scenario === 'delayed' && reads <= 2) value.head.sha = previous;
           if (scenario === 'foreign-head') value.head.sha = base;
-          if (scenario === 'foreign-base') value.base.sha = previous;
+          if (scenario === 'stale-base-snapshot' || scenario === 'refreshed-base-snapshot' && reads <= 2) value.base.sha = previous;
+          if (scenario === 'malformed-base-snapshot') value.base.sha = 'invalid';
           if (scenario === 'foreign-repo') value.head.repo.full_name = 'other/repo';
           if (scenario === 'foreign-base-repo') value.base.repo.full_name = 'other/repo';
           if (scenario === 'foreign-base-branch') value.base.ref = 'other';
@@ -214,12 +216,31 @@ test('implementation publication waits only for its known old head before starti
         return value;
       };
       const publishAndStart = async () => { await f.publish(); return f.start(); };
-      if (scenario === 'delayed') {
+      if (['delayed', 'stale-base-snapshot', 'refreshed-base-snapshot'].includes(scenario)) {
         const requests = await publishAndStart(); assert.equal(requests[0].state, 'observed');
-        assert.deepEqual(f.pushes, [head]); assert.ok(reads >= 3);
+        assert.deepEqual(f.pushes, [head]); if (scenario === 'delayed') assert.ok(reads >= 3);
       } else { await assert.rejects(publishAndStart()); assert.deepEqual(f.pushes, []); }
       assert.equal(writes, 1); assert.equal(f.pulls.length, 1);
       assert.ok(reads <= 25);
     }
+  }
+});
+
+
+test('fresh ordinary and epic publications accept old PR base snapshots only with the admitted live target', async () => {
+  for (const epic of [false, true]) {
+    const f = fixture(epic), api = f.api;
+    f.api = async (path, ...args) => {
+      const value = await api(path, ...args);
+      if (path === 'pulls/7' && (!args[0] || args[0] === 'GET')) value.base.sha = '9'.repeat(40);
+      return value;
+    };
+    await f.publish();
+    const requests = await f.start();
+    assert.ok(requests.every(row => row.state === 'observed' && row.base === base));
+    assert.deepEqual(f.pushes, [head]);
+    f.baseReference = head;
+    await assert.rejects(f.check(), /identity changed/);
+    assert.deepEqual(f.pushes, [head]);
   }
 });

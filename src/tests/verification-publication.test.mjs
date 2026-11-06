@@ -44,6 +44,7 @@ globalThis.fetch = async (url, options) => {
   let value;
   if (path === '') value = { default_branch: 'main' };
   else if (path === 'commits/main') value = { sha: s.base };
+  else if (path === 'git/ref/heads/main' && method === 'GET') value = { object: { sha: s.base } };
   else if (path === 'issues/7') value = s.issue;
   else if (path.startsWith('issues/7/comments?')) value = s.comments;
   else if (path === 'pulls/8') value = s.pr;

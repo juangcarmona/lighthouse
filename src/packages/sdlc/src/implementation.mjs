@@ -15,9 +15,10 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 export async function observeImplementationPublication(api, snapshot, published, wait) {
   const expectedBase = snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision;
   const expectedBranch = snapshot.epic?.base ?? snapshot.implementationReview?.base ?? snapshot.defaultBranch;
+  // An existing PR can retain an older base snapshot; the live target ref binds authority.
   return observeUpdatedProductPull(async path => {
     const current = await api(path);
-    if (current.number !== published.number || published.id !== undefined && current.id !== published.id || current.state !== 'open' || current.merged || current.head?.ref !== published.head.ref || current.head?.repo?.full_name !== snapshot.repository || current.base?.repo?.full_name !== snapshot.repository || current.base?.ref !== expectedBranch || current.base?.sha !== expectedBase || ![snapshot.sourceRevision, published.head.sha].includes(current.head?.sha) || (await api(`git/ref/heads/${published.head.ref}`)).object?.sha !== published.head.sha) throw Error('Implementation changed after publication');
+    if (current.number !== published.number || published.id !== undefined && current.id !== published.id || current.state !== 'open' || current.merged || current.head?.ref !== published.head.ref || current.head?.repo?.full_name !== snapshot.repository || current.base?.repo?.full_name !== snapshot.repository || current.base?.ref !== expectedBranch || !/^[a-f0-9]{40}$/.test(current.base?.sha ?? '') || (await api(`git/ref/heads/${expectedBranch}`))?.object?.sha !== expectedBase || ![snapshot.sourceRevision, published.head.sha].includes(current.head?.sha) || (await api(`git/ref/heads/${published.head.ref}`)).object?.sha !== published.head.sha) throw Error('Implementation changed after publication');
     return current;
   }, published.number, published.head.sha, wait);
 }
