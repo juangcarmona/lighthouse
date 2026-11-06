@@ -2,6 +2,10 @@
 
 ## 0.20.8
 
+- Authenticate owner-selected epic controller workflows separately from the frozen delivery source, preserving legacy journal validation.
+
+- Reconcile confirmed partial epic corrections before releasing their uncertain reservations; retain failed producers and accept authenticated verification-only receipts.
+
 - Reconcile delayed epic PR head readback after a confirmed correction without repeating the Git ref write.
 
 ### Patch Changes

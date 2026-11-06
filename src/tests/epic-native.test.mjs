@@ -10,6 +10,8 @@ import { createEpicJournal } from '../packages/sdlc/src/epic-journal.mjs';
 import { dispatchId, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { changesDigest } from '../packages/sdlc/src/implementation.mjs';
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
+import { taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
+const { recoverEpicCorrection } = await import('../packages/sdlc/src/epic-native.mjs');
 import { createHash } from 'node:crypto';
 
 const repository = 'owner/repo', owner = 'owner', issue = 146, sha = 'a'.repeat(40);
@@ -254,15 +256,19 @@ test('child PR reconciliation authenticates the dispatch, retained checks and ex
   const router = { id: 600, run_attempt: 1, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', actor, triggering_actor: actor, head_sha: sha, head_branch: 'main', repository: { full_name: repository } };
   const blob = createHash('sha1').update('blob 3\0new').digest('hex');
   const pr = { id: 777, number: 7, state: 'open', merged: false, user: bot, head: { ref: `lighthouse/implement-200-${snapshot.runId.slice(0, 12)}`, sha: head, repo: { full_name: repository } }, base: { ref: epic.base, repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${snapshot.runId} -->` };
-  let changedBlob = blob;
+  let changedBlob = blob, partial = false, reservationWrites = 0;
+  const runtime = { cleanup: { status: 'clean', identity: { repository, runId: snapshot.runId, workflowRunId: '700', attempt: 1 }, remaining: [], removalErrors: 0 } };
   const api = async (path, ...args) => {
     if (path === 'issues/200') return f.issues[0];
-    if (path === 'issues/comments/900') return comment;
+    if (path === 'issues/comments/900') { if (args[0] === 'PATCH') { reservationWrites++; comment.body = args[1].body; } return comment; }
+    if (path.startsWith('issues/200/comments?')) return [comment];
+    if (path === `git/ref/heads/${pr.head.ref}`) return { object: { sha: head } };
+    if (path === 'git/ref/heads/lighthouse/epic-146') return { ref: 'refs/heads/lighthouse/epic-146', object: { sha: base } };
     if (path === 'actions/runs/500/attempts/1') return { ...f.run, status: 'completed' };
     if (path === 'actions/runs/600/attempts/1') return router;
     if (path === 'actions/runs/700') return run;
     if (path === 'pulls/7') return pr;
-    if (path === `git/commits/${head}`) return { parents: [{ sha: base }] };
+    if (path === `git/commits/${head}`) return { parents: [{ sha: base }], tree: { sha: 'e'.repeat(40) } };
     if (path === `git/trees/${base}?recursive=1`) return { tree: [] };
     if (path === `git/trees/${head}?recursive=1`) return { tree: [{ path: 'src/a.txt', type: 'blob', mode: '100644', sha: changedBlob }] };
     return f.api(path, ...args);
@@ -270,7 +276,7 @@ test('child PR reconciliation authenticates the dispatch, retained checks and ex
   const readArtifact = async (_api, _repo, id, _name, file) => {
     if (String(id) === '500') return originalJournal;
     if (String(id) === '600') return request;
-    return ({ 'request.json': snapshot, 'envelope.json': envelope, 'changes.json': changes, 'checks.json': checks, 'published-pr.json': { number: 7, head } })[file];
+    return ({ 'request.json': snapshot, 'envelope.json': envelope, 'changes.json': changes, 'checks.json': checks, 'published-pr.json': partial ? null : { number: 7, head }, 'runtime.json': runtime })[file];
   };
   let recorded, writes = 0;
   const journal = { readReceipt: async () => recorded, writeReceipt: async (_key, value) => { recorded = structuredClone(value); writes++; } };
@@ -281,6 +287,48 @@ test('child PR reconciliation authenticates the dispatch, retained checks and ex
   assert.equal(writes, 3);
   changedBlob = 'f'.repeat(40);
   await assert.rejects(reconcileEpicPullRequest(args), /differs from validated content/);
+  changedBlob = blob;
+
+  request.worker = receipt.worker = snapshot.worker = 'apply-review';
+  run.path = '.github/workflows/lighthouse-sdlc-apply-review.lock.yml';
+  snapshot.implementationReview = { number: 7, issue: 200, head, base: epic.base, branch: pr.head.ref, approved: false, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'f'.repeat(64) };
+  snapshot.sourceRevision = checks.sourceRevision = head;
+  changes.length = 0; checks.changesDigest = changesDigest(changes);
+  receipt.digest = digest(JSON.stringify(request)); snapshot.dispatch.digest = receipt.digest;
+  comment.body = dispatchReceiptBody(repository, receipt);
+  assert.equal((await reconcileEpicPullRequest(args)).head, head);
+  snapshot.implementationReview.approved = true;
+  await assert.rejects(reconcileEpicPullRequest(args), /checks or publication/);
+  snapshot.implementationReview.approved = false;
+
+  partial = true; run.conclusion = 'failure'; receipt.status = 'unknown';
+  snapshot.implementationReview.implementationIdentity = snapshot.runId;
+  f.issues[0].labels = [];
+  request.taskDigest = snapshot.taskDigest = taskDigest(f.issues[0], []);
+  receipt.digest = digest(JSON.stringify(request)); snapshot.dispatch.digest = receipt.digest;
+  snapshot.sourceRevision = checks.sourceRevision = snapshot.implementationReview.head = base;
+  snapshot.repository = repository; snapshot.attempt = 1;
+  changes.push({ path: 'src/a.txt', mode: '100644', content: Buffer.from('new').toString('base64') });
+  checks.changesDigest = changesDigest(changes); checks.schemaVersion = 2; checks.candidateTree = 'e'.repeat(40);
+  checks.binding = { repository, issue: 200, runId: snapshot.runId, workflowRunId: '700', attempt: 1, sourceRevision: base, policyRevision: sha, intent: snapshot.taskDigest, policy: digest(JSON.stringify(snapshot.implementation)), planning: digest(JSON.stringify(null)) };
+  comment.body = dispatchReceiptBody(repository, receipt);
+  const saved = [], recover = () => recoverEpicCorrection({ ...args, number: 7, head, base, save: async value => saved.push(value) });
+  await assert.rejects(reconcileEpicPullRequest(args), /checks or publication/);
+  runtime.cleanup.status = 'unknown';
+  await assert.rejects(recover(), /cleanup is unconfirmed/);
+  assert.equal(reservationWrites, 0);
+  runtime.cleanup.status = 'clean'; checks.candidateTree = 'f'.repeat(40);
+  await assert.rejects(recover(), /checked tree/);
+  assert.equal(reservationWrites, 0);
+  checks.candidateTree = 'e'.repeat(40); f.issues[0].labels = [{ name: 'agent-working' }];
+  await assert.rejects(recover(), /reserved/);
+  assert.equal(reservationWrites, 0);
+  f.issues[0].labels = [];
+  const outcome = await recover();
+  assert.equal(outcome.status, 'reconciled'); assert.equal(outcome.originalConclusion, 'failure');
+  assert.equal(reservationWrites, 1); assert.equal(saved.at(-1).state, 'confirmed');
+  assert.equal((await recover()).status, 'reconciled'); assert.equal(reservationWrites, 1);
+  assert.equal(saved.at(-1).reservation, 'failed');
 });
 
 test('owner acceptance merges one authenticated child and leaves the parent open', async t => {

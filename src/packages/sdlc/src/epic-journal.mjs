@@ -41,7 +41,10 @@ function parseEntry(comment, repository, parent) {
   const matches = [...(comment.body ?? '').matchAll(/<!-- lighthouse-epic-journal:(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Missing or ambiguous epic journal marker');
   const value = JSON.parse(matches[0][1]);
-  if (Object.keys(value).sort().join(',') !== 'attempt,key,parent,receipt,repository,revision,runId,schemaVersion' || value.schemaVersion !== 1 || value.repository !== repository || value.parent !== parent || !positive(value.runId) || !Number.isSafeInteger(value.attempt) || value.attempt < 1 || !sha(value.revision) || typeof value.key !== 'string') throw Error('Invalid epic journal identity');
+  const workflow = value.workflowRevision !== undefined || value.workflowRef !== undefined;
+  if (workflow && (!sha(value.workflowRevision) || typeof value.workflowRef !== 'string' || !value.workflowRef || value.workflowRef.length > 250)) throw Error('Invalid epic workflow identity');
+  const fields = ['attempt', 'key', 'parent', 'receipt', 'repository', 'revision', 'runId', 'schemaVersion', ...(workflow ? ['workflowRevision', 'workflowRef'] : [])].sort().join(',');
+  if (Object.keys(value).sort().join(',') !== fields || value.schemaVersion !== 1 || value.repository !== repository || value.parent !== parent || !positive(value.runId) || !Number.isSafeInteger(value.attempt) || value.attempt < 1 || !sha(value.revision) || typeof value.key !== 'string') throw Error('Invalid epic journal identity');
   checkedReceipt(value.key, value.receipt, repository, parent);
   return value;
 }
@@ -56,9 +59,9 @@ export async function readEpicResourceReceipt({ api, repository, owner, correlat
   const { comment, entry } = candidates[0], receipt = entry.receipt;
   if (entry.revision !== sourceRevision || !allowedStates.includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, correlation) || resource && !isDeepStrictEqual(receipt.resource, resource)) throw Error('Epic resource receipt does not match the current identity');
   const origin = await api(`actions/runs/${entry.runId}/attempts/${entry.attempt}`);
-  if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== sourceRevision || origin.head_branch !== defaultBranch || origin.repository?.full_name !== repository) throw Error('Epic resource journal origin is not trusted');
+  if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== (entry.workflowRevision ?? sourceRevision) || origin.head_branch !== (entry.workflowRef ?? defaultBranch) || origin.repository?.full_name !== repository) throw Error('Epic resource journal origin is not trusted');
   const stored = await readArtifact(api, repository, entry.runId, artifactName(parent, entry.attempt), 'journal.json');
-  if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt })) throw Error('Epic resource journal artifact is missing or differs from its comment');
+  if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || stored.workflowRevision !== entry.workflowRevision || stored.workflowRef !== entry.workflowRef || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt })) throw Error('Epic resource journal artifact is missing or differs from its comment');
   return receipt;
 }
 
@@ -80,9 +83,10 @@ export async function readEpicAggregateReceipt(input) {
 }
 
 export async function createEpicJournal({ api, repository, owner, parent, sourceRevision, defaultBranch, run, path, authorize, readArtifact = readActionsJson }) {
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || typeof owner !== 'string' || !positive(parent) || !sha(sourceRevision) || !defaultBranch || !positive(run?.id) || !Number.isSafeInteger(run?.run_attempt) || run.run_attempt < 1 || run.status !== 'in_progress' || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.head_sha !== sourceRevision || run.head_branch !== defaultBranch || run.repository?.full_name !== repository || typeof authorize !== 'function' || typeof path !== 'string') throw Error('Epic journal requires an authenticated owner workflow');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || typeof owner !== 'string' || !positive(parent) || !sha(sourceRevision) || !defaultBranch || !positive(run?.id) || !Number.isSafeInteger(run?.run_attempt) || run.run_attempt < 1 || run.status !== 'in_progress' || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.actor?.login !== owner || run.triggering_actor?.login !== owner || !sha(run.head_sha) || typeof run.head_branch !== 'string' || !run.head_branch || run.head_branch.length > 250 || run.repository?.full_name !== repository || typeof authorize !== 'function' || typeof path !== 'string') throw Error('Epic journal requires an authenticated owner workflow');
   parent = Number(parent);
-  const journal = { schemaVersion: 1, repository, parent, revision: sourceRevision, runId: String(run.id), attempt: run.run_attempt, entries: {} };
+  const workflow = run.head_sha === sourceRevision && run.head_branch === defaultBranch ? {} : { workflowRevision: run.head_sha, workflowRef: run.head_branch };
+  const journal = { schemaVersion: 1, repository, parent, revision: sourceRevision, ...workflow, runId: String(run.id), attempt: run.run_attempt, entries: {} };
   const loaded = new Map();
   const save = () => writeFile(path, JSON.stringify(journal));
   await save();
@@ -97,10 +101,10 @@ export async function createEpicJournal({ api, repository, owner, parent, source
     if (entry.runId === String(run.id) && entry.attempt === run.run_attempt) stored = journal;
     else {
       const origin = await api(`actions/runs/${entry.runId}/attempts/${entry.attempt}`);
-      if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== run.path || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== sourceRevision || origin.head_branch !== defaultBranch || origin.repository?.full_name !== repository) throw Error('Epic journal origin is not trusted');
+      if (String(origin.id) !== String(entry.runId) || origin.run_attempt !== entry.attempt || origin.path !== run.path || origin.event !== 'workflow_dispatch' || origin.status !== 'completed' || origin.actor?.login !== owner || origin.triggering_actor?.login !== owner || origin.head_sha !== (entry.workflowRevision ?? sourceRevision) || origin.head_branch !== (entry.workflowRef ?? defaultBranch) || origin.repository?.full_name !== repository) throw Error('Epic journal origin is not trusted');
       stored = await readArtifact(api, repository, entry.runId, artifactName(parent, entry.attempt), 'journal.json');
     }
-    if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt: entry.receipt })) throw Error('Epic journal artifact is missing or differs from its comment');
+    if (!stored || stored.schemaVersion !== 1 || stored.repository !== repository || stored.parent !== parent || stored.revision !== sourceRevision || stored.workflowRevision !== entry.workflowRevision || stored.workflowRef !== entry.workflowRef || String(stored.runId) !== String(entry.runId) || stored.attempt !== entry.attempt || !isDeepStrictEqual(stored.entries?.[key], { commentId: comment.id, receipt: entry.receipt })) throw Error('Epic journal artifact is missing or differs from its comment');
     loaded.set(key, { comment, receipt: entry.receipt });
     return entry.receipt;
   }
@@ -119,7 +123,7 @@ export async function createEpicJournal({ api, repository, owner, parent, source
     }
     if (!previous && receipt.state !== 'intent') throw Error('Epic journal must start with intent');
     if (await authorize() !== true) throw Error('Epic journal authorization changed');
-    const entry = { schemaVersion: 1, repository, parent, revision: sourceRevision, runId: String(run.id), attempt: run.run_attempt, key, receipt };
+    const entry = { schemaVersion: 1, repository, parent, revision: sourceRevision, ...workflow, runId: String(run.id), attempt: run.run_attempt, key, receipt };
     const body = `${marker}${JSON.stringify(entry).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e')} -->`;
     const comment = previous ? await api(`issues/comments/${previous.comment.id}`, 'PATCH', { body }) : await api(`issues/${parent}/comments`, 'POST', { body });
     if (!isDeepStrictEqual(parseEntry(comment, repository, parent), entry)) throw Error('Epic journal write could not be confirmed');
