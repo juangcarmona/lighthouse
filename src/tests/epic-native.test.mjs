@@ -335,7 +335,9 @@ test('owner acceptance merges one authenticated child and leaves the parent open
   artifacts.set('503', JSON.parse(await readFile(acceptancePath, 'utf8')));
   f.issues[1].state = 'open';
   const dependent = await authenticateEpicChild({ api, repository, owner, child: 201, load: f.load, readArtifact });
-  assert.deepEqual(await inspectEpicDependencies({ api, repository, owner, child: 201, current: dependent, load: f.load, readArtifact, loadPolicy: args.loadPolicy }), { baseSha: mergedCommit });
+  const inclusion = await inspectEpicDependencies({ api, repository, owner, child: 201, current: dependent, load: f.load, readArtifact, loadPolicy: args.loadPolicy });
+  assert.equal(inclusion.baseSha, mergedCommit);
+  assert.equal(inclusion.dependencies[0].mergeCommit, mergedCommit);
   const repeated = await runEpicAction({ ...args, run: { ...f.run, id: 504 }, journalPath: `${f.path}.repeat` });
   assert.equal(repeated.recovered, true);
   assert.equal(mergeCalls, 1);

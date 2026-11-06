@@ -35,7 +35,7 @@ function fixture() {
 
 test('dependency acceptance requires a retained merge in the current epic history', async () => {
   const f = fixture();
-  assert.deepEqual(await f.run(), { baseSha });
+  assert.deepEqual(await f.run(), { baseSha, dependencies: [{ slice: 'first', issue: 10, pullRequest: 20, head, mergeCommit: commit, approvedBase: priorBase, checkedCandidate: candidate, review: 5, checks: 'passed', includedIn: baseSha, historyStatus: 'ahead' }] });
 });
 
 test('dependency admission stops for incomplete, changed or unverified evidence', async () => {

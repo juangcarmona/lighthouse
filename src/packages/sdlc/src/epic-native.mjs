@@ -117,7 +117,7 @@ export async function inspectEpicDependencies({ api, repository, owner, child, c
   if (!marker || marker.parent !== current.parent || marker.slice !== current.slice || marker.planDigest !== current.planDigest) throw Error('Epic child correlation changed');
   const branch = await api(`git/ref/heads/${current.base}`), baseSha = branch.object?.sha;
   if (branch.ref !== `refs/heads/${current.base}` || !/^[a-f0-9]{40}$/.test(baseSha ?? '')) throw Error('Epic integration branch is unavailable');
-  const repo = await api(''), expectedIds = [];
+  const repo = await api(''), expectedIds = [], dependencies = [];
   for (const dependency of marker.dependencies) {
     const childCorrelation = epicCorrelation({ repository, parent: current.parent, slice: dependency, planDigest: current.planDigest, base: current.base, dependencies: [] });
     const candidates = await findCandidates(api, childCorrelation);
@@ -132,11 +132,12 @@ export async function inspectEpicDependencies({ api, repository, owner, child, c
     const merged = await verifyAcceptedEpicMerge(api, { repository, owner, sourceRevision: current.sourceRevision, base: current.base, receipt, loadPolicy });
     const comparison = await api(`compare/${merged.commit}...${baseSha}`);
     if (!['identical', 'ahead'].includes(comparison.status) || comparison.merge_base_commit?.sha !== merged.commit) throw Error('Epic dependency is not included in the current base');
+    dependencies.push({ slice: dependency, issue: prior.number, pullRequest: receipt.resource.number, head: merged.head, mergeCommit: merged.commit, approvedBase: merged.base, checkedCandidate: merged.candidate, review: merged.review, checks: 'passed', includedIn: baseSha, historyStatus: comparison.status });
   }
   const native = await list(api, `issues/${child}/dependencies/blocked_by`);
   if (native.some(item => !Number.isSafeInteger(item.id)) || !isDeepStrictEqual(native.map(item => item.id).sort((a, b) => a - b), expectedIds.sort((a, b) => a - b))) throw Error('Native epic dependencies differ from the authorized plan');
   if ((await api(`git/ref/heads/${current.base}`)).object?.sha !== baseSha || !isDeepStrictEqual(await authenticate({ api, repository, owner, child, load, readArtifact }), current)) throw Error('Epic authority or base changed while checking dependencies');
-  return { baseSha };
+  return { baseSha, dependencies };
 }
 
 export async function checkEpicCapacity({ api, repository, owner, child, current, capacity, excludeRequest, load, prepare = prepareNativeEpic, findCandidates = findEpicCandidates }) {
