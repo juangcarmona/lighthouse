@@ -1,7 +1,7 @@
 import { closeSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile, symlink, rm, cp } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, symlink, rm, cp, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -95,9 +95,11 @@ test('engine adapter preserves structured evidence while streaming readable outp
     ];
     const shim = join(bin, 'docker');
     await writeFile(shim, `#!${process.execPath}
-require(${JSON.stringify(resourceShim)})(process.argv.slice(2));
 const fs = require('node:fs');
 const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(join(root, 'docker-calls.jsonl'))}, JSON.stringify(args)+'\\n');
+require(${JSON.stringify(resourceShim)})(args);
+if (['image', 'run'].includes(args[0]) && !fs.existsSync(${JSON.stringify(join(root, 'image-ready'))})) { console.error('No such image: '+${JSON.stringify(`sha256:${'a'.repeat(64)}`)}); process.exit(125); }
 if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
 if(args.includes('chown')) process.exit(0);
 if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);}
@@ -108,6 +110,19 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
 }
 `);
     await chmod(shim, 0o755);
+    const missing = spawnSync(process.execPath, [join(work, '.lighthouse-harness/src/packages/sdlc/src/opencode-execute.mjs')], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stderr, /No such image/);
+    const failedRuntime = JSON.parse(await readFile(join(runDir, 'runtime.json')));
+    assert.equal(failedRuntime.phases.preflight, 'failed');
+    assert.equal(failedRuntime.cleanup, undefined);
+    assert.deepEqual(await readdir(join(root, 'engine.lock.resources')), []);
+    const calls = (await readFile(join(root, 'docker-calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+    assert.ok(calls.some(args => args[0] === 'image'));
+    assert.ok(calls.every(args => args[0] !== 'run' && !(args[0] === 'network' && args[1] === 'create')));
+    await assert.rejects(readFile(join(runDir, 'envelope.json')));
+    await assert.rejects(readFile(join(root, 'safeoutputs', 'outputs.jsonl')));
+    await writeFile(join(root, 'image-ready'), 'provisioned');
     const execution = spawnSync(process.execPath, [join(work, '.lighthouse-harness/src/packages/sdlc/src/opencode-execute.mjs')], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config.json'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt.txt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs', 'outputs.jsonl') } });
     assert.equal(execution.status, 0, execution.stdout + execution.stderr);
     assert.equal(await readFile(join(work, 'tools/adopter.txt'), 'utf8'), 'Tracked adopter tool');
@@ -251,7 +266,7 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
 test('declared environment preflights before agent, validates with fresh services, and cleans failures', async () => {
   const { mkdir, chmod } = await import('node:fs/promises');
   const { spawnSync } = await import('node:child_process');
-  for (const outcome of ['success', 'missing-sdk', 'missing-agent', 'agent-failure', 'agent-cancel', 'ownership-changed']) {
+  for (const outcome of ['success', 'missing-image', 'invalid-image-entrypoint', 'missing-sdk', 'missing-agent', 'agent-failure', 'agent-cancel', 'ownership-changed']) {
     const root = await mkdtemp(join(tmpdir(), 'lighthouse-environment-'));
     try {
       const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1'), callsFile = join(root, 'calls.jsonl');
@@ -268,7 +283,10 @@ test('declared environment preflights before agent, validates with fresh service
 require(${JSON.stringify(resourceShim)})(process.argv.slice(2));
 const fs = require('node:fs'), args = process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(callsFile)}, JSON.stringify(args)+'\\n');
-if (args[0] === 'image') { console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']})); process.exit(0); }
+if (args[0] === 'image') {
+ if (${JSON.stringify(outcome)} === 'missing-image') { console.error('No such image: '+args.at(-1)); process.exit(1); }
+ console.log(JSON.stringify({entrypoint:${JSON.stringify(outcome === 'invalid-image-entrypoint' ? [] : ['/usr/local/bin/lighthouse-engine'])}})); process.exit(0);
+}
 const mount = dst => args.find(a => a.startsWith('type=bind,src=') && a.endsWith(',dst='+dst))?.slice(14).split(',dst=')[0];
 if(args.includes('cleanup-session') || args[0]==='rm' || args[0]==='network' || args.includes('chown')) process.exit(0);
 if(args.includes('-d')) process.exit(0);
@@ -294,7 +312,16 @@ if(mount('/output')) {
       const calls = (await readFile(callsFile, 'utf8')).trim().split('\n').map(JSON.parse);
       const agents = calls.filter(a => a.some(v => v.endsWith(',dst=/output')));
       const services = calls.filter(a => a[0] === 'run' && a.includes('-d'));
-      if (outcome === 'missing-sdk' || outcome === 'missing-agent') {
+      if (outcome === 'missing-image' || outcome === 'invalid-image-entrypoint') {
+        assert.notEqual(execution.status, 0);
+        assert.equal(agents.length, 0); assert.equal(services.length, 0);
+        assert.ok(calls.some(args => args[0] === 'image' && args.at(-1) === image));
+        assert.ok(calls.every(args => args[0] !== 'run' && !(args[0] === 'network' && args[1] === 'create')));
+        assert.match(execution.stderr, outcome === 'missing-image' ? /No such image/ : /Engine image has no valid entrypoint/);
+        const receipt = JSON.parse(await readFile(join(runDir, 'runtime.json')));
+        assert.equal(receipt.phases.preflight, 'failed'); assert.equal(receipt.cleanup, undefined);
+        await assert.rejects(readFile(join(runDir, 'envelope.json')));
+      } else if (outcome === 'missing-sdk' || outcome === 'missing-agent') {
         assert.notEqual(execution.status, 0); assert.equal(agents.length, 0); assert.equal(services.length, 0);
         assert.match(execution.stderr, outcome === 'missing-sdk' ? /prerequisite failed: .NET SDK/ : /prerequisite failed: OpenCode 2.1.0/);
       } else {
