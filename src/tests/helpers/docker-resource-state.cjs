@@ -3,7 +3,12 @@ module.exports = args => {
   const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
   const file = path.join(path.dirname(process.argv[1]), '.docker-resource-state.json');
   const read = () => fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
-  const write = rows => fs.writeFileSync(file, JSON.stringify(rows));
+  const write = rows => {
+    // Inventory reads can overlap the foreground container's exit handler.
+    const staging = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(staging, JSON.stringify(rows));
+    fs.renameSync(staging, file);
+  };
   const type = args[0] === 'run' ? 'container' : args[0] === 'network' && args[1] === 'create' ? 'network' : null;
   if (type) {
     const declared = args[args.indexOf('--label') + 1];
