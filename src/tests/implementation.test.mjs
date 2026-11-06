@@ -263,7 +263,8 @@ test('epic review updates the same PR after rechecking its shared base and autho
     const api = async (path, method, body) => {
       calls.push({ path, method, body });
       if (path === `git/ref/heads/${epic.base}`) return { object: { sha: epic.baseSha } };
-      if (path === 'pulls/34' && method !== 'PATCH') return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: calls.some(call => call.path.startsWith('git/refs/heads/')) ? 'created' : request.sourceRevision }, base: { ref: epic.base } };
+      if (path === `git/ref/heads/${reviewed.implementationReview.branch}`) return { object: { sha: 'created' } };
+      if (path === 'pulls/34' && method !== 'PATCH') return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: calls.some(call => call.path.startsWith('git/refs/heads/')) ? 'created' : request.sourceRevision, ref: reviewed.implementationReview.branch }, base: { ref: epic.base } };
       return { sha: 'created', tree: { sha: 'tree' } };
     };
     const publish = () => createImplementationPullRequest(api, reviewed, [change], 'Updated', '', true, async () => calls.push({ path: 'before' }), async () => { calls.push({ path: 'after' }); if (revoked) throw Error('revoked'); });
@@ -335,5 +336,33 @@ test('verification-only owner correction returns the same PR and never writes Gi
       assert.equal((await publish()).number, 34);
     } else await assert.rejects(publish(), /changed|revoked|No implementation changes/);
     assert.equal(calls.some(call => call.method !== 'GET'), false, scenario);
+  }
+});
+
+
+test('epic correction reconciles delayed PR readback without repeating a ref write', async () => {
+  for (const scenario of ['delayed', 'never', 'foreign-head', 'foreign-branch', 'moved-ref', 'moved-base', 'revoked']) {
+    const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: 'c'.repeat(40) };
+    const branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
+    const snapshot = { ...request, epic, implementationReview: { number: 34, head: request.sourceRevision, base: epic.base, branch } };
+    let written = false, reads = 0, writes = 0, descriptions = 0, checked = false;
+    const api = async (path, method) => {
+      if (path === `git/ref/heads/${epic.base}`) return { object: { sha: scenario === 'moved-base' && written ? 'moved' : epic.baseSha } };
+      if (path === `git/ref/heads/${branch}`) return { object: { sha: scenario === 'moved-ref' ? 'foreign' : 'created' } };
+      if (path === `git/refs/heads/${branch}`) { written = true; writes++; return { object: { sha: 'created' } }; }
+      if (path === 'pulls/34' && method === 'PATCH') { descriptions++; return {}; }
+      if (path === 'pulls/34') {
+        if (written) reads++;
+        return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: !written || scenario === 'never' || reads === 1 ? request.sourceRevision : scenario === 'foreign-head' ? 'foreign' : 'created', ref: scenario === 'foreign-branch' && written ? 'foreign' : branch }, base: { ref: epic.base } };
+      }
+      return { sha: 'created', tree: { sha: 'tree' } };
+    };
+    const publish = () => createImplementationPullRequest(api, snapshot, [change], 'Corrected.', '', true, async () => {}, async () => { checked = true; if (scenario === 'revoked') throw Error('revoked'); });
+    if (scenario === 'delayed') { assert.equal((await publish()).head.sha, 'created'); assert.equal(reads, 2); }
+    else await assert.rejects(publish(), scenario === 'revoked' ? /revoked/ : /Epic (?:PR|base)/);
+    assert.equal(writes, 1);
+    assert.equal(descriptions, scenario === 'delayed' ? 1 : 0);
+    assert.equal(checked, ['delayed', 'revoked'].includes(scenario));
+    assert.ok(reads <= 4);
   }
 });

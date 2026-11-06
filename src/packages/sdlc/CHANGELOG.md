@@ -2,6 +2,8 @@
 
 ## 0.20.8
 
+- Reconcile delayed epic PR head readback after a confirmed correction without repeating the Git ref write.
+
 ### Patch Changes
 
 - Supply host-verified dependency acceptance, review, check and history evidence to child workers so an accepted prerequisite does not become an artificial model blocker.
