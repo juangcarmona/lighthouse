@@ -1,5 +1,21 @@
 # @juangcarmona/lighthouse
 
+## 0.12.41
+
+### Patch Changes
+
+- c014bef: # Validate GitHub label descriptions
+
+  Validate GitHub label descriptions before adoption writes and shorten the default integration label description to fit the provider limit. Recheck older authorized plans against current validation while preserving existing labels and partial-effect evidence.
+
+- Updated dependencies [9851570]
+- Updated dependencies [a98affa]
+- Updated dependencies [c014bef]
+- Updated dependencies [fe0bdce]
+- Updated dependencies [4d10ee7]
+- Updated dependencies [dd66b3c]
+  - @juangcarmona/lighthouse-sdlc@0.20.8
+
 ## 0.12.40
 
 ### Patch Changes
