@@ -165,14 +165,14 @@ export function checkPublication(snapshot, issue, comments, revision) {
   if (taskDigest(issue, comments) !== snapshot.taskDigest) throw Error('Issue or owner answers changed; request refinement again');
 }
 
-export function checkImplementationPrInventory(pulls, snapshot, published = null) {
+export function checkImplementationPrInventory(pulls, snapshot, published = null, baseRevision) {
   let permitted = snapshot.implementationReview?.number ?? snapshot.productResume?.pullRequest ?? snapshot.productAlignment?.parent.pullRequest?.number;
   if (published) {
     const expected = checkImplementationPullRequest(published, snapshot.repository);
     const current = pulls.find(pr => pr.number === published.number);
     const identity = snapshot.productResume ? digest(JSON.stringify({ issue: snapshot.issue, applyIntent: snapshot.productResume.receiptIntent })) : snapshot.implementationReview?.implementationIdentity ?? (permitted === undefined ? snapshot.runId : null);
     const base = snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision;
-    if (permitted !== undefined && published.number !== permitted || !Number.isSafeInteger(published.id) || published.id < 1 || expected.issue !== snapshot.issue || identity && expected.implementationIdentity !== identity || expected.base !== (snapshot.epic?.base ?? snapshot.defaultBranch) || published.base.sha !== base || !current || current.id !== published.id || current.base?.sha !== published.base.sha) throw Error('Published implementation identity changed');
+    if (permitted !== undefined && published.number !== permitted || !Number.isSafeInteger(published.id) || published.id < 1 || expected.issue !== snapshot.issue || identity && expected.implementationIdentity !== identity || expected.base !== (snapshot.epic?.base ?? snapshot.defaultBranch) || baseRevision !== base || !/^[a-f0-9]{40}$/.test(published.base?.sha ?? '') || !current || current.id !== published.id || !/^[a-f0-9]{40}$/.test(current.base?.sha ?? '')) throw Error('Published implementation identity changed');
     checkImplementationPullRequest(current, snapshot.repository, expected);
     permitted = published.number;
   }
@@ -969,7 +969,8 @@ async function main(command) {
             else await checkReviewCurrent(api, repo, snapshot.implementationReview, true, publication);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.implementationReview.number, owner))) !== snapshot.implementationReview.threadDigest) throw Error('PR feedback changed');
           }
-          checkImplementationPrInventory(pulls, snapshot, publishedPr);
+          const baseReference = publishedPr ? await api(`git/ref/heads/${snapshot.epic?.base ?? snapshot.defaultBranch}`) : null;
+          checkImplementationPrInventory(pulls, snapshot, publishedPr, baseReference?.object?.sha);
         };
         if (!changes.length) recheckVerifiedCandidate = checkAuthority;
         const recheck = async () => { await recheckPublication(); if (changes.length) await checkAuthority(); };

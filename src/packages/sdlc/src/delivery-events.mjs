@@ -183,12 +183,14 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
   try {
     const current = await api(`pulls/${pr.number}`), repository = current.head.repo?.full_name;
     if (current.number !== pr.number || current.state !== 'open' || current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || !/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || current.base?.repo?.full_name !== repository || !sha(current.base?.sha) || !sha(revision)) { operation.code = 'head-changed'; throw Error('CI subject changed'); }
-    const base = current.base.sha, baseBranch = current.base.ref, branch = verificationBranch(pr.number, pr.head.sha);
+    const baseBranch = current.base.ref, branch = verificationBranch(pr.number, pr.head.sha);
+    const base = (await api(`git/ref/heads/${baseBranch}`))?.object?.sha;
+    if (!sha(base)) { operation.code = 'base-changed'; throw Error('CI base reference is unavailable'); }
     const recheck = async () => {
       await beforeWrite();
       const fresh = await api(`pulls/${pr.number}`);
       if (fresh.state !== 'open' || fresh.head.sha !== pr.head.sha || fresh.head.ref !== pr.head.ref) { operation.code = 'head-changed'; throw Error('CI head changed'); }
-      if (fresh.base?.sha !== base || fresh.base.ref !== baseBranch) { operation.code = 'base-changed'; throw Error('CI base changed'); }
+      if (fresh.base?.ref !== baseBranch || (await api(`git/ref/heads/${baseBranch}`))?.object?.sha !== base) { operation.code = 'base-changed'; throw Error('CI base changed'); }
     };
     for (const workflow of workflows) {
       const path = `contents/.github/workflows/${workflow}?ref=`;

@@ -6,13 +6,14 @@ const head = 'a'.repeat(40), revision = 'b'.repeat(40), blob = 'c'.repeat(40), r
 const pr = { number: 12, state: 'open', head: { sha: head, ref: 'lighthouse/implement-9', repo: { full_name: repository } }, base: { sha: revision, ref: 'main', repo: { full_name: repository } } };
 const branch = 'lighthouse/verification-12-' + head, now = Date.parse('2026-11-05T06:00:00Z');
 function fixture() {
-  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null, inventoryCalls: 0, inventoryErrors: [], workflowErrors: [], workflowReads: 0, afterWriteError: null };
+  const state = { ref: null, visible: false, calls: 0, saved: null, checkpoints: [], changed: null, mode: null, inventoryCalls: 0, inventoryErrors: [], workflowErrors: [], workflowReads: 0, afterWriteError: null, staleBaseSnapshot: null };
   const checkpoint = async requests => { state.saved = structuredClone(requests); state.checkpoints.push(state.saved); };
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET', 'Only the narrow App trigger may write');
     if (path.startsWith('contents/.lighthouse/')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['ci.yml', 'package.yml'] } })).toString('base64') };
-    if (path === 'pulls/12') return { ...pr, ...(state.changed === 'head' ? { head: { ...pr.head, sha: 'd'.repeat(40) } } : {}), ...(state.changed === 'base' ? { base: { ...pr.base, sha: 'd'.repeat(40) } } : {}) };
+    if (path === 'pulls/12') return { ...pr, ...(state.changed === 'head' ? { head: { ...pr.head, sha: 'd'.repeat(40) } } : {}), ...(state.changed === 'base' ? { base: { ...pr.base, sha: 'd'.repeat(40) } } : state.staleBaseSnapshot ? { base: { ...pr.base, sha: state.staleBaseSnapshot } } : {}) };
     if (path.startsWith('contents/.github/workflows/')) { state.workflowReads++; if (state.workflowErrors.length) throw state.workflowErrors.shift(); return { type: 'file', sha: state.changed === 'workflow' && path.endsWith(head) ? 'd'.repeat(40) : blob }; }
+    if (path === 'git/ref/heads/main') return state.mode === 'missing-base-ref' ? null : { object: { sha: state.mode === 'invalid-base-ref' ? 'invalid' : state.changed === 'base' ? 'd'.repeat(40) : revision } };
     if (path.startsWith('git/ref/heads/')) { assert.equal(path, 'git/ref/heads/' + branch); return state.ref; }
     const workflow = path.match(/^actions\/workflows\/(ci|package)\.yml\/runs\?head_sha=/)?.[1];
     assert.ok(workflow, path);
@@ -28,6 +29,7 @@ function fixture() {
     assert.ok(state.saved.every(request => request.state === 'requested'), 'Effect intent must be retained before the App call');
     assert.equal(input.branch, branch); assert.equal(input.head, head);
     if (state.mode === 'changed-after-mint') state.changed = 'base';
+    if (state.mode === 'snapshot-refresh-after-mint') state.staleBaseSnapshot = null;
     await input.beforeWrite();
     if (state.mode === 'unsent') throw Object.assign(Error('App unavailable'), { referenceAttempted: false });
     if (state.mode === 'unknown') throw Object.assign(Error('Lost acknowledgement'), { referenceAttempted: true });
@@ -169,4 +171,24 @@ test('publication CI workflow reads use the same bounded retry without another l
   const denied = fixture(); denied.state.workflowErrors = [Object.assign(Error('denied'), { status: 403 })];
   await assert.rejects(denied.dispatch(), failure => failure.status === 403);
   assert.equal(denied.state.workflowReads, 1); assert.equal(denied.state.calls, 0);
+});
+
+
+test('CI records the live base ref while a PR snapshot is stale or refreshes before the App push', async () => {
+  for (const mode of [null, 'snapshot-refresh-after-mint']) {
+    const f = fixture(); f.state.staleBaseSnapshot = 'e'.repeat(40); f.state.mode = mode;
+    const requests = await f.dispatch();
+    assert.equal(f.state.calls, 1);
+    assert.ok(requests.every(row => row.state === 'observed' && row.base === revision));
+  }
+});
+
+
+test('an absent or invalid live base reference stops before any App effect', async () => {
+  for (const mode of ['missing-base-ref', 'invalid-base-ref']) {
+    const f = fixture(); f.state.mode = mode;
+    await assert.rejects(f.dispatch(), error => error.ciRequestFailure.code === 'base-changed');
+    assert.equal(f.state.calls, 0);
+    assert.equal(f.state.ref, null);
+  }
 });
