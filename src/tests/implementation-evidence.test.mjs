@@ -14,20 +14,31 @@ import { unattendedImplementationPolicy, unattendedDigest } from '../packages/sd
 
 const revision = 'a'.repeat(40), head = 'b'.repeat(40), tree = 'c'.repeat(40), intent = 'd'.repeat(64);
 const copy = value => structuredClone(value);
-async function fixture({ unattended = false, route = 'ff' } = {}) {
+async function fixture({ unattended = false, route = 'ff', product = false } = {}) {
   const repository = 'owner/demo', issue = 18, pr = 23;
   const policy = { scope: 'Fix the specified behavior.', paths: ['src/'], reviewRequired: false, checks: [['node', 'verify.mjs']] };
   if (unattended) policy.verification = { paths: ['src/tests/'], corrections: {} };
   const file = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
   const state = { native: { id: 700, run_attempt: 1, repository: { full_name: repository }, path: '.github/workflows/lighthouse-sdlc-implement.lock.yml', head_sha: revision, head_branch: 'main', event: 'workflow_dispatch', status: 'completed', conclusion: 'success', actor: { login: 'owner' }, triggering_actor: { login: 'owner' } }, policy, tree, workflow: 'e'.repeat(40), missing: false, expired: false };
+  const identity = 'f'.repeat(64);
+  state.pr = { number: pr, state: 'open', merged: false, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/implement-${issue}-${identity.slice(0, 12)}`, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, body: `<!-- lighthouse-implementation:${identity} -->` };
+  state.implementationIdentity = identity;
+  if (product) {
+    const applyIntent = '9'.repeat(64), appliedHead = '8'.repeat(40);
+    const parent = { issue, stage: 'implement', predecessor: { runId: '200', attempt: 1 }, gap: { summary: 'Missing intent', scope: 'Issue scope' }, sourceRevision: revision, baseRevision: revision, taskDigest: intent, autoImplement: false };
+    const checkpoint = { schemaVersion: 1, kind: 'checkpoint', identity: { repository, issue, parentRunId: '200', authorizationDigest: '1'.repeat(64), policyDigest: '2'.repeat(64), workflowRevision: revision, head: appliedHead }, requestDigest: '4'.repeat(64), changeName: 'example', changeId: 'CHG-EXAMPLE', proposalDigest: '5'.repeat(64), baselineDigest: '6'.repeat(64), state: 'applied', effectIds: [`apply:${applyIntent}:${appliedHead}`], parent };
+    state.pr.body = `<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->\n<!-- lighthouse-product-implementation:${JSON.stringify({ schemaVersion: 1, issue, runId: identity, applyIntent, head })} -->`;
+    state.implementationIdentity = digest(JSON.stringify({ issue, applyIntent }));
+  }
   const completion = { binding: { repository, issue, pr, head, intent, branch: 'main' }, currentRevision: revision };
   state.unattended = unattended;
   state.grant = { schemaVersion: 1, enabled: true, routes: [route], paths: ['src/value.js'], reviewerProfile: 'fast', allowFivePoint: false, merge: true, maxCorrections: 2, timeoutSeconds: 600,
     ...(route === 'hotfix' ? { hotfix: { setupCommands: [['node', 'setup.mjs']], regressionCommand: ['node', '--test', 'src/tests/regression.mjs'], testPaths: ['src/tests/'], failurePattern: ['ERR_ASSERTION'], modules: { core: ['src/'] } } } : {}) };
   if (unattended) state.native.path = '.github/workflows/lighthouse-sdlc-unattended.yml';
   const api = async path => {
+    if (path === 'pulls/23') return copy(state.pr);
     if (path === 'actions/runs/700' || path === 'actions/runs/700/attempts/1') return copy(state.native);
-    if (path.startsWith('issues/18/comments?')) return [{ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:${JSON.stringify({ pr, head, complete: true, run: 700, attempt: 1 })} -->` }];
+    if (path.startsWith('issues/18/comments?')) return [{ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:${JSON.stringify({ pr, head, complete: true, run: 700, attempt: 1, implementationIdentity: state.implementationIdentity })} -->` }];
     if (path.startsWith('contents/.lighthouse/implement.json?')) return file({ defaults: state.policy });
     if (path.startsWith('contents/.lighthouse/environment.json?')) return null;
     if (path.startsWith('contents/.lighthouse/unattended.json?')) return file(state.grant);
@@ -95,6 +106,19 @@ test('unattended command evidence rejects fabricated authority, changed scope, s
   });
 });
 
+test('identity-bearing ordinary and product receipts authenticate open and merged PRs', async t => {
+  for (const product of [false, true]) for (const merged of [false, true]) await t.test(`${product ? 'product' : 'ordinary'} ${merged ? 'merged' : 'open'}`, async () => {
+    const f = await fixture({ product });
+    if (merged) {
+      f.state.pr.state = 'closed'; f.state.pr.merged = true; f.state.pr.merge_commit_sha = '7'.repeat(40);
+      f.completion.merged = true; f.completion.merge = f.state.pr.merge_commit_sha;
+    }
+    const result = await readImplementationEvidence(f.api, f.completion, f.options);
+    assert.equal(result.status, 'passed', result.reason);
+    assert.equal(result.publication.head, head);
+  });
+});
+
 test('a matching host receipt authenticates commands against the current published tree', async () => {
   const f = await fixture();
   const result = await readImplementationEvidence(f.api, f.completion, f.options);
@@ -147,6 +171,18 @@ test('a bot producer requires the authenticated router receipt and matching admi
 
 test('spoofed producers and changed criteria, code, plan, policy, command or attempt stay unavailable', async t => {
   const cases = {
+    'another PR': f => { f.state.pr.number++; },
+    'another issue branch': f => { f.state.pr.head.ref = f.state.pr.head.ref.replace('-18-', '-19-'); },
+    'another head repository': f => { f.state.pr.head.repo.full_name = 'attacker/demo'; },
+    'another base repository': f => { f.state.pr.base.repo.full_name = 'attacker/demo'; },
+    'another base branch': f => { f.state.pr.base.ref = 'other'; },
+    'another current head': f => { f.state.pr.head.sha = '1'.repeat(40); },
+    'another implementation identity': f => { f.state.implementationIdentity = '1'.repeat(64); },
+    'missing implementation marker': f => { f.state.pr.body = ''; },
+    'closed without merge': f => { f.state.pr.state = 'closed'; },
+    'unexpected merge': f => { f.state.pr.state = 'closed'; f.state.pr.merged = true; },
+    'unconfirmed merge': f => { f.completion.merged = true; f.completion.merge = '7'.repeat(40); },
+    'different merge commit': f => { f.completion.merged = true; f.completion.merge = '7'.repeat(40); f.state.pr.state = 'closed'; f.state.pr.merged = true; f.state.pr.merge_commit_sha = '8'.repeat(40); },
     'another repository': f => { f.state.native.repository.full_name = 'attacker/demo'; },
     'another workflow': f => { f.state.native.path = '.github/workflows/untrusted.yml'; },
     'another actor': f => { f.state.native.actor.login = 'attacker'; },
@@ -233,7 +269,7 @@ test('an installed tarball accepts authenticated matching inputs, rejects a spoo
     await writeFile(join(temp, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
     execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(temp, filename)], { cwd: temp, stdio: 'pipe' });
     const f = await fixture(), paths = [
-      'issues/18/comments?per_page=100&page=1', 'actions/runs/700', 'actions/runs/700/attempts/1',
+      'pulls/23', 'issues/18/comments?per_page=100&page=1', 'actions/runs/700', 'actions/runs/700/attempts/1',
       `contents/.github/workflows/lighthouse-sdlc-implement.lock.yml?ref=${revision}`,
       `contents/.lighthouse/implement.json?ref=${revision}`, `contents/.lighthouse/environment.json?ref=${revision}`,
       `git/commits/${head}`,
