@@ -3,6 +3,7 @@ import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { setTimeout } from 'node:timers/promises';
 import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
@@ -200,9 +201,14 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     const marker = current.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
     if (!marker && !productProof) throw Error('Implementation PR marker missing during update');
     if (epic) {
-      const updated = await api(`pulls/${snapshot.implementationReview.number}`);
-      if (updated.head?.sha !== created.sha || updated.base?.ref !== epic.base) throw Error('Epic PR changed during its update');
-      await checkEpicBase();
+      for (let attempt = 0; ; attempt++) {
+        const updated = await api(`pulls/${snapshot.implementationReview.number}`);
+        if (updated.base?.ref !== epic.base || updated.head?.ref !== snapshot.implementationReview.branch || ![snapshot.sourceRevision, created.sha].includes(updated.head?.sha) || (await api(`git/ref/heads/${snapshot.implementationReview.branch}`)).object?.sha !== created.sha) throw Error('Epic PR changed during its update');
+        await checkEpicBase();
+        if (updated.head.sha === created.sha) break;
+        if (attempt === 3) throw Error('Epic PR head readback did not reach the confirmed update');
+        await setTimeout(250 * 2 ** attempt);
+      }
       await afterRefWrite();
     }
     const revised = productProof ? `${current.body.replace(/<!-- lighthouse-product-implementation:\{[^\n]*\} -->/g, '')}\n\n${body.trim()}\n\n[Implementation evidence](${runUrl}).\n\n<!-- lighthouse-product-implementation:${JSON.stringify({ ...productProof, runId: snapshot.runId, head: created.sha })} -->` : description(marker);
