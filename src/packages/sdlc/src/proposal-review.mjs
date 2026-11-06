@@ -34,10 +34,11 @@ export function checkImplementationPullRequest(pr, repo, expected) {
   return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, implementationIdentity };
 }
 
-export function checkAlignedImplementationPullRequest(pr, repository, alignment) {
+export function checkAlignedImplementationPullRequest(pr, repository, alignment, { publishedHead } = {}) {
   const parent = alignment?.parent, expected = parent?.pullRequest;
   if (parent?.stage !== 'implement' || parent.review || !expected || pr?.number !== expected.number || !pr.draft) throw Error('Aligned implementation PR is not eligible');
-  return checkImplementationPullRequest(pr, repository, { issue: parent.issue, head: expected.head, branch: expected.branch, base: alignment.defaultBranch });
+  if (publishedHead !== undefined && !/^[a-f0-9]{40}$/.test(publishedHead)) throw Error('Invalid published implementation head');
+  return checkImplementationPullRequest(pr, repository, { issue: parent.issue, head: publishedHead ?? expected.head, branch: expected.branch, base: alignment.defaultBranch });
 }
 
 export async function loadProposalReview(api, repo, owner, event, eventName, implementation = false) {
@@ -87,9 +88,10 @@ export async function loadProposalFiles(api, review) {
   return validateProposalFiles(files, review.issue);
 }
 
-export async function checkReviewCurrent(api, repo, review, implementation = false) {
+export async function checkReviewCurrent(api, repo, review, implementation = false, { publishedHead } = {}) {
+  if (publishedHead !== undefined && (!implementation || !/^[a-f0-9]{40}$/.test(publishedHead))) throw Error('Invalid published implementation head');
   const pr = await api(`pulls/${review.number}`);
-  (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo, review);
+  (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo, publishedHead === undefined ? review : { ...review, head: publishedHead });
   if (reviewDigest(review.kind, await api(review.path)) !== review.feedbackDigest) throw Error('Review feedback changed; no update published');
   return pr;
 }

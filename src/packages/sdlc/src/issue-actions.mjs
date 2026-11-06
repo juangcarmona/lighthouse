@@ -170,7 +170,9 @@ export function checkImplementationPrInventory(pulls, snapshot, published = null
   if (published) {
     const expected = checkImplementationPullRequest(published, snapshot.repository);
     const current = pulls.find(pr => pr.number === published.number);
-    if (permitted !== undefined || !Number.isSafeInteger(published.id) || published.id < 1 || expected.issue !== snapshot.issue || expected.implementationIdentity !== snapshot.runId || expected.base !== (snapshot.epic?.base ?? snapshot.defaultBranch) || published.base.sha !== snapshot.sourceRevision || !current || current.id !== published.id || current.base?.sha !== published.base.sha) throw Error('Published implementation identity changed');
+    const identity = snapshot.productResume ? digest(JSON.stringify({ issue: snapshot.issue, applyIntent: snapshot.productResume.receiptIntent })) : snapshot.implementationReview?.implementationIdentity ?? (permitted === undefined ? snapshot.runId : null);
+    const base = snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision;
+    if (permitted !== undefined && published.number !== permitted || !Number.isSafeInteger(published.id) || published.id < 1 || expected.issue !== snapshot.issue || identity && expected.implementationIdentity !== identity || expected.base !== (snapshot.epic?.base ?? snapshot.defaultBranch) || published.base.sha !== base || !current || current.id !== published.id || current.base?.sha !== published.base.sha) throw Error('Published implementation identity changed');
     checkImplementationPullRequest(current, snapshot.repository, expected);
     permitted = published.number;
   }
@@ -936,7 +938,7 @@ async function main(command) {
       if (changes.length || isVerificationOnlyCorrection(snapshot)) {
         let publishedPr = null;
         const checkAuthority = async () => {
-          if (snapshot.ciRepair) {
+          if (snapshot.ciRepair && !publishedPr) {
             const run = await api(`actions/runs/${snapshot.ciRepair.run}`);
             const current = await ciRepairAfterChecks(api, repo, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } }, { currentDispatch: snapshot.dispatch.requestId });
             if (JSON.stringify(current?.ciRepair) !== JSON.stringify(snapshot.ciRepair)) throw Error('CI correction grant, policy, head or budget changed before publication');
@@ -950,11 +952,12 @@ async function main(command) {
           const fresh = await loadImplementation(api, issueNumber, owner, snapshot.baseRevision ?? snapshot.sourceRevision, repository.default_branch, snapshot.epic ? 'epic' : null);
           if (JSON.stringify(fresh) !== JSON.stringify(snapshot.implementation)) throw Error('Implementation authority changed');
           const pulls = await api('pulls?state=open&per_page=100');
-          if (snapshot.productResume) checkProductResumePullRequest(await api(`pulls/${snapshot.productResume.pullRequest}`), repo, snapshot.productResume);
-          if (snapshot.productAlignment?.parent.pullRequest) checkAlignedImplementationPullRequest(await api(`pulls/${snapshot.productAlignment.parent.pullRequest.number}`), repo, snapshot.productAlignment);
+          const publication = { publishedHead: publishedPr?.head.sha };
+          if (snapshot.productResume) checkProductResumePullRequest(await api(`pulls/${snapshot.productResume.pullRequest}`), repo, snapshot.productResume, publication);
+          if (snapshot.productAlignment?.parent.pullRequest) checkAlignedImplementationPullRequest(await api(`pulls/${snapshot.productAlignment.parent.pullRequest.number}`), repo, snapshot.productAlignment, publication);
           if (snapshot.implementationReview) {
             if (snapshot.productResume) { if (digest(JSON.stringify(await api(snapshot.implementationReview.path))) !== snapshot.implementationReview.feedbackDigest) throw Error('Implementation feedback changed'); }
-            else await checkReviewCurrent(api, repo, snapshot.implementationReview, true);
+            else await checkReviewCurrent(api, repo, snapshot.implementationReview, true, publication);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.implementationReview.number, owner))) !== snapshot.implementationReview.threadDigest) throw Error('PR feedback changed');
           }
           checkImplementationPrInventory(pulls, snapshot, publishedPr);
@@ -972,7 +975,9 @@ async function main(command) {
           await recheckPublication();
         };
         const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite);
-        if (!snapshot.implementationReview && !snapshot.productResume && !snapshot.productAlignment?.parent.pullRequest) publishedPr = structuredClone(pr);
+        const currentPr = await api(`pulls/${pr.number}`);
+        if (currentPr.number !== pr.number || currentPr.head?.sha !== pr.head.sha || currentPr.head?.ref !== pr.head.ref) throw Error('Implementation changed after publication');
+        publishedPr = structuredClone(currentPr);
         if (receipt.schemaVersion === 2) {
           const commit = await api(`git/commits/${pr.head.sha}`);
           const evidence = implementationEvidenceBundle(snapshot, receipt, changes, { pr: pr.number, head: pr.head.sha, tree: commit.tree.sha });
