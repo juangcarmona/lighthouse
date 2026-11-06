@@ -14,6 +14,7 @@ function fixture() {
     if (path === 'pulls/12') return { ...pr, ...(state.changed === 'head' ? { head: { ...pr.head, sha: 'd'.repeat(40) } } : {}), ...(state.changed === 'base' ? { base: { ...pr.base, sha: 'd'.repeat(40) } } : state.staleBaseSnapshot ? { base: { ...pr.base, sha: state.staleBaseSnapshot } } : {}) };
     if (path.startsWith('contents/.github/workflows/')) { state.workflowReads++; if (state.workflowErrors.length) throw state.workflowErrors.shift(); return { type: 'file', sha: state.changed === 'workflow' && path.endsWith(head) ? 'd'.repeat(40) : blob }; }
     if (path === 'git/ref/heads/main') return state.mode === 'missing-base-ref' ? null : { object: { sha: state.mode === 'invalid-base-ref' ? 'invalid' : state.changed === 'base' ? 'd'.repeat(40) : revision } };
+    if (path.startsWith('compare/')) return { base_commit: { sha: revision }, behind_by: 0 };
     if (path.startsWith('git/ref/heads/')) { assert.equal(path, 'git/ref/heads/' + branch); return state.ref; }
     const workflow = path.match(/^actions\/workflows\/(ci|package)\.yml\/runs\?head_sha=/)?.[1];
     assert.ok(workflow, path);

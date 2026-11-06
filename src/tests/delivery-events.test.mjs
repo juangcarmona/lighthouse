@@ -8,6 +8,43 @@ const profile = { completion: { postMergeWorkflows: ['verify.yml'] } };
 const file = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
 const event = { action: 'completed', workflow_run: { id: 123, head_sha: head } };
 
+test('only current merge-tree CI and current owner head approval can resume integration', async () => {
+  const base = 'd'.repeat(40), submitted = { action: 'completed', workflow_run: { id: 123, head_sha: merge } };
+  let actual = structuredClone(pr), liveBase = base, parents = [base, head];
+  let run = { id: 123, path: '.github/workflows/verify.yml', repository: { full_name: repository }, status: 'completed', conclusion: 'success', event: 'push', head_sha: merge, head_branch: `lighthouse/verification-60-${merge}` };
+  let reviews = [{ id: 7, state: 'APPROVED', user: { login: 'owner' }, commit_id: head }];
+  const api = async path => {
+    if (path === 'actions/runs/123') return run;
+    if (path === '') return { default_branch: 'main' };
+    if (path.startsWith('contents/')) return file(profile);
+    if (path.startsWith('commits/')) return [];
+    if (path === 'pulls/60') return actual;
+    if (path === 'pulls/61') return null;
+    if (path.includes('/reviews?')) return reviews;
+    if (path === 'git/ref/heads/main') return { object: { sha: liveBase } };
+    if (path.startsWith('compare/')) return { base_commit: { sha: liveBase }, behind_by: 1 };
+    if (path === 'git/commits/' + merge) return { sha: merge, parents: parents.map(sha => ({ sha })) };
+    throw Error(path);
+  };
+  assert.equal((await deliveryAfterChecks(api, repository, 'owner', submitted)).head, head);
+  assert.equal(await completionSource(api, repository, submitted), 'checks');
+  reviews.push({ id: 8, state: 'CHANGES_REQUESTED', user: { login: 'owner' }, commit_id: head });
+  assert.equal(await deliveryAfterChecks(api, repository, 'owner', submitted), null);
+  reviews = [{ id: 9, state: 'APPROVED', user: { login: 'owner' }, commit_id: merge }];
+  assert.equal(await deliveryAfterChecks(api, repository, 'owner', submitted), null);
+  reviews[0].commit_id = head;
+  for (const changed of [{ conclusion: 'failure' }, { path: '.github/workflows/other.yml' }, { event: 'workflow_dispatch' }, { head_branch: `lighthouse/verification-61-${merge}` }]) {
+    const previous = run; run = { ...run, ...changed };
+    assert.equal(await deliveryAfterChecks(api, repository, 'owner', submitted), null); run = previous;
+  }
+  actual.merge_commit_sha = base;
+  assert.equal(await deliveryAfterChecks(api, repository, 'owner', submitted), null);
+  actual = structuredClone(pr); liveBase = head;
+  await assert.rejects(deliveryAfterChecks(api, repository, 'owner', submitted), /current head and base/);
+  liveBase = base; parents = [base, 'f'.repeat(40)];
+  await assert.rejects(deliveryAfterChecks(api, repository, 'owner', submitted), /current head and base/);
+});
+
 test('CI resumes only the current owner-approved bot PR; unrelated, failed and stale runs do nothing', async () => {
   let actual = pr, run = { id: 123, path: '.github/workflows/verify.yml', status: 'completed', conclusion: 'success', event: 'workflow_dispatch', head_sha: head, head_branch: pr.head.ref };
   let reviews = [{ id: 7, state: 'APPROVED', user: { login: 'owner' }, commit_id: head }];

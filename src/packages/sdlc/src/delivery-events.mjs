@@ -1,7 +1,7 @@
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { stagePath } from './stage-dispatch.mjs';
 import { retryLimit, retryDelayMs } from './worker-recovery.mjs';
-import { verificationBranch } from './ci-subject.mjs';
+import { verificationBranch, verificationPush, verificationPullRequest, currentMergeSubject } from './ci-subject.mjs';
 
 function transportFailureCode(error) {
   if (error?.name === 'AbortError') return null;
@@ -38,6 +38,18 @@ export function ciFailureSummary(failure) {
   return `CI request: ${safe.method} ${safe.path}; ${safe.status ? `HTTP ${safe.status}` : safe.exception}; ${safe.code}; PR #${safe.pr} at ${safe.head}. Maintainer: reconcile the retained send state and native CI before any resend.`;
 }
 
+async function ciPullRequests(api, run) {
+  const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
+  if (!Array.isArray(pulls) || pulls.length >= 100) throw Error('CI subject lookup exceeds bounds');
+  // GitHub need not associate an unmerged test commit with its PR; the ref is only a lookup hint.
+  const number = verificationPullRequest(run);
+  if (number !== null && !pulls.some(pr => pr.number === number)) {
+    const pr = await api(`pulls/${number}`, 'GET', undefined, true);
+    if (pr?.number === number) pulls.push(pr);
+  }
+  return pulls;
+}
+
 // Display names filter subscriptions only; actual paths, revisions and subjects admit work.
 export async function completionSource(api, repository, event, env = {}) {
   if (event.action !== 'completed' || !Number.isSafeInteger(event.workflow_run?.id)) return null;
@@ -56,8 +68,7 @@ export async function completionSource(api, repository, event, env = {}) {
   if (!config) return null;
   const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
   if (!profile.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`) || !['push', 'pull_request', 'workflow_dispatch'].includes(run.event)) return null;
-  const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
-  if (pulls.length >= 100) throw Error('Completion subject lookup exceeds bounds');
+  const pulls = await ciPullRequests(api, run);
   return pulls.some(pr => {
     if (pr.base?.ref !== metadata.default_branch || pr.head?.sha !== run.head_sha && pr.merge_commit_sha !== run.head_sha) return false;
     try { checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository); return true; } catch {
@@ -101,8 +112,7 @@ export async function deliveryAfterChecks(api, repository, owner, event) {
   if (!config) return null;
   const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
   if (!profile.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`)) return null;
-  const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
-  if (pulls.length >= 100) throw Error('Delivery lookup exceeds bounds');
+  const pulls = await ciPullRequests(api, run);
   for (const candidate of pulls) {
     if (candidate.head?.sha !== run.head_sha && candidate.merge_commit_sha !== run.head_sha) continue;
     const pr = await api(`pulls/${candidate.number}`);
@@ -110,7 +120,12 @@ export async function deliveryAfterChecks(api, repository, owner, event) {
     let target;
     try { target = checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository); } catch { continue; }
     if (pr.merged && pr.merge_commit_sha === run.head_sha && run.head_branch === metadata.default_branch) return { stage: 'review', issue: target.issue, pr: pr.number, head: pr.head.sha, merge: false };
-    if (pr.state !== 'open' || pr.draft || pr.head.sha !== run.head_sha) continue;
+    if (pr.state !== 'open' || pr.draft) continue;
+    if (pr.head.sha !== run.head_sha) {
+      if (pr.merge_commit_sha !== run.head_sha || !(run.event === 'pull_request' || verificationPush(run, pr.number))) continue;
+      const base = (await api(`git/ref/heads/${pr.base.ref}`))?.object?.sha;
+      if ((await currentMergeSubject(api, pr, base))?.head !== run.head_sha) continue;
+    }
     const reviews = await api(`pulls/${pr.number}/reviews?per_page=100`);
     if (reviews.length >= 100) throw Error('Review lookup exceeds bounds');
     const decision = reviews.filter(r => r.user?.login === owner && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(r.state)).sort((a, b) => b.id - a.id)[0];
@@ -175,28 +190,52 @@ export async function dispatchDeliveryChecks(api, revision, pr, { checkpoint = a
   return requests;
 }
 
-// One immutable ref emits one eligible push for all configured trusted workflows.
+// Each immutable CI subject has its own bounded send state in the same receipt.
 async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, previous, now, ciTrigger, beforeWrite }) {
+  if (previous?.some(row => row.sourceHead !== undefined && row.sourceHead !== pr.head.sha)) throw Error('CI recovery source head changed');
+  let heads = previous?.filter(row => row.sourceHead === undefined) ?? [], merges = previous?.filter(row => row.sourceHead !== undefined) ?? [];
+  const saveHead = async rows => { heads = rows; await checkpoint([...heads, ...merges]); };
+  heads = await dispatchPushSubject(api, revision, pr, workflows, { checkpoint: saveHead, previous: previous ? heads : null, now, ciTrigger, beforeWrite });
+  if (!workflows.length) return heads;
+  const current = await api(`pulls/${pr.number}`);
+  if (current.head?.sha !== pr.head.sha || current.state !== 'open') throw Error('CI head changed before merge verification');
+  let subject;
+  try { subject = await currentMergeSubject(api, current, heads[0].base); }
+  catch (error) { error.ciRequestFailure = ciRequestFailure(error, pr, { method: 'GET', path: `pulls/${pr.number}`, code: 'base-changed' }); throw error; }
+  if (!subject) {
+    if (merges.length) throw Error('Retained CI merge subject is no longer current');
+    return heads;
+  }
+  const saveMerge = async rows => { merges = rows; await checkpoint([...heads, ...merges]); };
+  merges = await dispatchPushSubject(api, revision, pr, workflows, { checkpoint: saveMerge, previous: merges.length ? merges : null, now, ciTrigger, beforeWrite, subject });
+  return [...heads, ...merges];
+}
+
+// One immutable ref emits one eligible push for all configured trusted workflows.
+async function dispatchPushSubject(api, revision, pr, workflows, { checkpoint, previous, now, ciTrigger, beforeWrite, subject = null }) {
   if (!workflows.length) return [];
   let requests = [], operation = { method: 'GET', path: `pulls/${pr.number}` };
   const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
   try {
     const current = await api(`pulls/${pr.number}`), repository = current.head.repo?.full_name;
     if (current.number !== pr.number || current.state !== 'open' || current.head.sha !== pr.head.sha || current.head.ref !== pr.head.ref || !/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || current.base?.repo?.full_name !== repository || !sha(current.base?.sha) || !sha(revision)) { operation.code = 'head-changed'; throw Error('CI subject changed'); }
-    const baseBranch = current.base.ref, branch = verificationBranch(pr.number, pr.head.sha);
+    const head = subject?.head ?? pr.head.sha;
+    const baseBranch = current.base.ref, branch = verificationBranch(pr.number, head);
     const base = (await api(`git/ref/heads/${baseBranch}`))?.object?.sha;
     if (!sha(base)) { operation.code = 'base-changed'; throw Error('CI base reference is unavailable'); }
+    if (subject && JSON.stringify(await currentMergeSubject(api, current, base)) !== JSON.stringify(subject)) { operation.code = 'base-changed'; throw Error('CI merge subject changed'); }
     const recheck = async () => {
       await beforeWrite();
       const fresh = await api(`pulls/${pr.number}`);
       if (fresh.state !== 'open' || fresh.head.sha !== pr.head.sha || fresh.head.ref !== pr.head.ref) { operation.code = 'head-changed'; throw Error('CI head changed'); }
       if (fresh.base?.ref !== baseBranch || (await api(`git/ref/heads/${baseBranch}`))?.object?.sha !== base) { operation.code = 'base-changed'; throw Error('CI base changed'); }
+      if (subject && fresh.merge_commit_sha !== head) { operation.code = 'base-changed'; throw Error('CI merge subject changed'); }
     };
     for (const workflow of workflows) {
       const path = `contents/.github/workflows/${workflow}?ref=`;
-      const trusted = await readCiPreflight(api, path + revision), candidate = await readCiPreflight(api, path + pr.head.sha);
+      const trusted = await readCiPreflight(api, path + revision), candidate = await readCiPreflight(api, path + head);
       if (trusted.type !== 'file' || !sha(trusted.sha) || candidate.type !== 'file' || trusted.sha !== candidate.sha) { operation.code = 'workflow-changed'; throw Error('CI definition changed'); }
-      const identity = { schemaVersion: 2, trigger: 'app-push', pr: pr.number, head: pr.head.sha, sourceBranch: pr.head.ref, base, baseBranch, branch, workflow, workflowSha: trusted.sha, revision };
+      const identity = { schemaVersion: 2, trigger: 'app-push', pr: pr.number, head, ...(subject ? { sourceHead: pr.head.sha } : {}), sourceBranch: pr.head.ref, base, baseBranch, branch, workflow, workflowSha: trusted.sha, revision };
       const prior = previous?.find(item => item.workflow === workflow);
       if (previous && (!prior || Object.keys(identity).some(key => prior[key] !== identity[key]) || !['not-sent', 'requested', 'acknowledged', 'unknown', 'observed', 'rejected'].includes(prior.state) || !Number.isSafeInteger(prior.attempt) || prior.attempt < 1 || prior.attempt > retryLimit + 1 || !Number.isFinite(Date.parse(prior.observedAt)))) throw Error('CI recovery differs from the retained push identity');
       requests.push({ ...identity, attempt: prior?.attempt ?? 1, observedAt: prior?.observedAt ?? new Date(now).toISOString(), state: prior?.state ?? 'not-sent', ...(prior?.run ? { run: prior.run } : {}) });
@@ -205,10 +244,10 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
     const inventory = async (retryRead = false) => {
       for (const request of requests) {
         operation = { method: 'GET', path: `actions/workflows/${request.workflow}/runs` };
-        const path = `${operation.path}?head_sha=${pr.head.sha}&per_page=100`;
+        const path = `${operation.path}?head_sha=${head}&per_page=100`;
         const found = await (retryRead ? readCiPreflight(api, path) : api(path));
         if (!Array.isArray(found.workflow_runs) || !Number.isSafeInteger(found.total_count) || found.total_count !== found.workflow_runs.length || found.total_count > 100) { operation.code = 'inventory-incomplete'; throw Error('CI push inventory is incomplete'); }
-        const run = found.workflow_runs.filter(run => run.head_sha === pr.head.sha && run.head_branch === branch && run.repository?.full_name === repository && run.path === `.github/workflows/${request.workflow}` && run.event === 'push').sort((a, b) => b.id - a.id)[0];
+        const run = found.workflow_runs.filter(run => run.head_sha === head && run.head_branch === branch && run.repository?.full_name === repository && run.path === `.github/workflows/${request.workflow}` && run.event === 'push').sort((a, b) => b.id - a.id)[0];
         if (run) Object.assign(request, { state: 'observed', run: run.id });
         else if (request.state === 'observed') { request.state = 'unknown'; delete request.run; }
       }
@@ -216,7 +255,7 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
     await inventory(requests.every(request => ['not-sent', 'rejected'].includes(request.state)));
     const refPath = `git/ref/heads/${branch}`;
     let reference = await api(refPath, 'GET', undefined, true);
-    if (reference && (reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha)) { operation.code = 'head-changed'; throw Error('CI verification ref changed'); }
+    if (reference && (reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== head)) { operation.code = 'head-changed'; throw Error('CI verification ref changed'); }
     if (reference) {
       await checkpoint(requests);
       if (requests.every(request => request.state === 'observed') || previous && requests.every(request => ['observed', 'acknowledged'].includes(request.state))) return requests;
@@ -234,11 +273,11 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
     await checkpoint(requests);
     operation = { method: 'POST', path: 'git/refs' };
     try {
-      const app = await ciTrigger({ branch, head: pr.head.sha, beforeWrite: recheck });
+      const app = await ciTrigger({ branch, head, beforeWrite: recheck });
       for (const request of requests) Object.assign(request, { state: 'acknowledged', app });
     } catch (error) {
       reference = await api(refPath, 'GET', undefined, true);
-      if (!reference || reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha) {
+      if (!reference || reference.ref !== 'refs/heads/' + branch || reference.object?.sha !== head) {
         const rejected = error.referenceAttempted === false || Number.isInteger(error.status) && error.status >= 400 && error.status < 500;
         for (const request of requests) request.state = rejected ? 'rejected' : 'unknown';
         operation.code ??= error.authorityChanged ? 'authority-changed' : error.referenceAttempted === false ? 'app-setup-required' : 'send-unconfirmed';
@@ -247,7 +286,7 @@ async function dispatchPushChecks(api, revision, pr, workflows, { checkpoint, pr
       for (const request of requests) request.state = 'acknowledged';
     }
     reference = await api(refPath, 'GET', undefined, true);
-    if (reference?.ref !== 'refs/heads/' + branch || reference.object?.sha !== pr.head.sha) {
+    if (reference?.ref !== 'refs/heads/' + branch || reference.object?.sha !== head) {
       for (const request of requests) request.state = 'unknown';
       operation.code = 'send-unconfirmed'; throw Error('CI reference effect is unconfirmed');
     }
