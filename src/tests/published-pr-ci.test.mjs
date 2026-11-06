@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { checkPublication, checkImplementationPrInventory, taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
-import { createImplementationPullRequest } from '../packages/sdlc/src/implementation.mjs';
+import { createImplementationPullRequest, observeImplementationPublication } from '../packages/sdlc/src/implementation.mjs';
 import { dispatchDeliveryChecks } from '../packages/sdlc/src/delivery-events.mjs';
 import { checkReviewCurrent, loadProposalReview, checkAlignedImplementationPullRequest } from '../packages/sdlc/src/proposal-review.mjs';
 import { checkProductResumePullRequest } from '../packages/sdlc/src/product-change.mjs';
@@ -31,6 +31,7 @@ function fixture(epic = false) {
       f.pulls.push(pr); return structuredClone(pr);
     }
     if (path === 'pulls/7') return structuredClone(f.pulls[0]);
+    if (path.startsWith('git/ref/heads/lighthouse/implement-')) return { object: { sha: f.pulls[0].head.sha } };
     if (path.startsWith('git/commits/') && method === 'GET') return { tree: { sha: base } };
     if (path === 'git/ref/heads/lighthouse/epic-146') return { ref: 'refs/heads/lighthouse/epic-146', object: { sha: f.source } };
     if (path === 'git/commits' && method === 'POST') return { sha: head };
@@ -43,7 +44,7 @@ function fixture(epic = false) {
   };
   f.publish = async () => {
     const result = await createImplementationPullRequest(f.api, snapshot, [{ path: 'src/summary.mjs', mode: '100644', content: Buffer.from('export const summary = 1;').toString('base64') }], 'Candidate', '', true, f.check);
-    f.published = await f.api('pulls/7');
+    f.published = await observeImplementationPublication(f.api, snapshot, result, async () => {});
     assert.equal(f.published.head.sha, result.head.sha);
   };
   f.start = () => dispatchDeliveryChecks(f.api, base, f.published, { beforeWrite: f.check, ciTrigger: async input => {
@@ -186,4 +187,39 @@ test('a lost publication readback cannot cause another PR or CI push', async () 
   await assert.rejects(f.publish(), /Existing implementation PR/);
   assert.equal(f.pulls.length, 1);
   assert.equal(f.pushes.length, 0);
+});
+
+
+test('implementation publication waits only for its known old head before starting CI once', async () => {
+  for (const role of ['review', 'product', 'product-review', 'aligned']) {
+    for (const scenario of ['delayed', 'never', 'foreign-head', 'foreign-base', 'foreign-repo', 'foreign-base-repo', 'foreign-base-branch', 'foreign-number', 'foreign-branch', 'moved-ref', 'closed']) {
+      const f = await updateFixture(role), original = f.api, previous = f.snapshot.sourceRevision;
+      let writes = 0, reads = 0;
+      f.api = async (path, method = 'GET', body) => {
+        if (path.startsWith('git/refs/heads/') && method === 'PATCH') writes++;
+        if (path === `git/ref/heads/${f.pulls[0].head.ref}`) return { object: { sha: scenario === 'moved-ref' ? base : head } };
+        const value = await original(path, method, body);
+        if (path === 'pulls/7' && method === 'GET' && writes) {
+          reads++;
+          if (scenario === 'never' || scenario === 'delayed' && reads <= 2) value.head.sha = previous;
+          if (scenario === 'foreign-head') value.head.sha = base;
+          if (scenario === 'foreign-base') value.base.sha = previous;
+          if (scenario === 'foreign-repo') value.head.repo.full_name = 'other/repo';
+          if (scenario === 'foreign-base-repo') value.base.repo.full_name = 'other/repo';
+          if (scenario === 'foreign-base-branch') value.base.ref = 'other';
+          if (scenario === 'foreign-number') value.number = 8;
+          if (scenario === 'foreign-branch') value.head.ref = 'other';
+          if (scenario === 'closed') { value.state = 'closed'; value.merged = true; }
+        }
+        return value;
+      };
+      const publishAndStart = async () => { await f.publish(); return f.start(); };
+      if (scenario === 'delayed') {
+        const requests = await publishAndStart(); assert.equal(requests[0].state, 'observed');
+        assert.deepEqual(f.pushes, [head]); assert.ok(reads >= 3);
+      } else { await assert.rejects(publishAndStart()); assert.deepEqual(f.pushes, []); }
+      assert.equal(writes, 1); assert.equal(f.pulls.length, 1);
+      assert.ok(reads <= 25);
+    }
+  }
 });

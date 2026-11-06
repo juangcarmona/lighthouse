@@ -47,6 +47,7 @@ globalThis.fetch = async (url, options) => {
   else if (path === 'issues/7') value = s.issue;
   else if (path.startsWith('issues/7/comments?')) value = s.comments;
   else if (path === 'pulls/8') value = s.pr;
+  else if (path === 'git/ref/heads/' + s.pr.head.ref && method === 'GET') value = { object: { sha: s.pr.head.sha } };
   else if (path === 'issues/comments/10') value = s.feedback;
   else if (path.startsWith('pulls?')) value = [s.pr];
   else if (path.startsWith('issues/8/comments?')) value = s.prComments;
@@ -89,7 +90,7 @@ test('ambiguous implementation feedback asks on the existing PR without authoriz
     assert.match(notice.body, /Waiting for your answer/);
     assert.match(notice.body, /Which exact paragraph.*Reply here/);
     assert.equal(state.pr.head.sha, f.head);
-    assert.equal(state.calls.some(c => c.path.startsWith('git/') || c.path === 'pulls'), false);
+    assert.equal(state.calls.some(c => c.method !== 'GET' && (c.path.startsWith('git/') || c.path === 'pulls')), false);
   } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
 
@@ -101,7 +102,7 @@ test('production publisher renews same-head completion, preserves blockers and r
       const success = ['passed', 'failed', 'unavailable', 'pending'].includes(scenario);
       assert.equal(result.status, success ? 0 : 1, result.stdout + result.stderr);
       if (scenario === 'discussion-race') assert.match(result.stderr, /PR feedback changed/);
-      assert.equal(s.calls.some(c => c.path.startsWith('git/') || c.path === 'pulls'), false, 'No new commit, branch, PR or history rewrite');
+      assert.equal(s.calls.some(c => c.method !== 'GET' && (c.path.startsWith('git/') || c.path === 'pulls')), false, 'No new commit, branch, PR or history rewrite');
       const proofs = s.comments.filter(c => c.body.includes('lighthouse-pr-state:'));
       if (!success && scenario !== 'lost-response') { assert.equal(proofs.length, 0); return; }
       assert.equal(proofs.length, 1);

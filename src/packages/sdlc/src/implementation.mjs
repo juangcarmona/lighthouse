@@ -8,8 +8,19 @@ import { proposalRoot, changeName } from './proposal.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
+import { observeUpdatedProductPull } from './product-change-actions.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
+
+export async function observeImplementationPublication(api, snapshot, published, wait) {
+  const expectedBase = snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision;
+  const expectedBranch = snapshot.epic?.base ?? snapshot.implementationReview?.base ?? snapshot.defaultBranch;
+  return observeUpdatedProductPull(async path => {
+    const current = await api(path);
+    if (current.number !== published.number || published.id !== undefined && current.id !== published.id || current.state !== 'open' || current.merged || current.head?.ref !== published.head.ref || current.head?.repo?.full_name !== snapshot.repository || current.base?.repo?.full_name !== snapshot.repository || current.base?.ref !== expectedBranch || current.base?.sha !== expectedBase || ![snapshot.sourceRevision, published.head.sha].includes(current.head?.sha) || (await api(`git/ref/heads/${published.head.ref}`)).object?.sha !== published.head.sha) throw Error('Implementation changed after publication');
+    return current;
+  }, published.number, published.head.sha, wait);
+}
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
 const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product|\.git|\.opencode)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/') || /(?:^|\/)(?:AGENTS|CLAUDE)\.md$/.test(path);
 export const changesDigest = changes => hash(JSON.stringify(changes));
