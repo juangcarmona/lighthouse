@@ -139,6 +139,76 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('forced worker exit recovers an observed async engine but preserves an unobserved create', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawn } = await import('node:child_process');
+  const { once } = await import('node:events');
+  const { setTimeout: pause } = await import('node:timers/promises');
+  const { recoverExecutionOwners } = await import('../packages/sdlc/src/execution-cleanup.mjs');
+  for (const observed of [true, false]) {
+    const root = await mkdtemp(join(tmpdir(), 'lighthouse-killed-owner-'));
+    let child, enginePid;
+    try {
+      const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+      for (const dir of [work, bin, runDir]) await mkdir(dir);
+      execFileSync('git', ['init', '-q', work]);
+      await writeFile(join(work, 'README.md'), 'Read-only source'); execFileSync('git', ['-C', work, 'add', '.']);
+      await writeFile(join(runDir, 'request.json'), JSON.stringify({ repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'triage', issue: 1, sourceRevision: 'b'.repeat(40) }));
+      await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Read only');
+      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'c'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
+      const shim = join(bin, 'docker');
+      await writeFile(shim, `#!${process.execPath}
+const fs=require('node:fs'), args=process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(join(root, 'calls.jsonl'))},JSON.stringify(args)+'\\n');
+require(${JSON.stringify(resourceShim)})(args);
+if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['engine']}));process.exit(0);}
+if(args[1]==='ls'||args[1]==='inspect'||args[0]==='rm'||args[1]==='rm'||args.includes('chown'))process.exit(0);
+if(args.includes('--entrypoint')&&!args.some(arg=>arg.endsWith(',dst=/output'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);}
+if(args.some(arg=>arg.endsWith(',dst=/output'))){
+ fs.writeFileSync(${JSON.stringify(join(root, 'engine-started'))},String(process.pid));
+ if(${observed}) for(let i=0;i<3;i++)console.log(JSON.stringify({type:'text',part:{text:'Observed async engine'}}));
+ setTimeout(()=>process.exit(0),3000);
+}
+`);
+      await chmod(shim, 0o755);
+      child = spawn(process.execPath, [await fixtureHarness(root)], { env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'safeoutputs') }, stdio: ['ignore', 'pipe', 'pipe'] });
+      let stdout = '', stderr = '';
+      child.stdout.on('data', chunk => { stdout += chunk; if (observed && (stdout.match(/\[OpenCode\] Observed async engine/g)?.length ?? 0) === 3) child.kill('SIGKILL'); });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      const exited = once(child, 'close');
+      if (!observed) {
+        const deadline = Date.now() + 10000;
+        while (true) {
+          try { await readFile(join(root, 'engine-started')); break; } catch (error) { if (error.code !== 'ENOENT') throw error; }
+          assert.ok(Date.now() < deadline, stdout + stderr); await pause(20);
+        }
+        child.kill('SIGKILL');
+      }
+      const [, signal] = await exited; assert.equal(signal, 'SIGKILL', stdout + stderr);
+      enginePid = Number(await readFile(join(root, 'engine-started'), 'utf8'));
+      const directory = join(root, 'lock.resources'), files = await readdir(directory);
+      assert.equal(files.length, 1);
+      const journal = JSON.parse(await readFile(join(directory, files[0])));
+      assert.equal(journal.resources.find(resource => resource.name.endsWith('-engine')).pending, !observed);
+      const engineName = journal.resources.find(resource => resource.name.endsWith('-engine')).name;
+      const engineId = createHash('sha256').update(engineName).digest('hex');
+      const calls = (await readFile(join(root, 'calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
+      assert.equal(calls.filter(args => args[0] === 'container' && args[1] === 'inspect' && args.includes(engineId)).length, observed ? 1 : 0);
+      await assert.rejects(readFile(join(runDir, 'envelope.json')));
+      await assert.rejects(readFile(join(root, 'safeoutputs')));
+      const run = args => execFileSync(shim, args, { encoding: 'utf8' });
+      try { process.kill(enginePid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+      run(['rm', '-f', journal.resources.find(resource => resource.name.endsWith('-engine')).name]);
+      if (observed) assert.equal(recoverExecutionOwners(directory, { run })[0].status, 'clean');
+      else assert.throws(() => recoverExecutionOwners(directory, { run }), /not verified absent/);
+    } finally {
+      child?.kill('SIGKILL');
+      try { process.kill(enginePid ?? Number(await readFile(join(root, 'engine-started'), 'utf8')), 'SIGKILL'); } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) throw error; }
+      await rm(root, { recursive: true, force: true });
+    }
+  }
+});
+
 test('oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers', async () => {
   const { boundedEventLines } = await import('../packages/sdlc/src/opencode-progress.mjs');
   const lines = []; let omitted = 0;

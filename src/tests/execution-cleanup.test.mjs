@@ -70,9 +70,11 @@ test('lost create responses require observing ownership; absence alone cannot re
   const f = fixture();
   try {
     const args = f.allocate();
+    assert.equal(f.owner.observe(), true);
     assert.equal(f.owner.cleanup().status, 'clean');
     const second = createExecutionOwner(f.directory, { ...identity, attempt: 2 }, { run: f.run });
     const pending = second.prepare(['run', 'image']);
+    assert.equal(second.observe(), false);
     assert.equal(second.cleanup().status, 'unknown');
     second.completed(pending); assert.equal(second.cleanup().status, 'clean');
     assert.ok(args.includes('--label'));

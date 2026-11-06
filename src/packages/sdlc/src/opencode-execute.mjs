@@ -232,8 +232,10 @@ async function main() {
     const exit = await new Promise((ok, no) => {
       if (cancelled) throw Error('Execution cancelled before agent startup');
       child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+      let ownershipObserved = false;
       const consume = line => {
         try {
+          if (!ownershipObserved) ownershipObserved = config.resourceOwner.observe();
           eventLine(line);
         } catch (error) { no(error); cancel(); }
       };
