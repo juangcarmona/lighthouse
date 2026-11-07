@@ -47,3 +47,26 @@ test('unadopted, foreign, stale, failed and disabled completion signals do not w
   }
   assert.ok(!(await observe({}, false)).some(call => call.url.includes('/issues?state=open')));
 });
+
+
+test('review context distinguishes scheduled recovery from a manual replay with original CI identity', async () => {
+  const { readCompletionContinuation } = await import('../packages/sdlc/src/completion-events.mjs');
+  const ci = { id: 40, run_attempt: 1, repository: { full_name: 'owner/repo' }, path: '.github/workflows/ci.yml', event: 'workflow_dispatch', status: 'completed', conclusion: 'success', head_sha: head };
+  const recovery = { ...ci, id: 50, path: '.github/workflows/lighthouse-worker-maintenance.yml', event: 'schedule' };
+  const event = { workflow_run: { id: 40, head_sha: head }, completionRecovery: { maintenance: 50, attempt: 1, ci: 40 } };
+  const api = async path => structuredClone(path === 'actions/runs/40' ? ci : recovery);
+  const observation = await readCompletionContinuation(api, 'owner/repo', event);
+  assert.equal(observation.ci.id, 40);
+  assert.equal(observation.recovery.id, 50);
+  assert.equal(observation.recovery.event, 'schedule');
+  assert.equal(observation.recovery.url, 'https://github.com/owner/repo/actions/runs/50');
+  recovery.event = 'workflow_dispatch';
+  assert.equal((await readCompletionContinuation(api, 'owner/repo', event)).recovery.event, 'workflow_dispatch');
+  assert.equal((await readCompletionContinuation(api, 'owner/repo', { workflow_run: event.workflow_run })).recovery, null);
+  assert.equal(await readCompletionContinuation(api, 'owner/repo', null), null);
+  recovery.repository.full_name = 'foreign/repo';
+  await assert.rejects(readCompletionContinuation(api, 'owner/repo', event), /continuation/);
+  recovery.repository.full_name = 'owner/repo';
+  event.completionRecovery.ci = 41;
+  await assert.rejects(readCompletionContinuation(api, 'owner/repo', event), /continuation/);
+});
