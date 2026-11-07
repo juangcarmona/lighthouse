@@ -178,7 +178,38 @@ export function isVerificationOnlyCorrection(request) {
   const review = request.implementationReview;
   return request.stage === 'implement' && request.worker === 'apply-review' && review?.approved === false && review.issue === request.issue && review.head === request.sourceRevision && /^[a-f0-9]{40}$/.test(review.head ?? '') && /^[a-f0-9]{40}$/.test(request.baseRevision ?? '') && /^[a-f0-9]{64}$/.test(review.implementationIdentity ?? '') && /^[a-f0-9]{64}$/.test(review.feedbackDigest ?? '');
 }
+function publicationState(snapshot, checkedTree) {
+  return {
+    state: 'prepared', originalHead: snapshot.sourceRevision, publishedHead: null, checkedTree: checkedTree ?? null,
+    base: { branch: snapshot.epic?.base ?? snapshot.implementationReview?.base ?? snapshot.defaultBranch, head: snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision },
+    pullRequest: null, verificationRefresh: false,
+    authority: structuredClone({ repository: snapshot.repository, issue: snapshot.issue, head: snapshot.sourceRevision, dispatch: snapshot.dispatch ?? null, feedback: snapshot.implementationReview ?? null, productResume: snapshot.productResume ?? null, productAlignment: snapshot.productAlignment ?? null, epic: snapshot.epic ?? null, ciRepair: snapshot.ciRepair ?? null }),
+  };
+}
+
+export async function readImplementationPublication(api, snapshot, transition, wait) {
+  const prepared = publicationState(snapshot, transition.checkedTree);
+  if (transition.state !== 'confirmed' || transition.originalHead !== prepared.originalHead || JSON.stringify(transition.base) !== JSON.stringify(prepared.base) || JSON.stringify(transition.authority) !== JSON.stringify(prepared.authority)) throw Error('Implementation publication authority changed');
+  const pr = transition.pullRequest;
+  const observed = await observeImplementationPublication(api, snapshot, { number: pr.number, id: pr.id, head: { sha: transition.publishedHead, ref: pr.branch }, verificationRefresh: transition.verificationRefresh }, wait);
+  if (transition.checkedTree !== null && (await api(`git/commits/${transition.publishedHead}`)).tree?.sha !== transition.checkedTree) throw Error('Command evidence does not bind the tested and published trees');
+  return observed;
+}
+
+export async function publishImplementationPullRequest(api, { snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}, refreshVerification = false, checkedTree, wait }) {
+  const prepared = publicationState(snapshot, checkedTree);
+  const published = await writeImplementationPullRequest(api, { snapshot, changes, body, runUrl, draft, beforeWrite: () => beforeWrite(structuredClone(prepared)), afterRefWrite: () => afterRefWrite(structuredClone(prepared)), refreshVerification, checkedTree });
+  const observed = await observeImplementationPublication(api, snapshot, published, wait);
+  if (checkedTree !== undefined && (await api(`git/commits/${observed.head.sha}`)).tree?.sha !== checkedTree) throw Error('Command evidence does not bind the tested and published trees');
+  return { ...prepared, state: 'confirmed', publishedHead: observed.head.sha, pullRequest: { id: observed.id, number: observed.number, url: observed.html_url, branch: observed.head.ref }, verificationRefresh: published.verificationRefresh === true };
+}
+
+// Keep the exported positional entrypoint compatible for installed consumers.
 export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}, { refreshVerification = false, checkedTree } = {}) {
+  return writeImplementationPullRequest(api, { snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite, refreshVerification, checkedTree });
+}
+
+async function writeImplementationPullRequest(api, { snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite, refreshVerification, checkedTree }) {
   validateChanges(changes, snapshot.implementation.policy);
   if (!changes.length && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
   const synchronization = snapshot.sourceSynchronization;

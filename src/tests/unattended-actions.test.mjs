@@ -59,7 +59,9 @@ async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0 } =
     if (path === 'git/commits/' + 'b'.repeat(40)) return { tree: { sha: 'b'.repeat(40) } };
     if (path === 'git/blobs' || path === 'git/trees' || path === 'git/commits') return { sha: 'b'.repeat(40) };
     if (path === 'git/refs') return { object: { sha: 'b'.repeat(40) } };
-    if (path === 'pulls' && method === 'POST') return publishedPr = { number: 3, state: 'open', html_url: 'https://github.com/owner/repo/pull/3', head: { sha: 'b'.repeat(40), ref: body.head } };
+    if (path === 'git/ref/heads/main') return { object: { sha: revision } };
+    if (path.startsWith('git/ref/heads/lighthouse/implement-')) return { object: { sha: publishedPr.head.sha } };
+    if (path === 'pulls' && method === 'POST') return publishedPr = { id: 30, number: 3, state: 'open', merged: false, draft: body.draft, body: body.body, user: { login: 'github-actions[bot]', type: 'Bot' }, html_url: 'https://github.com/owner/repo/pull/3', head: { sha: 'b'.repeat(40), ref: body.head, repo: { full_name: 'owner/repo' } }, base: { ref: body.base, sha: revision, repo: { full_name: 'owner/repo' } } };
     if (path === 'pulls/3') return publishedPr;
     if (path.startsWith('issues/3/') || path.startsWith('pulls/3/')) return [];
     throw Error('Unexpected fixture API: ' + method + ' ' + path);
@@ -614,7 +616,7 @@ test('the native host integrates with concurrent readiness and retains its merge
     if (path === 'pulls' && method === 'POST') {
       pr = await originalApi(path, method, body);
       Object.assign(pr, { title: body.title, body: body.body, draft: true, changed_files: 2, node_id: 'fixture-pr', mergeable: true, mergeable_state: 'draft',
-        base: { ref: 'main', repo: { full_name: 'owner/repo' } } });
+        base: { ref: 'main', sha: f.revision, repo: { full_name: 'owner/repo' } } });
       pr.head.repo = { full_name: 'owner/repo' }; return pr;
     }
     if (path === 'pulls/3/merge' && method === 'PUT') {

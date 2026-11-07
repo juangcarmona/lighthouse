@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
 import { prepareSourceSynchronization } from './source-sync.mjs';
-import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection, observeImplementationPublication } from './implementation.mjs';
+import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, publishImplementationPullRequest, readImplementationPublication, isVerificationOnlyCorrection } from './implementation.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { digest } from './digests.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
@@ -810,9 +810,9 @@ async function main(command) {
     const repository = await api(''), revision = await api(`commits/${repository.default_branch}`);
     const publicationIssue = await api(issuePath);
     checkPublication(snapshot, publicationIssue, ownerAnswers(await comments()), revision.sha);
-    let recheckVerifiedCandidate = async () => {};
-    const recheckPublication = async () => {
-      await recheckVerifiedCandidate();
+    let recheckVerifiedCandidate = async () => {}, implementationPublication = null;
+    const recheckPublication = async (publication = null) => {
+      await recheckVerifiedCandidate(publication);
       await assertCurrentDispatch(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
       checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
       if (!snapshot.epic) return;
@@ -913,9 +913,9 @@ async function main(command) {
       if (value.result.status === 'passed' && !checksPassed) throw Error('Passed implementation has failed host checks');
       if (!changes.length && value.result.status === 'passed' && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
       if (changes.length || isVerificationOnlyCorrection(snapshot)) {
-        let publishedPr = null;
-        const checkAuthority = async () => {
-          if (snapshot.ciRepair && !publishedPr) {
+        const checkAuthority = async (transition = null) => {
+          const publishedPr = transition ? await readImplementationPublication(api, snapshot, transition) : null;
+          if (snapshot.ciRepair && !transition) {
             const run = await api(`actions/runs/${snapshot.ciRepair.run}`);
             const current = await ciRepairAfterChecks(api, repo, owner, { action: 'completed', workflow_run: { id: run.id, head_sha: run.head_sha } }, { currentDispatch: snapshot.dispatch.requestId });
             if (JSON.stringify(current?.ciRepair) !== JSON.stringify(snapshot.ciRepair)) throw Error('CI correction grant, policy, head or budget changed before publication');
@@ -942,7 +942,7 @@ async function main(command) {
           checkImplementationPrInventory(pulls, snapshot, publishedPr, baseReference?.object?.sha);
         };
         if (!changes.length) recheckVerifiedCandidate = checkAuthority;
-        const recheck = async () => { await recheckPublication(); if (changes.length) await checkAuthority(); };
+        const recheck = async (transition = null) => { await recheckPublication(transition); if (changes.length) await checkAuthority(transition); };
         if (snapshot.ciRepair) validateCiRepairChanges(changes, snapshot.issue, await productModelDirectory(process.cwd()));
         await validatePublicationFiles(process.cwd(), changes.map(file => ({ path: file.path, content: file.content === null ? null : Buffer.from(file.content, 'base64').toString('utf8') })), { api, policyRevision: snapshot.baseRevision ?? snapshot.sourceRevision, candidateRevision: snapshot.sourceRevision });
         const candidateComplete = value.result.status === 'passed' && checksPassed;
@@ -953,10 +953,9 @@ async function main(command) {
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
           await recheckPublication();
         };
-        const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite, { refreshVerification: candidateComplete, checkedTree: receipt.candidateTree });
-        const currentPr = await observeImplementationPublication(api, snapshot, pr);
-        if (currentPr.number !== pr.number || currentPr.head?.sha !== pr.head.sha || currentPr.head?.ref !== pr.head.ref) throw Error('Implementation changed after publication');
-        publishedPr = structuredClone(currentPr);
+        const transition = await publishImplementationPullRequest(api, { snapshot, changes, body: value.effect.body, runUrl, draft: true, beforeWrite: () => recheck(), afterRefWrite, refreshVerification: candidateComplete, checkedTree: receipt.candidateTree });
+        const pr = await readImplementationPublication(api, snapshot, transition);
+        implementationPublication = transition;
         if (receipt.schemaVersion === 2) {
           const commit = await api(`git/commits/${pr.head.sha}`);
           const evidence = implementationEvidenceBundle(snapshot, receipt, changes, { pr: pr.number, head: pr.head.sha, tree: commit.tree.sha });
@@ -964,7 +963,7 @@ async function main(command) {
         }
         prStateProof = `<!-- lighthouse-pr-state:${JSON.stringify({ pr: pr.number, head: pr.head.sha, complete: candidateComplete, run: Number(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(!changes.length ? { implementationIdentity: snapshot.implementationReview.implementationIdentity } : {}) })} -->`;
         await writeFile(join(dir, 'published-pr.json'), JSON.stringify({ number: pr.number, head: pr.head.sha }));
-        try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr, { ciTrigger: githubAppCiTrigger(env), beforeWrite: recheck, checkpoint: requests => writeFile(join(dir, 'ci-requests.json'), JSON.stringify(requests)) }); }
+        try { await dispatchDeliveryChecks(api, snapshot.baseRevision ?? snapshot.sourceRevision, pr, { ciTrigger: githubAppCiTrigger(env), beforeWrite: () => recheck(transition), checkpoint: requests => writeFile(join(dir, 'ci-requests.json'), JSON.stringify(requests)) }); }
         catch (error) {
           ciDispatchFailed = true;
           const failure = error.ciRequestFailure ?? ciRequestFailure(error, pr);
@@ -999,24 +998,24 @@ async function main(command) {
     const body = renderHandoff({ status: ciHandoff && !question ? 'blocked' : projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${resultMarker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question && !reviewQuestion ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
     const label = projection.label;
-    await recheckPublication();
+    await recheckPublication(implementationPublication);
     if (label === 'pr-draft') await projectImplementationPrState(api, issueNumber, true);
     else if (label) await api(`${issuePath}/labels`, 'POST', { labels: [label] });
     const fresh = await api(issuePath);
-    await recheckPublication();
+    await recheckPublication(implementationPublication);
     if (fresh.labels.some(x => x.name === snapshot.stage)) await api(`${issuePath}/labels/${snapshot.stage}`, 'DELETE');
     if (handoff) {
-      await recheckPublication();
+      await recheckPublication(implementationPublication);
       await api(`${issuePath}/labels`, 'POST', { labels: ['implement'] });
       await output('implement', String(!fresh.labels.some(x => x.name === 'future')));
     }
     if (reviewNotice) {
-      await recheckPublication();
+      await recheckPublication(implementationPublication);
       const prior = await api(`issues/${reviewNotice.pr.number}/comments?per_page=100`);
       if (prior.length >= 100) throw Error('PR discussion exceeds bounded publication');
       if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(reviewNotice.marker))) await api(`issues/${reviewNotice.pr.number}/comments`, 'POST', { body: reviewNotice.body });
     }
-    await recheckPublication();
+    await recheckPublication(implementationPublication);
     const report = existing ?? await api(`${issuePath}/comments`, 'POST', { body });
     if (snapshot.proposalReview && value.result.status === 'blocked') {
       const reviewMarker = `<!-- lighthouse-proposal-blocked:${snapshot.runId} -->`;
