@@ -1,8 +1,8 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { implementationPrProof } from './pr-state.mjs';
+import { implementationPrProof } from './implementation-proof.mjs';
 import { issueComments, loadDispatch, stagePath, workerFor } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
-import { taskDigest } from './issue-actions.mjs';
+import { taskDigest } from './digests.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
 
 export async function consumeReconciledLabel(api, owner, request, state) {

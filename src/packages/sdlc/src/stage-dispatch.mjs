@@ -1,4 +1,4 @@
-import { digest } from './host-contract.mjs';
+import { digest } from './digests.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
 import { isDeepStrictEqual } from 'node:util';

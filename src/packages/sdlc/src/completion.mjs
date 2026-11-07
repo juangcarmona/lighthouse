@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { deliveryAfterChecks } from './delivery-events.mjs';
 import { loadProposalReview } from './proposal-review.mjs';
-import { taskDigest } from './issue-actions.mjs';
+import { taskDigest } from './digests.mjs';
 import { validateGithubProfile } from './github-profile.mjs';
 
 export const fingerprint = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');

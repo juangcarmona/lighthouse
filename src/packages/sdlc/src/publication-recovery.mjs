@@ -1,4 +1,5 @@
-import { digest, validateStageEnvelope } from './host-contract.mjs';
+import { digest } from './digests.mjs';
+import { validateStageEnvelope } from './host-contract.mjs';
 import { loadStageReport } from './proposal.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { loadImplementation, validateCheckReceipt } from './implementation.mjs';

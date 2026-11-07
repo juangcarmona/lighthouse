@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readActionsJson } from './actions-artifact.mjs';
-import { implementationPrProof } from './pr-state.mjs';
+import { implementationPrProof } from './implementation-proof.mjs';
 import { loadImplementation, changesDigest, validateCheckReceipt } from './implementation.mjs';
 import { loadDispatch } from './stage-dispatch.mjs';
 import { checkProposal, checkImplementationPullRequest, reviewThread } from './proposal-review.mjs';

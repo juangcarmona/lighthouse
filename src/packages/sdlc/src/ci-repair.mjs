@@ -1,9 +1,9 @@
-import { digest } from './host-contract.mjs';
+import { digest } from './digests.mjs';
 import { checkImplementationPullRequest, checkProposal, reviewDigest } from './proposal-review.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch } from './stage-dispatch.mjs';
 import { loadStageReport } from './proposal.mjs';
 import { loadImplementation } from './implementation.mjs';
-import { taskDigest } from './issue-actions.mjs';
+import { taskDigest } from './digests.mjs';
 import { ciRunMatches } from './ci-subject.mjs';
 
 function repairPolicy(completion) {
