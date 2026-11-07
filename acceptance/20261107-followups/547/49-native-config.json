@@ -1,0 +1,34 @@
+{
+  "issue": 49,
+  "pr": 51,
+  "head": "a32ab2745922821e1c52d3bbff2f757d2069f8db",
+  "checkedTree": "d35fa1314d106531d6949dea6e3f344f5fa72d31",
+  "implementationRun": 42402651279,
+  "source": "f9c53cde2744934a94d41b3bb402815862c6918c",
+  "admittedBase": "f9c53cde2744934a94d41b3bb402815862c6918c",
+  "parents": [
+    "f9c53cde2744934a94d41b3bb402815862c6918c"
+  ],
+  "branch": "chore/49-lighthouse-implement-49ead3668462",
+  "branchPatternUnchanged": true,
+  "generatedGuardUnchanged": true,
+  "noBranchPolicyException": true,
+  "changedPaths": [
+    "openspec/changes/issue-49-proposal/design.md",
+    "openspec/changes/issue-49-proposal/proposal.md",
+    "openspec/changes/issue-49-proposal/tasks.md",
+    "src/summary.test.mjs"
+  ],
+  "sourceBodiesUnchanged": true,
+  "original26TestsPreserved": true,
+  "providerMetadataPreinstalledAndPreserved": true,
+  "providerMetadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "independentCheckExits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ]
+}

@@ -1,0 +1,228 @@
+{
+  "state": "verified",
+  "base": "52af452c45865b2e393be2ac0dd838247d8010e2",
+  "issue": 49,
+  "versions": {
+    "cli": "0.12.56",
+    "sdlc": "0.21.7",
+    "ui": "0.2.1"
+  },
+  "source": "f6883e431c4afaf760e065cdd230c3f318e7e266",
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    ".lighthouse/commands.json",
+    ".lighthouse/implement.json",
+    ".lighthouse/sdlc.json",
+    ".lighthouse/upgrade.json",
+    "LIGHTHOUSE.md",
+    "lighthouse.json",
+    "package-lock.json",
+    "package.json",
+    "openspec/changes/issue-49-proposal/.openspec.yaml"
+  ],
+  "preservedFiles": 106,
+  "branchPatternUnchanged": true,
+  "generatedGuardUnchanged": true,
+  "explicitProviderBaseline": {
+    "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+    "issue": 49,
+    "base": "52af452c45865b2e393be2ac0dd838247d8010e2",
+    "provider": "@fission-ai/openspec@1.15.0",
+    "command": [
+      "openspec",
+      "new",
+      "change",
+      "issue-49-proposal",
+      "--schema",
+      "spec-driven",
+      "--json"
+    ],
+    "metadata": "schema: spec-driven\ncreated: 2026-11-07\nskip_specs: true\n",
+    "metadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+    "scope": "Explicit preinstalled provider prerequisite for #547 branch qualification only; #414 automatic plan production remains unqualified."
+  },
+  "steps": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "-m",
+        "chore/49-adopt-published-branch-policy"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--prefer-online",
+        "--save-exact",
+        "@juangcarmona/lighthouse@0.12.56"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--apply"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs",
+        ".",
+        "package",
+        "--apply",
+        "--replace-reviewed",
+        "--with-completion",
+        "--with-product-change",
+        "--with-maintenance"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-triage"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-implement"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-integrate"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "HEAD:.lighthouse/implement.json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "-z"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "main": "f9c53cde2744934a94d41b3bb402815862c6918c",
+  "pr": 50,
+  "head": "e14e8cdf631cd05e172e7834c84bc3344eb8694d"
+}

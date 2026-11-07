@@ -1,0 +1,91 @@
+TAP version 13
+# Subtest: native publication creates a branch accepted by the adopted conventional policy
+not ok 1 - native publication creates a branch accepted by the adopted conventional policy
+  ---
+  duration_ms: 4.720255
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:30:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /^(feat|fix|docs|refactor|test|chore|build|ci|perf|revert)\/[1-9]\d*-[a-z0-9]+(?:-[a-z0-9]+)*$/u. Input:
+    
+    'lighthouse/implement-18-aaaaaaaaaaaa'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'lighthouse/implement-18-aaaaaaaaaaaa'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:32:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: a rejecting custom branch policy stops before any publication write
+not ok 2 - a rejecting custom branch policy stops before any publication write
+  ---
+  duration_ms: 0.863265
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:38:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:40:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an explicitly accepted native prefix retains its existing branch format
+ok 3 - an explicitly accepted native prefix retains its existing branch format
+  ---
+  duration_ms: 0.344644
+  type: 'test'
+  ...
+# Subtest: a detached checkout cannot bypass the adopted publication branch policy
+not ok 4 - a detached checkout cannot bypass the adopted publication branch policy
+  ---
+  duration_ms: 47.157502
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:49:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:59:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: conventional native branches retain exact marker, repository and bot identity checks
+not ok 5 - conventional native branches retain exact marker, repository and bot identity checks
+  ---
+  duration_ms: 1.447744
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:64:1'
+  failureType: 'testCodeFailure'
+  error: 'Not an open repository-owned implementation PR'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    checkImplementationPullRequest (file:///srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/packages/sdlc/src/proposal-review.mjs:31:258)
+    TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/547-publication-branch-policy/src/tests/publication-branch.test.mjs:66:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 1
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 257.553001

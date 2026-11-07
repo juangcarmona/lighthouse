@@ -1,0 +1,33 @@
+✔ native publication creates a branch accepted by the adopted conventional policy (2.40004ms)
+✔ a rejecting custom branch policy stops before any publication write (0.773212ms)
+✔ an explicitly accepted native prefix retains its existing branch format (0.331589ms)
+✔ proposal publication follows the same adopter branch policy before creating Git objects (0.516633ms)
+✔ existing PR correction stops on a changed branch policy instead of replacing its branch (0.30898ms)
+✔ malformed branch policies fail before any write (0.530813ms)
+✔ a detached checkout cannot bypass the adopted publication branch policy (33.496441ms)
+✔ conventional native branches retain exact marker, repository and bot identity checks (1.099542ms)
+✔ a fresh published implementation can start trusted head CI through its original authority guard (6.907914ms)
+✔ publication does not admit competing PRs, changed candidates or revoked owner authority (5.346907ms)
+▶ review corrections, product apply and aligned resumptions start CI for the new validated head on the same PR
+  ✔ review (2.357968ms)
+  ✔ product (1.580657ms)
+  ✔ product-review (0.926728ms)
+  ✔ aligned (0.710264ms)
+✔ review corrections, product apply and aligned resumptions start CI for the new validated head on the same PR (6.131945ms)
+✔ post-publication bindings never relax original head checks before publication (1.128163ms)
+✔ updated publications reject competing PRs, changed identity and revoked intent before App push (14.454234ms)
+✔ edited feedback or applied checkpoints cannot authorize a published continuation (1.348435ms)
+✔ a lost publication readback cannot cause another PR or CI push (0.492733ms)
+✔ implementation publication waits only for its known old head before starting CI once (46.448323ms)
+✔ fresh ordinary and epic publications accept old PR base snapshots only with the admitted live target (2.866683ms)
+✔ named publication returns one confirmed transition for initial, epic and every existing-PR path (8.849407ms)
+✔ a confirmed transition is unavailable until exact host publication and checked tree are observed (1.542532ms)
+✔ summary-only correction uses the same transition without a source commit or a replacement PR (1.569325ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 247.618731
