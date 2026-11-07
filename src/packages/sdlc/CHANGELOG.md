@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.12
+
+### Patch Changes
+
+- ff9869d: # Delivery contract dependencies
+
+  Separate task digests, proposal-file validation, implementation receipt selection and the GitHub REST adapter from delivery controllers. Preserve existing exports and receipt formats while removing domain imports of the executable issue adapter.
+
+- c676ecb: # Stale test-merge recovery
+
+  Recover a stale GitHub test merge after successful independent verification by publishing a commit with the same checked tree. Preserve the existing delivery PR and product apply, authenticate the new merge subject, and require approval of the resulting head.
+
 ## 0.20.11
 
 ### Patch Changes
