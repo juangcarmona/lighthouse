@@ -39,8 +39,10 @@ export function readDispatchReceipt(comment, repository, issue) {
   const matches = [...comment.body.matchAll(/<!-- lighthouse-dispatch:(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Missing or ambiguous dispatch receipt');
   const receipt = JSON.parse(matches[0][1]);
+  const rejected = receipt.admissionRejected;
+  if (rejected && (rejected.code !== 'workflow-revision-rejected' || rejected.attempt !== 1 || !sha(rejected.expectedRevision) || !sha(rejected.observedRevision) || rejected.expectedRevision === rejected.observedRevision || !positive(receipt.workerRunId) || receipt.status !== 'failed' || rejected.nextAction !== undefined && (typeof rejected.nextAction !== 'string' || rejected.nextAction.length > 1024))) throw Error('Invalid admission rejection receipt');
   if (receipt.intent !== undefined && !hash(receipt.intent)) throw Error('Invalid dispatch intent');
-  if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2)) throw Error('Invalid recovery receipt');
+  if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2 || receipt.recovery.kind !== undefined && (receipt.recovery.kind !== 'before-admission' || receipt.recovery.attempt !== 1))) throw Error('Invalid recovery receipt');
   if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.epicKey !== undefined && !hash(receipt.epicKey)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
 }
@@ -58,9 +60,9 @@ export function dispatchReceiptBody(repository, receipt) {
     cancelled: ['cancelled', 'This attempt was cancelled before a validated result was published.', 'The workflow maintainer should inspect the execution.', 'Any restart requires the configured authorization.'],
     unknown: ['unknown', 'Publication of a validated result could not be confirmed.', 'The workflow maintainer should inspect the execution.', 'Reconcile the outcome before requesting another attempt.'],
   };
-  const item = states[status];
+  const item = receipt.admissionRejected ? ['failed', `GitHub resolved workflow revision \`${receipt.admissionRejected.observedRevision}\` instead of \`${receipt.admissionRejected.expectedRevision}\`. This worker was rejected before admission; no agent or publisher was authorized.`, receipt.admissionRejected.nextAction ?? 'The workflow maintainer should inspect the linked rejected execution and scoped recovery observation.', 'Only one authenticated review recovery is allowed after current authority and skipped effects are verified.'] : states[status];
   if (!item) throw Error('Unknown dispatch status');
-  const recovery = receipt.recovery ? `\nRetry ${receipt.recovery.attempt}/2 · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
+  const recovery = receipt.recovery ? `\nRetry ${receipt.recovery.attempt}/${receipt.recovery.kind === 'before-admission' ? 1 : 2} · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
   const details = `[Dispatch origin](${root}${receipt.routerRunId})${receipt.workerRunId ? ` · [Execution](${root}${receipt.workerRunId})` : ''}${recovery}\n\n<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->`;
   return handoff({ status: item[0], stage: workerFor(receipt), happened: item[1], action: item[2], next: item[3], details });
 }
@@ -153,7 +155,7 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const recovery = !!request.recovery;
   const originPath = recovery ? '.github/workflows/lighthouse-worker-maintenance.yml' : routerPath;
   const originEvent = recovery ? request.routerEventName : request.eventName;
-  const reviewContinuation = request.stage === 'review' && !request.worker && !request.handoff && (request.completionRecovery?.maintenance === Number(request.event.inputs.after_run) || !request.completionRecovery && request.completionAuthorization?.issue === issue && request.completionAuthorization?.merge === false && sha(request.completionAuthorization?.head) && positive(request.completionAuthorization?.pr) && request.eventRunId === request.event.inputs.after_run);
+  const reviewContinuation = request.stage === 'review' && !request.worker && !request.handoff && (request.completionRecovery?.maintenance === Number(request.event?.inputs?.after_run) || !request.completionRecovery && request.completionAuthorization?.issue === issue && request.completionAuthorization?.merge === false && sha(request.completionAuthorization?.head) && positive(request.completionAuthorization?.pr) && request.eventRunId === request.event?.inputs?.after_run);
   const continuation = !recovery && isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && Number(request.event.inputs.issue) === issue && (reviewContinuation || request.stage === 'implement' && request.worker === 'apply-review' && request.ciRepair?.run === Number(request.event.inputs.after_run) && !request.handoff || request.stage === 'implement' && request.handoff && !request.worker && !request.feedbackKey && request.predecessor?.runId === request.event.inputs.after_run || request.worker === 'product-change' && request.productParent?.predecessor?.runId === request.event.inputs.after_run || (!request.worker || request.worker === 'apply-review' && request.productResume?.parent.review) && request.event.inputs.workflow === 'resume-product' && request.productResume?.applyRun?.runId === request.event.inputs.after_run || !request.worker && request.event.inputs.workflow === 'resume-aligned' && request.productAlignment?.alignmentRun?.runId === request.event.inputs.after_run);
   const epicTriage = !recovery && isBotEpicTriage(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'triage' && !request.handoff && !request.worker && Number(request.event.inputs.issue) === issue && Number(request.event.inputs.epic_parent) === request.epic?.parent;
   const epicRefinement = !recovery && isBotEpicRefinement(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage === 'refine' && !request.handoff && !request.worker && Number(request.event.inputs.issue) === issue && Number(request.event.inputs.epic_parent) === request.epic?.parent;
@@ -164,7 +166,12 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   executionModelSelection(request);
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.epic_run ?? request.event?.inputs?.after_run;
   if (String(eventRunId ?? '') !== String(receipt.eventRunId ?? '') || String(request.eventRunId ?? '') !== String(receipt.eventRunId ?? '')) throw Error('Completion event identity mismatch');
-  if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_sha !== request.workflowRevision || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
+  if (worker.path !== stagePath(workerFor(request)) || worker.event !== 'workflow_dispatch' || worker.head_branch !== request.ref || worker.repository?.full_name !== repository || ![owner, 'github-actions[bot]'].includes(worker.actor?.login) || ![owner, 'github-actions[bot]'].includes(worker.triggering_actor?.login)) throw Error('Dispatch worker identity mismatch');
+  if (worker.head_sha !== request.workflowRevision) {
+    const error = Error('Dispatch worker identity mismatch: workflow revision changed before admission');
+    if (sha(worker.head_sha)) error.code = 'workflow-revision-rejected';
+    throw error;
+  }
 }
 
 export async function loadDispatch(api, repository, owner, issue, commentId, worker, readArtifact = readActionsJson, depth = 0) {
@@ -174,7 +181,11 @@ export async function loadDispatch(api, repository, owner, issue, commentId, wor
   const receipt = readDispatchReceipt(comment, repository, issue);
   const parent = await api(`actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt}`);
   const request = await readArtifact(api, repository, receipt.routerRunId, dispatchArtifact(receipt), 'dispatch.json');
-  verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue);
+  try { verifyDispatchOrigin(request, receipt, parent, worker, repository, owner, issue); }
+  catch (error) {
+    if (error.code === 'workflow-revision-rejected') error.rejection = { dispatch: { request, receipt, commentId: Number(commentId) }, parent, run: worker };
+    throw error;
+  }
   if (isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login) && request.stage !== 'review' && !request.ciRepair && !request.completionRecovery && !request.productParent && !['resume-product', 'resume-aligned'].includes(request.event?.inputs?.workflow)) {
     const predecessor = await api(`actions/runs/${request.predecessor.runId}`);
     const next = await (await import('./stage-transition.mjs')).refinementAfterRun(api, repository, owner, { action: 'completed', workflow_run: { id: predecessor.id, head_sha: predecessor.head_sha } }, readArtifact);
@@ -250,11 +261,26 @@ export async function assertCurrentDispatch(api, repository, issue, dispatch, ru
 
 
 // Every dispatched worker shares the literal issue concurrency key before this call.
-export async function admitDispatch(api, repository, owner, env, event) {
+export async function admitDispatch(api, repository, owner, env, event, readArtifact = readActionsJson) {
   const issue = Number(env.LIGHTHOUSE_ISSUE);
   if (!Number.isSafeInteger(issue) || issue < 1 || String(issue) !== env.LIGHTHOUSE_ISSUE) throw Error('Dispatch issue must be a canonical positive integer');
   const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
-  const dispatch = await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], worker);
+  let dispatch;
+  try { dispatch = await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], worker, readArtifact); }
+  catch (error) {
+    if (error.rejection && worker.run_attempt === 1) {
+      const { dispatch: rejected } = error.rejection;
+      if (!rejected.receipt.workerRunId && (env.LIGHTHOUSE_WORKER ? workerFor(rejected.request) === env.LIGHTHOUSE_WORKER : rejected.request.stage === env.LIGHTHOUSE_STAGE)) {
+        const fresh = readDispatchReceipt(await api(`issues/comments/${rejected.commentId}`), repository, issue);
+        if (!fresh.workerRunId && fresh.digest === rejected.receipt.digest) {
+          fresh.workerRunId = String(worker.id); fresh.status = 'failed';
+          fresh.admissionRejected = { code: error.code, attempt: worker.run_attempt, expectedRevision: rejected.request.workflowRevision, observedRevision: worker.head_sha };
+          await api(`issues/comments/${rejected.commentId}`, 'PATCH', { body: dispatchReceiptBody(repository, fresh) });
+        }
+      }
+    }
+    throw error;
+  }
   checkEpicWorkerLease(dispatch.request, event.inputs);
   if (env.LIGHTHOUSE_WORKER ? workerFor(dispatch.request) !== env.LIGHTHOUSE_WORKER : dispatch.request.stage !== env.LIGHTHOUSE_STAGE) throw Error('Dispatch targets a different stage or worker');
   if (dispatch.request.recovery || dispatch.request.completionRecovery) {
@@ -263,7 +289,7 @@ export async function admitDispatch(api, repository, owner, env, event) {
     if (scope && !scope.includes(Number(issue))) throw Error('Recovery is outside the configured maintenance scope');
     if (dispatch.request.recovery) {
       const parent = await api(`actions/runs/${dispatch.receipt.routerRunId}/attempts/${dispatch.receipt.routerAttempt}`);
-      await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readActionsJson, 0, true);
+      await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, 0, true);
     }
   }
   const admitted = await claimDispatch(api, repository, dispatch, env.GITHUB_RUN_ID);

@@ -136,6 +136,8 @@ For immediate failed-CI continuation, the trusted pinned CI reconciliation job r
 
 For immediate post-merge review, a trusted pinned CI job runs after successful verification on the default branch and invokes `issue-actions.mjs signal-post-merge-review` with `LIGHTHOUSE_CI_RESULT` set from its actual dependency and `actions: write`. It wakes the existing router, which waits for terminal adopted CI and authenticates the exact merge and retained integration. Native completion and explicit signals share dispatch identity. Adopters own this CI callback; scheduled maintenance remains a recovery path.
 
+Automatic continuations select the current default-branch workflow revision while retaining their original router identity. An exact worker revision mismatch fails admission and records the rejected execution. Scoped maintenance can retry a final review once after a documentation-only default-branch advance (excluding product definitions), provided native jobs confirm no agent or publication ran and the accepted head, owner intent, reviews, checks and policy are unchanged. Other changes or uncertain effects require a fresh decision; direct owner workflow references are preserved.
+
 ## License
 
 Lighthouse-authored material in this package is licensed under [Apache-2.0](LICENSE); retain [NOTICE](NOTICE) and the applicable license and attribution when redistributing it. Copied or adapted guidance, workflows, scripts, styles and templates keep those terms. This does not assign a license to unrelated consumer code. External dependencies and integrations retain their own licenses.
