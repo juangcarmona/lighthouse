@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { feedbackKey, feedbackWorker, checkAlignedImplementationPullRequest, checkImplementationPullRequest, checkProposal, reviewThread, reviewTarget, loadProposalReview, loadProposalFiles, checkReviewCurrent, updateProposal } from './proposal-review.mjs';
+import { prepareSourceSynchronization } from './source-sync.mjs';
 import { loadImplementation, loadImplementationSeed, changesDigest, validateChanges, validateCheckReceipt, createImplementationPullRequest, isVerificationOnlyCorrection, observeImplementationPublication } from './implementation.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { digest } from './digests.mjs';
@@ -613,6 +614,10 @@ async function main(command) {
     if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
     const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
     const snapshot = { ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    if (isVerificationOnlyCorrection(snapshot) && !snapshot.epic && !snapshot.productResume && !snapshot.productAlignment && implementation.policy.verification?.synchronizeBase === true) {
+      const synchronization = await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision);
+      if (synchronization) snapshot.sourceSynchronization = synchronization;
+    }
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
@@ -628,6 +633,7 @@ async function main(command) {
     }
     if (productResume) { context.productResume = productResume; context.contract.rules += ' The approved Product Change was applied to the supplied issue branch. Resume only the original parent stage and its existing authorization. Preserve the applied product files and branch; product approval does not authorize merge or broaden implementation scope.'; }
     if (snapshot.productAlignment) { context.productAlignment = snapshot.productAlignment; context.contract.rules += ' The authenticated Product Change worker found that accepted product intent already covers this request. Resume only the original parent stage and its existing authorization. This observation grants no new product decision, implementation scope or merge authority.'; }
+    if (snapshot.sourceSynchronization) context.contract.rules += ' The trusted host synchronizes nonconflicting changes from the admitted default branch before execution. Preserve all supplied files, including verification inputs. Return no file changes; only the host may publish the independently checked synchronization.';
     if (alignedPr) context.contract.rules += ' Continue the existing draft implementation PR from its authenticated head. Preserve its content and the authorized scope.';
     if (!productWorker && ['triage', 'refine', 'propose', 'implement'].includes(stage)) context.contract.rules += ' If the authorized issue requires an adjustment to accepted product intent, stop with status blocked and return output.productGap with only summary and scope. Treat that observation as context, not approval or scope authority. Do not use a handoff question for a technical product prerequisite. Set nextAction to: Workflow maintainer: ensure the optional Product Change workflow is installed and follow its authenticated handoff. If a product or scope decision itself is missing, ask one explicit owner question instead.';
     if (continuation) {
@@ -900,6 +906,7 @@ async function main(command) {
           }
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
+          if (snapshot.sourceSynchronization && JSON.stringify(await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision)) !== JSON.stringify(snapshot.sourceSynchronization)) throw Error('Source synchronization authority changed');
           if (snapshot.planningReference) {
             checkProposal(await api(`pulls/${snapshot.planningReference.number}`), repo, snapshot.planningReference);
             if (digest(JSON.stringify(await reviewThread(api, snapshot.planningReference.number, owner))) !== snapshot.planningReference.threadDigest) throw Error('Proposal feedback changed');
@@ -930,7 +937,7 @@ async function main(command) {
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
           await recheckPublication();
         };
-        const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite, { refreshVerification: candidateComplete });
+        const pr = await createImplementationPullRequest(api, snapshot, changes, value.effect.body, runUrl, true, recheck, afterRefWrite, { refreshVerification: candidateComplete, checkedTree: receipt.candidateTree });
         const currentPr = await observeImplementationPublication(api, snapshot, pr);
         if (currentPr.number !== pr.number || currentPr.head?.sha !== pr.head.sha || currentPr.head?.ref !== pr.head.ref) throw Error('Implementation changed after publication');
         publishedPr = structuredClone(currentPr);

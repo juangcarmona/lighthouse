@@ -29,6 +29,8 @@ An owner correction can revalidate an existing implementation PR without editing
 
 When GitHub retains a test merge against an older base, a successful correction can publish a verification commit with the exact checked tree. The host waits for GitHub to recompute the merge subject and requests its normal CI. Integration requires approval of the resulting head; source files and the completed product apply remain unchanged.
 
+For a verification-only correction, an adopter can opt into `verification.synchronizeBase: true` in its implementation policy. Before execution, the host incorporates admitted default-branch changes where the PR has not changed the same path; conflicts block the run. The agent must preserve that complete input. Publication requires passing independent checks and commits the checked tree with both source and base as parents. Receipts bind those inputs, and the resulting head requires fresh approval. The option is disabled by default and does not apply to epic children or product-resumption workers.
+
 Answer correction questions on the existing PR. The issue directs the owner there; the PR reply requests a correction of the same branch under the current head and discussion checks. Issue-stage questions keep the reply destination stated in their handoff.
 
 For design-only work, add `future` before `refine`, then add `propose` after refinement passes. For delivery, request `implement` directly or let successful refinement continue under the installed implementation policy. Planning still happens before code changes. Gates are evidence and decision checks; only gates configured for a human require a human stop.

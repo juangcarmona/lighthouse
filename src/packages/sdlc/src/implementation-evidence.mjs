@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readActionsJson } from './actions-artifact.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
+import { prepareSourceSynchronization, synchronizationDigest } from './source-sync.mjs';
 import { loadImplementation, changesDigest, validateCheckReceipt } from './implementation.mjs';
 import { loadDispatch } from './stage-dispatch.mjs';
 import { checkProposal, checkImplementationPullRequest, reviewThread } from './proposal-review.mjs';
@@ -19,6 +20,7 @@ export function commandEvidenceBinding(request) {
     sourceRevision: request.sourceRevision, policyRevision: request.baseRevision ?? request.sourceRevision, intent: request.taskDigest,
     policy: digest(request.implementation), planning: digest(request.planningReference ?? null) };
   if (!/^[\w.-]+\/[\w.-]+$/.test(binding.repository ?? '') || !Number.isSafeInteger(binding.issue) || binding.issue < 1 || !hex(binding.runId) || !positive(binding.workflowRunId) || !Number.isSafeInteger(binding.attempt) || binding.attempt < 1 || !sha(binding.sourceRevision) || !sha(binding.policyRevision) || !hex(binding.intent)) throw Error('Command evidence requires an admitted repository, work item, run, attempt and intent');
+  if (request.sourceSynchronization !== undefined) binding.synchronization = synchronizationDigest(request.sourceSynchronization);
   return binding;
 }
 
@@ -49,7 +51,7 @@ export function implementationEvidenceBundle(request, receipt, changes, publicat
   if (receipt.schemaVersion !== 2 || digest(receipt.binding) !== digest(commandEvidenceBinding(request)) || !sha(receipt.candidateTree) || !sha(publication.head) || receipt.candidateTree !== publication.tree || !Number.isSafeInteger(publication.pr) || publication.pr < 1) throw Error('Command evidence does not bind the tested and published trees');
   const value = { schemaVersion: 1, producer: 'lighthouse-implementation-host', binding: receipt.binding,
     implementation: request.implementation, planningReference: request.planningReference ?? null,
-    dispatch: request.dispatch ?? null, changesDigest: changesDigest(changes), publication, receipt };
+    dispatch: request.dispatch ?? null, ...(request.sourceSynchronization ? { sourceSynchronization: request.sourceSynchronization } : {}), changesDigest: changesDigest(changes), publication, receipt };
   if (Buffer.byteLength(JSON.stringify(value)) > 128000) throw Error('Command evidence exceeds artifact member bounds');
   return value;
 }
@@ -117,7 +119,7 @@ export async function readImplementationEvidence(api, completion, { readArtifact
       grant = validateUnattendedPolicy(JSON.parse(Buffer.from(file.content, 'base64').toString()), artifact.unattended?.route);
       if (unattendedDigest(grant) !== artifact.unattended?.policyDigest) throw Error('Unattended command grant changed');
     }
-    const expected = commandEvidenceBinding({ ...binding, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference });
+    const expected = commandEvidenceBinding({ ...binding, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference, sourceSynchronization: artifact.sourceSynchronization });
     if (digest(expected) !== digest(binding)) throw Error('Command policy or plan binding changed');
     if (artifact.dispatch) {
       const origin = await loadDispatch(api, repository, owner, issue, artifact.dispatch.commentId, native, readArtifact);
@@ -131,6 +133,10 @@ export async function readImplementationEvidence(api, completion, { readArtifact
     if (!sha(receipt.candidateTree) || commit.tree?.sha !== receipt.candidateTree || publication.tree !== receipt.candidateTree) throw Error('Candidate code or plan tree changed');
     if (unattended) implementation.policy = unattendedImplementationPolicy(implementation.policy, grant, issue, artifact.unattended.route);
     if (digest(implementation) !== binding.policy) throw Error('Applicable implementation policy changed');
+    if (artifact.sourceSynchronization) {
+      const synchronization = artifact.sourceSynchronization;
+      if (unattended || implementation.policy.verification?.synchronizeBase !== true || synchronization.source !== binding.sourceRevision || synchronization.base !== binding.policyRevision || artifact.changesDigest !== changesDigest([]) || JSON.stringify(commit.parents?.map(parent => parent.sha)) !== JSON.stringify([binding.sourceRevision, binding.policyRevision]) || JSON.stringify(await prepareSourceSynchronization(api, binding.sourceRevision, binding.policyRevision)) !== JSON.stringify(synchronization)) throw Error('Synchronized command input authority changed');
+    }
     const verificationInputs = await verificationInputsCurrent(api, binding.policyRevision, completion.currentRevision, head);
     if (artifact.planningReference) {
       checkProposal(await api(`pulls/${artifact.planningReference.number}`), repository, artifact.planningReference);

@@ -299,3 +299,31 @@ console.log(JSON.stringify({installedPackage:true,accepted:accepted.status,rejec
     console.log('Packaged command evidence trace:', JSON.stringify(trace));
   } finally { await rm(temp, { recursive: true, force: true }); }
 });
+
+test('synchronized receipts authenticate immutable base inputs and exact commit ancestry without changing legacy admission', async () => {
+  const base = '1'.repeat(40), ancestor = '2'.repeat(40), sourceTree = '4'.repeat(40), baseTree = '5'.repeat(40), ancestorTree = '6'.repeat(40);
+  const before = '7'.repeat(40), after = '8'.repeat(40);
+  const synchronization = { schemaVersion: 1, source: revision, base, ancestor, sourceTree, baseTree, files: [{ path: '.github/workflows/ci.yml', sha: after, mode: '100644', size: 4, before: { sha: before, mode: '100644' } }] };
+  for (const scenario of ['passed', 'missing-manifest', 'changed-blob', 'wrong-parents', 'disabled-policy', 'model-changes']) {
+    const f = await fixture();
+    f.state.policy.verification = { paths: ['.github/'], corrections: {}, synchronizeBase: true };
+    const implementation = await loadImplementation(f.api, 18, 'owner', base, 'main');
+    const request = { ...f.request, baseRevision: base, implementation, sourceSynchronization: synchronization };
+    const receipt = { ...f.receipt, changesDigest: changesDigest([]), binding: commandEvidenceBinding(request) };
+    f.state.artifact = implementationEvidenceBundle(request, receipt, [], { pr: 23, head, tree });
+    if (scenario === 'missing-manifest') delete f.state.artifact.sourceSynchronization;
+    if (scenario === 'disabled-policy') f.state.policy.verification.synchronizeBase = false;
+    if (scenario === 'model-changes') { f.state.artifact.changesDigest = changesDigest(f.changes); f.state.artifact.receipt.changesDigest = f.state.artifact.changesDigest; }
+    f.completion.currentRevision = base;
+    const api = async path => {
+      if (path === `compare/${base}...${revision}`) return { base_commit: { sha: base }, merge_base_commit: { sha: ancestor }, behind_by: 1 };
+      if ([revision, base, ancestor].some(ref => path === `git/commits/${ref}`)) { const sha = path.slice(12); return { sha, tree: { sha: ({ [revision]: sourceTree, [base]: baseTree, [ancestor]: ancestorTree })[sha] } }; }
+      if ([sourceTree, baseTree, ancestorTree].some(ref => path === `git/trees/${ref}?recursive=1`)) return { truncated: false, tree: [{ path: '.github/workflows/ci.yml', mode: '100644', type: 'blob', size: 4, sha: path.includes(baseTree) ? scenario === 'changed-blob' ? '9'.repeat(40) : after : before }] };
+      const value = await f.api(path);
+      if (path === `git/commits/${head}`) value.parents = (scenario === 'wrong-parents' ? [revision] : [revision, base]).map(sha => ({ sha }));
+      return value;
+    };
+    const result = await readImplementationEvidence(api, f.completion, f.options);
+    assert.equal(result.status, scenario === 'passed' ? 'passed' : 'unavailable', scenario + ': ' + result.reason);
+  }
+});

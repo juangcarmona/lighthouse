@@ -9,6 +9,7 @@ import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
 import { observeUpdatedProductPull } from './product-change-actions.mjs';
+import { prepareSourceSynchronization, synchronizationDigest } from './source-sync.mjs';
 import { needsVerificationRefresh, observeVerificationMerge } from './ci-subject.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -34,7 +35,7 @@ export function validateImplementationPolicy(policy, issue) {
   if ('seed' in policy && (!policy.seed || typeof policy.seed !== 'object' || Object.keys(policy.seed).sort().join(',') !== 'base,head' || !/^[a-f0-9]{40}$/.test(policy.seed.base ?? '') || !/^[a-f0-9]{40}$/.test(policy.seed.head ?? ''))) throw Error('Seed must identify immutable base and head commits');
   if (policy.verification !== undefined) {
     const { paths, corrections } = policy.verification ?? {};
-    if (!policy.verification || Object.keys(policy.verification).sort().join(',') !== 'corrections,paths' || !Array.isArray(paths) || !paths.length || paths.length > 40 || paths.some(p => typeof p !== 'string' || /[?*\[\]{}]/.test(p) || !safePath(p.replace(/\/$/, ''))) || new Set(paths).size !== paths.length || !corrections || typeof corrections !== 'object' || Array.isArray(corrections) || Object.keys(corrections).length > 40 || Object.entries(corrections).some(([path, reason]) => !safePath(path) || !paths.some(p => p.endsWith('/') ? path.startsWith(p) : path === p) || typeof reason !== 'string' || !reason.trim() || reason.length > 2000)) throw Error('Verification needs explicit input paths and bounded correction reasons');
+    if (!policy.verification || Object.keys(policy.verification).filter(key => key !== 'synchronizeBase').sort().join(',') !== 'corrections,paths' || 'synchronizeBase' in policy.verification && typeof policy.verification.synchronizeBase !== 'boolean' || !Array.isArray(paths) || !paths.length || paths.length > 40 || paths.some(p => typeof p !== 'string' || /[?*\[\]{}]/.test(p) || !safePath(p.replace(/\/$/, ''))) || new Set(paths).size !== paths.length || !corrections || typeof corrections !== 'object' || Array.isArray(corrections) || Object.keys(corrections).length > 40 || Object.entries(corrections).some(([path, reason]) => !safePath(path) || !paths.some(p => p.endsWith('/') ? path.startsWith(p) : path === p) || typeof reason !== 'string' || !reason.trim() || reason.length > 2000)) throw Error('Verification needs explicit input paths and bounded correction reasons');
   }
   return policy;
 }
@@ -150,7 +151,8 @@ export async function materializeCandidate(before, changes, destination) {
   for (const [path, file] of files) { await mkdir(dirname(join(destination, path)), { recursive: true, mode: 0o777 }); await writeFile(join(destination, path), file.content, { mode: file.mode === '100755' ? 0o777 : 0o666 }); }
 }
 export function validateCheckReceipt(receipt, request, changes) {
-  if (receipt?.schemaVersion === 2 && (receipt.binding?.repository !== request.repository || receipt.binding.issue !== request.issue || receipt.binding.runId !== request.runId || receipt.binding.sourceRevision !== request.sourceRevision || receipt.binding.policyRevision !== (request.baseRevision ?? request.sourceRevision) || receipt.binding.intent !== request.taskDigest || receipt.binding.policy !== hash(JSON.stringify(request.implementation)) || receipt.binding.planning !== hash(JSON.stringify(request.planningReference ?? null)) || receipt.binding.attempt !== Number(request.attempt) || receipt.binding.workflowRunId !== String(request.workflowRunId) || !/^[a-f0-9]{40}$/.test(receipt.candidateTree ?? ''))) throw Error('Implementation check receipt producer or input mismatch');
+  if (request.sourceSynchronization && receipt?.schemaVersion !== 2) throw Error('Synchronized verification requires a bound command receipt');
+  if (receipt?.schemaVersion === 2 && (receipt.binding?.repository !== request.repository || receipt.binding.issue !== request.issue || receipt.binding.runId !== request.runId || receipt.binding.sourceRevision !== request.sourceRevision || receipt.binding.policyRevision !== (request.baseRevision ?? request.sourceRevision) || receipt.binding.intent !== request.taskDigest || receipt.binding.policy !== hash(JSON.stringify(request.implementation)) || receipt.binding.planning !== hash(JSON.stringify(request.planningReference ?? null)) || receipt.binding.synchronization !== synchronizationDigest(request.sourceSynchronization) || receipt.binding.attempt !== Number(request.attempt) || receipt.binding.workflowRunId !== String(request.workflowRunId) || !/^[a-f0-9]{40}$/.test(receipt.candidateTree ?? ''))) throw Error('Implementation check receipt producer or input mismatch');
   if (receipt?.runId !== request.runId || receipt.sourceRevision !== request.sourceRevision || receipt.changesDigest !== changesDigest(changes) || !Array.isArray(receipt.checks) || receipt.checks.length !== request.implementation.policy.checks.length) throw Error('Implementation check receipt identity mismatch');
   for (let i = 0; i < receipt.checks.length; i++) if (JSON.stringify(receipt.checks[i].command) !== JSON.stringify(request.implementation.policy.checks[i]) || !Number.isInteger(receipt.checks[i].exitCode)) throw Error('Implementation check receipt command mismatch');
   if (request.implementation.environment) {
@@ -163,9 +165,14 @@ export function isVerificationOnlyCorrection(request) {
   const review = request.implementationReview;
   return request.stage === 'implement' && request.worker === 'apply-review' && review?.approved === false && review.issue === request.issue && review.head === request.sourceRevision && /^[a-f0-9]{40}$/.test(review.head ?? '') && /^[a-f0-9]{40}$/.test(request.baseRevision ?? '') && /^[a-f0-9]{64}$/.test(review.implementationIdentity ?? '') && /^[a-f0-9]{64}$/.test(review.feedbackDigest ?? '');
 }
-export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}, { refreshVerification = false } = {}) {
+export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}, { refreshVerification = false, checkedTree } = {}) {
   validateChanges(changes, snapshot.implementation.policy);
   if (!changes.length && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
+  const synchronization = snapshot.sourceSynchronization;
+  if (synchronization) {
+    if (!refreshVerification || !/^[a-f0-9]{40}$/.test(checkedTree ?? '') || !isVerificationOnlyCorrection(snapshot) || changes.length || snapshot.epic || snapshot.productResume || snapshot.productAlignment || snapshot.implementation.policy.verification?.synchronizeBase !== true || synchronization.source !== snapshot.sourceRevision || synchronization.base !== snapshot.baseRevision) throw Error('Source synchronization requires a completed immutable verification correction');
+    if (JSON.stringify(await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision)) !== JSON.stringify(synchronization)) throw Error('Source synchronization authority changed');
+  }
   const epic = snapshot.epic;
   if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : epic.baseSha !== snapshot.sourceRevision))) throw Error('Invalid epic publication base');
   const checkEpicBase = async () => {
@@ -187,8 +194,8 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     await beforeWrite();
     await checkEpicBase();
     const current = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
-    verificationRefresh = refreshVerification === true && !epic && !snapshot.productResume && !snapshot.productAlignment && await needsVerificationRefresh(api, current, snapshot.baseRevision);
-    if (!verificationRefresh) {
+    verificationRefresh = !synchronization && refreshVerification === true && !epic && !snapshot.productResume && !snapshot.productAlignment && await needsVerificationRefresh(api, current, snapshot.baseRevision);
+    if (!verificationRefresh && !synchronization) {
       const revised = reviewBody(current, snapshot.sourceRevision);
       if (current.body !== revised) {
         try { await api(`pulls/${current.number}`, 'PATCH', { body: revised }); }
@@ -203,14 +210,17 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     }
   }
   const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
+  if (synchronization && (commit.sha !== synchronization.source || commit.tree?.sha !== synchronization.sourceTree)) throw Error('Synchronized source tree changed');
   for (const file of changes) {
     const sha = file.content === null ? null : (await api('git/blobs', 'POST', { content: file.content, encoding: 'base64' })).sha;
     entries.push({ path: file.path, mode: file.mode, type: 'blob', sha });
   }
+  if (synchronization) entries.push(...synchronization.files.map(({ path, sha, mode }) => ({ path, sha, mode, type: 'blob' })));
   if (verificationRefresh && (commit.sha !== snapshot.sourceRevision || !/^[a-f0-9]{40}$/.test(commit.tree?.sha ?? ''))) throw Error('Checked verification tree changed');
   const tree = verificationRefresh ? commit.tree : await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
+  if (synchronization && tree.sha !== checkedTree) throw Error('Synchronized publication differs from the independently checked tree');
   const message = verificationRefresh ? `chore: refresh verification for issue #${snapshot.issue}\n\nLighthouse-CI-Base: ${snapshot.baseRevision}` : `feat: implement issue #${snapshot.issue}`;
-  const created = await api('git/commits', 'POST', { message, tree: tree.sha, parents: [snapshot.sourceRevision] });
+  const created = await api('git/commits', 'POST', { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] });
   await beforeWrite();
   await checkEpicBase();
   if (snapshot.productAlignment?.parent.pullRequest) {
@@ -238,7 +248,7 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     if (current.head?.sha !== snapshot.sourceRevision) throw Error('Implementation PR changed before update');
     try { await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false }); }
     catch (error) {
-      if (!verificationRefresh) throw error;
+      if (!verificationRefresh && !synchronization) throw error;
       const observed = await api(`git/ref/heads/${snapshot.implementationReview.branch}`);
       if (observed.ref !== `refs/heads/${snapshot.implementationReview.branch}` || observed.object?.sha !== created.sha) throw error;
     }
