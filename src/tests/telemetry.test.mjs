@@ -160,3 +160,21 @@ test('forge observation retains source signals and skipped jobs without inventin
     assert.ok(!events.some(e => e.type === 'execution.admitted')); assert.ok(!JSON.stringify(events).includes('private'));
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+test('long-lived runners rotate bounded journals without stopping their command', async t => {
+  const directory = fixture();
+  try {
+    installTelemetry(directory, {});
+    const settings = JSON.parse(readFileSync(join(directory, 'settings.json'))); settings.maxBytes = 16384;
+    writeFileSync(join(directory, 'settings.json'), JSON.stringify(settings));
+    t.mock.timers.enable({ apis: ['setInterval'] });
+    const running = runRunner([process.execPath, '-e', 'process.exit(0)'], { ...process.env, LIGHTHOUSE_TELEMETRY_DIR: directory, RUNNER_NAME: 'rotation-test' });
+    t.mock.timers.tick(1200000);
+    assert.equal(await running, 0);
+    const health = telemetryHealth(directory), events = readTelemetry(directory);
+    assert.ok(health.length > 1); assert.ok(health.every(h => h.dropped === 0 && h.bytes <= settings.maxBytes && !h.active));
+    assert.equal(events.filter(e => e.type === 'runner.started').length, 1);
+    assert.equal(events.filter(e => e.type === 'runner.stopped').length, 1);
+    assert.ok(events.some(e => e.type === 'runner.resumed'));
+  } finally { t.mock.timers.reset(); rmSync(directory, { recursive: true, force: true }); }
+});
