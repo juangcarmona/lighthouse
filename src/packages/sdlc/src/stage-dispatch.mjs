@@ -42,7 +42,7 @@ export function readDispatchReceipt(comment, repository, issue) {
   const rejected = receipt.admissionRejected;
   if (rejected && (rejected.code !== 'workflow-revision-rejected' || rejected.attempt !== 1 || !sha(rejected.expectedRevision) || !sha(rejected.observedRevision) || rejected.expectedRevision === rejected.observedRevision || !positive(receipt.workerRunId) || receipt.status !== 'failed' || rejected.nextAction !== undefined && (typeof rejected.nextAction !== 'string' || rejected.nextAction.length > 1024))) throw Error('Invalid admission rejection receipt');
   if (receipt.intent !== undefined && !hash(receipt.intent)) throw Error('Invalid dispatch intent');
-  if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2)) throw Error('Invalid recovery receipt');
+  if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2 || receipt.recovery.kind !== undefined && (receipt.recovery.kind !== 'before-admission' || receipt.recovery.attempt !== 1))) throw Error('Invalid recovery receipt');
   if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.epicKey !== undefined && !hash(receipt.epicKey)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
 }
@@ -62,7 +62,7 @@ export function dispatchReceiptBody(repository, receipt) {
   };
   const item = receipt.admissionRejected ? ['failed', `GitHub resolved workflow revision \`${receipt.admissionRejected.observedRevision}\` instead of \`${receipt.admissionRejected.expectedRevision}\`. This worker was rejected before admission; no agent or publisher was authorized.`, receipt.admissionRejected.nextAction ?? 'The workflow maintainer should inspect the linked rejected execution and scoped recovery observation.', 'Only one authenticated review recovery is allowed after current authority and skipped effects are verified.'] : states[status];
   if (!item) throw Error('Unknown dispatch status');
-  const recovery = receipt.recovery ? `\nRetry ${receipt.recovery.attempt}/2 · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
+  const recovery = receipt.recovery ? `\nRetry ${receipt.recovery.attempt}/${receipt.recovery.kind === 'before-admission' ? 1 : 2} · [Previous request](https://github.com/${repository}/issues/${receipt.issue ?? ''}#issuecomment-${receipt.recovery.previousComment})` : '';
   const details = `[Dispatch origin](${root}${receipt.routerRunId})${receipt.workerRunId ? ` · [Execution](${root}${receipt.workerRunId})` : ''}${recovery}\n\n<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->`;
   return handoff({ status: item[0], stage: workerFor(receipt), happened: item[1], action: item[2], next: item[3], details });
 }

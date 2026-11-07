@@ -29,6 +29,7 @@ test('maintenance records one terminal rejection and one linked retry, then veri
   const retry = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
   assert.equal(retry.request.recovery.kind, 'before-admission');
   assert.equal(retry.request.recovery.attempt, 1);
+  assert.match(f.comments.at(-1).body, /Retry 1\/1/);
   assert.equal(retry.request.sourceRevision, current);
   assert.equal(retry.request.workflowRevision, current);
   assert.equal(retry.request.routerRevision, current);
