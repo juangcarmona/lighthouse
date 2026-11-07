@@ -1,5 +1,21 @@
 # @juangcarmona/lighthouse
 
+## 0.12.56
+
+### Patch Changes
+
+- 282ba21: # Respect adopter publication branch policy
+
+  Validate native publication branches against the adopter manifest before remote writes. Generate conventional implementation and proposal branches while preserving declared legacy policies and existing PR identities across feedback, product apply and recovery.
+
+- 0d996fc: # Correct planning review specification mode
+
+  Identify whether a validated engineering plan carries specification deltas or explicitly skips them before independent planning review. Keep provider-owned metadata and the existing correction budget unchanged.
+
+- Updated dependencies [282ba21]
+- Updated dependencies [0d996fc]
+  - @juangcarmona/lighthouse-sdlc@0.21.7
+
 ## 0.12.55
 
 ### Patch Changes
