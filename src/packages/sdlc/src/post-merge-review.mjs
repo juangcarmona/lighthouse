@@ -1,6 +1,6 @@
 import { inspectCompletion, postMergeRuns, list } from './completion-state.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
-import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
+import { isBotContinuation, issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
 import { validPendingReview } from './completion-status.mjs';
 
 const paused = issue => issue.state !== 'open' || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name));
@@ -66,4 +66,28 @@ export async function reconcilePostMergeReviews(api, repository, owner, branch, 
     }
   }
   return outcomes;
+}
+
+
+// A hint can delay observation only. The caller must still authenticate completion and the current grant.
+export async function waitForPendingIntegration(api, repository, owner, event, after, env, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  if (env.LIGHTHOUSE_COMPLETION_ENABLED !== 'true' || !isBotContinuation(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR) || event.inputs.stage !== 'review' || after?.completionRecovery || String(after?.workflow_run?.id) !== event.inputs.after_run) return { state: 'not-applicable' };
+  const ci = await api(`actions/runs/${after.workflow_run.id}`);
+  if (ci.id !== after.workflow_run.id || ci.repository?.full_name !== repository || ci.head_sha !== after.workflow_run.head_sha || ci.status !== 'completed' || ci.conclusion !== 'success') return { state: 'unavailable' };
+  const issue = Number(event.inputs.issue), branch = (await api('')).default_branch, deadline = Date.now() + 300000;
+  let entry;
+  for (let attempt = 0; attempt <= 60; attempt++) {
+    const current = await api(`issues/${issue}`);
+    if (paused(current) || current.user?.login !== owner) return { state: 'paused' };
+    entry ??= pending(await issueComments(api, issue), repository, issue);
+    if (entry) {
+      if (entry.hint.merge !== ci.head_sha) return { state: 'superseded' };
+      const run = await api(`actions/runs/${entry.hint.run}`, 'GET', undefined, true);
+      if (run && (String(run.id) !== entry.hint.run || run.repository?.full_name !== repository || !['.github/workflows/lighthouse-sdlc-integrate.lock.yml', '.github/workflows/lighthouse-sdlc-unattended.yml'].includes(run.path) || run.event !== 'workflow_dispatch' || run.head_branch !== branch || String(run.run_attempt) !== entry.hint.attempt)) return { state: 'unavailable' };
+      if (run?.status === 'completed') return { state: 'terminal', integrationRun: entry.hint.run };
+    }
+    if (attempt === 60 || Date.now() >= deadline) break;
+    await wait(Math.min(5000, Math.max(1, deadline - Date.now())));
+  }
+  return { state: 'pending' };
 }
