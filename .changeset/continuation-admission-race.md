@@ -1,6 +1,6 @@
 ---
 "@juangcarmona/lighthouse-sdlc": patch
-"@juangcarmona/lighthouse-cli": patch
+"@juangcarmona/lighthouse": patch
 ---
 
 # Recover rejected continuation admission
