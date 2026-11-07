@@ -50,8 +50,9 @@ export async function fixture() {
     throw Error(`Unexpected ${method} ${path}`);
   };
   const authorization = { issue: 7, pr: 8, head, merge: false };
-  const admissionBinding = (await inspectCompletion(api, repository, owner, authorization, 'review')).binding;
-  const request = { schemaVersion: 1, id: dispatchId(repository, '90', 'review'), repository, issue: 7, stage: 'review', routerRunId: '100', routerAttempt: 1, routerRevision: old, routerRef: 'main', workflowRevision: old, sourceRevision: old, ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '7', stage: 'review', workflow: 'stage', after_run: '90' } }, eventRunId: '90', handoff: false, taskDigest: taskDigest(issue, []), completionAuthorization: authorization, admissionBinding };
+  const observed = await inspectCompletion(api, repository, owner, authorization, 'review'), admissionBinding = observed.binding;
+  const admissionReviewsDigest = digest(JSON.stringify(observed.pullRequest.reviews));
+  const request = { schemaVersion: 1, id: dispatchId(repository, '90', 'review'), repository, issue: 7, stage: 'review', routerRunId: '100', routerAttempt: 1, routerRevision: old, routerRef: 'main', workflowRevision: old, sourceRevision: old, ref: 'main', eventName: 'workflow_dispatch', event: { inputs: { issue: '7', stage: 'review', workflow: 'stage', after_run: '90' } }, eventRunId: '90', handoff: false, taskDigest: taskDigest(issue, []), completionAuthorization: authorization, admissionBinding, admissionReviewsDigest };
   request.intent = dispatchIntent(request);
   const receipt = { schemaVersion: 1, stage: 'review', id: request.id, intent: request.intent, digest: digest(JSON.stringify(request)), eventRunId: '90', routerRunId: '100', routerAttempt: 1, workerRunId: null, status: 'requested' };
   const comment = { id: 30, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/7`, body: dispatchReceiptBody(repository, receipt) }; comments.push(comment); artifacts.set(100, request);
