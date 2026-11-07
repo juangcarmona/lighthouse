@@ -46,13 +46,14 @@ export function observeCli(telemetry, event) {
 export function nativeEventFile(path, { maxBytes = 8 * 1024 * 1024 } = {}) {
   let bytes = 0, dropped = 0;
   mkdirSync(dirname(path), { recursive: true });
-  const write = (type, attributes, source = {}, correlation = {}) => {
+  const write = (type, attributes, source = {}, correlation = {}, terminal = false) => {
     const safeCorrelation = Object.fromEntries(['sessionId', 'parentSessionId'].filter(k => /^ses_[\w-]{1,128}$/.test(correlation[k] ?? '')).map(k => [k, correlation[k]]));
     const line = JSON.stringify({ type, attributes: metadata(attributes), source, correlation: safeCorrelation }) + '\n';
-    if (bytes + Buffer.byteLength(line) > maxBytes) { dropped++; return; }
+    // Reserve space for the final omission count even after the event buffer fills.
+    if (bytes + Buffer.byteLength(line) > maxBytes - (terminal ? 0 : 1024)) { dropped++; return; }
     try { appendFileSync(path, line, { mode: 0o644 }); bytes += Buffer.byteLength(line); } catch { dropped++; }
   };
-  return { write, close() { write('collection.native-stopped', { omittedEvents: dropped, status: dropped ? 'incomplete' : 'completed' }); } };
+  return { write, close() { write('collection.native-stopped', { omittedEvents: dropped, status: dropped ? 'incomplete' : 'completed' }, {}, {}, true); } };
 }
 
 export function collectNativeFile(path, telemetry) {

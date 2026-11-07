@@ -243,7 +243,7 @@ async function main() {
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`] : []),
       ...(workerConfigPath ? ['--mount', `type=bind,src=${workerConfigPath},dst=/etc/opencode/opencode.json,readonly`, '--env', 'LIGHTHOUSE_NATIVE_TELEMETRY_FILE=/output/execution/native-events.jsonl'] : []),
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', 'LIGHTHOUSE_RESOURCE_TELEMETRY_FILE=/output/execution/resource-events.jsonl', '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, ...(telemetry.health().status !== 'disabled' ? ['--env', 'LIGHTHOUSE_RESOURCE_TELEMETRY_FILE=/output/execution/resource-events.jsonl'] : []), '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
     eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -386,6 +386,7 @@ async function main() {
     try {
       if (config.resourceOwner) { runtimeReceipt.cleanup = config.resourceOwner.cleanup(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); }
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(join(output, 'execution/native-events.jsonl'), join(runDir, 'evidence/host/native-events.jsonl')); } catch { telemetry.emit('collection.capability', { capability: 'opencode-native', status: 'unavailable', reasonCode: 'native-file-unavailable' }); }
+      if (runtimeReceipt.execution?.resourceSamplesDropped) telemetry.emit('collection.gap', { reasonCode: 'resource-sample-capacity', omittedEvents: runtimeReceipt.execution.resourceSamplesDropped });
       telemetry.emit('execution.resources', { ...runtimeReceipt.execution?.resources });
       telemetry.emit('execution.cleanup', { status: runtimeReceipt.cleanup?.status ?? 'unknown' });
       telemetry.emit('execution.ended', { status: stopReason ?? (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean' ? 'cleanup-failed' : outcome), exitCode: runtimeReceipt.execution?.exitCode, signal: runtimeReceipt.execution?.signal });

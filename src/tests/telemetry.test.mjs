@@ -88,6 +88,11 @@ test('native activity strips payloads, preserves timing, deduplicates and reconc
     assert.equal(usageSummary(events.filter(e => e.type !== 'session.step.ended')).coverage, 'incomplete');
     assert.equal(usageSummary(events, { health: [{ stream: telemetry.stream, dropped: 1 }] }).coverage, 'incomplete');
     assert.equal(usageSummary([]).tokens.inputTokens, null);
+    const capped = nativeEventFile(join(directory, 'capped.jsonl'), { maxBytes: 2048 });
+    for (let i = 0; i < 100; i++) capped.write('session.step.started', { status: 'running' });
+    capped.close();
+    const terminal = JSON.parse(readFileSync(join(directory, 'capped.jsonl'), 'utf8').trim().split('\n').at(-1));
+    assert.equal(terminal.type, 'collection.native-stopped'); assert.ok(terminal.attributes.omittedEvents > 0);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
