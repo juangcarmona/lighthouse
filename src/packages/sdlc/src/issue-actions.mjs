@@ -336,6 +336,13 @@ async function main(command) {
     else if (productApproval?.feedback) route = { run: true, stage: 'propose', worker: 'product-change', issue: productApproval.issue, productFeedback: productApproval.feedback, productReview: productApproval, reason: 'Owner requested a Product Change revision' };
   }
   const after = ['route', 'dispatch-prepare', 'prepare'].includes(command) ? await completedEvent(api, event, env) : null;
+  if (after && ['route', 'dispatch-prepare'].includes(command)) {
+    const observation = await (await import('./post-merge-review.mjs')).waitForPendingIntegration(api, repo, owner, event, after, env);
+    if (['pending', 'paused', 'superseded', 'unavailable'].includes(observation.state)) {
+      await output('run', 'false'); await output('send', 'false');
+      await summary(`Original CI retained; integration observation is ${observation.state}. No worker dispatched.`); return;
+    }
+  }
   if (after && !await completionSource(api, repo, after, env)) {
     if (command === 'prepare') throw Error('Completion is not a current adopted continuation source');
     await output('run', 'false'); await output('send', 'false');
