@@ -140,6 +140,11 @@ test('retention expires completed cursors while preserving active producers and 
     const denied = createTelemetry({ directory, maxStreams: 1 }); denied.emit('runner.started'); denied.close();
     assert.equal(denied.health().errorCode, 'RETENTION_CAPACITY'); assert.ok(telemetryHealth(directory).some(h => h.errorCode === 'RETENTION_CAPACITY'));
     second.close();
+    for (let i = 0; i < 4; i++) {
+      const disabled = createTelemetry({ directory, maxStreams: 1, env: { LIGHTHOUSE_TELEMETRY_DISABLED: 'true' } });
+      assert.equal(disabled.health().status, 'disabled'); disabled.close();
+    }
+    assert.equal(telemetryHealth(directory).filter(h => h.status === 'disabled').length, 1);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 

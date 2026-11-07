@@ -65,11 +65,12 @@ export function createTelemetry({ directory, component = 'adapter', context = {}
     maxStreams ??= settings?.maxStreams ?? 128;
     retentionMs ??= (settings?.retentionDays ?? 7) * 86400000;
     const files = readdirSync(directory).filter(name => /^[a-f0-9-]{36}\.json$/.test(name));
+    let retainedStreams = files.length;
     for (const name of files.sort((a, b) => statSync(join(directory, a)).mtimeMs - statSync(join(directory, b)).mtimeMs)) {
       const file = join(directory, name), age = Date.now() - statSync(file).mtimeMs;
-      if ((age > retentionMs || readdirSync(directory).filter(n => n.endsWith('.jsonl')).length >= maxStreams) && !JSON.parse(readFileSync(file)).active) { unlinkSync(file); try { unlinkSync(file.replace(/\.json$/, '.jsonl')); } catch {} state.retiredStreams++; }
+      if ((age > retentionMs || retainedStreams >= maxStreams) && !JSON.parse(readFileSync(file)).active) { unlinkSync(file); try { unlinkSync(file.replace(/\.json$/, '.jsonl')); } catch {} retainedStreams--; state.retiredStreams++; }
     }
-    if (readdirSync(directory).filter(name => name.endsWith('.jsonl')).length >= maxStreams) throw Object.assign(Error(), { code: 'RETENTION_CAPACITY' });
+    if (Math.max(retainedStreams, readdirSync(directory).filter(name => name.endsWith('.jsonl')).length) >= maxStreams) throw Object.assign(Error(), { code: 'RETENTION_CAPACITY' });
     if (state.status !== 'disabled') fd = openSync(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
     atomic(healthPath, state);
   } catch (error) { state.status = 'degraded'; state.errorCode = identifier(error.code) ?? 'IO_ERROR'; healthPath = join(directory, 'collection-error.json'); }
