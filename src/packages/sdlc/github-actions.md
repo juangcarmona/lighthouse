@@ -22,6 +22,8 @@ Blocked refinement and initial proposal questions can be answered on the issue. 
 
 The worker requires a Linux runner labelled `lighthouse-workflow`, Node.js, Docker, `flock` and `LIGHTHOUSE_ENGINE_CONFIG` pointing to an operator-owned configuration. See the source repository's `src/examples/opencode-engine` deployment example. The imported OpenCode engine starts a foreground container with read-only product source and harness package, a writable result directory and operator-managed provider authentication. Packaged skills load from `/harness/skills`; consumers do not copy the lifecycle skills into their source tree.
 
+Engine admission waits up to 240 seconds by default. On a shared host, the operator can set `engineSlotWaitSeconds` from 0 to 3600 in the engine configuration. Cancellation interrupts that wait and releases only the waiting request; the active engine keeps its lock. An unattended route's total deadline still applies while it waits.
+
 Run the self-hosted runner in an isolated container or VM with a private `/tmp`. The gh-aw v0.93.2 credential-cleanup step scans Git configurations under `/tmp` as well as the workspace and can rewrite unrelated checkouts or race with temporary repositories on a shared host. Bind the runner work directory at the same path visible to Docker so that the engine can mount its input and output directories.
 
 Implementation can opt into [repository execution environments](execution-environments.md) for preflighted Node or .NET images and temporary host-managed PostgreSQL. Existing undeclared consumers keep their current image configuration.
