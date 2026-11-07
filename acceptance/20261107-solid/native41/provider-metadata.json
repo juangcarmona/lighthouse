@@ -1,0 +1,60 @@
+{
+  "sourceRevision": "11a93d72458dd9d2bf6bbc1fb8ba96eb857481a5",
+  "producer": "host-owned pinned OpenSpec CLI",
+  "provider": "@fission-ai/openspec@1.15.0",
+  "status": "validated",
+  "otherPlanFilesUnchanged": true,
+  "metadata": {
+    "path": "openspec/changes/issue-41-proposal/.openspec.yaml",
+    "content": "schema: spec-driven\ncreated: 2026-11-07\nskip_specs: true\n"
+  },
+  "sha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "created": {
+    "change": {
+      "id": "issue-41-proposal",
+      "path": "/tmp/lighthouse-41-provider-metadata-9dYNvb/openspec/changes/issue-41-proposal",
+      "metadataPath": "/tmp/lighthouse-41-provider-metadata-9dYNvb/openspec/changes/issue-41-proposal/.openspec.yaml",
+      "schema": "spec-driven"
+    },
+    "root": {
+      "path": "/tmp/lighthouse-41-provider-metadata-9dYNvb",
+      "source": "implicit"
+    }
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "issue-41-proposal",
+        "type": "change",
+        "valid": true,
+        "issues": [
+          {
+            "level": "INFO",
+            "path": "file",
+            "message": "skip_specs is set in .openspec.yaml: change declares no spec-level behavior changes, zero deltas accepted"
+          }
+        ],
+        "durationMs": 21
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      "byType": {
+        "change": {
+          "items": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "/tmp/lighthouse-41-provider-metadata-9dYNvb",
+      "source": "nearest"
+    }
+  }
+}

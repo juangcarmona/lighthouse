@@ -1,0 +1,17 @@
+{
+  "repository": "juangcarmona/lighthouse-p0-acceptance-20261031",
+  "pr": 126,
+  "issue": 122,
+  "workflowRun": 42355325402,
+  "status": "success",
+  "originalHead": "d29b3c5aa796799e8185837739c7643bc1c85bbf",
+  "publishedHead": "d29b3c5aa796799e8185837739c7643bc1c85bbf",
+  "tree": "5b0eafaba58cf25fa919d8a19ff3c061a7de978e",
+  "treeUnchanged": true,
+  "checkpointUnchanged": true,
+  "applyIntent": "5327793c1e7363a55470c935f6802819152eb75f000d1d8661078b65c3003415",
+  "applyRunCountBefore": 9,
+  "applyRunCountAfter": 9,
+  "source": "93f87d9466bb8d355607cbeace1b8b9e0b855750",
+  "sameRuntimeAsRegistry": "0.21.1"
+}

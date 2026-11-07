@@ -1,0 +1,20 @@
+{
+  "state": "blocked-not-accepted",
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "issue": 41,
+  "reviewRun": 42371049592,
+  "integrationRun": 42370344412,
+  "ciRun": 42370697740,
+  "callbackRun": 42370749912,
+  "waitActuallySpannedTerminal": true,
+  "reason": "Fixture acceptance combined application requirements with factory wait/history audit, but the read-only final reviewer had no ordered timing/grant trace or prior issue38 provenance in its context. No repeat completed reviewer execution is permitted. A new narrowly scoped application delivery will qualify the external host mechanism separately.",
+  "rootKnownGaps": [
+    414,
+    541
+  ],
+  "waitObservation": {
+    "routeStart": "2026-11-07T12:03:09Z",
+    "routeEnd": "2026-11-07T12:06:29Z",
+    "integrationTerminalAt": "2026-11-07T12:06:12Z"
+  }
+}

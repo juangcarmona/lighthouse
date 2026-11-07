@@ -1,0 +1,80 @@
+{
+  "state": "failed-controlled-rollout",
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "issue": 38,
+  "followup": "https://github.com/juangcarmona/lighthouse/issues/541",
+  "dispatch": {
+    "id": "3f4cb2f6fdd0d5ea587c48992df1211b9dc27a042b16d3583197b3c56e8cdf1f",
+    "sourceRevision": "664b86ccce5afbad93dbee165b5da6fcb31c49ee",
+    "workflowRevision": "bc40c2af6266001a7c9831ba02da9eb5686d8e14",
+    "routerRevision": "bc40c2af6266001a7c9831ba02da9eb5686d8e14",
+    "routerRef": "main",
+    "ref": "main",
+    "eventRunId": "42362548108"
+  },
+  "worker": {
+    "id": 42364258349,
+    "head_sha": "664b86ccce5afbad93dbee165b5da6fcb31c49ee",
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "failure",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42364258349"
+  },
+  "jobs": [
+    {
+      "id": 128378923412,
+      "name": "Verify accepted commit, checks and evidence protection",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-07T10:30:54Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    },
+    {
+      "id": 128378966764,
+      "name": "pre_activation",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-07T10:31:04Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    },
+    {
+      "id": 128378967126,
+      "name": "activation",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-07T10:31:04Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    },
+    {
+      "id": 128378967599,
+      "name": "agent",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-07T10:31:05Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    },
+    {
+      "id": 128378967908,
+      "name": "conclusion",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-07T10:31:05Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    },
+    {
+      "id": 128378967975,
+      "name": "Validate, publish and release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-07T10:31:05Z",
+      "completed_at": "2026-11-07T10:31:04Z"
+    }
+  ],
+  "originalArtifact": {
+    "id": 13571092042,
+    "archiveSha256": "f18b93f84bfc5bbdf0df8dfe748b4814fc04c97c5ebead6014e07832dfde39d1",
+    "member": "dispatch.json",
+    "memberSha256": "264f63f252d2ddca6e4fa69b6f143c1a357890527ba73ce7856a16dadcf06deb"
+  },
+  "limit": "Rejected before worker admission; no accepted final review is claimed. Original merge and CI were not repeated."
+}

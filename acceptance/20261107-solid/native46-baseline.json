@@ -1,0 +1,25 @@
+{
+  "state": "verified-baseline",
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "issue": 46,
+  "base": "d25213e16f318e7da97b501cf83ec05ff94cc766",
+  "tuple": {
+    "cli": "0.12.54",
+    "sdlc": "0.21.5",
+    "ui": "0.2.1"
+  },
+  "provider": "@fission-ai/openspec@1.15.0",
+  "metadata": "schema: spec-driven\ncreated: 2026-11-07\nskip_specs: true\n",
+  "metadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".lighthouse/implement.json",
+    "openspec/changes/issue-46-proposal/.openspec.yaml"
+  ],
+  "preservedFiles": 127,
+  "scope": "The final reviewer accepts this application change; external host qualification separately authenticates the CI wait and single continuation. Prior issue41 remains blocked, not replayed. Provider metadata is an explicit preinstalled baseline prerequisite, not claimed as automatic initial plan repair.",
+  "main": "8aeee831310153dccbc55f40c14137c1ef3afb4b",
+  "pr": 47,
+  "head": "161d29876a664a562667578e84a44733b4d3460d"
+}

@@ -1,0 +1,62 @@
+{
+  "root": "/tmp/lighthouse-solid-reservation-registry-consumer-bbnj0wax",
+  "state": "verified",
+  "tuple": {
+    "lighthouse": "0.12.54",
+    "lighthouse-sdlc": "0.21.5",
+    "lighthouse-ui": "0.2.1"
+  },
+  "dryRunUnchanged": true,
+  "consumerFilesPreserved": [
+    "README.md",
+    "LICENSE"
+  ],
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--prefer-online",
+        "--no-audit",
+        "--no-fund",
+        "--save-dev",
+        "--save-exact",
+        "@juangcarmona/lighthouse@0.12.54"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "init",
+        "--name",
+        "SolidConsumer",
+        "--dry-run"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "init",
+        "--name",
+        "SolidConsumer"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

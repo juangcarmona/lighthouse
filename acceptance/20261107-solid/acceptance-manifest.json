@@ -1,0 +1,491 @@
+{
+  "type": "owner-retained-acceptance-archive",
+  "sourceRuns": [
+    {
+      "kind": "ordinary",
+      "run": 42356093715,
+      "archive": "ordinary-result.zip",
+      "archiveSha256": "ca5ac8c25cbe2fcace4d7539df7e2682b61ad5431bd7f45a0595978e92436abc",
+      "retainedOriginalMembers": [
+        "envelope.json",
+        "runtime.json",
+        "checks.json",
+        "changes.json"
+      ]
+    },
+    {
+      "kind": "ordinary",
+      "run": 42356093715,
+      "archive": "ordinary-command-evidence.zip",
+      "archiveSha256": "fe1b691db67c1d58fd05106418c57e55225eb66798374f03948080f470a07db7",
+      "retainedOriginalMembers": [
+        "implementation-evidence.json"
+      ]
+    },
+    {
+      "kind": "ordinary",
+      "run": 42356093715,
+      "archive": "ordinary-publication.zip",
+      "archiveSha256": "eb57a06568ee77df8aeed75194c671ee0a170088a14e3636ecb139aadd23773b",
+      "retainedOriginalMembers": [
+        "published-pr.json",
+        "ci-requests.json"
+      ]
+    },
+    {
+      "kind": "product",
+      "run": 42355325402,
+      "archive": "product-result.zip",
+      "archiveSha256": "e3014f6ebe9e12579be39f0d0b027488ef6e3599617049eeb6cff3815282e40a",
+      "retainedOriginalMembers": [
+        "envelope.json",
+        "runtime.json",
+        "checks.json",
+        "changes.json"
+      ]
+    },
+    {
+      "kind": "product",
+      "run": 42355325402,
+      "archive": "product-command-evidence.zip",
+      "archiveSha256": "41cba1a0a7990220ed31e53f100d953ae41575352a2dfa9e60b00e58a1e8e62e",
+      "retainedOriginalMembers": [
+        "implementation-evidence.json"
+      ]
+    },
+    {
+      "kind": "product",
+      "run": 42355325402,
+      "archive": "product-publication.zip",
+      "archiveSha256": "a42be1778b6e841dd4453799c6324cb8570bdbc16ef7348ae6c7ce7592425c5f",
+      "retainedOriginalMembers": [
+        "published-pr.json",
+        "ci-requests.json"
+      ]
+    },
+    {
+      "kind": "wait-native-implementation",
+      "run": 42371853413,
+      "archive": "wait-native-implementation-result.zip",
+      "archiveSha256": "31a67df7ad3a7ed3bbdbfdb5db96d1d0f54e223a781ab262a2ca5d499fac2d06",
+      "retainedOriginalMembers": [
+        "envelope.json",
+        "runtime.json",
+        "checks.json",
+        "changes.json"
+      ]
+    },
+    {
+      "kind": "wait-native-implementation",
+      "run": 42371853413,
+      "archive": "wait-native-implementation-command-evidence.zip",
+      "archiveSha256": "30468911037bd6776984821474a452a07e4103924e25aece0215dcddd24f7aa8",
+      "retainedOriginalMembers": [
+        "implementation-evidence.json"
+      ]
+    },
+    {
+      "kind": "wait-native-implementation",
+      "run": 42371853413,
+      "archive": "wait-native-implementation-publication.zip",
+      "archiveSha256": "0c5ebe2f1a46a4e59fa19c34a4056cdbe31fb50b67aa3fc49953cdb62fb3cd82",
+      "retainedOriginalMembers": [
+        "published-pr.json",
+        "ci-requests.json"
+      ]
+    },
+    {
+      "kind": "native46-integration",
+      "run": 42373584511,
+      "archive": "wait-native-integration-result.zip",
+      "archiveSha256": "b0aaa827a54d0b8769b0c83ca5c4d95c3d8b654b5ba688ca9493af459c05c239",
+      "retainedOriginalMembers": [
+        "envelope.json",
+        "runtime.json"
+      ]
+    },
+    {
+      "kind": "native46-integration",
+      "run": 42373584511,
+      "archive": "wait-native-integration-publication.zip",
+      "archiveSha256": "22c95cc4016fbcf321d75f43567d4b82c8959b60beb93851a3e0ed0cd254d11b",
+      "retainedOriginalMembers": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ]
+    },
+    {
+      "kind": "native46-review",
+      "run": 42374274489,
+      "archive": "wait-native-review-result.zip",
+      "archiveSha256": "3a0a6922bbef5183e10605751190599ff472d4909e69e362d2a90a30139fa3e4",
+      "retainedOriginalMembers": [
+        "envelope.json",
+        "runtime.json"
+      ]
+    },
+    {
+      "kind": "native46-review",
+      "run": 42374274489,
+      "archive": "wait-native-review-publication.zip",
+      "archiveSha256": "b54140a42a1b403e33de9ba67d54b7422da04cd681d832f6987cd89ee2aacf88",
+      "retainedOriginalMembers": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ]
+    }
+  ],
+  "excluded": "Raw model sessions, telemetry, credentials, full input context and raw events are excluded. Original artifacts remain linked to their native workflow runs. Issues 34, 38 and 41 are failed pre-acceptance traces; issue 541 remains open for concurrent main advancement.",
+  "files": [
+    {
+      "path": "acceptance/20261107-solid/README.md",
+      "sha256": "01580692ee2866353359060b5e166691cf2551a2508e7159fb183aa9a0cc6f68",
+      "bytes": 1795
+    },
+    {
+      "path": "acceptance/20261107-solid/blocked-issue-34/admission.json",
+      "sha256": "616c6d4aacee201d4abada246cbebab10d6c2e93394126455225b36e957e10cd",
+      "bytes": 229
+    },
+    {
+      "path": "acceptance/20261107-solid/blocked-issue-34/envelope.json",
+      "sha256": "acf15b4c84a4de6ac32f0206531c3560b406699d37176556c68f23ed7091d1aa",
+      "bytes": 16489
+    },
+    {
+      "path": "acceptance/20261107-solid/blocked-issue-34/integration-receipt.json",
+      "sha256": "fd0c3cce7ab4709a211cf80ea0ab1c4a06e5e7e133888f344a01ebdd5a326a24",
+      "bytes": 1290
+    },
+    {
+      "path": "acceptance/20261107-solid/blocked-issue-34/publication-receipt.json",
+      "sha256": "ea8296603ef47071dd872dbf45a0e48730baaa417f389dcc8c53f3146e6c093b",
+      "bytes": 356
+    },
+    {
+      "path": "acceptance/20261107-solid/blocked-issue-41/envelope.json",
+      "sha256": "6951dbc153986ee35c35b744be9fc12f8a82e7f62d1b33c6a423c5a5e0fb0b41",
+      "bytes": 15980
+    },
+    {
+      "path": "acceptance/20261107-solid/failed-38-rollout-proof.json",
+      "sha256": "5426f997ae71d2d677fb5525c627d36cd9c06adfb17d0e61cd38d1ca32dcf5ea",
+      "bytes": 2640
+    },
+    {
+      "path": "acceptance/20261107-solid/failed-41-live-wait-summary.json",
+      "sha256": "4126f50f944605c659eeb47decabd6580fdce965c5507bd26803518a7e5594c3",
+      "bytes": 947
+    },
+    {
+      "path": "acceptance/20261107-solid/failed-41-review-proof.json",
+      "sha256": "1cfbd892aae72c7077b590d3db3d1114c5ce7d053ca1ab670286065415b91a16",
+      "bytes": 844
+    },
+    {
+      "path": "acceptance/20261107-solid/lighthouse-510-before.json",
+      "sha256": "969bd6772c60b985bc8a50e2e4a111939c9b671aa3e2278974e263310dd061e4",
+      "bytes": 1666
+    },
+    {
+      "path": "acceptance/20261107-solid/lighthouse-510-export-equivalence.json",
+      "sha256": "59035fad67c59bad2f466f60c1f40d8535d2dac70eaac3fe6bc0d6625024c7eb",
+      "bytes": 1384
+    },
+    {
+      "path": "acceptance/20261107-solid/lighthouse-solid-reservation-fresh-consumer.json",
+      "sha256": "d505ad4861eefb312bb65b0946c18786c5799e74e38676ce89e7a5d6a8370e3e",
+      "bytes": 1121
+    },
+    {
+      "path": "acceptance/20261107-solid/live-wait-observation-summary.json",
+      "sha256": "26be4d5dcd489bca02a0945b191a6c534445f1c3103a0cedf81803b9816bc329",
+      "bytes": 856
+    },
+    {
+      "path": "acceptance/20261107-solid/native41-metadata-correction-proof.json",
+      "sha256": "02c39462aaba2ff8e17bd58ac31e86684d37a0ef81f261c2f0faa53e3b7d4726",
+      "bytes": 1546
+    },
+    {
+      "path": "acceptance/20261107-solid/native41/initial-metadata-block/checks.json",
+      "sha256": "2fda93ea9a0c3f9fad1f43e9282edf44a4099398b9be9b9a61070ee78e2f79ae",
+      "bytes": 15572
+    },
+    {
+      "path": "acceptance/20261107-solid/native41/initial-metadata-block/envelope.json",
+      "sha256": "0baac210a8848c3e5169e8d3a8858f4c8f50d7be01d55dae458209656f624e02",
+      "bytes": 5829
+    },
+    {
+      "path": "acceptance/20261107-solid/native41/provider-metadata.json",
+      "sha256": "1db77b55998f4d69e7fb42f6a84a47a7d67be0b3be303dbf4473447a08549c90",
+      "bytes": 1670
+    },
+    {
+      "path": "acceptance/20261107-solid/native46-baseline.json",
+      "sha256": "edabcb9eaccae9208173712a0ba9478a708e410d51e8974ac2630f4d7e16c6ca",
+      "bytes": 1151
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/blocked-before-merge/envelope.json",
+      "sha256": "20b04f9ef5a1162f760e0a8a143b61226ab577e491de90690affb91c32402738",
+      "bytes": 10965
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/blocked-before-merge/integration-receipt.json",
+      "sha256": "0eb40b271244b47f3752806f1e8f9ee5f11de19fb4591a3651e0081f052a050a",
+      "bytes": 1060
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/blocked-before-merge/publication-receipt.json",
+      "sha256": "a76e5215b76a75a4fee533afbf1c9d805e4bbd141e6bf60269de7d52e2c246b8",
+      "bytes": 344
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/integration/envelope.json",
+      "sha256": "0d81507032e9f0931e9141c289d8a95d7164c25c45e69e6e713f653592ace83c",
+      "bytes": 10749
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/integration/integration-receipt.json",
+      "sha256": "fc95f6ded63b55909e3e5a973717a557c5df19c5112b7717a924056d637ce8b6",
+      "bytes": 1339
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/integration/publication-receipt.json",
+      "sha256": "73f8fdff8fd283b194b15a14f7cd5b6e05fbbaf21a181b465c8b49e78528e9ab",
+      "bytes": 352
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/integration/report.md",
+      "sha256": "d26d9e95de1cb769638607f2f90c713ae5fe8ae930b49fb43df2e1f7eb8ba284",
+      "bytes": 1395
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/integration/runtime.json",
+      "sha256": "7ba3002e44d5d34b433aba5d2d8e611a46a0bf3e6a0a8c273028b9a033369033",
+      "bytes": 3578
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/review/envelope.json",
+      "sha256": "17a0d48304c3fd25932dc66c452dd13fc4e9cd3f2e115c6604ed88543fe24c0c",
+      "bytes": 13561
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/review/integration-receipt.json",
+      "sha256": "65f021690b62d56ea11ebc7a2f2608f2d529207c9313c1d9b19642da5e973c30",
+      "bytes": 1275
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/review/publication-receipt.json",
+      "sha256": "a43b7da7a3ffeef9a7108fa4b4ad98a672f13350693fb73cbc2f4bc485564099",
+      "bytes": 352
+    },
+    {
+      "path": "acceptance/20261107-solid/native46/review/runtime.json",
+      "sha256": "c4c95c3db5785ce7758a057eb6c2b0f42c82a82c81b63a6c3caa5a69ef72b369",
+      "bytes": 3578
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/changes.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/checks.json",
+      "sha256": "0cc69ef383678fa869eca9fe8b254c761812dc3c4a68e9efcd13786052b852c2",
+      "bytes": 13682
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/ci-requests.json",
+      "sha256": "fc2bfddd8365472bfe2eff56be0a6991a6846709b7a2429d22e815b008cdd412",
+      "bytes": 890
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/correction-proof.json",
+      "sha256": "6cb9770b20135e98b07b127004cedb0bec54edd0009ca0d366b69e6bbae29764",
+      "bytes": 2140
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/envelope.json",
+      "sha256": "6fa83c3d0fdd8907e8da1d5afe65e22b8daa535b34dee64841c293960f5a7ccf",
+      "bytes": 4334
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/implementation-evidence.json",
+      "sha256": "a21f1de062b51e686d7d0f22feb3f6f076103203b8257081a7f4c8da43bc1864",
+      "bytes": 22386
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/published-pr.json",
+      "sha256": "789553ece26c7a6309600386defbccd2b4210471db868e727a0e1d3ab2bee481",
+      "bytes": 63
+    },
+    {
+      "path": "acceptance/20261107-solid/ordinary/runtime.json",
+      "sha256": "9317cb8bb7fe1dc3d4f5d87cdb24a20f934cd4820d97b9a29f90312f74eabe39",
+      "bytes": 4763
+    },
+    {
+      "path": "acceptance/20261107-solid/product/changes.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2
+    },
+    {
+      "path": "acceptance/20261107-solid/product/checks.json",
+      "sha256": "ab76cd3fdbcd36f8cd938c88feae998689b7bd9db6d3be30996a4030aa1b471c",
+      "bytes": 5708
+    },
+    {
+      "path": "acceptance/20261107-solid/product/ci-requests.json",
+      "sha256": "a9c88e59f52ac8140fec42f19b0f3208d2e4ea9d503cf38d3f1026b3d4e2f3ea",
+      "bytes": 238
+    },
+    {
+      "path": "acceptance/20261107-solid/product/correction-proof.json",
+      "sha256": "7dcd73ebb9970a69763b845da294bc28da9152bb3353b2a22fb8d668e101f8cf",
+      "bytes": 619
+    },
+    {
+      "path": "acceptance/20261107-solid/product/envelope.json",
+      "sha256": "89d68196404bd01e9dcda248637dc62fc5a92ccd953e043b683a68bf15951e67",
+      "bytes": 3610
+    },
+    {
+      "path": "acceptance/20261107-solid/product/implementation-evidence.json",
+      "sha256": "90f740854b58e4eda135cdbff7464515a20902956f05bb18d1b6ce835577c22f",
+      "bytes": 7666
+    },
+    {
+      "path": "acceptance/20261107-solid/product/published-pr.json",
+      "sha256": "fffe1d4ca52f6d7ba306a104e1d2c07c5f02317dd864ca4e93f1e2fa6e8afaca",
+      "bytes": 64
+    },
+    {
+      "path": "acceptance/20261107-solid/product/runtime.json",
+      "sha256": "c7196f5479f792adffad1e9a939be0392c88817d287ced5ffa667056ae3f9884",
+      "bytes": 4319
+    },
+    {
+      "path": "acceptance/20261107-solid/root-verification.json",
+      "sha256": "77e6563f2c6853906f8f9c8d35e8e0337616b26a43f25cda6edede12900d3749",
+      "bytes": 577
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-510-red.log",
+      "sha256": "24758db335ade2d9a62ea2fe01898e1b2f4ce8cd6831c1b474dcb2b17deab854",
+      "bytes": 3201
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-515-red.log",
+      "sha256": "f5c09feb9a0c65abee0a9243c073600f242078965f197e571a1be8f42c5d3c15",
+      "bytes": 2037
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-ci-wait-entry-green.log",
+      "sha256": "72751923aff5a1dc1b8c06bd48ea17dde95ce498fef0ab807a8741a1d687481c",
+      "bytes": 1135
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-ci-wait-entry-red.log",
+      "sha256": "46ccbc2a49c6184f703707e0427685ee50aca5fa1c1e1a3eaef8b2c6a312f07a",
+      "bytes": 1768
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-provenance-publication-green.log",
+      "sha256": "2b333fbe521e9597182db7c2c4afda75d24e758e81537f74aed8b2caacdf0919",
+      "bytes": 12699
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-provenance-publication-red.log",
+      "sha256": "090ff781511eb4115cae0670a78635c77fc496c0c5d799d3b6dea1f46a90e304",
+      "bytes": 10326
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-provenance-red.log",
+      "sha256": "7595abedb80b4dc3d2a128e1c7d411ede31eb661ac72ee19f05e9f152eddf233",
+      "bytes": 1467
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-report-red.log",
+      "sha256": "bd838ae1122fd28b5164b25b1a17ba5edef05d7b107e5baa3d2d4509177da060",
+      "bytes": 3083
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-reservation-green.log",
+      "sha256": "a678d5a0225090ce8b126b8262a95feb1cb8912e8d276e676fe8db946a7474d8",
+      "bytes": 1590
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-reservation-red.log",
+      "sha256": "b95b33a2e902a24f2d57e61db65456a96de6983460ce2dde257495c0fa5d996a",
+      "bytes": 3005
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-subscriptions-red.log",
+      "sha256": "b4436e55cb1bfbcfda4b19795b49aa65a9aa025548774744abfa2d0fb175b2d4",
+      "bytes": 1022
+    },
+    {
+      "path": "acceptance/20261107-solid/tdd/lighthouse-519-terminal-red.log",
+      "sha256": "0922836b39effebf3d4319c57aad18b59d5206e7a5ba42e730fe97ef42184738",
+      "bytes": 1307
+    },
+    {
+      "path": "acceptance/20261107-solid/terminal-native-proof.json",
+      "sha256": "60b1b4ece18148d48587b8a855274ad8c57dab5d1fcf5673f5868e2d8487e169",
+      "bytes": 51580
+    },
+    {
+      "path": "acceptance/20261107-solid/verification.json",
+      "sha256": "66f7d51776c94193ddb184f52230ea9e54a387bd8749408656a5f464589fc910",
+      "bytes": 660
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-apply-before.json",
+      "sha256": "5342c7127bd5e520f3e5387c89aba78a9c851aaf0a11d83fb5179897b0155133",
+      "bytes": 221
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-config.json",
+      "sha256": "c4063ae77409e0e1b1b2316170fa47d1896de668377f1908e66d8265bb0f4add",
+      "bytes": 1423
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/changes.json",
+      "sha256": "452cec2b29a8a1edfbdcb6f1d02a129840e8c4215d7a20cc230f978e6f954a3a",
+      "bytes": 23342
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/checks.json",
+      "sha256": "3c1b838a2da14689e28d8fa8d5511a477f67c0ec1d935687a639d7cf35d0bda6",
+      "bytes": 14846
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/ci-requests.json",
+      "sha256": "9dad70f6154bd65aa7f008c3c5911a85a91fe32f32e26abb84c281d3fca64dcc",
+      "bytes": 890
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/envelope.json",
+      "sha256": "c1077c6d5ea4ca37b33635f803321f2c387dcdeb599215df2059f021f4792bfa",
+      "bytes": 3212
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/implementation-evidence.json",
+      "sha256": "e7a5f97a865bf73f0d092636fc3a298d81ba734e74723a8c41b1513e3adb880c",
+      "bytes": 17323
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/published-pr.json",
+      "sha256": "689f461fa50315402272cc72bab9df265d2281aeddbe9f1038541f26194788d6",
+      "bytes": 63
+    },
+    {
+      "path": "acceptance/20261107-solid/wait-native-implementation/runtime.json",
+      "sha256": "6b79542a2f6d43c12a0b2923a80acd8e5bd15e8db060a7e0e3c344126b10208a",
+      "bytes": 4573
+    }
+  ]
+}

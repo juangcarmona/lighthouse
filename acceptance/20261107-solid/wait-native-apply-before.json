@@ -1,0 +1,12 @@
+{
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "total": 1,
+  "runs": [
+    {
+      "id": 42176849394,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

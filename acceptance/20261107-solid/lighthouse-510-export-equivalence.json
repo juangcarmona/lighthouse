@@ -1,0 +1,77 @@
+{
+  "baseline": "2472dc7abfca6e11a223a2254dbdf46e49424941",
+  "functions": [
+    {
+      "name": "assertChecks",
+      "identicalBody": true
+    },
+    {
+      "name": "assertCitedChecks",
+      "identicalBody": true
+    },
+    {
+      "name": "assertFresh",
+      "identicalBody": true
+    },
+    {
+      "name": "authorizeCompletion",
+      "identicalBody": true
+    },
+    {
+      "name": "authorizeCompletionEvent",
+      "identicalBody": true
+    },
+    {
+      "name": "checkCommit",
+      "identicalBody": true
+    },
+    {
+      "name": "completionEffects",
+      "identicalBody": true
+    },
+    {
+      "name": "evidenceProtection",
+      "identicalBody": true
+    },
+    {
+      "name": "fingerprint",
+      "identicalBody": true
+    },
+    {
+      "name": "inspectCompletion",
+      "identicalBody": true
+    },
+    {
+      "name": "list",
+      "identicalBody": true
+    },
+    {
+      "name": "loadProfile",
+      "identicalBody": true
+    },
+    {
+      "name": "mergeAccepted",
+      "identicalBody": true
+    },
+    {
+      "name": "observeChecks",
+      "identicalBody": true
+    },
+    {
+      "name": "postMergeRuns",
+      "identicalBody": true
+    },
+    {
+      "name": "requiredPolicy",
+      "identicalBody": true
+    },
+    {
+      "name": "ruleRevision",
+      "identicalBody": true
+    },
+    {
+      "name": "sha",
+      "identicalBody": true
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+TAP version 13
+# Subtest: the original bot CI signal waits for terminal integration without another completion event
+ok 1 - the original bot CI signal waits for terminal integration without another completion event
+  ---
+  duration_ms: 6.532024
+  type: 'test'
+  ...
+# Subtest: delayed pending hint visibility is retained and waiting is bounded without sending effects
+ok 2 - delayed pending hint visibility is retained and waiting is bounded without sending effects
+  ---
+  duration_ms: 1.868242
+  type: 'test'
+  ...
+# Subtest: owner holds, manual requests, foreign sources and mismatched CI cannot use the bot wait
+ok 3 - owner holds, manual requests, foreign sources and mismatched CI cannot use the bot wait
+  ---
+  duration_ms: 1.431967
+  type: 'test'
+  ...
+# Subtest: the real router waits on the original CI, then denies a revoked workflow adoption without dispatch
+ok 4 - the real router waits on the original CI, then denies a revoked workflow adoption without dispatch
+  ---
+  duration_ms: 219.091342
+  type: 'test'
+  ...
+# Subtest: an active integration reservation can outlive CI and delayed hint visibility
+not ok 5 - an active integration reservation can outlive CI and delayed hint visibility
+  ---
+  duration_ms: 4.40322
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/519-active-integration-wait/src/tests/pending-integration-wait.test.mjs:89:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'paused'
+    - 'terminal'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'terminal'
+  actual: 'paused'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/519-active-integration-wait/src/tests/pending-integration-wait.test.mjs:95:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: terminal integration never turns another active reservation into review authority
+not ok 6 - terminal integration never turns another active reservation into review authority
+  ---
+  duration_ms: 0.677515
+  type: 'test'
+  location: '/srv/workspaces/juangcarmona/lighthouse/519-active-integration-wait/src/tests/pending-integration-wait.test.mjs:98:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'paused'
+    - 'pending'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'pending'
+  actual: 'paused'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/519-active-integration-wait/src/tests/pending-integration-wait.test.mjs:100:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 438.636194

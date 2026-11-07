@@ -1,0 +1,71 @@
+{
+  "cycles": [
+    [
+      "completion-recovery.mjs",
+      "completion.mjs",
+      "delivery-events.mjs",
+      "integration-evidence.mjs",
+      "process-publication.mjs",
+      "publication-recovery.mjs",
+      "worker-recovery.mjs"
+    ]
+  ],
+  "edges": {
+    "completion-recovery.mjs": [
+      "actions-artifact.mjs",
+      "completion-status.mjs",
+      "completion.mjs",
+      "digests.mjs",
+      "handoff.mjs",
+      "host-contract.mjs",
+      "integration-evidence.mjs",
+      "process-publication.mjs",
+      "stage-dispatch.mjs",
+      "unattended-planning-evidence.mjs"
+    ],
+    "completion.mjs": [
+      "delivery-events.mjs",
+      "digests.mjs",
+      "github-profile.mjs",
+      "proposal-review.mjs"
+    ],
+    "delivery-events.mjs": [
+      "ci-subject.mjs",
+      "proposal-review.mjs",
+      "stage-dispatch.mjs",
+      "worker-recovery.mjs"
+    ],
+    "integration-evidence.mjs": [
+      "actions-artifact.mjs",
+      "completion.mjs",
+      "evidence.mjs",
+      "stage-dispatch.mjs",
+      "unattended.mjs"
+    ],
+    "process-publication.mjs": [
+      "completion-status.mjs",
+      "completion.mjs",
+      "evidence.mjs"
+    ],
+    "publication-recovery.mjs": [
+      "actions-artifact.mjs",
+      "delivery-events.mjs",
+      "digests.mjs",
+      "handoff.mjs",
+      "host-contract.mjs",
+      "implementation.mjs",
+      "proposal-review.mjs",
+      "proposal.mjs",
+      "stage-dispatch.mjs"
+    ],
+    "worker-recovery.mjs": [
+      "actions-artifact.mjs",
+      "completion-recovery.mjs",
+      "digests.mjs",
+      "handoff.mjs",
+      "host-contract.mjs",
+      "publication-recovery.mjs",
+      "stage-dispatch.mjs"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "issue": 46,
+  "pr": 48,
+  "head": "18396c5cd242141c7b0720b1c926c638f1f9ecef",
+  "checkedTree": "93dc0bb4c208d37deb05c7262a2553535c84692c",
+  "implementationRun": 42371853413,
+  "source": "8aeee831310153dccbc55f40c14137c1ef3afb4b",
+  "admittedBase": "8aeee831310153dccbc55f40c14137c1ef3afb4b",
+  "parents": [
+    "8aeee831310153dccbc55f40c14137c1ef3afb4b"
+  ],
+  "changedPaths": [
+    "openspec/changes/issue-46-proposal/design.md",
+    "openspec/changes/issue-46-proposal/proposal.md",
+    "openspec/changes/issue-46-proposal/tasks.md",
+    "src/summary.test.mjs"
+  ],
+  "sourceBodiesUnchanged": true,
+  "original24TestsPreserved": true,
+  "providerMetadataPreinstalledAndPreserved": true,
+  "providerMetadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "independentCheckExits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "priorBlockedIntegration": 42372867881,
+  "branchException": {
+    "reviewId": 5812251332,
+    "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/48#pullrequestreview-5812251332",
+    "branch": "lighthouse/implement-46-8ed1271c322a",
+    "head": "18396c5cd242141c7b0720b1c926c638f1f9ecef",
+    "scope": "Exact existing PR/branch/head only; no other policy waiver. Original blocked receipt confirms no merge or CI effects. Default naming incompatibility remains Lighthouse issue547."
+  },
+  "integrationRun": 42373584511
+}

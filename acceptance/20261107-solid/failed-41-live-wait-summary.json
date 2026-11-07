@@ -1,0 +1,36 @@
+{
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "observedAt": "2026-11-07T12:03:51.956785+00:00",
+  "integration": {
+    "id": 42370344412,
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "ci": {
+    "id": 42370697740,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "callback": {
+    "id": 42370749912,
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "routeStep": {
+    "name": "Route the authorized event",
+    "status": "in_progress",
+    "conclusion": null,
+    "number": 5,
+    "started_at": "2026-11-07T12:03:09Z",
+    "completed_at": null
+  },
+  "delayStep": {
+    "name": "Retain integration in progress for the issue 41 continuation race",
+    "status": "in_progress",
+    "conclusion": null,
+    "number": 14,
+    "started_at": "2026-11-07T12:02:52Z",
+    "completed_at": null
+  },
+  "observedAtNote": "Local timestamp when the authenticated API observations were saved."
+}

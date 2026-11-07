@@ -1,0 +1,15 @@
+{
+  "command": "npm run verify",
+  "state": "passed",
+  "codeIncludesMain": "83a7796e254f897f40074d6d1bed3d733fc59e32",
+  "sourceWorkflowPin": "83a7796e254f897f40074d6d1bed3d733fc59e32",
+  "testCounts": {
+    "passed": 1019,
+    "failed": 0,
+    "skipped": 9
+  },
+  "publicSiteFiles": 136,
+  "markdownAndLocalLinksPassed": true,
+  "logSha256": "0cdda1ab3473ea3716321024cd7f95e8c4fbdc7cb57c1f9d60bd22b131cb3cbb",
+  "note": "Includes concurrent canonical native-estimate/context repair and version commit. Registry/native acceptance retain independent 0.12.54/0.21.5 binding."
+}

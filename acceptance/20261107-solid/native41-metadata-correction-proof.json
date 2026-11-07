@@ -1,0 +1,44 @@
+{
+  "state": "passed-preintegration-technical-correction",
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "issue": 41,
+  "pr": 44,
+  "sourceHead": "11a93d72458dd9d2bf6bbc1fb8ba96eb857481a5",
+  "publishedHead": "75140bd9e6579f28156737b6d9b9cf194e2a6f38",
+  "checkedTree": "9e8f907945a1b64cc2f1a10c50b8631d100efcbd",
+  "workerRun": 42366187441,
+  "feedbackComment": 6705919648,
+  "onlyChangedPath": "openspec/changes/issue-41-proposal/.openspec.yaml",
+  "independentCheckExits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "providerMetadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "originalArtifacts": [
+    {
+      "id": 13571935982,
+      "name": "lighthouse-implement-input-41-1",
+      "sha256": "efdeea573e958129470dd91961edf62ee4ba57298bb562eb0116c49ea36d17d6"
+    },
+    {
+      "id": 13572570263,
+      "name": "lighthouse-implement-result-41-1",
+      "sha256": "5fea8d36de003bb2eb1b30a00717e4030999a9c57d01dd8f55bc505ed918cd51"
+    },
+    {
+      "id": 13572510944,
+      "name": "lighthouse-command-evidence-41-1",
+      "sha256": "94f99e17e27e21b63d06df966b737076cbd1f758cfba13778bd5234424252643"
+    },
+    {
+      "id": 13571862687,
+      "name": "lighthouse-implement-publication-41-1",
+      "sha256": "f8b23d13269b60676b379090dffedb2c090cb35d50f95de1a3bdbc3fbec1a8f7"
+    }
+  ],
+  "limit": "Preintegration owner-agent technical feedback, not the final autonomous CI continuation. No integration approval or ProductShape apply was granted by this correction."
+}
