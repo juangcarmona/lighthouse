@@ -85,3 +85,17 @@ globalThis.fetch = async (url, options) => {
     assert.match(await readFile(join(root, 'output'), 'utf8'), /run=false/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('an active integration reservation can outlive CI and delayed hint visibility', async () => {
+  const f = fixture(); f.issue.labels = [{ name: 'agent-working' }]; f.comments([]);
+  const result = await f.call(n => {
+    if (n === 1) f.comments([f.comment]);
+    if (n === 3) { f.run.status = 'completed'; f.issue.labels = []; }
+  });
+  assert.equal(result.state, 'terminal'); assert.equal(f.sleeps(), 3);
+});
+
+test('terminal integration never turns another active reservation into review authority', async () => {
+  const f = fixture(); f.run.status = 'completed'; f.issue.labels = [{ name: 'agent-working' }];
+  assert.equal((await f.call()).state, 'pending'); assert.equal(f.sleeps(), 60);
+});
