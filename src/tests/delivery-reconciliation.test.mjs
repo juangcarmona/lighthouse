@@ -194,5 +194,9 @@ test('completion subscriptions include terminal producers only when installed', 
     assert.ok(!completion.includes('unattended'));
     const delegated = await completionSubscriptions(root, { implement: true, propose: true, productChange: false, completion: true, unattended: true });
     assert.ok(delegated.includes('integrate') && delegated.includes('unattended'));
+    await mkdir(join(root, '.github/workflows'), { recursive: true });
+    await writeFile(join(root, '.github/workflows/lighthouse-sdlc-unattended.yml'), 'name: Existing delegated delivery\non: workflow_dispatch\n');
+    assert.ok((await completionSubscriptions(root, { implement: true, propose: true, productChange: false, completion: true })).includes('Existing delegated delivery'));
+    assert.ok(!(await completionSubscriptions(root, { implement: true, propose: true, productChange: false })).includes('Existing delegated delivery'));
   } finally { await rm(root, { recursive: true, force: true }); }
 });

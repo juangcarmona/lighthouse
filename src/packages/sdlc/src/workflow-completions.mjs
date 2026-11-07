@@ -29,6 +29,10 @@ export async function completionSubscriptions(root, { implement, propose, produc
     const path = `.github/workflows/${filename}`;
     names.push(workflowDisplayName(await readFile(join(root, path), 'utf8'), path));
   }
+  if (completion && !unattended) {
+    const path = '.github/workflows/lighthouse-sdlc-unattended.yml', source = await optional(join(root, path));
+    if (source) names.push(workflowDisplayName(source, path));
+  }
   const epicPath = '.github/workflows/lighthouse-sdlc-epic.yml';
   const epicSource = epic ? await readFile(new URL('../workflows/lighthouse-sdlc-epic.yml', import.meta.url), 'utf8') : await optional(join(root, epicPath));
   if (epicSource) names.push(workflowDisplayName(epicSource, epicPath));
