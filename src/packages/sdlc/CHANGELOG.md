@@ -1,5 +1,23 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.0
+
+### Minor Changes
+
+- f2b0752: # Runner telemetry
+
+  Collect correlated runner metadata from first startup, preserve native OpenCode activity and resource observations, and expose replayable events and optional OTLP export for independent consumers.
+
+### Patch Changes
+
+- f76fcbd: # Confirmed integration and final-review recovery
+
+  Report confirmed integration effects and recover missed final-review continuations through the existing scheduled reconciler and original CI dispatch identity.
+
+- 24cb9f4: # Runner journal rotation
+
+  Rotate long-running runner journals before capacity is reached without interrupting jobs.
+
 ## 0.20.15
 
 ### Patch Changes
