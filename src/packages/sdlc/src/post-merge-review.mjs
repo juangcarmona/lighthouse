@@ -3,7 +3,8 @@ import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { isBotContinuation, issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
 import { validPendingReview } from './completion-status.mjs';
 
-const paused = issue => issue.state !== 'open' || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name));
+const ownerPaused = issue => issue.state !== 'open' || issue.labels.some(label => ['human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name));
+const paused = issue => ownerPaused(issue) || issue.labels.some(label => label.name === 'agent-working');
 function pending(comments, repository, issue) {
   return comments.flatMap(comment => {
     if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || comment.issue_url !== `https://api.github.com/repos/${repository}/issues/${issue}`) return [];
@@ -78,13 +79,13 @@ export async function waitForPendingIntegration(api, repository, owner, event, a
   let entry;
   for (let attempt = 0; attempt <= 60; attempt++) {
     const current = await api(`issues/${issue}`);
-    if (paused(current) || current.user?.login !== owner) return { state: 'paused' };
+    if (ownerPaused(current) || current.user?.login !== owner) return { state: 'paused' };
     entry ??= pending(await issueComments(api, issue), repository, issue);
     if (entry) {
       if (entry.hint.merge !== ci.head_sha) return { state: 'superseded' };
       const run = await api(`actions/runs/${entry.hint.run}`, 'GET', undefined, true);
       if (run && (String(run.id) !== entry.hint.run || run.repository?.full_name !== repository || !['.github/workflows/lighthouse-sdlc-integrate.lock.yml', '.github/workflows/lighthouse-sdlc-unattended.yml'].includes(run.path) || run.event !== 'workflow_dispatch' || run.head_branch !== branch || String(run.run_attempt) !== entry.hint.attempt)) return { state: 'unavailable' };
-      if (run?.status === 'completed') return { state: 'terminal', integrationRun: entry.hint.run };
+      if (run?.status === 'completed' && !current.labels.some(label => label.name === 'agent-working')) return { state: 'terminal', integrationRun: entry.hint.run };
     }
     if (attempt === 60 || Date.now() >= deadline) break;
     await wait(Math.min(5000, Math.max(1, deadline - Date.now())));
