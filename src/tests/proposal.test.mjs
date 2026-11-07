@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { checkRefinement, validateProposalFiles, prepareProposal, proposalValidationFailure, createProposalPullRequest } from '../packages/sdlc/src/proposal.mjs';
 import { validateStageEnvelope } from '../packages/sdlc/src/host-contract.mjs';
 import { routeIssue } from '../packages/sdlc/src/issue-actions.mjs';
@@ -119,6 +121,57 @@ test('the real OpenSpec provider scaffolds, instructs and strictly validates pro
   assert.equal(complete[4].path, `${root}/.openspec.yaml`);
   assert.match(complete[4].content, /schema: spec-driven/);
   await assert.rejects(prepareProposal(18, files.map(f => f.path.includes('/specs/') ? { ...f, content: '# Empty spec' } : f), provider));
+});
+
+test('real OpenSpec discovery and validation use the supplied baseline without adopter npm settings', async () => {
+  const cli = resolve('node_modules/@fission-ai/openspec/bin/openspec.js');
+  const specification = '# Existing system\n\n## Purpose\nPreserve the existing system.\n\n## Requirements\n\n### Requirement: Stable behavior\nThe system SHALL preserve its existing behavior.\n\n#### Scenario: Existing input\n- **WHEN** an existing input is supplied\n- **THEN** its behavior is preserved\n';
+  const configuration = 'schema: spec-driven\ncontext: Read the committed baseline.\n';
+  const file = content => ({ mode: '100644', content: Buffer.from(content) });
+  const baseline = new Map([
+    ['openspec/config.yaml', file(configuration)],
+    ['openspec/specs/existing-system/spec.md', file(specification)],
+    ['.npmrc', file('registry=https://registry.invalid\n')],
+    ['package.json', file('{"name":"unrelated-adopter"}')],
+    ['openspec/changes/another/proposal.md', file('# Unrelated proposal\n')],
+  ]);
+  let discoveries = 0, validations = 0;
+  const provider = async (cwd, args) => {
+    assert.equal(await readFile(join(cwd, 'openspec/config.yaml'), 'utf8'), configuration);
+    assert.equal(await readFile(join(cwd, 'openspec/specs/existing-system/spec.md'), 'utf8'), specification);
+    assert.equal(existsSync(join(cwd, '.npmrc')), false);
+    assert.equal(existsSync(join(cwd, 'package.json')), false);
+    assert.equal(existsSync(join(cwd, 'openspec/changes/another')), false);
+    if (args[0] === 'list') discoveries++;
+    if (args[0] === 'validate') validations++;
+    return execFileSync(process.execPath, [cli, ...args], { cwd, encoding: 'utf8', env: { ...process.env, OPENSPEC_TELEMETRY: '0' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  };
+  const context = await prepareProposal(18, null, provider, baseline);
+  assert.equal(context.discovery.status, 'passed');
+  assert.deepEqual(context.discovery.command, ['openspec', 'list', '--specs', '--json']);
+  assert.deepEqual(context.discovery.specifications.map(spec => spec.id), ['existing-system']);
+  assert.equal(discoveries, 1);
+  assert.equal((await prepareProposal(18, files, provider, baseline)).length, files.length + 1);
+  assert.equal(validations, 1);
+});
+
+for (const path of ['openspec/specs/../../escape', 'openspec/specs/unsafe\\name']) test(`OpenSpec baseline preparation rejects unsafe source path ${path}`, async () => {
+  let invoked = false;
+  await assert.rejects(prepareProposal(18, null, () => { invoked = true; }, new Map([[path,
+    { mode: '100644', content: Buffer.from('unsafe') }]])), /Invalid OpenSpec baseline/);
+  assert.equal(invoked, false);
+});
+
+test('missing or malformed provider inventory remains a planning failure', async () => {
+  for (const inventory of [{ specs: [], root: { path: '/another-source' } }, { specs: {}, root: null }, { specs: [], status: [{ severity: 'error', code: 'incomplete_inventory' }] }]) {
+    const provider = (cwd, args) => JSON.stringify(args[0] === 'list' ? { root: { path: cwd }, ...inventory } : {});
+    await assert.rejects(prepareProposal(18, null, provider, new Map()), /OpenSpec discovery did not identify/);
+  }
+  const failure = Error('Provider discovery unavailable');
+  await assert.rejects(prepareProposal(18, null, (_cwd, args) => {
+    if (args[0] === 'list') throw failure;
+    return '{}';
+  }, new Map()), error => error === failure);
 });
 
 test('publisher rechecks authority before a create-only branch, preserves base tree and does not merge', async () => {

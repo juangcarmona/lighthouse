@@ -1,7 +1,7 @@
 export { changeName, proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { changeName, proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { loadDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -23,19 +23,36 @@ export function proposalValidationFailure(error, issue) {
 }
 
 // Use the provider's scaffold, instructions and validator; never maintain a copied schema.
-export async function prepareProposal(issue, files, provider = openspec) {
+export async function prepareProposal(issue, files, provider = openspec, baseline = null) {
   if (files) validateProposalFiles(files, issue);
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-proposal-'));
   const name = changeName(issue);
   try {
+    for (const [path, file] of baseline ?? []) {
+      if (path !== 'openspec/config.yaml' && !path.startsWith('openspec/specs/') && !path.startsWith('openspec/schemas/')) continue;
+      if (path.includes('\\') || path.split('/').some(part => !part || part === '.' || part === '..')
+          || !['100644', '100755'].includes(file.mode) || !Buffer.isBuffer(file.content)) throw Error('Invalid OpenSpec baseline input');
+      const target = join(dir, path);
+      await mkdir(dirname(target), { recursive: true }); await writeFile(target, file.content);
+    }
     await provider(dir, ['new', 'change', name, '--schema', 'spec-driven', '--json']);
     if (!files) {
+      let discovery = null;
+      if (baseline !== null) {
+        const command = ['list', '--specs', '--json'];
+        const inventory = JSON.parse(await provider(dir, command));
+        if (!Array.isArray(inventory.specs) || !Array.isArray(inventory.status ?? [])
+            || (inventory.status ?? []).some(item => item?.severity === 'error')
+            || ![dir, await realpath(dir)].includes(inventory.root?.path))
+          throw Error('OpenSpec discovery did not identify the prepared source baseline');
+        discovery = { status: 'passed', command: ['openspec', ...command], specifications: inventory.specs, diagnostics: inventory.status ?? [] };
+      }
       const instructions = {};
       for (const artifact of ['proposal', 'specs', 'design', 'tasks']) {
         const value = JSON.parse(await provider(dir, ['instructions', artifact, '--change', name, '--json']));
         instructions[artifact] = { outputPath: value.outputPath, instruction: value.instruction, template: value.template };
       }
-      return { provider: '@fission-ai/openspec@1.15.0', schema: 'spec-driven', root: proposalRoot(issue), instructions };
+      return { provider: '@fission-ai/openspec@1.15.0', schema: 'spec-driven', root: proposalRoot(issue), instructions, ...(discovery ? { discovery } : {}) };
     }
     const metadata = `${proposalRoot(issue)}/.openspec.yaml`;
     for (const file of files) {

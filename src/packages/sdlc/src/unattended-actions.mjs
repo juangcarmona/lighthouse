@@ -194,13 +194,14 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         return refined;
       },
       propose: async (_refined, correction = null) => {
-        const proposal = await prepareProposal(issueNumber, null, provider);
+        const proposal = await prepareProposal(issueNumber, null, provider, source);
+        proposal.discovery.sourceRevision = revision;
         const result = await step('propose', 'propose',
-          'Prepare the smallest engineering plan through context.proposal.instructions. Read the adopter rules in /workspace/openspec/config.yaml and follow their document scope and citation requirements. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, the returned .openspec.yaml payload contains only skip_specs: true; the final file also includes host-owned provider metadata. When context.correction is present, repair its concrete findings against the previous plan without expanding the authorized issue. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
+          'Prepare the smallest engineering plan through context.proposal.instructions. This read-only worker has no command-execution tool. The trusted host already ran the pinned OpenSpec CLI against a prepared copy of the committed adopter baseline; use context.proposal.discovery as its source-bound specification inventory, and context.proposal.instructions as its provider instructions. The host will materialize and strictly validate returned files afterward. Do not claim to have executed these commands yourself. Read the adopter rules in /workspace/openspec/config.yaml and follow their document scope and citation requirements. Return proposal.md, design.md and tasks.md in output.files under proposal.root, even for documentation-only changes; keep tasks unchecked. For a change without spec-level behavior, the returned .openspec.yaml payload contains only skip_specs: true; the final file also includes host-owned provider metadata. When context.correction is present, repair its concrete findings against the previous plan without expanding the authorized issue. Follow /harness/skills/propose/SKILL.md. Preserve product and architecture authority. Write the envelope; the host validates and materializes the proposal.',
           { proposal, refinement: refined, ...(correction ? { correction } : {}) });
         planProducer = result;
         let files;
-        try { files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider); }
+        try { files = await prepareProposal(issueNumber, result.envelope.result.output.files, provider, source); }
         catch (error) {
           if (!error.proposalValidation) throw error;
           // Reserve the rejected plan's unused review slot; retained stage identities stay stable.
