@@ -1,3 +1,4 @@
+import { parsePublicationBranch } from './publication-branch.mjs';
 import { reconcilePostMergeReviews } from './post-merge-review.mjs';
 import { signalCiRepair } from './ci-repair.mjs';
 import { verificationPush } from './ci-subject.mjs';
@@ -96,10 +97,10 @@ async function main() {
         if (!(await commentsFor(api, issue.number)).some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(notice))) await api(`issues/${issue.number}/comments`, 'POST', { body: handoff({ status: 'blocked', stage: 'product-change', happened: `The product decision for PR #${pr.number} no longer matches its current head.`, action: 'Workflow maintainer: revalidate the Product Change and request a new decision for the current PR.', next: 'Product apply and parent continuation remain stopped until current evidence and approval are available.', link: `[Open PR #${pr.number}](${pr.html_url})`, details: notice }) });
         continue;
       }
-      const match = pr.head.ref.match(/^lighthouse\/(?:implement|propose)-([1-9][0-9]*)-[a-f0-9]{12}$/);
-      if (pr.head.ref.startsWith('lighthouse/propose-') && !pr.body?.includes('<!-- lighthouse-product-implementation:')) continue;
-      if (!match || pr.user?.login !== 'github-actions[bot]' || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo || pr.state !== 'open') continue;
-      const issue = await api(`issues/${match[1]}`);
+      const branch = parsePublicationBranch(pr.head.ref);
+      if (branch?.stage === 'propose' && !pr.body?.includes('<!-- lighthouse-product-implementation:')) continue;
+      if (!branch || !['implement', 'propose'].includes(branch.stage) || pr.user?.login !== 'github-actions[bot]' || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo || pr.state !== 'open') continue;
+      const issue = await api(`issues/${branch.issue}`);
       if (issue.state !== 'open') continue;
       if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
       await projectImplementationPrState(api, issue.number, true);

@@ -1,3 +1,4 @@
+import { isIssuePublicationBranch } from './publication-branch.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
 import { issueComments, loadDispatch, stagePath, workerFor } from './stage-dispatch.mjs';
@@ -23,7 +24,7 @@ export async function implementationContinuation(api, repository, owner, request
   const pulls = await api('pulls?state=open&per_page=100');
   if (pulls.length >= 100) throw Error('Implementation candidate lookup exceeds bounds');
   const candidates = pulls.filter(pr => {
-    if (pr.head?.ref?.startsWith(`lighthouse/implement-${request.issue}-`)) return true;
+    if (isIssuePublicationBranch(pr.head?.ref, request.issue, 'implement')) return true;
     try { return checkImplementationPullRequest(pr, repository).issue === request.issue; } catch { return false; }
   });
   if (!candidates.length) return null;

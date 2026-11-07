@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { checkProductResumePullRequest } from './product-change.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
+import { selectPublicationBranch } from './publication-branch.mjs';
 
 const openspec = (cwd, args) => execFileSync('npx', ['--yes', '--package', '@fission-ai/openspec@1.15.0', 'openspec', ...args], { cwd, encoding: 'utf8', timeout: 120000, maxBuffer: 1024 * 1024, env: { ...process.env, OPENSPEC_TELEMETRY: '0', CI: 'true' }, stdio: ['ignore', 'pipe', 'pipe'] });
 
@@ -90,7 +91,7 @@ export async function loadRefinement(api, repo, reports, current) {
 }
 
 export async function createProposalPullRequest(api, snapshot, files, body, runUrl, beforeWrite) {
-  const branch = `lighthouse/propose-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
+  const branch = await selectPublicationBranch(api, snapshot, 'propose', snapshot.productResume?.branch);
   // A fresh immutable branch per run avoids updating a human's or another run's work.
   const commit = await api(`git/commits/${snapshot.sourceRevision}`);
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => ({ path: file.path, mode: '100644', type: 'blob', content: file.content })) });

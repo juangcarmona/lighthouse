@@ -1,3 +1,4 @@
+import { parsePublicationBranch } from './publication-branch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { loadDispatch, checkDispatchClaim, stagePath, issueComments } from './stage-dispatch.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
@@ -108,7 +109,7 @@ export async function productGapAfterRun(api, repository, owner, event, readArti
   if (proof || review) {
     const number = proof?.pr ?? review.number, head = proof?.head ?? review.head;
     const pr = await api(`pulls/${number}`);
-    if (!Number.isSafeInteger(number) || number < 1 || !/^[a-f0-9]{40}$/.test(head ?? '') || pr.number !== number || pr.state !== 'open' || pr.merged || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository || !new RegExp(`^lighthouse/(?:implement|propose)-${request.issue}-[a-f0-9]{12}$`).test(pr.head.ref)) throw Error('Existing issue PR is not an eligible parent');
+    if (!Number.isSafeInteger(number) || number < 1 || !/^[a-f0-9]{40}$/.test(head ?? '') || pr.number !== number || pr.state !== 'open' || pr.merged || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.head?.repo?.full_name !== repository || pr.base?.repo?.full_name !== repository || !['implement', 'propose'].includes(parsePublicationBranch(pr.head.ref)?.stage) || parsePublicationBranch(pr.head.ref)?.issue !== request.issue) throw Error('Existing issue PR is not an eligible parent');
     pullRequest = { number, head, branch: pr.head.ref };
   }
   return { issue: request.issue, stage, predecessor: { runId: String(run.id), attempt: run.run_attempt }, gap: envelope.result.output.productGap, sourceRevision: request.sourceRevision, baseRevision: request.baseRevision ?? request.sourceRevision, taskDigest: request.taskDigest, autoImplement: request.autoImplement === true, ...(pullRequest ? { pullRequest } : {}), ...(reviewEvidence ? { review: reviewEvidence } : {}) };

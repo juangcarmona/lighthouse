@@ -81,7 +81,7 @@ test('snapshot captures additions and deletions, excludes build output and rejec
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 test('an issue uses repository checks without a proposal PR or per-issue configuration', async () => {
-  const api = async path => {
+  const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path.startsWith('contents/.lighthouse/environment.json')) return null;
     if (path.startsWith('contents/.lighthouse/implement.json')) return null;
     assert.ok(path.startsWith('contents/package.json'));
@@ -97,7 +97,7 @@ test('an issue uses repository checks without a proposal PR or per-issue configu
 });
 test('repository defaults and existing bounded per-issue policies remain usable without merging a proposal', async () => {
   for (const configured of [{ defaults: policy }, { 18: policy }]) {
-    const api = async path => {
+    const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path.startsWith('contents/.lighthouse/environment.json')) return null;
       assert.ok(path.startsWith('contents/.lighthouse/implement.json'));
       return { content: Buffer.from(JSON.stringify(configured)).toString('base64') };
@@ -116,7 +116,7 @@ test('host checks bind the exact candidate and commands, preserving failures', (
   receipt.checks[0].command = ['true']; assert.throws(() => validateCheckReceipt(receipt, request, [change]), /command/);
 });
 test('publisher rechecks authority before a create-only branch and preserves draft state', async () => {
-  const calls = [], api = async (path, method, body) => { calls.push({ path, method, body }); return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created', html_url: 'https://example.test/pr/34' }; };
+  const calls = [], api = async (path, method, body) => { calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created', html_url: 'https://example.test/pr/34' }; };
   await createImplementationPullRequest(api, request, [change], 'Owner review pending', 'https://example.test/run', true, async () => calls.push({ path: 'recheck' }));
   assert.equal(calls.find(c => c.path === 'pulls').body.draft, true);
   assert.match(calls.find(c => c.path === 'pulls').body.body, /Refs #18/);
@@ -140,7 +140,7 @@ test('aligned implementation resumes the authenticated draft PR and rejects chan
     if (variant === 'base') pr.base.ref = 'other';
     if (variant === 'draft') pr.draft = false;
     const api = async (path, method, body) => {
-      calls.push({ path, method, body });
+      calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === 'pulls/34' && method !== 'PATCH') return pr;
       return { sha: 'created', tree: { sha: 'tree' } };
     };
@@ -162,7 +162,7 @@ test('an epic child targets the recorded shared base and stops if it advances', 
     const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
     const calls = []; let reads = 0;
     const api = async (path, method, body) => {
-      calls.push({ path, method, body });
+      calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: ++reads === changedAt ? 'c'.repeat(40) : epic.baseSha } };
       return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
     };
@@ -183,7 +183,7 @@ test('epic publication rejects an invalid base and revoked authority', async () 
   const epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: request.sourceRevision };
   const calls = []; let authorizations = 0;
   const api = async (path, method, body) => {
-    calls.push({ path, method, body });
+    calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path.startsWith('git/ref/heads/')) return { object: { sha: epic.baseSha } };
     return path.startsWith('git/commits/') ? { tree: { sha: 'tree' } } : { sha: 'created' };
   };
@@ -245,7 +245,7 @@ test('an immutable recovery seed cannot overwrite newer source or expand its wri
 
 test('review feedback updates the existing implementation branch without a force push or second PR', async () => {
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); return path === 'pulls/34' && method !== 'PATCH' ? { head: { sha: request.sourceRevision }, body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` } : { sha: 'created', tree: { sha: 'tree' } }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; return path === 'pulls/34' && method !== 'PATCH' ? { head: { sha: request.sourceRevision }, body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->` } : { sha: 'created', tree: { sha: 'tree' } }; };
   const reviewed = { ...request, implementationReview: { number: 34, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
   const pr = await createImplementationPullRequest(api, reviewed, [change], 'Updated', '', false, async () => calls.push({ path: 'recheck' }));
   assert.equal(pr.number, 34);
@@ -261,7 +261,7 @@ test('epic review updates the same PR after rechecking its shared base and autho
     const calls = [], epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: 'c'.repeat(40) };
     const reviewed = { ...request, epic, implementationReview: { number: 34, head: request.sourceRevision, base: epic.base, branch: 'lighthouse/implement-18-aaaaaaaaaaaa', url: 'https://example.test/pr/34' } };
     const api = async (path, method, body) => {
-      calls.push({ path, method, body });
+      calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === `git/ref/heads/${epic.base}`) return { object: { sha: epic.baseSha } };
       if (path === `git/ref/heads/${reviewed.implementationReview.branch}`) return { object: { sha: 'created' } };
       if (path === 'pulls/34' && method !== 'PATCH') return { body: `<!-- lighthouse-implementation:${'a'.repeat(64)} -->`, head: { sha: calls.some(call => call.path.startsWith('git/refs/heads/')) ? 'created' : request.sourceRevision, ref: reviewed.implementationReview.branch }, base: { ref: epic.base } };
@@ -283,7 +283,7 @@ test('an approved product prerequisite resumes on its existing branch and retain
   const resume = { issue: 18, parent, pullRequest: 34, head, branch, receiptIntent: intent };
   const productPr = { number: 34, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: branch, repo: { full_name: repository } }, base: { ref: 'main', repo: { full_name: repository } }, html_url: 'https://example.test/pr/34', body: `Product decision retained.\n<!-- lighthouse-product-change:{"changeId":"CHG-EXAMPLE"} -->\n<!-- lighthouse-product-change-checkpoint:${JSON.stringify(checkpoint)} -->` };
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
   const result = await createImplementationPullRequest(api, { ...request, repository, productResume: resume }, [change], 'Implemented the bounded issue.', 'https://example.test/run', true, async () => {});
   assert.equal(result.number, 34);
   assert.deepEqual(calls.find(call => call.path === `git/refs/heads/${branch}`).body, { sha: after, force: false });
@@ -302,7 +302,7 @@ test('an approved product prerequisite resumes on its existing branch and retain
   assert.throws(() => checkImplementationPullRequest({ ...productPr, head: { ...productPr.head, sha: '9'.repeat(40) }, body: staleWithLegacyMarker }, repository));
   const correctedHead = '7'.repeat(40), reviewCalls = [];
   const reviewedPr = { ...productPr, head: { ...productPr.head, sha: after }, body };
-  const reviewApi = async (path, method, payload) => { reviewCalls.push({ path, method, body: payload }); if (path === 'pulls/34' && method !== 'PATCH') return reviewedPr; if (path === 'git/commits' && method === 'POST') return { sha: correctedHead }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  const reviewApi = async (path, method, payload) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null; reviewCalls.push({ path, method, body: payload }); if (path === 'pulls/34' && method !== 'PATCH') return reviewedPr; if (path === 'git/commits' && method === 'POST') return { sha: correctedHead }; return { sha: 'blob', tree: { sha: 'tree' } }; };
   await createImplementationPullRequest(reviewApi, { ...request, repository, sourceRevision: after, implementationReview: { number: 34, branch, url: productPr.html_url } }, [change], 'Reviewed correction.', 'https://example.test/review-run', true, async () => {});
   const correctedBody = reviewCalls.find(call => call.path === 'pulls/34' && call.method === 'PATCH').body.body;
   assert.equal(checkImplementationPullRequest({ ...reviewedPr, head: { ...reviewedPr.head, sha: correctedHead }, body: correctedBody }, repository).issue, 18);
@@ -324,7 +324,7 @@ test('verification-only owner correction returns the same PR and never writes Gi
     if (scenario === 'head') pr.head.sha = 'd'.repeat(40);
     if (scenario === 'identity') pr.body = `<!-- lighthouse-implementation:${'a'.repeat(63)}b -->`;
     const api = async (path, method = 'GET', body) => {
-      calls.push({ path, method, body });
+      calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === 'pulls/34') { if (method === 'PATCH') pr.body = body.body; return pr; }
       if (path === review.path) return scenario === 'feedback' ? { ...feedback, body: 'Revoked' } : feedback;
       throw Error('Unexpected API: ' + path);
@@ -348,7 +348,7 @@ test('epic correction reconciles delayed PR readback without repeating a ref wri
     const branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
     const snapshot = { ...request, epic, implementationReview: { number: 34, head: request.sourceRevision, base: epic.base, branch } };
     let written = false, reads = 0, writes = 0, descriptions = 0, checked = false;
-    const api = async (path, method) => {
+    const api = async (path, method) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === `git/ref/heads/${epic.base}`) return { object: { sha: scenario === 'moved-base' && written ? 'moved' : epic.baseSha } };
       if (path === `git/ref/heads/${branch}`) return { object: { sha: scenario === 'moved-ref' ? 'foreign' : 'created' } };
       if (path === `git/refs/heads/${branch}`) { written = true; writes++; return { object: { sha: 'created' } }; }
@@ -385,7 +385,7 @@ test('verification-only metadata preserves product provenance and reconciles onl
     const snapshot = { ...request, repository, stage: 'implement', worker: 'apply-review', baseRevision: 'd'.repeat(40), implementationReview: review };
     const calls = []; let writes = 0, authorities = 0;
     const api = async (path, method = 'GET', payload) => {
-      calls.push({ path, method });
+      calls.push({ path, method }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === review.path) return scenario === 'ack-revoked' && writes ? { ...feedback, body: 'Revoked' } : feedback;
       if (path !== 'pulls/34') throw Error('No Git resource may be requested');
       if (method === 'PATCH') { writes++; if (scenario !== 'ack-unconfirmed') pr.body = payload.body; if (scenario.startsWith('ack-')) throw Error('lost ack'); }

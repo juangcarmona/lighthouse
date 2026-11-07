@@ -114,9 +114,12 @@ test('scheduled reconciliation selects only bot implementation PRs', async () =>
       { number: 172, head: { ref: 'lighthouse/implement-171-b467e429e869' }, user: { login: 'github-actions[bot]' } },
       { number: 173, head: { ref: 'lighthouse/implement-171-b467e429e869' }, user: { login: 'other' } },
       { number: 174, head: { ref: 'feature/docs' }, user: { login: 'github-actions[bot]' } },
+      { number: 175, head: { ref: 'chore/171-lighthouse-implement-b467e429e869' }, user: { login: 'github-actions[bot]' } },
+      { number: 176, head: { ref: 'chore/171-lighthouse-implement-b467e429e869' }, user: { login: 'other' } },
+      { number: 177, head: { ref: 'docs/171-lighthouse-implement-b467e429e869' }, user: { login: 'github-actions[bot]' } },
     ];
   };
-  assert.deepEqual(await scheduledImplementationPulls(api), [172]);
+  assert.deepEqual(await scheduledImplementationPulls(api), [172, 175]);
 });
 
 test('CI callback accepts only the current configured repository run', () => {

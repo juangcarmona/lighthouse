@@ -1,3 +1,4 @@
+import { isIssuePublicationBranch, parsePublicationBranch } from './publication-branch.mjs';
 export { taskDigest } from './digests.mjs';
 import { taskDigest } from './digests.mjs';
 export { repositoryApiUrl, createIssueApi } from './github-rest.mjs';
@@ -180,7 +181,7 @@ export function checkImplementationPrInventory(pulls, snapshot, published = null
     checkImplementationPullRequest(current, snapshot.repository, expected);
     permitted = published.number;
   }
-  if (pulls.length >= 100 || pulls.some(pr => pr.number !== permitted && pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`))) throw Error('Existing implementation PR requires review');
+  if (pulls.length >= 100 || pulls.some(pr => pr.number !== permitted && isIssuePublicationBranch(pr.head.ref, snapshot.issue, 'implement'))) throw Error('Existing implementation PR requires review');
 }
 export async function resolveEpicRouting(api, repository, owner, issueNumber, route, enabled, authenticate) {
   if (!route.run || enabled !== 'true' || !['triage', 'refine', 'implement', 'integrate'].includes(route.stage) || route.worker && !(route.worker === 'apply-review' && route.stage === 'implement')) return undefined;
@@ -379,12 +380,12 @@ async function main(command) {
       await output('run', 'false'); await output('send', 'false');
       await summary('No delivery action for feedback on a closed PR.'); return;
     }
-    if (!/^(?:lighthouse\/implement-|lighthouse\/propose-)/.test(pr.head?.ref ?? '')) {
+    if (!['implement', 'propose'].includes(parsePublicationBranch(pr.head?.ref)?.stage)) {
       if (command !== 'route') throw Error('Unrelated PR cannot authorize a Lighthouse dispatch');
       await output('stage', ''); await output('worker', ''); await output('run', 'false'); await output('issue', '');
       await summary('No Lighthouse action for this PR.'); return;
     }
-    const implementation = pr.body?.includes('<!-- lighthouse-product-implementation:') || pr.head?.ref?.startsWith('lighthouse/implement-') && !pr.body?.includes('<!-- lighthouse-product-proposal:');
+    const implementation = pr.body?.includes('<!-- lighthouse-product-implementation:') || parsePublicationBranch(pr.head?.ref)?.stage === 'implement' && !pr.body?.includes('<!-- lighthouse-product-proposal:');
     const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation);
     const reports = await api(`issues/${feedback.number}/comments?per_page=100`);
     if (reports.length >= 100) throw Error('Discussion exceeds bounded collection');
@@ -608,8 +609,8 @@ async function main(command) {
       implementation = await loadImplementation(api, issueNumber, owner, baseRevision, repository.default_branch, epicImplementation ? 'epic' : null);
       seed = implementationReview || alignedPr ? null : await loadImplementationSeed(api, implementation.policy, revision.sha);
       const pulls = await api('pulls?state=open&per_page=100');
-      if (pulls.length >= 100 || pulls.some(pr => pr.number !== (implementationReview?.number ?? productResume?.pullRequest ?? alignedPr?.number) && pr.head.ref.startsWith(`lighthouse/implement-${issueNumber}-`))) throw Error('Review the existing implementation PR before requesting another');
-      const proposal = pulls.find(pr => pr.head.ref.startsWith(`lighthouse/propose-${issueNumber}-`));
+      if (pulls.length >= 100 || pulls.some(pr => pr.number !== (implementationReview?.number ?? productResume?.pullRequest ?? alignedPr?.number) && isIssuePublicationBranch(pr.head.ref, issueNumber, 'implement'))) throw Error('Review the existing implementation PR before requesting another');
+      const proposal = pulls.find(pr => isIssuePublicationBranch(pr.head.ref, issueNumber, 'propose'));
       if (proposal && !implementationReview) {
         planningReference = checkProposal(await api(`pulls/${proposal.number}`), repo);
         planningReference.thread = await reviewThread(api, planningReference.number, owner);
@@ -624,7 +625,7 @@ async function main(command) {
       const errors = validateStageEnvelope(predecessor.envelope, predecessor.request); if (errors.length) throw Error(errors.join('\n'));
       if (await api(`contents/${proposalRoot(issueNumber)}?ref=${revision.sha}`, 'GET', undefined, true)) throw Error('Proposal directory already exists; review the existing proposal');
       const pulls = await api('pulls?state=open&per_page=100');
-      if (pulls.length >= 100 || pulls.some(pr => pr.head.ref.startsWith(`lighthouse/propose-${issueNumber}-`))) throw Error('Review the existing proposal PR before requesting another');
+      if (pulls.length >= 100 || pulls.some(pr => isIssuePublicationBranch(pr.head.ref, issueNumber, 'propose'))) throw Error('Review the existing proposal PR before requesting another');
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
@@ -668,7 +669,7 @@ async function main(command) {
       if (!productReview) {
         const pulls = await api('pulls?state=open&per_page=100');
         if (pulls.length >= 100) throw Error('Open PR list exceeds bounds while resuming Product Change');
-        const existing = pulls.find(pr => (pr.head?.ref?.startsWith(`lighthouse/implement-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${issueNumber}-`) || pr.head?.ref?.startsWith(`lighthouse/propose-${issueNumber}-`)) && /<!-- lighthouse-product-change(?:-review|:review):/.test(pr.body ?? ''));
+        const existing = pulls.find(pr => isIssuePublicationBranch(pr.head?.ref, issueNumber) && /<!-- lighthouse-product-change(?:-review|:review):/.test(pr.body ?? ''));
         if (existing) productReview = { pullRequest: existing.number, head: existing.head.sha };
       }
       let existingFiles;
