@@ -31,3 +31,22 @@ export async function authorizeCompletionEvent(api, repository, event, env, stag
   if (latest?.id !== review.id || latest.state !== 'APPROVED') throw Error('Owner approval was superseded');
   return { issue: review.issue, pr: review.number, head: review.head, merge: true, approval: { id: review.id, owner, head: review.head } };
 }
+
+// Observation only: authorizeCompletionEvent has already verified the retained grant and recovery artifact.
+export async function readCompletionContinuation(api, repository, event) {
+  if (!event?.workflow_run) return null;
+  const read = async (id, sha = null) => {
+    if (!Number.isSafeInteger(id) || id < 1) throw Error('Invalid completion continuation');
+    const run = await api(`actions/runs/${id}`);
+    if (run.id !== id || run.repository?.full_name !== repository || run.status !== 'completed' || run.conclusion !== 'success' || sha && run.head_sha !== sha) throw Error('Completion continuation observation changed');
+    return { id, attempt: run.run_attempt, path: run.path, event: run.event, head: run.head_sha, status: run.status, conclusion: run.conclusion, url: `https://github.com/${repository}/actions/runs/${id}` };
+  };
+  const ci = await read(event.workflow_run.id, event.workflow_run.head_sha);
+  let recovery = null;
+  if (event.completionRecovery) {
+    if (event.completionRecovery.ci !== ci.id) throw Error('Completion continuation CI changed');
+    recovery = await read(event.completionRecovery.maintenance);
+    if (recovery.path !== '.github/workflows/lighthouse-worker-maintenance.yml' || recovery.attempt !== event.completionRecovery.attempt || !['schedule', 'workflow_dispatch'].includes(recovery.event)) throw Error('Completion continuation recovery changed');
+  }
+  return { ci, recovery };
+}

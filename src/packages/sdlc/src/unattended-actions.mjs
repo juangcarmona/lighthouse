@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { runUnattended, validateUnattendedPolicy, unattendedImplementationPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { stageContext, executeUnattendedStage, applyCandidate, candidateInventory, boundedOpenSpecProvider } from './unattended-runtime.mjs';
+import { completionSummary, pendingReviewMarker } from './completion-status.mjs';
 import { loadImplementation, publishImplementationPullRequest, readImplementationPublication } from './implementation.mjs';
 import { prepareProposal, proposalRoot } from './proposal.mjs';
 import { resolveModelProfile } from './model-profiles.mjs';
@@ -312,7 +313,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
           postMergeError = error;
           postMerge = observation.profile.completion.postMergeWorkflows.map(workflow => ({ workflow, revision: result.sha, state: 'missing', status: 'unavailable', reason: error.message.slice(0, 3000) }));
         }
-        await notifyIntegrated(handoff({ status: postMergeError ? 'blocked' : 'completed', stage: route, happened: `PR #${pr.number} was merged at ${result.sha}.${postMergeError ? ' Post-merge verification could not be requested.' : ''}`, action: postMergeError ? 'Workflow maintainer: inspect the execution and current CI before requesting verification again.' : 'None.', next: postMergeError ? 'Post-merge verification remains unconfirmed.' : 'Post-merge review follows the configured CI and completion policy; release and deployment remain separate.', link: `[Merged PR #${pr.number}](${pr.html_url})` }));
+        await notifyIntegrated(handoff({ status: postMergeError ? 'blocked' : 'completed', stage: route, happened: completionSummary(request, { ...receipt, postMerge }, 'passed'), action: postMergeError ? 'Workflow maintainer: inspect the execution and current CI before requesting verification again.' : 'None.', next: postMergeError ? 'Post-merge verification remains unconfirmed.' : 'Post-merge review follows the configured CI and completion policy; release and deployment remain separate.', link: `[Merged PR #${pr.number}](${pr.html_url})`, details: pendingReviewMarker({ ...request, authorization }, receipt) }));
         return { ...result, postMerge, notifications };
       },
       stop: async (reason, _evidence, error) => {

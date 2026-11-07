@@ -1,5 +1,21 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.3
+
+### Patch Changes
+
+- 58de6c7: # Wake final review when integration completes
+
+  Reconcile retained final-review continuations on successful integration and adopted CI completion, keeping the periodic fallback. Delegated delivery retains the same confirmed status and pending-review identity. Review context records the authenticated CI and recovery trigger so a scheduled continuation can be distinguished from a manual replay.
+
+## 0.21.2
+
+### Patch Changes
+
+- d54e138: # Runner registration metadata
+
+  Read BOM-prefixed runner registration metadata and keep optional identity failures from changing the runner command's exit status.
+
 ## 0.21.1
 
 ### Patch Changes

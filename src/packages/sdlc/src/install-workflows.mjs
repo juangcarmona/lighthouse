@@ -23,7 +23,7 @@ if (epic) files.push('lighthouse-sdlc-epic.yml');
 for (const name of files) {
   let content = (await readFile(new URL(`../workflows/${name}`, import.meta.url), 'utf8')).replaceAll('__LIGHTHOUSE_REF__', revision);
   if (name === 'lighthouse-sdlc-router.yml') {
-    content = content.replace(/^    workflows: \[.*\]$/m, `    workflows: ${JSON.stringify(await completionSubscriptions(root, { implement, propose, productChange, epic }))}`);
+    content = content.replace(/^    workflows: \[.*\]$/m, `    workflows: ${JSON.stringify(await completionSubscriptions(root, { implement, propose, productChange, epic, completion, unattended }))}`);
     const enabled = ['triage', 'refine', ...(propose ? ['propose'] : []), ...(implement ? ['implement'] : []), ...(completion ? ['integrate', 'review'] : [])];
     content = content.replace('LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review', `LIGHTHOUSE_ENABLED_STAGES: ${enabled.join(',')}`).replace('options: [triage, refine, propose, implement, integrate, review]', `options: [${enabled.join(', ')}]`);
     content = content.replace('options: [stage, product-change, resume-product, resume-aligned]', `options: [stage${productChange ? ', product-change, resume-product, resume-aligned' : ''}]`).replace('LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false', `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${productChange}`);

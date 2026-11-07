@@ -40,6 +40,10 @@ async function main() {
   if (!config) return;
   const profile = JSON.parse(Buffer.from(config.content, 'base64').toString());
   if (profile.repository !== repo) throw Error('Repository profile differs from the event');
+  const reconcileReviews = async () => {
+    if (env.LIGHTHOUSE_COMPLETION_ENABLED !== 'true') return;
+    for (const outcome of await reconcilePostMergeReviews(api, repo, owner, metadata.default_branch)) console.log(`Final review #${outcome.issue}: ${outcome.state}; original integration ${outcome.integrationRun}.`);
+  };
   let candidates = [];
   const ciCallback = ['workflow_dispatch', 'push'].includes(env.GITHUB_EVENT_NAME) && env.LIGHTHOUSE_CI_RECONCILE === 'true';
   if (env.GITHUB_EVENT_NAME === 'pull_request') {
@@ -49,15 +53,18 @@ async function main() {
     const id = event.workflow_run?.id;
     if (event.action !== 'completed' || !Number.isSafeInteger(id)) return;
     const run = await api(`actions/runs/${id}`);
-    if (run.status !== 'completed' || run.conclusion !== 'success' || run.head_sha !== event.workflow_run.head_sha || run.repository?.full_name !== repo || !profile.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`)) return;
+    if (run.id !== id || run.status !== 'completed' || run.conclusion !== 'success' || run.head_sha !== event.workflow_run.head_sha || run.repository?.full_name !== repo) return;
+    const integration = ['.github/workflows/lighthouse-sdlc-integrate.lock.yml', '.github/workflows/lighthouse-sdlc-unattended.yml'].includes(run.path) && run.event === 'workflow_dispatch' && run.head_branch === metadata.default_branch;
+    const ci = profile.completion?.postMergeWorkflows?.some(name => run.path === `.github/workflows/${name}`) && ['push', 'pull_request', 'workflow_dispatch'].includes(run.event);
+    if (!integration && !ci) return;
+    await reconcileReviews();
+    if (integration) return;
     const pulls = await api(`commits/${run.head_sha}/pulls?per_page=100`);
     if (pulls.length >= 100) throw Error('PR lookup exceeds bound');
     candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
   } else if (env.GITHUB_EVENT_NAME === 'schedule') {
     candidates = await scheduledImplementationPulls(api);
-    if (env.LIGHTHOUSE_COMPLETION_ENABLED === 'true') {
-      for (const outcome of await reconcilePostMergeReviews(api, repo, owner, metadata.default_branch)) console.log(`Final review #${outcome.issue}: ${outcome.state}; original integration ${outcome.integrationRun}.`);
-    }
+    await reconcileReviews();
   } else if (ciCallback) {
     const id = Number(env.GITHUB_RUN_ID);
     if (!Number.isSafeInteger(id) || !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '')) throw Error('CI callback lacks a run or head');
