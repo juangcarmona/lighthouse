@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.2
+
+### Patch Changes
+
+- d54e138: # Runner registration metadata
+
+  Read BOM-prefixed runner registration metadata and keep optional identity failures from changing the runner command's exit status.
+
 ## 0.21.1
 
 ### Patch Changes
