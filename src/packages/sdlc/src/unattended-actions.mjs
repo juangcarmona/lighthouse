@@ -12,7 +12,7 @@ import { loadImplementation, publishImplementationPullRequest, readImplementatio
 import { prepareProposal, proposalRoot } from './proposal.mjs';
 import { resolveModelProfile } from './model-profiles.mjs';
 import { taskDigest } from './digests.mjs';
-import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } from './completion.mjs';
+import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } from './completion-state.mjs';
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';

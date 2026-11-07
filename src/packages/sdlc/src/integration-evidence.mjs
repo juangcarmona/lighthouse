@@ -1,8 +1,8 @@
 import { readActionsJson } from './actions-artifact.mjs';
 import { verifyDispatchOrigin, stagePath } from './stage-dispatch.mjs';
-import { authorizeCompletion } from './completion.mjs';
+import { authorizeCompletion } from './completion-contract.mjs';
 import { createHash } from 'node:crypto';
-import { fingerprint, sha } from './completion.mjs';
+import { fingerprint, sha } from './completion-contract.mjs';
 import { validateEvidenceRecord, validateEvidenceIndex } from './evidence.mjs';
 import { verifyUnattendedIntegration } from './unattended.mjs';
 

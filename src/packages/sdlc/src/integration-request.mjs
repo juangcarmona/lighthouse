@@ -1,6 +1,6 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
-import { list, loadProfile, requiredPolicy, checkCommit } from './completion.mjs';
+import { list, loadProfile, requiredPolicy, checkCommit } from './completion-state.mjs';
 
 export function assertIntegrationLabelCurrent(repository, owner, authorization, pr, issue, comments, reviews) {
   if (authorization.merge !== false || issue.state !== 'open' || issue.pull_request || issue.user?.login !== owner || issue.labels.some(l => l.name === 'human-working')) throw Error('Owner: integration assessment is no longer authorized; release human work before requesting it again.');

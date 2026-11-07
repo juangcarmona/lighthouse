@@ -2,7 +2,7 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { ruleRevision, evidenceProtection, list } from './completion.mjs';
+import { ruleRevision, evidenceProtection, list } from './completion-state.mjs';
 export async function observeProtection(api, branch, now = Date.now()) {
   await evidenceProtection(api, branch);
   const rules = await list(api, `rules/branches/${encodeURIComponent(branch)}`);

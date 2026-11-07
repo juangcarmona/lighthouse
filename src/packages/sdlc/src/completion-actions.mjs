@@ -6,7 +6,9 @@ import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { authorizeCompletionEvent, inspectCompletion, assertFresh, assertChecks, mergeAccepted, postMergeRuns, fingerprint, list, completionEffects, assertCitedChecks } from './completion.mjs';
+import { authorizeCompletionEvent } from './completion-events.mjs';
+import { fingerprint } from './completion-contract.mjs';
+import { inspectCompletion, assertFresh, assertChecks, mergeAccepted, postMergeRuns, list, completionEffects, assertCitedChecks } from './completion-state.mjs';
 import { completionBundle, publishProcessBundle, preflightProcessPublication } from './process-publication.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';

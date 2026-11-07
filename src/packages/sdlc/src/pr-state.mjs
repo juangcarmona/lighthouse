@@ -1,7 +1,7 @@
 export { implementationPrProof } from './implementation-proof.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { checkCommit } from './completion.mjs';
+import { checkCommit } from './completion-state.mjs';
 import { verificationPush } from './ci-subject.mjs';
 import { validateProductCheckpoint, productProposalProof } from './product-change.mjs';
 

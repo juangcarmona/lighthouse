@@ -1,4 +1,4 @@
-import { inspectCompletion, postMergeRuns, list } from './completion.mjs';
+import { inspectCompletion, postMergeRuns, list } from './completion-state.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
 import { validPendingReview } from './completion-status.mjs';

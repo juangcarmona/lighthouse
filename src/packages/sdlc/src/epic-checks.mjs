@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { loadProfile } from './completion.mjs';
+import { loadProfile } from './completion-state.mjs';
 import { readCiPreflight } from './delivery-events.mjs';
 
 // The caller authenticates the PR and parent lease; checks never authorize a merge.
