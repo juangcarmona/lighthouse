@@ -6,7 +6,8 @@
 
 - [x] 1.1 Inspect canonical product authority, ADR-0007, router/preparation/publication and source dispatch receipts; record the proposed implementation and remaining qualification.
 - [ ] 1.2 Extract canonical read-only fact collection and eligibility/admission evaluation; add explicit supported version, reasons, source/input/policy/question and actual reservation provenance.
-- [ ] 1.3 Add and document the bounded public SDK/schema with injected authenticated transport; preserve legacy entry and explicit unsupported behavior.
+- [ ] 1.3 Obtain independent planning acceptance before implementation, preserving the bounded correction and owner-only gates.
+- [ ] 1.4 Add and document the bounded public SDK/schema with injected authenticated transport; preserve legacy entry and explicit unsupported behavior.
 
 ## 2. Typed source requests
 
@@ -25,7 +26,7 @@
 - [ ] 4.1 Add meaningful denial/race/compatibility and real-entrypoint regressions, including same-key payload conflict, changed evidence, reservations, delayed events and global-auto-implement scope.
 - [ ] 4.2 Run full deterministic verification, package contents and clean packed-consumer checks; update owning package and realized architecture documentation as applicable.
 - [ ] 4.3 Qualify actual authorized user dispatch/comment/continuation and lost-response/restart reconciliation in an isolated source-owned repository, preserving exact source receipts and cleanup proof.
-- [ ] 4.4 Obtain independent plan and final-head technical reviews within the configured correction bound; retain protected publication and forge gates.
+- [ ] 4.4 Obtain independent final-head technical review within the configured correction bound; retain protected publication and forge gates.
 - [ ] 4.5 Publish compatible public packages through the existing protected release flow, verify registry artifacts, adopt the released contract in the consumer, integrate and record the retrospective.
 
 <!-- pdac:cite id="QR-AUTHORITY-TRACEABILITY" digest="sha256:f2f309f40b61461ae3af2ef87e81769a5efed5be2696d5ca729aed42e9926079" -->
