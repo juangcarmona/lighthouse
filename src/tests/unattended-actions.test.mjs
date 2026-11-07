@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -11,10 +11,14 @@ import { implementationPrProof, reconcileImplementationPr } from '../packages/sd
 import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
-async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0, specBearing = false } = {}) {
+async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0, specBearing = false, baselineSpecs = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
   await mkdir(join(sourceRoot, 'src/feature'), { recursive: true });
   await writeFile(join(sourceRoot, 'src/feature/rule.mjs'), 'export const eligible = value => value > 2;\n');
+  if (baselineSpecs) {
+    await mkdir(join(sourceRoot, 'openspec/specs/boundary'), { recursive: true });
+    await writeFile(join(sourceRoot, 'openspec/specs/boundary/spec.md'), '# Boundary\n\n## Requirements\n\n### Requirement: Inclusive boundary\nValues equal to2 SHALL be eligible.\n\n#### Scenario: Equal value\n- **WHEN** the value equals2\n- **THEN** it is eligible\n');
+  }
   const git = args => execFileSync('git', ['-C', sourceRoot, '-c', 'core.hooksPath=/dev/null', ...args], { encoding: 'utf8', stdio: 'pipe',
     env: { ...process.env, GIT_AUTHOR_NAME: 'Fixture', GIT_AUTHOR_EMAIL: 'fixture@localhost', GIT_COMMITTER_NAME: 'Fixture', GIT_COMMITTER_EMAIL: 'fixture@localhost' } });
   git(['init', '--template=', '--initial-branch=main']); git(['add', '.']); git(['commit', '-m', 'Fixture']);
@@ -124,6 +128,12 @@ if (args[0] === 'validate' && ${rejectValidation} > 0) {
     process.exit(1);
   }
 }
+if (args[0] === 'list') {
+  const directory = 'openspec/specs';
+  const ids = fs.existsSync(directory) ? fs.readdirSync(directory) : [];
+  console.log(JSON.stringify({ specs: ids.map(id => ({ id, requirementCount: 1 })), root: { path: process.cwd(), source: 'nearest' } }));
+  process.exit(0);
+}
 if (args[0] === 'new') {
   const dir = 'openspec/changes/' + args[2]; fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(dir + '/.openspec.yaml', 'schema: spec-driven\\ncreated: 2026-11-05\\n');
@@ -224,8 +234,12 @@ test('provider validation repair preserves stage identities and never reviews re
     assert.equal(f.executions[3].request.runId, digest({ runId, sequence: 5, stage: 'integrate', worker: 'independent-review' }));
     assert.equal(result.evidence[0].kind, 'proposal-validation');
     assert.equal(result.evidence[0].files.length, 4);
-    const output = await readFile(join(f.root, 'lighthouse-unattended-123/provider-commands/provider-7.stdout.log'), 'utf8');
-    assert.equal(JSON.parse(output).items[0].valid, false);
+    const directory = join(f.root, 'lighthouse-unattended-123/provider-commands');
+    const outputs = await Promise.all((await readdir(directory)).filter(name => name.endsWith('.stdout.log'))
+      .map(async name => JSON.parse(await readFile(join(directory, name), 'utf8'))));
+    const rejected = outputs.filter(output => output.items?.[0]?.valid === false);
+    assert.equal(rejected.length, 1);
+    assert.deepEqual(rejected[0], JSON.parse(result.evidence[0].validation.output));
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
@@ -459,6 +473,31 @@ test('FF planning repair uses concrete feedback, drops superseded files and reta
     assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1); assert.notEqual(bindings[0], bindings[1]);
     const retained = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/report.json')));
     assert.equal(retained.planningRound, 1);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+for (const baselineSpecs of [false, true]) test(`read-only FF planner consumes host CLI discovery of ${baselineSpecs ? 'existing' : 'no'} baseline specifications`, async () => {
+  const f = await fixture({ route: 'ff', baselineSpecs }), execute = f.execute;
+  let planning = false;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.request.stage === 'propose') {
+      planning = true;
+      const discovery = options.context.proposal.discovery;
+      if (!discovery || discovery.status !== 'passed' || discovery.sourceRevision !== f.revision
+          || JSON.stringify(discovery.command) !== JSON.stringify(['openspec', 'list', '--specs', '--json'])
+          || JSON.stringify(discovery.specifications.map(spec => spec.id)) !== JSON.stringify(baselineSpecs ? ['boundary'] : [])) {
+        result.envelope.result.status = 'blocked';
+        result.envelope.result.missingEvidence = ['Required OpenSpec CLI discovery is unavailable to this read-only planner.'];
+      }
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(planning, true);
+    assert.equal(result.status, 'waiting-human', result.reason);
+    assert.equal(f.writes.filter(write => write.path === 'pulls').length, 1);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 

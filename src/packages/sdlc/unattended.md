@@ -42,6 +42,8 @@ Unattended reviewers return only the bound verdict and findings in `/output/enve
 
 ## Fast-forward
 
+Before a read-only FF planning worker runs, the trusted host prepares the committed adopter's OpenSpec configuration, schemas and baseline specifications in an isolated provider directory. The pinned CLI supplies the source-bound specification inventory and artifact instructions in the planning context. The worker returns proposed files; the host materializes and strictly validates them against the same baseline before independent review. Missing or malformed provider discovery stops planning. The worker is not asked to execute unavailable shell commands, and a host receipt is never presented as a command the model ran.
+
 Concrete engineering-plan corrections may return to the proposal worker before implementation. Planning and candidate repairs share `maxCorrections`; every revised plan requires provider validation and a fresh independent review. Escalation and changed authority stop delivery. Hotfix planning retains its existing terminal review behavior.
 
 Refinement must establish low risk, known reversible scope, resolved dependencies, no missing product decision and an explained numeric estimate of 1, 2 or 3. Five points requires `allowFivePoint: true`; legacy size labels are not converted into points. A separate read-only reviewer checks readiness and the real provider-generated engineering plan before code changes. The implementation and required host checks are then reviewed independently against the original issue, owner answers and actual before/after source.
