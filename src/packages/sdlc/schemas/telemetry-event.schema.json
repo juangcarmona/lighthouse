@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://juangcarmona.github.io/lighthouse/schemas/telemetry-event.schema.json",
+  "title": "Lighthouse telemetry event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "stream",
+    "sequence",
+    "type",
+    "time",
+    "observedAt",
+    "producer",
+    "correlation",
+    "traceId",
+    "spanId",
+    "source",
+    "attributes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "stream": {
+      "type": "string",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,127}$"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$"
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "packageVersion",
+        "installationId",
+        "environment"
+      ],
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "packageVersion": {
+          "type": "string"
+        },
+        "installationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "environment": {
+          "enum": [
+            "local",
+            "github-actions"
+          ]
+        }
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "issue",
+        "pullRequest",
+        "revision",
+        "worker",
+        "stage",
+        "runId",
+        "workflowRunId",
+        "workflowAttempt",
+        "job",
+        "runner",
+        "sessionId",
+        "parentSessionId",
+        "requestId",
+        "routerRunId",
+        "routerAttempt",
+        "signalId"
+      ],
+      "properties": {
+        "repository": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "issue": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "pullRequest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "worker": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "stage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "runId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "workflowRunId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "workflowAttempt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "job": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "runner": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "sessionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "parentSessionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "requestId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "routerRunId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "routerAttempt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "signalId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "sequence",
+        "artifact"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sequence": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "artifact": {
+          "enum": [
+            "native-events.jsonl",
+            "engine-events.jsonl",
+            null
+          ]
+        }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "status": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "reasonCode": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "reasonDigest": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "eventName": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "action": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "label": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "actorClass": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "authorization": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "decision": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "tool": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "callId": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "messageId": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "model": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "provider": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "modelSource": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "finishReason": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "requestKind": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "adapter": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "capability": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "image": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "signal": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "exitCode": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "durationMs": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "inputTokens": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "outputTokens": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "reasoningTokens": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "cacheReadTokens": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "cacheWriteTokens": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "stepStarts": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "stepFinishes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "toolCalls": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "sourceEvents": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "omittedEvents": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "cpuUsageUsec": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "memoryBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "memoryPeakBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "pids": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "pidsPeak": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "pidsDenied": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "oomKills": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "readBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "writeBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "networkRxBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "networkTxBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "cpuLimit": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "memoryLimitBytes": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "pidsLimit": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "httpStatus": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "attempt": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "delayMs": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "streamConnected": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "queueDurationMs": {
+          "$ref": "#/$defs/metadataValue"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "metadataValue": {
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

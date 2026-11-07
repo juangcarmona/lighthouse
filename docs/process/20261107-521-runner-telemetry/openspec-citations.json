@@ -1,0 +1,50 @@
+{
+  "schema": "product-definition-as-code/citations/v1alpha1",
+  "targets": [
+    "openspec/changes/issue-521-runner-telemetry"
+  ],
+  "citations": [
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "openspec/changes/issue-521-runner-telemetry/design.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "openspec/changes/issue-521-runner-telemetry/proposal.md",
+      "line": 11,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "openspec/changes/issue-521-runner-telemetry/specs/runner-telemetry/spec.md",
+      "line": 15,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "openspec/changes/issue-521-runner-telemetry/tasks.md",
+      "line": 12,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "total": 4,
+    "current": 4,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

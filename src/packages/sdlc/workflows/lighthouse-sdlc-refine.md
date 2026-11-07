@@ -149,6 +149,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/issue-actions.mjs cleanup
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
   publish:
     concurrency:
       group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-publish-{0}', github.run_id) }}
@@ -213,6 +231,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/issue-actions.mjs continue-product-gap
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
 ---
 
 # Refine the authorized issue

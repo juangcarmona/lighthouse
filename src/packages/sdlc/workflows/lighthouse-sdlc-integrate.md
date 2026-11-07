@@ -141,6 +141,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/completion-actions.mjs cleanup
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
   publish:
     concurrency:
       group: lighthouse-process-publication
@@ -204,6 +222,24 @@ jobs:
           LIGHTHOUSE_AGENT_RESULT: ${{ needs.agent.result }}
           LIGHTHOUSE_PUBLISH_STATUS: ${{ job.status }}
         run: node src/packages/sdlc/src/completion-actions.mjs cleanup
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
 ---
 
 # Integrate the accepted delivery

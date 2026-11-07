@@ -1,0 +1,43 @@
+{
+  "repository": {
+    "command": "npm run verify",
+    "tests": 983,
+    "passed": 974,
+    "failed": 0,
+    "optionalSkipped": 9,
+    "markdownlint": "passed",
+    "localLinks": "passed",
+    "publicSite": "passed"
+  },
+  "workflowDistribution": {
+    "command": "bash scripts/verify-issue-workflows.sh",
+    "result": "passed",
+    "compiler": "gh-aw v0.93.2",
+    "actionlint": "1.7.12"
+  },
+  "product": {
+    "artifacts": 140,
+    "errors": 0,
+    "warnings": 0
+  },
+  "architectureCitations": {
+    "current": 39,
+    "errors": 0,
+    "warnings": 0
+  },
+  "changeCitations": {
+    "current": 4,
+    "errors": 0,
+    "warnings": 0
+  },
+  "openSpec": {
+    "change": "issue-521-runner-telemetry",
+    "strict": "passed"
+  },
+  "liveQualification": {
+    "command": "scripts/verify-runner-telemetry.mjs",
+    "result": "passed",
+    "consumer": "separate-container",
+    "schemaValidatedEvents": 75
+  }
+}

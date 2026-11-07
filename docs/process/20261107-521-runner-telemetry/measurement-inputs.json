@@ -1,0 +1,26 @@
+{
+  "source": "independent-receiver-events",
+  "runId": "9d746c8cdefd7b1e364325b938dca2c5dce1dc50763cf2b2a6020cafce88323a",
+  "modelStepDurationsMs": [
+    3002,
+    4950,
+    1560
+  ],
+  "toolDurationsMs": [
+    38,
+    29,
+    13
+  ],
+  "resourceSamples": 12,
+  "lastResourceSample": {
+    "cpuUsageUsec": 4201580,
+    "memoryBytes": 34054144,
+    "memoryPeakBytes": 347103232,
+    "pids": 8,
+    "readBytes": 0,
+    "writeBytes": 2088960,
+    "networkRxBytes": 962339,
+    "networkTxBytes": 97586
+  },
+  "hostWaitMs": 5
+}

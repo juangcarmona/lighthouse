@@ -83,7 +83,7 @@ export async function copyEvidence(source, destination) {
 export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
 // A regular-file stdout prevents providers using process.exit() from truncating pending pipe writes.
 const checkOutputCommand = 'node /harness/src/managed-command.mjs run /diagnostics "$@" > /tmp/lighthouse-check.log 2>&1; check_exit=$?; cat /tmp/lighthouse-check.log || exit 125; exit "$check_exit"';
-export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null, repository = request.repository }) {
+export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null, repository = request.repository, telemetry }) {
   const checkBaseline = await sourceFiles(workspace);
   await prepareImplementationWorkspace(workspace, config, request.issue, repository);
   const limits = executionLimits(config);
@@ -107,6 +107,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
       const remaining = deadline - Date.now();
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
+      const checkStarted = Date.now(); telemetry?.emit('check.started', { callId: `check-${i + 1}`, status: 'running' });
       let log = '', pending = '', logTruncated = false;
       const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command]);
       let reason = null;
@@ -138,6 +139,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
       const exitCode = execution.status === 'passed' ? 0 : exit.code || 1;
       const evidencePaths = [...changes.map(file => file.path), ...(request.implementation.proposal?.root ? [request.implementation.proposal.root + '/'] : [])];
       receipt.checks.push({ command, exitCode, execution, output: retainedCommandOutput(log, logTruncated, evidencePaths) });
+      telemetry?.emit('check.ended', { callId: `check-${i + 1}`, exitCode, status: execution.status, durationMs: Date.now() - checkStarted, ...execution.resources });
       console.log(`Host check ${i + 1}: ${exitCode === 0 ? 'passed' : executionFailure(execution)}`);
       if (exitCode !== 0) {
         for (const skipped of request.implementation.policy.checks.slice(i + 1)) receipt.checks.push({ command: skipped, exitCode: 125, reason: 'Not run after a failed check' });

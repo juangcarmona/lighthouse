@@ -36,7 +36,7 @@ export async function executionReceipt(path, exit, reason = null) {
   const signal = /^SIG[A-Z0-9]+$/.test(observed.signal ?? '') ? observed.signal : exit.signal ?? null;
   const exitCode = Number.isInteger(exit.code) ? exit.code : null;
   const status = reason ?? (observed.state === 'cancelled' ? 'cancelled' : resources.oomKills > 0 ? 'out-of-memory' : resources.pidsDenied > 0 ? 'process-limit' : exitCode === 0 ? 'passed' : signal === 'SIGABRT' || exitCode === 134 ? 'aborted' : 'failed');
-  return { status, exitCode, signal, resources };
+  return { status, exitCode, signal, resources, ...(Number.isSafeInteger(observed.resourceSamplesDropped) && observed.resourceSamplesDropped > 0 ? { resourceSamplesDropped: observed.resourceSamplesDropped } : {}) };
 }
 
 export function executionFailure(receipt) {

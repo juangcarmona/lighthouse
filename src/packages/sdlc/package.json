@@ -44,7 +44,8 @@
     "src",
     "unattended.md",
     "LICENSE",
-    "NOTICE"
+    "NOTICE",
+    "telemetry.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -94,7 +95,10 @@
     "./product-change": "./src/product-change.mjs",
     "./product-change-actions": "./src/product-change-actions.mjs",
     "./schemas/product-change.schema.json": "./schemas/product-change.schema.json",
-    "./unattended": "./src/unattended.mjs"
+    "./unattended": "./src/unattended.mjs",
+    "./telemetry": "./src/telemetry.mjs",
+    "./telemetry-opencode": "./src/telemetry-opencode.mjs",
+    "./schemas/telemetry-event.schema.json": "./schemas/telemetry-event.schema.json"
   },
   "license": "Apache-2.0"
 }

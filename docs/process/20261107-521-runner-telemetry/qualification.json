@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "telemetrySchemaVersion": 1,
+  "origin": "isolated-local-demonstration",
+  "actionsRun": false,
+  "sourceRevision": "6cb34d8357a7b7d73df003a1975b9ae04a1fe48b",
+  "package": {
+    "name": "@juangcarmona/lighthouse-sdlc",
+    "version": "0.20.14",
+    "integrity": "sha512-ECy2R0tTwqc2GYFC0Y0fFrB6PDHAYsBZ9REQboSsMRb44XFF70jKVoX2IofkQhtjRAxWUUYgjLVCWXic5rPEhQ==",
+    "shasum": "71d56d25bd5fbd5972c8fd458621f4701bc41c5e",
+    "status": "unpublished-candidate"
+  },
+  "engineImage": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+  "engineVersion": "opencode v2.1.0",
+  "events": 75,
+  "exporterOutage": "degraded",
+  "exporterRecovery": "exporting",
+  "replayDeduplicated": true,
+  "cases": [
+    {
+      "name": "completed",
+      "runId": "9d746c8cdefd7b1e364325b938dca2c5dce1dc50763cf2b2a6020cafce88323a",
+      "exitCode": 0,
+      "cleanup": "clean",
+      "eventCount": 55,
+      "types": [
+        "execution.admitted",
+        "execution.host-wait.started",
+        "execution.host-wait.ended",
+        "execution.phase",
+        "resource.sample",
+        "collection.native-started",
+        "cli.step_start",
+        "cli.tool_use",
+        "cli.step_finish",
+        "session.step.started",
+        "session.tool.called",
+        "session.step.streamed",
+        "session.tool.success",
+        "session.step.ended",
+        "execution.result",
+        "collection.native-stopped",
+        "execution.resources",
+        "execution.cleanup",
+        "execution.ended",
+        "collection.stopped",
+        "signal.received"
+      ],
+      "usage": {
+        "schemaVersion": 1,
+        "source": "opencode-native",
+        "coverage": "observed",
+        "stepStarts": 3,
+        "stepFinishes": 3,
+        "tokens": {
+          "inputTokens": 2485,
+          "outputTokens": 243,
+          "reasoningTokens": 21,
+          "cacheReadTokens": 3968,
+          "cacheWriteTokens": 0
+        },
+        "actualBilledCost": null,
+        "toolCalls": 3
+      },
+      "runtimePackage": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.20.14"
+      },
+      "runtimeDistribution": {
+        "type": "package",
+        "integrity": "sha512-ECy2R0tTwqc2GYFC0Y0fFrB6PDHAYsBZ9REQboSsMRb44XFF70jKVoX2IofkQhtjRAxWUUYgjLVCWXic5rPEhQ=="
+      }
+    },
+    {
+      "name": "cancelled",
+      "runId": "09168c6e2f60bdf3f08f8f63e59356ae485cfecd672a552a77f842c167a9e4fc",
+      "exitCode": 1,
+      "cleanup": "clean",
+      "eventCount": 17,
+      "types": [
+        "execution.admitted",
+        "execution.host-wait.started",
+        "execution.host-wait.ended",
+        "execution.phase",
+        "resource.sample",
+        "collection.capability",
+        "execution.resources",
+        "execution.cleanup",
+        "execution.ended",
+        "collection.stopped",
+        "signal.received"
+      ],
+      "usage": {
+        "schemaVersion": 1,
+        "source": "opencode-cli",
+        "coverage": "unavailable",
+        "stepStarts": 0,
+        "stepFinishes": 0,
+        "tokens": {
+          "inputTokens": null,
+          "outputTokens": null,
+          "reasoningTokens": null,
+          "cacheReadTokens": null,
+          "cacheWriteTokens": null
+        },
+        "actualBilledCost": null,
+        "toolCalls": 0
+      },
+      "runtimePackage": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.20.14"
+      },
+      "runtimeDistribution": {
+        "type": "package",
+        "integrity": "sha512-ECy2R0tTwqc2GYFC0Y0fFrB6PDHAYsBZ9REQboSsMRb44XFF70jKVoX2IofkQhtjRAxWUUYgjLVCWXic5rPEhQ=="
+      }
+    }
+  ],
+  "schemaValidation": {
+    "validator": "Python jsonschema 4.19.2, Draft 2020-12 with date-time checks",
+    "records": 75,
+    "errors": 0
+  }
+}
