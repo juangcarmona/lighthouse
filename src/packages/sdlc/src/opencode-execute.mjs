@@ -21,6 +21,8 @@ import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwned
 import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
 import { prepareProductEvidence, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
+import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
+import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -118,6 +120,10 @@ async function main() {
   if (!/^sha256:[a-f0-9]{64}$/.test(config.image) || !/^[\w-]+$/.test(config.authVolume) || !Number.isInteger(config.uid)) throw Error('Invalid operator engine configuration');
   const runDir = join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const request = JSON.parse(await readFile(join(runDir, 'request.json'), 'utf8'));
+  const telemetry = createTelemetry({ component: 'engine-adapter', context: telemetryContext(env, request) });
+  process.once('exit', () => telemetry.close('interrupted'));
+  telemetry.emit('execution.admitted', { status: 'admitted', model: config.model, modelSource: 'requested-configuration', image: config.image });
+  let outcome = 'failed', nativeCollect = () => {}, nativeTimer;
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
   for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
   const reviewOutput = reviewOutputProtocol(request);
@@ -150,7 +156,8 @@ async function main() {
   const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const runtimeReceipt = { ...await harnessIdentity(harness), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
   let phase = 'preflight', evidenceRetained = false;
-  const recordPhase = async status => { runtimeReceipt.phases[phase] = status; await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
+  const phaseStarted = new Map();
+  const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
   let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const preparation = new AbortController();
@@ -159,7 +166,9 @@ async function main() {
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
     console.log('Waiting for the operator host engine slot');
+    const waitStarted = Date.now(); telemetry.emit('execution.host-wait.started', { status: 'waiting' });
     slot = acquireEngineSlot(config.lock);
+    telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
     const command = imageCommand(config.image);
@@ -214,12 +223,27 @@ async function main() {
     codegraph = codegraphSelection(config, implementing);
     if (codegraph.status === 'pending') codegraph = await startCodegraph({ config, source, harness, dir, name, docker });
     runtimeReceipt.codegraph = { status: codegraph.status, ...(codegraph.reason ? { reason: codegraph.reason } : {}), ...(codegraph.tools ? { tools: codegraph.tools } : {}) };
+    let workerConfigPath = codegraph.workerConfigPath;
+    if (telemetry.health().status !== 'disabled') {
+      try {
+        const workerConfig = workerConfigPath ? JSON.parse(await readFile(workerConfigPath, 'utf8')) : JSON.parse(runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
+        if (!Array.isArray(workerConfig.policies)) throw Error('Unsupported engine policy');
+        workerConfig.plugins = [...(workerConfig.plugins ?? []), '/harness/src/opencode-telemetry'];
+        workerConfig.policies.push({ action: 'integration.use', resource: 'plugin:/harness/src/opencode-telemetry', effect: 'allow' });
+        workerConfigPath = join(dir, 'telemetry-opencode.json');
+        await writeFile(workerConfigPath, JSON.stringify(workerConfig), { mode: 0o444 });
+      } catch { telemetry.emit('collection.capability', { capability: 'opencode-native', status: 'unavailable', reasonCode: 'engine-policy-unavailable' }); }
+    }
+    const collectEvents = collectNativeFile(join(output, 'execution/native-events.jsonl'), telemetry), collectResources = collectNativeFile(join(output, 'execution/resource-events.jsonl'), telemetry);
+    nativeCollect = () => { collectEvents(); collectResources(); };
+    nativeTimer = setInterval(nativeCollect, 1000);
     phase = 'execution'; await recordPhase('running');
     const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
       '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
-      ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`, '--mount', `type=bind,src=${codegraph.workerConfigPath},dst=/etc/opencode/opencode.json,readonly`] : []),
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
+      ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`] : []),
+      ...(workerConfigPath ? ['--mount', `type=bind,src=${workerConfigPath},dst=/etc/opencode/opencode.json,readonly`, '--env', 'LIGHTHOUSE_NATIVE_TELEMETRY_FILE=/output/execution/native-events.jsonl'] : []),
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, '--env', 'LIGHTHOUSE_RESOURCE_TELEMETRY_FILE=/output/execution/resource-events.jsonl', '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
     eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
@@ -229,6 +253,7 @@ async function main() {
     const report = text => { lastVisible = Date.now(); console.log(redact(text)); };
     const eventLine = line => {
       const redacted = redact(line);
+      try { observeCli(telemetry, JSON.parse(redacted)); } catch { /* Non-event engine logs have no telemetry payload. */ }
       try { if (JSON.parse(redacted).type === 'error') engineError = true; } catch {}
       appendFileSync(eventsPath, redacted + '\n');
       const visible = formatOpenCodeEvent(redacted);
@@ -300,7 +325,7 @@ async function main() {
       const candidate = join(dir, 'candidate'); await mkdir(candidate);
       await materializeCandidate(baseline, changes, candidate);
       if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
-      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected, repository });
+      const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected, repository, telemetry });
       receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
@@ -326,6 +351,8 @@ async function main() {
     await mkdir(dirname(env.GH_AW_SAFE_OUTPUTS), { recursive: true });
     await writeFile(env.GH_AW_SAFE_OUTPUTS, JSON.stringify(completion) + '\n');
     await recordPhase('passed');
+    outcome = envelope.result.status;
+    telemetry.emit('execution.result', { status: outcome, reasonCode: outcome === 'blocked' ? envelope.result.pendingReview.length ? 'pending-review' : 'missing-evidence' : 'validated-result' });
   } catch (error) {
     error.phase = phase;
     await recordPhase('failed');
@@ -344,6 +371,7 @@ async function main() {
     }
     throw error;
   } finally {
+    clearInterval(nativeTimer); nativeCollect();
     if (eventsPath) {
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(eventsPath, join(runDir, 'evidence/host/engine-events.jsonl')); }
       catch { console.error('Engine events could not be retained; inspect the runner diagnostics.'); }
@@ -357,6 +385,18 @@ async function main() {
     try { if (config.resourceOwner) restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
     try {
       if (config.resourceOwner) { runtimeReceipt.cleanup = config.resourceOwner.cleanup(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); }
+      try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(join(output, 'execution/native-events.jsonl'), join(runDir, 'evidence/host/native-events.jsonl')); } catch { telemetry.emit('collection.capability', { capability: 'opencode-native', status: 'unavailable', reasonCode: 'native-file-unavailable' }); }
+      telemetry.emit('execution.resources', { ...runtimeReceipt.execution?.resources });
+      telemetry.emit('execution.cleanup', { status: runtimeReceipt.cleanup?.status ?? 'unknown' });
+      telemetry.emit('execution.ended', { status: stopReason ?? (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean' ? 'cleanup-failed' : outcome), exitCode: runtimeReceipt.execution?.exitCode, signal: runtimeReceipt.execution?.signal });
+      telemetry.close(outcome);
+      try {
+        const events = readTelemetry(telemetry.directory, { stream: telemetry.stream });
+        await mkdir(join(runDir, 'evidence/host'), { recursive: true });
+        await writeFile(join(runDir, 'evidence/host/telemetry.jsonl'), events.map(e => JSON.stringify(e)).join('\n') + '\n');
+        await writeFile(join(runDir, 'evidence/host/telemetry-usage.json'), JSON.stringify(usageSummary(events, { health: [telemetry.health()] })));
+        runtimeReceipt.telemetry = telemetry.health(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+      } catch { console.error('Telemetry retention incomplete; inspect collector health.'); }
       await rm(dir, { recursive: true, force: true });
     } finally { if (slot !== undefined) closeSync(slot); }
     if (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean') throw Object.assign(Error('Execution cleanup is not verified; inspect runtime.json and the operator ownership journal before retrying'), { phase: 'cleanup' });

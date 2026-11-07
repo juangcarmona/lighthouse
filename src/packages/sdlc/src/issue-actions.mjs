@@ -2,6 +2,7 @@ export { taskDigest } from './digests.mjs';
 import { taskDigest } from './digests.mjs';
 export { repositoryApiUrl, createIssueApi } from './github-rest.mjs';
 import { createIssueApi } from './github-rest.mjs';
+import { createTelemetry, telemetryContext, routingReason } from './telemetry.mjs';
 import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
 import capabilityCatalog from '../capabilities.json' with { type: 'json' };
@@ -211,10 +212,13 @@ async function main(command) {
   const env = { ...process.env }, repo = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo ?? '')) throw Error('Invalid repository');
   let event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+  const telemetry = createTelemetry({ component: 'github-adapter', context: telemetryContext(env, { repository: repo, issue: event.issue?.number, pullRequest: event.pull_request?.number, signalId: String(event.comment?.id ?? event.review?.id ?? env.GITHUB_RUN_ID ?? '') }) });
+  process.once('exit', () => telemetry.close(process.exitCode ? 'failed' : 'completed'));
+  telemetry.emit('signal.received', { eventName: env.GITHUB_EVENT_NAME, action: event.action, label: event.label?.name, actorClass: env.GITHUB_ACTOR === owner ? 'owner' : env.GITHUB_ACTOR === 'github-actions[bot]' ? 'automation' : 'external', authorization: 'not-yet-evaluated', phase: command });
   const dir = env.LIGHTHOUSE_RUN_DIR ?? join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const api = createIssueApi(repo, env);
-  const summary = async text => { if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
-  const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  const summary = async text => { telemetry.emit('adapter.observation', { phase: command, reasonCode: routingReason(text), reasonDigest: digest(text), status: 'observed' }); if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
+  const output = async (name, value) => { if (['run', 'send', 'eligible'].includes(name)) telemetry.emit('routing.decision', { phase: command, decision: name, status: value === 'true' ? 'admitted' : 'not-dispatched' }); if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
   if (command === 'signal-post-merge-review') {
     const sent = await signalCurrentPostMergeReview(api, repo, env);
     await summary(sent ? 'Post-merge CI signalled the existing router; terminal CI and retained integration are rechecked before review.' : 'No eligible post-merge review continuation.'); return;
@@ -226,7 +230,9 @@ async function main(command) {
   if (command === 'product-apply-cleanup') { await reportProductApplyStop(api, repo, owner, env, event); return; }
   if (command === 'dispatch-send') {
     const request = JSON.parse(await readFile(join(dir, 'dispatch.json'), 'utf8'));
+    telemetry.bind(telemetryContext(env, request)); telemetry.emit('dispatch.started', { status: 'requested' });
     await sendDispatch(api, repo, request, env.LIGHTHOUSE_DISPATCH_COMMENT);
+    telemetry.emit('dispatch.ended', { status: 'sent' });
     await summary('Stage dispatch sent. Follow the linked receipt on the issue; dispatch is not stage completion.');
     return;
   }
@@ -234,6 +240,7 @@ async function main(command) {
   if (['prepare', 'product-apply-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && (event.inputs?.['dispatch-request'] || env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true')) {
     dispatch = await admitDispatch(api, repo, owner, env, event);
     if (!dispatch.admitted) {
+      telemetry.emit('admission.decision', { status: 'duplicate', reasonCode: 'existing-execution' });
       await output('eligible', 'false'); await summary('This request already has an execution. No duplicate agent started.'); return;
     }
     if (command === 'prepare') {
@@ -499,6 +506,8 @@ async function main(command) {
     return;
   }
   if (command === 'route') {
+    telemetry.bind({ stage: route.stage, worker: route.worker ?? route.stage, issue: route.issue });
+    telemetry.emit('routing.reason', { status: route.run ? 'admitted' : 'not-dispatched', reasonCode: routingReason(route.reason), reasonDigest: digest(route.reason ?? 'unavailable') });
     if (route.run && (['product-change', 'apply-product-change'].includes(route.worker) ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED !== 'true' : !(env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(route.stage))) route = { run: false, reason: 'Requested workflow is not installed.' };
     if (labelRequest && !route.run) await labelHandoff();
     await output('integration_request', integrationRequest ? JSON.stringify(integrationRequest) : '');

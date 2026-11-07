@@ -2,7 +2,7 @@
 id: CHG-LH-RUNNER-TELEMETRY-001
 type: product-change
 title: Collect portable runner telemetry from first installation
-status: proposed
+status: applied
 base-revision: '0524176b994a39ca15b11406542d73d30c19cbd6'
 operations:
   add: [TERM-RUNNER-TELEMETRY, UC-CONSUME-RUNNER-TELEMETRY, FR-RUNNER-TELEMETRY]

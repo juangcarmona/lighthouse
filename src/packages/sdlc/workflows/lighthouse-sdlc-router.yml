@@ -104,6 +104,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/pr-state-actions.mjs
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
   epic-triage:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_EPIC_ENABLED == 'true' &&
@@ -131,6 +149,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/epic-dispatch.mjs
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
   route:
     if: >-
       vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' &&
@@ -173,6 +209,24 @@ jobs:
           LIGHTHOUSE_EPIC_ENABLED: ${{ vars.LIGHTHOUSE_EPIC_ENABLED }}
           LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: ${{ env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED }}
         run: node src/packages/sdlc/src/issue-actions.mjs route
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14
   dispatch:
     name: 📥 Dispatch selected stage
     needs: route
@@ -223,3 +277,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
         run: node src/packages/sdlc/src/issue-actions.mjs dispatch-send
+      - name: Observe workflow telemetry
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+      - name: Preserve workflow telemetry
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-telemetry-${{ github.job }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/gh-aw/telemetry/*.jsonl
+            ${{ runner.temp }}/gh-aw/telemetry/????????-????-????-????-????????????.json
+            ${{ runner.temp }}/gh-aw/telemetry/export-health.json
+          if-no-files-found: ignore
+          retention-days: 14

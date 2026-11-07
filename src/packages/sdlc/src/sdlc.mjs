@@ -17,6 +17,7 @@ import { browserEvidenceReport } from './browser-e2e.mjs';
 import { buildEvidenceIndex, evidenceReport, validateEvidenceIndex, validateEvidenceRecord } from './evidence.mjs';
 import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
 import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from './aliases.mjs';
+import { telemetryCli } from './telemetry-cli.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const contractPath = resolve(packageRoot, 'contract.json');
@@ -393,11 +394,13 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+if (!['telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
   console.error('Usage: lighthouse-sdlc <contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
-if (command === 'contract') {
+if (command === 'telemetry') {
+  await telemetryCli(process.argv.slice(3));
+} else if (command === 'contract') {
   console.log(await readFile(contractPath, 'utf8'));
 } else if (command === 'triage') {
   await runTriage(process.argv.slice(3));

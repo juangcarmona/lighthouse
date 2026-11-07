@@ -62,6 +62,14 @@ Evidence records and indexes are adopter-owned files under `.lighthouse/evidence
 
 <!-- pdac:cite id="UC-VERIFY-FOUNDATION" digest="sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11" -->
 
+## Runner telemetry
+
+The [runner telemetry module](../../../src/packages/sdlc/src/telemetry.mjs) writes bounded private journals with per-producer ordering, metadata correlation and explicit collection health. The native OpenCode observer removes payloads inside the runtime; the host retains prepared observations before ephemeral cleanup. The public schema and CLI expose live following and cursor replay, while a separate exporter maps events into OTLP HTTP JSON logs. Export acknowledgement advances its checkpoint; consumers deduplicate event IDs after a lost acknowledgement. Mandatory execution and publication receipts retain their authority.
+
+<!-- pdac:cite id="FR-RUNNER-TELEMETRY" digest="sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068" -->
+
+The [package guide](../../../src/packages/sdlc/telemetry.md) owns configuration, retention, capability coverage, units and recovery. Hosted-job observations are retained as workflow artifacts; configuring an exporter on a self-hosted runner alone does not stream hosted jobs. Active orphan journals and expired cursors remain visible limitations. Consumers and operators own fleet storage and presentation; the package provides no dashboard or workload scheduler.
+
 ## Visual contract
 
 The UI package provides semantic tokens, native recipes and `DESIGN.md`; initialization can project a soft visual skill and a deterministic token verifier when the selected stack supports them.

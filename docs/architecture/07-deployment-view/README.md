@@ -54,6 +54,10 @@ When an adopter enables the optional memory provider, its host provisions a priv
 
 ## Adopter execution host
 
+The example runner image includes the [telemetry startup wrapper](../../../src/packages/sdlc/src/telemetry-runner.mjs). Its operator supplies private persistent journal storage; an optional external collector receives OTLP log batches. Engine containers receive only the native observer and its bounded output path, without exporter credentials. The independent consumer example runs separately with a read-only script mount and its own output volume. [Installation and consumption](../../../src/packages/sdlc/telemetry.md) describe adoption for existing images and workflow pins; source availability does not establish rollout to an adopter.
+
+<!-- pdac:cite id="FR-RUNNER-TELEMETRY" digest="sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068" -->
+
 The selected refinement worker requests `[self-hosted, linux, lighthouse-workflow]`. A dedicated Actions runner container starts an ephemeral OpenCode container on the adopter's Linux host. Preparation and publication jobs run on GitHub-hosted runners. Provider authentication and image configuration stay outside source trees; no factory service is called. The runner has its own home and temporary directories. Its work directory is mounted at the same absolute host path so sibling engine mounts resolve correctly.
 
 Personal-account adopters may register repository runners on one machine. GitHub queues their jobs, while a shared operator `flock` path serializes engine execution across repositories. Each container has separate source and output mounts and bounded resources. One physical machine therefore needs one execution slot initially, not a persistent container per worker type. A larger pool can retain the same router and worker contracts.

@@ -1,5 +1,5 @@
 // Runs inside the workload: one command group, one receipt, bounded child cleanup.
-import { mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -9,6 +9,13 @@ const number = path => { try { const value = Number(readFileSync(path, 'utf8').t
 const counter = (path, key) => { try { const line = readFileSync(path, 'utf8').split('\n').find(line => line.startsWith(key + ' ')); return line ? Number(line.split(' ')[1]) : null; } catch { return null; } };
 const ticks = pid => { try { return readFileSync(`/proc/${pid}/stat`, 'utf8').split(') ')[1].split(' ')[19]; } catch { return null; } };
 const atomic = (path, value) => { writeFileSync(path + '.tmp', JSON.stringify(value), { mode: 0o644 }); renameSync(path + '.tmp', path); };
+
+export function workloadResources() {
+  let io = null, network = null;
+  try { io = [...readFileSync('/sys/fs/cgroup/io.stat', 'utf8').matchAll(/\b(rbytes|wbytes)=(\d+)/g)].reduce((sum, m) => { sum[m[1]] = (sum[m[1]] ?? 0) + Number(m[2]); return sum; }, {}); } catch {}
+  try { network = readFileSync('/proc/net/dev', 'utf8').split('\n').slice(2).filter(l => l.includes(':')).reduce((sum, l) => { const v = l.split(':')[1].trim().split(/\s+/).map(Number); sum.rx += v[0]; sum.tx += v[8]; return sum; }, { rx: 0, tx: 0 }); } catch {}
+  return { cpuUsageUsec: counter('/sys/fs/cgroup/cpu.stat', 'usage_usec'), memoryBytes: number('/sys/fs/cgroup/memory.current'), memoryPeakBytes: number('/sys/fs/cgroup/memory.peak'), pids: number('/sys/fs/cgroup/pids.current'), readBytes: io?.rbytes ?? null, writeBytes: io?.wbytes ?? null, networkRxBytes: network?.rx ?? null, networkTxBytes: network?.tx ?? null };
+}
 
 export async function managedCommand(directory, id, command) {
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id) || !command.length) throw Error('Use a unique command ID and an executable');
@@ -25,6 +32,7 @@ export async function managedCommand(directory, id, command) {
   const baselineDenied = counter('/sys/fs/cgroup/pids.events', 'max');
   const baselineOom = counter('/sys/fs/cgroup/memory.events', 'oom_kill');
   const state = { state: 'running', pid: process.pid, startTicks: ticks(process.pid), exitCode: null, signal: null, resources: { pidsLimit: number('/sys/fs/cgroup/pids.max'), pidsPeak: null, pidsDenied: null, memoryPeakBytes: null, oomKills: null } };
+  let lastResourceSample = 0, resourceBytes = 0;
   const sample = () => {
     const current = number('/sys/fs/cgroup/pids.current'), denied = counter('/sys/fs/cgroup/pids.events', 'max'), oom = counter('/sys/fs/cgroup/memory.events', 'oom_kill');
     state.resources.pidsPeak = current === null ? state.resources.pidsPeak : Math.max(state.resources.pidsPeak ?? 0, current, number('/sys/fs/cgroup/pids.peak') ?? 0);
@@ -32,6 +40,11 @@ export async function managedCommand(directory, id, command) {
     state.resources.oomKills = oom === null || baselineOom === null ? null : Math.max(0, oom - baselineOom);
     state.resources.memoryPeakBytes = number('/sys/fs/cgroup/memory.peak');
     atomic(receipt, state);
+    if (process.env.LIGHTHOUSE_RESOURCE_TELEMETRY_FILE && Date.now() - lastResourceSample >= 1000) {
+      lastResourceSample = Date.now();
+      const line = JSON.stringify({ type: 'resource.sample', attributes: workloadResources(), source: { kind: 'cgroup-v2', time: Date.now() } }) + '\n';
+      try { if (resourceBytes + line.length <= 2 * 1024 * 1024) { appendFileSync(process.env.LIGHTHOUSE_RESOURCE_TELEMETRY_FILE, line, { mode: 0o644 }); resourceBytes += line.length; } else state.resourceSamplesDropped = (state.resourceSamplesDropped ?? 0) + 1; } catch { state.resourceSamplesDropped = (state.resourceSamplesDropped ?? 0) + 1; }
+    }
   };
   try {
     if (existsSync(receipt)) throw Error('Command ID already has a receipt; use a new ID for the next attempt');
