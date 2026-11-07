@@ -5,6 +5,7 @@ import { mkdtemp, mkdir, writeFile, readFile, cp, rm, chmod } from 'node:fs/prom
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { sourceFiles, materializeCandidate } from '../packages/sdlc/src/implementation.mjs';
 import { stageContext } from '../packages/sdlc/src/unattended-runtime.mjs';
 import { restoreWorkspaceOwnership, writableTree } from '../packages/sdlc/src/implementation-runtime.mjs';
 
@@ -34,7 +35,15 @@ assert.equal(process.env.LIGHTHOUSE_CI_APP_PRIVATE_KEY,undefined);
 fs.mkdirSync(process.env.XDG_CACHE_HOME,{recursive:true});
 fs.writeFileSync(process.env.XDG_CACHE_HOME+'/scratch','disposable',{mode:0o600});
 let scopeProbe;
-if(scenario.startsWith('readonly-')) {assert.throws(()=>fs.writeFileSync('/workspace/demo.js','reviewer tampering'),error=>{scopeProbe=error.code;return error.code==='EROFS';});}
+if(scenario.startsWith('planning-')) {
+ const plan='/workspace/openspec/changes/issue-320-proposal';fs.mkdirSync(plan,{recursive:true});
+ fs.writeFileSync(plan+'/proposal.md','# Proposal\\n\\n## Why\\nRetain verification behavior.\\n\\n## What Changes\\n- Characterize the existing implementation.\\n\\n## Capabilities\\n### New Capabilities\\n- verification: Preserve observable verification.\\n### Modified Capabilities\\nNone.\\n\\n## Impact\\nTests only.\\n');
+ fs.writeFileSync(plan+'/design.md','# Design\\nPreserve existing behavior and inspect independent checks.\\n');
+ fs.writeFileSync(plan+'/tasks.md','# Tasks\\n\\n- [x] 1.1 Implement the bounded verification change.\\n');
+ if(scenario==='planning-new')fs.writeFileSync(plan+'/.openspec.yaml','skip_specs: true\\n');
+ if(scenario==='planning-specs') {fs.mkdirSync(plan+'/specs/verification',{recursive:true});fs.writeFileSync(plan+'/specs/verification/spec.md','## ADDED Requirements\\n\\n### Requirement: Verification behavior\\nThe system SHALL retain the declared verification behavior.\\n\\n#### Scenario: Completed implementation\\n- **WHEN** the bounded change is checked\\n- **THEN** the existing verification behavior is preserved\\n');}
+}
+if(scenario.startsWith('readonly-')) {assert.throws(()=>fs.writeFileSync('/workspace/demo.js','reviewer tampering'),error=>{scopeProbe=error.code;return ['EROFS','EACCES'].includes(error.code);});}
 else if(!scenario.startsWith('zero-')) fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
 fs.mkdirSync('/output/evidence',{mode:0o700});
 fs.writeFileSync('/output/evidence/a-final.log','retained final evidence',{mode:0o600});
@@ -73,17 +82,27 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
     image = (await readFile(join(root, 'image-id'), 'utf8')).trim();
     execFileSync('docker', ['volume', 'create', volume], { stdio: 'pipe' });
     volumeCreated = true;
-    for (const scenario of ['success', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed', 'zero-initial', 'zero-review', 'zero-check-failed', 'zero-blocked', 'readonly-review', 'readonly-untouched', 'readonly-stale', 'readonly-malformed', 'readonly-payload-accept', 'readonly-payload-changes', 'readonly-payload-untouched', 'readonly-payload-stale', 'readonly-payload-extra']) {
+    for (const scenario of ['success', 'planning-new', 'planning-existing', 'planning-specs', 'unreadable', 'symlink', 'oversized', 'missing-tool', 'engine-failed', 'zero-initial', 'zero-review', 'zero-check-failed', 'zero-blocked', 'readonly-review', 'readonly-untouched', 'readonly-stale', 'readonly-malformed', 'readonly-payload-accept', 'readonly-payload-changes', 'readonly-payload-untouched', 'readonly-payload-stale', 'readonly-payload-extra']) {
       await t.test(scenario, async () => {
         const current = join(root, scenario), work = join(current, 'work'), runDir = join(current, 'lighthouse-1-1');
         await mkdir(work, { recursive: true }); await mkdir(runDir);
         const original = scenario.startsWith('zero-') ? 'export const repaired = true;' : 'export const repaired = false;';
         await writeFile(join(work, 'demo.js'), original);
-        execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', 'demo.js']);
+        const existingMetadata = '# Provider-owned baseline\nschema: spec-driven\ncreated: 2025-01-01\nskip_specs: true\n';
+        if (scenario === 'planning-existing') {
+          await mkdir(join(work, 'openspec/changes/issue-320-proposal'), { recursive: true });
+          await writeFile(join(work, 'openspec/changes/issue-320-proposal/.openspec.yaml'), existingMetadata);
+        }
+        execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', '.']);
         const checks = scenario === 'missing-tool' ? [['lighthouse-missing-executable']] : [['node', '-e', 'const assert=require("node:assert/strict");assert.match(require("node:fs").readFileSync("demo.js","utf8"),/repaired = true/);assert.equal(process.env.NODE_DISABLE_COMPILE_CACHE,"1");assert.equal(process.env.TMPDIR,"/tmp");']];
         if (scenario === 'zero-check-failed') checks[0] = ['node', '-e', 'process.exit(1)'];
         if (scenario === 'success') checks.push(['node', '-e', 'console.log(JSON.stringify({data:Array(2000).fill("x".repeat(100)),summary:{current:37,errors:0},documents:[{path:"demo.js"}],citations:[{source:"demo.js",status:"current"}]},null,2));process.exit(0)']);
         const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', issue: 320, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'], checks, reviewRequired: false } } };
+        if (scenario.startsWith('planning-')) {
+          request.implementation.proposal = { root: 'openspec/changes/issue-320-proposal' };
+          request.implementation.policy.paths.push('openspec/changes/issue-320-proposal/');
+          checks[0] = ['node', '-e', 'const f=require("node:fs"),a=require("node:assert/strict"),r="openspec/changes/issue-320-proposal/",m=f.readFileSync(r+".openspec.yaml","utf8");a.match(m,/^schema: spec-driven$/m);a.match(m,/^created: [0-9]{4}-[0-9]{2}-[0-9]{2}$/m);a.match(f.readFileSync(r+"tasks.md","utf8"),/^- \\[x\\] /m);'];
+        }
         if (scenario.startsWith('readonly-')) { request.stage = 'integrate'; request.worker = 'independent-review'; }
         if (scenario.startsWith('readonly-payload-')) request.reviewOutput = { protocol: 'verdict-v1', binding: 'e'.repeat(64), purpose: 'candidate' };
         if (scenario.startsWith('zero-') && scenario !== 'zero-initial') Object.assign(request, { worker: 'apply-review', baseRevision: 'c'.repeat(40), implementationReview: { issue: request.issue, approved: false, head: request.sourceRevision, implementationIdentity: 'd'.repeat(64), feedbackDigest: 'e'.repeat(64) } });
@@ -129,12 +148,12 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
             const result = JSON.parse(await readFile(join(runDir, 'envelope.json'))).result;
             assert.equal(result.status, scenario === 'readonly-untouched' ? 'blocked' : 'passed');
             if (scenario === 'readonly-untouched') { assert.ok(result.missingEvidence.length); assert.equal(result.output.review, undefined); }
-            else assert.equal(result.output.scopeProbe, 'EROFS');
+            else assert.ok(['EROFS', 'EACCES'].includes(result.output.scopeProbe));
             assert.equal(runtime.execution.status, 'passed');
             await assert.rejects(readFile(join(runDir, 'checks.json')), { code: 'ENOENT' });
           }
           assert.match(await readFile(join(runDir, 'evidence/host/engine-events.jsonl'), 'utf8'), /Private final evidence written/);
-        } else if (scenario === 'success' || scenario.startsWith('zero-')) {
+        } else if (scenario === 'success' || scenario.startsWith('zero-') || scenario.startsWith('planning-')) {
           assert.equal(run.status, 0, run.stdout + run.stderr);
           assert.deepEqual(runtime.phases, { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: scenario === 'zero-check-failed' ? 'failed' : 'passed', completion: 'passed' });
           const envelope = JSON.parse(await readFile(join(runDir, 'envelope.json')));
@@ -151,6 +170,15 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
           assert.match(receipt.candidateTree, /^[a-f0-9]{40}$/);
           assert.equal(typeof receipt.checks[0].output.content, 'string');
           assert.match(receipt.checks[0].output.sha256, /^[a-f0-9]{64}$/);
+          if (scenario.startsWith('planning-')) {
+            const candidate = join(current, 'provider-checked'); await mkdir(candidate);
+            const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
+            await materializeCandidate(await sourceFiles(work), changes, candidate);
+            const cli = new URL('../../node_modules/@fission-ai/openspec/bin/openspec.js', import.meta.url);
+            const validation = execFileSync(process.execPath, [cli.pathname, 'validate', 'issue-320-proposal', '--strict', '--no-interactive', '--json'], { cwd: candidate, env: { ...process.env, OPENSPEC_TELEMETRY: '0' }, encoding: 'utf8' });
+            assert.equal(JSON.parse(validation).summary.totals.failed, 0);
+            if (scenario === 'planning-existing') assert.equal(await readFile(join(candidate, 'openspec/changes/issue-320-proposal/.openspec.yaml'), 'utf8'), existingMetadata);
+          }
           if (scenario === 'success') {
             assert.deepEqual(receipt.checks[1].output.jsonSummary, { current: 37, errors: 0 });
             assert.equal(JSON.parse(await readFile(join(runDir, 'evidence/host/check-2.log'), 'utf8')).data.length, 2000);

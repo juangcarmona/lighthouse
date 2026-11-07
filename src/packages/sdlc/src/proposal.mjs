@@ -4,13 +4,12 @@ import { loadDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { checkProductResumePullRequest } from './product-change.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { selectPublicationBranch } from './publication-branch.mjs';
 
-const openspec = (cwd, args) => execFileSync('npx', ['--yes', '--package', '@fission-ai/openspec@1.15.0', 'openspec', ...args], { cwd, encoding: 'utf8', timeout: 120000, maxBuffer: 1024 * 1024, env: { ...process.env, OPENSPEC_TELEMETRY: '0', CI: 'true' }, stdio: ['ignore', 'pipe', 'pipe'] });
+import { openSpec as openspec } from './openspec-provider.mjs';
 
 export function proposalValidationFailure(error, issue) {
   if ((error.code ?? error.status) !== 1 || error.signal || error.killed || !error.stdout || Buffer.byteLength(error.stdout) > 65536) return null;
