@@ -486,3 +486,14 @@ test('new integration reports separate confirmed host effects from the historica
   const legacy = completionBundle({ ...candidate, reportFormat: undefined }, result, receipt)['report.md'];
   assert.doesNotMatch(legacy, /## Confirmed host state/);
 });
+
+
+test('review publication retains trigger provenance without changing legacy bundle bytes', () => {
+  const receipt = { state: 'merged', sha: merged };
+  const legacy = completionBundle(request, envelope, receipt);
+  const continuation = { ci: { id: 40, event: 'workflow_dispatch' }, recovery: { id: 50, event: 'schedule' } };
+  const files = completionBundle({ ...request, reportFormat: 2, continuation }, envelope, receipt);
+  assert.deepEqual(JSON.parse(files['evidence-record.json']).payload.continuation, continuation);
+  assert.deepEqual(completionBundle(request, envelope, receipt), legacy);
+  assert.ok(!Object.hasOwn(JSON.parse(legacy['evidence-record.json']).payload, 'continuation'));
+});

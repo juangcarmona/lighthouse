@@ -17,8 +17,8 @@ export function workflowDisplayName(source, path) {
   return name;
 }
 
-export async function completionSubscriptions(root, { implement, propose, productChange, epic = false }) {
-  const names = ['refine', ...(productChange ? ['triage', ...(propose ? ['propose', 'apply review'] : []), ...(implement ? ['implement'] : []), 'product-change', 'apply-product-change'] : [])];
+export async function completionSubscriptions(root, { implement, propose, productChange, epic = false, completion = false, unattended = false }) {
+  const names = ['refine', ...(completion ? ['integrate'] : []), ...(unattended ? ['unattended'] : []), ...(productChange ? ['triage', ...(propose ? ['propose', 'apply review'] : []), ...(implement ? ['implement'] : []), 'product-change', 'apply-product-change'] : [])];
   const optional = async path => {
     try { return await readFile(path, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; return null; }
   };
@@ -28,6 +28,10 @@ export async function completionSubscriptions(root, { implement, propose, produc
   for (const filename of checks) {
     const path = `.github/workflows/${filename}`;
     names.push(workflowDisplayName(await readFile(join(root, path), 'utf8'), path));
+  }
+  if (completion && !unattended) {
+    const path = '.github/workflows/lighthouse-sdlc-unattended.yml', source = await optional(join(root, path));
+    if (source) names.push(workflowDisplayName(source, path));
   }
   const epicPath = '.github/workflows/lighthouse-sdlc-epic.yml';
   const epicSource = epic ? await readFile(new URL('../workflows/lighthouse-sdlc-epic.yml', import.meta.url), 'utf8') : await optional(join(root, epicPath));

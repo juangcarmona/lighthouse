@@ -659,6 +659,13 @@ test('the native host integrates with concurrent readiness and retains its merge
     const postMerge = events.findIndex(e => e.path === 'actions/workflows/verify.yml/dispatches' && e.body.ref === 'main');
     assert.ok(bundle > 0 && postMerge > bundle);
     assert.ok(!f.labels.includes('agent-working'));
+    if (!interrupt?.includes('notification')) {
+      const pending = f.comments.find(comment => comment.body.includes('<!-- lighthouse-pending-review:'));
+      assert.ok(pending, 'Delegated integration must retain its final-review continuation');
+      assert.match(pending.body, /Final review: pending/);
+      assert.match(pending.body, /"run":"123"/);
+      assert.match(pending.body, new RegExp(merged));
+    }
   } finally { await rm(f.root, { recursive: true, force: true }); }
   });
 });
