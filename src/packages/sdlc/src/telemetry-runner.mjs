@@ -28,7 +28,8 @@ export async function runRunner(command, env = process.env) {
     try { writeFileSync(path, `#!/bin/sh\nexec node '${module.replaceAll("'", "'\\''")}' hook ${action}\n`, { mode: 0o700 }); chmodSync(path, 0o700); childEnv[`ACTIONS_RUNNER_HOOK_JOB_${name}`] = path; }
     catch { console.error(JSON.stringify({ type: 'collection.health', status: 'degraded', reasonCode: 'hook-installation-unavailable' })); }
   }
-  const telemetry = createTelemetry({ ...config, component: 'runner', context: telemetryContext(childEnv), env: childEnv });
+  const startStream = () => createTelemetry({ ...config, component: 'runner', context: telemetryContext(childEnv), env: childEnv });
+  let telemetry = startStream(), streamStarted = Date.now();
   telemetry.emit('runner.started', { status: 'idle' });
   let exporting = false;
   const forward = async () => {
@@ -38,7 +39,14 @@ export async function runRunner(command, env = process.env) {
     catch { telemetry.emit('collection.gap', { reasonCode: 'export-configuration' }); }
     finally { exporting = false; }
   };
-  const timer = setInterval(() => { telemetry.emit('runner.heartbeat', { status: 'alive' }); void forward(); }, 10000);
+  const timer = setInterval(() => {
+    // Leave room for terminal records and retire long-lived streams without stopping jobs.
+    if (telemetry.health().bytes > (config.maxBytes ?? 16777216) - 4096 || Date.now() - streamStarted >= 6 * 3600000) {
+      telemetry.close('rotated'); telemetry = startStream(); streamStarted = Date.now();
+      telemetry.emit('runner.resumed', { status: 'alive', reasonCode: 'journal-rotation' });
+    }
+    telemetry.emit('runner.heartbeat', { status: 'alive' }); void forward();
+  }, 10000);
   const child = spawn(command[0], command.slice(1), { env: childEnv, stdio: 'inherit' });
   const stop = signal => child.kill(signal);
   const term = () => stop('SIGTERM'), interrupt = () => stop('SIGINT');
