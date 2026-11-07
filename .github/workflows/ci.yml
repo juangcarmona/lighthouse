@@ -70,7 +70,7 @@ jobs:
   reconcile-implementation-pr:
     timeout-minutes: 5
     needs: repository
-    if: always() && ((github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/lighthouse/implement-')) || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/lighthouse/verification-')))
+    if: always() && ((github.event_name == 'workflow_dispatch' && (startsWith(github.ref, 'refs/heads/lighthouse/implement-') || startsWith(github.ref, 'refs/heads/chore/') || startsWith(github.ref, 'refs/heads/docs/'))) || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/lighthouse/verification-')))
     concurrency:
       group: lighthouse-pr-state
       cancel-in-progress: false

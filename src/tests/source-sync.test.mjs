@@ -24,7 +24,7 @@ async function fixture() {
   const base = commit('managed update'); git('checkout', '-q', '--detach', source);
   const calls = [];
   const api = async (path, method = 'GET') => {
-    calls.push({ path, method }); assert.equal(method, 'GET');
+    calls.push({ path, method }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; assert.equal(method, 'GET');
     if (path === `compare/${base}...${source}`) return { base_commit: { sha: base }, merge_base_commit: { sha: ancestor }, behind_by: 1 };
     if (path.startsWith('git/commits/')) { const sha = path.slice(12); return { sha, tree: { sha: git('rev-parse', `${sha}^{tree}`) } }; }
     if (path.startsWith('git/trees/')) {
@@ -76,10 +76,10 @@ test('synchronization rejects conflicts, incomplete inventories and unsupported 
   try {
     const original = f.api;
     for (const mutate of [t => t.truncated = true, t => t.tree.push(t.tree[0]), t => t.tree[0].mode = '120000', t => t.tree[0].size = 4 * 1024 * 1024 + 1]) {
-      const api = async path => { const value = await original(path); if (path.startsWith('git/trees/')) mutate(value); return value; };
+      const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null; const value = await original(path); if (path.startsWith('git/trees/')) mutate(value); return value; };
       await assert.rejects(prepareSourceSynchronization(api, f.source, f.base));
     }
-    const api = async path => {
+    const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       const value = await original(path);
       if (path === `git/trees/${f.git('rev-parse', `${f.base}^{tree}`)}?recursive=1`) value.tree.find(file => file.path === 'src/app.mjs').sha = 'a'.repeat(40);
       return value;
@@ -103,7 +103,7 @@ test('sync publication uses the independently checked tree and two parents; fail
     const checkedTree = 'd'.repeat(40), newHead = 'e'.repeat(40);
     for (const scenario of ['passed', 'lost-ack', 'unknown', 'tree-mismatch', 'failed', 'model-change', 'epic']) {
       const writes = [];
-      const api = async (path, method = 'GET', body) => {
+      const api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
         if (method === 'GET') {
           if (path === 'pulls/34') return structuredClone(current);
           if (path === review.path) return feedback;

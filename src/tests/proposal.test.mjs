@@ -123,18 +123,18 @@ test('the real OpenSpec provider scaffolds, instructs and strictly validates pro
 
 test('publisher rechecks authority before a create-only branch, preserves base tree and does not merge', async () => {
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); return path.startsWith('git/commits/') ? { tree: { sha: 'tree-base' } } : { sha: 'new-sha', html_url: 'https://example/pr/1', number: 1 }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; return path.startsWith('git/commits/') ? { tree: { sha: 'tree-base' } } : { sha: 'new-sha', html_url: 'https://example/pr/1', number: 1 }; };
   const snapshot = { sourceRevision: 'base', issue: 18, runId: 'a'.repeat(64), title: 'Static talks', defaultBranch: 'main' };
   await assert.rejects(createProposalPullRequest(api, snapshot, files, 'Proposal', 'https://example/run', async () => { throw Error('Intent changed'); }), /Intent changed/);
   assert.equal(calls.some(c => c.path === 'git/refs' || c.path === 'pulls'), false);
   calls.length = 0;
   await createProposalPullRequest(api, snapshot, files, 'Proposal', 'https://example/run', async () => { calls.push({ path: 'recheck' }); });
-  assert.deepEqual(calls.map(c => c.path), ['git/commits/base', 'git/trees', 'git/commits', 'recheck', 'git/refs', 'pulls']);
-  assert.equal(calls[1].body.base_tree, 'tree-base');
-  assert.deepEqual(calls[2].body.parents, ['base']);
-  assert.equal(calls[4].method, 'POST');
-  assert.equal(calls[4].body.ref, 'refs/heads/lighthouse/propose-18-aaaaaaaaaaaa');
-  assert.doesNotMatch(calls[5].body.body, /Closes #18/);
+  assert.deepEqual(calls.map(c => c.path), ['contents/lighthouse.json?ref=base', 'git/commits/base', 'git/trees', 'git/commits', 'recheck', 'git/refs', 'pulls']);
+  assert.equal(calls[2].body.base_tree, 'tree-base');
+  assert.deepEqual(calls[3].body.parents, ['base']);
+  assert.equal(calls[5].method, 'POST');
+  assert.equal(calls[5].body.ref, 'refs/heads/lighthouse/propose-18-aaaaaaaaaaaa');
+  assert.doesNotMatch(calls[6].body.body, /Closes #18/);
 });
 
 test('a resumed proposal updates its applied product PR without opening another branch', async () => {
@@ -148,7 +148,7 @@ test('a resumed proposal updates its applied product PR without opening another 
   const pendingBody = productPr.body.replace('\"state\":\"applied\"', '\"state\":\"waiting-product-decision\"') + `\n<!-- lighthouse-proposal:${'a'.repeat(64)} -->`;
   assert.throws(() => checkProposal({ ...productPr, head: { ...productPr.head, ref: 'lighthouse/propose-18-aaaaaaaaaaaa' }, body: pendingBody }, repository));
   const calls = [];
-  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
+  const api = async (path, method, body) => { calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null; if (path === 'pulls/34' && method !== 'PATCH') return productPr; if (path === 'git/commits' && method === 'POST') return { sha: after }; return { sha: 'blob', tree: { sha: 'tree' } }; };
   const snapshot = { repository, sourceRevision: head, issue: 18, runId: 'a'.repeat(64), title: 'Example', defaultBranch: 'main', productResume: resume };
   const result = await createProposalPullRequest(api, snapshot, files, 'Engineering proposal.', 'https://example.test/run', async () => {});
   assert.equal(result.number, 34);
@@ -165,7 +165,7 @@ test('a resumed proposal updates its applied product PR without opening another 
   const next = '8'.repeat(40), feedback = { id: 9, body: 'Clarify.', user: { login: 'owner', type: 'User' } }, feedbackDigest = (await import('../packages/sdlc/src/host-contract.mjs')).digest(JSON.stringify(feedback));
   const review = { ...checkProposal(current, repository), path: 'issues/comments/9', feedbackDigest };
   const reviewCalls = [];
-  const reviewApi = async (path, method, payload) => {
+  const reviewApi = async (path, method, payload) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     reviewCalls.push({ path, method, body: payload });
     if (path === 'pulls/34' && method !== 'PATCH') return current;
     if (path === 'issues/comments/9') return feedback;
@@ -191,7 +191,7 @@ test('authenticated correction reports bind the dispatch base separately from th
   const run = { ...parent, id: 20, path: '.github/workflows/lighthouse-sdlc-apply-review.lock.yml', event: 'workflow_dispatch', status: 'completed', conclusion: 'success' };
   const request = { repository, issue: 47, stage: 'implement', workflowRunId: '20', workflowRevision: base, sourceRevision: head, baseRevision: base, runId, dispatch: { commentId: 7, requestId: origin.id, digest: receipt.digest } };
   const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/47`, body: dispatchReceiptBody(repository, receipt) };
-  const api = async path => {
+  const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path === 'actions/runs/20') return run;
     if (path === 'actions/runs/10/attempts/1') return parent;
     assert.equal(path, 'issues/comments/7'); return comment;
@@ -215,7 +215,7 @@ test('bot correction dispatch origins retain the original adopted failed CI atte
   const run = { ...parent, id: 20, path: '.github/workflows/lighthouse-sdlc-apply-review.lock.yml', status: 'completed', conclusion: 'success' };
   const ci = { status: 'completed', conclusion: 'failure', head_sha: head, repository: { full_name: repository }, path: '.github/workflows/verify.yml' };
   const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/47`, body: dispatchReceiptBody(repository, receipt) };
-  const api = async path => {
+  const api = async path => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path === 'actions/runs/10/attempts/1') return parent;
     if (path === 'actions/runs/123/attempts/1') return ci;
     if (path.startsWith('contents/')) return { content: Buffer.from(JSON.stringify({ completion: { postMergeWorkflows: ['verify.yml'] } })).toString('base64') };

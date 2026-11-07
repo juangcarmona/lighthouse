@@ -37,7 +37,7 @@ async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0, sp
   let publishedPr = null;
   const issue = () => ({ number: 1, state: 'open', title: 'Correct the inclusive boundary', body: 'Values equal to 2 must be eligible.', html_url: 'https://github.com/owner/repo/issues/1', user: { login: 'owner' }, labels: labels.map(name => ({ name })) });
   const encode = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
-  const api = async (path, method = 'GET', body) => {
+  const api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (method !== 'GET') writes.push({ path, method, body });
     if (path === '') return { default_branch: 'main' };
     if (path === 'commits/main') return { sha: revision };
@@ -620,7 +620,7 @@ test('the native host integrates with concurrent readiness and retains its merge
     return { ok: true, json: async () => ({ errors: [{ message: 'Already ready for review' }] }) };
   });
   f.api = async (path, method = 'GET', body) => {
-    events.push({ path, method, body });
+    events.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (integrated && path === 'issues/1/comments' && method === 'POST' && interrupt?.includes('notification')) throw Error('Notifications unavailable');
     if (path === 'commits/main') return { sha: integrated ? merged : revision };
     if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };

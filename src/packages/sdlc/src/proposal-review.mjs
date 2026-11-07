@@ -1,6 +1,7 @@
 import { digest } from './digests.mjs';
 import { proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { productImplementationProof, productProposalProof } from './product-change.mjs';
+import { parsePublicationBranch, selectPublicationBranch } from './publication-branch.mjs';
 
 export const reviewDigest = (kind, value) => digest(JSON.stringify(kind === 'ci' ? { id: value.id, attempt: value.run_attempt, repository: value.repository?.full_name, path: value.path, event: value.event, head: value.head_sha, branch: value.head_branch, status: value.status, conclusion: value.conclusion } : value));
 
@@ -14,24 +15,24 @@ export function reviewTarget(event, eventName) {
 }
 
 export function checkProposal(pr, repo, expected) {
-  const match = pr.head?.ref?.match(/^lighthouse\/(?:propose|implement)-([1-9][0-9]*)-([a-f0-9]{12})$/);
+  const branch = parsePublicationBranch(pr.head?.ref);
   const marker = pr.body?.match(/<!-- lighthouse-proposal:([a-f0-9]{64}) -->/)?.[1];
   const productProof = productProposalProof(pr);
-  const standard = pr.head?.ref?.startsWith('lighthouse/propose-') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(match?.[2] ?? 'invalid');
-  if (!match || !(standard || productProof?.issue === Number(match[1])) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned Lighthouse proposal');
-  if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base)) throw Error('Proposal changed during review; no update published');
-  return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, ...(productProof ? { productProposal: true } : {}) };
+  const standard = branch?.stage === 'propose' && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(branch.identity);
+  if (!branch || !['propose', 'implement'].includes(branch.stage) || !(standard || productProof?.issue === branch.issue) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned Lighthouse proposal');
+  if (expected && (pr.head.sha !== expected.head || pr.head.ref !== expected.branch || branch.issue !== expected.issue || pr.base.ref !== expected.base)) throw Error('Proposal changed during review; no update published');
+  return { number: pr.number, issue: branch.issue, head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, ...(productProof ? { productProposal: true } : {}) };
 }
 
 export function checkImplementationPullRequest(pr, repo, expected) {
-  const match = pr.head?.ref?.match(/^lighthouse\/(?:implement|propose)-([1-9][0-9]*)-([a-f0-9]{12})$/);
+  const branch = parsePublicationBranch(pr.head?.ref);
   const marker = pr.body?.match(/<!-- lighthouse-implementation:([a-f0-9]{64}) -->/)?.[1];
   const productProof = productImplementationProof(pr);
-  const standard = pr.head?.ref?.startsWith('lighthouse/implement-') && !pr.body?.includes('<!-- lighthouse-product-change:') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(match?.[2] ?? 'invalid');
-  if (!match || !(standard || productProof?.issue === Number(match[1])) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
+  const standard = branch?.stage === 'implement' && !pr.body?.includes('<!-- lighthouse-product-change:') && !/<!-- lighthouse-product-change(?:-checkpoint|:checkpoint):/.test(pr.body ?? '') && marker?.startsWith(branch.identity);
+  if (!branch || !['implement', 'propose'].includes(branch.stage) || !(standard || productProof?.issue === branch.issue) || pr.user?.login !== 'github-actions[bot]' || pr.user.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repo || pr.base.repo?.full_name !== repo) throw Error('Not an open repository-owned implementation PR');
   const implementationIdentity = productProof ? digest(JSON.stringify({ issue: productProof.issue, applyIntent: productProof.applyIntent })) : marker;
-  if (expected && (expected.number !== undefined && pr.number !== expected.number || pr.head.sha !== expected.head || pr.head.ref !== expected.branch || Number(match[1]) !== expected.issue || pr.base.ref !== expected.base || expected.implementationIdentity && implementationIdentity !== expected.implementationIdentity)) throw Error('Implementation changed during review');
-  return { number: pr.number, issue: Number(match[1]), head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, implementationIdentity };
+  if (expected && (expected.number !== undefined && pr.number !== expected.number || pr.head.sha !== expected.head || pr.head.ref !== expected.branch || branch.issue !== expected.issue || pr.base.ref !== expected.base || expected.implementationIdentity && implementationIdentity !== expected.implementationIdentity)) throw Error('Implementation changed during review');
+  return { number: pr.number, issue: branch.issue, head: pr.head.sha, branch: pr.head.ref, base: pr.base.ref, url: pr.html_url, implementationIdentity };
 }
 
 export function checkAlignedImplementationPullRequest(pr, repository, alignment, { publishedHead } = {}) {
@@ -98,6 +99,7 @@ export async function checkReviewCurrent(api, repo, review, implementation = fal
 
 export async function updateProposal(api, repo, snapshot, files, beforeWrite) {
   const review = snapshot.proposalReview;
+  await selectPublicationBranch(api, { ...snapshot, sourceRevision: snapshot.sourceRevision ?? review.head }, 'propose', review.branch);
   const commit = await api(`git/commits/${review.head}`);
   const old = await loadProposalFiles(api, review);
   const removed = old.filter(f => !files.some(n => n.path === f.path)).map(f => ({ path: f.path, mode: '100644', type: 'blob', sha: null }));

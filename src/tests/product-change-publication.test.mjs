@@ -15,7 +15,7 @@ test('product proposal checkpoints wait for the actual published head on an exis
     const snapshot = { issue: 18, stage: 'propose', title: 'Example', defaultBranch: 'main', sourceRevision: parent, runId: 'd'.repeat(64), workflowRunId: '100', workflowRevision: parent, authorizationDigest: 'e'.repeat(64), policyDigest: 'f'.repeat(64), taskDigest: '1'.repeat(64) };
     const original = { number: 7, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { ref: 'lighthouse/implement-18-previous', sha: parent, repo: { full_name: repository } }, base: { ref: 'main' }, html_url: 'https://example.test/pr/7', body: 'Preserve existing work.\n<!-- lighthouse-product-change:{} -->' };
     let updated = false, polls = 0, writes = 0, refWrites = 0, publishedBody;
-    const api = async (path, method = 'GET', body) => {
+    const api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path === 'pulls?state=open&per_page=100') return [structuredClone(original)];
       if (path === 'pulls/7' && method === 'GET') {
         const current = structuredClone(original);
@@ -56,7 +56,7 @@ test('product review and approval use the same markers, including legacy publish
   const candidate = { changeName: 'example', changeId: 'CHG-EXAMPLE', files, proposalDigest: validateProductChangeFiles(files, { changeName: 'example' }).digest, baselineDigest, affectedAreas: [], decisions: [] };
   const snapshot = { issue, stage: 'propose', title: 'Example', defaultBranch: 'main', sourceRevision: base, runId: 'c'.repeat(64), workflowRunId: '100', workflowRevision: base, authorizationDigest: 'd'.repeat(64), policyDigest: 'e'.repeat(64), taskDigest: 'f'.repeat(64) };
   let pr, writes = 0, appliedTree, decisionComment, laterDecisions = [], reviews = [], issueLabels = [{ name: 'future' }];
-  const api = async (path, method = 'GET', body, optional = false) => {
+  const api = async (path, method = 'GET', body, optional = false) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (method !== 'GET') writes++;
     if (path === 'pulls?state=open&per_page=100') return [];
     if (path === `git/commits/${base}`) return { tree: { sha: 'tree' } };

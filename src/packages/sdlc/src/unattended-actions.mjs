@@ -1,3 +1,4 @@
+import { isIssuePublicationBranch } from './publication-branch.mjs';
 import { createIssueApi } from './github-rest.mjs';
 import { validateReviewPayload } from './independent-review.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
@@ -73,7 +74,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const marker = '<!-- lighthouse-unattended:' + runId + ' -->';
   if ((await comments()).some(c => c.user?.login === 'github-actions[bot]' && c.body.includes(marker))) throw Error('This request already has a receipt; inspect effects before retrying');
   const pulls = await list(api, 'pulls?state=open');
-  if (pulls.some(pr => pr.head.ref.startsWith('lighthouse/implement-' + issueNumber + '-'))) throw Error('Existing implementation PR needs review rather than a second delivery');
+  if (pulls.some(pr => isIssuePublicationBranch(pr.head.ref, issueNumber, 'implement'))) throw Error('Existing implementation PR needs review rather than a second delivery');
   const root = join(env.RUNNER_TEMP, 'lighthouse-unattended-' + env.GITHUB_RUN_ID);
   await mkdir(root, { recursive: true });
   const source = await committedSource(sourceRoot, revision);

@@ -14,7 +14,7 @@ function fixture(scenario = 'stale') {
   const snapshot = { repository, issue: 18, runId: marker, stage: 'implement', worker: 'apply-review', sourceRevision: head, baseRevision: base, defaultBranch: 'main', implementationReview: review, implementation: { policy: { paths: ['src/'], checks: [['npm', 'test']] } } };
   const calls = [];
   const api = async (path, method = 'GET', body) => {
-    calls.push({ path, method, body });
+    calls.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path === 'pulls/34') { if (method === 'PATCH') pr.body = body.body; return structuredClone(pr); }
     if (path === review.path) return scenario === 'feedback' ? { ...feedback, body: 'Stop' } : feedback;
     if (path === 'git/ref/heads/main') return { object: { sha: scenario === 'base' ? oldBase : base } };
@@ -78,7 +78,7 @@ test('a lost branch acknowledgement is read back once; an uncertain advance is n
 test('merge observation waits for GitHub recomputation and binds the resulting head and base', async () => {
   const f = fixture(); await f.publish(true);
   const expected = structuredClone(f.pr), newMerge = sha('7'); let reads = 0, waits = 0;
-  const api = async (path, ...args) => {
+  const api = async (path, ...args) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path === 'pulls/34' && ++reads === 3) f.pr.merge_commit_sha = newMerge;
     if (path.startsWith('compare/')) return { base_commit: { sha: f.base }, behind_by: 1 };
     if (path === `git/commits/${newMerge}`) return { sha: newMerge, parents: [{ sha: f.base }, { sha: f.refreshed }] };
@@ -91,7 +91,7 @@ test('merge observation waits for GitHub recomputation and binds the resulting h
 test('merge observation stops on changed authority and bounds an unchanged stale subject', async () => {
   for (const scenario of ['stale', 'head', 'base']) {
     const f = fixture(); await f.publish(true); const expected = structuredClone(f.pr); let waits = 0;
-    const api = async (path, ...args) => {
+    const api = async (path, ...args) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       if (path.startsWith('compare/')) return { base_commit: { sha: f.base }, behind_by: 1 };
       if (scenario === 'head' && path === 'pulls/34') return { ...f.pr, head: { ...f.pr.head, sha: sha('9') } };
       if (scenario === 'base' && path === 'git/ref/heads/main') return { object: { sha: sha('9') } };
@@ -106,7 +106,7 @@ test('the named transition observes a refreshed verification head while preservi
   const { publishImplementationPullRequest, readImplementationPublication } = await import('../packages/sdlc/src/implementation.mjs');
   const f = fixture('lost-ack'), newMerge = sha('7');
   f.pr.id = 34; f.pr.base.sha = f.base;
-  const api = async (path, ...args) => {
+  const api = async (path, ...args) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (path === `git/commits/${f.refreshed}`) return { sha: f.refreshed, tree: { sha: f.tree } };
     if (path === `git/commits/${newMerge}`) return { sha: newMerge, parents: [{ sha: f.base }, { sha: f.refreshed }] };
     if (path === `compare/${f.base}...${f.refreshed}`) return { base_commit: { sha: f.base }, behind_by: 0 };

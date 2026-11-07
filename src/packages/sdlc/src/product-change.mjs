@@ -1,3 +1,4 @@
+import { parsePublicationBranch } from './publication-branch.mjs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { cp, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -129,8 +130,8 @@ export function validateProductCheckpoint(value) {
     if (!exact(parent, ['issue', 'stage', 'predecessor', 'gap', 'sourceRevision', 'baseRevision', 'taskDigest', 'autoImplement', ...(['feedback', 'pullRequest', 'review'].filter(key => Object.hasOwn(parent ?? {}, key)))]) || parent.issue !== value.identity?.issue || !['triage', 'refine', 'propose', 'implement'].includes(parent.stage) || !exact(parent.predecessor, ['runId', 'attempt']) || !/^[1-9][0-9]*$/.test(parent.predecessor.runId ?? '') || !Number.isSafeInteger(parent.predecessor.attempt) || parent.predecessor.attempt < 1 || !exact(parent.gap, ['summary', 'scope']) || !['summary', 'scope'].every(key => typeof parent.gap[key] === 'string' && parent.gap[key].trim() && parent.gap[key].length <= 4000 && !/<!--\s*lighthouse-/i.test(parent.gap[key])) || !revisionPattern.test(parent.sourceRevision ?? '') || !revisionPattern.test(parent.baseRevision ?? '') || !hashPattern.test(parent.taskDigest ?? '') || typeof parent.autoImplement !== 'boolean') errors.push('Product Change parent checkpoint is invalid');
   }
   if (value.parent?.pullRequest !== undefined) {
-    const pr = value.parent.pullRequest;
-    if (!exact(pr, ['number', 'head', 'branch']) || !Number.isSafeInteger(pr.number) || pr.number < 1 || !revisionPattern.test(pr.head ?? '') || typeof pr.branch !== 'string' || !new RegExp(`^lighthouse/(?:implement|propose)-${value.identity?.issue}-[a-f0-9]{12}$`).test(pr.branch)) errors.push('Product Change parent PR evidence is invalid');
+    const pr = value.parent.pullRequest, branch = parsePublicationBranch(pr?.branch);
+    if (!exact(pr, ['number', 'head', 'branch']) || !Number.isSafeInteger(pr.number) || pr.number < 1 || !revisionPattern.test(pr.head ?? '') || !branch || !['implement', 'propose'].includes(branch.stage) || branch.issue !== value.identity?.issue) errors.push('Product Change parent PR evidence is invalid');
   }
   if (value.parent?.review !== undefined) {
     const review = value.parent.review;

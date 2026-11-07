@@ -8,7 +8,7 @@ import { checkProductResumePullRequest } from '../packages/sdlc/src/product-chan
 import { digest } from '../packages/sdlc/src/host-contract.mjs';
 
 const repository = 'owner/repo', base = 'a'.repeat(40), head = 'b'.repeat(40), runId = 'c'.repeat(64);
-function fixture(epic = false) {
+function fixture(epic = false, conventional = false) {
   const issue = { title: 'Bounded summary', body: 'Classify the supplied observations.', state: 'open', labels: [{ name: 'agent-working' }] };
   const snapshot = { issue: 18, repository, title: issue.title, runId, sourceRevision: base, defaultBranch: 'main', taskDigest: taskDigest(issue, []), implementation: { policy: { scope: 'Only the summary', paths: ['src/'], checks: [['npm', 'test']], reviewRequired: false } } };
   if (epic) snapshot.epic = { parent: 146, base: 'lighthouse/epic-146', baseSha: base };
@@ -25,13 +25,13 @@ function fixture(epic = false) {
     if (snapshot.productAlignment) checkAlignedImplementationPullRequest(await f.api('pulls/7'), repository, snapshot.productAlignment, published);
     checkImplementationPrInventory(f.pulls, snapshot, f.published, f.published ? (await f.api(`git/ref/heads/${snapshot.epic?.base ?? snapshot.defaultBranch}`))?.object?.sha : undefined);
   };
-  f.api = async (path, method = 'GET', body) => {
+  f.api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return conventional ? { type: 'file', encoding: 'base64', content: Buffer.from(JSON.stringify({ repository: { conventions: { branchPattern: '^chore/[1-9][0-9]*-lighthouse-implement-[a-f0-9]{12}$' } } })).toString('base64') } : null;
     if (path === 'pulls' && method === 'POST') {
       const pr = { id: 700, number: 7, state: 'open', merged: false, draft: body.draft, body: body.body, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: body.head, repo: { full_name: repository } }, base: { sha: base, ref: body.base, repo: { full_name: repository } } };
       f.pulls.push(pr); return structuredClone(pr);
     }
     if (path === 'pulls/7') return structuredClone(f.pulls[0]);
-    if (path.startsWith('git/ref/heads/lighthouse/implement-')) return { object: { sha: f.pulls[0].head.sha } };
+    if (path === `git/ref/heads/${f.pulls[0]?.head.ref}`) return { object: { sha: f.pulls[0].head.sha } };
     if (path.startsWith('git/commits/') && method === 'GET') return { tree: { sha: base } };
     if (path === 'git/ref/heads/main' || path === 'git/ref/heads/lighthouse/epic-146') return { object: { sha: f.baseReference } };
     if (path.startsWith('compare/')) return { base_commit: { sha: f.baseReference }, behind_by: 0 };
@@ -56,13 +56,13 @@ function fixture(epic = false) {
   return f;
 }
 
-async function updateFixture(role) {
-  const f = fixture(), prior = 'd'.repeat(40), originalRun = 'e'.repeat(64), branch = `lighthouse/implement-18-${originalRun.slice(0, 12)}`;
+async function updateFixture(role, conventional = false) {
+  const f = fixture(false, conventional), prior = 'd'.repeat(40), originalRun = 'e'.repeat(64), branch = conventional ? `chore/18-lighthouse-implement-${originalRun.slice(0, 12)}` : `lighthouse/implement-18-${originalRun.slice(0, 12)}`;
   const current = { id: 700, number: 7, state: 'open', merged: false, draft: true, user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: prior, ref: branch, repo: { full_name: repository } }, base: { sha: base, ref: 'main', repo: { full_name: repository } }, html_url: 'https://github.com/owner/repo/pull/7', body: `Original evidence.\n<!-- lighthouse-implementation:${originalRun} -->` };
   f.pulls.push(current); f.snapshot.sourceRevision = prior; f.snapshot.baseRevision = base;
   f.feedback = { id: 100, user: { login: 'owner', type: 'User' }, body: 'Preserve the contract and correct the boundary.', issue_url: `https://api.github.com/repos/${repository}/issues/7`, html_url: 'https://github.com/owner/repo/pull/7#issuecomment-100' };
   const originalApi = f.api;
-  f.api = async (path, method = 'GET', body) => {
+  f.api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return originalApi(path, method, body);
     if (path === `git/refs/heads/${branch}` && method === 'PATCH') { current.head.sha = body.sha; return {}; }
     if (path === 'pulls/7' && method === 'PATCH') { current.body = body.body; return structuredClone(current); }
     if (path === 'issues/comments/100') return structuredClone(f.feedback);
@@ -181,7 +181,7 @@ test('edited feedback or applied checkpoints cannot authorize a published contin
 
 test('a lost publication readback cannot cause another PR or CI push', async () => {
   const f = fixture(), api = f.api;
-  f.api = async (path, ...args) => { if (path === 'pulls/7') throw Error('Readback unavailable'); return api(path, ...args); };
+  f.api = async (path, ...args) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null; if (path === 'pulls/7') throw Error('Readback unavailable'); return api(path, ...args); };
   await assert.rejects(f.publish(), /Readback unavailable/);
   assert.equal(f.pulls.length, 1);
   assert.equal(f.published, null);
@@ -196,7 +196,7 @@ test('implementation publication waits only for its known old head before starti
     for (const scenario of ['delayed', 'never', 'foreign-head', 'stale-base-snapshot', 'refreshed-base-snapshot', 'foreign-base', 'missing-base-ref', 'malformed-base-snapshot', 'foreign-repo', 'foreign-base-repo', 'foreign-base-branch', 'foreign-number', 'foreign-branch', 'moved-ref', 'closed']) {
       const f = await updateFixture(role), original = f.api, previous = f.snapshot.sourceRevision;
       let writes = 0, reads = 0;
-      f.api = async (path, method = 'GET', body) => {
+      f.api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
         if (path.startsWith('git/refs/heads/') && method === 'PATCH') writes++;
         if (path === 'git/ref/heads/main') return scenario === 'missing-base-ref' ? null : { object: { sha: scenario === 'foreign-base' ? previous : base } };
         if (path === `git/ref/heads/${f.pulls[0].head.ref}`) return { object: { sha: scenario === 'moved-ref' ? base : head } };
@@ -231,7 +231,7 @@ test('implementation publication waits only for its known old head before starti
 test('fresh ordinary and epic publications accept old PR base snapshots only with the admitted live target', async () => {
   for (const epic of [false, true]) {
     const f = fixture(epic), api = f.api;
-    f.api = async (path, ...args) => {
+    f.api = async (path, ...args) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null;
       const value = await api(path, ...args);
       if (path === 'pulls/7' && (!args[0] || args[0] === 'GET')) value.base.sha = '9'.repeat(40);
       return value;
@@ -249,8 +249,8 @@ test('fresh ordinary and epic publications accept old PR base snapshots only wit
 test('named publication returns one confirmed transition for initial, epic and every existing-PR path', async () => {
   const { publishImplementationPullRequest } = await import('../packages/sdlc/src/implementation.mjs');
   assert.equal(typeof publishImplementationPullRequest, 'function');
-  for (const role of ['initial', 'epic', 'review', 'product-review', 'resume', 'aligned']) {
-    const f = role === 'initial' || role === 'epic' ? fixture(role === 'epic') : await updateFixture(role);
+  for (const conventional of [false, true]) for (const role of ['initial', 'epic', 'review', 'product-review', 'resume', 'aligned']) {
+    const f = role === 'initial' || role === 'epic' ? fixture(role === 'epic', conventional) : await updateFixture(role, conventional);
     const guards = [], originalHead = f.snapshot.sourceRevision;
     const transition = await publishImplementationPullRequest(f.api, {
       snapshot: f.snapshot,
@@ -291,7 +291,7 @@ test('summary-only correction uses the same transition without a source commit o
   const { publishImplementationPullRequest, readImplementationPublication } = await import('../packages/sdlc/src/implementation.mjs');
   const f = await updateFixture('review'); f.snapshot.stage = 'implement'; f.snapshot.worker = 'apply-review';
   const writes = [], originalApi = f.api;
-  const api = async (path, method = 'GET', body) => { if (method !== 'GET') writes.push({ path, method }); return originalApi(path, method, body); };
+  const api = async (path, method = 'GET', body) => { if (path.startsWith('contents/lighthouse.json?ref=')) return null; if (method !== 'GET') writes.push({ path, method }); return originalApi(path, method, body); };
   const transition = await publishImplementationPullRequest(api, { snapshot: f.snapshot, changes: [], body: 'Fresh verification evidence.', runUrl: '', draft: true, beforeWrite: f.check, checkedTree: base, wait: async () => {} });
   assert.equal(transition.originalHead, f.snapshot.sourceRevision);
   assert.equal(transition.publishedHead, f.snapshot.sourceRevision);

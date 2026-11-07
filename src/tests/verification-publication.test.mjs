@@ -43,6 +43,7 @@ globalThis.fetch = async (url, options) => {
   s.calls.push({ path, method, body });
   let value;
   if (path === '') value = { default_branch: 'main' };
+  else if (path.startsWith('contents/lighthouse.json?ref=')) return { ok: false, status: 404 };
   else if (path === 'commits/main') value = { sha: s.base };
   else if (path === 'git/ref/heads/main' && method === 'GET') value = { object: { sha: s.base } };
   else if (path === 'issues/7') value = s.issue;

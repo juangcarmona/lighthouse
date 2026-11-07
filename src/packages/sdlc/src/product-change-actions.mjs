@@ -7,6 +7,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { validateProductChangeFiles, validateProductCheckpoint, validateProductWorkspace, loadProductBridge, productReviewBinding, parseProductDecision, verifyProductDecision, authorizeProductApply, createProductApplyReceipt, productModelDigest, productModelDirectory } from './product-change.mjs';
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { handoff } from './handoff.mjs';
+import { selectPublicationBranch, isIssuePublicationBranch } from './publication-branch.mjs';
 
 const marker = '<!-- lighthouse-product-change-';
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -136,26 +137,27 @@ export async function publishProductChangePullRequest(api, repository, snapshot,
   if (files.changeId !== candidate.changeId || files.digest !== candidate.proposalDigest || validation.provider !== 'passed' || validation.openSpec !== 'passed') throw Error('Product Change candidate validation evidence is stale');
   const pulls = await api('pulls?state=open&per_page=100');
   if (pulls.length >= 100) throw Error('Open pull request list exceeds bounds');
-  const issuePulls = pulls.filter(pr => pr.head?.ref?.startsWith(`lighthouse/implement-${snapshot.issue}-`) || pr.head?.ref?.startsWith(`lighthouse/product-change-${snapshot.issue}-`) || pr.head?.ref?.startsWith(`lighthouse/propose-${snapshot.issue}-`));
+  const issuePulls = pulls.filter(pr => isIssuePublicationBranch(pr.head?.ref, snapshot.issue));
   if (issuePulls.length > 1) throw Error('Issue has multiple eligible delivery PRs; owner review is required');
   let pr = issuePulls[0] ? await api(`pulls/${issuePulls[0].number}`) : null;
   let base, branch, parent;
   if (pr) {
-    if ((pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`) || pr.head.ref.startsWith(`lighthouse/propose-${snapshot.issue}-`)) && (pr.body?.includes('<!-- lighthouse-product-change:') || pr.body?.includes('<!-- lighthouse-product-change-review:'))) {
+    if (isIssuePublicationBranch(pr.head.ref, snapshot.issue, 'implement', 'propose') && (pr.body?.includes('<!-- lighthouse-product-change:') || pr.body?.includes('<!-- lighthouse-product-change-review:'))) {
       if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || pr.head?.repo?.full_name !== repository) throw Error('Existing Product Change PR is not a current bot-owned PR');
-    } else if (pr.head.ref.startsWith(`lighthouse/implement-${snapshot.issue}-`)) checkImplementationPullRequest(pr, repository);
-    else if (pr.head.ref.startsWith(`lighthouse/propose-${snapshot.issue}-`)) checkProposal(pr, repository);
+    } else if (isIssuePublicationBranch(pr.head.ref, snapshot.issue, 'implement')) checkImplementationPullRequest(pr, repository);
+    else if (isIssuePublicationBranch(pr.head.ref, snapshot.issue, 'propose')) checkProposal(pr, repository);
     else if (pr.user?.login !== 'github-actions[bot]' || pr.user?.type !== 'Bot' || pr.state !== 'open' || pr.merged || !pr.body?.includes('<!-- lighthouse-product-change:')) throw Error('Existing issue PR is not an eligible Lighthouse Product Change draft');
     if (pr.base?.ref !== snapshot.defaultBranch || pr.head?.repo?.full_name !== repository) throw Error('Existing issue PR targets an unexpected repository or base');
     if (!pr.draft) throw Error('Product Change cannot modify a PR already submitted for review');
     branch = pr.head.ref; parent = pr.head.sha;
     base = await api(`git/commits/${parent}`);
   } else {
-    branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
+    branch = await selectPublicationBranch(api, snapshot, 'implement');
     parent = snapshot.sourceRevision;
     base = await api(`git/commits/${parent}`);
   }
   if (snapshot.productParent?.pullRequest && (!pr || pr.number !== snapshot.productParent.pullRequest.number || snapshot.productEntry !== 'feedback' && pr.head.sha !== snapshot.productParent.pullRequest.head || pr.head.ref !== snapshot.productParent.pullRequest.branch)) throw Error('Parent issue PR changed before Product Change publication');
+  if (pr) await selectPublicationBranch(api, snapshot, 'implement', branch);
   const tree = await api('git/trees', 'POST', { base_tree: base.tree.sha, tree: candidate.files.map(file => ({ path: file.path, mode: '100644', type: 'blob', content: file.content })) });
   const commit = await api('git/commits', 'POST', { message: `docs: prepare product change for #${snapshot.issue}`, tree: tree.sha, parents: [parent] });
   await beforeWrite();
@@ -320,6 +322,7 @@ export async function publishProductApply(api, repository, owner, dispatch, resu
   if (projected.modelRoot !== result.modelRoot || projected.digest !== result.resultingModelDigest) throw Error('Published files do not reproduce the provider-validated product model');
   const pr = await api(`pulls/${fresh.pullRequest}`);
   if (pr.head.sha !== fresh.head || pr.state !== 'open' || pr.merged || pr.head.repo?.full_name !== repository) throw Error('Product PR head changed before apply publication');
+  await selectPublicationBranch(api, { issue: fresh.issue, sourceRevision: fresh.head }, 'implement', pr.head.ref);
   const commit = await api(`git/commits/${fresh.head}`);
   const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: files.map(file => file.deleted ? { path: file.path, mode: '100644', type: 'blob', sha: null } : { path: file.path, mode: '100644', type: 'blob', content: file.content }) });
   const created = await api('git/commits', 'POST', { message: `docs: apply product change ${fresh.checkpoint.changeId}`, tree: tree.sha, parents: [fresh.head] });

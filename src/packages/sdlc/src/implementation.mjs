@@ -11,6 +11,7 @@ import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './pro
 import { observeUpdatedProductPull } from './product-change-actions.mjs';
 import { prepareSourceSynchronization, synchronizationDigest } from './source-sync.mjs';
 import { needsVerificationRefresh, observeVerificationMerge } from './ci-subject.mjs';
+import { selectPublicationBranch } from './publication-branch.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 
@@ -219,6 +220,7 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
   }
   const epic = snapshot.epic;
   if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : epic.baseSha !== snapshot.sourceRevision))) throw Error('Invalid epic publication base');
+  const branch = await selectPublicationBranch(api, snapshot, 'implement', snapshot.implementationReview?.branch ?? snapshot.productResume?.branch ?? snapshot.productAlignment?.parent.pullRequest?.branch);
   const checkEpicBase = async () => {
     if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');
   };
@@ -311,7 +313,6 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
     await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: revised });
     return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch }, ...(verificationRefresh ? { verificationRefresh: true } : {}) };
   }
-  const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
   if (epic) { await beforeWrite(); await checkEpicBase(); }
   return api('pulls', 'POST', { title: snapshot.title.slice(0, 180), head: branch, base: epic?.base ?? snapshot.defaultBranch, draft, body: description(snapshot.runId) });

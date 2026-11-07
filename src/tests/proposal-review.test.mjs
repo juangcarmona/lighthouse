@@ -84,6 +84,7 @@ test('publication updates the same branch non-forcibly and rejects a concurrent 
   const files = ['proposal.md', 'design.md', 'tasks.md', 'specs/control/spec.md'].map(name => ({ path: `openspec/changes/issue-47-proposal/${name}`, content: name === 'tasks.md' ? '- [ ] Implement' : '# Proposal' }));
   let changed = false; const writes = [];
   const api = async (path, method, body) => {
+    if (path.startsWith('contents/lighthouse.json?ref=')) return null;
     if (method) { writes.push({ path, method, body }); return { sha: 'new' }; }
     if (path === 'pulls/60') return changed ? { ...pr, head: { ...pr.head, sha: 'concurrent' } } : pr;
     if (path === 'issues/comments/7') return comment;

@@ -1,3 +1,4 @@
+import { parsePublicationBranch } from './publication-branch.mjs';
 export { implementationPrProof } from './implementation-proof.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
@@ -37,8 +38,8 @@ export function productOnlyCheckpoint(pr) {
   if (matches.length !== 1) return null;
   try {
     const checkpoint = JSON.parse(matches[0][1]);
-    const branch = pr.head?.ref?.match(/^lighthouse\/(?:implement|propose|product-change)-([1-9][0-9]*)-[a-f0-9]{12}$/);
-    if (validateProductCheckpoint(checkpoint).length || !branch || Number(branch[1]) !== checkpoint.identity.issue || checkpoint.identity.repository !== pr.head?.repo?.full_name || checkpoint.identity.repository !== pr.base?.repo?.full_name || !Number.isSafeInteger(pr.number)) return null;
+    const branch = parsePublicationBranch(pr.head?.ref);
+    if (validateProductCheckpoint(checkpoint).length || !branch || branch.issue !== checkpoint.identity.issue || checkpoint.identity.repository !== pr.head?.repo?.full_name || checkpoint.identity.repository !== pr.base?.repo?.full_name || !Number.isSafeInteger(pr.number)) return null;
     if (checkpoint.state === 'waiting-product-decision' && checkpoint.effectIds.length === 1 && checkpoint.effectIds[0] === `pr:${pr.number}:${checkpoint.identity.head}`) return checkpoint;
     if (checkpoint.state === 'applied' && checkpoint.effectIds.some(id => /^apply:[a-f0-9]{64}:/.test(id) && id.endsWith(`:${checkpoint.identity.head}`))) return checkpoint;
     return null;
@@ -51,7 +52,7 @@ export async function scheduledImplementationPulls(api) {
   const numbers = [];
   for (let page = 1; page <= 10; page++) {
     const pulls = await api(`pulls?state=open&per_page=100&page=${page}`);
-    numbers.push(...pulls.filter(pr => /^lighthouse\/(?:implement|propose|product-change)-[1-9][0-9]*-[a-f0-9]{12}$/.test(pr.head?.ref ?? '') && pr.user?.login === 'github-actions[bot]' && !productProposalProof(pr) && (isProductOnlyPullRequest(pr) ? isStaleProductDecision(pr) : pr.head.ref.startsWith('lighthouse/implement-') || pr.body?.includes('<!-- lighthouse-product-implementation:'))).map(pr => pr.number));
+    numbers.push(...pulls.filter(pr => parsePublicationBranch(pr.head?.ref) && pr.user?.login === 'github-actions[bot]' && !productProposalProof(pr) && (isProductOnlyPullRequest(pr) ? isStaleProductDecision(pr) : parsePublicationBranch(pr.head.ref)?.stage === 'implement' || pr.body?.includes('<!-- lighthouse-product-implementation:'))).map(pr => pr.number));
     if (pulls.length < 100) return numbers;
   }
   throw Error('Open PR history exceeds reconciliation bound');
