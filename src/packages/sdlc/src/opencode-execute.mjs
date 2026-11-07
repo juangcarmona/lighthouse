@@ -1,7 +1,7 @@
 // gh-aw engine adapter: one foreground container and optional host-owned test services.
 import { readFile, writeFile, appendFile, mkdir, mkdtemp, readdir, copyFile, chmod, rm, lstat } from 'node:fs/promises';
-import { dirname, join, resolve, isAbsolute } from 'node:path';
-import { openSync, closeSync, appendFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { closeSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spawn, execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -21,6 +21,8 @@ import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwned
 import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
 import { implementationPlanMetadata, prepareImplementationPlanMetadata } from './implementation-plan.mjs';
+import { acquireEngineSlot, engineSlotWaitSeconds } from './engine-slot.mjs';
+export { acquireEngineSlot } from './engine-slot.mjs';
 import { prepareProductEvidence, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
 import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
@@ -106,15 +108,6 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   await writeFile(path, JSON.stringify(context));
   return evidence;
 }
-export function acquireEngineSlot(path, seconds = 240) {
-  if (!isAbsolute(path ?? '')) throw Error('Operator engine lock must be an absolute path');
-  const fd = openSync(path, 'a', 0o600);
-  try {
-    // Linux flock belongs to the shared open file description, held until closeSync.
-    execFileSync('flock', ['--exclusive', '--wait', String(seconds), '3'], { stdio: ['ignore', 'inherit', 'inherit', fd] });
-    return fd;
-  } catch { closeSync(fd); throw Error('Host engine capacity unavailable'); }
-}
 async function main() {
   const env = process.env;
   const config = JSON.parse(await readFile(env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8'));
@@ -168,7 +161,7 @@ async function main() {
   try {
     console.log('Waiting for the operator host engine slot');
     const waitStarted = Date.now(); telemetry.emit('execution.host-wait.started', { status: 'waiting' });
-    slot = acquireEngineSlot(config.lock);
+    slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config), { signal: preparation.signal });
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
