@@ -17,8 +17,8 @@ export function workflowDisplayName(source, path) {
   return name;
 }
 
-export async function completionSubscriptions(root, { implement, propose, productChange, epic = false }) {
-  const names = ['refine', ...(productChange ? ['triage', ...(propose ? ['propose', 'apply review'] : []), ...(implement ? ['implement'] : []), 'product-change', 'apply-product-change'] : [])];
+export async function completionSubscriptions(root, { implement, propose, productChange, epic = false, completion = false, unattended = false }) {
+  const names = ['refine', ...(completion ? ['integrate'] : []), ...(unattended ? ['unattended'] : []), ...(productChange ? ['triage', ...(propose ? ['propose', 'apply review'] : []), ...(implement ? ['implement'] : []), 'product-change', 'apply-product-change'] : [])];
   const optional = async path => {
     try { return await readFile(path, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; return null; }
   };

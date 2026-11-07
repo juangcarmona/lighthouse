@@ -184,3 +184,15 @@ test('installer subscribes only to selected continuations and adopted CI names, 
     assert.throws(() => workflowDisplayName('name: >\n  CI\n', 'ci.yml'), /static workflow name/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('completion subscriptions include terminal producers only when installed', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-terminal-subscriptions-'));
+  try {
+    assert.ok(!(await completionSubscriptions(root, { implement: true, propose: true, productChange: false })).includes('integrate'));
+    const completion = await completionSubscriptions(root, { implement: true, propose: true, productChange: false, completion: true });
+    assert.ok(completion.includes('integrate'));
+    assert.ok(!completion.includes('unattended'));
+    const delegated = await completionSubscriptions(root, { implement: true, propose: true, productChange: false, completion: true, unattended: true });
+    assert.ok(delegated.includes('integrate') && delegated.includes('unattended'));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
