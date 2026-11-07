@@ -11,7 +11,7 @@ import { implementationPrProof, reconcileImplementationPr } from '../packages/sd
 import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
 
-async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0 } = {}) {
+async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0, specBearing = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
   await mkdir(join(sourceRoot, 'src/feature'), { recursive: true });
   await writeFile(join(sourceRoot, 'src/feature/rule.mjs'), 'export const eligible = value => value > 2;\n');
@@ -74,7 +74,7 @@ async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0 } =
     if (['triage', 'refine'].includes(options.request.stage)) envelope.result.output = { eligibility, hotfix: plan };
     else if (options.request.stage === 'propose') envelope.result.output.files = [
       ...['proposal.md', 'design.md', 'tasks.md'].map(name => ({ path: 'openspec/changes/issue-1-proposal/' + name, content: name === 'tasks.md' ? '- [ ] Implement boundary correction\n' : '# Synthetic adapter plan\n' })),
-      { path: 'openspec/changes/issue-1-proposal/.openspec.yaml', content: 'skip_specs: true' },
+      ...(specBearing ? [{ path: 'openspec/changes/issue-1-proposal/specs/boundary/spec.md', content: '## ADDED Requirements\n\n### Requirement: Inclusive boundary\nValues equal to 2 SHALL be eligible.\n\n#### Scenario: Equal value\n- **WHEN** the value equals 2\n- **THEN** it is eligible\n' }] : [{ path: 'openspec/changes/issue-1-proposal/.openspec.yaml', content: 'skip_specs: true' }]),
     ];
     else if (options.request.worker === 'independent-review') {
       if (options.context.review.purpose === 'candidate') {
@@ -459,6 +459,30 @@ test('FF planning repair uses concrete feedback, drops superseded files and reta
     assert.equal(proposals, 2); assert.equal(reviews, 2); assert.equal(implementations, 1); assert.notEqual(bindings[0], bindings[1]);
     const retained = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/report.json')));
     assert.equal(retained.planningRound, 1);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+for (const specBearing of [false, true]) test(`FF planning review receives the host-validated ${specBearing ? 'spec-deltas' : 'skip-specs'} lane`, async () => {
+  const f = await fixture({ route: 'ff', specBearing }), execute = f.execute;
+  let reviewed = false;
+  f.execute = async options => {
+    const result = await execute(options);
+    if (options.context.review?.purpose === 'plan') {
+      reviewed = true;
+      const files = options.context.review.details.plan.files;
+      const metadata = files.find(file => file.path.endsWith('/.openspec.yaml')).content;
+      assert.match(metadata, /schema: spec-driven/);
+      assert.equal(metadata.includes('skip_specs: true'), !specBearing);
+      if (options.context.review.specificationMode !== (specBearing ? 'spec-deltas' : 'skip-specs'))
+        result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Planning review did not identify the validated specification lane.'] };
+    }
+    return result;
+  };
+  try {
+    const result = await runGithubUnattended(f);
+    assert.equal(reviewed, true);
+    assert.equal(result.status, 'waiting-human', result.reason);
+    assert.equal(f.writes.filter(write => write.path === 'pulls').length, 1);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
