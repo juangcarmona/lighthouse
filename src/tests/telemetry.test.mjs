@@ -5,12 +5,29 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { createTelemetry, telemetryContext, readTelemetry, telemetryHealth, exportTelemetry } from '../packages/sdlc/src/telemetry.mjs';
 import { openCodeObserver, observeCli, usageSummary, nativeEventFile, collectNativeFile } from '../packages/sdlc/src/telemetry-opencode.mjs';
 import { installTelemetry, jobHook, runRunner } from '../packages/sdlc/src/telemetry-runner.mjs';
 import { workflowTelemetry } from '../packages/sdlc/src/telemetry-workflow.mjs';
 const fixture = () => mkdtempSync(join(tmpdir(), 'lh-telemetry-'));
 const tokens = { input: 100, output: 5, reasoning: 2, cache: { read: 50, write: 0 } };
+
+test('runner registration BOM is accepted and malformed optional identity preserves command exit', () => {
+  const directory = fixture(), state = join(directory, 'telemetry');
+  const env = { ...process.env, LIGHTHOUSE_TELEMETRY_DIR: state }; delete env.RUNNER_NAME;
+  const command = fileURLToPath(new URL('../packages/sdlc/src/telemetry-runner.mjs', import.meta.url));
+  try {
+    writeFileSync(join(directory, '.runner'), '\ufeff' + JSON.stringify({ agentName: 'bom-runner' }));
+    const invoke = code => spawnSync(process.execPath, [command, 'run', '--', process.execPath, '-e', `process.exit(${code})`], { cwd: directory, env, encoding: 'utf8' });
+    const first = invoke(0); assert.equal(first.status, 0, first.stderr);
+    assert.equal(readTelemetry(state).find(e => e.type === 'runner.started').correlation.runner, 'bom-runner');
+    writeFileSync(join(directory, '.runner'), '{');
+    const malformed = invoke(7); assert.equal(malformed.status, 7, malformed.stderr);
+    assert.ok(readTelemetry(state).some(e => e.type === 'collection.capability' && e.attributes.capability === 'runner-identity' && e.attributes.status === 'unavailable'));
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
 
 test('first installation, independent cursor replay and upgrades preserve settings', () => {
   const directory = fixture();
