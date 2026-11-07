@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { runUnattended, validateUnattendedPolicy, unattendedImplementationPolicy, unattendedDigest, assertIndependentReview, regressionPlan, hotfixScope } from './unattended.mjs';
 import { implementationEvidenceBundle } from './implementation-evidence.mjs';
 import { stageContext, executeUnattendedStage, applyCandidate, candidateInventory, boundedOpenSpecProvider } from './unattended-runtime.mjs';
-import { loadImplementation, createImplementationPullRequest } from './implementation.mjs';
+import { loadImplementation, publishImplementationPullRequest, readImplementationPublication } from './implementation.mjs';
 import { prepareProposal, proposalRoot } from './proposal.mjs';
 import { resolveModelProfile } from './model-profiles.mjs';
 import { taskDigest } from './digests.mjs';
@@ -237,8 +237,9 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         originalFiles: Object.fromEntries(candidate.changes.map(c => [c.path, source.get(c.path)?.content.toString('base64') ?? null])),
         red: candidate.red, verification: candidate.receipt.verification, checks: candidate.receipt }, lastStep),
       publish: async candidate => {
-        const snapshot = { issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
-        published = await createImplementationPullRequest(publicationApi, snapshot, candidate.changes, 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, true, recheck);
+        const snapshot = { repository, issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
+        const transition = await publishImplementationPullRequest(publicationApi, { snapshot, changes: candidate.changes, body: 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, draft: true, beforeWrite: recheck, checkedTree: lastStep.receipt.candidateTree });
+        published = await readImplementationPublication(publicationApi, snapshot, transition);
         const testedTree = (await api(`git/commits/${published.head.sha}`)).tree.sha;
         const retainedReceipt = { ...lastStep.receipt, checks: lastStep.receipt.checks.map(({ log, ...check }) => check) };
         const commandEvidence = { ...implementationEvidenceBundle(lastStep.request, retainedReceipt, lastStep.changes, { pr: published.number, head: published.head.sha, tree: testedTree }), unattended: { route, policyDigest } };

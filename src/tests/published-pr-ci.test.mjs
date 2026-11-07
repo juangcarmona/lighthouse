@@ -245,3 +245,60 @@ test('fresh ordinary and epic publications accept old PR base snapshots only wit
     assert.deepEqual(f.pushes, [head]);
   }
 });
+
+test('named publication returns one confirmed transition for initial, epic and every existing-PR path', async () => {
+  const { publishImplementationPullRequest } = await import('../packages/sdlc/src/implementation.mjs');
+  assert.equal(typeof publishImplementationPullRequest, 'function');
+  for (const role of ['initial', 'epic', 'review', 'product-review', 'resume', 'aligned']) {
+    const f = role === 'initial' || role === 'epic' ? fixture(role === 'epic') : await updateFixture(role);
+    const guards = [], originalHead = f.snapshot.sourceRevision;
+    const transition = await publishImplementationPullRequest(f.api, {
+      snapshot: f.snapshot,
+      changes: [{ path: 'src/summary.mjs', mode: '100644', content: Buffer.from('export const summary = 1;').toString('base64') }],
+      body: 'Candidate', runUrl: '', draft: true, checkedTree: base,
+      beforeWrite: async state => { guards.push(structuredClone(state)); await f.check(); }, wait: async () => {},
+    });
+    assert.deepEqual(Object.keys(transition).sort(), ['authority', 'base', 'checkedTree', 'originalHead', 'publishedHead', 'pullRequest', 'state', 'verificationRefresh']);
+    assert.equal(transition.state, 'confirmed', role);
+    assert.equal(transition.originalHead, originalHead, role);
+    assert.equal(transition.publishedHead, head, role);
+    assert.equal(transition.checkedTree, base, role);
+    assert.equal(transition.base.head, base, role);
+    assert.equal(transition.pullRequest.number, 7, role);
+    assert.equal(transition.authority.head, originalHead, role);
+    assert.ok(guards.length > 0);
+    assert.ok(guards.every(state => state.state === 'prepared' && state.originalHead === originalHead && state.publishedHead === null));
+  }
+});
+
+test('a confirmed transition is unavailable until exact host publication and checked tree are observed', async () => {
+  const { publishImplementationPullRequest } = await import('../packages/sdlc/src/implementation.mjs');
+  assert.equal(typeof publishImplementationPullRequest, 'function');
+  for (const scenario of ['changed-head', 'wrong-tree', 'competing-pr']) {
+    const f = fixture(), originalApi = f.api;
+    const api = async (...args) => {
+      const observed = await originalApi(...args);
+      if (args[0] === 'pulls/7' && scenario === 'changed-head') observed.head.sha = 'd'.repeat(40);
+      if (args[0] === 'pulls/7' && scenario === 'competing-pr') observed.id = 701;
+      return observed;
+    };
+    await assert.rejects(publishImplementationPullRequest(api, { snapshot: f.snapshot, changes: [{ path: 'src/summary.mjs', mode: '100644', content: Buffer.from('candidate').toString('base64') }], body: 'Candidate', runUrl: '', draft: true, beforeWrite: f.check, checkedTree: scenario === 'wrong-tree' ? 'e'.repeat(40) : base, wait: async () => {} }), /changed|tree|publication/i, scenario);
+    assert.equal(f.pushes.length, 0);
+  }
+});
+
+test('summary-only correction uses the same transition without a source commit or a replacement PR', async () => {
+  const { publishImplementationPullRequest, readImplementationPublication } = await import('../packages/sdlc/src/implementation.mjs');
+  const f = await updateFixture('review'); f.snapshot.stage = 'implement'; f.snapshot.worker = 'apply-review';
+  const writes = [], originalApi = f.api;
+  const api = async (path, method = 'GET', body) => { if (method !== 'GET') writes.push({ path, method }); return originalApi(path, method, body); };
+  const transition = await publishImplementationPullRequest(api, { snapshot: f.snapshot, changes: [], body: 'Fresh verification evidence.', runUrl: '', draft: true, beforeWrite: f.check, checkedTree: base, wait: async () => {} });
+  assert.equal(transition.originalHead, f.snapshot.sourceRevision);
+  assert.equal(transition.publishedHead, f.snapshot.sourceRevision);
+  assert.equal(transition.state, 'confirmed');
+  assert.deepEqual(writes.map(write => write.path), ['pulls/7']);
+  assert.equal((await readImplementationPublication(api, f.snapshot, transition, async () => {})).number, 7);
+  await assert.rejects(readImplementationPublication(api, f.snapshot, { ...transition, state: 'prepared' }), /authority changed/);
+  f.snapshot.implementationReview.feedbackDigest = 'f'.repeat(64);
+  await assert.rejects(readImplementationPublication(api, f.snapshot, transition), /authority changed/);
+});

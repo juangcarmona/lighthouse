@@ -101,3 +101,24 @@ test('merge observation stops on changed authority and bounds an unchanged stale
     assert.equal(waits, scenario === 'stale' ? 19 : 0);
   }
 });
+
+test('the named transition observes a refreshed verification head while preserving its old feedback grant', async () => {
+  const { publishImplementationPullRequest, readImplementationPublication } = await import('../packages/sdlc/src/implementation.mjs');
+  const f = fixture('lost-ack'), newMerge = sha('7');
+  f.pr.id = 34; f.pr.base.sha = f.base;
+  const api = async (path, ...args) => {
+    if (path === `git/commits/${f.refreshed}`) return { sha: f.refreshed, tree: { sha: f.tree } };
+    if (path === `git/commits/${newMerge}`) return { sha: newMerge, parents: [{ sha: f.base }, { sha: f.refreshed }] };
+    if (path === `compare/${f.base}...${f.refreshed}`) return { base_commit: { sha: f.base }, behind_by: 0 };
+    const result = await f.api(path, ...args);
+    if (path === 'pulls/34' && f.pr.head.sha === f.refreshed) { f.pr.merge_commit_sha = newMerge; result.merge_commit_sha = newMerge; }
+    return result;
+  };
+  const transition = await publishImplementationPullRequest(api, { snapshot: f.snapshot, changes: [], body: 'Verified.', runUrl: '', draft: true, beforeWrite: async state => { assert.equal(state.authority.feedback.head, f.head); assert.equal(state.publishedHead, null); }, refreshVerification: true, checkedTree: f.tree, wait: async () => {} });
+  assert.equal(transition.originalHead, f.head);
+  assert.equal(transition.publishedHead, f.refreshed);
+  assert.equal(transition.authority.feedback.head, f.head);
+  assert.equal(transition.verificationRefresh, true);
+  assert.equal((await readImplementationPublication(api, f.snapshot, transition, async () => {})).head.sha, f.refreshed);
+  assert.equal(f.calls.filter(call => call.path.startsWith('git/refs/') && call.method === 'PATCH').length, 1);
+});
