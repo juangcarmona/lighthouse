@@ -213,7 +213,11 @@ async function main(command) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo ?? '')) throw Error('Invalid repository');
   let event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
   const telemetry = createTelemetry({ component: 'github-adapter', context: telemetryContext(env, { repository: repo, issue: event.issue?.number, pullRequest: event.pull_request?.number, signalId: String(event.comment?.id ?? event.review?.id ?? env.GITHUB_RUN_ID ?? '') }) });
-  process.once('exit', () => telemetry.close(process.exitCode ? 'failed' : 'completed'));
+  const observedStart = Date.now();
+  process.once('exit', () => {
+    telemetry.emit(command.includes('publish') ? 'publication.process-ended' : 'adapter.ended', { phase: command, status: process.exitCode ? 'failed' : 'process-completed', durationMs: Date.now() - observedStart });
+    telemetry.close(process.exitCode ? 'failed' : 'completed');
+  });
   telemetry.emit('signal.received', { eventName: env.GITHUB_EVENT_NAME, action: event.action, label: event.label?.name, actorClass: env.GITHUB_ACTOR === owner ? 'owner' : env.GITHUB_ACTOR === 'github-actions[bot]' ? 'automation' : 'external', authorization: 'not-yet-evaluated', phase: command });
   const dir = env.LIGHTHOUSE_RUN_DIR ?? join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
   const api = createIssueApi(repo, env);
@@ -631,6 +635,7 @@ async function main(command) {
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
     await output('source_revision', revision.sha);
+    telemetry.bind(telemetryContext(env, snapshot));
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
@@ -763,6 +768,8 @@ async function main(command) {
   }
   if (command === 'cleanup') { try { await readFile(join(dir, 'reserved')); } catch { if (preparationStop) await publishObservedStop(api, preparationStop); return; } }
   const snapshot = JSON.parse(await readFile(join(dir, 'request.json'), 'utf8'));
+  telemetry.bind(telemetryContext(env, snapshot));
+  telemetry.emit(command.includes('publish') ? 'publication.started' : 'adapter.started', { phase: command, status: 'running' });
   if (command === 'continue-product-gap') {
     await readFile(join(dir, 'published'));
     const envelope = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));

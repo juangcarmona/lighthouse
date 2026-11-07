@@ -65,6 +65,8 @@ test('failure receipts distinguish rejected tasks, OOM, abort, timeout and cance
       assert.equal(receipt.status, status);
       assert.ok(!executionFailure(receipt).includes('failed or cancelled'));
     }
+    await writeFile(path, JSON.stringify({ resourceSamplesDropped: 4 }));
+    assert.equal((await executionReceipt(path, { code: 0, signal: null })).resourceSamplesDropped, 4);
     await rm(path);
     const absent = await executionReceipt(path, { code: 134, signal: null });
     assert.equal(absent.status, 'aborted');

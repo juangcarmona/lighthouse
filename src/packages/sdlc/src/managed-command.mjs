@@ -39,12 +39,12 @@ export async function managedCommand(directory, id, command) {
     state.resources.pidsDenied = denied === null || baselineDenied === null ? null : Math.max(0, denied - baselineDenied);
     state.resources.oomKills = oom === null || baselineOom === null ? null : Math.max(0, oom - baselineOom);
     state.resources.memoryPeakBytes = number('/sys/fs/cgroup/memory.peak');
-    atomic(receipt, state);
     if (process.env.LIGHTHOUSE_RESOURCE_TELEMETRY_FILE && Date.now() - lastResourceSample >= 1000) {
       lastResourceSample = Date.now();
       const line = JSON.stringify({ type: 'resource.sample', attributes: workloadResources(), source: { kind: 'cgroup-v2', time: Date.now() } }) + '\n';
       try { if (resourceBytes + line.length <= 2 * 1024 * 1024) { appendFileSync(process.env.LIGHTHOUSE_RESOURCE_TELEMETRY_FILE, line, { mode: 0o644 }); resourceBytes += line.length; } else state.resourceSamplesDropped = (state.resourceSamplesDropped ?? 0) + 1; } catch { state.resourceSamplesDropped = (state.resourceSamplesDropped ?? 0) + 1; }
     }
+    atomic(receipt, state);
   };
   try {
     if (existsSync(receipt)) throw Error('Command ID already has a receipt; use a new ID for the next attempt');

@@ -14,6 +14,7 @@ await mkdir(output, { recursive: true, mode: 0o700 });
 const run = (command, args, options = {}) => execFileSync(command, args, { cwd: repository, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...options });
 const operator = JSON.parse(await readFile(process.env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8'));
 const revision = run('git', ['rev-parse', 'HEAD']).trim();
+const engineVersion = run('docker', ['run', '--rm', '--network', 'none', '--entrypoint', 'opencode', operator.image, '--version']).trim();
 const packed = JSON.parse(run('npm', ['pack', '--workspace', '@juangcarmona/lighthouse-sdlc', '--pack-destination', output, '--json']))[0];
 const consumer = join(output, 'consumer'); await mkdir(consumer, { recursive: true });
 run('npm', ['install', '--prefix', consumer, '--ignore-scripts', '--no-audit', '--no-fund', join(output, packed.filename)]);
@@ -71,7 +72,7 @@ try {
   const first = readTelemetry(directory)[0];
   const replay = run(process.execPath, [join(harness, 'src/sdlc.mjs'), 'telemetry', 'read', '--directory', directory, '--stream', first.stream, '--after', String(first.sequence)]).trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
   assert.ok(replay.every(e => e.sequence > first.sequence));
-  const summary = { schemaVersion: 1, origin: 'isolated-local-demonstration', actionsRun: false, sourceRevision: revision, package: { name: packed.name, version: packed.version, integrity: packed.integrity, shasum: packed.shasum, status: 'unpublished-candidate' }, engineImage: operator.image, receiverContainer: receiver, events: independent.count, exporterOutage: failed.status, replayDeduplicated: true, cases };
+  const summary = { schemaVersion: 1, telemetrySchemaVersion: 1, origin: 'isolated-local-demonstration', actionsRun: false, sourceRevision: revision, package: { name: packed.name, version: packed.version, integrity: packed.integrity, shasum: packed.shasum, status: 'unpublished-candidate' }, engineImage: operator.image, engineVersion, receiverContainer: receiver, events: independent.count, exporterOutage: failed.status, exporterRecovery: exported.status, replayDeduplicated: true, cases };
   await writeFile(join(output, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary, null, 2));
 } finally { try { run('docker', ['rm', '-f', receiver]); } catch {} }
