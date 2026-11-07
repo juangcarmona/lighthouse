@@ -1,3 +1,4 @@
+import { completionSummary, pendingReviewMarker } from './completion-status.mjs';
 import { fingerprint, inspectCompletion, postMergeRuns, assertFresh, assertChecks, assertCitedChecks, completionEffects } from './completion.mjs';
 import { completionBundle, publishProcessBundle, readPublishedBundle } from './process-publication.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
@@ -51,7 +52,7 @@ async function reconcileFinalReview(api, repository, owner, issue, observation, 
     await recheck(); await api(`issues/${issue.number}/labels/${label}`, 'DELETE', undefined, true);
   }
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
-  const body = handoff({ status: 'completed', stage: 'review', happened: envelope.effect.body, action: 'None.', next: 'The original final review is retained; no further stage is requested.', link: `[Report and retrospective](${retained.url})`, details: `[Original execution](${request.runUrl})\n\n${marker}` });
+  const body = handoff({ status: 'completed', stage: 'review', happened: completionSummary(request, receipt, envelope.result.status), action: 'None.', next: 'The original final review is retained; no further stage is requested.', link: `[Report and retrospective](${retained.url})`, details: `[Original execution](${request.runUrl})\n\n${marker}` });
   for (const target of new Set([issue.number, request.authorization.pr])) {
     const comments = await issueComments(api, target);
     if (!comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) {
@@ -121,7 +122,7 @@ export async function reconcileCompletion(api, repository, owner, issue, observa
   }
   await recheck();
   const marker = `<!-- lighthouse-completion:${request.runId} -->`;
-  const body = handoff({ status: 'completed', stage: 'integrate', happened: 'The confirmed integration publication was reconciled from its original assessment and merge receipt. No merge, agent execution, source edit or CI run was repeated.', action: 'None.', next: 'The existing passed post-merge CI can resume the authorized review.', link: `[Report and retrospective](${publication.url})`, details: `[Original execution](${request.runUrl})\n\n${marker}` });
+  const body = handoff({ status: 'completed', stage: 'integrate', happened: completionSummary(request, { ...receipt, postMerge: checks }, envelope.result.status), action: 'None.', next: 'The existing passed post-merge CI can resume the authorized review.', link: `[Report and retrospective](${publication.url})`, details: `[Original execution](${request.runUrl})\n\n${marker}\n${pendingReviewMarker(request, receipt)}` });
   for (const target of new Set([issue.number, request.authorization.pr])) {
     const comments = await issueComments(api, target);
     if (!comments.some(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.body?.includes(marker))) { await recheck(); await api(`issues/${target}/comments`, 'POST', { body }); }

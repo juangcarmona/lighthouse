@@ -1,3 +1,4 @@
+import { reconcilePostMergeReviews } from './post-merge-review.mjs';
 import { signalCiRepair } from './ci-repair.mjs';
 import { verificationPush } from './ci-subject.mjs';
 import { readFile } from 'node:fs/promises';
@@ -54,6 +55,9 @@ async function main() {
     candidates = pulls.filter(pr => pr.head?.sha === run.head_sha).map(pr => pr.number);
   } else if (env.GITHUB_EVENT_NAME === 'schedule') {
     candidates = await scheduledImplementationPulls(api);
+    if (env.LIGHTHOUSE_COMPLETION_ENABLED === 'true') {
+      for (const outcome of await reconcilePostMergeReviews(api, repo, owner, metadata.default_branch)) console.log(`Final review #${outcome.issue}: ${outcome.state}; original integration ${outcome.integrationRun}.`);
+    }
   } else if (ciCallback) {
     const id = Number(env.GITHUB_RUN_ID);
     if (!Number.isSafeInteger(id) || !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '')) throw Error('CI callback lacks a run or head');
