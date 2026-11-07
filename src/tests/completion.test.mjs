@@ -473,3 +473,16 @@ test('a partial-publication notice is read only from the exact immutable origina
   tree.tree.at(-1).mode = '120000';
   await assert.rejects(readPublishedBundle(api, request, files, { commit: head }), /does not bind/);
 });
+
+test('new integration reports separate confirmed host effects from the historical agent assessment', () => {
+  const candidate = { ...request, stage: 'integrate', reportFormat: 2 };
+  const result = { ...envelope, effect: { body: 'No merge or post-merge verification has happened yet.' } };
+  const receipt = { state: 'merged', sha: merged, postMerge: [{ workflow: 'ci.yml', state: 'passed', status: 'passed', runId: 50 }] };
+  const report = completionBundle(candidate, result, receipt)['report.md'];
+  assert.match(report, /## Confirmed host state/);
+  assert.match(report, /ci.yml: passed/);
+  assert.match(report, /Final review: pending/);
+  assert.match(report, /## Agent assessment before publication\n\nNo merge or post-merge verification has happened yet\./);
+  const legacy = completionBundle({ ...candidate, reportFormat: undefined }, result, receipt)['report.md'];
+  assert.doesNotMatch(legacy, /## Confirmed host state/);
+});
