@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.8
+
+### Patch Changes
+
+- 7815b7c: # Supply host OpenSpec discovery to read-only planning
+
+  Run provider discovery against the committed adopter baseline and supply its result before the read-only planning worker starts. Validate the returned plan against that same baseline while preserving review, correction limits and existing authority.
+
+- 615d705: # Materialize direct implementation plan metadata through OpenSpec
+
+  Scaffold provider-owned metadata before the implementation agent starts and reconstruct the final file before independent checks. Preserve existing metadata and completed implementation tasks without changing the unattended correction budget.
+
 ## 0.21.7
 
 ### Patch Changes
