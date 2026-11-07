@@ -14,13 +14,14 @@ export async function committedSource(root, revision) {
   const entries = git(['ls-tree', '-rz', '--full-tree', revision]).split('\0').filter(Boolean);
   if (entries.length > 5000) throw Error('Admitted source inventory exceeds bounds');
   const tracked = new Map(entries.map(entry => {
-    const match = entry.match(/^(100644|100755) blob ([a-f0-9]{40})\t(.+)$/s);
+    const match = entry.match(/^(100644|100755|120000) blob ([a-f0-9]{40})\t(.+)$/s);
     if (!match) throw Error('Admitted source contains an unsupported member');
     return [match[3], { mode: match[1], sha: match[2] }];
   }));
   const source = await sourceFiles(root, tracked);
-  if (source.size !== tracked.size) throw Error('Working source inventory differs from the admitted revision');
+  if (source.size !== [...tracked.values()].filter(file => file.mode !== '120000').length) throw Error('Working source inventory differs from the admitted revision');
   for (const [path, expected] of tracked) {
+    if (expected.mode === '120000') continue; // sourceFiles authenticates link metadata without exposing its target.
     const file = source.get(path);
     if (!file || file.mode !== expected.mode || createHash('sha1').update(`blob ${file.content.length}\0`).update(file.content).digest('hex') !== expected.sha) throw Error(`Working source differs from the admitted revision: ${path}`);
   }
