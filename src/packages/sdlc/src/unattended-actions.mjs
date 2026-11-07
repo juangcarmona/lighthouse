@@ -1,3 +1,4 @@
+import { createIssueApi } from './github-rest.mjs';
 import { validateReviewPayload } from './independent-review.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -24,14 +25,8 @@ const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 const owners = (comments, owner) => comments.filter(c => c.user?.login === owner).map(c => ({ id: c.id, body: c.body, updated_at: c.updated_at }));
 const testState = (source, paths) => Object.fromEntries([...paths].sort().map(path => [path, source.has(path) ? { content: source.get(path).content.toString('base64'), mode: source.get(path).mode } : null]));
 
-export async function githubJson(env, path, method = 'GET', body, optional = false) {
-  const response = await fetch('https://api.github.com/repos/' + env.GITHUB_REPOSITORY + (path ? '/' + path : ''), {
-    method, headers: { authorization: 'Bearer ' + env.GH_TOKEN, accept: 'application/vnd.github+json', 'content-type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000),
-  });
-  if (optional && response.status === 404) return null;
-  if (!response.ok) throw Error('GitHub ' + method + ' ' + path + ': ' + response.status);
-  return response.status === 204 ? null : response.json();
+export async function githubJson(env, ...args) {
+  return createIssueApi(env.GITHUB_REPOSITORY, env)(...args);
 }
 
 // A delegated merge never overrides a later owner hold or new review input.

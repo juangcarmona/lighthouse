@@ -1,3 +1,4 @@
+import { createIssueApi } from './github-rest.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { admitDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, executionModelSelection, issueComments } from './stage-dispatch.mjs';
 import { readFile, writeFile, mkdir, appendFile, access } from 'node:fs/promises';
@@ -17,12 +18,7 @@ async function main(command) {
   const env = { ...process.env }, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '')) throw Error('Invalid repository');
   const dir = join(env.RUNNER_TEMP, `lighthouse-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}`);
-  const api = async (path, method = 'GET', body, optional = false) => {
-    const response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
-    if (optional && response.status === 404) return null;
-    if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
-    return response.status === 204 ? null : response.json();
-  };
+  const api = createIssueApi(repository, env);
   const save = (file, value) => writeFile(join(dir, file), JSON.stringify(value, null, 2));
   const load = async file => JSON.parse(await readFile(join(dir, file), 'utf8'));
   const summary = async text => { console.log(text); if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };

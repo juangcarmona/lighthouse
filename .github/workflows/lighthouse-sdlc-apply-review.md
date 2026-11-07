@@ -69,6 +69,7 @@ steps:
     with:
       persist-credentials: false
       ref: ${{ needs.prepare.outputs.source_revision }}
+      fetch-depth: 0
   - name: Load the pinned harness package
     uses: actions/checkout@v5
     with:

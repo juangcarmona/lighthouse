@@ -8,6 +8,7 @@ import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import { reviewOutputProtocol, reviewTemplate, reviewEnvelope } from './independent-review.mjs';
 import { createRequire } from 'node:module';
+import { synchronizedSource, synchronizationDigest } from './source-sync.mjs';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
 import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
@@ -177,6 +178,14 @@ async function main() {
     baseline = implementing ? await sourceFiles(source) : null;
     trackedSource = baseline ? new Map(baseline) : null;
     if (implementing) {
+      if (request.sourceSynchronization) {
+        if (!isVerificationOnlyCorrection(request) || request.epic || request.productResume || request.productAlignment || request.seedDigest || request.implementation.policy.verification?.synchronizeBase !== true || request.sourceSynchronization.source !== request.sourceRevision || request.sourceSynchronization.base !== request.baseRevision) throw Error('Unauthorized source synchronization');
+        baseline = synchronizedSource(env.GITHUB_WORKSPACE, baseline, request.sourceSynchronization);
+        trackedSource = new Map(baseline);
+        runtimeReceipt.synchronization = { source: request.sourceRevision, base: request.baseRevision, digest: synchronizationDigest(request.sourceSynchronization) };
+        await rm(source, { recursive: true, force: true }); await mkdir(source);
+        await materializeCandidate(baseline, [], source);
+      }
       if (request.seedDigest) {
         const seed = validateChanges(JSON.parse(await readFile(join(runDir, 'seed.json'), 'utf8')), request.implementation.policy);
         if (changesDigest(seed) !== request.seedDigest) throw Error('Seed artifact identity mismatch');
@@ -280,6 +289,7 @@ async function main() {
     if (implementing) {
       const candidateFiles = await sourceFiles(source, trackedSource);
       const changes = collectChanges(baseline, candidateFiles, request.implementation.policy);
+      if (request.sourceSynchronization && changes.length) throw Error('Synchronized verification cannot include model file changes');
       const verification = verificationIntegrity(baseline, candidateFiles, request.implementation.policy, request.issue);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
       await mkdir(join(runDir, 'evidence'), { recursive: true });
