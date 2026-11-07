@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.11
+
+### Patch Changes
+
+- bd89570: # Preserve admitted recovery provenance
+
+  Authenticate retained recovery origins independently of current admission permission. Recheck current authority before a new claim while preserving the identity of an already admitted or completed worker after reservations and later source changes.
+
 ## 0.21.10
 
 ### Patch Changes

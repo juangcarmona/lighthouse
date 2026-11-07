@@ -176,3 +176,22 @@ test('a recovered review admits once and another workflow revision race exhausts
     assert.equal(f.calls.some(call => call.path.endsWith('/merge') || call.path.endsWith('/dispatches')), false);
   }
 });
+
+test('an admitted recovery keeps its authenticated origin while reserved or after later source changes', async () => {
+  for (const scenario of ['reservation', 'later-workflow']) {
+    const f = await fixture();
+    const retry = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+    f.artifacts.set(300, retry.request);
+    const worker = { ...f.run, id: 400, status: 'in_progress', conclusion: null };
+    f.runs.set(400, worker);
+    const env = { LIGHTHOUSE_ISSUE: '7', LIGHTHOUSE_STAGE: 'review', GITHUB_RUN_ID: '400', GITHUB_RUN_ATTEMPT: '1', LIGHTHOUSE_RECOVERY_ENABLED: 'true' };
+    assert.equal((await admitDispatch(f.api, repository, owner, env, { inputs: { 'dispatch-request': String(retry.commentId) } }, f.readArtifact)).admitted, true);
+    if (scenario === 'reservation') f.issue.labels.push({ name: 'agent-working' });
+    else f.changed[0].filename = '.github/workflows/lighthouse-sdlc-review.lock.yml';
+    const loaded = await loadDispatch(f.api, repository, owner, 7, retry.commentId, worker, f.readArtifact);
+    assert.equal(loaded.receipt.workerRunId, '400');
+    await assert.rejects(verifyRecoveryOrigin(f.api, repository, owner, loaded, f.maintenance, f.readArtifact, 0, true), /authority changed/);
+    const forged = structuredClone(retry.request); forged.completionAuthorization.head = 'f'.repeat(40);
+    await assert.rejects(verifyRecoveryOrigin(f.api, repository, owner, { ...loaded, request: forged }, f.maintenance, f.readArtifact, 0), /authorization changed/);
+  }
+});

@@ -297,7 +297,7 @@ export async function reconcileUnattendedStop(api, repository, owner, issue, com
 // Called again by the worker, before claiming a maintenance-created retry.
 export async function verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, depth, revalidate = false) {
   const r = dispatch.request, retry = r.recovery;
-  if (retry?.kind === 'before-admission') return verifyAdmissionRecovery(api, repository, owner, dispatch, parent, readArtifact);
+  if (retry?.kind === 'before-admission') return verifyAdmissionRecovery(api, repository, owner, dispatch, parent, readArtifact, revalidate);
   if (parent.path !== maintenancePath || !retry || !Number.isSafeInteger(retry.attempt) || retry.attempt < 1 || retry.attempt > retryLimit || !/^[1-9][0-9]*$/.test(String(retry.previousComment))) throw Error('Invalid recovery origin');
   const comment = await api(`issues/comments/${retry.previousComment}`);
   const receipt = readDispatchReceipt(comment, repository, r.issue);
