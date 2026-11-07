@@ -36,6 +36,8 @@ The trusted host probes the selected image without source or credential mounts. 
 
 The agent and independent checks use different containers, networks and database credentials. Validation starts with an empty database, not the agent's changes. The host removes containers, anonymous volumes and networks after each phase. Validation has no provider authentication volume or GitHub credentials. Neither workload receives the host Docker socket. Public package downloads remain available; these bridge networks are not an egress firewall. This does not change the existing single-trusted-host security model.
 
+Each admitted validation command has its own ten-minute execution limit; environment preparation and earlier successful commands do not consume later command windows. The installed workflow retains its overall job timeout. Cancellation, failed or unknown command completion still stops subsequent checks and publication.
+
 NuGet packages and .NET CLI state use writable temporary directories rather than the engine's read-only home. Each independent command has fresh temporary storage: combine restore and test in the consumer's verification command instead of assuming a prior command's NuGet cache survives.
 
 Cancellation first removes workload containers, then services. The host records repository, native run and attempt ownership before allocating containers or networks, including temporary helpers. It retains journals in `<operator lock path>.resources`; operators must create this private directory and persistently mount it at the same absolute path when the runner is containerized. The journal is never mounted in a workload.
