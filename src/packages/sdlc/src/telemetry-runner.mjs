@@ -19,8 +19,11 @@ export async function runRunner(command, env = process.env) {
   let config;
   try { config = installTelemetry(directory, env); }
   catch { config = { directory, env, endpoint: null }; console.error(JSON.stringify({ type: 'collection.health', status: 'degraded', reasonCode: 'operator-state-unavailable' })); }
-  let runner = env.RUNNER_NAME;
-  if (!runner && existsSync('.runner')) runner = JSON.parse(readFileSync('.runner')).agentName;
+  let runner = env.RUNNER_NAME, identityUnavailable = false;
+  if (!runner && existsSync('.runner')) {
+    try { runner = JSON.parse(readFileSync('.runner', 'utf8').replace(/^\uFEFF/u, '')).agentName; }
+    catch { identityUnavailable = true; }
+  }
   const childEnv = { ...config.env, LIGHTHOUSE_TELEMETRY_DIR: directory, RUNNER_NAME: runner ?? 'unregistered', LIGHTHOUSE_TELEMETRY_START_HOOK: env.ACTIONS_RUNNER_HOOK_JOB_STARTED ?? '', LIGHTHOUSE_TELEMETRY_END_HOOK: env.ACTIONS_RUNNER_HOOK_JOB_COMPLETED ?? '' };
   const module = fileURLToPath(import.meta.url);
   for (const [name, action] of [['STARTED', 'started'], ['COMPLETED', 'completed']]) {
@@ -31,6 +34,7 @@ export async function runRunner(command, env = process.env) {
   const startStream = () => createTelemetry({ ...config, component: 'runner', context: telemetryContext(childEnv), env: childEnv });
   let telemetry = startStream(), streamStarted = Date.now();
   telemetry.emit('runner.started', { status: 'idle' });
+  if (identityUnavailable) telemetry.emit('collection.capability', { capability: 'runner-identity', status: 'unavailable', reasonCode: 'registration-metadata-unreadable' });
   let exporting = false;
   const forward = async () => {
     if (!config.endpoint || exporting || config.env.LIGHTHOUSE_TELEMETRY_DISABLED === 'true') return;
