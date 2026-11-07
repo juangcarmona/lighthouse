@@ -14,6 +14,10 @@ test('creator seeds an independent product and refuses an occupied target', asyn
   try {
     const result = spawnSync(process.execPath, [creator, target, '--name', 'Workshop'], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
+    assert.equal(await readFile(resolve(target, 'Lighthouse.LICENSE'), 'utf8'), await readFile('LICENSE', 'utf8'));
+    assert.equal(await readFile(resolve(target, 'Lighthouse.NOTICE'), 'utf8'), await readFile('NOTICE', 'utf8'));
+    assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /starter remains under Apache-2\.0/);
+    assert.equal(JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8')).license, undefined);
     const solution = await readFile(resolve(target, 'Workshop.slnx'), 'utf8');
     assert.match(solution, /src\/root\/Workshop.Api/);
     assert.equal((solution.match(/<Project Path=/g) ?? []).length, 7);
@@ -47,6 +51,10 @@ test('packaged creator seeds the profile assets and verifier without remote writ
   try {
     const result = spawnSync(process.execPath, [packagedCreator, 'create-dotnet', target, '--name', 'Product'], { encoding: 'utf8' });
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+    assert.equal(await readFile(resolve(target, 'Lighthouse.LICENSE'), 'utf8'), await readFile('LICENSE', 'utf8'));
+    assert.equal(await readFile(resolve(target, 'Lighthouse.NOTICE'), 'utf8'), await readFile('NOTICE', 'utf8'));
+    assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /starter remains under Apache-2\.0/);
+    assert.equal(JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8')).license, undefined);
     assert.match(await readFile(resolve(target, 'docs/profiles/dotnet/README.md'), 'utf8'), /Minimal APIs/);
     assert.match(await readFile(resolve(target, '.agents/skills/lighthouse-dotnet/SKILL.md'), 'utf8'), /Aspire/);
     assert.match(await readFile(resolve(target, 'scripts/verify-dotnet.mjs'), 'utf8'), /LighthouseModule/);

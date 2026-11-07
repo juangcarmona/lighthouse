@@ -64,6 +64,9 @@ try {
     ['Lighthouse.slnx', `${name}.slnx`],
   ]) await copy(resolve(templateRoot, from), resolve(stage, to));
 
+  await copy(resolve(packageRoot, 'LICENSE'), resolve(stage, 'Lighthouse.LICENSE'));
+  await copy(resolve(packageRoot, 'NOTICE'), resolve(stage, 'Lighthouse.NOTICE'));
+
   const solutionFile = resolve(stage, `${name}.slnx`);
   const solutionText = (await readFile(solutionFile, 'utf8'))
     .replaceAll('examples/src/', 'src/')
@@ -101,8 +104,8 @@ try {
     name: `@juangcarmona/${name.toLowerCase()}`, private: true, type: 'module', engines: { node: '>=22' },
     scripts: { verify: 'node scripts/lighthouse.mjs verify && node scripts/verify-dotnet.mjs' },
   }, null, 2)}\n`);
-  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse ${cliPackage.version}. Application and tooling sources are product-owned after creation.\n\nRun dotnet restore ${name}.slnx once to create lockfiles, then npm run verify. Commit lockfiles.\n\nStart dotnet run --project src/root/${name}.Api or the optional src/root/${name}.AppHost. Configure authentication using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n`);
-  await writeFile(resolve(stage, 'AGENTS.md'), `# ${name} engineering guidance\n\nUse the Lighthouse .NET profile from the pinned baseline revision. Keep Minimal API commands/queries as complete single-file slices. Handlers remain internal sealed and independent of HTTP. Modules use sibling Contracts assemblies. Run npm run verify.\n\nApplication and tooling source is product-owned. Do not hand-edit LIGHTHOUSE.md. Record narrow, expiring exceptions for suppressed diagnostics.\n`);
+  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse ${cliPackage.version}. The Lighthouse-derived starter remains under Apache-2.0; preserve Lighthouse.LICENSE and Lighthouse.NOTICE. Your own application additions keep their own licensing decision.\n\nRun dotnet restore ${name}.slnx once to create lockfiles, then npm run verify. Commit lockfiles.\n\nStart dotnet run --project src/root/${name}.Api or the optional src/root/${name}.AppHost. Configure authentication using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n`);
+  await writeFile(resolve(stage, 'AGENTS.md'), `# ${name} engineering guidance\n\nUse the Lighthouse .NET profile from the pinned baseline revision. Keep Minimal API commands/queries as complete single-file slices. Handlers remain internal sealed and independent of HTTP. Modules use sibling Contracts assemblies. Run npm run verify.\n\nMaintain application and tooling source in this product. Preserve Lighthouse.LICENSE and Lighthouse.NOTICE for the Lighthouse-derived starter. Do not hand-edit LIGHTHOUSE.md. Record narrow, expiring exceptions for suppressed diagnostics.\n`);
   await mkdir(resolve(stage, '.github/workflows'), { recursive: true });
   await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm run verify\n`);
 

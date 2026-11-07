@@ -42,7 +42,9 @@
     "skills",
     "workflows",
     "src",
-    "unattended.md"
+    "unattended.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -93,5 +95,6 @@
     "./product-change-actions": "./src/product-change-actions.mjs",
     "./schemas/product-change.schema.json": "./schemas/product-change.schema.json",
     "./unattended": "./src/unattended.mjs"
-  }
+  },
+  "license": "Apache-2.0"
 }
