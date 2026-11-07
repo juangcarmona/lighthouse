@@ -81,6 +81,11 @@ test('native activity strips payloads, preserves timing, deduplicates and reconc
     sink.close(); collectNativeFile(join(directory, 'native.jsonl'), telemetry)();
     observeCli(telemetry, { type: 'step_finish', part: { id: 'compat', tokens } });
     telemetry.close(); const events = readTelemetry(directory, { stream: telemetry.stream });
+    const schema = JSON.parse(readFileSync(new URL('../packages/sdlc/schemas/telemetry-event.schema.json', import.meta.url)));
+    for (const event of events) {
+      assert.match(event.type, new RegExp(schema.properties.type.pattern));
+      for (const key of Object.keys(event.attributes)) assert.ok(key in schema.properties.attributes.properties);
+    }
     const result = usageSummary(events);
     assert.equal(result.coverage, 'observed'); assert.equal(result.tokens.inputTokens, 100); assert.equal(result.toolCalls, 1);
     assert.equal(events.find(e => e.type === 'session.tool.success').attributes.durationMs, 200);
