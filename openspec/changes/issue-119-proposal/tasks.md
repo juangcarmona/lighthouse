@@ -6,7 +6,7 @@
 
 - [x] 1.1 Inspect canonical product authority, ADR-0007, router/preparation/publication and source dispatch receipts; record the proposed implementation and remaining qualification.
 - [ ] 1.2 Extract canonical read-only fact collection and eligibility/admission evaluation; add explicit supported version, reasons, source/input/policy/question and actual reservation provenance.
-- [ ] 1.3 Obtain independent planning acceptance before implementation, preserving the bounded correction and owner-only gates.
+- [x] 1.3 Obtain independent planning acceptance before implementation, preserving the bounded correction and owner-only gates.
 - [ ] 1.4 Add and document the bounded public SDK/schema with injected authenticated transport; preserve legacy entry and explicit unsupported behavior.
 
 ## 2. Typed source requests
