@@ -1,0 +1,71 @@
+{
+  "root": "/srv/workspaces/juangcarmona/lighthouse/547-checks-tmp/lighthouse-414-queue-registry-consumer-rc9zh8rn",
+  "state": "verified",
+  "tuple": {
+    "lighthouse": "0.12.58",
+    "lighthouse-sdlc": "0.21.9",
+    "lighthouse-ui": "0.2.1"
+  },
+  "dryRunUnchanged": true,
+  "consumerFilesPreserved": [
+    "README.md",
+    "LICENSE"
+  ],
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--prefer-online",
+        "--no-audit",
+        "--no-fund",
+        "--save-dev",
+        "--save-exact",
+        "@juangcarmona/lighthouse@0.12.58"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "init",
+        "--name",
+        "SolidConsumer",
+        "--dry-run"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "init",
+        "--name",
+        "SolidConsumer"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "init",
+        "-b",
+        "chore/52-lighthouse-implement-aaaaaaaaaaaa"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

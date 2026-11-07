@@ -1,0 +1,43 @@
+{
+  "state": "native-delivered",
+  "issue": 54,
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "unattendedRun": 42416039702,
+  "source": "4cc202b24bda69519341b09393ac1d0beaf5e2e6",
+  "pr": 58,
+  "head": "f42e79bab588f19d848e0b6d2e6e88ca3271678a",
+  "merge": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+  "checkedTree": "4a52ae91e544a3b587a01cbcf9280887bb571c18",
+  "branch": "chore/54-lighthouse-implement-935e4baf47bd",
+  "planningRound": 1,
+  "acceptedCandidateRound": 0,
+  "sharedCorrectionBudget": 2,
+  "sourceBodiesUnchanged": true,
+  "original30TestsPreserved": true,
+  "providerMetadataAbsentAtBase": true,
+  "completedTasksPreserved": true,
+  "branchPatternAndGuardUnchanged": true,
+  "independentCheckExits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "implementationStage": "288a77bbadcb26846aeb931c11ecec113824f371aaf940d96ac8351c735c7340",
+  "implementationModel": "openai/gpt-6.1-sol",
+  "artifact": {
+    "id": 13592315817,
+    "name": "lighthouse-unattended-42416039702-1",
+    "sha256": "ddc4d3e8d01c8a188ddb13781da1632b6b0fc7b0b2bcd1d9e5d1d6f742dd265f"
+  },
+  "versions": {
+    "cli": "0.12.58",
+    "sdlc": "0.21.9",
+    "ui": "0.2.1"
+  },
+  "initialProposalWasControlledFixtureNotModel": true,
+  "previousCapacityStop": 42412299050,
+  "finalReview": 42417805508
+}

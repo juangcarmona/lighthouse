@@ -1,0 +1,211 @@
+{
+  "state": "accepted",
+  "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+  "issue": 54,
+  "pr": 58,
+  "head": "f42e79bab588f19d848e0b6d2e6e88ca3271678a",
+  "merge": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+  "implementation": {
+    "state": "native-delivered",
+    "issue": 54,
+    "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+    "unattendedRun": 42416039702,
+    "source": "4cc202b24bda69519341b09393ac1d0beaf5e2e6",
+    "pr": 58,
+    "head": "f42e79bab588f19d848e0b6d2e6e88ca3271678a",
+    "merge": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+    "checkedTree": "4a52ae91e544a3b587a01cbcf9280887bb571c18",
+    "branch": "chore/54-lighthouse-implement-935e4baf47bd",
+    "planningRound": 1,
+    "acceptedCandidateRound": 0,
+    "sharedCorrectionBudget": 2,
+    "sourceBodiesUnchanged": true,
+    "original30TestsPreserved": true,
+    "providerMetadataAbsentAtBase": true,
+    "completedTasksPreserved": true,
+    "branchPatternAndGuardUnchanged": true,
+    "independentCheckExits": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "implementationStage": "288a77bbadcb26846aeb931c11ecec113824f371aaf940d96ac8351c735c7340",
+    "implementationModel": "openai/gpt-6.1-sol",
+    "artifact": {
+      "id": 13592315817,
+      "name": "lighthouse-unattended-42416039702-1",
+      "sha256": "ddc4d3e8d01c8a188ddb13781da1632b6b0fc7b0b2bcd1d9e5d1d6f742dd265f"
+    },
+    "versions": {
+      "cli": "0.12.58",
+      "sdlc": "0.21.9",
+      "ui": "0.2.1"
+    },
+    "initialProposalWasControlledFixtureNotModel": true,
+    "previousCapacityStop": 42412299050,
+    "finalReview": 42417805508
+  },
+  "namedBranchVerification": {
+    "head": "f42e79bab588f19d848e0b6d2e6e88ca3271678a",
+    "branch": "chore/54-lighthouse-implement-935e4baf47bd",
+    "cliExit": 0,
+    "guardExit": 0,
+    "steps": [
+      {
+        "command": [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "npx",
+          "--no-install",
+          "lighthouse",
+          "verify"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": [
+          "node",
+          "scripts/lighthouse-guard.mjs",
+          "verify"
+        ],
+        "exitCode": 0
+      }
+    ]
+  },
+  "unattended": {
+    "id": 42416039702,
+    "path": ".github/workflows/lighthouse-sdlc-unattended.yml",
+    "event": "workflow_dispatch",
+    "head_sha": "4cc202b24bda69519341b09393ac1d0beaf5e2e6",
+    "head_branch": "main",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-07T21:28:45Z",
+    "updated_at": "2026-11-07T21:49:46Z",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42416039702",
+    "actor": "juangcarmona",
+    "triggeringActor": "juangcarmona"
+  },
+  "originalPostMergeCi": {
+    "id": 42417684117,
+    "path": ".github/workflows/ci.yml",
+    "event": "workflow_dispatch",
+    "head_sha": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+    "head_branch": "main",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-07T21:49:32Z",
+    "updated_at": "2026-11-07T21:50:18Z",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42417684117",
+    "actor": "github-actions[bot]",
+    "triggeringActor": "github-actions[bot]"
+  },
+  "originalCiCallback": {
+    "id": 42417736168,
+    "path": ".github/workflows/lighthouse-sdlc-router.yml",
+    "event": "workflow_dispatch",
+    "head_sha": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+    "head_branch": "main",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-07T21:50:14Z",
+    "updated_at": "2026-11-07T21:51:08Z",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42417736168",
+    "actor": "github-actions[bot]",
+    "triggeringActor": "github-actions[bot]"
+  },
+  "review": {
+    "id": 42417805508,
+    "path": ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    "event": "workflow_dispatch",
+    "head_sha": "fd15f531485e95a8aee7ed71255c3f40a13c69b4",
+    "head_branch": "main",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-07T21:51:04Z",
+    "updated_at": "2026-11-07T21:57:07Z",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42417805508",
+    "actor": "github-actions[bot]",
+    "triggeringActor": "github-actions[bot]"
+  },
+  "nativeReviewConsumedAcceptedReplacement": {
+    "proposalRunId": "3b53d9f16b4274a301a7421ae9cc36bf9dd4c6489ce99f25c7da30f4dbfa37d6",
+    "reviewRunId": "2d039a39f955091bac59fa04da22daa7cea65ce5a048ba50dc3cda5a0d5c8d48",
+    "binding": "1751145acbecd44a99f302b702d3244b4d6e0683821935ee201a70f310edc09c",
+    "configuredModels": {
+      "producer": "openai/gpt-6.1-sol",
+      "reviewer": "openai/gpt-6-luna"
+    },
+    "providerSettings": "unverified"
+  },
+  "priorIntegration": {
+    "commit": "e14e32fe5d9f50aa167359eab8963264547c39e7",
+    "path": "docs/process/20261107-54-characterize-unavailable-numeric-and-boolean-status-values/runs/42416039702/attempt-0001/post-integration/evidence-record.json",
+    "recordSha256": "51c4777fa982946c9a1f7bd7bccce0f658bf2f95e89445eb277b2cffc5d627a6",
+    "workflow": {
+      "runId": "42416039702",
+      "attempt": "1",
+      "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42416039702",
+      "harnessRevision": null,
+      "package": {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.21.9"
+      },
+      "distribution": {
+        "type": "package",
+        "integrity": "sha512-UlgGgER3DN6ViUmmiZZ4hYjSxbyzeLrwzzf01Ft9J7mXAPIt0dwzxpj1KTo3vbC+eizUX3Fyl/K4oN+1pKyT1g=="
+      },
+      "conclusion": "success",
+      "actor": "juangcarmona"
+    }
+  },
+  "publication": {
+    "commit": "d49f7255d794dc708a14a8dcb04b8042a88a18cc",
+    "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/blob/d49f7255d794dc708a14a8dcb04b8042a88a18cc/docs/process/20261107-54-characterize-unavailable-numeric-and-boolean-status-values/runs/42417805508/attempt-0001/post-integration/report.md",
+    "duplicate": false
+  },
+  "counts": {
+    "successfulUnattendedRuns": 1,
+    "priorCapacityStopBeforeModel": 1,
+    "merge": 1,
+    "postMergeCi": 1,
+    "finalReview": 1,
+    "ownerPrReviews": 0,
+    "applyBefore": 1,
+    "applyAfter": 1
+  },
+  "artifacts": [
+    {
+      "id": 13592451261,
+      "name": "lighthouse-input-54-1",
+      "sha256": "9ab8bfa2981765689dd8e163dac5fd729ca61643af14b934ae065bfa831905ee",
+      "run": 42417805508
+    },
+    {
+      "id": 13592231894,
+      "name": "lighthouse-result-54-1",
+      "sha256": "1b4f32458c088c764dcea68fb40c5e040ae2c986ee1705feec2a5670d063b429",
+      "run": 42417805508
+    },
+    {
+      "id": 13592178286,
+      "name": "lighthouse-completion-54-1",
+      "sha256": "90cdd4d4009846b3bddb0e9fba40b40a0b41aeed46240ce0bd55426dff65eb7b",
+      "run": 42417805508
+    }
+  ],
+  "scope": "First plan deliberately invalid and explicitly simulated; replacement proposal, independent planning/candidate reviews and implementation are actual model executions under the shared two-correction budget. No controlled main advance; issue541 remains separate."
+}

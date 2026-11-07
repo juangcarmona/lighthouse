@@ -1,0 +1,14 @@
+{
+  "run": 42416039702,
+  "route": "ff",
+  "issue": 54,
+  "source": "4cc202b24bda69519341b09393ac1d0beaf5e2e6",
+  "owner": "juangcarmona",
+  "attempt": 1,
+  "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42416039702",
+  "requestedOnce": true,
+  "previousConfirmedStop": 42412299050,
+  "engineSlotWaitSeconds": 1800,
+  "correctionLimit": 2,
+  "totalTimeoutSeconds": 3600
+}

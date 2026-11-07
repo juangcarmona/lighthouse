@@ -1,0 +1,8 @@
+{
+  "kind": "controlled-negative-fixture-precheck",
+  "provider": "@fission-ai/openspec@1.15.0",
+  "sdk": "0.21.9",
+  "result": "deterministic eligible strict-validation rejection",
+  "sha256": "3e8587767c3b8b8bda39dc36a817b6983bedaca40baa5fb794af5c909180e487",
+  "nativeExecuted": false
+}

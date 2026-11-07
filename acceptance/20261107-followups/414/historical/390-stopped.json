@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "evidence": [],
+  "reason": "Independent planning review request-changes: The proposed proposal.md, design.md, and tasks.md lack the explicit Product Definition scope declaration required for current OpenSpec documents by openspec/config.yaml; add pdac-scope: none with a non-empty reason to each if they have no product-semantic dependency, or cite the impacted artifacts. proposal.md says .openspec.yaml must contain exactly skip_specs: true, but the supplied .openspec.yaml also contains schema and created fields; align the instruction with the provider-required metadata or make the artifact match the stated exact content.",
+  "nextAction": "Inspect execution evidence and resolve the identified blocker"
+}

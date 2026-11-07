@@ -1,0 +1,34 @@
+Waiting for an exclusive operator engine slot for Docker boundary qualification.
+Exclusive operator engine slot acquired; fixture journals cannot overlap live engines.
+▶ native worker exports private evidence and preserves candidates on collection failures
+  ✔ success (7445.39429ms)
+  ✔ planning-new (7799.625825ms)
+  ✔ planning-existing (7161.939347ms)
+  ✔ planning-specs (7795.762566ms)
+  ✔ unreadable (5125.208412ms)
+  ✔ symlink (5281.068907ms)
+  ✔ oversized (5192.369757ms)
+  ✔ missing-tool (3111.545949ms)
+  ✔ engine-failed (4949.157538ms)
+  ✔ zero-initial (6661.758707ms)
+  ✔ zero-review (6778.295091ms)
+  ✔ zero-check-failed (6621.811497ms)
+  ✔ zero-blocked (7013.821647ms)
+  ✔ readonly-review (3343.769604ms)
+  ✔ readonly-untouched (3322.497568ms)
+  ✔ readonly-stale (3342.685404ms)
+  ✔ readonly-malformed (3305.608216ms)
+  ✔ readonly-payload-accept (3318.564481ms)
+  ✔ readonly-payload-changes (3449.816184ms)
+  ✔ readonly-payload-untouched (3358.413546ms)
+  ✔ readonly-payload-stale (3393.674843ms)
+  ✔ readonly-payload-extra (3161.561971ms)
+✔ native worker exports private evidence and preserves candidates on collection failures (115371.118681ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115498.510383

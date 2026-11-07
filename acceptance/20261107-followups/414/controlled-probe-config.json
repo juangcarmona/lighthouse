@@ -1,0 +1,15 @@
+{
+  "kind": "operator-controlled-first-plan-fixture",
+  "issue": 54,
+  "baseImage": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+  "image": "sha256:5075249c883f1715c2cc93e8892150ee40fbcc55083182b5fe2189f63242016e",
+  "firstProposal": "deterministic invalid plan, no model invoked",
+  "laterStages": "delegate unchanged original engine",
+  "globalConfigUnchanged": true,
+  "copiedConfigMode": "0o600",
+  "files": {
+    "Dockerfile": "3a216563ff1b64dcee14408642421ef2ab70011029b785bcb714f795a3ba36c8",
+    "src/first-plan-probe.mjs": "fb3f32f0448776e042d6f5ef96611b6b2cd2226c1906515607fce17cb4667ecc",
+    "src/rejected-plan.mjs": "0b0f6a93449a3f7a01e7100063a8eafdee243f40fff74280d16cdc4b8ddc4950"
+  }
+}

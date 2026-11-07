@@ -1,0 +1,11 @@
+{
+  "run": 42412299050,
+  "route": "ff",
+  "issue": 54,
+  "source": "d0c8a81b5bb14027676c2e910150a7f3ba1fd144",
+  "owner": "juangcarmona",
+  "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42412299050",
+  "requestedOnce": true,
+  "probeEnabled": true,
+  "nativeFirstProposalExplicitlySimulated": true
+}

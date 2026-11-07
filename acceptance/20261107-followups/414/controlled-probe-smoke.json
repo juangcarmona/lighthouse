@@ -1,0 +1,15 @@
+{
+  "kind": "controlled-fixture-smoke",
+  "state": "passed",
+  "image": "sha256:5075249c883f1715c2cc93e8892150ee40fbcc55083182b5fe2189f63242016e",
+  "noNetwork": true,
+  "noAuthMounted": true,
+  "noModelInvoked": true,
+  "envelopeValidated": true,
+  "plannedFiles": [
+    "openspec/changes/issue-54-proposal/proposal.md",
+    "openspec/changes/issue-54-proposal/design.md",
+    "openspec/changes/issue-54-proposal/tasks.md",
+    "openspec/changes/issue-54-proposal/specs/summary-characterization/spec.md"
+  ]
+}

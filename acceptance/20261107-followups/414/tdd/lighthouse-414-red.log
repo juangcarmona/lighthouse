@@ -1,0 +1,88 @@
+▶ native worker exports private evidence and preserves candidates on collection failures
+  ✔ success (7294.773641ms)
+  ✖ planning-new (7003.762322ms)
+  ✔ planning-existing (7206.077717ms)
+  ✖ planning-specs (6722.227701ms)
+  ✔ unreadable (4778.302454ms)
+  ✔ symlink (4920.478244ms)
+  ✔ oversized (4450.342728ms)
+  ✔ missing-tool (3164.36842ms)
+  ✔ engine-failed (4743.585301ms)
+  ✔ zero-initial (6723.587198ms)
+  ✔ zero-review (6708.392288ms)
+  ✔ zero-check-failed (6762.338676ms)
+  ✔ zero-blocked (6350.578774ms)
+  ✔ readonly-review (2968.842374ms)
+  ✔ readonly-untouched (3008.088148ms)
+  ✔ readonly-stale (2968.638612ms)
+  ✔ readonly-malformed (2907.454911ms)
+  ✔ readonly-payload-accept (2883.784354ms)
+  ✔ readonly-payload-changes (2916.121783ms)
+  ✔ readonly-payload-untouched (3034.659014ms)
+  ✔ readonly-payload-stale (2950.856743ms)
+  ✔ readonly-payload-extra (2952.280071ms)
+✖ native worker exports private evidence and preserves candidates on collection failures (110979.121641ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 20
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111063.64353
+
+✖ failing tests:
+
+test at src/tests/worker-evidence.integration.test.mjs:86:15
+✖ planning-new (7003.762322ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      completion: 'passed',
+      evidence: 'passed',
+      execution: 'passed',
+      preflight: 'passed',
+  +   verification: 'failed'
+  -   verification: 'passed'
+    }
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-owned-plan-metadata/src/tests/worker-evidence.integration.test.mjs:158:18)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-owned-plan-metadata/src/tests/worker-evidence.integration.test.mjs:86:7)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: 'failed', completion: 'passed' },
+    expected: { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: 'passed', completion: 'passed' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at src/tests/worker-evidence.integration.test.mjs:86:15
+✖ planning-specs (6722.227701ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      completion: 'passed',
+      evidence: 'passed',
+      execution: 'passed',
+      preflight: 'passed',
+  +   verification: 'failed'
+  -   verification: 'passed'
+    }
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-owned-plan-metadata/src/tests/worker-evidence.integration.test.mjs:158:18)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-owned-plan-metadata/src/tests/worker-evidence.integration.test.mjs:86:7)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: 'failed', completion: 'passed' },
+    expected: { preflight: 'passed', execution: 'passed', evidence: 'passed', verification: 'passed', completion: 'passed' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

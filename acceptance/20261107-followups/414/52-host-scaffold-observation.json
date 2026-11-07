@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-11-07T20:08:21.706965+00:00",
+  "workflowRunId": 42409387915,
+  "phases": {
+    "preflight": "passed",
+    "execution": "running"
+  },
+  "planningMetadata": {
+    "provider": "@fission-ai/openspec@1.15.0",
+    "path": "openspec/changes/issue-52-proposal/.openspec.yaml",
+    "origin": "provider-scaffold",
+    "sha256": "cb72bd9217510d5461ddb5384ca197195a83da2d8dfbd237178f7ed662291c68"
+  },
+  "baseMetadataAbsent": true
+}

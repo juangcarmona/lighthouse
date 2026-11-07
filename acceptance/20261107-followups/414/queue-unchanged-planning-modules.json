@@ -1,0 +1,44 @@
+{
+  "old": "0.21.8",
+  "current": "0.21.9",
+  "byteIdentical": [
+    {
+      "module": "src/implementation-plan.mjs",
+      "sha256": "a772a28cd31fafde1e5ed90af8c48150342ae980976bde5fe8056dea39ac9e4f"
+    },
+    {
+      "module": "src/openspec-provider.mjs",
+      "sha256": "931a5b9cc7a1828f9599140ea8a417984044e7be5e9b0cb9485a0cc12290f83d"
+    },
+    {
+      "module": "src/proposal.mjs",
+      "sha256": "9c24cf57cd078f40b628da5074154812fc295ad823e354ed5cf332ecc39a6013"
+    },
+    {
+      "module": "src/unattended-planning-evidence.mjs",
+      "sha256": "40b04aaa097ab38f9280afdaabe97c68dffecb8d70e512f3f5d72953dbcb7bd6"
+    },
+    {
+      "module": "src/unattended.mjs",
+      "sha256": "399d478becde573c51ff54936622fe82fcc98b239a3ca654deca3dff95cca0e0"
+    },
+    {
+      "module": "src/unattended-actions.mjs",
+      "sha256": "592ca2f44df38b8f546bcad5aa3bb71e48cf9178e2570a2ca29de0bb712c1768"
+    },
+    {
+      "module": "src/unattended-runtime.mjs",
+      "sha256": "55c47896cf44458191f2ceb3fc0871f49fbc10a2faed6cb5c2037cae2db421af"
+    },
+    {
+      "module": "src/implementation.mjs",
+      "sha256": "708a597503d75a1706ad9535385f0c71213a4f6bcaa5bc8808c84ef5dbe1844f"
+    },
+    {
+      "module": "src/publication-branch.mjs",
+      "sha256": "190ffc6d63f25d39ace6a53a23dc9d84136676d183fa10e1fc53c3a37fa24c8b"
+    }
+  ],
+  "nativeDirectEvidence": "414-direct-terminal-native-proof.json",
+  "queueChangeIsSeparate": "src/engine-slot.mjs and opencode host admission call"
+}

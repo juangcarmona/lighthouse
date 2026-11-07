@@ -1,0 +1,48 @@
+✖ a queued engine acquires the released slot without blocking the event loop (1016.817346ms)
+✖ cancelling queued admission leaves the active engine and subsequent admission intact (1020.479286ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2163.631261
+
+✖ failing tests:
+
+test at src/tests/engine-slot.test.mjs:9:1
+✖ a queued engine acquires the released slot without blocking the event loop (1016.817346ms)
+  Error: Host engine capacity unavailable
+      at acquireEngineSlot (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/packages/sdlc/src/opencode-execute.mjs:116:34)
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/tests/engine-slot.test.mjs:15:22)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at src/tests/engine-slot.test.mjs:25:1
+✖ cancelling queued admission leaves the active engine and subsequent admission intact (1020.479286ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   name: 'Error'
+  -   name: 'AbortError'
+    }
+  
+      at async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/tests/engine-slot.test.mjs:30:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Host engine capacity unavailable
+        at acquireEngineSlot (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/packages/sdlc/src/opencode-execute.mjs:116:34)
+        at assert.rejects.name (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/tests/engine-slot.test.mjs:30:38)
+        at waitForActual (node:assert:632:21)
+        at strict.rejects (node:assert:769:31)
+        at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/414-host-engine-admission/src/tests/engine-slot.test.mjs:30:18)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:974:7),
+    expected: { name: 'AbortError' },
+    operator: 'rejects',
+    diff: 'simple'
+  }

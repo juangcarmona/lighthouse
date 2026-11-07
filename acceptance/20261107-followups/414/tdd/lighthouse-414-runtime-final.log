@@ -1,0 +1,32 @@
+▶ native worker exports private evidence and preserves candidates on collection failures
+  ✔ success (6205.023949ms)
+  ✔ planning-new (6671.664567ms)
+  ✔ planning-existing (6161.815585ms)
+  ✔ planning-specs (7087.234104ms)
+  ✔ unreadable (4589.348141ms)
+  ✔ symlink (4462.039347ms)
+  ✔ oversized (4437.78479ms)
+  ✔ missing-tool (3073.60577ms)
+  ✔ engine-failed (4802.004267ms)
+  ✔ zero-initial (6766.8679ms)
+  ✔ zero-review (6693.222137ms)
+  ✔ zero-check-failed (6883.803536ms)
+  ✔ zero-blocked (6786.642274ms)
+  ✔ readonly-review (3455.106036ms)
+  ✔ readonly-untouched (3342.668462ms)
+  ✔ readonly-stale (3255.126456ms)
+  ✔ readonly-malformed (3436.220634ms)
+  ✔ readonly-payload-accept (3224.547769ms)
+  ✔ readonly-payload-changes (3307.703487ms)
+  ✔ readonly-payload-untouched (3464.819521ms)
+  ✔ readonly-payload-stale (3275.661271ms)
+  ✔ readonly-payload-extra (3376.931448ms)
+✔ native worker exports private evidence and preserves candidates on collection failures (111438.484888ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111538.912694

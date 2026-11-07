@@ -1,0 +1,44 @@
+{
+  "issue": 52,
+  "pr": 55,
+  "head": "a4d34a87ed1b4d00791d5dc3fbccb22cf01a072c",
+  "checkedTree": "e745436475612e4010ce5972807b6e366a4bf3da",
+  "implementationRun": 42409387915,
+  "source": "958c2305cb4a87d06fa78174bc2bd4ce3edbbee4",
+  "admittedBase": "958c2305cb4a87d06fa78174bc2bd4ce3edbbee4",
+  "parents": [
+    "958c2305cb4a87d06fa78174bc2bd4ce3edbbee4"
+  ],
+  "branch": "chore/52-lighthouse-implement-f0e10f5a11ec",
+  "branchPatternUnchanged": true,
+  "generatedGuardUnchanged": true,
+  "noBranchPolicyException": true,
+  "changedPaths": [
+    "openspec/changes/issue-52-proposal/.openspec.yaml",
+    "openspec/changes/issue-52-proposal/design.md",
+    "openspec/changes/issue-52-proposal/proposal.md",
+    "openspec/changes/issue-52-proposal/tasks.md",
+    "src/summary.test.mjs"
+  ],
+  "sourceBodiesUnchanged": true,
+  "original28TestsPreserved": true,
+  "providerMetadataAbsentAtBaseAndCreatedByHost": true,
+  "planningMetadata": {
+    "provider": "@fission-ai/openspec@1.15.0",
+    "path": "openspec/changes/issue-52-proposal/.openspec.yaml",
+    "origin": "provider-scaffold",
+    "sha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc"
+  },
+  "providerMetadataSha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc",
+  "independentCheckExits": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "approvalId": 5814752498,
+  "completedTasksPreserved": true,
+  "completedTaskCount": 3
+}

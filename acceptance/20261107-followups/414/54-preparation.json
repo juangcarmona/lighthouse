@@ -1,0 +1,183 @@
+{
+  "base": "6184d98062686c3a425c462e97b3ce7b1c91ec3a",
+  "issue": 54,
+  "versions": {
+    "cli": "0.12.57",
+    "sdlc": "0.21.8"
+  },
+  "providerMetadataAbsent": true,
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".lighthouse/implement.json",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".lighthouse/models.json",
+    ".lighthouse/unattended.json"
+  ],
+  "originalPoliciesPreserved": true,
+  "branchPatternAndGuardUnchanged": true,
+  "controlledFixture": {
+    "kind": "operator-controlled-first-plan-fixture",
+    "issue": 54,
+    "baseImage": "sha256:a62c20fc4f2d62704fc1691e96d369a72d873ed356ecef5c53c646a57cb132ec",
+    "image": "sha256:5075249c883f1715c2cc93e8892150ee40fbcc55083182b5fe2189f63242016e",
+    "firstProposal": "deterministic invalid plan, no model invoked",
+    "laterStages": "delegate unchanged original engine",
+    "globalConfigUnchanged": true,
+    "copiedConfigMode": "0o600",
+    "files": {
+      "Dockerfile": "3a216563ff1b64dcee14408642421ef2ab70011029b785bcb714f795a3ba36c8",
+      "src/first-plan-probe.mjs": "fb3f32f0448776e042d6f5ef96611b6b2cd2226c1906515607fce17cb4667ecc",
+      "src/rejected-plan.mjs": "0b0f6a93449a3f7a01e7100063a8eafdee243f40fff74280d16cdc4b8ddc4950"
+    }
+  },
+  "steps": [
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "api",
+        "repos/juangcarmona/lighthouse-published-consumer-20261104/issues/52"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "origin",
+        "main"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "switch",
+        "-c",
+        "chore/54-qualify-bounded-plan-repair",
+        "origin/main"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs",
+        ".",
+        "package",
+        "--apply",
+        "--replace-reviewed",
+        "--with-completion",
+        "--with-product-change",
+        "--with-maintenance",
+        "--with-unattended"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-triage"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-implement"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-integrate"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "-z"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "pr": 56,
+  "head": "698f67c6ed48b196d7543b4fa8452edfdd0f809a",
+  "main": "d0c8a81b5bb14027676c2e910150a7f3ba1fd144",
+  "providerMetadataAbsentAtAdoptedBase": true,
+  "postMergeCi": 42412223399
+}

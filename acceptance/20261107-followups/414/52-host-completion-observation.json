@@ -1,0 +1,28 @@
+{
+  "workflowRunId": 42409387915,
+  "phases": {
+    "preflight": "passed",
+    "execution": "passed",
+    "evidence": "passed",
+    "verification": "passed",
+    "completion": "passed"
+  },
+  "execution": {
+    "status": "passed",
+    "exitCode": 0,
+    "signal": null,
+    "resources": {
+      "pidsLimit": 1024,
+      "pidsPeak": 81,
+      "pidsDenied": 0,
+      "memoryPeakBytes": 1298440192,
+      "oomKills": 0
+    }
+  },
+  "planningMetadata": {
+    "provider": "@fission-ai/openspec@1.15.0",
+    "path": "openspec/changes/issue-52-proposal/.openspec.yaml",
+    "origin": "provider-scaffold",
+    "sha256": "4d929b9905e5333cb40379353adf2b309b5f1c9faf1a86f2d7af132d15c305cc"
+  }
+}

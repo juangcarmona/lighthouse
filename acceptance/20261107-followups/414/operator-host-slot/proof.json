@@ -1,0 +1,12 @@
+{
+  "kind": "operator-host-slot-correction",
+  "beforeSha256": "5f0e2743fe2689d2e70b2343cea4ddff89ce014488869a27bdee674675a8a388",
+  "afterSha256": "940f60c6b70c6ec8b6a406f618e3c54a98b6d1a57e9b480538cd62d909f8e048",
+  "scope": "Only native unattended deliver jobs bypass the shared gh-aw gateway-port reservation; engine-slot locking unchanged.",
+  "smokePass": true,
+  "agentControlStillRequiresLock": true,
+  "releasedUnusedGatewayHolder": 182472,
+  "activeWorkerUnchanged": 181816,
+  "activeWorkflowNotCancelled": true,
+  "nativeRun": 42410198253
+}

@@ -1,0 +1,33 @@
+{
+  "head": "f42e79bab588f19d848e0b6d2e6e88ca3271678a",
+  "branch": "chore/54-lighthouse-implement-935e4baf47bd",
+  "cliExit": 0,
+  "guardExit": 0,
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

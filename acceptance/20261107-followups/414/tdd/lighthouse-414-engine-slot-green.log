@@ -1,0 +1,21 @@
+✔ a queued engine acquires the released slot without blocking the event loop (39.31143ms)
+✔ cancelling queued admission leaves the active engine and subsequent admission intact (40.615768ms)
+✔ engine snapshot contains tracked regular files but no checkout credentials or symlink targets (75.135152ms)
+✔ engine logs retain execution events while removing common credential formats (0.728907ms)
+✔ host engine lock excludes another execution and releases with its descriptor (15.969999ms)
+✔ gh-aw completion requires a valid completed envelope and does not imply publication (4.211072ms)
+✔ engine adapter preserves structured evidence while streaming readable output (3149.677628ms)
+✔ forced worker exit recovers an observed async engine but preserves an unobserved create (3003.155645ms)
+✔ oversized diagnostics cannot stop execution or leak partial secrets, and framing recovers (2.632259ms)
+✔ profile adapter forwards two worker variants, marks receipts unverified and never falls back (9151.92885ms)
+✔ a product worker from implementation uses the read-only product engine without implementation policy (1639.908559ms)
+✔ a failed implementation retains its bounded candidate but cannot emit successful completion (2104.681574ms)
+✔ declared environment preflights before agent, validates with fresh services, and cleans failures (23869.270692ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43153.681064

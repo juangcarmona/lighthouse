@@ -1,0 +1,366 @@
+{
+  "state": "verified",
+  "base": "a83da4e45b7db219bf9436677e28fc195185ba36",
+  "issue": 52,
+  "versions": {
+    "cli": "0.12.57",
+    "sdlc": "0.21.8",
+    "ui": "0.2.1"
+  },
+  "source": "8e75f07791d884dfd169642ea2afa1f229b083b6",
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    ".lighthouse/commands.json",
+    ".lighthouse/implement.json",
+    ".lighthouse/sdlc.json",
+    ".lighthouse/upgrade.json",
+    "LIGHTHOUSE.md",
+    "lighthouse.json",
+    "package-lock.json",
+    "package.json"
+  ],
+  "preservedFiles": 110,
+  "branchPatternUnchanged": true,
+  "generatedGuardUnchanged": true,
+  "providerMetadataAbsentAtBase": true,
+  "steps": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "-m",
+        "chore/52-adopt-host-owned-plan-metadata"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--prefer-online",
+        "--save-exact",
+        "@juangcarmona/lighthouse@0.12.57"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--apply"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs",
+        ".",
+        "package",
+        "--apply",
+        "--replace-reviewed",
+        "--with-completion",
+        "--with-product-change",
+        "--with-maintenance"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-triage"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-implement"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-integrate"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "HEAD:.lighthouse/implement.json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "-z"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "authorityAdoption": {
+    "command": [
+      "lighthouse",
+      "authorities",
+      "--adopt-existing",
+      "--apply"
+    ],
+    "plan": {
+      "schemaVersion": 1,
+      "command": "lighthouse authorities --adopt-existing",
+      "status": "ready",
+      "remoteWrites": "none",
+      "providerWrites": "none",
+      "authorities": [
+        {
+          "id": "productShape",
+          "label": "ProductShape",
+          "provider": "@prodshape/cli",
+          "version": "0.23.0",
+          "path": "docs/product/model",
+          "command": "prodshape validate --format json",
+          "recordedVersion": null,
+          "status": "ready",
+          "valid": true,
+          "diagnostics": [
+            {
+              "severity": "warning",
+              "code": "PRODUCT103",
+              "message": "Requirement 'FR-SUMMARY-001' is not reachable from any actor",
+              "file": "docs/product/model/requirements/functional/fr-summary-001.md",
+              "artifact": "FR-SUMMARY-001"
+            }
+          ],
+          "nextAction": null
+        },
+        {
+          "id": "arcShape",
+          "label": "ArcShape",
+          "provider": "@arcshape/cli",
+          "version": "0.4.0",
+          "path": "docs/architecture",
+          "command": "arcshape validate --docs docs/architecture --links --citations --format json",
+          "recordedVersion": null,
+          "status": "ready",
+          "valid": true,
+          "diagnostics": [],
+          "nextAction": null
+        }
+      ],
+      "operations": [
+        {
+          "action": "record",
+          "path": "lighthouse.json",
+          "values": {
+            "productShape": "0.23.0",
+            "arcShape": "0.4.0"
+          }
+        },
+        {
+          "action": "regenerate",
+          "path": "LIGHTHOUSE.md"
+        }
+      ],
+      "apply": "lighthouse authorities --adopt-existing --apply"
+    },
+    "applyOutputSha256": "f5bca28454ce3cd0bbd8b6cc2dc27619facb2b127b985383c0bde8d12988d901",
+    "providerFilesByteIdentical": [
+      ".product/config.yaml",
+      ".product/integrations/openspec.ci.yml",
+      ".product/integrations/openspec.json",
+      ".product/templates/actor.md",
+      ".product/templates/bounded-context.md",
+      ".product/templates/business-rule.md",
+      ".product/templates/constraint.md",
+      ".product/templates/domain-term.md",
+      ".product/templates/functional-requirement.md",
+      ".product/templates/journey.md",
+      ".product/templates/product-change.md",
+      ".product/templates/quality-requirement.md",
+      ".product/templates/structured-behaviour.md",
+      ".product/templates/use-case.md",
+      "docs/architecture/01-introduction-and-goals/README.md",
+      "docs/architecture/02-constraints/README.md",
+      "docs/architecture/03-context-and-scope/README.md",
+      "docs/architecture/04-solution-strategy/README.md",
+      "docs/architecture/05-building-block-view/README.md",
+      "docs/architecture/06-runtime-view/README.md",
+      "docs/architecture/07-deployment-view/README.md",
+      "docs/architecture/08-crosscutting-concepts/README.md",
+      "docs/architecture/09-architecture-decisions/README.md",
+      "docs/architecture/10-quality-requirements/README.md",
+      "docs/architecture/11-risks-and-technical-debt/README.md",
+      "docs/architecture/12-glossary/README.md",
+      "docs/architecture/README.md",
+      "docs/product/README.md",
+      "docs/product/changes/active/.gitkeep",
+      "docs/product/changes/completed/.gitkeep",
+      "docs/product/changes/rejected/.gitkeep",
+      "docs/product/changes/superseded/.gitkeep",
+      "docs/product/model/actors/.gitkeep",
+      "docs/product/model/behaviours/.gitkeep",
+      "docs/product/model/business-rules/.gitkeep",
+      "docs/product/model/business-rules/br-summary-001.md",
+      "docs/product/model/domain/bounded-contexts/.gitkeep",
+      "docs/product/model/domain/terms/.gitkeep",
+      "docs/product/model/journeys/.gitkeep",
+      "docs/product/model/requirements/constraints/.gitkeep",
+      "docs/product/model/requirements/functional/.gitkeep",
+      "docs/product/model/requirements/functional/fr-summary-001.md",
+      "docs/product/model/requirements/quality/.gitkeep",
+      "docs/product/model/use-cases/.gitkeep",
+      "openspec/schemas/product-change/schema.yaml",
+      "openspec/schemas/product-change/scripts/product-apply.mjs",
+      "openspec/schemas/product-change/scripts/product-validate.mjs",
+      "openspec/schemas/product-change/templates/change.md",
+      "openspec/schemas/product-change/templates/proposal.md",
+      "openspec/schemas/product-recovery/schema.yaml",
+      "openspec/schemas/product-recovery/templates/brief.md",
+      "openspec/schemas/product-recovery/templates/report.md"
+    ],
+    "productApply": false
+  },
+  "main": "958c2305cb4a87d06fa78174bc2bd4ce3edbbee4",
+  "pr": 53,
+  "head": "c0e174ebac911ebb3e85fbd488f4348be78e41a6",
+  "baseTreeMetadata52Absent": true
+}

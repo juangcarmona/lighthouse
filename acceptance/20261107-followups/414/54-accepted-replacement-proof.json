@@ -1,0 +1,52 @@
+{
+  "state": "accepted",
+  "kind": "native-accepted-replacement-selection",
+  "run": 42416039702,
+  "planningRound": 1,
+  "acceptedProposal": "3b53d9f16b4274a301a7421ae9cc36bf9dd4c6489ce99f25c7da30f4dbfa37d6",
+  "rejectedProposal": "8cfa0015ac527cd1af922d4010ab71a0de4c2d6c3de2d624f417896a42f2b714",
+  "planningReview": "2d039a39f955091bac59fa04da22daa7cea65ce5a048ba50dc3cda5a0d5c8d48",
+  "reviewBinding": "1751145acbecd44a99f302b702d3244b4d6e0683821935ee201a70f310edc09c",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "firstProposalWasControlledFixtureNotModel": true,
+  "laterProposalAndReviewWereActualExecutions": true,
+  "negativeControls": [
+    {
+      "tamper": "planningRound",
+      "value": 0,
+      "rejected": true
+    },
+    {
+      "tamper": "planningRound",
+      "value": 3,
+      "rejected": true
+    },
+    {
+      "tamper": "planningRound",
+      "value": -1,
+      "rejected": true
+    },
+    {
+      "tamper": "planningRound",
+      "value": "1",
+      "rejected": true
+    },
+    {
+      "tamper": "planningRound",
+      "value": null,
+      "rejected": true
+    },
+    {
+      "tamper": "remove planningRound and try legacy round-zero fallback",
+      "rejected": true
+    },
+    {
+      "tamper": "replace accepted plan with authentic rejected initial plan",
+      "rejected": true
+    }
+  ]
+}

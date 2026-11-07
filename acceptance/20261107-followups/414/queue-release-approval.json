@@ -1,0 +1,16 @@
+{
+  "run": 42414433972,
+  "source": "b062abb7479da472f472e7ae3591083961c250a8",
+  "versions": {
+    "cli": "0.12.58",
+    "sdlc": "0.21.9",
+    "ui": "0.2.1"
+  },
+  "approval": {
+    "environment_ids": [
+      24897005419
+    ],
+    "state": "approved",
+    "comment": "Standing owner authorization: publish exact CLI 0.12.58 and SDLC 0.21.9 from b062abb after all Version Packages checks passed. UI remains 0.2.1."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "kind": "scoped-operator-admission-configuration",
+  "issue": 54,
+  "engineSlotWaitSeconds": 1800,
+  "defaultUnchanged": 240,
+  "globalConfigUnchangedByOperation": true,
+  "privateMode": "0o600",
+  "beforeSha256": "db4036c221f413ff9a0107194901d567685e0bed0ea7c95291e4b20fef4f2537",
+  "afterSha256": "2774cf5af3ae3fd3f131db35063d9f615faf606de3f07391031225460a2320c1",
+  "image": "sha256:5075249c883f1715c2cc93e8892150ee40fbcc55083182b5fe2189f63242016e",
+  "correctionLimitUnchanged": 2,
+  "routeTimeoutSecondsUnchanged": 3600
+}

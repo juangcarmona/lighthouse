@@ -1,0 +1,127 @@
+{
+  "state": "verified",
+  "base": "d0c8a81b5bb14027676c2e910150a7f3ba1fd144",
+  "versions": {
+    "cli": "0.12.58",
+    "sdlc": "0.21.9",
+    "ui": "0.2.1"
+  },
+  "metadataAbsent": true,
+  "oldPoliciesAndModelsPreserved": true,
+  "branchPatternAndGuardUnchanged": true,
+  "preservedFiles": 117,
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    ".lighthouse/commands.json",
+    ".lighthouse/sdlc.json",
+    ".lighthouse/upgrade.json",
+    "LIGHTHOUSE.md",
+    "lighthouse.json",
+    "package-lock.json",
+    "package.json"
+  ],
+  "providerWrites": "none",
+  "generatedProjectionRegeneratedThroughCli": true,
+  "projectionChange": "SDK version line only; authority versions unchanged",
+  "steps": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "--others",
+        "--exclude-standard"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "ls-files",
+        "-z"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "HEAD:lighthouse.json"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "main": "4cc202b24bda69519341b09393ac1d0beaf5e2e6",
+  "pr": 57,
+  "head": "772a83419782dd28bbeea61f39539487a19a5a9e",
+  "postMergeCi": 42415933337,
+  "ownPlanAbsentAtAdoptedBase": true
+}

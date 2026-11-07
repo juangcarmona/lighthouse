@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "evidence": [],
+  "reason": "Independent engine execution failed: refine: Host engine capacity unavailable",
+  "nextAction": "Inspect execution evidence and resolve the identified blocker"
+}
