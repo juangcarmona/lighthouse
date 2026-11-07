@@ -37,9 +37,12 @@
     "src/verify-dotnet.mjs",
     "upgrades",
     "src/github-profile.mjs",
-    "github-profile.md"
+    "github-profile.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "bin": {
     "lighthouse": "./src/lighthouse.mjs"
-  }
+  },
+  "license": "Apache-2.0"
 }

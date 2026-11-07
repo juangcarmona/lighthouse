@@ -106,6 +106,6 @@ test('the UI artifact contains the complete visual contract', () => {
     assert.equal(packed.status, 0, packed.stderr);
     const [artifact] = JSON.parse(packed.stdout);
     assert.equal(artifact.name, name);
-    assert.deepEqual(artifact.files.map((file) => file.path).sort(), files);
+    assert.deepEqual(artifact.files.map((file) => file.path).sort(), [...files, 'LICENSE', 'NOTICE'].sort());
   }
 });

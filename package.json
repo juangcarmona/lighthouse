@@ -36,5 +36,6 @@
     "@fission-ai/openspec": "1.15.0",
     "@playwright/test": "1.64.1",
     "@prodshape/cli": "0.23.0"
-  }
+  },
+  "license": "Apache-2.0"
 }

@@ -84,3 +84,7 @@ The recommended `github-profile` capability is opt-in. Adopters declare checks, 
 ## External user identity
 
 Applications that need sign-in follow the [external identity contract](assets/profiles/identity.md). Reuse a shared OIDC provider; Keycloak is the self-hosted reference. The package ships guidance for application integration and acceptance evidence, while the operator owns provider deployment. Existing adopters receive the guidance through a reviewed harness upgrade.
+
+## License
+
+Lighthouse-authored material in this package is licensed under [Apache-2.0](LICENSE); retain [NOTICE](NOTICE) and the applicable license and attribution when redistributing it. Copied or adapted guidance, workflows, scripts, styles and templates keep those terms. This does not assign a license to unrelated consumer code. External dependencies and integrations retain their own licenses.

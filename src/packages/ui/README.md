@@ -21,3 +21,7 @@ The package contains the tokens, native recipes, the design guide, the agent ski
 ```
 
 The recipes use the `--lh-*` tokens and native HTML semantics. Products retain markup, state, routing and accessible behavior.
+
+## License
+
+Lighthouse-authored material in this package is licensed under [Apache-2.0](LICENSE); retain [NOTICE](NOTICE) and the applicable license and attribution when redistributing it. Copied or adapted guidance, workflows, scripts, styles and templates keep those terms. This does not assign a license to unrelated consumer code. External dependencies and integrations retain their own licenses.

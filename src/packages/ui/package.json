@@ -24,7 +24,9 @@
     "components.css",
     "index.css",
     "tokens.css",
-    "skills/ui-design/SKILL.md"
+    "skills/ui-design/SKILL.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "exports": {
     ".": "./index.css",
@@ -36,5 +38,6 @@
   },
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "license": "Apache-2.0"
 }
