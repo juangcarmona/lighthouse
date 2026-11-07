@@ -1,5 +1,16 @@
 # @juangcarmona/lighthouse
 
+## 0.12.59
+
+### Patch Changes
+
+- e94e82d: # Recover rejected continuation admission
+
+  Refresh automatic continuations against the current default workflow revision and record rejected admission. Recover a final review once after a documentation-only branch advance when native skipped jobs and unchanged authority are confirmed.
+
+- Updated dependencies [e94e82d]
+  - @juangcarmona/lighthouse-sdlc@0.21.10
+
 ## 0.12.58
 
 ### Patch Changes
