@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.5
+
+### Patch Changes
+
+- ac11044: # Wait for the current integration reservation
+
+  An early CI callback can wait while integration still holds its execution reservation, including before the pending hint becomes visible. Owner holds still stop continuation; terminal integration and a released reservation are required before the full grant is rechecked.
+
 ## 0.21.4
 
 ### Patch Changes
