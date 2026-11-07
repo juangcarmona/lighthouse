@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { reviewOutputProtocol, reviewTemplate, reviewEnvelope } from './independent-review.mjs';
 import { createRequire } from 'node:module';
 import { synchronizedSource, synchronizationDigest } from './source-sync.mjs';
-import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest } from './implementation.mjs';
+import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest, withinScope } from './implementation.mjs';
 import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
@@ -20,6 +20,7 @@ import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-r
 import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
+import { implementationPlanMetadata, prepareImplementationPlanMetadata } from './implementation-plan.mjs';
 import { prepareProductEvidence, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
 import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
@@ -159,7 +160,7 @@ async function main() {
   const phaseStarted = new Map();
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
+  let child, timer, heartbeat, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const preparation = new AbortController();
   const cancel = (reason = 'cancelled') => { cancelled = true; preparation.abort(); stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
@@ -201,6 +202,17 @@ async function main() {
         for (const file of seed) if (file.content !== null) trackedSource.set(file.path, {});
         await rm(source, { recursive: true, force: true }); await mkdir(source);
         await materializeCandidate(baseline, seed, source);
+      }
+      if (request.implementation.proposal && !request.sourceSynchronization) {
+        planningBaseline = await sourceFiles(source, trackedSource);
+        const metadata = await prepareImplementationPlanMetadata(planningBaseline, request, undefined, preparation.signal);
+        if (metadata) {
+          if (!withinScope(metadata.path, request.implementation.policy)) throw Error('OpenSpec metadata is outside the authorized implementation scope');
+          await mkdir(dirname(join(source, metadata.path)), { recursive: true });
+          await writeFile(join(source, metadata.path), metadata.content);
+          planningBaseline.set(metadata.path, metadata); trackedSource.set(metadata.path, {});
+          runtimeReceipt.planningMetadata = { provider: '@fission-ai/openspec@1.15.0', path: metadata.path, origin: metadata.origin, sha256: createHash('sha256').update(metadata.content).digest('hex') };
+        }
       }
       await prepareImplementationWorkspace(source, config, request.issue, repository);
     }
@@ -313,7 +325,13 @@ async function main() {
     clearTimeout(timer);
     if (implementing) {
       const candidateFiles = await sourceFiles(source, trackedSource);
-      const changes = collectChanges(baseline, candidateFiles, request.implementation.policy);
+      const modelChanges = collectChanges(baseline, candidateFiles, request.implementation.policy);
+      const metadata = request.sourceSynchronization ? null : await implementationPlanMetadata(candidateFiles, planningBaseline ?? baseline, request, undefined, preparation.signal);
+      if (metadata) {
+        candidateFiles.set(metadata.path, { content: metadata.content, mode: metadata.mode });
+        runtimeReceipt.planningMetadata = { provider: '@fission-ai/openspec@1.15.0', path: metadata.path, origin: metadata.origin, sha256: createHash('sha256').update(metadata.content).digest('hex') };
+      }
+      const changes = metadata ? collectChanges(baseline, candidateFiles, request.implementation.policy) : modelChanges;
       if (request.sourceSynchronization && changes.length) throw Error('Synchronized verification cannot include model file changes');
       const verification = verificationIntegrity(baseline, candidateFiles, request.implementation.policy, request.issue);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
