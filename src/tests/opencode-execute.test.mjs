@@ -44,10 +44,10 @@ test('host engine lock excludes another execution and releases with its descript
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-slot-'));
   try {
     const lock = join(root, 'engine.lock');
-    const fd = acquireEngineSlot(lock, 0);
-    try { assert.throws(() => acquireEngineSlot(lock, 0), /capacity unavailable/); }
+    const fd = await acquireEngineSlot(lock, 0);
+    try { await assert.rejects(acquireEngineSlot(lock, 0), /capacity unavailable/); }
     finally { closeSync(fd); }
-    closeSync(acquireEngineSlot(lock, 0));
+    closeSync(await acquireEngineSlot(lock, 0));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
