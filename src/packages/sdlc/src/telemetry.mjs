@@ -12,7 +12,7 @@ const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 const hash = value => createHash('sha256').update(value).digest('hex');
 const identifier = value => typeof value === 'string' && /^[\w./:@#-]{1,256}$/.test(value) && !/(?:Bearer|sk-|ghp_|github_pat_|eyJ)/i.test(value) ? value : null;
 const numeric = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
-const attributes = new Set(['phase', 'status', 'reasonCode', 'reasonDigest', 'eventName', 'action', 'label', 'actorClass', 'authorization', 'decision', 'tool', 'callId', 'messageId', 'model', 'provider', 'modelSource', 'finishReason', 'requestKind', 'adapter', 'capability', 'image', 'signal', 'exitCode', 'durationMs', 'inputTokens', 'outputTokens', 'reasoningTokens', 'cacheReadTokens', 'cacheWriteTokens', 'stepStarts', 'stepFinishes', 'toolCalls', 'sourceEvents', 'omittedEvents', 'cpuUsageUsec', 'memoryBytes', 'memoryPeakBytes', 'pids', 'pidsPeak', 'pidsDenied', 'oomKills', 'readBytes', 'writeBytes', 'networkRxBytes', 'networkTxBytes', 'cpuLimit', 'memoryLimitBytes', 'pidsLimit', 'httpStatus', 'attempt', 'delayMs', 'streamConnected']);
+const attributes = new Set(['phase', 'status', 'reasonCode', 'reasonDigest', 'eventName', 'action', 'label', 'actorClass', 'authorization', 'decision', 'tool', 'callId', 'messageId', 'model', 'provider', 'modelSource', 'finishReason', 'requestKind', 'adapter', 'capability', 'image', 'signal', 'exitCode', 'durationMs', 'queueDurationMs', 'inputTokens', 'outputTokens', 'reasoningTokens', 'cacheReadTokens', 'cacheWriteTokens', 'stepStarts', 'stepFinishes', 'toolCalls', 'sourceEvents', 'omittedEvents', 'cpuUsageUsec', 'memoryBytes', 'memoryPeakBytes', 'pids', 'pidsPeak', 'pidsDenied', 'oomKills', 'readBytes', 'writeBytes', 'networkRxBytes', 'networkTxBytes', 'cpuLimit', 'memoryLimitBytes', 'pidsLimit', 'httpStatus', 'attempt', 'delayMs', 'streamConnected']);
 const correlationKeys = ['repository', 'issue', 'pullRequest', 'revision', 'worker', 'stage', 'runId', 'workflowRunId', 'workflowAttempt', 'job', 'runner', 'sessionId', 'parentSessionId', 'requestId', 'routerRunId', 'routerAttempt', 'signalId'];
 export function metadata(values = {}) {
   return Object.fromEntries(Object.entries(values).filter(([key]) => attributes.has(key)).map(([key, value]) => [key, typeof value === 'boolean' ? value : typeof value === 'number' ? numeric(value) : identifier(value)]));
@@ -33,13 +33,20 @@ export function telemetryDirectory(env = process.env) {
   return resolve(env.LIGHTHOUSE_TELEMETRY_DIR ?? (env.GITHUB_ACTIONS === 'true' && env.RUNNER_TEMP ? join(env.RUNNER_TEMP, 'gh-aw/telemetry') : join(env.XDG_STATE_HOME ?? join(env.HOME ?? homedir(), '.local/state'), 'lighthouse/telemetry')));
 }
 const atomic = (path, value) => { writeFileSync(path + '.tmp', JSON.stringify(value) + '\n', { mode: 0o600 }); renameSync(path + '.tmp', path); };
+export function telemetrySettings(directory) {
+  const path = join(directory, 'settings.json');
+  if (!existsSync(path)) return null;
+  const selected = JSON.parse(readFileSync(path));
+  if (selected.schemaVersion !== 1 || typeof selected.enabled !== 'boolean' || !Number.isInteger(selected.maxBytes) || selected.maxBytes < 16384 || selected.maxBytes > 16777216 || !Number.isInteger(selected.maxStreams) || selected.maxStreams < 1 || selected.maxStreams > 128 || !Number.isInteger(selected.retentionDays) || selected.retentionDays < 1 || selected.retentionDays > 90) throw Object.assign(Error('Invalid operator telemetry settings'), { code: 'INVALID_SETTINGS' });
+  return selected;
+}
 export const telemetryCapabilities = {
   lifecycle: 'host-observed', opencode: 'native-2.1-plugin-with-cli-fallback', usage: 'observed-with-coverage',
   resources: 'linux-cgroup-v2-and-proc', billing: 'unavailable', payloads: 'disabled', transport: 'ndjson-and-otlp-http-json-logs',
 };
 
 // A process owns one journal. Consumers merge streams; no workload shares an append lock.
-export function createTelemetry({ directory, component = 'adapter', context = {}, env = process.env, maxBytes = 16 * 1024 * 1024, maxStreams = 128, retentionMs = 7 * 86400000 } = {}) {
+export function createTelemetry({ directory, component = 'adapter', context = {}, env = process.env, maxBytes, maxStreams, retentionMs } = {}) {
   directory ??= telemetryDirectory(env);
   const stream = randomUUID(), path = join(directory, stream + '.jsonl');
   let healthPath = join(directory, stream + '.json');
@@ -52,6 +59,11 @@ export function createTelemetry({ directory, component = 'adapter', context = {}
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     if (lstatSync(directory).isSymbolicLink()) throw Object.assign(Error(), { code: 'UNSAFE_DIRECTORY' });
     safeDirectory = true;
+    const settings = telemetrySettings(directory);
+    if (settings?.enabled === false) state.status = 'disabled';
+    maxBytes ??= settings?.maxBytes ?? 16 * 1024 * 1024;
+    maxStreams ??= settings?.maxStreams ?? 128;
+    retentionMs ??= (settings?.retentionDays ?? 7) * 86400000;
     const files = readdirSync(directory).filter(name => /^[a-f0-9-]{36}\.json$/.test(name));
     for (const name of files.sort((a, b) => statSync(join(directory, a)).mtimeMs - statSync(join(directory, b)).mtimeMs)) {
       const file = join(directory, name), age = Date.now() - statSync(file).mtimeMs;

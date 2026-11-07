@@ -421,6 +421,9 @@
         },
         "streamConnected": {
           "$ref": "#/$defs/metadataValue"
+        },
+        "queueDurationMs": {
+          "$ref": "#/$defs/metadataValue"
         }
       }
     }

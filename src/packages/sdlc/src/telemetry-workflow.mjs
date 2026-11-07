@@ -17,7 +17,8 @@ export async function workflowTelemetry(env = process.env, fetchRequest = fetch)
       for (const job of payload.jobs ?? []) {
         telemetry.bind({ job: String(job.id), runner: job.runner_name ?? null });
         const duration = Date.parse(job.completed_at) - Date.parse(job.started_at);
-        telemetry.emit('workflow.job.observed', { status: job.conclusion ?? job.status, reasonCode: job.conclusion === 'skipped' ? 'workflow-condition-or-dependency' : 'forge-observation', durationMs: duration >= 0 ? duration : null }, { kind: 'github', id: `job:${job.id}:${job.status}:${job.conclusion ?? 'pending'}` });
+        const queue = Date.parse(job.started_at) - Date.parse(job.created_at);
+        telemetry.emit('workflow.job.observed', { status: job.conclusion ?? job.status, reasonCode: job.conclusion === 'skipped' ? 'workflow-condition-or-dependency' : 'forge-observation', durationMs: duration >= 0 ? duration : null, queueDurationMs: queue >= 0 ? queue : null }, { kind: 'github', id: `job:${job.id}:${job.status}:${job.conclusion ?? 'pending'}` });
       }
       if (payload.total_count > (payload.jobs?.length ?? 0)) telemetry.emit('collection.gap', { reasonCode: 'workflow-job-page-bound' });
     } catch { telemetry.emit('collection.gap', { reasonCode: 'forge-metadata-unavailable' }); }

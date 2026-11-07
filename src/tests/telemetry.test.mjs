@@ -24,6 +24,16 @@ test('first installation, independent cursor replay and upgrades preserve settin
     const settings = JSON.parse(readFileSync(join(directory, 'settings.json'))); settings.retentionDays = 3;
     writeFileSync(join(directory, 'settings.json'), JSON.stringify(settings)); installTelemetry(directory, {});
     assert.equal(JSON.parse(readFileSync(join(directory, 'settings.json'))).retentionDays, 3);
+    settings.enabled = false; writeFileSync(join(directory, 'settings.json'), JSON.stringify(settings));
+    const disabled = createTelemetry({ directory, component: 'engine-adapter', env: {} });
+    assert.equal(disabled.health().status, 'disabled'); disabled.close();
+    settings.enabled = true; settings.maxBytes = 16384; writeFileSync(join(directory, 'settings.json'), JSON.stringify(settings));
+    const bounded = createTelemetry({ directory, component: 'job-hook', env: {} });
+    for (let i = 0; i < 40; i++) bounded.emit('resource.sample');
+    assert.ok(bounded.health().bytes <= settings.maxBytes); assert.ok(bounded.health().dropped > 0); bounded.close();
+    writeFileSync(join(directory, 'settings.json'), '{}');
+    const invalid = createTelemetry({ directory, env: {} });
+    assert.equal(invalid.health().status, 'degraded'); assert.equal(invalid.health().errorCode, 'INVALID_SETTINGS'); invalid.close();
     assert.throws(() => readTelemetry(directory, { stream: '../../secret' }), /cursor/);
     assert.throws(() => readTelemetry(directory, { stream: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', after: 5 }), /expired/);
   } finally { rmSync(directory, { recursive: true, force: true }); }
@@ -128,9 +138,10 @@ test('forge observation retains source signals and skipped jobs without inventin
   try {
     const event = join(directory, 'event.json'); writeFileSync(event, JSON.stringify({ action: 'labeled', label: { name: 'refine' }, issue: { number: 521, body: 'private prose' } }));
     const env = { LIGHTHOUSE_TELEMETRY_DIR: directory, GITHUB_EVENT_PATH: event, GITHUB_EVENT_NAME: 'issues', GITHUB_REPOSITORY: 'owner/repo', GITHUB_RUN_ID: '42', GITHUB_RUN_ATTEMPT: '1', GH_TOKEN: 'private-token' };
-    await workflowTelemetry(env, async () => new Response(JSON.stringify({ total_count: 1, jobs: [{ id: 55, conclusion: 'skipped', status: 'completed', started_at: null, completed_at: null, runner_name: null }] })));
+    await workflowTelemetry(env, async () => new Response(JSON.stringify({ total_count: 2, jobs: [{ id: 56, conclusion: 'success', status: 'completed', created_at: '2026-11-07T06:00:00Z', started_at: '2026-11-07T06:00:05Z', completed_at: '2026-11-07T06:00:10Z', runner_name: 'test-runner' }, { id: 55, conclusion: 'skipped', status: 'completed', started_at: null, completed_at: null, runner_name: null }] })));
     const events = readTelemetry(directory); assert.ok(events.some(e => e.type === 'signal.received' && e.attributes.label === 'refine'));
-    const job = events.find(e => e.type === 'workflow.job.observed'); assert.equal(job.attributes.status, 'skipped'); assert.equal(job.correlation.runner, null);
+    const job = events.find(e => e.type === 'workflow.job.observed' && e.correlation.job === '55'); assert.equal(job.attributes.status, 'skipped'); assert.equal(job.attributes.queueDurationMs, null);
+    const completed = events.find(e => e.correlation.job === '56'); assert.equal(completed.attributes.queueDurationMs, 5000); assert.equal(completed.attributes.durationMs, 5000); assert.equal(job.correlation.runner, null);
     assert.ok(!events.some(e => e.type === 'execution.admitted')); assert.ok(!JSON.stringify(events).includes('private'));
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });

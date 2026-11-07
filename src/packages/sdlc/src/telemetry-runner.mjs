@@ -3,14 +3,13 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'n
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
-import { createTelemetry, telemetryContext, telemetryDirectory, exportTelemetry } from './telemetry.mjs';
+import { createTelemetry, telemetryContext, telemetryDirectory, telemetrySettings, exportTelemetry } from './telemetry.mjs';
 
 export function installTelemetry(directory, env = process.env) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const settings = join(directory, 'settings.json');
   if (!existsSync(settings)) writeFileSync(settings, JSON.stringify({ schemaVersion: 1, enabled: true, maxBytes: 16777216, maxStreams: 128, retentionDays: 7, otlpEndpoint: null }, null, 2) + '\n', { mode: 0o600 });
-  const selected = JSON.parse(readFileSync(settings));
-  if (selected.schemaVersion !== 1 || typeof selected.enabled !== 'boolean' || !Number.isInteger(selected.maxBytes) || selected.maxBytes < 16384 || selected.maxBytes > 16777216 || !Number.isInteger(selected.maxStreams) || selected.maxStreams < 1 || selected.maxStreams > 128 || !Number.isInteger(selected.retentionDays) || selected.retentionDays < 1 || selected.retentionDays > 90) throw Error('Invalid operator telemetry settings');
+  const selected = telemetrySettings(directory);
   return { directory, env: { ...env, ...(selected.enabled ? {} : { LIGHTHOUSE_TELEMETRY_DISABLED: 'true' }) }, maxBytes: selected.maxBytes, maxStreams: selected.maxStreams, retentionMs: selected.retentionDays * 86400000, endpoint: env.LIGHTHOUSE_TELEMETRY_OTLP_ENDPOINT ?? selected.otlpEndpoint };
 }
 

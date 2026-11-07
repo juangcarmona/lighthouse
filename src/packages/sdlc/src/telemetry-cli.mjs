@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { setTimeout as pause } from 'node:timers/promises';
-import { createTelemetry, readTelemetry, telemetryDirectory, telemetryHealth, exportTelemetry } from './telemetry.mjs';
+import { createTelemetry, readTelemetry, telemetryDirectory, telemetryHealth, telemetrySettings, exportTelemetry } from './telemetry.mjs';
 import { usageSummary } from './telemetry-opencode.mjs';
 import { installTelemetry } from './telemetry-runner.mjs';
 
@@ -24,7 +24,7 @@ export async function telemetryCli(args, env = process.env) {
     } while (true);
   } else if (command === 'usage') print(usageSummary(readTelemetry(directory).filter(e => !option('--run') || e.correlation.runId === option('--run')), { health: telemetryHealth(directory) }));
   else if (command === 'export') {
-    const endpoint = option('--endpoint') ?? env.LIGHTHOUSE_TELEMETRY_OTLP_ENDPOINT;
+    const endpoint = option('--endpoint') ?? env.LIGHTHOUSE_TELEMETRY_OTLP_ENDPOINT ?? telemetrySettings(directory)?.otlpEndpoint;
     if (!endpoint) throw Error('Configure an explicit OTLP HTTP JSON /v1/logs endpoint');
     const headers = env.LIGHTHOUSE_TELEMETRY_OTLP_HEADERS ? JSON.parse(env.LIGHTHOUSE_TELEMETRY_OTLP_HEADERS) : {};
     do { print(await exportTelemetry(directory, { endpoint, headers })); if (!args.includes('--follow')) break; await pause(2000); } while (true);
