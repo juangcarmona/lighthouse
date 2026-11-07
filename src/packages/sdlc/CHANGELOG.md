@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.1
+
+### Patch Changes
+
+- 433ec3a: # Acyclic completion services
+
+  Separate completion contracts, GitHub observations and event authorization. Share retry constants directly and preserve existing exported entrypoints and delivery behavior.
+
+- 2472dc7: # Explicit implementation publication
+
+  Use one named publication transition for implementation and correction paths, retaining original authority separately from the host-confirmed head and checked tree. Preserve the legacy exported entrypoint.
+
 ## 0.21.0
 
 ### Minor Changes
