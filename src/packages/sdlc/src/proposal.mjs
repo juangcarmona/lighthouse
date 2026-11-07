@@ -8,7 +8,6 @@ import { isDeepStrictEqual } from 'node:util';
 import { checkProductResumePullRequest } from './product-change.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { selectPublicationBranch } from './publication-branch.mjs';
-
 import { openSpec as openspec } from './openspec-provider.mjs';
 
 export function proposalValidationFailure(error, issue) {

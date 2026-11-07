@@ -37,6 +37,7 @@ fs.writeFileSync(process.env.XDG_CACHE_HOME+'/scratch','disposable',{mode:0o600}
 let scopeProbe;
 if(scenario.startsWith('planning-')) {
  const plan='/workspace/openspec/changes/issue-320-proposal';fs.mkdirSync(plan,{recursive:true});
+ assert.match(fs.readFileSync(plan+'/.openspec.yaml','utf8'),/^schema: spec-driven$/m);
  fs.writeFileSync(plan+'/proposal.md','# Proposal\\n\\n## Why\\nRetain verification behavior.\\n\\n## What Changes\\n- Characterize the existing implementation.\\n\\n## Capabilities\\n### New Capabilities\\n- verification: Preserve observable verification.\\n### Modified Capabilities\\nNone.\\n\\n## Impact\\nTests only.\\n');
  fs.writeFileSync(plan+'/design.md','# Design\\nPreserve existing behavior and inspect independent checks.\\n');
  fs.writeFileSync(plan+'/tasks.md','# Tasks\\n\\n- [x] 1.1 Implement the bounded verification change.\\n');
