@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.20.13
+
+### Patch Changes
+
+- 9d67e2b: # Checked base synchronization
+
+  Synchronize an explicitly enabled review correction with its admitted base before independent verification, and bind publication to that checked tree and both parents. Preserve immutable model inputs and retain sanitized hosting failure reasons.
+
 ## 0.20.12
 
 ### Patch Changes
