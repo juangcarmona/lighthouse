@@ -99,6 +99,31 @@ test('candidate Git exposes only a declared credential-free origin and rejects m
   } finally { process.env.PATH = previousPath; await rm(root, { recursive: true, force: true }); }
 });
 
+test('each admitted command retains its own timeout after earlier checks consume time', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async t => {
+  const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'command-budgets-'));
+  const workspace = join(root, 'source');
+  const config = { image: process.env.LIGHTHOUSE_TEST_IMAGE, uid: process.getuid() };
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  try {
+    await mkdir(workspace);
+    await writeFile(join(workspace, 'README.md'), 'Bounded verification fixture.\n');
+    const checks = ['first', 'second', 'third'].map(value => ['node', '-e', `console.log(${JSON.stringify(value)})`]);
+    const telemetry = { emit(event) { if (event === 'check.ended') now += 9 * 60 * 1000; } };
+    const receipt = await runImplementationChecks({ config,
+      request: { repository: 'owner/repo', issue: 557, runId: 'command-budgets', sourceRevision: 'fixture', implementation: { policy: { checks } } },
+      changes: [], workspace, output: join(root, 'output'), name: `command-budgets-${process.pid}`,
+      redact: text => text, cancelled: () => false, telemetry });
+    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0]);
+    assert.deepEqual(receipt.checks.map(check => check.command), checks);
+    assert.ok(receipt.checks.every(check => check.execution.status === 'passed'));
+  } finally {
+    t.mock.restoreAll();
+    await restoreWorkspaceOwnership(root, config);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('container checks install workspace bins and execute temporary tools', { skip: !process.env.LIGHTHOUSE_TEST_IMAGE }, async () => {
   const root = await mkdtemp(join(process.env.RUNNER_TEMP ?? tmpdir(), 'workspace-checks-'));
   const workspace = join(root, 'source');
