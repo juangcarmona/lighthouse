@@ -40,7 +40,7 @@ export async function observeAdmissionRejection(api, repository, owner, rejectio
     if (stage !== 'review' || !same(authorization, request.completionAuthorization)) return confirmed();
     const current = await inspectCompletion(api, repository, owner, request.completionAuthorization, 'review');
     assertChecks(current);
-    if (current.currentRevision !== revision || !same(current.binding, request.admissionBinding) || (await postMergeRuns(api, current, current.merge)).some(check => check.status !== 'passed')) return confirmed();
+    if (current.currentRevision !== revision || !same(current.binding, request.admissionBinding) || digest(JSON.stringify(current.pullRequest.reviews)) !== request.admissionReviewsDigest || (await postMergeRuns(api, current, current.merge)).some(check => check.status !== 'passed')) return confirmed();
     return result('retryable', 'workflow-revision-rejected', 'Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.', { confirmed: true, jobs, revision, workflowRevision: revision });
   } catch { return confirmed(); }
 }

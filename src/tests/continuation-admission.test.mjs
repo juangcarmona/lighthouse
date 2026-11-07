@@ -67,11 +67,12 @@ test('uncertain effects never authorize recovery or terminal reconciliation', as
 });
 
 test('changed criteria, holds, approval, head, policy and workflow ownership stop a confirmed rejection', async () => {
-  for (const scenario of ['criteria', 'hold', 'approval', 'head', 'policy', 'workflow', 'product', 'code', 'unknown-inventory', 'rewritten-history', 'owner-ref', 'missing-binding', 'custom-product']) {
+  for (const scenario of ['criteria', 'hold', 'approval', 'approval-text', 'head', 'policy', 'workflow', 'product', 'code', 'unknown-inventory', 'rewritten-history', 'owner-ref', 'missing-binding', 'custom-product']) {
     const f = await fixture();
     if (scenario === 'criteria') f.issue.body += ' Changed acceptance.';
     if (scenario === 'hold') f.issue.labels.push({ name: 'human-working' });
     if (scenario === 'approval') f.reviews.push({ id: 2, user: { login: owner }, state: 'CHANGES_REQUESTED', commit_id: head });
+    if (scenario === 'approval-text') f.reviews[0].body = 'Additional acceptance condition.';
     if (scenario === 'head') f.pr.head.sha = 'f'.repeat(40);
     if (scenario === 'policy') f.profile.requiredApprovals = 1;
     if (scenario === 'workflow') f.changed[0].filename = '.github/workflows/lighthouse-sdlc-review.lock.yml';
