@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir, lstat, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, lstat, readlink, mkdtemp, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
@@ -100,6 +100,7 @@ export async function sourceFiles(root, baseline) {
   if (metadata) execFileSync('git', ['init', '--bare', '-q', metadata], { env: gitEnv });
   const trackedDirectories = new Set();
   for (const path of baseline?.keys() ?? []) { let parent = dirname(path); while (parent !== '.') { trackedDirectories.add(parent); parent = dirname(parent); } }
+  const pendingLinks = new Set([...baseline ?? []].filter(([, file]) => file.mode === '120000').map(([path]) => path));
   const files = new Map(); let bytes = 0;
   async function visit(dir, relative = '') {
     for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -111,6 +112,14 @@ export async function sourceFiles(root, baseline) {
         if (ignored.status !== 1) throw Error('Unable to resolve ignored implementation output');
       }
       const stat = await lstat(target);
+      if (pendingLinks.has(path)) {
+        if (!safePath(path) || !stat.isSymbolicLink()) throw Error(`Admitted source link changed: ${path}`);
+        const content = await readlink(target, { encoding: 'buffer' });
+        const sha = createHash('sha1').update(`blob ${content.length}\0`).update(content).digest('hex');
+        if (sha !== baseline.get(path).sha) throw Error(`Admitted source link changed: ${path}`);
+        pendingLinks.delete(path);
+        continue;
+      }
       if (!safePath(path) || stat.isSymbolicLink() || !stat.isDirectory() && !stat.isFile()) throw Error(`Unsafe implementation file: ${path}`);
       if (stat.isDirectory()) await visit(target, path);
       else {
@@ -120,7 +129,11 @@ export async function sourceFiles(root, baseline) {
       }
     }
   }
-  try { await visit(root); return files; } finally { if (metadata) await rm(metadata, { recursive: true, force: true }); }
+  try {
+    await visit(root);
+    if (pendingLinks.size) throw Error(`Admitted source link is absent: ${[...pendingLinks][0]}`);
+    return files;
+  } finally { if (metadata) await rm(metadata, { recursive: true, force: true }); }
 }
 export function collectChanges(before, after, policy) {
   const changes = [];
