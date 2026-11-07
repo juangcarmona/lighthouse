@@ -7,6 +7,7 @@ import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visi
 import { readActionsJson } from './actions-artifact.mjs';
 import { reconcileCompletion } from './completion-recovery.mjs';
 import { reconcilePublishedCi } from './publication-recovery.mjs';
+import { observeAdmissionRejection, reconcileAdmissionRejection, admissionRetryRequest, verifyAdmissionRecovery } from './admission-recovery.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
 export const shortRunMs = 5 * 60 * 1000;
@@ -106,14 +107,14 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
     let observedRunId;
     if (matches.length === 1 && found.total_count <= 100) {
       const run = await api(`actions/runs/${matches[0].id}`);
-      try { await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch { return { ...missingOrigin(), observedRunId: String(run.id) }; }
+      try { await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch (error) { if (error.rejection) return observeAdmissionRejection(api, repository, owner, error.rejection, issue, comments); return { ...missingOrigin(), observedRunId: String(run.id) }; }
       observedRunId = String(run.id);
     }
     return { issue: issue.number, worker: workerFor(receipt), outcome: 'requested', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-unconfirmed', nextAction: 'Inspect the request and matching Actions execution; never resend an unconfirmed dispatch.', ...(observedRunId ? { observedRunId } : {}) };
   }
   const run = await api(`actions/runs/${receipt.workerRunId}`);
   let dispatch;
-  try { dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch { return { ...missingOrigin(), observedRunId: String(run.id) }; }
+  try { dispatch = await loadDispatch(api, repository, owner, issue.number, comment.id, run, readArtifact); } catch (error) { if (error.rejection) return observeAdmissionRejection(api, repository, owner, error.rejection, issue, comments); return { ...missingOrigin(), observedRunId: String(run.id) }; }
   const jobs = await api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
   if (!Array.isArray(jobs.jobs) || !Number.isSafeInteger(jobs.total_count) || jobs.total_count !== jobs.jobs.length || jobs.total_count > 100) throw Error('Execution job inventory is incomplete or exceeds recovery bounds');
   const repo = await api('');
@@ -296,6 +297,7 @@ export async function reconcileUnattendedStop(api, repository, owner, issue, com
 // Called again by the worker, before claiming a maintenance-created retry.
 export async function verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, depth, revalidate = false) {
   const r = dispatch.request, retry = r.recovery;
+  if (retry?.kind === 'before-admission') return verifyAdmissionRecovery(api, repository, owner, dispatch, parent, readArtifact);
   if (parent.path !== maintenancePath || !retry || !Number.isSafeInteger(retry.attempt) || retry.attempt < 1 || retry.attempt > retryLimit || !/^[1-9][0-9]*$/.test(String(retry.previousComment))) throw Error('Invalid recovery origin');
   const comment = await api(`issues/comments/${retry.previousComment}`);
   const receipt = readDispatchReceipt(comment, repository, r.issue);
@@ -329,6 +331,19 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
   for (const { comment } of latest.values()) {
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
+    if (observation.admissionRejected) {
+      const { admissionRejected, confirmed, ...visible } = publicObservation;
+      observations.push(visible);
+      if (observation.rootId !== currentRoot || enabled !== true) continue;
+      await reconcileAdmissionRejection(api, repository, observation);
+      if (observation.state !== 'retryable') continue;
+      const freshIssue = await api(`issues/${issueNumber}`), freshComments = await issueComments(api, issueNumber);
+      const fresh = await observeDispatch(api, repository, owner, await api(`issues/comments/${comment.id}`), freshIssue, freshComments, now, readArtifact);
+      if (fresh.state !== 'retryable') continue;
+      const request = admissionRetryRequest(fresh, parent);
+      const recorded = await recordDispatch(api, repository, request);
+      return { observations, ...(recorded.send ? { request, commentId: recorded.comment.id } : {}) };
+    }
     if (observation.rootId === currentRoot) {
       const completion = await reconcileCompletion(api, repository, owner, issue, observation, parent, enabled, { readArtifact, save: saveCompletionRecovery });
       if (completion) Object.assign(publicObservation, completion);

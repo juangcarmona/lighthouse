@@ -97,7 +97,7 @@ async function main(command) {
           const admission = await load('admission.json');
           if (admission.requestId === receipt.id && admission.digest === receipt.digest && /^[a-f0-9]{40}$/.test(admission.sourceRevision)) sourceRevision = admission.sourceRevision;
         } catch {}
-        if (String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository, issue: Number(env.LIGHTHOUSE_ISSUE), stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision };
+        if (!receipt.admissionRejected && String(receipt.workerRunId) === String(env.GITHUB_RUN_ID)) preparationStop = { repository, issue: Number(env.LIGHTHOUSE_ISSUE), stage: receipt.stage, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, dispatch: { commentId, requestId: receipt.id, digest: receipt.digest }, observation: 'preparation-failure', sourceRevision };
       } catch (error) { await summary(`Preparation outcome could not be authenticated: ${error.message}. Inspect the execution.`); }
     }
     if (!await access(join(dir, 'reserved')).then(() => true, () => false)) { if (preparationStop) await publishObservedStop(api, preparationStop); return; }
