@@ -1,5 +1,16 @@
 # @juangcarmona/lighthouse
 
+## 0.12.55
+
+### Patch Changes
+
+- ce55ac9: # Readable native estimate contract
+
+  Supply the canonical estimate schema and stage status to native triage/refinement, resolve their packaged guidance links, and serialize bounded execution context for readable contract inspection. Invalid estimates remain rejected by the existing validators.
+
+- Updated dependencies [ce55ac9]
+  - @juangcarmona/lighthouse-sdlc@0.21.6
+
 ## 0.12.54
 
 ### Patch Changes
