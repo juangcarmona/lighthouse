@@ -19,10 +19,10 @@ ProductShape owns product intent, ArcShape owns architecture evidence and Lighth
 
 ## Start with a repository
 
-Requires Node.js 22 or later. This example uses the registry-qualified CLI 0.12.47, which selects SDLC 0.20.14 and UI 0.2.1. It needs no Lighthouse source checkout. In the repository you want to adopt:
+Requires Node.js 22 or later. This example uses the registry-qualified CLI 0.12.54, which selects SDLC 0.21.5 and UI 0.2.1. It needs no Lighthouse source checkout. In the repository you want to adopt:
 
 ```sh
-npm install --save-dev --save-exact @juangcarmona/lighthouse@0.12.47
+npm install --ignore-scripts --save-dev --save-exact @juangcarmona/lighthouse@0.12.54
 npx --no-install lighthouse init --name MyProduct --dry-run
 npx --no-install lighthouse init --name MyProduct
 npx --no-install lighthouse verify
@@ -54,11 +54,12 @@ The procedures ship in the CLI and SDLC package READMEs. After installation, rea
 
 | Profile | Recorded proof and limits |
 | --- | --- |
-| Registry baseline: CLI 0.12.47 / SDLC 0.20.14 / UI 0.2.1 | [Published metadata, integrity and all 292 artifact files verified](https://github.com/juangcarmona/lighthouse/issues/215#issuecomment-6703366055). [Fresh-cache installation, initializer preview, verification and .NET starter creation passed](https://github.com/juangcarmona/lighthouse/issues/215#issuecomment-6703385256); consumer guidance, licensing and tooling markers were preserved. Apache-2.0 scope and third-party exceptions are explicit. |
-| Optional GitHub delivery | [Controlled native acceptance and retained matrix](https://github.com/juangcarmona/lighthouse/blob/7114fccd40486d94d633c5ab32128a69644324e3/docs/process/20261107-published-consumer/README.md) use CLI 0.12.46 / SDLC 0.20.13 / UI 0.2.0, Node 24, gh-aw 0.93.2 and the adopted Docker/OpenCode 2.1.0 engine. The workspace providers are ProductShape CLI 0.23.0, ArcShape CLI 0.4.0 and OpenSpec 1.15.0; Product Change jobs install bridge 0.6.6 with its own dependencies. The trace includes product approval/apply, independent verification, authorized merge, post-merge CI and accepted final review. One explicit native maintenance request recovered the final continuation; [#519](https://github.com/juangcarmona/lighthouse/issues/519) tracks that remaining reliability gap. |
-| Other engines and hardened profiles | Not qualified by this trace. Configured model selectors do not establish provider-authenticated identity, billing or cost; those measurements remain unknown here. |
+| Registry recipe: CLI 0.12.54 / SDLC 0.21.5 / UI 0.2.1 | [Registry and fresh-consumer qualification](https://github.com/juangcarmona/lighthouse/tree/0eb8a398751a96d4b18df93a3cd733db1a87ef57/acceptance/20261107-solid) binds all 297 packaged files to the reviewed source. Fresh-cache installation, unchanged initializer preview, initialization and verification passed; the consumer's README and license were preserved. |
+| Automatic GitHub continuation | [Native case #46](https://github.com/juangcarmona/lighthouse-published-consumer-20261104/issues/46) passed [original post-merge CI](https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42373925660) before integration became terminal. That CI callback waited and started one final review, which closed the issue automatically without manual maintenance or a review resignal. [Protected report and retrospective](https://github.com/juangcarmona/lighthouse-published-consumer-20261104/blob/b21274b6357fe582f3b260564d255e714d9d5382/docs/process/20261107-46-prove-object-valued-statuses-are-classified-without-coercion/runs/42374274489/attempt-0001/post-integration/report.md). |
+| Earlier qualification | [CLI 0.12.47 / SDLC 0.20.14 registry and .NET starter proof](https://github.com/juangcarmona/lighthouse/issues/215#issuecomment-6703385256) and the [CLI 0.12.46 / SDLC 0.20.13 / UI 0.2.0 delivery matrix](https://github.com/juangcarmona/lighthouse/blob/7114fccd40486d94d633c5ab32128a69644324e3/docs/process/20261107-published-consumer/README.md) retain their original limits. The earlier delivery needed explicit maintenance to recover its final continuation. |
+| Other engines and hardened profiles | Not qualified by these traces. Configured model selectors do not establish provider-authenticated identity, billing or cost; those measurements remain unknown here. |
 
-The native negative controls, interruption recovery, upgrade and rollback retain their original package versions in the linked matrix. The registry baseline above proves current installation and distribution; it does not change the version bindings or operator interventions recorded in those earlier runs. [#216](https://github.com/juangcarmona/lighthouse/issues/216) tracks the scoped acceptance.
+The older negative controls, interruption recovery, upgrade and rollback keep the versions and operator interventions in their original matrix; the new continuation proof does not requalify every case. [#216](https://github.com/juangcarmona/lighthouse/issues/216) tracks scoped consumer acceptance. [#541](https://github.com/juangcarmona/lighthouse/issues/541) remains open for a separate dispatch race when main advances before worker admission. [#414](https://github.com/juangcarmona/lighthouse/issues/414) covers rejected-plan repair; the new case uses preinstalled provider metadata and an explicit exception for its native branch ([#547](https://github.com/juangcarmona/lighthouse/issues/547)). Case #41 needed metadata correction and later remained blocked on factory-audit evidence outside its reviewer context; it is retained as a failed trace.
 
 ## Explore
 
