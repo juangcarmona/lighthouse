@@ -95,7 +95,6 @@ export async function runImplementationChecks({ config, request, changes, worksp
     receipt.candidateTree = execFileSync('git', ['-c', `safe.directory=${workspace}`, '-C', workspace, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
     receipt.observedAt = new Date().toISOString();
   }
-  const deadline = Date.now() + 600000;
   await mkdir(output, { recursive: true });
   await chmod(output, 0o777);
   const runtime = await startEnvironment({ selected, image: config.image, commands: [['sh'], ...request.implementation.policy.checks], agent: false, name: `${name}-validation`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
@@ -103,6 +102,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
     for (let i = 0; i < request.implementation.policy.checks.length; i++) {
+      const deadline = Date.now() + 600000;
       const command = request.implementation.policy.checks[i];
       const remaining = deadline - Date.now();
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
