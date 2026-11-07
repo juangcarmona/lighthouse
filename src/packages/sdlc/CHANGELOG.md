@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.21.9
+
+### Patch Changes
+
+- e615651: # Cancellable host engine admission
+
+  Make host engine admission cancellable and let operators bound its wait on shared hosts without changing the default or the unattended correction budget.
+
 ## 0.21.8
 
 ### Patch Changes
