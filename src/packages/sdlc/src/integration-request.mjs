@@ -1,5 +1,5 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { implementationPrProof } from './pr-state.mjs';
+import { implementationPrProof } from './implementation-proof.mjs';
 import { list, loadProfile, requiredPolicy, checkCommit } from './completion.mjs';
 
 export function assertIntegrationLabelCurrent(repository, owner, authorization, pr, issue, comments, reviews) {

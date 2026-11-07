@@ -1,4 +1,5 @@
-import { digest, validateStageEnvelope } from './host-contract.mjs';
+import { digest } from './digests.mjs';
+import { validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
 import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerExecutionObservation, publishStep } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';

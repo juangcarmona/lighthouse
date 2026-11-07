@@ -1,7 +1,8 @@
 import { fingerprint, inspectCompletion, postMergeRuns, assertFresh, assertChecks, assertCitedChecks, completionEffects } from './completion.mjs';
 import { completionBundle, publishProcessBundle, readPublishedBundle } from './process-publication.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
-import { digest, validateStageEnvelope } from './host-contract.mjs';
+import { digest } from './digests.mjs';
+import { validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, loadDispatch, finishDispatch, assertCurrentDispatch } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff, pendingQuestion, visibleNextAction } from './handoff.mjs';

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { withinScope } from './implementation.mjs';
 import { validateStageCompletion } from './contracts.mjs';
-import { proposalRoot } from './proposal.mjs';
+import { proposalRoot } from './proposal-files.mjs';
 
 export const unattendedDigest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
