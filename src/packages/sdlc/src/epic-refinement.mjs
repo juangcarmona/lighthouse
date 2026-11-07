@@ -3,7 +3,7 @@ import { issueComments, readDispatchReceipt } from './stage-dispatch.mjs';
 import { authenticateEpicChild } from './epic-native.mjs';
 import { loadStageReport } from './proposal.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
-import { taskDigest } from './issue-actions.mjs';
+import { taskDigest } from './digests.mjs';
 
 // This observation proves current child and triage state; it does not grant execution authority.
 export async function observeEpicRefinement({ api, repository, owner, child, allowWorking = false, authenticate = authenticateEpicChild, loadReport = loadStageReport, readArtifact }) {

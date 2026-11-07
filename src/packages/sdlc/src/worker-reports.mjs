@@ -1,4 +1,4 @@
-import { digest } from './host-contract.mjs';
+import { digest } from './digests.mjs';
 import { workers } from './stage-dispatch.mjs';
 
 export const causes = Object.freeze({

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { setTimeout } from 'node:timers/promises';
-import { proposalRoot, changeName } from './proposal.mjs';
+import { proposalRoot, changeName } from './proposal-files.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';

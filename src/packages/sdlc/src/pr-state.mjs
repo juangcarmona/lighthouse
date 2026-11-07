@@ -1,9 +1,10 @@
+export { implementationPrProof } from './implementation-proof.mjs';
+import { implementationPrProof } from './implementation-proof.mjs';
 import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { checkCommit } from './completion.mjs';
 import { verificationPush } from './ci-subject.mjs';
 import { validateProductCheckpoint, productProposalProof } from './product-change.mjs';
 
-const marker = /<!-- lighthouse-pr-state:(\{[^\n]*\}) -->/;
 const draftIntent = /<!-- lighthouse-pr-draft-intent:([1-9][0-9]*):([a-f0-9]{40}):([1-9][0-9]*) -->/;
 
 export const draftIntentMarker = (pr, run) => {
@@ -70,21 +71,6 @@ export async function setPullRequestDraft(token, pr, draft) {
   });
   const result = await response.json();
   if (!response.ok || result.errors?.length || result.data?.[field]?.pullRequest?.isDraft !== draft) throw Error('GitHub could not change PR draft state');
-}
-
-export function implementationPrProof(comments, pr) {
-  for (const comment of [...comments].reverse()) {
-    if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot') continue;
-    const raw = comment.body?.match(marker)?.[1];
-    if (!raw) continue;
-    let proof;
-    try { proof = JSON.parse(raw); } catch { continue; }
-    if (proof.pr === pr.number && proof.head === pr.head.sha && typeof proof.complete === 'boolean' && /^[1-9][0-9]*$/.test(String(proof.run))) {
-      if (proof.implementationIdentity && proof.implementationIdentity !== checkImplementationPullRequest(pr, pr.head.repo.full_name).implementationIdentity) return null;
-      return proof;
-    }
-  }
-  return null;
 }
 
 export async function projectImplementationPrState(api, issue, draft) {

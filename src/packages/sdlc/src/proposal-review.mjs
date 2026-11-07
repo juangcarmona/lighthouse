@@ -1,5 +1,5 @@
-import { digest } from './host-contract.mjs';
-import { proposalRoot, validateProposalFiles } from './proposal.mjs';
+import { digest } from './digests.mjs';
+import { proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { productImplementationProof, productProposalProof } from './product-change.mjs';
 
 export const reviewDigest = (kind, value) => digest(JSON.stringify(kind === 'ci' ? { id: value.id, attempt: value.run_attempt, repository: value.repository?.full_name, path: value.path, event: value.event, head: value.head_sha, branch: value.head_branch, status: value.status, conclusion: value.conclusion } : value));

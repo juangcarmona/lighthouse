@@ -1,15 +1,15 @@
-import { createHash } from 'node:crypto';
+export { digest } from './digests.mjs';
+import { digest } from './digests.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { validateStageCompletion, validateStageResult } from './contracts.mjs';
 import stages from '../stages.json' with { type: 'json' };
 import pkg from '../package.json' with { type: 'json' };
-import { validateProposalFiles } from './proposal.mjs';
+import { validateProposalFiles } from './proposal-files.mjs';
 import { routeEvent } from './event-router.mjs';
 import { validateRequestTriage, validateEstimateRevision } from './request-triage.mjs';
 import { assessDecomposition } from './epic.mjs';
 
-export const digest = (text) => createHash('sha256').update(text).digest('hex');
 const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const hex = /^[a-f0-9]{64}$/;
 const revision = /^[a-f0-9]{40}$/;
