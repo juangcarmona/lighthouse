@@ -1,6 +1,6 @@
 import { completionSummary } from './completion-status.mjs';
 import { createHash } from 'node:crypto';
-import { evidenceProtection } from './completion.mjs';
+import { evidenceProtection } from './completion-state.mjs';
 import { buildEvidenceIndex, validateEvidenceRecord, validateEvidenceIndex } from './evidence.mjs';
 
 const digest = value => createHash('sha256').update(value).digest('hex');

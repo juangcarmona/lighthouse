@@ -16,7 +16,7 @@ import { loadDispatch, checkDispatchClaim, finishDispatch } from './stage-dispat
 import { validateChanges, validateCheckReceipt, isVerificationOnlyCorrection } from './implementation.mjs';
 import { digest } from './host-contract.mjs';
 import { createHash } from 'node:crypto';
-import { list, loadProfile, requiredPolicy, checkCommit } from './completion.mjs';
+import { list, loadProfile, requiredPolicy, checkCommit } from './completion-state.mjs';
 import { observeEpicMerge, mergeEpicChild } from './epic-merge.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
 import { ensureEpicChecks } from './epic-checks.mjs';

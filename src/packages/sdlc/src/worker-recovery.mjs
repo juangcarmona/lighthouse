@@ -1,3 +1,5 @@
+import { retryLimit, retryDelayMs } from './recovery-policy.mjs';
+export { retryLimit, retryDelayMs } from './recovery-policy.mjs';
 import { digest } from './digests.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
@@ -7,8 +9,6 @@ import { reconcileCompletion } from './completion-recovery.mjs';
 import { reconcilePublishedCi } from './publication-recovery.mjs';
 
 export const maintenancePath = '.github/workflows/lighthouse-worker-maintenance.yml';
-export const retryLimit = 2;
-export const retryDelayMs = 30 * 60 * 1000;
 export const shortRunMs = 5 * 60 * 1000;
 export const recoveryId = (repository, rootId, attempt) => digest(`${repository}:${rootId}:retry:${attempt}`);
 export function recoveryIssues(value) {

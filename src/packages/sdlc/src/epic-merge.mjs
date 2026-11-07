@@ -1,5 +1,5 @@
 import { checkImplementationPullRequest } from './proposal-review.mjs';
-import { checkCommit, list, loadProfile, requiredPolicy } from './completion.mjs';
+import { checkCommit, list, loadProfile, requiredPolicy } from './completion-state.mjs';
 import { isDeepStrictEqual } from 'node:util';
 import { epicCorrelation, epicJournalKey } from './epic-github.mjs';
 

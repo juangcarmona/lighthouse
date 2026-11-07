@@ -1,5 +1,6 @@
 import { completionSummary, pendingReviewMarker } from './completion-status.mjs';
-import { fingerprint, inspectCompletion, postMergeRuns, assertFresh, assertChecks, assertCitedChecks, completionEffects } from './completion.mjs';
+import { fingerprint } from './completion-contract.mjs';
+import { inspectCompletion, postMergeRuns, assertFresh, assertChecks, assertCitedChecks, completionEffects } from './completion-state.mjs';
 import { completionBundle, publishProcessBundle, readPublishedBundle } from './process-publication.mjs';
 import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { digest } from './digests.mjs';

@@ -1,6 +1,6 @@
 import { checkImplementationPullRequest, checkProposal } from './proposal-review.mjs';
 import { stagePath } from './stage-dispatch.mjs';
-import { retryLimit, retryDelayMs } from './worker-recovery.mjs';
+import { retryLimit, retryDelayMs } from './recovery-policy.mjs';
 import { verificationBranch, verificationPush, verificationPullRequest, currentMergeSubject } from './ci-subject.mjs';
 
 function transportFailureCode(error) {
