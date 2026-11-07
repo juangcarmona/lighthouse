@@ -1,0 +1,9 @@
+{
+  "schema": "product-definition-as-code/diagnostics/v1alpha1",
+  "diagnostics": [],
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "artifacts": 140
+  }
+}

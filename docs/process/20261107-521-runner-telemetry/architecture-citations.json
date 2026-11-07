@@ -1,0 +1,330 @@
+{
+  "schema": "product-definition-as-code/citations/v1alpha1",
+  "targets": [
+    "docs/architecture"
+  ],
+  "citations": [
+    {
+      "id": "UC-INITIALIZE-PROJECT",
+      "digest": "sha256:10a0edc89444b645253a801fb3bf35dc8c3bcf858396e50de2057091c4d8f7fa",
+      "source": "docs/architecture/01-introduction-and-goals/README.md",
+      "line": 21,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-ADOPTABILITY",
+      "digest": "sha256:97827599b046672b59f27be39008c158d043d8c11a8f54cf9dd9b1478b1d6e55",
+      "source": "docs/architecture/01-introduction-and-goals/README.md",
+      "line": 48,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-INITIALIZE-FOUNDATION",
+      "digest": "sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4",
+      "source": "docs/architecture/02-constraints/README.md",
+      "line": 25,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-SDLC-PACKAGE-BOUNDARY",
+      "digest": "sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71",
+      "source": "docs/architecture/02-constraints/README.md",
+      "line": 40,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-OWNED-AUTHORITY",
+      "digest": "sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611",
+      "source": "docs/architecture/03-context-and-scope/README.md",
+      "line": 28,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-OWNED-AUTHORITY",
+      "digest": "sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611",
+      "source": "docs/architecture/03-context-and-scope/README.md",
+      "line": 57,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-INITIALIZE-AUTHORITIES",
+      "digest": "sha256:7243c8af149a2199dd2e9e9f9984a6b7a72de8d98b24917af07fa40861058a51",
+      "source": "docs/architecture/04-solution-strategy/README.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-VERIFY-FOUNDATION",
+      "digest": "sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11",
+      "source": "docs/architecture/04-solution-strategy/README.md",
+      "line": 29,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-INITIALIZE-FOUNDATION",
+      "digest": "sha256:95dfc4b2b0a94c5747615e734a2302004543bcc8f33e1e494937d471d2bfc1c4",
+      "source": "docs/architecture/04-solution-strategy/README.md",
+      "line": 35,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-RUN-AGENT",
+      "digest": "sha256:a36f45b77cc1a28f6222e3becc70832fc60e70f6857d36d0870154165d28c42e",
+      "source": "docs/architecture/05-building-block-view/README.md",
+      "line": 89,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PRODUCT-CHANGE-HANDOFF",
+      "digest": "sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1",
+      "source": "docs/architecture/06-runtime-view/README.md",
+      "line": 52,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-INITIALIZE-AUTHORITIES",
+      "digest": "sha256:7243c8af149a2199dd2e9e9f9984a6b7a72de8d98b24917af07fa40861058a51",
+      "source": "docs/architecture/06-runtime-view/README.md",
+      "line": 146,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "docs/architecture/06-runtime-view/apply-product-change.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/apply-review.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/implement.md",
+      "line": 37,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/integrate.md",
+      "line": 36,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/maintenance.md",
+      "line": 55,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "docs/architecture/06-runtime-view/product-change.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-PRODUCT-CHANGE-WORKFLOW",
+      "digest": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+      "source": "docs/architecture/06-runtime-view/product-definition-as-code.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/propose.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/refine.md",
+      "line": 33,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/review.md",
+      "line": 30,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/triage.md",
+      "line": 31,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "docs/architecture/06-runtime-view/unattended.md",
+      "line": 32,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "docs/architecture/06-runtime-view/unattended.md",
+      "line": 34,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-AUTHORIZED-WORKFLOW-ENTRY",
+      "digest": "sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09",
+      "source": "docs/architecture/06-runtime-view/worker-catalogue.md",
+      "line": 90,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-FAST-FORWARD-DELIVERY",
+      "digest": "sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e",
+      "source": "docs/architecture/06-runtime-view/worker-catalogue.md",
+      "line": 180,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-HOTFIX-ROUTE",
+      "digest": "sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3",
+      "source": "docs/architecture/06-runtime-view/worker-catalogue.md",
+      "line": 182,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-PUBLIC-SITE-PROJECTION",
+      "digest": "sha256:e300dc42b79accf48aafa2877f68d42d5ce77edd218057f29b61ff81f97b47b9",
+      "source": "docs/architecture/07-deployment-view/README.md",
+      "line": 53,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "docs/architecture/07-deployment-view/README.md",
+      "line": 59,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-OWNED-AUTHORITY",
+      "digest": "sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611",
+      "source": "docs/architecture/08-crosscutting-concepts/README.md",
+      "line": 17,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "UC-VERIFY-FOUNDATION",
+      "digest": "sha256:353ac93b2889f277883d867ae98be244fbf8a00e8bc0bba5a6b2d594eaa21d11",
+      "source": "docs/architecture/08-crosscutting-concepts/README.md",
+      "line": 63,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "FR-RUNNER-TELEMETRY",
+      "digest": "sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068",
+      "source": "docs/architecture/08-crosscutting-concepts/README.md",
+      "line": 69,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "BR-AGENT-LAUNCH",
+      "digest": "sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed",
+      "source": "docs/architecture/08-crosscutting-concepts/README.md",
+      "line": 94,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-ADOPTABILITY",
+      "digest": "sha256:97827599b046672b59f27be39008c158d043d8c11a8f54cf9dd9b1478b1d6e55",
+      "source": "docs/architecture/10-quality-requirements/README.md",
+      "line": 23,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-LOW-COUPLING",
+      "digest": "sha256:6892a1030f2bbc6d41c16ae1199b557028e3ed98b8bb392af9a38cd7fda413b8",
+      "source": "docs/architecture/10-quality-requirements/README.md",
+      "line": 24,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-TRACEABILITY",
+      "digest": "sha256:a9f6e6ff0b72345022504a0bff1f037e52232f78a90311d28c35eb3568f95500",
+      "source": "docs/architecture/10-quality-requirements/README.md",
+      "line": 25,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-REPRODUCIBLE-DISTRIBUTION",
+      "digest": "sha256:ac9c5b33405da493ab5cb1e65477b9be6c76b05ab59a71dd0fa384f30c7a13db",
+      "source": "docs/architecture/10-quality-requirements/README.md",
+      "line": 26,
+      "form": "inline",
+      "status": "current"
+    },
+    {
+      "id": "QR-LOW-COUPLING",
+      "digest": "sha256:6892a1030f2bbc6d41c16ae1199b557028e3ed98b8bb392af9a38cd7fda413b8",
+      "source": "docs/architecture/11-risks-and-technical-debt/README.md",
+      "line": 20,
+      "form": "inline",
+      "status": "current"
+    }
+  ],
+  "diagnostics": [],
+  "summary": {
+    "total": 39,
+    "current": 39,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 0
+  }
+}

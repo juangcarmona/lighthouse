@@ -15,10 +15,10 @@ pdac-scope: cited
 
 - [x] Integrate runner startup/hooks, native engine observation, resource samples and hosted workflow evidence.
 - [x] Preserve mandatory evidence behavior and expose independent consumption and health commands.
-- [ ] Validate source, package contents, schemas, generated workflow locks and authority citations.
+- [x] Validate source, package contents, schemas, generated workflow locks and authority citations.
 
 ## 3. Native qualification
 
-- [ ] Exercise a clean candidate-package installation, real isolated OpenCode worker and separate containerized consumer.
-- [ ] Retain replay, missing usage, cancellation, exporter outage and redaction evidence.
-- [ ] Record versions, artifact integrity, limitations and the release/adoption boundary.
+- [x] Exercise a clean candidate-package installation, real isolated OpenCode worker and separate containerized consumer.
+- [x] Retain replay, missing usage, cancellation, exporter outage and redaction evidence.
+- [x] Record versions, artifact integrity, limitations and the release/adoption boundary.
