@@ -9,6 +9,7 @@ import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
 import { observeUpdatedProductPull } from './product-change-actions.mjs';
+import { needsVerificationRefresh, observeVerificationMerge } from './ci-subject.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 
@@ -16,11 +17,12 @@ export async function observeImplementationPublication(api, snapshot, published,
   const expectedBase = snapshot.epic?.baseSha ?? snapshot.baseRevision ?? snapshot.sourceRevision;
   const expectedBranch = snapshot.epic?.base ?? snapshot.implementationReview?.base ?? snapshot.defaultBranch;
   // An existing PR can retain an older base snapshot; the live target ref binds authority.
-  return observeUpdatedProductPull(async path => {
+  const observed = await observeUpdatedProductPull(async path => {
     const current = await api(path);
     if (current.number !== published.number || published.id !== undefined && current.id !== published.id || current.state !== 'open' || current.merged || current.head?.ref !== published.head.ref || current.head?.repo?.full_name !== snapshot.repository || current.base?.repo?.full_name !== snapshot.repository || current.base?.ref !== expectedBranch || !/^[a-f0-9]{40}$/.test(current.base?.sha ?? '') || (await api(`git/ref/heads/${expectedBranch}`))?.object?.sha !== expectedBase || ![snapshot.sourceRevision, published.head.sha].includes(current.head?.sha) || (await api(`git/ref/heads/${published.head.ref}`)).object?.sha !== published.head.sha) throw Error('Implementation changed after publication');
     return current;
   }, published.number, published.head.sha, wait);
+  return published.verificationRefresh ? observeVerificationMerge(api, observed, expectedBase, wait) : observed;
 }
 const safePath = path => typeof path === 'string' && path.length < 300 && !path.startsWith('/') && !path.includes('\\') && !path.split('/').some(p => !p || p === '.' || p === '..' || p === '.git');
 const protectedPath = path => /^(?:\.lighthouse|\.agents|\.product|\.git|\.opencode)(?:\/|$)/.test(path) || /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.netrc|id_rsa|id_ed25519)$/.test(path) || path.startsWith('.github/') || /(?:^|\/)(?:AGENTS|CLAUDE)\.md$/.test(path);
@@ -161,7 +163,7 @@ export function isVerificationOnlyCorrection(request) {
   const review = request.implementationReview;
   return request.stage === 'implement' && request.worker === 'apply-review' && review?.approved === false && review.issue === request.issue && review.head === request.sourceRevision && /^[a-f0-9]{40}$/.test(review.head ?? '') && /^[a-f0-9]{40}$/.test(request.baseRevision ?? '') && /^[a-f0-9]{64}$/.test(review.implementationIdentity ?? '') && /^[a-f0-9]{64}$/.test(review.feedbackDigest ?? '');
 }
-export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}) {
+export async function createImplementationPullRequest(api, snapshot, changes, body, runUrl, draft, beforeWrite, afterRefWrite = async () => {}, { refreshVerification = false } = {}) {
   validateChanges(changes, snapshot.implementation.policy);
   if (!changes.length && !isVerificationOnlyCorrection(snapshot)) throw Error('No implementation changes to publish');
   const epic = snapshot.epic;
@@ -180,29 +182,35 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
     return `${prior}\n\n${evidence}\n\n<!-- lighthouse-product-implementation:${JSON.stringify({ ...proof, runId: snapshot.runId, head })} -->`;
   };
   await checkEpicBase();
+  let verificationRefresh = false;
   if (!changes.length) {
     await beforeWrite();
     await checkEpicBase();
     const current = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
-    const revised = reviewBody(current, snapshot.sourceRevision);
-    if (current.body !== revised) {
-      try { await api(`pulls/${current.number}`, 'PATCH', { body: revised }); }
-      catch (error) {
-        const observed = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
-        if (observed.body !== revised) throw error;
-        await beforeWrite(); await checkEpicBase();
-        return observed;
+    verificationRefresh = refreshVerification === true && !epic && !snapshot.productResume && !snapshot.productAlignment && await needsVerificationRefresh(api, current, snapshot.baseRevision);
+    if (!verificationRefresh) {
+      const revised = reviewBody(current, snapshot.sourceRevision);
+      if (current.body !== revised) {
+        try { await api(`pulls/${current.number}`, 'PATCH', { body: revised }); }
+        catch (error) {
+          const observed = await checkReviewCurrent(api, snapshot.repository, snapshot.implementationReview, true);
+          if (observed.body !== revised) throw error;
+          await beforeWrite(); await checkEpicBase();
+          return observed;
+        }
       }
+      return { ...current, body: revised };
     }
-    return { ...current, body: revised };
   }
   const commit = await api(`git/commits/${snapshot.sourceRevision}`), entries = [];
   for (const file of changes) {
     const sha = file.content === null ? null : (await api('git/blobs', 'POST', { content: file.content, encoding: 'base64' })).sha;
     entries.push({ path: file.path, mode: file.mode, type: 'blob', sha });
   }
-  const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
-  const created = await api('git/commits', 'POST', { message: `feat: implement issue #${snapshot.issue}`, tree: tree.sha, parents: [snapshot.sourceRevision] });
+  if (verificationRefresh && (commit.sha !== snapshot.sourceRevision || !/^[a-f0-9]{40}$/.test(commit.tree?.sha ?? ''))) throw Error('Checked verification tree changed');
+  const tree = verificationRefresh ? commit.tree : await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
+  const message = verificationRefresh ? `chore: refresh verification for issue #${snapshot.issue}\n\nLighthouse-CI-Base: ${snapshot.baseRevision}` : `feat: implement issue #${snapshot.issue}`;
+  const created = await api('git/commits', 'POST', { message, tree: tree.sha, parents: [snapshot.sourceRevision] });
   await beforeWrite();
   await checkEpicBase();
   if (snapshot.productAlignment?.parent.pullRequest) {
@@ -228,7 +236,12 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
   if (snapshot.implementationReview) {
     const current = await api(`pulls/${snapshot.implementationReview.number}`);
     if (current.head?.sha !== snapshot.sourceRevision) throw Error('Implementation PR changed before update');
-    await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false });
+    try { await api(`git/refs/heads/${snapshot.implementationReview.branch}`, 'PATCH', { sha: created.sha, force: false }); }
+    catch (error) {
+      if (!verificationRefresh) throw error;
+      const observed = await api(`git/ref/heads/${snapshot.implementationReview.branch}`);
+      if (observed.ref !== `refs/heads/${snapshot.implementationReview.branch}` || observed.object?.sha !== created.sha) throw error;
+    }
     const revised = reviewBody(current, created.sha);
     if (epic) {
       for (let attempt = 0; ; attempt++) {
@@ -242,7 +255,7 @@ export async function createImplementationPullRequest(api, snapshot, changes, bo
       await afterRefWrite();
     }
     await api(`pulls/${snapshot.implementationReview.number}`, 'PATCH', { body: revised });
-    return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch } };
+    return { number: snapshot.implementationReview.number, html_url: snapshot.implementationReview.url, head: { sha: created.sha, ref: snapshot.implementationReview.branch }, ...(verificationRefresh ? { verificationRefresh: true } : {}) };
   }
   const branch = `lighthouse/implement-${snapshot.issue}-${snapshot.runId.slice(0, 12)}`;
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: created.sha });
