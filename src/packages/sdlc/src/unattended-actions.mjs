@@ -1,3 +1,4 @@
+import { committedSourceLinks } from './source-link-tree.mjs';
 import { isIssuePublicationBranch } from './publication-branch.mjs';
 import { createIssueApi } from './github-rest.mjs';
 import { validateReviewPayload } from './independent-review.mjs';
@@ -78,6 +79,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const root = join(env.RUNNER_TEMP, 'lighthouse-unattended-' + env.GITHUB_RUN_ID);
   await mkdir(root, { recursive: true });
   const source = await committedSource(sourceRoot, revision);
+  const sourceLinks = await committedSourceLinks(sourceRoot, revision);
   const implementation = await loadImplementation(api, issueNumber, owner, revision, metadata.default_branch, route);
   if (!implementation.policy.verification) throw Error('Unattended delivery requires declared verification inputs, including test entrypoints and transitive scripts');
   verificationIntegrity(source, source, implementation.policy, issueNumber);
@@ -143,7 +145,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     const request = { repository, runId: unattendedDigest({ runId, sequence: ++sequence, stage, worker }), issue: issueNumber, stage, worker, sourceRevision: revision,
       workflowRunId, attempt, taskDigest: intent,
       ...(worker === 'independent-review' ? { reviewOutput: { protocol: 'verdict-v1', binding: extra.review.binding, purpose: extra.review.purpose } } : {}),
-      ...(stage === 'implement' ? { implementation: { ...implementation, policy: selectedPolicy } } : {}) };
+      ...(stage === 'implement' ? { ...(sourceLinks ? { sourceLinks } : {}), implementation: { ...implementation, policy: selectedPolicy } } : {}) };
     const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');
     const result = await execute({ env, root, request, source: working, context,
