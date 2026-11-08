@@ -46,8 +46,8 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `LIGHTHOUSE_AUTO_IMPLEMENT` | Allows authorized refinement to request implementation; `future` still pauses it |
 | `LIGHTHOUSE_COMPLETION_ENABLED` | Allows integration/review routing; grants no merge permission |
 | `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED` | Allows product preparation, approval/apply and guarded parent resumption |
-| `LIGHTHOUSE_MAINTENANCE_ENABLED` | Enables the separately installed maintenance scan and manual maintenance |
-| `LIGHTHOUSE_MAINTENANCE_ISSUES` | Limits subjects; `[]` admits none, absence selects open owner issues, invalid data stops admission |
+| `LIGHTHOUSE_MAINTENANCE_ENABLED` | Enables the separate maintenance scan, completed-review wakes and manual maintenance |
+| `LIGHTHOUSE_MAINTENANCE_ISSUES` | Limits subjects; `[]` admits none, absence selects open owner issues and recent unresolved final reviews, invalid data stops admission |
 | `LIGHTHOUSE_RECOVERY_ENABLED` | Separately permits bounded retries and confirmed-effect recovery; checked again at worker admission |
 | `LIGHTHOUSE_REPORT_INDEX_ISSUE` | Selects an open owner-authored report index; absence disables reports |
 | `LIGHTHOUSE_CI_APP_CLIENT_ID` | Optional eligible CI connection, paired with the `LIGHTHOUSE_CI_APP_PRIVATE_KEY` Actions secret; grants no delivery or merge authority |
@@ -164,7 +164,7 @@ The router records intent before sending. A worker authenticates the request and
 
 [Maintenance workflow](../../../src/packages/sdlc/workflows/lighthouse-worker-maintenance.yml) · [Recovery decisions](../../../src/packages/sdlc/src/worker-recovery.mjs)
 
-[Explore maintenance and recovery](maintenance.md). Observation is read-only and can report active work without waiting for its issue lease. Reconciliation serializes issue effects, rechecks original authority and may restore a missing handoff, reconcile retained CI send state or complete publication after a confirmed merge. Two linked technical retries, at least 30 minutes apart, remain separate from CI correction rounds. Missing origins, cancellations, human decisions and unknown effects cannot authorize a resend.
+[Explore maintenance and recovery](maintenance.md). Observation is read-only and can report active work without waiting for its issue lease. Reconciliation serializes issue effects, rechecks original authority and may restore a missing handoff, reconcile retained CI send state or complete publication after a confirmed merge. Technical correction retries and rejected final-review admission use separate budgets; neither grants fresh delivery authority. Missing origins, cancellations, human decisions and unknown effects cannot authorize a resend.
 
 ## Error reports
 
