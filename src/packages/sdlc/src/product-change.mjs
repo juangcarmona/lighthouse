@@ -1,3 +1,4 @@
+import { legacyControlBody } from './issue-comment-intent.mjs';
 import { parsePublicationBranch } from './publication-branch.mjs';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
@@ -289,6 +290,7 @@ export function productReviewBinding(input) {
 }
 
 export function parseProductDecision(text) {
+  if (!legacyControlBody(text)) return null;
   const match = typeof text === 'string' && text.trim().match(/^\/product-change (approve|request-changes|answer) ([a-z0-9]+(?:-[a-z0-9]+)*) ([a-f0-9]{64})(?:\n([\s\S]{1,4000}))?$/);
   if (!match) return null;
   return { action: match[1], changeName: match[2], reviewKey: match[3], detail: match[4]?.trim() ?? '' };

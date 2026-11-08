@@ -1,0 +1,20 @@
+{
+  "failedWorker": 42449043523,
+  "reason": "Stage not authorized",
+  "beforeModelExecution": true,
+  "sourceQuestionNotResolved": true,
+  "cause": "Fresh comment recheck replaced the authenticated typed continuation route with legacy comment routing.",
+  "correction": "Recheck the same authenticated client route against fresh issue and comments; retain original scope and reservation checks.",
+  "red": "Production prepare command reproduces Stage not authorized before the correction.",
+  "green": "Production prepare retains original question/reply/client identity and keeps autoImplement/productChange false under global true; a fresh competing reservation is rejected before another effect.",
+  "claim": "Router, intent and execution-observer tests passed; actual continuation qualification was still pending.",
+  "observed": "The real native worker rejected prepare before model execution; its source acknowledgment did not resolve the question.",
+  "processGap": "A typed continuation could pass router/SDK checks without running the worker prepare phase through its fresh comment-route recheck.",
+  "guardOwner": "src/tests/issue-control-continuation-prepare.test.mjs",
+  "guard": "Production CLI preparation must preserve exact question/reply/client identity and original stage-only grant; a new competing reservation during the fresh recheck must reject before another effect.",
+  "counterfactual": "Confirmed RED with the complete provider fixture and pre-fix production route, then GREEN after the narrow source correction; existing CI test discovery includes the guard. No copied skill or lifecycle gate was edited.",
+  "focusedTests": {
+    "passed": 94,
+    "failed": 0
+  }
+}

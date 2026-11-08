@@ -1,3 +1,4 @@
+import { legacyControlComment } from './issue-comment-intent.mjs';
 import { digest } from './digests.mjs';
 import { proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { productImplementationProof, productProposalProof } from './product-change.mjs';
@@ -9,6 +10,7 @@ export const feedbackKey = review => digest(`${review.number}:${review.kind}:${r
 export const feedbackWorker = review => review && !review.approved ? 'apply-review' : undefined;
 
 export function reviewTarget(event, eventName) {
+  if (['issue_comment', 'pull_request_review_comment', 'pull_request_review'].includes(eventName) && !legacyControlComment(eventName === 'pull_request_review' ? event.review : event.comment)) return null;
   if (eventName === 'issue_comment' && event.issue?.pull_request) return event.issue.number;
   if (['pull_request_review', 'pull_request_review_comment'].includes(eventName)) return event.pull_request?.number;
   return null;
@@ -51,6 +53,7 @@ export async function loadProposalReview(api, repo, owner, event, eventName, imp
   if (!Number.isSafeInteger(id) || id < 1) throw Error('Missing feedback identity');
   const path = kind === 'review' ? `pulls/${number}/reviews/${id}` : kind === 'inline' ? `pulls/comments/${id}` : `issues/comments/${id}`;
   const feedback = await api(path);
+  if (!legacyControlComment(feedback)) throw Error('Typed client text cannot authorize proposal feedback');
   if (feedback.user?.login !== owner || feedback.user.type === 'Bot') throw Error('Feedback is not from the repository owner');
   if (kind === 'comment' && feedback.issue_url !== `https://api.github.com/repos/${repo}/issues/${number}` || kind === 'inline' && feedback.pull_request_url !== `https://api.github.com/repos/${repo}/pulls/${number}`) throw Error('Feedback belongs to another PR');
   if (kind !== 'comment' && feedback.commit_id !== target.head) throw Error('Feedback targets an older proposal commit; review the current diff');
@@ -58,7 +61,7 @@ export async function loadProposalReview(api, repo, owner, event, eventName, imp
   if (kind === 'review' && !['approved', 'commented', 'changes_requested'].includes(feedback.state?.toLowerCase())) throw Error('Review is not submitted feedback');
   const inline = kind === 'review' ? await api(`pulls/${number}/reviews/${id}/comments?per_page=100`) : [];
   if (inline.length >= 100) throw Error('Review exceeds bounded feedback collection');
-  const body = [feedback.body, ...inline.map(c => `${c.path}:${c.line ?? c.original_line}\n${c.body}`)].filter(Boolean).join('\n\n');
+  const body = [feedback.body, ...inline.filter(legacyControlComment).map(c => `${c.path}:${c.line ?? c.original_line}\n${c.body}`)].filter(Boolean).join('\n\n');
   if (!approved && !body.trim()) throw Error('No review feedback to apply');
   return { ...target, kind, id, path, feedback: body, feedbackDigest: digest(JSON.stringify(feedback)), receipt: `<!-- lighthouse-review:${kind}:${id}:${digest(JSON.stringify(feedback))} -->`, url: pr.html_url, feedbackUrl: feedback.html_url, approved };
 }
@@ -68,7 +71,7 @@ export async function reviewThread(api, number, owner) {
   for (const path of [`issues/${number}/comments`, `pulls/${number}/comments`, `pulls/${number}/reviews`]) {
     const rows = await api(`${path}?per_page=100`);
     if (rows.length >= 100) throw Error('Proposal discussion exceeds bounded collection');
-    for (const c of rows) if (c.user?.login === owner && c.user.type !== 'Bot' && (!c.state || ['commented', 'changes_requested'].includes(c.state.toLowerCase()))) messages.push({ id: c.id, body: c.body, path: c.path, url: c.html_url, updated: c.updated_at, submitted: c.submitted_at });
+    for (const c of rows) if (legacyControlComment(c) && c.user?.login === owner && c.user.type !== 'Bot' && (!c.state || ['commented', 'changes_requested'].includes(c.state.toLowerCase()))) messages.push({ id: c.id, body: c.body, path: c.path, url: c.html_url, updated: c.updated_at, submitted: c.submitted_at });
   }
   return messages;
 }

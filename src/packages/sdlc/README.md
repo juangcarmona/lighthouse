@@ -91,6 +91,10 @@ The installer subscribes the router to selected continuation workers and the wor
 
 Required PR checks must come from an event [GitHub accepts for PR rules](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks?plain=1). A green `workflow_dispatch` job supports execution evidence but cannot satisfy those rules. Lighthouse authenticates the native run, SHA and check suite before counting a job; unavailable origin or an ineligible event blocks integration with its execution link. Configure eligible CI for bot publications separately; dispatch alone does not establish unattended merge readiness. Post-merge verification can still use dispatch.
 
+## Typed issue controls
+
+The optional [issue-control SDK](issue-control.md) provides authenticated observation, stage-only Refine/Propose, ordinary comments and explicit continuation of a verified pending question. Install with `--with-issue-control` to enable the existing router's typed entry and capability declaration. Caller-owned credentials and a durable atomic intent journal are required; source receipts distinguish submission, worker admission and validated results. Native actual-user qualification and release remain separate from this source implementation.
+
 ## Bounded unattended routes
 
 Install `--with-unattended` explicitly to add fast-forward and test-first hotfix compositions. [Configuration and execution](unattended.md) describes admission, separate model review, regression proof, scope limits, merge delegation and recovery. Existing supervised routes retain their stops. The bounded `lighthouse-unattended-<run>-<attempt>` artifact contains delivery receipts; full engine and check logs are retained separately as `lighthouse-unattended-diagnostics-<run>-<attempt>`.

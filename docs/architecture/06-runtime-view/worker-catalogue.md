@@ -39,6 +39,7 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `--with-product-change` | Adds `product-change` and `apply-product-change` |
 | `--with-maintenance` | Adds deterministic observation, reconciliation and optional reports |
 | `--with-unattended` | Adds `ff` and `hotfix` compositions plus completion workers; initial policy is disabled |
+| `--with-issue-control` | Enables the typed client entry in the existing router and writes its digest-bound capability declaration; [SDK and source receipts](../../../src/packages/sdlc/issue-control.md) describe support and remaining qualification |
 | `--with-epic` | Adds the [serial epic workflow](../../../src/packages/sdlc/workflows/lighthouse-sdlc-epic.yml) and completion workers; activation remains separate |
 | `LIGHTHOUSE_AUTOMATION_ENABLED` | Repository admission switch; does not supply missing policy or approval |
 | `LIGHTHOUSE_ENABLED_STAGES` | Installer-selected lifecycle stages in the reviewed router |

@@ -1,3 +1,8 @@
+import { loadClientDispatch, clientDispatchRoute, checkClientContinuation, checkClientSnapshot } from './issue-control-native.mjs';
+import { parseIssueComment } from './issue-comment-intent.mjs';
+import { ownerIntentComments, collectTriageAdmission, collectProposalAdmission } from './issue-admission.mjs';
+export { pendingReply, issueCommandLabels, routeIssue, checkHandoff, checkReplyInputs } from './issue-entry.mjs';
+import { pendingReply, issueCommandLabels, routeIssue, checkHandoff, checkReplyInputs } from './issue-entry.mjs';
 import { sourceLinksFromApi } from './source-link-tree.mjs';
 import { isIssuePublicationBranch, parsePublicationBranch } from './publication-branch.mjs';
 export { taskDigest } from './digests.mjs';
@@ -7,7 +12,6 @@ import { createIssueApi } from './github-rest.mjs';
 import { createTelemetry, telemetryContext, routingReason } from './telemetry.mjs';
 import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
-import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
@@ -81,46 +85,6 @@ export async function reportProductApplyStop(api, repo, owner, env, event, readA
   return;
 }
 
-export function pendingReply(event, comments) {
-  const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
-  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-handoff:v1 -->|<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
-  const productChangeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
-  const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
-  if (productChangeName) {
-    const stage = declared?.[1] ?? 'propose';
-    if (!['triage', 'refine', 'propose', 'implement'].includes(stage)) return null;
-    return { stage, worker: 'product-change', productFeedback: { action: 'answer', changeName: productChangeName, text: event.comment.body, sourceCommentId: event.comment.id }, report };
-  }
-  const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
-  return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
-}
-
-export const issueCommandLabels = capabilityCatalog.capabilities.find(c => c.id === 'labels').configuration.labels.filter(l => l.role === 'command').map(l => l.name);
-
-export function routeIssue(event, actor, owner, eventName, comments = []) {
-  if (actor !== owner || event.issue?.pull_request || (event.issue && event.issue.state !== 'open')) return { run: false, reason: 'Unauthorized actor or closed/non-issue target' };
-  const labels = event.issue?.labels?.map(x => x.name) ?? [];
-  if (labels.includes('future') && (event.label?.name === 'implement' || event.inputs?.stage === 'implement')) return { run: false, reason: 'Implementation paused by future label' };
-  if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
-  if (eventName === 'issues' && event.action === 'unlabeled' && event.label?.name === 'future' && labels.includes('implement')) return { run: true, stage: 'implement', issue: event.issue.number, reason: 'Owner resumed implementation' };
-  if (eventName === 'issues' && event.action === 'labeled' && issueCommandLabels.includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
-  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
-    const pending = pendingReply(event, comments);
-    if (pending) return { run: true, ...pending, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
-  }
-  if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
-  if (eventName === 'workflow_dispatch' && event.inputs?.workflow === 'product-change' && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: ['propose', 'implement'].includes(event.inputs?.stage) ? event.inputs.stage : 'propose', worker: 'product-change', issue: Number(event.inputs.issue), reason: 'Owner requested Product Change preparation from an idea' };
-  if (eventName === 'workflow_dispatch' && ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
-  return { run: false, reason: 'No eligible stage event' };
-}
-export function checkHandoff(request, envelope, issue, answers, revision, runId) {
-  if (request.stage !== 'refine' || request.issue !== issue.number || String(request.workflowRunId) !== String(runId) || request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, answers) || envelope.result?.status !== 'passed' || validateStageEnvelope(envelope, request).length) throw Error('Refinement handoff is not current successful evidence');
-  if (issue.labels.some(x => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(x.name))) throw Error('Issue is paused or reserved');
-}
-export function checkReplyInputs(request, issue, answers, report, revision) {
-  const priorAnswers = answers.filter(c => c.created_at < report.created_at);
-  if (request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, priorAnswers)) throw Error('Pending stage inputs changed; refresh refinement before continuing');
-}
 export function continuationContext(continuation, answer) {
   const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
   return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
@@ -225,6 +189,10 @@ async function main(command) {
   const api = createIssueApi(repo, env);
   const summary = async text => { telemetry.emit('adapter.observation', { phase: command, reasonCode: routingReason(text), reasonDigest: digest(text), status: 'observed' }); if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
   const output = async (name, value) => { if (['run', 'send', 'eligible'].includes(name)) telemetry.emit('routing.decision', { phase: command, decision: name, status: value === 'true' ? 'admitted' : 'not-dispatched' }); if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
+  if (event.inputs?.client_request && ['route', 'dispatch-prepare', 'prepare'].includes(command)) {
+    await output('run', 'false'); await output('send', 'false'); await output('eligible', 'false');
+    await summary('Typed requests use only source issue-control admission.'); return;
+  }
   if (command === 'signal-post-merge-review') {
     const sent = await signalCurrentPostMergeReview(api, repo, env);
     await summary(sent ? 'Post-merge CI signalled the existing router; terminal CI and retained integration are rechecked before review.' : 'No eligible post-merge review continuation.'); return;
@@ -242,7 +210,7 @@ async function main(command) {
     await summary('Stage dispatch sent. Follow the linked receipt on the issue; dispatch is not stage completion.');
     return;
   }
-  let dispatch;
+  let dispatch, clientRequest;
   if (['prepare', 'product-apply-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && (event.inputs?.['dispatch-request'] || env.LIGHTHOUSE_DISPATCH_REQUIRED === 'true')) {
     dispatch = await admitDispatch(api, repo, owner, env, event);
     if (!dispatch.admitted) {
@@ -255,6 +223,7 @@ async function main(command) {
     }
     // Only the authenticated router artifact supplies the original event/actor.
     // Execution IDs and GITHUB_SHA still identify this independent worker.
+    clientRequest = await loadClientDispatch({ api, repository: repo, owner, native: dispatch.request, readArtifact: readActionsJson });
     event = dispatch.request.event;
     env.GITHUB_EVENT_NAME = dispatch.request.eventName;
     env.GITHUB_ACTOR = owner; env.GITHUB_TRIGGERING_ACTOR = owner;
@@ -319,7 +288,8 @@ async function main(command) {
     await summary(`Product Change ${published.receipt.changeId} applied to PR #${published.pullRequest.number}. Review the refreshed model diff; merge is separate.`);
     return;
   }
-  let route = routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
+  let route = clientRequest ? clientDispatchRoute(clientRequest, dispatch.request, await api('issues/' + dispatch.request.issue), await issueComments(api, dispatch.request.issue))
+    : routeIssue(event, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME);
   const epicTriage = env.LIGHTHOUSE_EPIC_ENABLED === 'true' && isBotEpicTriage(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR);
   const epicRefinement = env.LIGHTHOUSE_EPIC_ENABLED === 'true' && isBotEpicRefinement(event, env.GITHUB_EVENT_NAME, env.GITHUB_ACTOR, env.GITHUB_TRIGGERING_ACTOR);
   if (epicTriage && ['route', 'dispatch-prepare'].includes(command)) {
@@ -409,18 +379,13 @@ async function main(command) {
   }
   const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? route.issue ?? event.issue?.number);
   const issuePath = `issues/${issueNumber}`;
-  const comments = async () => {
-    const all = [];
-    for (let page = 1; page <= 10; page++) {
-      const batch = await api(`${issuePath}/comments?per_page=100&page=${page}`); all.push(...batch);
-      if (batch.length < 100) return all;
-    }
-    throw Error('Comment history exceeds bounded intake');
-  };
-  const ownerAnswers = all => all.filter(c => c.user.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
+  const comments = () => issueComments(api, issueNumber);
+  const ownerAnswers = all => ownerIntentComments(all, owner);
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !productApproval) {
     const fresh = await api(issuePath);
-    route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
+    const currentComments = await comments();
+    route = clientRequest ? clientDispatchRoute(clientRequest, dispatch.request, fresh, currentComments)
+      : routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, currentComments);
     if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
       await api(`issues/comments/${event.comment.id}/reactions`, 'POST', { content: 'eyes' });
     }
@@ -570,12 +535,14 @@ async function main(command) {
     if (env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !handoff) {
       const reply = answers.find(c => c.id === event.comment.id);
       continuationAnswer = reply;
-      const pending = pendingReply({ ...event, comment: reply }, all);
+      const pending = clientRequest ? clientDispatchRoute(clientRequest, dispatch.request, issue, all) : pendingReply({ ...event, comment: reply }, all);
+      if (clientRequest) continuationAnswer = { ...reply, body: parseIssueComment(reply).body };
       if (!pending || pending.stage !== route.stage) throw Error('Reply no longer answers the pending stage');
       continuation = await loadStageReport(api, repo, pending.report, { owner, issue: issueNumber });
       const errors = validateStageEnvelope(continuation.envelope, continuation.request);
       if (errors.length || continuation.request.stage !== route.stage || continuation.envelope.result.status !== 'blocked') throw Error('Invalid blocked-stage evidence');
       checkReplyInputs(continuation.request, issue, answers, pending.report, revision.sha);
+      if (clientRequest) checkClientContinuation(clientRequest, dispatch.request, continuation, pending.report);
     }
     if (implementationReview) {
       implementationReview.thread = await reviewThread(api, implementationReview.number, owner);
@@ -590,14 +557,8 @@ async function main(command) {
     await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
     let predecessor, implementation, seed, planningReference, triage;
     if (!productWorker && (stage === 'refine' || issue.user.login !== owner && !proposalReview && !implementationReview && ['propose', 'implement'].includes(stage))) {
-      const report = [...all].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-stage:triage:passed -->'));
-      if (!report && issue.user.login !== owner) throw Error('External request requires authenticated passed triage before later work');
-      if (report) {
-        triage = await loadStageReport(api, repo, report, { owner, issue: issueNumber });
-        const errors = validateStageEnvelope(triage.envelope, triage.request);
-        if (errors.length || triage.request.stage !== 'triage' || triage.envelope.result.status !== 'passed' || triage.request.sourceRevision !== (productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha)) || triage.request.originalRequest !== (issue.body ?? '')) throw Error('Triage evidence is invalid or stale; request triage again');
-        if (stage === 'refine') checkEpicTriageBinding(dispatch?.request.epic, triage);
-      }
+      triage = await collectTriageAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha) });
+      if (stage === 'refine' && triage) checkEpicTriageBinding(dispatch?.request.epic, triage);
     }
     if (stage === 'implement' && !productWorker) {
       if (handoff) {
@@ -621,13 +582,7 @@ async function main(command) {
     }
     if (proposalReview && (!issue.labels.some(x => x.name === 'ready') || proposalReview.base !== repository.default_branch)) throw Error('Proposal is not ready or targets a non-default branch');
     if (stage === 'propose' && !productWorker && !proposalReview && !implementationReview) {
-      if (!issue.labels.some(x => x.name === 'ready')) throw Error('Proposal requires a ready issue');
-      predecessor = continuation?.request.refinement ?? await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: productResume?.baseRevision ?? revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers) });
-      if (predecessor.request.stage !== 'refine' || predecessor.request.issue !== issueNumber || predecessor.request.sourceRevision !== (productResume?.baseRevision ?? revision.sha) || predecessor.envelope.result.status !== 'passed') throw Error('Continuation refinement is invalid');
-      const errors = validateStageEnvelope(predecessor.envelope, predecessor.request); if (errors.length) throw Error(errors.join('\n'));
-      if (await api(`contents/${proposalRoot(issueNumber)}?ref=${revision.sha}`, 'GET', undefined, true)) throw Error('Proposal directory already exists; review the existing proposal');
-      const pulls = await api('pulls?state=open&per_page=100');
-      if (pulls.length >= 100 || pulls.some(pr => isIssuePublicationBranch(pr.head.ref, issueNumber, 'propose'))) throw Error('Review the existing proposal PR before requesting another');
+      predecessor = await collectProposalAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: productResume?.baseRevision ?? revision.sha, proposalRevision: revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers), predecessor: continuation?.request.refinement });
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });
@@ -637,7 +592,7 @@ async function main(command) {
     if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
     const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
     const sourceLinks = stage === 'implement' ? await sourceLinksFromApi(api, revision.sha) : undefined;
-    const snapshot = { ...(sourceLinks ? { sourceLinks } : {}), ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { ...(sourceLinks ? { sourceLinks } : {}), ...(dispatch?.request.client ? { client: dispatch.request.client } : {}), ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (isVerificationOnlyCorrection(snapshot) && !snapshot.epic && !snapshot.productResume && !snapshot.productAlignment && implementation.policy.verification?.synchronizeBase === true) {
       const synchronization = await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision);
       if (synchronization) snapshot.sourceSynchronization = synchronization;
@@ -826,6 +781,12 @@ async function main(command) {
       await recheckVerifiedCandidate(publication);
       await assertCurrentDispatch(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
       checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${snapshot.defaultBranch}`)).sha);
+      if (snapshot.client) {
+        const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+        const origin = await loadDispatch(api, repo, owner, issueNumber, snapshot.dispatch.commentId, worker);
+        const control = await loadClientDispatch({ api, repository: repo, owner, native: origin.request, readArtifact: readActionsJson });
+        checkClientSnapshot(control, origin.request, snapshot);
+      }
       if (!snapshot.epic) return;
       const { baseSha, ...epic } = snapshot.epic, native = await import('./epic-native.mjs');
       await checkEpicAuthority(epic, () => native.authenticateEpicChild({ api, repository: repo, owner, child: issueNumber }));
@@ -959,7 +920,13 @@ async function main(command) {
         const candidateComplete = value.result.status === 'passed' && checksPassed;
         const checks = receipt.checks.map(c => `- \`${c.command.join(' ')}\`: exit ${c.exitCode}`).join('\n');
         const afterRefWrite = async () => {
-          if (!snapshot.epic) return;
+          if (snapshot.client) {
+        const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
+        const origin = await loadDispatch(api, repo, owner, issueNumber, snapshot.dispatch.commentId, worker);
+        const control = await loadClientDispatch({ api, repository: repo, owner, native: origin.request, readArtifact: readActionsJson });
+        checkClientSnapshot(control, origin.request, snapshot);
+      }
+      if (!snapshot.epic) return;
           if (snapshot.dispatch) await checkDispatchClaim(api, repo, issueNumber, snapshot.dispatch, env.GITHUB_RUN_ID);
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
           await recheckPublication();

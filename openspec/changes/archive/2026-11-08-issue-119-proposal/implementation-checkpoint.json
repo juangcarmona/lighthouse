@@ -1,0 +1,80 @@
+{
+  "workItem": 119,
+  "kind": "Connected public source implementation checkpoint; native qualification and release pending",
+  "recordedAt": "2026-11-08T04:11:58.460305+00:00",
+  "implemented": [
+    "Read-only source policy/admission facts with injected repository-bound transport and verified actor/permission binding",
+    "Strict typed intent and installed-contract parsing, stable namespace and source/input/policy bindings",
+    "Current source wait and reservation revocation reuse in legacy routing and continuation eligibility",
+    "Internal observe/prepare/submit/reconcile SDK with explicit actual-user transport, stable intent keys, caller atomic claim before POST, restart/lost-response reconciliation and fixed non-disclosing failures",
+    "Authenticated source claim and immutable terminal-result artifact readers; edited bot comments cannot invent terminal acceptance and a lost final comment update can reconcile from its artifact",
+    "Canonical existing reply-input checks, transport-order-independent original-grant digest, source question timestamps and readable unsupported questions with disabled continuation",
+    "Case/spacing variants of reserved typed metadata fail closed across legacy command/review/decision parsers",
+    "Reconciliation distinguishes observed equivalent work from a source-owned durable alias, and recovers original source-confirmed continuation before inspecting a later edited/deleted response",
+    "Source invocation revision and originating response comment identity are recorded separately from the requested stale grant, allowing explicit source rejection without fresh work",
+    "Opt-in source router job, exact capability declaration and existing per-issue native dispatch serialization",
+    "Immutable source request plus exact stable-key and equivalent-payload indexes survive a deleted result comment",
+    "Source admission/rejection/alias production and explicit stage-only flags, with original-grant continuation intersection",
+    "Native receipt, worker snapshot, result, source report and publisher bind the original client identity and grant",
+    "Authenticated alias resolution and worker run/attempt/result observation; continuation consumption and resolution remain distinct",
+    "Public SDK/parser/schema exports, owning guide, isolated packed-consumer imports and actual source CLI fixture sequence",
+    "Typed owner text quoting source markers remains attributed input; legacy command/reply exclusion stays enforced."
+  ],
+  "verification": {
+    "fullRepository": {
+      "status": "passed",
+      "command": "npm run verify",
+      "tests": 1141,
+      "passed": 1131,
+      "skipped": 10,
+      "failed": 0,
+      "publicSiteFiles": 136
+    },
+    "focused": {
+      "status": "passed",
+      "coverage": "CLI subprocess intake/admission/single native POST/publication; authenticated execution and aliases; SDK, contract, typed comment and legacy proposal compatibility; isolated packed public imports"
+    },
+    "negativeControls": [
+      "Unsupported pending-worker question was lost despite verified evidence",
+      "Object key ordering changed the original-grant digest",
+      "Ordinary input after the question incorrectly revoked the canonical reply grant",
+      "Edited bot comment invented terminal outcome without source result artifact",
+      "Multiple comments for one intent were returned as unknown instead of conflict",
+      "Uppercase or missing-space metadata entered legacy parsers",
+      "Equivalent old work incorrectly acknowledged a new key without a durable source alias",
+      "A deleted/edited current response hid an already authenticated original continuation outcome",
+      "Catalogue verification caught an undocumented installer selection; the source-linked catalogue was updated",
+      "Real existing-authority provider validation caught the new guide missing from its copied fixture; copy coverage was restored",
+      "Hosted repository CI caught a changeset added after the earlier verification with a missing Markdown heading. The heading is repaired and the complete verification is repeated with that changeset included.",
+      "A valid typed owner comment quoting a source receipt marker was wrongly omitted from attributed input; the regression first failed and now preserves the typed body as data without legacy execution."
+    ],
+    "openSpec": {
+      "passed": 33,
+      "failed": 0
+    },
+    "architectureCitations": {
+      "current": 40,
+      "stale": 0,
+      "tampered": 0,
+      "unresolved": 0
+    },
+    "officialCompiler": {
+      "version": "0.93.2",
+      "workers": [
+        "triage",
+        "refine",
+        "propose",
+        "apply-review"
+      ],
+      "passed": 4,
+      "failed": 0
+    }
+  },
+  "remaining": [
+    "Actual authorized user dispatch/comment/current-question continuation and lost-response/restart qualification in the isolated source-owned repository",
+    "Independent final-head audit and configured forge checks",
+    "Protected public publication, registry verification, released consumer adoption, integration and retrospective"
+  ],
+  "authority": "The public SDK and optional router entry exist in this source branch. They are not released or enabled in any adopter by this checkpoint. V1 explicitly declines epic/custom-model/Product Change pending contexts; background issue binding remains unknown when unsupported.",
+  "qualifiedBase": "Merged source ee3f2e591b8ad78db87bc28e6242f1d0f0b7b34c without rewriting the work branch; full verification repeated."
+}

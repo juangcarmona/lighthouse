@@ -3,9 +3,10 @@ import { resolve, join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { completionSubscriptions } from './workflow-completions.mjs';
 import { registryWorkflow } from './workflow-distribution.mjs';
+import { createIssueControlManifest } from './issue-control-contract.mjs';
 
 const [target, revision, ...flags] = process.argv.slice(2);
-if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended', '--with-epic'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended] [--with-epic]');
+if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended', '--with-epic', '--with-issue-control'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended] [--with-epic] [--with-issue-control]');
 const packageVersion = revision === 'package' ? JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version : null;
 const apply = flags.includes('--apply'), replace = flags.includes('--replace-reviewed');
 const compilerCommand = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ?? 'gh';
@@ -13,6 +14,7 @@ const compilerArgs = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ? [] : ['aw'];
 const productChange = flags.includes('--with-product-change');
 const unattended = flags.includes('--with-unattended');
 const epic = flags.includes('--with-epic');
+const issueControl = flags.includes('--with-issue-control');
 const completion = flags.includes('--with-completion') || unattended || epic;
 const implement = flags.includes('--with-implement') || completion;
 const propose = flags.includes('--with-propose') || implement;
@@ -30,12 +32,23 @@ for (const name of files) {
     if (!implement) content = content.replace('LIGHTHOUSE_AUTO_IMPLEMENT: true', 'LIGHTHOUSE_AUTO_IMPLEMENT: false');
     if (!completion) content = content.replaceAll('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false');
   }
+  if (name === 'lighthouse-sdlc-router.yml' && issueControl) content = '# lighthouse-issue-control:v1\n' + content.replace('  client-control:\n    if: >-\n      false &&', '  client-control:\n    if: >-\n      true &&');
   if (packageVersion) content = registryWorkflow(content, packageVersion);
   const path = join(root, '.github/workflows', name);
   const exists = await access(path).then(() => true, () => false);
   if (exists && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing workflow differs: ${path}; review the diff before --replace-reviewed`);
   planned.push({ path, content });
   console.log(`${apply ? 'Write' : 'Would write'} ${path}`);
+}
+if (issueControl) {
+  const router = planned.find(item => item.path.endsWith('/lighthouse-sdlc-router.yml')).content;
+  const path = join(root, '.lighthouse/issue-control.json');
+  const backgroundWorkflows = [];
+  for (const name of ['lighthouse-sdlc-unattended.yml', 'lighthouse-sdlc-epic.yml'])
+    if (files.includes(name) || await access(join(root, '.github/workflows', name)).then(() => true, () => false)) backgroundWorkflows.push(name);
+  const content = JSON.stringify(createIssueControlManifest(router, backgroundWorkflows), null, 2) + '\n';
+  if (await access(path).then(() => true, () => false) && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing issue-control declaration differs: ${path}; review before --replace-reviewed`);
+  planned.push({ path, content }); console.log(`${apply ? 'Write' : 'Would write'} ${path}`);
 }
 const formPath = join(root, '.github/ISSUE_TEMPLATE/change-request.yml');
 if (unattended) {
