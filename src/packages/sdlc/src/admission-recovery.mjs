@@ -8,18 +8,24 @@ const stop = 'Inspect the rejected execution and current authority before reques
 const same = (a, b) => digest(JSON.stringify(a)) === digest(JSON.stringify(b));
 const preparation = 'Verify accepted commit, checks and evidence protection';
 
+async function rejectedJobs(api, { dispatch, run }) {
+  if (run.status !== 'completed' || run.run_attempt !== 1 || run.conclusion !== 'failure') return null;
+  if (dispatch.receipt.workerRunId && String(dispatch.receipt.workerRunId) !== String(run.id)) return null;
+  const inventory = await api(`actions/runs/${run.id}/attempts/1/jobs?per_page=100`);
+  if (!Array.isArray(inventory.jobs) || inventory.total_count !== inventory.jobs.length || inventory.total_count > 100) return null;
+  const jobs = inventory.jobs;
+  const preparationJobs = jobs.filter(job => job.name === preparation), publicationJobs = jobs.filter(job => job.name === 'Validate, publish and release');
+  if (preparationJobs.length !== 1 || preparationJobs[0].conclusion !== 'failure' || publicationJobs.length !== 1 || publicationJobs[0].conclusion !== 'skipped' || ['pre_activation', 'activation', 'agent'].some(name => jobs.filter(job => job.name === name).length !== 1 || jobs.find(job => job.name === name).conclusion !== 'skipped') || jobs.some(job => job.name !== preparation && job.conclusion !== 'skipped')) return null;
+  return jobs;
+}
+
 // A changed ref never admits work; only a terminal native job inventory can establish skipped effects.
 export async function observeAdmissionRejection(api, repository, owner, rejection, issue, comments) {
   const { dispatch, parent, run } = rejection, request = dispatch.request;
   const base = { issue: issue.number, worker: request.worker ?? request.stage, runId: String(run.id), rootId: request.recovery?.rootId ?? request.id, attempt: request.recovery?.attempt ?? 0, outcome: 'failed', admissionRejected: true, dispatch, run };
   const result = (state, code, nextAction = stop, extra = {}) => ({ ...base, state, code, nextAction, ...extra });
-  if (run.status !== 'completed' || run.run_attempt !== 1 || run.conclusion !== 'failure') return result('uncertain', 'admission-effects-unconfirmed');
-  if (dispatch.receipt.workerRunId && String(dispatch.receipt.workerRunId) !== String(run.id)) return result('uncertain', 'admission-effects-unconfirmed');
-  const inventory = await api(`actions/runs/${run.id}/attempts/1/jobs?per_page=100`);
-  if (!Array.isArray(inventory.jobs) || inventory.total_count !== inventory.jobs.length || inventory.total_count > 100) return result('uncertain', 'admission-effects-unconfirmed');
-  const jobs = inventory.jobs;
-  const preparationJobs = jobs.filter(job => job.name === preparation), publicationJobs = jobs.filter(job => job.name === 'Validate, publish and release');
-  if (preparationJobs.length !== 1 || preparationJobs[0].conclusion !== 'failure' || publicationJobs.length !== 1 || publicationJobs[0].conclusion !== 'skipped' || ['pre_activation', 'activation', 'agent'].some(name => jobs.filter(job => job.name === name).length !== 1 || jobs.find(job => job.name === name).conclusion !== 'skipped') || jobs.some(job => job.name !== preparation && job.conclusion !== 'skipped')) return result('uncertain', 'admission-effects-unconfirmed');
+  const jobs = await rejectedJobs(api, rejection);
+  if (!jobs) return result('uncertain', 'admission-effects-unconfirmed');
   const confirmed = extra => result('blocked', 'admission-authority-changed', stop, { confirmed: true, jobs, ...extra });
   if (request.recovery) return result('exhausted', 'admission-retry-exhausted', stop, { confirmed: true, jobs });
   if (request.stage !== 'review' || request.worker || request.handoff || request.completionRecovery || !request.admissionBinding || !isBotContinuation(request.event, parent.event, parent.actor?.login, parent.triggering_actor?.login)) return confirmed();
@@ -65,7 +71,7 @@ export function admissionRetryRequest(observation, parent) {
   return next;
 }
 
-export async function verifyAdmissionRecovery(api, repository, owner, dispatch, parent, readArtifact) {
+export async function verifyAdmissionRecovery(api, repository, owner, dispatch, parent, readArtifact, revalidate = false) {
   const request = dispatch.request, retry = request.recovery;
   if (parent.path !== '.github/workflows/lighthouse-worker-maintenance.yml' || retry.attempt !== 1 || !/^[1-9][0-9]*$/.test(String(retry.previousComment))) throw Error('Invalid before-admission recovery');
   const comment = await api(`issues/comments/${retry.previousComment}`), receipt = readDispatchReceipt(comment, repository, request.issue);
@@ -75,6 +81,10 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   try { await loadDispatch(api, repository, owner, request.issue, comment.id, run, readArtifact); }
   catch (error) { rejection = error.rejection; }
   if (!rejection || rejection.dispatch.request.recovery || retry.rootId !== rejection.dispatch.request.id || run.path !== stagePath('review')) throw Error('Invalid original admission rejection');
+  if (!await rejectedJobs(api, rejection)) throw Error('Original admission rejection effects are unconfirmed');
+  const expected = admissionRetryRequest({ dispatch: rejection.dispatch, rootId: retry.rootId, revision: request.sourceRevision }, parent);
+  if (!same(request, expected)) throw Error('Before-admission recovery authorization changed');
+  if (!revalidate) return;
   const issue = await api(`issues/${request.issue}`);
   const comments = await (await import('./stage-dispatch.mjs')).issueComments(api, request.issue);
   // The current retry is allowed; any other newer dispatch supersedes the original request.
