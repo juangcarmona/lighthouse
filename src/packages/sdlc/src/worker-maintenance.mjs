@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch, readDispatchReceipt } from './stage-dispatch.mjs';
 import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } from './worker-recovery.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
-import { admissionCompletion } from './admission-recovery.mjs';
+import { admissionCompletion, completedAdmission } from './admission-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
@@ -58,11 +58,14 @@ async function main(command) {
   };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
   const parent = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
-  if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch', 'workflow_run'].includes(parent.event) || ![owner, ...(parent.event === 'workflow_run' ? ['github-actions[bot]'] : [])].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login) throw Error('Maintenance is not an authorized execution');
+  const event = env.GITHUB_EVENT_PATH ? JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')) : null;
+  const callback = parent.event === 'workflow_dispatch' && event?.inputs?.completed_run !== undefined && event.inputs.completed_run !== '';
+  const completionWake = parent.event === 'workflow_run' || callback;
+  if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch', 'workflow_run'].includes(parent.event) || ![owner, ...(completionWake ? ['github-actions[bot]'] : [])].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login) throw Error('Maintenance is not an authorized execution');
   if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
   const scope = recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
-  const event = parent.event === 'workflow_run' || command === 'scan' ? JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')) : null;
-  const admissionWake = parent.event === 'workflow_run' ? await admissionCompletion(api, repository, owner, event) : null;
+  const admissionWake = parent.event === 'workflow_run' ? await admissionCompletion(api, repository, owner, event) : callback ? await completedAdmission(api, repository, owner, event.inputs.completed_run) : null;
+  if (callback && admissionWake && event.inputs.issue !== String(admissionWake.issue)) throw Error('Callback issue differs from its authenticated review');
   if (command === 'report') {
     const root = join(env.RUNNER_TEMP, 'worker-observations'), observations = [], seen = [];
     const directories = await readdir(root);
@@ -83,9 +86,9 @@ async function main(command) {
     return;
   }
   if (command === 'scan') {
-    if (parent.event === 'workflow_run') {
+    if (completionWake) {
       const issues = admissionWake && (!scope || scope.includes(admissionWake.issue)) ? [admissionWake.issue] : [];
-      await writeFile(join(env.RUNNER_TEMP, 'maintenance-wake.json'), JSON.stringify({ schemaVersion: 1, parent: { id: parent.id, attempt: parent.run_attempt, event: parent.event, revision: parent.head_sha }, signal: { id: event.workflow_run?.id, attempt: event.workflow_run?.run_attempt, revision: event.workflow_run?.head_sha }, wake: admissionWake, issues }));
+      await writeFile(join(env.RUNNER_TEMP, 'maintenance-wake.json'), JSON.stringify({ schemaVersion: 1, parent: { id: parent.id, attempt: parent.run_attempt, event: parent.event, revision: parent.head_sha }, observedAt: new Date().toISOString(), signal: callback ? { id: Number(event.inputs.completed_run), transport: 'worker-callback' } : { id: event.workflow_run?.id, attempt: event.workflow_run?.run_attempt, revision: event.workflow_run?.head_sha, transport: 'workflow_run' }, wake: admissionWake, issues }));
       await output('issues', JSON.stringify(issues)); return;
     }
     const requested = event.inputs?.issue;
@@ -96,7 +99,7 @@ async function main(command) {
   }
   const issue = Number(env.LIGHTHOUSE_ISSUE);
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid issue');
-  if (parent.event === 'workflow_run' && admissionWake?.issue !== issue) throw Error('Completion wake differs from this issue');
+  if (completionWake && admissionWake?.issue !== issue) throw Error('Completion wake differs from this issue');
   if (scope && !scope.includes(issue)) throw Error('Issue is outside the configured maintenance scope');
   const dir = join(env.RUNNER_TEMP, `lighthouse-maintenance-${env.GITHUB_RUN_ID}-${issue}`);
   if (command === 'observe') {

@@ -15,6 +15,8 @@ import { readIntegrationEvidence } from './integration-evidence.mjs';
 import { readUnattendedPlanningReview } from './unattended-planning-evidence.mjs';
 import { handoff, pendingQuestion, publishObservedStop, visibleNextAction, workerStopObservation, resultHandoffState } from './handoff.mjs';
 
+import { signalAdmissionRejection } from './admission-recovery.mjs';
+
 export const assertCurrentCompletionAttempt = assertCurrentDispatch;
 
 async function main(command) {
@@ -25,6 +27,11 @@ async function main(command) {
   const save = (file, value) => writeFile(join(dir, file), JSON.stringify(value, null, 2));
   const load = async file => JSON.parse(await readFile(join(dir, file), 'utf8'));
   const summary = async text => { console.log(text); if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, text + '\n'); };
+  if (command === 'signal-admission-rejection') {
+    const signal = await signalAdmissionRejection(api, repository, owner, env, JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')));
+    if (signal) { await mkdir(dir, { recursive: true }); await save('admission-signal.json', signal); await summary('Requested authenticated completion observation; no retry is authorized by this signal.'); }
+    return;
+  }
   if (command === 'prepare') {
     let event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
     let dispatch;
