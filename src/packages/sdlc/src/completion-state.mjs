@@ -159,6 +159,49 @@ export function assertChecks(observation) {
   }
   if (!observation.checks.length || observation.checks.some(c => c.status !== 'passed')) throw Error('Required checks are missing, pending or failed');
 }
+// The caller supplies the original route deadline, never a renewed CI allowance.
+export async function waitForIntegration({ api, repository, owner, authorization, workflowRunId, deadline, signal, recheck, promote,
+  inspect = inspectCompletion, now = Date.now, delay = ms => new Promise(resolve => setTimeout(resolve, ms)) }) {
+  if (!Number.isFinite(deadline)) throw Error('Integration requires the original finite delivery deadline');
+  const until = deadline;
+  const guard = () => {
+    if (signal?.aborted || now() >= until) throw Error('Delivery was cancelled or exceeded its execution limit; retain the PR for a new authorized action');
+  };
+  const authorize = async () => { guard(); await recheck(); guard(); };
+  let promoted = false;
+  while (true) {
+    await authorize();
+    const current = await api('pulls/' + authorization.pr);
+    guard();
+    if (current.head.sha !== authorization.head || current.state !== 'open') throw Error('Published candidate changed before integration');
+    if (promoted && current.draft) throw Error('PR returned to draft; new authorization is required');
+    // Observe a draft without promoting it while CI is pending. Merge still rejects drafts.
+    let observation = await inspect(api, repository, owner, authorization, 'integrate', workflowRunId, { observeDraft: true });
+    guard();
+    let checked = false;
+    try { assertChecks(observation); checked = true; }
+    catch (error) { if (observation.checks.some(check => ['ineligible-event', 'unverified-workflow'].includes(check.state))) throw error; }
+    if (checked) {
+      await authorize();
+      if (current.draft) {
+        try { await promote(current); }
+        catch (error) {
+          guard();
+          const reconciled = await api('pulls/' + authorization.pr);
+          guard();
+          if (reconciled.state !== 'open' || reconciled.head.sha !== authorization.head || reconciled.draft) throw error;
+        }
+      }
+      await authorize();
+      promoted = true;
+      observation = await inspect(api, repository, owner, authorization, 'integrate', workflowRunId);
+      await authorize();
+      if (observation.mergeable) return observation;
+    }
+    guard();
+    await delay(Math.min(30000, until - now()));
+  }
+}
 export async function mergeAccepted(api, snapshot, recheck, beforeMerge = async () => {}) {
   const fresh = await recheck();
   if (fresh.merged && fresh.binding.head === snapshot.binding.head) return { state: 'merged', sha: fresh.merge, recovered: true };

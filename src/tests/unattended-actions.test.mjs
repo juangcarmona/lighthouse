@@ -645,7 +645,7 @@ test('delegated integration honors owner draft holds and new PR feedback before 
 
 
 test('the native host integrates with concurrent readiness and retains its merge bundle before post-merge dispatch', async t => {
-  for (const interrupt of [null, 'pause', 'cancel', 'pause-before-publication', 'cancel-before-publication', 'post-merge-dispatch-error', 'post-merge-notification-error', 'post-merge-dispatch-and-notification-error']) await t.test(interrupt ?? 'success', async t => {
+  for (const interrupt of [null, 'pause', 'cancel', 'deadline-during-final-authority', 'pause-before-publication', 'cancel-before-publication', 'post-merge-dispatch-error', 'post-merge-notification-error', 'post-merge-dispatch-and-notification-error']) await t.test(interrupt ?? 'success', async t => {
   const f = await fixture(); f.policy.merge = true;
   const originalApi = f.api, events = [];
   const revision = execFileSync('git', ['-C', f.env.LIGHTHOUSE_SOURCE_ROOT, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -653,6 +653,8 @@ test('the native host integrates with concurrent readiness and retains its merge
   const profile = { schemaVersion: 1, profileVersion: 1, repository: 'owner/repo', intake: 'collaborators', requiredChecks: [{ context: 'repository', integrationId: 7 }], requiredApprovals: 0,
     evidenceBranch: 'process/data', completion: { publishEvidence: true, postMergeWorkflows: ['verify.yml'] } };
   let pr = null, integrated = false, promotionCalls = 0, inspections = 0;
+  let clock = Date.now();
+  if (interrupt === 'deadline-during-final-authority') t.mock.method(Date, 'now', () => clock);
   t.mock.method(globalThis, 'fetch', async () => {
     promotionCalls++; pr.draft = false; pr.mergeable_state = 'clean';
     // Existing CI reconciliation completed the same transition just before this mutation.
@@ -660,6 +662,7 @@ test('the native host integrates with concurrent readiness and retains its merge
   });
   f.api = async (path, method = 'GET', body) => {
     events.push({ path, method, body }); if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+    if (interrupt === 'deadline-during-final-authority' && inspections >= 3 && path.startsWith('pulls/3/comments?')) clock += 60000;
     if (integrated && path === 'issues/1/comments' && method === 'POST' && interrupt?.includes('notification')) throw Error('Notifications unavailable');
     if (path === 'commits/main') return { sha: integrated ? merged : revision };
     if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
@@ -702,7 +705,7 @@ test('the native host integrates with concurrent readiness and retains its merge
   };
   try {
     const result = await runGithubUnattended(f);
-    if (interrupt?.startsWith('pause') || interrupt?.startsWith('cancel')) {
+    if (interrupt?.startsWith('pause') || interrupt?.startsWith('cancel') || interrupt === 'deadline-during-final-authority') {
       assert.equal(result.status, 'blocked', 'A late ' + interrupt + ' must stop the merge');
       assert.equal(integrated, false); assert.equal(events.filter(e => e.method === 'PUT').length, 0);
       if (interrupt.endsWith('before-publication')) assert.equal(events.filter(e => e.path === 'pulls' && e.method === 'POST').length, 0);
