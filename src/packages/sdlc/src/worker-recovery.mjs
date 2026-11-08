@@ -97,6 +97,17 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
   return result('retryable', 'worker-technical-failure', 'Record one linked retry under the adopted policy.', { retryAt });
 }
 
+async function workflowRefMissing(api, ref, error) {
+  if (![404, 422].includes(error.status)) return false;
+  // A lookup failure alone cannot prove absence; require successful, bounded inventories.
+  for (const kind of ['heads', 'tags']) {
+    const prefix = `refs/${kind}/${ref}`;
+    const refs = await api(`git/matching-refs/${kind}/${encodeURIComponent(ref)}?per_page=100`);
+    if (!Array.isArray(refs) || refs.length >= 100 || refs.some(item => typeof item?.ref !== 'string' || !item.ref.startsWith(prefix) || item.ref === prefix)) return false;
+  }
+  return true;
+}
+
 export async function observeDispatch(api, repository, owner, comment, issue, comments, now = Date.now(), readArtifact = readActionsJson) {
   const receipt = readDispatchReceipt(comment, repository, issue.number);
   const missingOrigin = () => ({ issue: issue.number, worker: workerFor(receipt), outcome: 'unknown', rootId: receipt.recovery?.rootId ?? receipt.id, attempt: receipt.recovery?.attempt ?? 0, state: 'uncertain', code: 'dispatch-origin-unavailable', nextAction: `Inspect original router https://github.com/${repository}/actions/runs/${receipt.routerRunId}/attempts/${receipt.routerAttempt} and request digest ${receipt.digest}. Restore only retained authenticated bytes with that digest and origin; otherwise preserve the candidate and reconcile effects before a new owner request. Never resend the unconfirmed dispatch.` });
@@ -119,8 +130,13 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
   if (!Array.isArray(jobs.jobs) || !Number.isSafeInteger(jobs.total_count) || jobs.total_count !== jobs.jobs.length || jobs.total_count > 100) throw Error('Execution job inventory is incomplete or exceeds recovery bounds');
   const repo = await api('');
   const revision = (await api(`commits/${encodeURIComponent(repo.default_branch)}`)).sha;
-  const workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha;
   const execution = workerExecutionObservation({ run, jobs: jobs.jobs, receipt, worker: workerFor(dispatch.request) });
+  let workflowRevision;
+  try { workflowRevision = (await api(`commits/${encodeURIComponent(dispatch.request.ref)}`)).sha; }
+  catch (error) {
+    if (!await workflowRefMissing(api, dispatch.request.ref, error)) throw error;
+    return { ...identity({ request: dispatch.request, run }), outcome: execution.outcome, state: 'blocked', code: 'workflow-ref-missing', workflowRef: dispatch.request.ref, expectedWorkflowRevision: dispatch.request.workflowRevision, requestDigest: receipt.digest, requestCommentId: comment.id, refLookupStatus: error.status, nextAction: `Maintainer: reconcile the retained execution https://github.com/${repository}/actions/runs/${run.id} and select an existing workflow ref under a fresh owner request. Historical provenance remains authenticated; never resend this request or recreate its ref automatically.` };
+  }
   const observation = workerFor(dispatch.request) === 'apply-product-change'
     ? ['completed', 'waiting', 'blocked'].includes(receipt.status) ? null : productApplyObservation({ prepare: jobs.jobs.find(job => job.name === 'Recheck product approval')?.conclusion, apply: jobs.jobs.find(job => job.name === 'Apply with the pinned ProductShape provider')?.conclusion, publish: jobs.jobs.find(job => job.name === 'Recheck and publish provider output')?.conclusion })
     : execution.observation;

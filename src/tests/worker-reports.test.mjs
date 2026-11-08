@@ -188,3 +188,22 @@ test('manual closure survives a repeated observation; a new occurrence reopens a
   assert.equal(f.issues[1].state, 'open');
   assert.equal(readReport(f.issues[1], repo, 'implement', code).entries.length, 2);
 });
+
+
+test('a missing workflow ref reports the original run with a fixed action and no private diagnostics', async () => {
+  const f = fixture();
+  const row = { ...observation(11), state: 'blocked', code: 'workflow-ref-missing', workflowRef: 'private-retired-ref', requestDigest: 'b'.repeat(64), refLookupStatus: 422, nextAction: 'private exception text' };
+  const [result] = await publishReports(f.api, repo, owner, 1, [row]);
+  const report = f.issues.find(issue => issue.number === result.number);
+  assert.equal(result.count, 1);
+  assert.match(report.body, /Workflow reference no longer exists/);
+  assert.match(report.body, /fresh owner request/);
+  assert.match(report.body, /actions\/runs\/11/);
+  assert.doesNotMatch(report.body, /private-retired-ref|private exception text/);
+  const parsed = readReport(report, repo, 'implement', 'workflow-ref-missing');
+  assert.equal(parsed.entries[0].state, 'blocked');
+  assert.equal(parsed.entries[0].rootId, row.rootId);
+  const writes = f.calls.filter(c => c.method !== 'GET').length;
+  await publishReports(f.api, repo, owner, 1, [row]);
+  assert.equal(f.calls.filter(c => c.method !== 'GET').length, writes);
+});
