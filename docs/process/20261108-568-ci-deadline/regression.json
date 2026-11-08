@@ -1,0 +1,20 @@
+{
+  "workItem": 568,
+  "negativeControl": {
+    "implementation": "Extracted prior ten-minute polling ceiling with original deadline propagation",
+    "command": [
+      "node",
+      "--test",
+      "src/tests/integration-deadline.test.mjs"
+    ],
+    "status": "failed",
+    "passed": 6,
+    "failed": 2,
+    "failures": [
+      "CI readiness at 660 seconds incorrectly rejected at 600 seconds",
+      "625-second original deadline incorrectly stopped at 600 seconds"
+    ]
+  },
+  "clock": "Deterministic injected clock; no real sleeping",
+  "verification": "Final full verification and hosted checks remain separate."
+}

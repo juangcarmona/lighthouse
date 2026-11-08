@@ -5,13 +5,13 @@
 ## 1. Plan
 
 - [x] 1.1 Inspect the existing admission clock, polling, check validation and publication guards; record ProductShape authority and impact.
-- [ ] 1.2 Obtain independent planning acceptance before implementation.
+- [x] 1.2 Obtain independent planning acceptance before implementation.
 
 ## 2. Implement and verify
 
-- [ ] 2.1 Extract the existing polling loop with virtual-clock/source-observation seams and preserve all head, hold, check-origin and promotion guards.
-- [ ] 2.2 Propagate the original deadline through provider, recheck and integration waiting; preserve resource, command and correction bounds.
-- [ ] 2.3 Prove CI readiness after ten minutes, deadline/cancellation stops, expiry during a read, changed head/hold and invalid check origin with meaningful regressions.
+- [x] 2.1 Extract the existing polling loop with virtual-clock/source-observation seams and preserve all head, hold, check-origin and promotion guards.
+- [x] 2.2 Propagate the original deadline through provider, recheck and integration waiting; preserve resource, command and correction bounds.
+- [x] 2.3 Prove CI readiness after ten minutes, deadline/cancellation stops, expiry during a read, changed head/hold and invalid check origin with meaningful regressions.
 - [ ] 2.4 Update owning package documentation and run full repository verification, OpenSpec and current citations.
 
 ## 3. Integration
