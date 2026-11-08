@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.2
+
+### Patch Changes
+
+- 8b55dd1: # Keep wake evidence outside report inputs
+
+  Use a separate artifact prefix for completion wake evidence so the reporter downloads only issue observation artifacts.
+
 ## 0.22.1
 
 ### Patch Changes
