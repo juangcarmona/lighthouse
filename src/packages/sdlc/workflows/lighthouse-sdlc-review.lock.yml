@@ -305,8 +305,8 @@ jobs:
           GH_AW_PROMPT_CONTENT_0001: "<safe-output-tools>\nTools: noop(max:2)\n"
           GH_AW_PROMPT_CONTENT_0002: "</safe-output-tools>\n"
           GH_AW_PROMPT_CONTENT_0003: "</system>\n"
-          GH_AW_PROMPT_CONTENT_0004: "{{#runtime-import shared/lighthouse-opencode.md}}\n"
-          GH_AW_PROMPT_CONTENT_0005: "{{#runtime-import lighthouse-sdlc-review.md}}\n"
+          GH_AW_PROMPT_CONTENT_0004: "{{#runtime-import .github/workflows/shared/lighthouse-opencode.md}}\n"
+          GH_AW_PROMPT_CONTENT_0005: "{{#runtime-import .github/workflows/lighthouse-sdlc-review.md}}\n"
         with:
           script: |
             const { setupGlobals } = require(process.env.GH_AW_ACTIONS_DIR + '/setup_globals.cjs');
@@ -1034,6 +1034,7 @@ jobs:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "2"
           GH_AW_WORKFLOW_NAME: "review"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/lighthouse-sdlc-review.md"
           GH_AW_ENGINE_ID: "opencode"
           GH_AW_ENGINE_VERSION: "2.1.0"
           GH_AW_ENGINE_MODEL: ${{ needs.agent.outputs.model }}
@@ -1059,6 +1060,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_WORKFLOW_NAME: "review"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/lighthouse-sdlc-review.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "lighthouse-sdlc-review"
@@ -1100,6 +1102,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_WORKFLOW_NAME: "review"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/lighthouse-sdlc-review.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_REPORT_FAILED_JOBS: "true"
         with:
