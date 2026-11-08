@@ -1,7 +1,10 @@
 # opaque-source-link-tree Specification
 
+<!-- pdac-scope: cited -->
+
 ## Purpose
-TBD - created by archiving change issue-571-proposal. Update Purpose after archive.
+
+Keep checked and published candidate tree identities equal while preserving authenticated source-link metadata outside the executable filesystem.
 
 ## Requirements
 
@@ -28,3 +31,6 @@ The trusted host SHALL bind unchanged tracked source-link path, mode and blob id
 
 - **WHEN** no opaque source-link entries exist
 - **THEN** the host preserves the existing candidate tree and evidence binding behavior
+
+<!-- pdac:cite id="BR-FAIL-CLOSED" digest="sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d" -->
+<!-- pdac:cite id="QR-AUTHORITY-TRACEABILITY" digest="sha256:f2f309f40b61461ae3af2ef87e81769a5efed5be2696d5ca729aed42e9926079" -->

@@ -25,7 +25,8 @@
     "passed": 1067,
     "skipped": 10,
     "failed": 0,
-    "publicSiteFiles": 136
+    "publicSiteFiles": 136,
+    "postArchiveCorrection": "Hosted repository check caught the OpenSpec-generated missing heading whitespace and placeholder Purpose. Canonical purpose and current provider-generated citations were supplied; full verification repeats with archived specs."
   },
   "limits": [
     "Docker behavior is stubbed in the deterministic tree fixture; it proves host metadata/index behavior, not a new image or provider qualification.",
