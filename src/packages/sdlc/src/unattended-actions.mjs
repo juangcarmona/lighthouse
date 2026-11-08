@@ -14,7 +14,7 @@ import { loadImplementation, publishImplementationPullRequest, readImplementatio
 import { prepareProposal, proposalRoot } from './proposal.mjs';
 import { resolveModelProfile } from './model-profiles.mjs';
 import { taskDigest } from './digests.mjs';
-import { list, inspectCompletion, assertChecks, mergeAccepted, postMergeRuns } from './completion-state.mjs';
+import { list, inspectCompletion, waitForIntegration, mergeAccepted, postMergeRuns } from './completion-state.mjs';
 import { completionBundle, publishProcessBundle } from './process-publication.mjs';
 import { dispatchDeliveryChecks } from './delivery-events.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
@@ -91,13 +91,14 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
   const reviewer = resolveModelProfile({ project, operator, worker: 'independent-review', profile: policy.reviewerProfile });
   if (producer.model === reviewer.model) throw Error('Independent reviewer resolves to the implementation model');
   let reserved = false, sequence = 0, working = source, lastStep = null, published = null, refined = null, lastReview = null, planProducer = null;
-  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), policy.timeoutSeconds * 1000);
-  const provider = boundedOpenSpecProvider({ root, signal: controller.signal, deadline: Date.now() + policy.timeoutSeconds * 1000, env });
+  const deadline = Date.now() + policy.timeoutSeconds * 1000;
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), Math.max(0, deadline - Date.now()));
+  const provider = boundedOpenSpecProvider({ root, signal: controller.signal, deadline, env });
   const onSignal = () => controller.abort();
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   const runUrl = 'https://github.com/' + repository + '/actions/runs/' + env.GITHUB_RUN_ID;
   const recheck = async () => {
-    if (controller.signal.aborted) throw Error('Delivery was cancelled or exceeded its execution limit');
+    if (controller.signal.aborted || Date.now() >= deadline) throw Error('Delivery was cancelled or exceeded its execution limit');
     if ((await api('commits/' + encodeURIComponent(metadata.default_branch))).sha !== revision) throw Error('Authorized base or policy changed; reassess before continuing');
     const fresh = await api('issues/' + issueNumber);
     if (fresh.state !== 'open' || fresh.labels.some(l => ['human-working', 'future', 'needs-info', 'waiting-review'].includes(l.name)) ||
@@ -107,6 +108,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       if (current.state !== 'open' || current.head.sha !== published.head.sha) throw Error('Published candidate changed before integration');
       await assertUnattendedPullRequest(api, await comments(), current, owner);
     }
+    if (controller.signal.aborted || Date.now() >= deadline) throw Error('Delivery was cancelled or exceeded its execution limit');
   };
   const newerAttempt = async () => {
     const latest = (await comments()).filter(c => c.id > initialCommentId && c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-(?:unattended|dispatch|actions|stop):/.test(c.body ?? '')).at(-1);
@@ -257,37 +259,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
         return published;
       },
       integrate: async (candidate, pr) => {
-        const until = Math.min(Date.now() + 600000, Date.now() + policy.timeoutSeconds * 1000);
-        let observation, promoted = false;
         const authorization = { issue: issueNumber, pr: pr.number, head: pr.head.sha, merge: true,
           unattended: { route, owner, policyDigest, review: lastReview } };
-        do {
-          await recheck();
-          const current = await api('pulls/' + pr.number);
-          if (current.head.sha !== pr.head.sha || current.state !== 'open') throw Error('Published candidate changed before integration');
-          if (promoted && current.draft) throw Error('PR returned to draft; new authorization is required');
-          // Observe a draft without promoting it while CI is pending. The final merge recheck still rejects drafts.
-          observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID, { observeDraft: true });
-          let checked = false;
-          try { assertChecks(observation); checked = true; }
-          catch (error) { if (observation.checks.some(check => ['ineligible-event', 'unverified-workflow'].includes(check.state))) throw error; }
-          if (checked) {
-            await recheck();
-            if (current.draft) {
-              try { await setPullRequestDraft(env.GH_TOKEN, current, false); }
-              catch (error) {
-                const reconciled = await api('pulls/' + pr.number);
-                if (reconciled.state !== 'open' || reconciled.head.sha !== pr.head.sha || reconciled.draft) throw error;
-              }
-            }
-            await recheck();
-            promoted = true;
-            observation = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);
-            if (observation.mergeable) break;
-          }
-          if (Date.now() >= until) throw Error('Required CI or mergeability is pending; retain the PR for a new authorized action');
-          await new Promise(resolve => setTimeout(resolve, 30000));
-        } while (!controller.signal.aborted);
+        const observation = await waitForIntegration({ api, repository, owner, authorization, workflowRunId: env.GITHUB_RUN_ID,
+          deadline, signal: controller.signal, recheck, promote: current => setPullRequestDraft(env.GH_TOKEN, current, false) });
         const result = await mergeAccepted(api, observation, async () => {
           await recheck();
           const fresh = await inspectCompletion(api, repository, owner, authorization, 'integrate', env.GITHUB_RUN_ID);

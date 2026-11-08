@@ -58,6 +58,8 @@ The complete candidate is limited to 100 added plus deleted production-code line
 
 ## Integration and recovery
 
+Provider work, authority rechecks and the CI/mergeability wait share one absolute deadline established at admission. CI may complete after ten minutes when the original route window still has time; waiting never starts a new allowance. Expiry or cancellation during an observation stops before draft promotion or returning a mergeable candidate.
+
 The host rechecks source, policy, owner intent, reservations, the exact PR head, required CI and hosting rules before a delegated merge. Required GitHub checks must actually pass. A merge queue requires a supported queue-aware adapter; protected decisions retain their configured owners.
 
 The trusted host retains the integration bundle on the adopted evidence branch for existing post-merge review. Release, deployment, smoke checks and rollback continue only through their existing separately authorized paths. A merge does not establish deployment.

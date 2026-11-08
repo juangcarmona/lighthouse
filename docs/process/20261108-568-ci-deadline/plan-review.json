@@ -1,0 +1,21 @@
+{
+  "head": "0c553d9d7263d5f41bc286a397a282d29e9e27d8",
+  "verdict": "accept",
+  "findings": [],
+  "dimensions": {
+    "product_scope_and_authority": "Pass. This is an internal waiting-boundary correction, not a product, resource, correction-count, or provider-selection change. The cited ProductShape rules govern bounded work and stage gates; no product decision is added. No adopter engineering-lifecycle.md is present or needed for this assessment.",
+    "single_original_deadline_and_provider_cancellation_propagation": "Pass. The plan establishes one absolute deadline at the existing route limit, shares it with the provider and integration wait, and adds expiry to authority rechecks rather than granting CI a fresh allowance.",
+    "exact_head_state_and_owner_hold_preservation": "Pass. It retains source/PR head and state validation, owner feedback and draft holds, and requires expiry or cancellation during observation to stop before promotion.",
+    "checks_and_workflow_provenance": "Pass. Existing required-check and workflow-origin validation are retained; ineligible or unverified origins fail closed.",
+    "draft_promotion_uncertainty_and_final_merge_checks": "Pass. Promotion-response reconciliation remains constrained to the expected open PR/head and confirmed non-draft state. Fresh completion reads and the guarded merge path remain in place; expiry/cancellation do not authorize a merge.",
+    "meaningful_virtual_clock_boundary_regressions": "Pass. The proposed seam exercises the real polling loop and calls for regressions covering success after ten minutes but before the deadline, expiry during a read, cancellation, changed head/hold, and invalid check origin without sleeping.",
+    "bounded_implementation_and_delivery_qualification": "Pass. The extraction and documentation scope is limited, existing bounds and authorities remain unchanged, and tasks distinguish implementation verification from exact-head review, hosted checks, OpenSpec synchronization, and merge. The supplied planning-check evidence does not establish that those future delivery checks have passed."
+  },
+  "kind": "plan",
+  "issue": 568,
+  "requestedModel": "openai/gpt-6-luna",
+  "requestedEffort": "high",
+  "reviewedAt": "2026-11-08T01:43:07.897859+00:00",
+  "sourceReadOnly": true,
+  "transport": "standalone JSON in reviewer final text; output template remained untouched"
+}
