@@ -64,6 +64,108 @@ test('recovery rejects an incomplete job inventory before it can infer a safe re
   assert.equal(f.calls.some(call => call.method !== 'GET'), false);
 });
 
+function deletedWorkflowFixture(status = 422) {
+  const f = fixture();
+  f.request.ref = f.parent.head_branch = f.run.head_branch = 'feature/retired';
+  f.receipt.digest = digest(JSON.stringify(f.request));
+  f.comment.body = dispatchReceiptBody(repository, f.receipt);
+  const missing = Object.assign(Error('Commit ref unavailable'), { status });
+  const api = async (path, ...args) => {
+    if (path === 'commits/feature%2Fretired') { f.calls.push({ path, method: args[0] ?? 'GET' }); throw missing; }
+    if (/^git\/matching-refs\/(heads|tags)\/feature%2Fretired/.test(path)) { f.calls.push({ path, method: args[0] ?? 'GET' }); return []; }
+    return f.api(path, ...args);
+  };
+  return { ...f, api, missing };
+}
+
+test('a deleted workflow ref preserves authenticated history and blocks every recovery effect', async () => {
+  for (const status of [404, 422]) {
+    const f = deletedWorkflowFixture(status);
+    const historical = await loadDispatch(f.api, repository, owner, 7, 30, f.run, f.readArtifact);
+    assert.equal(historical.request.workflowRevision, sha);
+    const [observation] = await observeRecovery(f.api, repository, owner, 7, Date.now(), f.readArtifact);
+    assert.equal(observation.state, 'blocked');
+    assert.equal(observation.code, 'workflow-ref-missing');
+    assert.equal(observation.runId, '200');
+    assert.equal(observation.rootId, f.request.id);
+    assert.equal(observation.workflowRef, 'feature/retired');
+    assert.equal(observation.expectedWorkflowRevision, sha);
+    assert.equal(observation.requestDigest, f.receipt.digest);
+    assert.equal(observation.requestCommentId, 30);
+    assert.equal(observation.refLookupStatus, status);
+    assert.match(observation.nextAction, /Maintainer:.*fresh owner request/);
+    assert.equal(observation.dispatch, undefined);
+    const before = JSON.stringify(f.comments);
+    for (let duplicate = 0; duplicate < 2; duplicate++) {
+      const result = await prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+      assert.equal(result.request, undefined);
+      assert.equal(result.observations[0].code, 'workflow-ref-missing');
+    }
+    assert.equal(JSON.stringify(f.comments), before);
+    assert.equal(f.calls.every(c => c.method === 'GET'), true);
+  }
+});
+
+test('missing-ref classification requires positive bounded head and tag inventories', async () => {
+  for (const scenario of ['present-head', 'present-tag', 'permission', 'network', 'malformed', 'truncated']) {
+    const f = deletedWorkflowFixture();
+    const api = async (path, ...rest) => {
+      if (path.startsWith('git/matching-refs/')) {
+        if (scenario === 'permission') throw Object.assign(Error('Denied'), { status: 403 });
+        if (scenario === 'network') throw Error('Network unavailable');
+        if (scenario === 'malformed') return { message: 'Not a reference inventory' };
+        if (scenario === 'truncated') return Array.from({ length: 100 }, () => ({ ref: 'refs/heads/feature/retired-child' }));
+        if (scenario === 'present-head' && path.includes('/heads/')) return [{ ref: 'refs/heads/feature/retired' }];
+        if (scenario === 'present-tag' && path.includes('/tags/')) return [{ ref: 'refs/tags/feature/retired' }];
+      }
+      return f.api(path, ...rest);
+    };
+    await assert.rejects(observeRecovery(api, repository, owner, 7, Date.now(), f.readArtifact), undefined, scenario);
+    assert.equal(f.calls.every(c => c.method === 'GET'), true);
+  }
+  for (const status of [400, 401, 403, 429, 500, undefined]) {
+    const f = deletedWorkflowFixture(); let inventories = 0;
+    const error = Object.assign(Error('Lookup failed'), status === undefined ? {} : { status });
+    const api = async (path, ...rest) => {
+      if (path === 'commits/feature%2Fretired') throw error;
+      if (path.startsWith('git/matching-refs/')) inventories++;
+      return f.api(path, ...rest);
+    };
+    await assert.rejects(observeRecovery(api, repository, owner, 7, Date.now(), f.readArtifact), e => e === error);
+    assert.equal(inventories, 0);
+  }
+});
+
+test('a deleted workflow ref leaves a retained retry historical but denies a fresh claim', async () => {
+  const f = deletedWorkflowFixture();
+  const live = (path, ...args) => path === 'commits/feature%2Fretired' ? { sha } : f.api(path, ...args);
+  const retry = await prepareRecovery(live, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact);
+  assert.ok(retry.request);
+  f.artifacts.set('300', retry.request);
+  const worker = { ...f.run, id: 400 };
+  const retained = await loadDispatch(f.api, repository, owner, 7, retry.commentId, worker, f.readArtifact);
+  const writes = f.calls.filter(c => c.method !== 'GET').length;
+  await verifyRecoveryOrigin(f.api, repository, owner, retained, f.maintenance, f.readArtifact, 0, false);
+  await assert.rejects(verifyRecoveryOrigin(f.api, repository, owner, retained, f.maintenance, f.readArtifact, 0, true), e => e === f.missing);
+  assert.equal(f.calls.filter(c => c.method !== 'GET').length, writes);
+});
+
+test('one missing workflow ref does not abort observation of the remaining batch', async () => {
+  const retired = deletedWorkflowFixture(), current = fixture();
+  current.issue.number = current.request.issue = 8;
+  current.request.event.inputs.issue = '8';
+  current.comment.issue_url = `https://api.github.com/repos/${repository}/issues/8`;
+  current.receipt.digest = digest(JSON.stringify(current.request));
+  current.comment.body = dispatchReceiptBody(repository, current.receipt);
+  const api = async (path, ...args) => current.api(path.replace(/^issues\/8(?=\/|$)/, 'issues/7'), ...args);
+  const results = [];
+  for (const [client, number, artifact] of [[retired.api, 7, retired.readArtifact], [api, 8, current.readArtifact]]) {
+    results.push(...await observeRecovery(client, repository, owner, number, Date.now(), artifact));
+  }
+  assert.deepEqual(results.map(o => [o.issue, o.state]), [[7, 'blocked'], [8, 'retryable']]);
+  assert.equal([...retired.calls, ...current.calls].every(c => c.method === 'GET'), true);
+});
+
 test('abandoned reservation cleanup requires matching execution evidence and an unchanged bot label event', async () => {
   for (const scenario of ['valid', 'human-label', 'newer-dispatch', 'unknown-publication', 'missing-snapshot', 'owner-hold', 'event-changed', 'missing-event-id', 'agent-succeeded', 'existing-notice']) {
     const f = fixture();

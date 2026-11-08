@@ -7,6 +7,7 @@ export const causes = Object.freeze({
   'dispatch-unconfirmed': ['Dispatch confirmation is missing', 'Reconcile the recorded request with Actions before requesting more work.'],
   'execution-rerun': ['Execution was rerun outside recovery', 'Inspect all attempts and the original claim.'],
   'authority-changed': ['Source or owner intent changed', 'Request fresh work against the current source and intent.'],
+  'workflow-ref-missing': ['Workflow reference no longer exists', 'Maintainer: reconcile the original execution and select an existing workflow ref under a fresh owner request; never resend or recreate its ref automatically.'],
   'manual-recovery': ['Outcome requires operator recovery', 'Inspect actual effects and make a new owner decision.'],
   'publication-uncertain': ['Publication effects are uncertain', 'Inspect the PR, issue and publication job before another request.'],
   'execution-time-unknown': ['Execution timestamp is unavailable', 'Inspect the Actions execution timestamps.'],
