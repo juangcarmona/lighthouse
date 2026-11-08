@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.1
+
+### Patch Changes
+
+- a65e97b: # Wake confirmed review recovery
+
+  Wake bounded final-review admission recovery from authenticated native worker completion. Preserve the original grant and single linked retry, reject uncertain effects and retain the scheduled sweep for missed events.
+
 ## 0.22.0
 
 ### Minor Changes
