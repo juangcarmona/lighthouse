@@ -1,4 +1,5 @@
 import { productModelDirectoryFromConfig } from './product-change.mjs';
+import { readActionsJson } from './actions-artifact.mjs';
 import { digest } from './digests.mjs';
 import { inspectCompletion, assertChecks, postMergeRuns } from './completion-state.mjs';
 import { deliveryAfterChecks } from './delivery-events.mjs';
@@ -17,6 +18,22 @@ async function rejectedJobs(api, { dispatch, run }) {
   const preparationJobs = jobs.filter(job => job.name === preparation), publicationJobs = jobs.filter(job => job.name === 'Validate, publish and release');
   if (preparationJobs.length !== 1 || preparationJobs[0].conclusion !== 'failure' || publicationJobs.length !== 1 || publicationJobs[0].conclusion !== 'skipped' || ['pre_activation', 'activation', 'agent'].some(name => jobs.filter(job => job.name === name).length !== 1 || jobs.find(job => job.name === name).conclusion !== 'skipped') || jobs.some(job => job.name !== preparation && job.conclusion !== 'skipped')) return null;
   return jobs;
+}
+
+// Completion is a wake-up only: admission still rechecks the original grant and current authority.
+export async function admissionCompletion(api, repository, owner, event, readArtifact = readActionsJson) {
+  const signal = event.workflow_run;
+  if (event.action !== 'completed' || signal?.repository?.full_name !== repository || !Number.isSafeInteger(signal.id) || signal.id < 1 || signal.run_attempt !== 1 || signal.status !== 'completed' || signal.conclusion !== 'failure') return null;
+  const run = await api(`actions/runs/${signal.id}/attempts/${signal.run_attempt}`);
+  if (run?.repository?.full_name !== repository || run.path !== stagePath('review') || run.event !== 'workflow_dispatch' || run.head_sha !== signal.head_sha || run.run_attempt !== signal.run_attempt || run.status !== 'completed' || run.conclusion !== 'failure') return null;
+  const match = /^review #([1-9][0-9]*) · request ([1-9][0-9]*)$/.exec(run.display_title ?? '');
+  if (!match) return null;
+  let rejection;
+  try { await loadDispatch(api, repository, owner, Number(match[1]), Number(match[2]), run, readArtifact); }
+  catch (error) { rejection = error.rejection; }
+  const request = rejection?.dispatch.request;
+  if (!request || request.recovery || request.stage !== 'review' || request.worker || request.handoff || request.completionRecovery || !isBotContinuation(request.event, rejection.parent.event, rejection.parent.actor?.login, rejection.parent.triggering_actor?.login) || !await rejectedJobs(api, rejection)) return null;
+  return { issue: Number(match[1]), runId: String(run.id), attempt: run.run_attempt, revision: run.head_sha, commentId: Number(match[2]) };
 }
 
 // A changed ref never admits work; only a terminal native job inventory can establish skipped effects.
@@ -65,7 +82,7 @@ export async function reconcileAdmissionRejection(api, repository, observation) 
 
 export function admissionRetryRequest(observation, parent) {
   const { request } = observation.dispatch;
-  const recovery = { kind: 'before-admission', rootId: observation.rootId, previousComment: observation.dispatch.commentId, attempt: 1 };
+  const recovery = { kind: 'before-admission', rootId: observation.rootId, previousComment: observation.dispatch.commentId, attempt: 1, ...(observation.wake ? { wake: observation.wake } : {}) };
   const next = { ...request, id: digest(`${request.repository}:${recovery.rootId}:retry:1`), sourceRevision: observation.revision, workflowRevision: observation.revision, routerRunId: String(parent.id), routerAttempt: parent.run_attempt, routerRevision: parent.head_sha, routerRef: parent.head_branch, routerEventName: parent.event, recovery };
   next.intent = dispatchIntent(next);
   return next;
@@ -82,7 +99,12 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   catch (error) { rejection = error.rejection; }
   if (!rejection || rejection.dispatch.request.recovery || retry.rootId !== rejection.dispatch.request.id || run.path !== stagePath('review')) throw Error('Invalid original admission rejection');
   if (!await rejectedJobs(api, rejection)) throw Error('Original admission rejection effects are unconfirmed');
-  const expected = admissionRetryRequest({ dispatch: rejection.dispatch, rootId: retry.rootId, revision: request.sourceRevision }, parent);
+  let wake;
+  if (parent.event === 'workflow_run') {
+    wake = { issue: request.issue, runId: String(run.id), attempt: run.run_attempt, revision: run.head_sha, commentId: Number(comment.id) };
+    if (![owner, 'github-actions[bot]'].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login || !same(retry.wake, wake)) throw Error('Invalid admission completion wake');
+  } else if (retry.wake !== undefined) throw Error('Unexpected admission completion wake');
+  const expected = admissionRetryRequest({ dispatch: rejection.dispatch, rootId: retry.rootId, revision: request.sourceRevision, wake }, parent);
   if (!same(request, expected)) throw Error('Before-admission recovery authorization changed');
   if (!revalidate) return;
   const issue = await api(`issues/${request.issue}`);
@@ -90,5 +112,6 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   // The current retry is allowed; any other newer dispatch supersedes the original request.
   const originalComments = comments.filter(item => item.id !== dispatch.commentId);
   const observation = await observeAdmissionRejection(api, repository, owner, rejection, issue, originalComments);
+  observation.wake = wake;
   if (observation.state !== 'retryable' || !same(request, admissionRetryRequest(observation, parent))) throw Error('Before-admission recovery authority changed');
 }
