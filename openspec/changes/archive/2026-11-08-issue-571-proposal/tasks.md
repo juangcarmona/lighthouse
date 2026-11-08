@@ -7,9 +7,9 @@
 
 ## 2. Implement and verify
 
-- [ ] 2.1 Add trusted source-link metadata validation and complete checked-tree construction without filesystem links or target bytes.
-- [ ] 2.2 Propagate and bind metadata through native/unattended requests and command evidence; keep publisher equality and empty-source compatibility.
-- [ ] 2.3 Prove the original mismatch and the corrected tree, input denial, caller coverage and legacy regression behavior.
+- [x] 2.1 Add trusted source-link metadata validation and complete checked-tree construction without filesystem links or target bytes.
+- [x] 2.2 Propagate and bind metadata through native/unattended requests and command evidence; keep publisher equality and empty-source compatibility.
+- [x] 2.3 Prove the original mismatch and the corrected tree, input denial, caller coverage and legacy regression behavior.
 - [ ] 2.4 Run full verification, update relevant docs and obtain final independent acceptance.
 
 ## 3. Integrate

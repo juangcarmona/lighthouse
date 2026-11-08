@@ -1,0 +1,35 @@
+{
+  "workItem": 571,
+  "recordedAt": "2026-11-08T04:09:47.057583+00:00",
+  "rootCause": "Authenticated tracked source links were omitted from the checked regular-file tree but preserved by publication.",
+  "negativeControl": {
+    "status": "failed as expected before implementation",
+    "assertion": "complete checked tree equals original Git overlay",
+    "checked": "d9f7a5cdbb8a45749e4ba0abd61d6735b0c8673b",
+    "overlay": "1d287387d1262362911d0a6f1d6e9f170b9561ea"
+  },
+  "green": {
+    "status": "passed",
+    "fixture": "tracked ignored link with an inaccessible target and a regular candidate change",
+    "assertions": [
+      "complete checked tree equals the original Git overlay",
+      "no filesystem symlink in the check workspace",
+      "original candidate HEAD and index unchanged",
+      "no-link path keeps the original tree",
+      "forged metadata and artifact digest rejected by independent admitted-commit reconstruction"
+    ]
+  },
+  "verification": {
+    "command": "npm run verify",
+    "tests": 1077,
+    "passed": 1067,
+    "skipped": 10,
+    "failed": 0,
+    "publicSiteFiles": 136
+  },
+  "limits": [
+    "Docker behavior is stubbed in the deterministic tree fixture; it proves host metadata/index behavior, not a new image or provider qualification.",
+    "Source merge does not requalify a previously blocked native delivery.",
+    "Actual forge checks, final independent review and selected native/adopter qualification remain separate."
+  ]
+}

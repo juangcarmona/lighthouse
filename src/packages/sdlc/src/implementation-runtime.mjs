@@ -1,3 +1,4 @@
+import { checkedCandidateTree } from './source-link-tree.mjs';
 import { chmod, mkdir, writeFile, readdir, lstat, copyFile, mkdtemp, rename, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
@@ -92,7 +93,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   if (request.repository && request.workflowRunId && request.attempt && request.taskDigest) {
     receipt.schemaVersion = 2;
     receipt.binding = commandEvidenceBinding(request);
-    receipt.candidateTree = execFileSync('git', ['-c', `safe.directory=${workspace}`, '-C', workspace, 'rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
+    receipt.candidateTree = await checkedCandidateTree(workspace, request.sourceLinks, request.sourceRevision);
     receipt.observedAt = new Date().toISOString();
   }
   await mkdir(output, { recursive: true });

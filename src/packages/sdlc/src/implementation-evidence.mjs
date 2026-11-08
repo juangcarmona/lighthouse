@@ -1,3 +1,4 @@
+import { sourceLinksDigest, sourceLinksFromApi } from './source-link-tree.mjs';
 import { createHash } from 'node:crypto';
 import { readActionsJson } from './actions-artifact.mjs';
 import { implementationPrProof } from './implementation-proof.mjs';
@@ -21,6 +22,7 @@ export function commandEvidenceBinding(request) {
     policy: digest(request.implementation), planning: digest(request.planningReference ?? null) };
   if (!/^[\w.-]+\/[\w.-]+$/.test(binding.repository ?? '') || !Number.isSafeInteger(binding.issue) || binding.issue < 1 || !hex(binding.runId) || !positive(binding.workflowRunId) || !Number.isSafeInteger(binding.attempt) || binding.attempt < 1 || !sha(binding.sourceRevision) || !sha(binding.policyRevision) || !hex(binding.intent)) throw Error('Command evidence requires an admitted repository, work item, run, attempt and intent');
   if (request.sourceSynchronization !== undefined) binding.synchronization = synchronizationDigest(request.sourceSynchronization);
+  if (request.sourceLinks !== undefined) binding.sourceLinks = sourceLinksDigest(request.sourceLinks, request.sourceRevision);
   return binding;
 }
 
@@ -51,7 +53,7 @@ export function implementationEvidenceBundle(request, receipt, changes, publicat
   if (receipt.schemaVersion !== 2 || digest(receipt.binding) !== digest(commandEvidenceBinding(request)) || !sha(receipt.candidateTree) || !sha(publication.head) || receipt.candidateTree !== publication.tree || !Number.isSafeInteger(publication.pr) || publication.pr < 1) throw Error('Command evidence does not bind the tested and published trees');
   const value = { schemaVersion: 1, producer: 'lighthouse-implementation-host', binding: receipt.binding,
     implementation: request.implementation, planningReference: request.planningReference ?? null,
-    dispatch: request.dispatch ?? null, ...(request.sourceSynchronization ? { sourceSynchronization: request.sourceSynchronization } : {}), changesDigest: changesDigest(changes), publication, receipt };
+    dispatch: request.dispatch ?? null, ...(request.sourceLinks ? { sourceLinks: request.sourceLinks } : {}), ...(request.sourceSynchronization ? { sourceSynchronization: request.sourceSynchronization } : {}), changesDigest: changesDigest(changes), publication, receipt };
   if (Buffer.byteLength(JSON.stringify(value)) > 128000) throw Error('Command evidence exceeds artifact member bounds');
   return value;
 }
@@ -119,7 +121,9 @@ export async function readImplementationEvidence(api, completion, { readArtifact
       grant = validateUnattendedPolicy(JSON.parse(Buffer.from(file.content, 'base64').toString()), artifact.unattended?.route);
       if (unattendedDigest(grant) !== artifact.unattended?.policyDigest) throw Error('Unattended command grant changed');
     }
-    const expected = commandEvidenceBinding({ ...binding, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference, sourceSynchronization: artifact.sourceSynchronization });
+    const sourceLinks = await sourceLinksFromApi(api, binding.sourceRevision);
+    if (sourceLinksDigest(sourceLinks, binding.sourceRevision) !== sourceLinksDigest(artifact.sourceLinks, binding.sourceRevision)) throw Error('Opaque source-link provenance changed');
+    const expected = commandEvidenceBinding({ ...binding, sourceLinks, baseRevision: binding.policyRevision, taskDigest: intent, implementation: artifact.implementation, planningReference: artifact.planningReference, sourceSynchronization: artifact.sourceSynchronization });
     if (digest(expected) !== digest(binding)) throw Error('Command policy or plan binding changed');
     if (artifact.dispatch) {
       const origin = await loadDispatch(api, repository, owner, issue, artifact.dispatch.commentId, native, readArtifact);
