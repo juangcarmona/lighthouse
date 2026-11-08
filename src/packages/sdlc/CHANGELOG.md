@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.4
+
+### Patch Changes
+
+- 105ce46: # Missing workflow references
+
+  Report confirmed missing workflow refs without aborting maintenance observation or granting recovery effects; preserve historical request identity and distinguish unavailable evidence from deletion.
+
 ## 0.22.3
 
 ### Patch Changes
