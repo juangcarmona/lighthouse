@@ -50,6 +50,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -58,7 +60,9 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Validate pending release plan
         if: hashFiles('.changeset/*.md', '!.changeset/README.md') != ''
-        run: npx --no-install changeset status
+        run: |
+          git show-ref --verify --quiet refs/heads/main || git branch main origin/main
+          npx --no-install changeset status
       - run: npm test
       - name: Validate installed issue workflows
         env:

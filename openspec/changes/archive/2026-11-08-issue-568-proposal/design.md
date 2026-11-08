@@ -18,6 +18,10 @@ CI becoming green after ten minutes may advance only before the original deadlin
 
 This factors an internal polling function and propagates an existing time limit. No component, trust, persistence, deployment or runtime authority changes; common architecture documentation has no structural change. The owning package guide records the corrected waiting boundary. No package release or adopter policy increase is claimed by this source fix.
 
+## Qualification correction
+
+Hosted package validation exposed a shallow-checkout failure before tests: Changesets could not find its configured `main` merge base. The package job now obtains full history and establishes the local base ref before the unchanged release-plan validation. A clean shallow-clone negative control reproduces the original failure; restoring history and that ref makes the same command pass. This CI prerequisite preserves the validation rather than excluding the patch changeset.
+
 ## Risks and rollback
 
 Clock and cancellation checks must agree; retain the controller as the hard cancellation path and check the absolute deadline before privileged effects. Keep all existing tests and exact-head verification. Revert the source change to restore the old polling behavior; preserve diagnostic evidence of the early stop.
