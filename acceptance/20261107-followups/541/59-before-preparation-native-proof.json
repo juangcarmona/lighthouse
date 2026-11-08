@@ -1,0 +1,14 @@
+{
+  "state": "before-preparation-refresh-proven",
+  "routerRevision": "1dacf727305e98cee894b01626fd13d81384eff4",
+  "sourceRevision": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+  "workflowRevision": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+  "observedMainBeforeForwarding": "d19d0a4c7f09a4ef54591c206eff337a19462301",
+  "originalCi": "42429572395",
+  "requestComment": "6715037252",
+  "sourceArtifact": "59-original-bot-router-lighthouse-dispatch-3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96.zip",
+  "recoveryAlreadyEnabled": true,
+  "scopeEnabledBeforeFailure": [
+    59
+  ]
+}

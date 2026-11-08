@@ -1,0 +1,72 @@
+{
+  "head": "599af0172e9e1293a1dc3dfd0ca0b955c9f68e6a",
+  "branch": "chore/59-lighthouse-implement-dfd34a494e01",
+  "lighthouseVerify": "passed",
+  "conventionalNamedBranchGuard": "passed",
+  "original31TestsPreservedBytes": 18786,
+  "productionBodyUnchanged": true,
+  "appendedTests": 1,
+  "productModelUnchanged": true,
+  "checks": [
+    {
+      "command": [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--yes",
+        "--package=@fission-ai/openspec@1.15.0",
+        "openspec",
+        "validate",
+        "issue-59-proposal",
+        "--strict",
+        "--no-interactive"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

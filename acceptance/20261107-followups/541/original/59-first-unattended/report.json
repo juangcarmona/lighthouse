@@ -1,0 +1,38 @@
+{
+  "status": "blocked",
+  "evidence": [
+    {
+      "kind": "planning",
+      "round": 0,
+      "review": {
+        "accepted": true,
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    {
+      "kind": "candidate",
+      "round": 0,
+      "review": {
+        "accepted": false,
+        "verdict": "request-changes",
+        "findings": [
+          "openspec/changes/issue-59-proposal/tasks.md claims the additional branch-guard, Lighthouse, and ProductShape checks were executed and exited 0 (lines 27, 40), but context.review.details.verificationPlan marks these additional checks planned-not-executed and supplies no receipts; remove or accurately qualify those completion claims and leave task 2.2 unchecked until evidence exists."
+        ]
+      }
+    },
+    {
+      "kind": "candidate",
+      "round": 1,
+      "review": {
+        "accepted": false,
+        "verdict": "escalate",
+        "findings": [
+          "The issue requires the unchanged conventional branch guard to pass, but the host-executed check receipts contain only npm ci, npm run verify, and strict OpenSpec validation; the task artifact's additional guard-success statement is an agent-reported claim whose referenced receipts are unavailable here, so execution and branch-name compliance are not independently established."
+        ]
+      }
+    }
+  ],
+  "reason": "Independent review stopped delivery: The issue requires the unchanged conventional branch guard to pass, but the host-executed check receipts contain only npm ci, npm run verify, and strict OpenSpec validation; the task artifact's additional guard-success statement is an agent-reported claim whose referenced receipts are unavailable here, so execution and branch-name compliance are not independently established.",
+  "nextAction": "Inspect execution evidence and resolve the identified blocker"
+}

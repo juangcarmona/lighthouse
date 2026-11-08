@@ -1,0 +1,551 @@
+{
+  "type": "owner-retained-acceptance-archive",
+  "sourceRuns": [
+    {
+      "archive": "59-native-implementation-lighthouse-implement-input-59-1.zip",
+      "sha256": "7b26a277f35de62798ea0a2dee03c60b308366faf90428f7a65f5b9e4d783453",
+      "originalMembers": [
+        "admission.json",
+        "request.json"
+      ]
+    },
+    {
+      "archive": "59-native-implementation-lighthouse-implement-result-59-1.zip",
+      "sha256": "9f3ed184f9f89e6aa057f8ef9838f5c5e07d224562b3f29d9e2df7bafdf99d6f",
+      "originalMembers": [
+        "envelope.json",
+        "changes.json",
+        "runtime.json",
+        "checks.json"
+      ]
+    },
+    {
+      "archive": "59-native-implementation-lighthouse-command-evidence-59-1.zip",
+      "sha256": "af2cb94f6e9723f90e410a035d325deb04e14468b777d8ade7be9f38f05a459b",
+      "originalMembers": [
+        "implementation-evidence.json"
+      ]
+    },
+    {
+      "archive": "59-native-implementation-lighthouse-implement-publication-59-1.zip",
+      "sha256": "88a5e4c9bb0a3dbd6cde1fc13d62e6385f3b926c66607b1932348e0f6e84d200",
+      "originalMembers": [
+        "published-pr.json",
+        "ci-requests.json"
+      ]
+    },
+    {
+      "archive": "59-native-integration-lighthouse-completion-59-1.zip",
+      "sha256": "db87948eb8344d189a031e924f2ff6335f6e24ff68e6224e7d08857bb3fccdc3",
+      "originalMembers": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ]
+    },
+    {
+      "archive": "59-native-integration-lighthouse-result-59-1.zip",
+      "sha256": "55bae83f9a7ffb22ed95aa2178b54f697a6413b2acf98145822c2a1284436f50",
+      "originalMembers": [
+        "envelope.json",
+        "runtime.json"
+      ]
+    },
+    {
+      "archive": "59-native-integration-lighthouse-input-59-1.zip",
+      "sha256": "e0eb2c5ec58e8784dfb49cb3f0dc5a1b0b84a5549cf2b0d13fc4699537ae9a10",
+      "originalMembers": [
+        "admission.json",
+        "request.json"
+      ]
+    },
+    {
+      "archive": "59-original-bot-router-lighthouse-dispatch-3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96.zip",
+      "sha256": "091e4cc140c6971faf94d21b058c3d3a7fd744b10d6f1a4f089fc51e2bed9c3f",
+      "originalMembers": [
+        "dispatch.json"
+      ]
+    },
+    {
+      "archive": "59-recovered-review-lighthouse-result-59-1.zip",
+      "sha256": "89bf1d4778051d30e82d7b21f1dbf1ed64cc816a5b5aa42b74588569b65bf797",
+      "originalMembers": [
+        "envelope.json",
+        "runtime.json"
+      ]
+    },
+    {
+      "archive": "59-recovered-review-lighthouse-input-59-1.zip",
+      "sha256": "bef770f36137c59affea374b54958bb70c16377e143e38a13ef6ce86d23b4d73",
+      "originalMembers": [
+        "admission.json",
+        "request.json"
+      ]
+    },
+    {
+      "archive": "59-recovered-review-lighthouse-completion-59-1.zip",
+      "sha256": "39c62d0686eccad019b947564008157cb4ef02927487ec57292cfe8fc4ba02b6",
+      "originalMembers": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ]
+    },
+    {
+      "archive": "59-native-maintenance-lighthouse-dispatch-cf9dae233db66c032d5dbbb5627062440965150daaee497d6c98b6209cda2fbc.zip",
+      "sha256": "2e6ae5d705f3d9ff6c163be22ca1a5ecec9d8555d2bb2805b96010880372c90e",
+      "originalMembers": [
+        "dispatch.json"
+      ]
+    },
+    {
+      "archive": "59-original-gates.zip",
+      "sha256": "875e078b8cb6cf766a6e0e647c411bf9b39ec00ca66881beb6c8ad15f7ab4f25",
+      "originalMembers": [
+        "541-gates.jsonl"
+      ]
+    },
+    {
+      "archive": "59-first-unattended.zip",
+      "sha256": "cfc4e69ba5e1d27080d1ff39ec83b7f1683bb418b80ea5323f4258faee63715b",
+      "originalMembers": [
+        "report.json"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "acceptance/20261107-followups/541/541-terminal-native-proof.json",
+      "sha256": "0c8950b4d583b101d1ce8713d283a6189aa6e062f82eb2ea1e406fe6dff0a9e2",
+      "bytes": 20794
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-apply-before.json",
+      "sha256": "cc6b5766f936ef9caa54e853ce7a59f0818dc80c70160fd116448695fb1f82a1",
+      "bytes": 17802
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-before-post-advance.json",
+      "sha256": "a065f92a088bf24aacb7ae0fa1a576969f69524f8aba8aca18bf1c1377fbf61a",
+      "bytes": 688
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-before-preparation-advance.json",
+      "sha256": "653773c8f24c39369e7a2b0edf3acfa35cace80cad67b3d638ec13ebb2b87f0e",
+      "bytes": 720
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-before-preparation-native-proof.json",
+      "sha256": "096cdf2b16929e077ec731a89a7e236a9a7783fed7d6db4b3556770037663a00",
+      "bytes": 602
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-confirmed-before-admission-rejection.json",
+      "sha256": "17e1141a30917f9a7635004cf533be9433c6194d4e81248fab32f114e3cbde7b",
+      "bytes": 962
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-controlled-carrier-after.json",
+      "sha256": "c56fa76030125702d8c6260037bc9da19e5c8f806c125678ac41272c4955f8b9",
+      "bytes": 1117
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-controlled-carrier-before.json",
+      "sha256": "580d6cbc38197cd874f3a99ad4b3ca8455db6500ce5a133c773301b59a918725",
+      "bytes": 818
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-direct-implementation-proof.json",
+      "sha256": "0e0d2228d16dcb4bc65b77bf897f05022c2f9d6f0a4d2eceda4af0804e1e4d41",
+      "bytes": 673
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-direct-launch-preconditions.json",
+      "sha256": "156b0dfb9ee0f89d8c0871ef0df004301c755d3f09de045d79cbd194a277332f",
+      "bytes": 497
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-launch-preconditions.json",
+      "sha256": "6f69c7e364e8c99e0347b4bbcc1e78a606b7d5ebda0280d26a45830022d28977",
+      "bytes": 414
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-named-branch-check.json",
+      "sha256": "12570a56e1c30f8b87860f93537a2e003075e643b81cefe26469d2dddfd1da4e",
+      "bytes": 1334
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-native-maintenance-wakeup.json",
+      "sha256": "27606f098208a43b1012b04b530233503e2988515dffa3b01144659719880385",
+      "bytes": 581
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-original-artifact-digests.json",
+      "sha256": "e61bfaa2b237868ecb9e6eaa43a3ff1642666c7c266855afd9fe08c5b986217b",
+      "bytes": 2829
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-phase-adoption.json",
+      "sha256": "d287c785f1ba73f25ceeaa4275c4b6b874a0f8616974561e1b2e9831c4c08ad3",
+      "bytes": 4758
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-pre-aborted-forward-proof.json",
+      "sha256": "2098fd2cf5e3fa9d9039c6d04350af3f483d3f68f0d6ef8f4c42bcf56a484802",
+      "bytes": 58
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-readonly-native-recovery-observation.json",
+      "sha256": "e49a8ed210921e2a7b29a212cdcbb29353af6ce5383b6cacaac11048062a264f",
+      "bytes": 1841
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-schedule-observations.jsonl",
+      "sha256": "8224cbe30861e99d6b4773025371c447dd6ccb10510516a2ca98bbbeec5f23bf",
+      "bytes": 650
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-scope-restored-before-rejection.json",
+      "sha256": "10fd5edf69eef0f7c57074ebaa590052dde5ab4395934a2db41bab25cc0de4ca",
+      "bytes": 127
+    },
+    {
+      "path": "acceptance/20261107-followups/541/59-trusted-validation-policy.json",
+      "sha256": "5bb16e25277742c2ba2e28982dabb462786105b4378b07e3ad82d74ef47090dc",
+      "bytes": 680
+    },
+    {
+      "path": "acceptance/20261107-followups/541/README.md",
+      "sha256": "257476d8015c35606b9804364ca4af4e8e22e601b8fedf54ce618f083a0439e0",
+      "bytes": 2390
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/59-integration-before-checks.log",
+      "sha256": "3b2d02d69829393f4d56bb5a3e025ae97e5d823c6265a2b22e4096cd31d20236",
+      "bytes": 3946
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/59-original-router-failure.log",
+      "sha256": "53acb996e86f88e5ba9c6a17805543f5f6538e0bebbeac7a7c0bbaacc6f07b07",
+      "bytes": 3911
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/59-rejected-review.log",
+      "sha256": "f46afb0ab10742dfe4cd9e7f762c75a083231fc4b60249c92845ccd23ae57e23",
+      "bytes": 3983
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/acceptance-541-gates.mjs",
+      "sha256": "c0c0983d3fcfcf557d64c1c5f5f62d83280e63bb1d305051d8da2d203ae582bd",
+      "bytes": 3977
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/acceptance-541-preload.mjs",
+      "sha256": "623444621b5f41fdd3baa6ec50706c9fa6079f17d49f58c582b50deec15f06aa",
+      "bytes": 559
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/check-aborted-forward.mjs",
+      "sha256": "c4237bc6f89ac9cf2c810f55aa39625286cdbea5e25beee777af5f710334c356",
+      "bytes": 682
+    },
+    {
+      "path": "acceptance/20261107-followups/541/controlled-carrier/operator-deliver-original.mjs",
+      "sha256": "ac14563aeb7e3e35453967518c97392c4dc7281578e1000c8b71de2b396fa3b6",
+      "bytes": 2970
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-implementation-artifacts.json",
+      "sha256": "4b55b4be610ac1185b1591edf865ca0f83b73f5a48ed9b67e25dcb1988ad80ea",
+      "bytes": 12863
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-implementation-jobs.json",
+      "sha256": "49f71c5b911c993972731ad0f6b600467e9bdfe30c547338ceae32d0d58b332a",
+      "bytes": 40499
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-implementation-run.json",
+      "sha256": "6e2986618e60907f2478a2c79a0ae08bfce47600986bc95fb68dbeee639b07e6",
+      "bytes": 16871
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-integration-artifacts.json",
+      "sha256": "424e5d9b47bbc6d295885b535c7d497d5ce404066af0e49aca1fecbe4b0bb304",
+      "bytes": 10976
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-integration-jobs.json",
+      "sha256": "5dba8f9931cb83d079b741f95733f132302b29e12cbb801ab3b8139a8765f26c",
+      "bytes": 40022
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-integration-run.json",
+      "sha256": "260b88dc9b4c35c58f670f6f735f841c4f8ec458f2967d902cc9ab8e8022296a",
+      "bytes": 16871
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-maintenance-artifacts.json",
+      "sha256": "a5ed69403441937439a9f1bb2b60b9c111418cafdec8beea3ef36270575479f0",
+      "bytes": 5617
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-maintenance-jobs.json",
+      "sha256": "d0577ac1da5c14cacccc76ac598524786e95c5bb36b6944b3089a6b798885ecd",
+      "bytes": 15647
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-native-maintenance-run.json",
+      "sha256": "5b17a591f4c479e6a8647fc55cdffb3a203cd0f0d11fc92b5041fd492431d520",
+      "bytes": 16599
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-original-bot-router-artifacts.json",
+      "sha256": "c832c54047b10da701290270a21178fd28a64562b812cd3316c28a7633d7f6fb",
+      "bytes": 3786
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-original-bot-router-jobs.json",
+      "sha256": "8fb00c50050ac44dc14e98e177e9be961f861ca7abf7bf887029686542c0ba82",
+      "bytes": 11801
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-original-bot-router-run.json",
+      "sha256": "b35e9a752bc2008daf04b95ba233d5f66d1e6deb7879c48486fac36aa40524b3",
+      "bytes": 16878
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-recovered-review-artifacts.json",
+      "sha256": "7d4d745ac6c0696bf4cd32418d649c9ab4f78e72c0a9c0f98e255043dba13b25",
+      "bytes": 10976
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-recovered-review-jobs.json",
+      "sha256": "fc78f7267377298b524f7af60a3c89fa09d7550cf3a6d89765c97fba70370608",
+      "bytes": 39707
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-recovered-review-run.json",
+      "sha256": "5d732d774b7aff21b147af05290c19bd7deae3aeb0df29b22aaef0d79b307e81",
+      "bytes": 16857
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-rejected-review-artifacts.json",
+      "sha256": "f137c29c4405d16c98a130043133578580bb06358db9d50eb20ca8dbef881d4b",
+      "bytes": 966
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-rejected-review-jobs.json",
+      "sha256": "8e5d4f747c39d60f936cefcfa92a9b7da4fd659d81b2090609fe77927364b56c",
+      "bytes": 10964
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-rejected-review-run.json",
+      "sha256": "20c66bdbfd8c73cfce0f8612f0d2335d17cdd039fe9ca57c8ccf9b24bbc8587b",
+      "bytes": 16611
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-seed-draft-stop-artifacts.json",
+      "sha256": "4b4ffe8753099513cd8d0481d0ef11c21f416695267cfc3a7dd3e93068292ad9",
+      "bytes": 966
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-seed-draft-stop-jobs.json",
+      "sha256": "5e640f9450e15262ed818e3af04a4b4386dca2825b3f41aca80287998cb9862e",
+      "bytes": 10982
+    },
+    {
+      "path": "acceptance/20261107-followups/541/native/59-seed-draft-stop-run.json",
+      "sha256": "ddd9819db4b60324c503c5ae67ea3ea01d452875189b0880a26e4c53d8477757",
+      "bytes": 16871
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-first-unattended/report.json",
+      "sha256": "305610caf9ce0123494e094ed8f9d4c839a23c5836f9384d5be0074bb9034075",
+      "bytes": 1861
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-command-evidence-59-1/implementation-evidence.json",
+      "sha256": "559c1e172cc6b6137d5904ad409aebe06d0b34891dd09219a3eb1fcbdd1e7d02",
+      "bytes": 17987
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-input-59-1/admission.json",
+      "sha256": "f980593d8eb812def6e74a1c408d565d16b2c7a36855d21035476039cb3f9676",
+      "bytes": 216
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-input-59-1/request.json",
+      "sha256": "14ff465699e920da30255d9eb9d95bfe2f0ce31d03776dd0bb7a540aa8d879b1",
+      "bytes": 2210
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-publication-59-1/ci-requests.json",
+      "sha256": "cd4a7564be2c7b32ae40b58a3947d40e53ff2fc525e079d02adc862deef79a8a",
+      "bytes": 896
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-publication-59-1/published-pr.json",
+      "sha256": "78c95eb89c410cdbd66ea3029b46986227012eb9117c096a64f4318f9dee0228",
+      "bytes": 63
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-result-59-1/changes.json",
+      "sha256": "c380fd754c477b3009e8fa312b6cf346b59278593c71794a96f195e0de1650a1",
+      "bytes": 35748
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-result-59-1/checks.json",
+      "sha256": "839166f5b42e9326b6a98be419fb8b5648862242ce0a935340cac98dcd918c88",
+      "bytes": 15472
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-result-59-1/envelope.json",
+      "sha256": "ea5238eaffb4239b3fcdd17ec61fc0b3cbcdd67b00231efc5d97a17230743531",
+      "bytes": 4609
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-implementation-lighthouse-implement-result-59-1/runtime.json",
+      "sha256": "8fd985cf8e658bfb38f3eda50e703452d47b909a2b33f973e3aef6ca331f3f17",
+      "bytes": 4793
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-completion-59-1/integration-receipt.json",
+      "sha256": "b1055b0ef09ace2407f53dba40891e98e7bffe756567d86007e87fce3c0a4c97",
+      "bytes": 1202
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-completion-59-1/publication-receipt.json",
+      "sha256": "ef849b1a99078de6147e7da74051f6a15cfe8f5695484bf2b4d0a0f817a44746",
+      "bytes": 348
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-input-59-1/admission.json",
+      "sha256": "fe216e3da60932bcb2f6d23267ef085477ed19a885fdd3957c109734607da976",
+      "bytes": 229
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-input-59-1/request.json",
+      "sha256": "6ff45f3c5fbbb814c801622d39ce3c95a4b04d1fa5a9853aa19e062a3cdcd5ea",
+      "bytes": 65334
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-result-59-1/envelope.json",
+      "sha256": "b72e1443f84f135309393ddb0288b74258c3a37ed267a6d2f33478649c80ec38",
+      "bytes": 16629
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-integration-lighthouse-result-59-1/runtime.json",
+      "sha256": "12f275879cceea72a911448038039a9875bd18a9351d0d619e85f4b256701193",
+      "bytes": 3814
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-native-maintenance-lighthouse-dispatch-cf9dae233db66c032d5dbbb5627062440965150daaee497d6c98b6209cda2fbc/dispatch.json",
+      "sha256": "a72e23a0842f6c258859aec6518c51db8bb1874211ecd55a06e32f78617af2ad",
+      "bytes": 9578
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-original-bot-router-lighthouse-dispatch-3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96/dispatch.json",
+      "sha256": "b367d5caccdd6a793ec4734082219c58d5fbb661479ba1de387df9236916440b",
+      "bytes": 9384
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-original-gates/541-gates.jsonl",
+      "sha256": "87748d255a59196541da7f94df484e455eb90f7cbdea7ca95778585f72c5e1d2",
+      "bytes": 1316
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-completion-59-1/integration-receipt.json",
+      "sha256": "078d5e28db950b277660810f9de48f64959910589a361c7d087d0372136c54d2",
+      "bytes": 1275
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-completion-59-1/publication-receipt.json",
+      "sha256": "41c50283c3a07bcdc5580e14bec7f31f50ab30986e35caf41c94ec5c1e9b434c",
+      "bytes": 348
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-input-59-1/admission.json",
+      "sha256": "44356d9128d8a7d23de1cb672926b781e2890785fe5caade69da1f9c6d9b86ba",
+      "bytes": 229
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-input-59-1/request.json",
+      "sha256": "b1a7882fd3eb1794ba22083bf08f0e1f6f414917cdffd1c31e5f3819bbdbf2ca",
+      "bytes": 85940
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-result-59-1/envelope.json",
+      "sha256": "15f83ed85bb336853e4af1bc4196cd1c8357bc5833cf63fa343e20ea4a46f6e6",
+      "bytes": 21618
+    },
+    {
+      "path": "acceptance/20261107-followups/541/original/59-recovered-review-lighthouse-result-59-1/runtime.json",
+      "sha256": "34d4c174910afb52972c1aa87ccb7e9aa884c803b2de497a0db3e917c6b98f01",
+      "bytes": 3814
+    },
+    {
+      "path": "acceptance/20261107-followups/541/phase-publication-approval.json",
+      "sha256": "8d78de3a42786ae8615faafac729844c90e9f434467386e06f1bf03312a8d85d",
+      "bytes": 185
+    },
+    {
+      "path": "acceptance/20261107-followups/541/registry/verification.json",
+      "sha256": "124dbb09eb09510e774a766c8f54e56cfa35699968777470d4bd234e5401937f",
+      "bytes": 661
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/admitted-origin-green.log",
+      "sha256": "c712d10ac0ab9731af603a8e9e39a829bb53b57cc73942386fb9972ddb6f03c9",
+      "bytes": 8472
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/admitted-origin-red.log",
+      "sha256": "2f60192d0b072e445a3da31fb2329e09baccd6a1ae7b9c78d245ab939aa3bbd9",
+      "bytes": 1100
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/direct-seed-gate-green.log",
+      "sha256": "559021ede6a1d8645e1877149281be976660ab5e2062173a6baf38d683355543",
+      "bytes": 1012
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/direct-seed-gate-red.log",
+      "sha256": "1218aecd706c11f77ecd29aea191843548f1fed827ff65b2236c25b011c9eaa0",
+      "bytes": 343
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/lighthouse-541-consumer.log",
+      "sha256": "e72c2303ade1dbae456c4d41ca014a4014fe45025b8d69981dac7719a62b3dc8",
+      "bytes": 176
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/lighthouse-541-red.log",
+      "sha256": "231f5298fe389d59492c8a48dd3b194dc364dabb1df2a287b5ee0eb51998b46f",
+      "bytes": 2660
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/lighthouse-541-verify-final.log",
+      "sha256": "c300f4e357d9edeb451d927a764d9586c1594b6a8923601a684d76fa13e09e66",
+      "bytes": 98106
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/retry-display-red.log",
+      "sha256": "0202cd3f2eca804116b6c025bf2c78cd0b173ca318b0b0353c0354044c867938",
+      "bytes": 3130
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/review-text-green.log",
+      "sha256": "712e5f23e3b293977b7ee60328de0428a1ff9c8e1dbb23bdd80d08d21662809c",
+      "bytes": 8355
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/review-text-red.log",
+      "sha256": "127fd5c29e46f5cbcc5df52b048d2925cc5f318ff038fc324dba10e9c62d523b",
+      "bytes": 4415
+    },
+    {
+      "path": "acceptance/20261107-followups/541/tdd/router-old-selector-regression.log",
+      "sha256": "646663aabed3091339a50f95631805dd2f1009322999bad5a917e75544a27907",
+      "bytes": 1162
+    }
+  ]
+}

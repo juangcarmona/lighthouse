@@ -1,0 +1,44 @@
+✖ maintenance records one terminal rejection and one linked retry, then verifies current authority before admission (12.191505ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 106.152961
+
+✖ failing tests:
+
+test at src/tests/continuation-admission.test.mjs:27:1
+✖ maintenance records one terminal rejection and one linked retry, then verifies current authority before admission (12.191505ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Retry 1\/1/. Input:
+  
+  '## Requested · review\n' +
+    '\n' +
+    'The request is recorded; execution is not confirmed.\n' +
+    '\n' +
+    'Your next action:\n' +
+    'None. Wait for admission.\n' +
+    '\n' +
+    'What happens next:\n' +
+    'The workflow will report the outcome when the request is processed.\n' +
+    '\n' +
+    '<details><summary>Execution details</summary>\n' +
+    '\n' +
+    '[Dispatch origin](https://github.com/owner/repo/actions/runs/300)\n' +
+    'Retry 1/2 · [Previous request](https://github.com/owner/repo/issues/7#issuecomment-30)\n' +
+    '\n' +
+    '<!-- lighthouse-dispatch:{"schemaVersion":1,"intent":"25610fb668c0bcebc3b13585c14e98e30810cfc568c5d86d66a67ea1e1826a86","stage":"review","recovery":{"kind":"before-admission","rootId":"a0609ed9cb9dd005f6e21b9a7a186c653f3d0da145ef1495dbb94e35c3f74e99","previousComment":30,"attempt":1},"issue":7,"status":"requested","eventRunId":"90","id":"ab27dcf0c0bb4765155befe76769e3975e536f4b38f3ba00aed7a3ae593c439e","digest":"fedf5828f5fc6c6b9084e7402dc600fb2acc456b12fb1b6cb55b8c1ad890c4fe","routerRunId":"300","routerAttempt":1,"workerRunId":null} -->\n' +
+    '</details>'
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:32:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '## Requested · review\n\nThe request is recorded; execution is not confirmed.\n\nYour next action:\nNone. Wait for admission.\n\nWhat happens next:\nThe workflow will report the outcome when the request is processed.\n\n<details><summary>Execution details</summary>\n\n[Dispatch origin](https://github.com/owner/repo/actions/runs/300)\nRetry 1/2 · [Previous request](https://github.com/owner/repo/issues/7#issuecomment-30)\n\n<!-- lighthouse-dispatch:{"schemaVersion":1,"intent":"25610fb668c0bcebc3b13585c14e98e30810cfc568c5d86d66a67ea1e1826a86","stage":"review","recovery":{"kind":"before-admission","rootId":"a0609ed9cb9dd005f6e21b9a7a186c653f3d0da145ef1495dbb94e35c3f74e99","previousComment":30,"attempt":1},"issue":7,"status":"requested","eventRunId":"90","id":"ab27dcf0c0bb4765155befe76769e3975e536f4b38f3ba00aed7a3ae593c439e","digest":"fedf5828f5fc6c6b9084e7402dc600fb2acc456b12fb1b6cb55b8c1ad890c4fe","routerRunId":"300","routerAttempt":1,"workerRunId":null} -->\n</details>',
+    expected: /Retry 1\/1/,
+    operator: 'match',
+    diff: 'simple'
+  }

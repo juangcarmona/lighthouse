@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 13597017999,
+      "node_id": "MDg6QXJ0aWZhY3QxMzU5NzAxNzk5OQ==",
+      "name": "lighthouse-telemetry-prepare-1",
+      "size_in_bytes": 1599,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13597017999",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13597017999/zip",
+      "expired": false,
+      "digest": "sha256:a2ffa5c657d16661c46e94200e6ba42bd4f0380c26c5429c03272aed6aee6308",
+      "created_at": "2026-11-08T00:31:43Z",
+      "updated_at": "2026-11-08T00:31:43Z",
+      "expires_at": "2026-11-22T00:31:43Z",
+      "workflow_run": {
+        "id": 42430136347,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "d19d0a4c7f09a4ef54591c206eff337a19462301"
+      }
+    }
+  ]
+}

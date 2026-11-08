@@ -1,0 +1,10 @@
+{
+  "source": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+  "run": 42426568288,
+  "versions": {
+    "cli": "0.12.60",
+    "sdlc": "0.21.11",
+    "ui": "0.2.1"
+  },
+  "approved": true
+}

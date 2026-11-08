@@ -1,0 +1,30 @@
+✖ actual router preparation refreshes a bot continuation while retaining an explicit owner workflow branch (141.822555ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 236.44759
+
+✖ failing tests:
+
+test at src/tests/continuation-admission.test.mjs:115:1
+✖ actual router preparation refreshes a bot continuation while retaining an explicit owner workflow branch (141.822555ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+  - 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:147:14)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    expected: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

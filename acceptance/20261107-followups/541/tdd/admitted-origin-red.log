@@ -1,0 +1,20 @@
+✖ an admitted recovery keeps its authenticated origin while reserved or after later source changes (32.652718ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 158.810316
+
+✖ failing tests:
+
+test at src/tests/continuation-admission.test.mjs:180:1
+✖ an admitted recovery keeps its authenticated origin while reserved or after later source changes (32.652718ms)
+  Error: Before-admission recovery authority changed
+      at verifyAdmissionRecovery (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/packages/sdlc/src/admission-recovery.mjs:83:110)
+      at async loadDispatch (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/packages/sdlc/src/stage-dispatch.mjs:236:25)
+      at async TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:191:20)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)

@@ -1,0 +1,82 @@
+✖ changed criteria, holds, approval, head, policy and workflow ownership stop a confirmed rejection (16.786109ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.405228
+
+✖ failing tests:
+
+test at src/tests/continuation-admission.test.mjs:69:1
+✖ changed criteria, holds, approval, head, policy and workflow ownership stop a confirmed rejection (16.786109ms)
+  AssertionError [ERR_ASSERTION]: approval-text
+  + actual - expected
+  
+  + {
+  +   admissionBinding: {
+  +     base: 'dddddddddddddddddddddddddddddddddddddddd',
+  +     branch: 'main',
+  +     files: '8b8f8be6c2bce41c76fe70bae199c90ce436ab104c413514e6753600590b3085',
+  +     head: 'cccccccccccccccccccccccccccccccccccccccc',
+  +     intent: '5168cf6d4a94778bc50342be0c0edf8028cb97b97d96bf108f63088d27a83c21',
+  +     issue: 7,
+  +     policy: 'f2f7a237de874fb3c55adda3e8f443bf93e4427a034dbeebc0e8e131a626aa48',
+  +     pr: 8,
+  +     prIntent: '529d1e783718c6a9d2dc77debd5e549ca04902a79ebd376d41bec87c84e2b8bf',
+  +     repository: 'owner/repo',
+  +     reviews: '7e3ff3c98c3550defe304ad271793142b419b5317ef20414e8bb481fe1c29ed5'
+  +   },
+  +   completionAuthorization: {
+  +     head: 'cccccccccccccccccccccccccccccccccccccccc',
+  +     issue: 7,
+  +     merge: false,
+  +     pr: 8
+  +   },
+  +   event: {
+  +     inputs: {
+  +       after_run: '90',
+  +       issue: '7',
+  +       stage: 'review',
+  +       workflow: 'stage'
+  +     }
+  +   },
+  +   eventName: 'workflow_dispatch',
+  +   eventRunId: '90',
+  +   handoff: false,
+  +   id: 'ab27dcf0c0bb4765155befe76769e3975e536f4b38f3ba00aed7a3ae593c439e',
+  +   intent: '25610fb668c0bcebc3b13585c14e98e30810cfc568c5d86d66a67ea1e1826a86',
+  +   issue: 7,
+  +   recovery: {
+  +     attempt: 1,
+  +     kind: 'before-admission',
+  +     previousComment: 30,
+  +     rootId: 'a0609ed9cb9dd005f6e21b9a7a186c653f3d0da145ef1495dbb94e35c3f74e99'
+  +   },
+  +   ref: 'main',
+  +   repository: 'owner/repo',
+  +   routerAttempt: 1,
+  +   routerEventName: 'workflow_dispatch',
+  +   routerRef: 'main',
+  +   routerRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+  +   routerRunId: '300',
+  +   schemaVersion: 1,
+  +   sourceRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+  +   stage: 'review',
+  +   taskDigest: '5168cf6d4a94778bc50342be0c0edf8028cb97b97d96bf108f63088d27a83c21',
+  +   workflowRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+  + }
+  - undefined
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:88:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { schemaVersion: 1, id: 'ab27dcf0c0bb4765155befe76769e3975e536f4b38f3ba00aed7a3ae593c439e', repository: 'owner/repo', issue: 7, stage: 'review', routerRunId: '300', routerAttempt: 1, routerRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', routerRef: 'main', workflowRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', sourceRevision: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', ref: 'main', eventName: 'workflow_dispatch', event: { inputs: [Object] }, eventRunId: '90', handoff: false, taskDigest: '5168cf6d4a94778bc50342be0c0edf8028cb97b97d96bf108f63088d27a83c21', completionAuthorization: { issue: 7, pr: 8, head: 'cccccccccccccccccccccccccccccccccccccccc', merge: false }, admissionBinding: { repository: 'owner/repo', issue: 7, pr: 8, head: 'cccccccccccccccccccccccccccccccccccccccc', base: 'dddddddddddddddddddddddddddddddddddddddd', branch: 'main', intent: '5168cf6d4a94778bc50342be0c0edf8028cb97b97d96bf108f63088d27a83c21', policy: 'f2f7a237de874fb3c55adda3e8f443bf93e4427a034dbeebc0e8e131a626aa48', reviews: '7e3ff3c98c3550defe304ad271793142b419b5317ef20414e8bb481fe1c29ed5', prIntent: '529d1e783718c6a9d2dc77debd5e549ca04902a79ebd376d41bec87c84e2b8bf', files: '8b8f8be6c2bce41c76fe70bae199c90ce436ab104c413514e6753600590b3085' }, intent: '25610fb668c0bcebc3b13585c14e98e30810cfc568c5d86d66a67ea1e1826a86', routerEventName: 'workflow_dispatch', recovery: { kind: 'before-admission', rootId: 'a0609ed9cb9dd005f6e21b9a7a186c653f3d0da145ef1495dbb94e35c3f74e99', previousComment: 30, attempt: 1 } },
+    expected: undefined,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

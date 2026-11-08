@@ -1,0 +1,226 @@
+{
+  "state": "verified",
+  "base": "0408d98d3dc1572945eb11d033b0ea29a4d313e7",
+  "versions": {
+    "cli": "0.12.60",
+    "sdlc": "0.21.11"
+  },
+  "old31TestsAndProductionUnchanged": true,
+  "policiesAndModelsUnchanged": true,
+  "acceptanceControlsRestored": true,
+  "metadataAbsent": true,
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    ".lighthouse/commands.json",
+    ".lighthouse/sdlc.json",
+    ".lighthouse/upgrade.json",
+    "LIGHTHOUSE.md",
+    "lighthouse.json",
+    "package-lock.json",
+    "package.json",
+    "scripts/acceptance-541-gates.mjs"
+  ],
+  "steps": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--prefer-online",
+        "--save-exact",
+        "@juangcarmona/lighthouse@0.12.60"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--format",
+        "json"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "upgrade",
+        "--scope",
+        "all",
+        "--apply"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs",
+        ".",
+        "package",
+        "--apply",
+        "--replace-reviewed",
+        "--with-completion",
+        "--with-product-change",
+        "--with-maintenance",
+        "--with-unattended"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-apply-review"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-implement"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-integrate"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-review"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-triage"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-apply-product-change"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-product-change"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-propose"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-refine"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "state": "confirmed-rejected-before-admission",
+  "main": "d19d0a4c7f09a4ef54591c206eff337a19462301",
+  "originalReceipt": {
+    "comment": 6715037252,
+    "schemaVersion": 1,
+    "intent": "377adc735da1e5b37063c944515af571132d23d00e43b9638a63b3a15c0776f8",
+    "stage": "review",
+    "status": "failed",
+    "eventRunId": "42429572395",
+    "id": "3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96",
+    "digest": "b367d5caccdd6a793ec4734082219c58d5fbb661479ba1de387df9236916440b",
+    "routerRunId": "42429629854",
+    "routerAttempt": 1,
+    "workerRunId": "42430136347",
+    "admissionRejected": {
+      "code": "workflow-revision-rejected",
+      "attempt": 1,
+      "expectedRevision": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+      "observedRevision": "d19d0a4c7f09a4ef54591c206eff337a19462301"
+    }
+  },
+  "nativeRun": 42430136347,
+  "allEffectJobsSkipped": true,
+  "operatorCarrierDisclosed": "59-controlled-carrier-after.json"
+}

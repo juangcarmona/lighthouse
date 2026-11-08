@@ -1,0 +1,21 @@
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	﻿2026-11-08T00:31:38.7342484Z ##[group]Run node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/completion-actions.mjs prepare
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7343358Z [36;1mnode .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/completion-actions.mjs prepare[0m
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7364517Z shell: /usr/bin/bash -e {0}
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7364773Z env:
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7364976Z   LIGHTHOUSE_DISPATCH_REQUIRED: true
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7365558Z   LIGHTHOUSE_ENGINE_CONFIG: /home/juan/.local/share/lighthouse-runtime/home-published-consumer/541-acceptance-engine.json
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7366148Z   LIGHTHOUSE_MAINTENANCE_ISSUES: [59]
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7366422Z   LIGHTHOUSE_RECOVERY_ENABLED: true
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7366685Z   LIGHTHOUSE_STAGE: review
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7366927Z   OTEL_EXPORTER_OTLP_ENDPOINT: 
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7367223Z   OTEL_SERVICE_NAME: gh-aw.lighthouse-sdlc-review
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7368101Z   OTEL_RESOURCE_ATTRIBUTES: gh-aw.workflow.name=review,gh-aw.repository=juangcarmona/lighthouse-published-consumer-20261104,gh-aw.run.id=42430136347,github.run_id=42430136347,gh-aw.engine.id=opencode
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7369266Z   OTEL_EXPORTER_OTLP_HEADERS: 
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7369545Z   GH_AW_OTLP_ENDPOINTS: [{"url":"","headers":""}]
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7369857Z   GH_AW_OTLP_IF_MISSING: ignore
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7370094Z   LIGHTHOUSE_ISSUE: 59
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7370303Z   GH_HOST: github.com
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7372710Z   GH_TOKEN: ***
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:38.7372920Z ##[endgroup]
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:41.1787231Z ##[error]Dispatch worker identity mismatch: workflow revision changed before admission
+Verify accepted commit, checks and evidence protection	Collect verified owner intent and reserve the issue	2026-11-08T00:31:41.1864286Z ##[error]Process completed with exit code 1.

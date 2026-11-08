@@ -1,0 +1,39 @@
+{
+  "onlyAddedIssue": 59,
+  "basePoliciesUnchanged": true,
+  "checks": [
+    [
+      "npm",
+      "ci",
+      "--ignore-scripts"
+    ],
+    [
+      "npm",
+      "run",
+      "verify"
+    ],
+    [
+      "npx",
+      "--no-install",
+      "lighthouse",
+      "verify"
+    ],
+    [
+      "node",
+      "scripts/lighthouse-guard.mjs",
+      "verify"
+    ],
+    [
+      "npx",
+      "--no-install",
+      "prodshape",
+      "citations",
+      "verify",
+      "--provider",
+      "openspec",
+      "--format",
+      "json"
+    ]
+  ],
+  "reason": "Independent candidate review correctly rejected unsupported guard-success claims when the required guard lacked a trusted host receipt."
+}

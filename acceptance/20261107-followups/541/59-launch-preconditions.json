@@ -1,0 +1,14 @@
+{
+  "source": "ca623000cda51b1b111937add7bba5d7caf08bf2",
+  "issueOpen": true,
+  "labels": [],
+  "noPrior59Execution": true,
+  "metadataAbsent": true,
+  "ci": 42423715809,
+  "ciConclusion": "success",
+  "originalApplyCount": 1,
+  "beforeModelPreparationIncidents": [
+    "acceptance-only job-env context corrected by PR61",
+    "GitHub closing keyword in PR60 prose removed; issue reopened before execution"
+  ]
+}

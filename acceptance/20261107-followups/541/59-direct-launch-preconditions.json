@@ -1,0 +1,18 @@
+{
+  "source": "99e2067e17b73d261eb705ea887fe561756ebe63",
+  "versions": {
+    "cli": "0.12.60",
+    "sdlc": "0.21.11"
+  },
+  "issueOpen": true,
+  "metadataAbsent": true,
+  "ci": 42427886708,
+  "ciPassed": true,
+  "noPriorDirectImplementation": true,
+  "originalApplyCount": 1,
+  "maintenanceScopeDuringSeed": [],
+  "restoreScopeBeforeInjectedPost": [
+    "59"
+  ],
+  "seedRoute": "normal implementation then one exact-head technical owner approval; final continuation/recovery remain automatic"
+}

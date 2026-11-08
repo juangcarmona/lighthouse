@@ -1,0 +1,55 @@
+✖ late default-branch move keeps exact worker rejection distinguishable from an untrusted origin (7.852724ms)
+✖ confirmed rejected preparation is retryable once without any admitted effects (2.462868ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132.486615
+
+✖ failing tests:
+
+test at src/tests/continuation-admission.test.mjs:63:1
+✖ late default-branch move keeps exact worker rejection distinguishable from an untrusted origin (7.852724ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Dispatch worker identity mismatch
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:65:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Dispatch worker identity mismatch
+        at verifyDispatchOrigin (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/packages/sdlc/src/stage-dispatch.mjs:167:374)
+        at actor.login (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:65:23)
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:65:10)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at src/tests/continuation-admission.test.mjs:71:1
+✖ confirmed rejected preparation is retryable once without any admitted effects (2.462868ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'dispatch-origin-unavailable'
+  - 'workflow-revision-rejected'
+  
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/541-continuation-admission/src/tests/continuation-admission.test.mjs:74:10)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'dispatch-origin-unavailable',
+    expected: 'workflow-revision-rejected',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

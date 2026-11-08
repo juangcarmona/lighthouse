@@ -1,0 +1,22 @@
+{
+  "phase": "before-preparation",
+  "base": "1dacf727305e98cee894b01626fd13d81384eff4",
+  "head": "23b04e955412c1cc590a9837070be956ae79e2fe",
+  "branch": "docs/59-acceptance-before-preparation",
+  "gate": {
+    "comment": 6715021584,
+    "schemaVersion": 1,
+    "fixture": "541",
+    "phase": "before-preparation",
+    "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+    "issue": 59,
+    "run": "42429629854",
+    "routerRevision": "1dacf727305e98cee894b01626fd13d81384eff4",
+    "currentRevision": "1dacf727305e98cee894b01626fd13d81384eff4",
+    "ci": "42429572395"
+  },
+  "paths": [
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    "docs/acceptance/541-before-preparation.md"
+  ]
+}

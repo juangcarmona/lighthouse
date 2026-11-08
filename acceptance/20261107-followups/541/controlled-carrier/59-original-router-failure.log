@@ -1,0 +1,24 @@
+📥 Dispatch selected stage	Dispatch the independent stage	﻿2026-11-08T00:27:04.6587700Z ##[group]Run node --import "$GITHUB_WORKSPACE/.fixture/scripts/acceptance-541-preload.mjs" .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/issue-actions.mjs dispatch-send
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6590693Z [36;1mnode --import "$GITHUB_WORKSPACE/.fixture/scripts/acceptance-541-preload.mjs" .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/issue-actions.mjs dispatch-send[0m
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6623296Z shell: /usr/bin/bash -e {0}
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6623752Z env:
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6624410Z   LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6625241Z   LIGHTHOUSE_AUTO_IMPLEMENT: true
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6625730Z   LIGHTHOUSE_COMPLETION_ENABLED: true
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6626248Z   LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: true
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6626787Z   LIGHTHOUSE_INTEGRATION_REQUEST: 
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6627278Z   LIGHTHOUSE_ISSUE: 59
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6627678Z   LIGHTHOUSE_EPIC_PARENT: 
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6628097Z   LIGHTHOUSE_EPIC_ENABLED: 
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6628592Z   LIGHTHOUSE_EPIC_CAPACITY: 
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6629365Z   LIGHTHOUSE_STAGE: review
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6629831Z   LIGHTHOUSE_WORKER: review
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6635928Z   GH_TOKEN: ***
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6636435Z   LIGHTHOUSE_DISPATCH_COMMENT: 6715037252
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6637201Z   LIGHTHOUSE_ACCEPTANCE_GATE_LOG: /home/runner/work/_temp/541-gates.jsonl
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6637976Z   LIGHTHOUSE_ACCEPTANCE_541_ISSUE: 59
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:04.6638460Z ##[endgroup]
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:27:06.4235345Z {"schemaVersion":1,"fixture":"541","phase":"before-post","repository":"juangcarmona/lighthouse-published-consumer-20261104","issue":59,"run":"42429629854","routerRevision":"1dacf727305e98cee894b01626fd13d81384eff4","currentRevision":"9138fb073d56883972a4c835b7dbcc3c3b4d39ff","ci":"42429572395","requestComment":"6715037252","ref":"main"}
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:29:08.2965326Z {"schemaVersion":1,"fixture":"541","phase":"before-post","repository":"juangcarmona/lighthouse-published-consumer-20261104","issue":59,"run":"42429629854","routerRevision":"1dacf727305e98cee894b01626fd13d81384eff4","currentRevision":"d19d0a4c7f09a4ef54591c206eff337a19462301","ci":"42429572395","requestComment":"6715037252","ref":"main","released":true}
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:29:08.2994504Z ##[error]The operation was aborted due to timeout
+📥 Dispatch selected stage	Dispatch the independent stage	2026-11-08T00:29:08.3097249Z ##[error]Process completed with exit code 1.

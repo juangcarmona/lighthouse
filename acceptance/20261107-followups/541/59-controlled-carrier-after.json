@@ -1,0 +1,24 @@
+{
+  "kind": "operator-corrected-fault-carrier",
+  "reason": "The probe held a pre-created 30-second AbortSignal for 122 seconds. The original native fetch rejected the already-aborted signal before an HTTP request or worker existed. Deliver the exact retained request once through the published sendDispatch; retain the original bot router provenance. This is explicit operator fault preparation, not an automatic resend policy.",
+  "observedAt": "2026-11-08T00:31:28.343Z",
+  "priorWorkerCount": 0,
+  "requestId": "3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96",
+  "requestComment": 6715037252,
+  "routerRevision": "1dacf727305e98cee894b01626fd13d81384eff4",
+  "workflowRevision": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+  "expectedWorkerRevision": "d19d0a4c7f09a4ef54591c206eff337a19462301",
+  "deliveredAt": "2026-11-08T00:31:30.796Z",
+  "writes": [
+    {
+      "path": "actions/workflows/lighthouse-sdlc-review.lock.yml/dispatches",
+      "body": {
+        "ref": "main",
+        "inputs": {
+          "issue": "59",
+          "dispatch-request": "6715037252"
+        }
+      }
+    }
+  ]
+}

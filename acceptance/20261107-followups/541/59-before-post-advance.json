@@ -1,0 +1,23 @@
+{
+  "phase": "before-post",
+  "base": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+  "head": "f8d244b973102c36c106c92f9b260a2d382d9b93",
+  "branch": "docs/59-acceptance-before-post",
+  "gate": {
+    "comment": 6715037797,
+    "schemaVersion": 1,
+    "fixture": "541",
+    "phase": "before-post",
+    "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+    "issue": 59,
+    "run": "42429629854",
+    "routerRevision": "1dacf727305e98cee894b01626fd13d81384eff4",
+    "currentRevision": "9138fb073d56883972a4c835b7dbcc3c3b4d39ff",
+    "ci": "42429572395",
+    "requestComment": "6715037252",
+    "ref": "main"
+  },
+  "paths": [
+    "docs/acceptance/541-before-post.md"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "kind": "explicit-native-maintenance-wakeup",
+  "observedAt": "2026-11-08T01:10:46.214347+00:00",
+  "sourceRevision": "d19d0a4c7f09a4ef54591c206eff337a19462301",
+  "inputs": {
+    "issue": "59"
+  },
+  "newOwnerDecision": false,
+  "unchangedAuthority": true,
+  "lastScheduledRun": 42426483415,
+  "reason": "No scheduled maintenance after the confirmed rejection despite active five-minute cron. Validate native bounded recovery with one owner workflow_dispatch. Automatic scheduler delivery remains unproven and tracked in root issue 567.",
+  "scheduledDeliveryProven": false
+}

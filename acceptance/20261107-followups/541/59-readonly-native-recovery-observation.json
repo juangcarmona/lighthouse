@@ -1,0 +1,59 @@
+{
+  "observedAt": "2026-11-08T00:34:38.998Z",
+  "readOnly": true,
+  "observations": [
+    {
+      "issue": 59,
+      "worker": "implement",
+      "runId": "42428097674",
+      "rootId": "5691f9f5a653b05d3b3ddd880392202603679dcf1176d2ad56594e0b5b192308",
+      "attempt": 0,
+      "outcome": "completed",
+      "state": "succeeded",
+      "code": "worker-completed",
+      "cause": "none",
+      "nextAction": "No recovery needed."
+    },
+    {
+      "issue": 59,
+      "worker": "integrate",
+      "runId": "42429027778",
+      "rootId": "734f5a606d09c858237d986c6749a9f00a3bbf544305bc879ba1ac2ecf086685",
+      "attempt": 0,
+      "outcome": "technical-failure",
+      "pr": 64,
+      "head": "599af0172e9e1293a1dc3dfd0ca0b955c9f68e6a",
+      "state": "blocked",
+      "code": "authority-changed",
+      "cause": "duration-unknown",
+      "nextAction": "Request fresh work against the current source and owner intent."
+    },
+    {
+      "issue": 59,
+      "worker": "integrate",
+      "runId": "42429156968",
+      "rootId": "5706d7f7b0aec778d8511afb0850cf1f66d06f9b4bb840eb7f6b2648b0dacb9e",
+      "attempt": 0,
+      "outcome": "completed",
+      "pr": 64,
+      "head": "599af0172e9e1293a1dc3dfd0ca0b955c9f68e6a",
+      "state": "succeeded",
+      "code": "worker-completed",
+      "cause": "none",
+      "nextAction": "No recovery needed."
+    },
+    {
+      "issue": 59,
+      "worker": "review",
+      "runId": "42430136347",
+      "rootId": "3c82e026ad4e529b838dde9e15209ef057a64b61d0032bcec1a54a19e1d9ff96",
+      "attempt": 0,
+      "outcome": "failed",
+      "admissionRejected": true,
+      "state": "retryable",
+      "code": "workflow-revision-rejected",
+      "nextAction": "Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.",
+      "confirmed": true
+    }
+  ]
+}
