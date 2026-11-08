@@ -16,6 +16,11 @@ The trusted host SHALL bind unchanged tracked source-link path, mode and blob id
 - **WHEN** source-link metadata has a changed revision, unsupported entry, duplicate or regular-file/directory collision
 - **THEN** trusted preparation or evidence validation rejects the request before publication
 
+#### Scenario: Artifact metadata and its digest are forged together
+
+- **WHEN** retained evidence changes opaque entries and updates its own claimed metadata digest
+- **THEN** the reader independently reconstructs the entries from the authenticated admitted source commit and rejects the mismatch before accepting command evidence
+
 #### Scenario: Source contains no links
 
 - **WHEN** no opaque source-link entries exist
