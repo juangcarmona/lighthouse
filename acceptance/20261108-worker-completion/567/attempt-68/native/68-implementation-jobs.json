@@ -1,0 +1,1183 @@
+{
+  "total_count": 6,
+  "jobs": [
+    {
+      "id": 128671491294,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9Wsk3g",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128671491294",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128671491294",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:06:08Z",
+      "started_at": "2026-11-08T08:06:11Z",
+      "completed_at": "2026-11-08T08:06:31Z",
+      "name": "Authorize and reserve issue",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:06:12Z",
+          "completed_at": "2026-11-08T08:06:12Z"
+        },
+        {
+          "name": "Configure GH_HOST for enterprise compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:06:12Z",
+          "completed_at": "2026-11-08T08:06:12Z"
+        },
+        {
+          "name": "Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T08:06:12Z",
+          "completed_at": "2026-11-08T08:06:16Z"
+        },
+        {
+          "name": "Install the published Lighthouse harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:06:16Z",
+          "completed_at": "2026-11-08T08:06:17Z"
+        },
+        {
+          "name": "Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T08:06:17Z",
+          "completed_at": "2026-11-08T08:06:18Z"
+        },
+        {
+          "name": "Collect verified owner intent and reserve the issue",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T08:06:18Z",
+          "completed_at": "2026-11-08T08:06:27Z"
+        },
+        {
+          "name": "Preserve the execution request",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T08:06:27Z",
+          "completed_at": "2026-11-08T08:06:28Z"
+        },
+        {
+          "name": "Release reservation if preparation failed",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-08T08:06:28Z",
+          "completed_at": "2026-11-08T08:06:28Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T08:06:28Z",
+          "completed_at": "2026-11-08T08:06:28Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T08:06:28Z",
+          "completed_at": "2026-11-08T08:06:29Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-08T08:06:29Z",
+          "completed_at": "2026-11-08T08:06:29Z"
+        },
+        {
+          "name": "Post Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-08T08:06:29Z",
+          "completed_at": "2026-11-08T08:06:30Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T08:06:30Z",
+          "completed_at": "2026-11-08T08:06:30Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128671491294",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036137,
+      "runner_name": "GitHub Actions 1000036137",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128671571915,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9Wxfyw",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128671571915",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128671571915",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:06:31Z",
+      "started_at": "2026-11-08T08:06:34Z",
+      "completed_at": "2026-11-08T08:06:40Z",
+      "name": "pre_activation",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:06:34Z",
+          "completed_at": "2026-11-08T08:06:35Z"
+        },
+        {
+          "name": "Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:06:35Z",
+          "completed_at": "2026-11-08T08:06:38Z"
+        },
+        {
+          "name": "Post Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:06:38Z",
+          "completed_at": "2026-11-08T08:06:39Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T08:06:39Z",
+          "completed_at": "2026-11-08T08:06:39Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128671571915",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036140,
+      "runner_name": "GitHub Actions 1000036140",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128671603099,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9WzZmw",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128671603099",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128671603099",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:06:40Z",
+      "started_at": "2026-11-08T08:06:43Z",
+      "completed_at": "2026-11-08T08:06:57Z",
+      "name": "activation",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:06:44Z",
+          "completed_at": "2026-11-08T08:06:45Z"
+        },
+        {
+          "name": "Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:06:45Z",
+          "completed_at": "2026-11-08T08:06:49Z"
+        },
+        {
+          "name": "Mask OTLP telemetry headers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T08:06:49Z",
+          "completed_at": "2026-11-08T08:06:49Z"
+        },
+        {
+          "name": "Generate agentic run info",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:06:49Z",
+          "completed_at": "2026-11-08T08:06:49Z"
+        },
+        {
+          "name": "Enforce strict mode policy",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-08T08:06:49Z",
+          "completed_at": "2026-11-08T08:06:49Z"
+        },
+        {
+          "name": "Restore daily AIC scan observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T08:06:49Z",
+          "completed_at": "2026-11-08T08:06:50Z"
+        },
+        {
+          "name": "Check daily workflow token guardrail",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T08:06:50Z",
+          "completed_at": "2026-11-08T08:06:50Z"
+        },
+        {
+          "name": "Publish daily AIC scan observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T08:06:50Z",
+          "completed_at": "2026-11-08T08:06:50Z"
+        },
+        {
+          "name": "Check for OAuth tokens",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T08:06:50Z",
+          "completed_at": "2026-11-08T08:06:50Z"
+        },
+        {
+          "name": "Checkout .github and .agents folders",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T08:06:50Z",
+          "completed_at": "2026-11-08T08:06:51Z"
+        },
+        {
+          "name": "Save agent config folders for base branch restoration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T08:06:51Z",
+          "completed_at": "2026-11-08T08:06:51Z"
+        },
+        {
+          "name": "Check workflow lock file",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T08:06:51Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Check compile-agentic version",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Log runtime features",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Create prompt with built-in context",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Interpolate variables and render templates",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Substitute placeholders",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Validate prompt placeholders",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Print prompt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:52Z"
+        },
+        {
+          "name": "Inventory installed skills",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-08T08:06:52Z",
+          "completed_at": "2026-11-08T08:06:53Z"
+        },
+        {
+          "name": "Upload info artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T08:06:53Z",
+          "completed_at": "2026-11-08T08:06:54Z"
+        },
+        {
+          "name": "Stage prompt files for artifact upload",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-08T08:06:54Z",
+          "completed_at": "2026-11-08T08:06:54Z"
+        },
+        {
+          "name": "Upload activation artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-08T08:06:54Z",
+          "completed_at": "2026-11-08T08:06:55Z"
+        },
+        {
+          "name": "Post Checkout .github and .agents folders",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 45,
+          "started_at": "2026-11-08T08:06:55Z",
+          "completed_at": "2026-11-08T08:06:55Z"
+        },
+        {
+          "name": "Post Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 46,
+          "started_at": "2026-11-08T08:06:55Z",
+          "completed_at": "2026-11-08T08:06:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 47,
+          "started_at": "2026-11-08T08:06:55Z",
+          "completed_at": "2026-11-08T08:06:55Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128671603099",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036143,
+      "runner_name": "GitHub Actions 1000036143",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128671659951,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9W23rw",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128671659951",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128671659951",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:06:57Z",
+      "started_at": "2026-11-08T08:06:59Z",
+      "completed_at": "2026-11-08T08:16:36Z",
+      "name": "agent",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:07:00Z",
+          "completed_at": "2026-11-08T08:07:13Z"
+        },
+        {
+          "name": "Set up runner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:07:13Z",
+          "completed_at": "2026-11-08T08:07:14Z"
+        },
+        {
+          "name": "Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T08:07:14Z",
+          "completed_at": "2026-11-08T08:07:18Z"
+        },
+        {
+          "name": "Set runtime paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:07:18Z",
+          "completed_at": "2026-11-08T08:07:18Z"
+        },
+        {
+          "name": "Mask OTLP telemetry headers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T08:07:18Z",
+          "completed_at": "2026-11-08T08:07:18Z"
+        },
+        {
+          "name": "Check OTLP telemetry configuration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T08:07:18Z",
+          "completed_at": "2026-11-08T08:07:19Z"
+        },
+        {
+          "name": "Initialize agent execution evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T08:07:19Z",
+          "completed_at": "2026-11-08T08:07:19Z"
+        },
+        {
+          "name": "Create gh-aw temp directory",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T08:07:19Z",
+          "completed_at": "2026-11-08T08:07:19Z"
+        },
+        {
+          "name": "Configure gh CLI for GitHub Enterprise",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T08:07:19Z",
+          "completed_at": "2026-11-08T08:07:19Z"
+        },
+        {
+          "name": "Download activation artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T08:07:19Z",
+          "completed_at": "2026-11-08T08:07:21Z"
+        },
+        {
+          "name": "Check out the authorized product revision",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T08:07:21Z",
+          "completed_at": "2026-11-08T08:07:22Z"
+        },
+        {
+          "name": "Setup Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T08:07:22Z",
+          "completed_at": "2026-11-08T08:07:23Z"
+        },
+        {
+          "name": "Install the published Lighthouse harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T08:07:23Z",
+          "completed_at": "2026-11-08T08:07:25Z"
+        },
+        {
+          "name": "Load the authorized issue context",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T08:07:25Z",
+          "completed_at": "2026-11-08T08:07:27Z"
+        },
+        {
+          "name": "Configure Git credentials",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T08:07:27Z",
+          "completed_at": "2026-11-08T08:07:27Z"
+        },
+        {
+          "name": "Restore inline sub-agents from activation artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-08T08:07:27Z",
+          "completed_at": "2026-11-08T08:07:27Z"
+        },
+        {
+          "name": "Restore inline skills from activation artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-08T08:07:27Z",
+          "completed_at": "2026-11-08T08:07:27Z"
+        },
+        {
+          "name": "Download container images",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-11-08T08:07:27Z",
+          "completed_at": "2026-11-08T08:07:28Z"
+        },
+        {
+          "name": "Prepare Safe Outputs Directories",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-08T08:07:28Z",
+          "completed_at": "2026-11-08T08:07:28Z"
+        },
+        {
+          "name": "Generate Safe Outputs Config",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-08T08:07:28Z",
+          "completed_at": "2026-11-08T08:07:28Z"
+        },
+        {
+          "name": "Generate Safe Outputs Tools",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T08:07:28Z",
+          "completed_at": "2026-11-08T08:07:28Z"
+        },
+        {
+          "name": "Start MCP Gateway",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-08T08:07:28Z",
+          "completed_at": "2026-11-08T08:07:34Z"
+        },
+        {
+          "name": "Mount MCP servers as CLIs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-08T08:07:34Z",
+          "completed_at": "2026-11-08T08:07:34Z"
+        },
+        {
+          "name": "Clean credentials",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-11-08T08:07:34Z",
+          "completed_at": "2026-11-08T08:07:34Z"
+        },
+        {
+          "name": "Audit pre-agent workspace",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-11-08T08:07:34Z",
+          "completed_at": "2026-11-08T08:07:34Z"
+        },
+        {
+          "name": "Write OpenCode log parser script",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-11-08T08:07:34Z",
+          "completed_at": "2026-11-08T08:07:34Z"
+        },
+        {
+          "name": "OpenCode progress and result",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-11-08T08:07:34Z",
+          "completed_at": "2026-11-08T08:16:13Z"
+        },
+        {
+          "name": "Configure Git credentials",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-11-08T08:16:13Z",
+          "completed_at": "2026-11-08T08:16:13Z"
+        },
+        {
+          "name": "Stop MCP Gateway",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-08T08:16:13Z",
+          "completed_at": "2026-11-08T08:16:13Z"
+        },
+        {
+          "name": "Redact secrets in logs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 30,
+          "started_at": "2026-11-08T08:16:13Z",
+          "completed_at": "2026-11-08T08:16:14Z"
+        },
+        {
+          "name": "Append agent step summary",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 31,
+          "started_at": "2026-11-08T08:16:14Z",
+          "completed_at": "2026-11-08T08:16:14Z"
+        },
+        {
+          "name": "Copy Safe Outputs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 32,
+          "started_at": "2026-11-08T08:16:14Z",
+          "completed_at": "2026-11-08T08:16:14Z"
+        },
+        {
+          "name": "Ingest agent output",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 33,
+          "started_at": "2026-11-08T08:16:14Z",
+          "completed_at": "2026-11-08T08:16:14Z"
+        },
+        {
+          "name": "Parse agent logs for step summary",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 34,
+          "started_at": "2026-11-08T08:16:14Z",
+          "completed_at": "2026-11-08T08:16:15Z"
+        },
+        {
+          "name": "Parse MCP Gateway logs for step summary",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 35,
+          "started_at": "2026-11-08T08:16:15Z",
+          "completed_at": "2026-11-08T08:16:15Z"
+        },
+        {
+          "name": "Generate observability summary",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 36,
+          "started_at": "2026-11-08T08:16:15Z",
+          "completed_at": "2026-11-08T08:16:15Z"
+        },
+        {
+          "name": "Write agent output placeholder if missing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 37,
+          "started_at": "2026-11-08T08:16:15Z",
+          "completed_at": "2026-11-08T08:16:15Z"
+        },
+        {
+          "name": "Validate the Lighthouse result",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 38,
+          "started_at": "2026-11-08T08:16:15Z",
+          "completed_at": "2026-11-08T08:16:15Z"
+        },
+        {
+          "name": "Preserve the result and runtime receipt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 39,
+          "started_at": "2026-11-08T08:16:15Z",
+          "completed_at": "2026-11-08T08:16:18Z"
+        },
+        {
+          "name": "Preserve implementation evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 40,
+          "started_at": "2026-11-08T08:16:18Z",
+          "completed_at": "2026-11-08T08:16:20Z"
+        },
+        {
+          "name": "Preserve OpenCode diagnostic events",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 41,
+          "started_at": "2026-11-08T08:16:20Z",
+          "completed_at": "2026-11-08T08:16:22Z"
+        },
+        {
+          "name": "Observe agent workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 42,
+          "started_at": "2026-11-08T08:16:22Z",
+          "completed_at": "2026-11-08T08:16:23Z"
+        },
+        {
+          "name": "Preserve agent telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 43,
+          "started_at": "2026-11-08T08:16:23Z",
+          "completed_at": "2026-11-08T08:16:26Z"
+        },
+        {
+          "name": "Upload agent output fallback artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 44,
+          "started_at": "2026-11-08T08:16:26Z",
+          "completed_at": "2026-11-08T08:16:28Z"
+        },
+        {
+          "name": "Upload agent artifacts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 45,
+          "started_at": "2026-11-08T08:16:28Z",
+          "completed_at": "2026-11-08T08:16:30Z"
+        },
+        {
+          "name": "Post Setup Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 87,
+          "started_at": "2026-11-08T08:16:31Z",
+          "completed_at": "2026-11-08T08:16:31Z"
+        },
+        {
+          "name": "Post Check out the authorized product revision",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 88,
+          "started_at": "2026-11-08T08:16:31Z",
+          "completed_at": "2026-11-08T08:16:31Z"
+        },
+        {
+          "name": "Post Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 89,
+          "started_at": "2026-11-08T08:16:31Z",
+          "completed_at": "2026-11-08T08:16:31Z"
+        },
+        {
+          "name": "Complete runner",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 90,
+          "started_at": "2026-11-08T08:16:31Z",
+          "completed_at": "2026-11-08T08:16:31Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 91,
+          "started_at": "2026-11-08T08:16:31Z",
+          "completed_at": "2026-11-08T08:16:31Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128671659951",
+      "labels": [
+        "self-hosted",
+        "linux",
+        "lighthouse-workflow"
+      ],
+      "runner_id": 2,
+      "runner_name": "bastion-published-consumer",
+      "runner_group_id": 1,
+      "runner_group_name": "Default"
+    },
+    {
+      "id": 128673793067,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9Y5EKw",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128673793067",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128673793067",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:16:37Z",
+      "started_at": "2026-11-08T08:16:39Z",
+      "completed_at": "2026-11-08T08:17:26Z",
+      "name": "Validate, publish and release",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:16:40Z",
+          "completed_at": "2026-11-08T08:16:41Z"
+        },
+        {
+          "name": "Configure GH_HOST for enterprise compatibility",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:16:41Z",
+          "completed_at": "2026-11-08T08:16:41Z"
+        },
+        {
+          "name": "Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T08:16:41Z",
+          "completed_at": "2026-11-08T08:16:41Z"
+        },
+        {
+          "name": "Install the published Lighthouse harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:16:41Z",
+          "completed_at": "2026-11-08T08:16:43Z"
+        },
+        {
+          "name": "Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T08:16:43Z",
+          "completed_at": "2026-11-08T08:16:43Z"
+        },
+        {
+          "name": "Load the execution request",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T08:16:43Z",
+          "completed_at": "2026-11-08T08:16:44Z"
+        },
+        {
+          "name": "Load the candidate result",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T08:16:44Z",
+          "completed_at": "2026-11-08T08:16:45Z"
+        },
+        {
+          "name": "Require an executed agent",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 8,
+          "started_at": "2026-11-08T08:16:45Z",
+          "completed_at": "2026-11-08T08:16:45Z"
+        },
+        {
+          "name": "Recheck authority and publish the validated result",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T08:16:45Z",
+          "completed_at": "2026-11-08T08:17:16Z"
+        },
+        {
+          "name": "Preserve authenticated command evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T08:17:16Z",
+          "completed_at": "2026-11-08T08:17:17Z"
+        },
+        {
+          "name": "Preserve the publication receipt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T08:17:17Z",
+          "completed_at": "2026-11-08T08:17:18Z"
+        },
+        {
+          "name": "Release the issue reservation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-08T08:17:18Z",
+          "completed_at": "2026-11-08T08:17:22Z"
+        },
+        {
+          "name": "Request the verified product prerequisite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T08:17:22Z",
+          "completed_at": "2026-11-08T08:17:22Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T08:17:22Z",
+          "completed_at": "2026-11-08T08:17:23Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T08:17:23Z",
+          "completed_at": "2026-11-08T08:17:24Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-11-08T08:17:24Z",
+          "completed_at": "2026-11-08T08:17:24Z"
+        },
+        {
+          "name": "Post Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 30,
+          "started_at": "2026-11-08T08:17:24Z",
+          "completed_at": "2026-11-08T08:17:24Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 31,
+          "started_at": "2026-11-08T08:17:24Z",
+          "completed_at": "2026-11-08T08:17:24Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128673793067",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036151,
+      "runner_name": "GitHub Actions 1000036151",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128673974231,
+      "run_id": 42461472983,
+      "workflow_name": "implement #68 \u00b7 request 6719069144",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9ZEH1w",
+      "head_sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128673974231",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/job/128673974231",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T08:17:26Z",
+      "started_at": "2026-11-08T08:17:30Z",
+      "completed_at": "2026-11-08T08:17:45Z",
+      "name": "conclusion",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T08:17:31Z",
+          "completed_at": "2026-11-08T08:17:33Z"
+        },
+        {
+          "name": "Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T08:17:33Z",
+          "completed_at": "2026-11-08T08:17:37Z"
+        },
+        {
+          "name": "Download agent output artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T08:17:37Z",
+          "completed_at": "2026-11-08T08:17:38Z"
+        },
+        {
+          "name": "Setup agent output environment variable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T08:17:38Z",
+          "completed_at": "2026-11-08T08:17:38Z"
+        },
+        {
+          "name": "Download Safe Outputs Items Manifest",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T08:17:38Z",
+          "completed_at": "2026-11-08T08:17:39Z"
+        },
+        {
+          "name": "Process no-op messages",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T08:17:39Z",
+          "completed_at": "2026-11-08T08:17:39Z"
+        },
+        {
+          "name": "Handle agent failure",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T08:17:39Z",
+          "completed_at": "2026-11-08T08:17:39Z"
+        },
+        {
+          "name": "Report failed jobs",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T08:17:39Z",
+          "completed_at": "2026-11-08T08:17:40Z"
+        },
+        {
+          "name": "Collect usage artifact files",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T08:17:40Z",
+          "completed_at": "2026-11-08T08:17:40Z"
+        },
+        {
+          "name": "Generate usage activity summary and unified session",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T08:17:40Z",
+          "completed_at": "2026-11-08T08:17:41Z"
+        },
+        {
+          "name": "Upload usage artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T08:17:41Z",
+          "completed_at": "2026-11-08T08:17:42Z"
+        },
+        {
+          "name": "Wait before retrying usage artifact upload",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-08T08:17:42Z",
+          "completed_at": "2026-11-08T08:17:42Z"
+        },
+        {
+          "name": "Retry upload usage artifact",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-08T08:17:42Z",
+          "completed_at": "2026-11-08T08:17:42Z"
+        },
+        {
+          "name": "Post Setup Scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-11-08T08:17:42Z",
+          "completed_at": "2026-11-08T08:17:42Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-11-08T08:17:42Z",
+          "completed_at": "2026-11-08T08:17:42Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128673974231",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036156,
+      "runner_name": "GitHub Actions 1000036156",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

@@ -1,0 +1,1509 @@
+{
+  "reportFormat": 2,
+  "dispatch": {
+    "commentId": 6719189180,
+    "requestId": "8bb7baf8ac4204bb081c46041b09d63a8552fb73439483e77f159225a9550958",
+    "digest": "f5db7543bd2bf45b779e5c1d7967ae70e9763d6bcb7b7e70d198efa8a8801adc"
+  },
+  "dispatchOrigin": {
+    "request": {
+      "schemaVersion": 1,
+      "id": "8bb7baf8ac4204bb081c46041b09d63a8552fb73439483e77f159225a9550958",
+      "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+      "issue": 68,
+      "stage": "integrate",
+      "routerRunId": "42462397552",
+      "routerAttempt": 1,
+      "routerRevision": "e995995c1513ebc65012341dd052646b207a0be8",
+      "routerRef": "chore/68-lighthouse-implement-468d4c3ce5c1",
+      "workflowRevision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "sourceRevision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "ref": "main",
+      "eventName": "pull_request_review",
+      "event": {
+        "action": "submitted",
+        "pull_request": {
+          "_links": {
+            "comments": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/71/comments"
+            },
+            "commits": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71/commits"
+            },
+            "html": {
+              "href": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71"
+            },
+            "issue": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/71"
+            },
+            "review_comment": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/comments{/number}"
+            },
+            "review_comments": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71/comments"
+            },
+            "self": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71"
+            },
+            "statuses": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/statuses/e995995c1513ebc65012341dd052646b207a0be8"
+            }
+          },
+          "active_lock_reason": null,
+          "assignee": null,
+          "assignees": [],
+          "author_association": "CONTRIBUTOR",
+          "auto_merge": null,
+          "base": {
+            "label": "juangcarmona:main",
+            "ref": "main",
+            "repo": {
+              "allow_auto_merge": false,
+              "allow_forking": true,
+              "allow_merge_commit": true,
+              "allow_rebase_merge": true,
+              "allow_squash_merge": true,
+              "allow_update_branch": false,
+              "archive_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/{archive_format}{/ref}",
+              "archived": false,
+              "assignees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/assignees{/user}",
+              "blobs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/blobs{/sha}",
+              "branches_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/branches{/branch}",
+              "clone_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+              "collaborators_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/collaborators{/collaborator}",
+              "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/comments{/number}",
+              "commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits{/sha}",
+              "compare_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/compare/{base}...{head}",
+              "contents_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contents/{+path}",
+              "contributors_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contributors",
+              "created_at": "2026-11-04T22:19:46Z",
+              "default_branch": "main",
+              "delete_branch_on_merge": false,
+              "deployments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/deployments",
+              "description": "Engineering acceptance consumer using published Lighthouse packages",
+              "disabled": false,
+              "downloads_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/downloads",
+              "events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/events",
+              "fork": false,
+              "forks": 0,
+              "forks_count": 0,
+              "forks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/forks",
+              "full_name": "juangcarmona/lighthouse-published-consumer-20261104",
+              "git_commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits{/sha}",
+              "git_refs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/refs{/sha}",
+              "git_tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/tags{/sha}",
+              "git_url": "git://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+              "has_discussions": false,
+              "has_downloads": false,
+              "has_issues": true,
+              "has_pages": false,
+              "has_projects": true,
+              "has_pull_requests": true,
+              "has_wiki": true,
+              "homepage": null,
+              "hooks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/hooks",
+              "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+              "id": 1446259521,
+              "is_template": false,
+              "issue_comment_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/comments{/number}",
+              "issue_events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/events{/number}",
+              "issues_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues{/number}",
+              "keys_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/keys{/key_id}",
+              "labels_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/labels{/name}",
+              "language": "JavaScript",
+              "languages_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/languages",
+              "license": null,
+              "merge_commit_message": "PR_TITLE",
+              "merge_commit_title": "MERGE_MESSAGE",
+              "merges_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/merges",
+              "milestones_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/milestones{/number}",
+              "mirror_url": null,
+              "name": "lighthouse-published-consumer-20261104",
+              "node_id": "R_kgDOVjQrQQ",
+              "notifications_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/notifications{?since,all,participating}",
+              "open_issues": 9,
+              "open_issues_count": 9,
+              "owner": {
+                "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+                "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+                "followers_url": "https://api.github.com/users/juangcarmona/followers",
+                "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+                "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+                "gravatar_id": "",
+                "html_url": "https://github.com/juangcarmona",
+                "id": 2834629,
+                "login": "juangcarmona",
+                "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+                "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+                "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+                "repos_url": "https://api.github.com/users/juangcarmona/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+                "type": "User",
+                "url": "https://api.github.com/users/juangcarmona",
+                "user_view_type": "public"
+              },
+              "private": false,
+              "pull_request_creation_policy": "all",
+              "pulls_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls{/number}",
+              "pushed_at": "2026-11-08T08:17:09Z",
+              "releases_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/releases{/id}",
+              "size": 912,
+              "squash_merge_commit_message": "COMMIT_MESSAGES",
+              "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+              "ssh_url": "git@github.com:juangcarmona/lighthouse-published-consumer-20261104.git",
+              "stargazers_count": 0,
+              "stargazers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/stargazers",
+              "statuses_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/statuses/{sha}",
+              "subscribers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscribers",
+              "subscription_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscription",
+              "svn_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+              "tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/tags",
+              "teams_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/teams",
+              "topics": [],
+              "trees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees{/sha}",
+              "updated_at": "2026-11-08T08:05:43Z",
+              "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104",
+              "use_squash_pr_title_as_default": false,
+              "visibility": "public",
+              "watchers": 0,
+              "watchers_count": 0,
+              "web_commit_signoff_required": false
+            },
+            "sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+            "user": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+              "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+              "followers_url": "https://api.github.com/users/juangcarmona/followers",
+              "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+              "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/juangcarmona",
+              "id": 2834629,
+              "login": "juangcarmona",
+              "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+              "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+              "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+              "repos_url": "https://api.github.com/users/juangcarmona/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/juangcarmona",
+              "user_view_type": "public"
+            }
+          },
+          "body": "Implemented issue #68 with one callable/bigint characterization test and its plan, preserving all 32 existing tests and production code. All six candidate commands passed, including all 33 tests. The host must now independently validate the candidate and publish it for review; the published-branch guard and forge CI remain pending.\n\nRefs #68.\n\nNext: complete the candidate and its checks. [Run and evidence](https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983).\n\n<!-- lighthouse-implementation:468d4c3ce5c14bdb5e00cbfc9100c6ea06f59276fc4a0d1e6667a53480ea3625 -->",
+          "closed_at": null,
+          "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/71/comments",
+          "commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71/commits",
+          "created_at": "2026-11-08T08:16:55Z",
+          "diff_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71.diff",
+          "draft": false,
+          "head": {
+            "label": "juangcarmona:chore/68-lighthouse-implement-468d4c3ce5c1",
+            "ref": "chore/68-lighthouse-implement-468d4c3ce5c1",
+            "repo": {
+              "allow_auto_merge": false,
+              "allow_forking": true,
+              "allow_merge_commit": true,
+              "allow_rebase_merge": true,
+              "allow_squash_merge": true,
+              "allow_update_branch": false,
+              "archive_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/{archive_format}{/ref}",
+              "archived": false,
+              "assignees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/assignees{/user}",
+              "blobs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/blobs{/sha}",
+              "branches_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/branches{/branch}",
+              "clone_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+              "collaborators_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/collaborators{/collaborator}",
+              "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/comments{/number}",
+              "commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits{/sha}",
+              "compare_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/compare/{base}...{head}",
+              "contents_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contents/{+path}",
+              "contributors_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contributors",
+              "created_at": "2026-11-04T22:19:46Z",
+              "default_branch": "main",
+              "delete_branch_on_merge": false,
+              "deployments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/deployments",
+              "description": "Engineering acceptance consumer using published Lighthouse packages",
+              "disabled": false,
+              "downloads_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/downloads",
+              "events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/events",
+              "fork": false,
+              "forks": 0,
+              "forks_count": 0,
+              "forks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/forks",
+              "full_name": "juangcarmona/lighthouse-published-consumer-20261104",
+              "git_commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits{/sha}",
+              "git_refs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/refs{/sha}",
+              "git_tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/tags{/sha}",
+              "git_url": "git://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+              "has_discussions": false,
+              "has_downloads": false,
+              "has_issues": true,
+              "has_pages": false,
+              "has_projects": true,
+              "has_pull_requests": true,
+              "has_wiki": true,
+              "homepage": null,
+              "hooks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/hooks",
+              "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+              "id": 1446259521,
+              "is_template": false,
+              "issue_comment_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/comments{/number}",
+              "issue_events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/events{/number}",
+              "issues_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues{/number}",
+              "keys_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/keys{/key_id}",
+              "labels_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/labels{/name}",
+              "language": "JavaScript",
+              "languages_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/languages",
+              "license": null,
+              "merge_commit_message": "PR_TITLE",
+              "merge_commit_title": "MERGE_MESSAGE",
+              "merges_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/merges",
+              "milestones_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/milestones{/number}",
+              "mirror_url": null,
+              "name": "lighthouse-published-consumer-20261104",
+              "node_id": "R_kgDOVjQrQQ",
+              "notifications_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/notifications{?since,all,participating}",
+              "open_issues": 9,
+              "open_issues_count": 9,
+              "owner": {
+                "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+                "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+                "followers_url": "https://api.github.com/users/juangcarmona/followers",
+                "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+                "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+                "gravatar_id": "",
+                "html_url": "https://github.com/juangcarmona",
+                "id": 2834629,
+                "login": "juangcarmona",
+                "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+                "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+                "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+                "repos_url": "https://api.github.com/users/juangcarmona/repos",
+                "site_admin": false,
+                "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+                "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+                "type": "User",
+                "url": "https://api.github.com/users/juangcarmona",
+                "user_view_type": "public"
+              },
+              "private": false,
+              "pull_request_creation_policy": "all",
+              "pulls_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls{/number}",
+              "pushed_at": "2026-11-08T08:17:09Z",
+              "releases_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/releases{/id}",
+              "size": 912,
+              "squash_merge_commit_message": "COMMIT_MESSAGES",
+              "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+              "ssh_url": "git@github.com:juangcarmona/lighthouse-published-consumer-20261104.git",
+              "stargazers_count": 0,
+              "stargazers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/stargazers",
+              "statuses_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/statuses/{sha}",
+              "subscribers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscribers",
+              "subscription_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscription",
+              "svn_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+              "tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/tags",
+              "teams_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/teams",
+              "topics": [],
+              "trees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees{/sha}",
+              "updated_at": "2026-11-08T08:05:43Z",
+              "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104",
+              "use_squash_pr_title_as_default": false,
+              "visibility": "public",
+              "watchers": 0,
+              "watchers_count": 0,
+              "web_commit_signoff_required": false
+            },
+            "sha": "e995995c1513ebc65012341dd052646b207a0be8",
+            "user": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+              "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+              "followers_url": "https://api.github.com/users/juangcarmona/followers",
+              "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+              "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/juangcarmona",
+              "id": 2834629,
+              "login": "juangcarmona",
+              "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+              "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+              "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+              "repos_url": "https://api.github.com/users/juangcarmona/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/juangcarmona",
+              "user_view_type": "public"
+            }
+          },
+          "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71",
+          "id": 5209807506,
+          "issue_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/71",
+          "labels": [],
+          "locked": false,
+          "merge_commit_sha": "736abefedeffaf0fb2c37a72fcf67940ed107514",
+          "merged_at": null,
+          "milestone": null,
+          "node_id": "PR_kwDOVjQrQc8AAAABNodakg",
+          "number": 71,
+          "patch_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71.patch",
+          "requested_reviewers": [],
+          "requested_teams": [],
+          "review_comment_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/comments{/number}",
+          "review_comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71/comments",
+          "state": "open",
+          "statuses_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/statuses/e995995c1513ebc65012341dd052646b207a0be8",
+          "title": "Characterize callable and bigint statuses without coercion",
+          "updated_at": "2026-11-08T08:18:41Z",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71",
+          "user": {
+            "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+            "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+            "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+            "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+            "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/apps/github-actions",
+            "id": 41898282,
+            "login": "github-actions[bot]",
+            "node_id": "MDM6Qm90NDE4OTgyODI=",
+            "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+            "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+            "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+            "type": "Bot",
+            "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+            "user_view_type": "public"
+          }
+        },
+        "repository": {
+          "allow_forking": true,
+          "archive_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/{archive_format}{/ref}",
+          "archived": false,
+          "assignees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/assignees{/user}",
+          "blobs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/blobs{/sha}",
+          "branches_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/branches{/branch}",
+          "clone_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+          "collaborators_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/collaborators{/collaborator}",
+          "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/comments{/number}",
+          "commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits{/sha}",
+          "compare_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/compare/{base}...{head}",
+          "contents_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contents/{+path}",
+          "contributors_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contributors",
+          "created_at": "2026-11-04T22:19:46Z",
+          "default_branch": "main",
+          "deployments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/deployments",
+          "description": "Engineering acceptance consumer using published Lighthouse packages",
+          "disabled": false,
+          "downloads_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/downloads",
+          "events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/events",
+          "fork": false,
+          "forks": 0,
+          "forks_count": 0,
+          "forks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/forks",
+          "full_name": "juangcarmona/lighthouse-published-consumer-20261104",
+          "git_commits_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits{/sha}",
+          "git_refs_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/refs{/sha}",
+          "git_tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/tags{/sha}",
+          "git_url": "git://github.com/juangcarmona/lighthouse-published-consumer-20261104.git",
+          "has_discussions": false,
+          "has_downloads": false,
+          "has_issues": true,
+          "has_pages": false,
+          "has_projects": true,
+          "has_pull_requests": true,
+          "has_wiki": true,
+          "homepage": null,
+          "hooks_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/hooks",
+          "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+          "id": 1446259521,
+          "is_template": false,
+          "issue_comment_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/comments{/number}",
+          "issue_events_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues/events{/number}",
+          "issues_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/issues{/number}",
+          "keys_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/keys{/key_id}",
+          "labels_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/labels{/name}",
+          "language": "JavaScript",
+          "languages_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/languages",
+          "license": null,
+          "merges_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/merges",
+          "milestones_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/milestones{/number}",
+          "mirror_url": null,
+          "name": "lighthouse-published-consumer-20261104",
+          "node_id": "R_kgDOVjQrQQ",
+          "notifications_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/notifications{?since,all,participating}",
+          "open_issues": 9,
+          "open_issues_count": 9,
+          "owner": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+            "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+            "followers_url": "https://api.github.com/users/juangcarmona/followers",
+            "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+            "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/juangcarmona",
+            "id": 2834629,
+            "login": "juangcarmona",
+            "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+            "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+            "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+            "repos_url": "https://api.github.com/users/juangcarmona/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+            "type": "User",
+            "url": "https://api.github.com/users/juangcarmona",
+            "user_view_type": "public"
+          },
+          "private": false,
+          "pull_request_creation_policy": "all",
+          "pulls_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls{/number}",
+          "pushed_at": "2026-11-08T08:17:09Z",
+          "releases_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/releases{/id}",
+          "size": 912,
+          "ssh_url": "git@github.com:juangcarmona/lighthouse-published-consumer-20261104.git",
+          "stargazers_count": 0,
+          "stargazers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/stargazers",
+          "statuses_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/statuses/{sha}",
+          "subscribers_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscribers",
+          "subscription_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/subscription",
+          "svn_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104",
+          "tags_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/tags",
+          "teams_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/teams",
+          "topics": [],
+          "trees_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees{/sha}",
+          "updated_at": "2026-11-08T08:05:43Z",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104",
+          "visibility": "public",
+          "watchers": 0,
+          "watchers_count": 0,
+          "web_commit_signoff_required": false
+        },
+        "review": {
+          "_links": {
+            "html": {
+              "href": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71#pullrequestreview-5817172292"
+            },
+            "pull_request": {
+              "href": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71"
+            }
+          },
+          "author_association": "OWNER",
+          "body": "Approved this exact technical characterization under the owner's standing end-to-end authorization. The prior 32-test prefix and production code are unchanged; one meaningful callable/bigint test and its host-owned plan are added. Independent host checks and the current forge checks passed; the PR is ready. Authorize integration of this head. This grants no second merge, original CI or ProductShape apply, and no new product intent.",
+          "commit_id": "e995995c1513ebc65012341dd052646b207a0be8",
+          "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71#pullrequestreview-5817172292",
+          "id": 5817172292,
+          "node_id": "PRR_kwDOVjQrQc8AAAABWrsBRA",
+          "pull_request_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/pulls/71",
+          "state": "approved",
+          "submitted_at": "2026-11-08T08:18:52Z",
+          "updated_at": "2026-11-08T08:18:52Z",
+          "user": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+            "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+            "followers_url": "https://api.github.com/users/juangcarmona/followers",
+            "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+            "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/juangcarmona",
+            "id": 2834629,
+            "login": "juangcarmona",
+            "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+            "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+            "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+            "repos_url": "https://api.github.com/users/juangcarmona/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+            "type": "User",
+            "url": "https://api.github.com/users/juangcarmona",
+            "user_view_type": "public"
+          }
+        },
+        "sender": {
+          "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+          "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+          "followers_url": "https://api.github.com/users/juangcarmona/followers",
+          "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+          "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+          "gravatar_id": "",
+          "html_url": "https://github.com/juangcarmona",
+          "id": 2834629,
+          "login": "juangcarmona",
+          "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+          "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+          "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+          "repos_url": "https://api.github.com/users/juangcarmona/repos",
+          "site_admin": false,
+          "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+          "type": "User",
+          "url": "https://api.github.com/users/juangcarmona",
+          "user_view_type": "public"
+        }
+      },
+      "handoff": false,
+      "queue": true,
+      "autoImplement": false,
+      "productChangeEnabled": true,
+      "taskDigest": "72bea4600e2baf667bab8d80bef74724b4d88c49c05d99063c4de4ef8ec24401",
+      "completionAuthorization": {
+        "issue": 68,
+        "pr": 71,
+        "head": "e995995c1513ebc65012341dd052646b207a0be8",
+        "merge": true,
+        "approval": {
+          "id": 5817172292,
+          "owner": "juangcarmona",
+          "head": "e995995c1513ebc65012341dd052646b207a0be8"
+        }
+      },
+      "intent": "d4a4f0a8fb58041cb5fab108a98b40bf62e7d64e4266c003e3dd5c693b90ac43"
+    },
+    "receipt": {
+      "schemaVersion": 1,
+      "intent": "d4a4f0a8fb58041cb5fab108a98b40bf62e7d64e4266c003e3dd5c693b90ac43",
+      "stage": "integrate",
+      "status": "running",
+      "id": "8bb7baf8ac4204bb081c46041b09d63a8552fb73439483e77f159225a9550958",
+      "digest": "f5db7543bd2bf45b779e5c1d7967ae70e9763d6bcb7b7e70d198efa8a8801adc",
+      "routerRunId": "42462397552",
+      "routerAttempt": 1,
+      "workerRunId": "42462431099"
+    }
+  },
+  "runId": "c2cbd382713c19e7eb80fbb32dad921ac0cf8c819225846e9e7663a7f9f1695c",
+  "issue": 68,
+  "stage": "integrate",
+  "title": "Characterize callable and bigint statuses without coercion",
+  "sourceRevision": "e995995c1513ebc65012341dd052646b207a0be8",
+  "taskDigest": "72bea4600e2baf667bab8d80bef74724b4d88c49c05d99063c4de4ef8ec24401",
+  "workflowRunId": "42462431099",
+  "attempt": "1",
+  "observedAt": "2026-11-08T08:19:44.883Z",
+  "package": {
+    "name": "@juangcarmona/lighthouse-sdlc",
+    "version": "0.22.1"
+  },
+  "harnessRevision": null,
+  "distribution": {
+    "type": "package",
+    "integrity": "sha512-0iX/izjxl+DMoW/N170bH0UsSNN1i/L5lPwC0fMHAqJmCO6P3ETR3Ji7KATKmt+x2UZd2hM6H4NoXWD1dCuFWg=="
+  },
+  "runUrl": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462431099",
+  "authorization": {
+    "issue": 68,
+    "pr": 71,
+    "head": "e995995c1513ebc65012341dd052646b207a0be8",
+    "merge": true,
+    "approval": {
+      "id": 5817172292,
+      "owner": "juangcarmona",
+      "head": "e995995c1513ebc65012341dd052646b207a0be8"
+    }
+  },
+  "completion": {
+    "binding": {
+      "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+      "issue": 68,
+      "pr": 71,
+      "head": "e995995c1513ebc65012341dd052646b207a0be8",
+      "base": "6eb33581502ea7e0091ffd074ad105a878d19920",
+      "branch": "main",
+      "intent": "72bea4600e2baf667bab8d80bef74724b4d88c49c05d99063c4de4ef8ec24401",
+      "policy": "42d0b55be2283eeedbca4b4476185c583b3f890bb7f011273f3ebf161d24a589",
+      "reviews": "f46e869bb1fd3163996a2b25982b59a3c82280673f6ca91aaa82508d7805ea23",
+      "prIntent": "1ee45a82a8e214d3a22cc7b886e976d1136bbbc9613bb0a3ff97af5c366ed9f8",
+      "files": "6bc02855d42c17c7c84769fe2cf1f4aa12804702297c3a4caa4f84a47abaf361"
+    },
+    "observedChecks": [
+      {
+        "evidenceId": "github-check:128674351149",
+        "name": "📥 Dispatch selected stage",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462397552/job/128674351149"
+      },
+      {
+        "evidenceId": "github-check:128674319001",
+        "name": "pr-state",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462397552/job/128674319001"
+      },
+      {
+        "evidenceId": "github-check:128674298234",
+        "name": "epic-triage",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462397552/job/128674298234"
+      },
+      {
+        "evidenceId": "github-check:128674297762",
+        "name": "client-control",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462397552/job/128674297762"
+      },
+      {
+        "evidenceId": "github-check:128674297055",
+        "name": "route",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462397552/job/128674297055"
+      },
+      {
+        "evidenceId": "github-check:128674259960",
+        "name": "📥 Dispatch selected stage",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462384980/job/128674259960"
+      },
+      {
+        "evidenceId": "github-check:128674259607",
+        "name": "client-control",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462384980/job/128674259607"
+      },
+      {
+        "evidenceId": "github-check:128674259571",
+        "name": "epic-triage",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462384980/job/128674259571"
+      },
+      {
+        "evidenceId": "github-check:128674259211",
+        "name": "route",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462384980/job/128674259211"
+      },
+      {
+        "evidenceId": "github-check:128674258642",
+        "name": "pr-state",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462384980/job/128674258642"
+      },
+      {
+        "evidenceId": "github-check:128674125873",
+        "name": "continue-post-merge-review",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462258389/job/128674125873"
+      },
+      {
+        "evidenceId": "github-check:128674054837",
+        "name": "Verify Lighthouse foundation",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462258453/job/128674054837"
+      },
+      {
+        "evidenceId": "github-check:128674052136",
+        "name": "repository",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462258389/job/128674052136"
+      },
+      {
+        "evidenceId": "github-check:128674016941",
+        "name": "continue-post-merge-review",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "unavailable",
+        "state": "skipped",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462274881/job/128674016941"
+      },
+      {
+        "evidenceId": "github-check:128673923340",
+        "name": "repository",
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "app": 15368,
+        "status": "passed",
+        "state": "success",
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462274881/job/128673923340"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:1",
+        "name": "npm ci --ignore-scripts",
+        "command": [
+          "npm",
+          "ci",
+          "--ignore-scripts"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "\nadded 341 packages, and audited 342 packages in 2m\n\n56 packages are looking for funding\n  run `npm fund` for details\n\n4 low severity vulnerabilities\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n",
+          "sha256": "669bccefbc427aedc5d97aeb3818b067b978fd98f2d3ade988d735ca40632bb1",
+          "logSha256": "669bccefbc427aedc5d97aeb3818b067b978fd98f2d3ade988d735ca40632bb1",
+          "logTruncated": false,
+          "truncated": false
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:2",
+        "name": "npm run verify",
+        "command": [
+          "npm",
+          "run",
+          "verify"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "\n> verify\n> node scripts/consumer-preflight.mjs && node scripts/verify-delivery-profile.mjs && npm test\n\n\n> test\n> node --test src/*.test.mjs\n\n✔ summarizes an empty inventory (1.483929ms)\n✔ does not count unavailable evidence as passed (0.159015ms)\n✔ summarizes an all-passed inventory (0.125751ms)\n✔ summarizes an all-failed inventory (0.146482ms)\n✔ summarizes a mixed inventory (0.153803ms)\n✔ counts a missing status as unavailable (0.122045ms)\n✔ counts only exact passed and failed strings (0.173703ms)\n✔ preserves input contents, object identities and order (0.300916ms)\n✔ supports frozen inventory and observation objects (0.155956ms)\n✔ counts __proto__ as unavailable without changing the observation (0.245243ms)\n✔ counts constructor as unavailable without changing the observation (0.126296ms)\n✔ counts toString as unavailable without changing the observation (0.09593ms)\n✔ counts boxed passed as unavailable without changing the observation (0.219352ms)\n✔ counts boxed failed as unavailable without changing the observation (0.146398ms)\n✔ preserves frozen prototype-key and boxed-string observations in a mixed inventory (0.319613ms)\n✔ reads each accessor status exactly once in inventory order (0.395926ms)\n✔ reads each Proxy status exactly once in inventory order (0.142854ms)\n✔ counts Symbol(passed) as unavailable alongside primitive controls (0.144472ms)\n✔ counts Symbol(failed) as unavailable alongside primitive controls (0.055737ms)\n✔ counts 0 as unavailable alongside primitive controls (0.049038ms)\n✔ counts 1 as unavailable alongside primitive controls (0.051123ms)\n✔ counts -1 as unavailable alongside primitive controls (0.046968ms)\n✔ preserves an abrupt accessor status failure without reading later observations (0.535944ms)\n✔ preserves an abrupt Proxy status failure without reading later observations (0.138958ms)\n✔ classifies an object with throwing Symbol.toPrimitive hooks without coercion (0.244443ms)\n✔ classifies an object with throwing toString/valueOf hooks without coercion (0.090537ms)\n✔ reads a repeated accessor observation once per inventory occurrence without caching (0.266882ms)\n✔ reads a repeated Proxy observation once per inventory occurrence without caching (0.118044ms)\n✔ returns independent mixed-inventory summaries across calls and caller mutation (0.298032ms)\n✔ returns independent empty-inventory summaries without retaining prior counts (0.131298ms)\n✔ preserves frozen numeric, boolean and nullish statuses in a mixed inventory (0.336832ms)\n✔ preserves frozen symbol and throwing-object statuses without coercion (0.212953ms)\n✔ preserves frozen callable and bigint statuses without invocation or coercion (0.201979ms)\nℹ tests 33\nℹ suites 0\nℹ pass 33\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 81.251637\n",
+          "sha256": "5b82acaeb56b045798dc3ca2e2ab325874a759ba977267bff7609b0b654ba949",
+          "logSha256": "5b82acaeb56b045798dc3ca2e2ab325874a759ba977267bff7609b0b654ba949",
+          "logTruncated": false,
+          "truncated": false
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:3",
+        "name": "npx --no-install lighthouse verify",
+        "command": [
+          "npx",
+          "--no-install",
+          "lighthouse",
+          "verify"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "Lighthouse manifest, repository boundaries and managed projection are valid.\n",
+          "sha256": "a1b382205bb24b6785d0b699bb8f40b1f5dd222bd238243ba5c67f3f25f6a25c",
+          "logSha256": "a1b382205bb24b6785d0b699bb8f40b1f5dd222bd238243ba5c67f3f25f6a25c",
+          "logTruncated": false,
+          "truncated": false
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:4",
+        "name": "node scripts/lighthouse-guard.mjs verify",
+        "command": [
+          "node",
+          "scripts/lighthouse-guard.mjs",
+          "verify"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logTruncated": false,
+          "truncated": false
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:5",
+        "name": "npx --no-install prodshape citations verify --provider openspec --format json",
+        "command": [
+          "npx",
+          "--no-install",
+          "prodshape",
+          "citations",
+          "verify",
+          "--provider",
+          "openspec",
+          "--format",
+          "json"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "{\n  \"schema\": \"product-definition-as-code/citations-provider/v1alpha1\",\n  \"provider\": \"openspec\",\n  \"integrationVersion\": \"0.23.0\",\n  \"root\": \"openspec\",\n  \"includeArchived\": false,\n  \"documents\": [\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/proposal.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/design.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/tasks.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/proposal.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/design.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/tasks.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/proposal.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/design.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 4\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/tasks.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/proposal.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/design.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/tasks.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/proposal.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/design.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/tasks.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/specs/observation-summary/spec.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"specs\",\n      \"state\": \"bound\",\n      \"declaration\": \"cite",
+          "sha256": "aa2ac58ed69bab6bf87a6dc6be6e62072c58a6567ddc291ce97aaa283fe16d4e",
+          "logSha256": "659c2f690cf504770719e2d228771263527ca8024bed254c63f1f532879c3cfd",
+          "logTruncated": false,
+          "truncated": true,
+          "jsonSummary": {
+            "totalDocuments": 35,
+            "currentDocuments": 35,
+            "bound": 34,
+            "exempt": 1,
+            "unclassified": 0,
+            "totalCitations": 71,
+            "current": 71,
+            "stale": 0,
+            "tampered": 0,
+            "unresolved": 0,
+            "errors": 0,
+            "warnings": 1
+          },
+          "summarySha256": "b290b890f47b1986faac668d47741ff771389e2d521c781a269f133f1fb1f919",
+          "jsonEvidence": {
+            "schema": "product-definition-as-code/citations-provider/v1alpha1",
+            "provider": "openspec",
+            "integrationVersion": "0.23.0",
+            "root": "openspec",
+            "scope": [
+              "openspec/changes/issue-68-proposal/design.md",
+              "openspec/changes/issue-68-proposal/proposal.md",
+              "openspec/changes/issue-68-proposal/tasks.md"
+            ],
+            "documents": [
+              {
+                "path": "openspec/changes/issue-68-proposal/proposal.md",
+                "change": "issue-68-proposal",
+                "archived": false,
+                "artifactKind": "proposal",
+                "state": "bound",
+                "declaration": "cited",
+                "citations": 2
+              },
+              {
+                "path": "openspec/changes/issue-68-proposal/design.md",
+                "change": "issue-68-proposal",
+                "archived": false,
+                "artifactKind": "design",
+                "state": "bound",
+                "declaration": "cited",
+                "citations": 2
+              },
+              {
+                "path": "openspec/changes/issue-68-proposal/tasks.md",
+                "change": "issue-68-proposal",
+                "archived": false,
+                "artifactKind": "tasks",
+                "state": "bound",
+                "declaration": "cited",
+                "citations": 2
+              }
+            ],
+            "citations": [
+              {
+                "id": "BR-SUMMARY-001",
+                "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                "source": "openspec/changes/issue-68-proposal/proposal.md",
+                "line": 34,
+                "form": "inline",
+                "status": "current"
+              },
+              {
+                "id": "FR-SUMMARY-001",
+                "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                "source": "openspec/changes/issue-68-proposal/proposal.md",
+                "line": 37,
+                "form": "inline",
+                "status": "current"
+              },
+              {
+                "id": "BR-SUMMARY-001",
+                "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                "source": "openspec/changes/issue-68-proposal/design.md",
+                "line": 20,
+                "form": "inline",
+                "status": "current"
+              },
+              {
+                "id": "FR-SUMMARY-001",
+                "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                "source": "openspec/changes/issue-68-proposal/design.md",
+                "line": 22,
+                "form": "inline",
+                "status": "current"
+              },
+              {
+                "id": "BR-SUMMARY-001",
+                "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                "source": "openspec/changes/issue-68-proposal/tasks.md",
+                "line": 10,
+                "form": "inline",
+                "status": "current"
+              },
+              {
+                "id": "FR-SUMMARY-001",
+                "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                "source": "openspec/changes/issue-68-proposal/tasks.md",
+                "line": 12,
+                "form": "inline",
+                "status": "current"
+              }
+            ],
+            "diagnostics": [
+              {
+                "severity": "warning",
+                "code": "PRODUCT103",
+                "message": "Requirement 'FR-SUMMARY-001' is not reachable from any actor",
+                "file": "docs/product/model/requirements/functional/fr-summary-001.md",
+                "artifact": "FR-SUMMARY-001"
+              }
+            ]
+          },
+          "evidenceSha256": "5da8c1b5a73e5ac9210737dcf44396ab0a7dd253caf8a44882adae95c6a864ba"
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      },
+      {
+        "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:6",
+        "name": "npx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-68-proposal --strict --no-interactive",
+        "command": [
+          "npx",
+          "--yes",
+          "--package=@fission-ai/openspec@1.15.0",
+          "openspec",
+          "validate",
+          "issue-68-proposal",
+          "--strict",
+          "--no-interactive"
+        ],
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "exitCode": 0,
+        "output": {
+          "content": "Change 'issue-68-proposal' is valid\nℹ [INFO] file: skip_specs is set in .openspec.yaml: change declares no spec-level behavior changes, zero deltas accepted\n",
+          "sha256": "d557ab0077b2dd71c380dbf103657f8f14fffed9a6dc50611305973dc66c603a",
+          "logSha256": "d557ab0077b2dd71c380dbf103657f8f14fffed9a6dc50611305973dc66c603a",
+          "logTruncated": false,
+          "truncated": false
+        },
+        "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+      }
+    ],
+    "finalization": {
+      "executor": "trusted publisher after current-stage validation",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "open",
+        "merged": false,
+        "labels": []
+      },
+      "onPassed": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "onBlocked": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "pullRequestLabels": "preserve",
+      "reservation": "agent-working is added and previous execution-failed state is cleared after this observation; host cleanup releases the reservation for every outcome"
+    },
+    "workItem": {
+      "title": "Characterize callable and bigint statuses without coercion",
+      "body": "Append one characterization test for the accepted summarize contract; preserve production behavior.\n\nAcceptance:\n- Append one test to src/summary.test.mjs, preserving all 32 existing tests byte-for-byte as a prefix and preserving src/summary.mjs exactly.\n- Use a frozen four-item inventory with exact primitive passed and failed statuses, a bigint status, and a frozen callable status whose Symbol.toPrimitive hook throws. Expect literal counters total=4, passed=1, failed=1, unavailable=2 without invoking the callable or coercing either unusual status.\n- Verify the inventory and each status identity remain unchanged. Execute the declared candidate checks through the trusted host and cite their actual receipts. The eventual published branch guard and forge CI remain subsequent host gates; report them as pending before publication.\n- Preserve product models, provider scaffolds, existing guidance, implementation policy and workflow configuration. Planning artifacts for this issue are allowed; the accepted product definition covers the behavior.\n\nThis technical seed qualifies Lighthouse #567. An isolated transport gate will pause the original automatic final-review dispatch while the default branch advances through one documentation-only commit. The unchanged admission guard must reject it before any agent or publisher runs. Native worker completion must wake the existing bounded recovery, with no owner maintenance invocation and no second merge, original CI or product apply. The control itself grants no additional delivery permission.",
+      "ownerAnswers": []
+    },
+    "pullRequest": {
+      "title": "Characterize callable and bigint statuses without coercion",
+      "body": "Implemented issue #68 with one callable/bigint characterization test and its plan, preserving all 32 existing tests and production code. All six candidate commands passed, including all 33 tests. The host must now independently validate the candidate and publish it for review; the published-branch guard and forge CI remain pending.\n\nRefs #68.\n\nNext: complete the candidate and its checks. [Run and evidence](https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983).\n\n<!-- lighthouse-implementation:468d4c3ce5c14bdb5e00cbfc9100c6ea06f59276fc4a0d1e6667a53480ea3625 -->",
+      "ownerAnswers": [],
+      "reviews": [
+        {
+          "author": "juangcarmona",
+          "body": "Approved this exact technical characterization under the owner's standing end-to-end authorization. The prior 32-test prefix and production code are unchanged; one meaningful callable/bigint test and its host-owned plan are added. Independent host checks and the current forge checks passed; the PR is ready. Authorize integration of this head. This grants no second merge, original CI or ProductShape apply, and no new product intent.",
+          "state": "APPROVED",
+          "commit": "e995995c1513ebc65012341dd052646b207a0be8",
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71#pullrequestreview-5817172292"
+        }
+      ]
+    },
+    "profile": {
+      "schemaVersion": 1,
+      "profileVersion": 1,
+      "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+      "intake": "collaborators",
+      "requiredChecks": [
+        {
+          "context": "repository",
+          "integrationId": 15368
+        }
+      ],
+      "requiredApprovals": 0,
+      "evidenceBranch": "process/retrospectives",
+      "releaseWorkflowReady": false,
+      "completion": {
+        "publishEvidence": true,
+        "postMergeWorkflows": [
+          "ci.yml"
+        ],
+        "protectionObservations": [
+          {
+            "id": 26571408,
+            "revision": "a8ef8a343393664a7e6b8e7a8567b3a41fe9ad8544fe1fe65511cd8cf1a6326c"
+          }
+        ]
+      }
+    },
+    "policy": {
+      "rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "juangcarmona/lighthouse-published-consumer-20261104",
+          "ruleset_id": 26571398
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "juangcarmona/lighthouse-published-consumer-20261104",
+          "ruleset_id": 26571398
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "juangcarmona/lighthouse-published-consumer-20261104",
+          "ruleset_id": 26571398
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": true,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "repository",
+                "integration_id": 15368
+              }
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "juangcarmona/lighthouse-published-consumer-20261104",
+          "ruleset_id": 26571402
+        }
+      ],
+      "classic": null,
+      "checks": [
+        {
+          "context": "repository",
+          "app": 15368
+        }
+      ]
+    },
+    "checks": [
+      {
+        "context": "repository",
+        "app": 15368,
+        "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+        "status": "passed",
+        "state": "passed",
+        "checks": [
+          {
+            "id": 128674052136,
+            "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42462258389",
+            "status": "completed",
+            "conclusion": "success",
+            "app": 15368,
+            "eligible": true,
+            "state": "eligible",
+            "event": "pull_request",
+            "run": 42462258389
+          }
+        ],
+        "commitStatus": null
+      }
+    ],
+    "checkedRevision": "e995995c1513ebc65012341dd052646b207a0be8",
+    "merged": false,
+    "merge": null,
+    "mergeable": true,
+    "title": "Characterize callable and bigint statuses without coercion",
+    "issueUrl": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/issues/68",
+    "prUrl": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/71",
+    "labels": [
+      "pr-ready"
+    ],
+    "files": [
+      {
+        "path": "openspec/changes/issue-68-proposal/.openspec.yaml",
+        "status": "added",
+        "sha": "0acfd37c278b191ef753e197d63ca3b6c1e7cecc"
+      },
+      {
+        "path": "openspec/changes/issue-68-proposal/design.md",
+        "status": "added",
+        "sha": "8dadcdd4333f94a100951c010b13c41e61c3ef0b"
+      },
+      {
+        "path": "openspec/changes/issue-68-proposal/proposal.md",
+        "status": "added",
+        "sha": "8d8fcf9b7d7b9f1142a0dccc39592e06bba89990"
+      },
+      {
+        "path": "openspec/changes/issue-68-proposal/tasks.md",
+        "status": "added",
+        "sha": "acf0e99e505c5c0f38832f8d4be6493ac44145ea"
+      },
+      {
+        "path": "src/summary.test.mjs",
+        "status": "modified",
+        "sha": "941af2c2cfe3f14631e4ee0306f40ee9cd4e756a"
+      }
+    ],
+    "currentRevision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+    "mergeActor": null,
+    "implementationEvidence": {
+      "status": "passed",
+      "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8",
+      "binding": {
+        "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+        "issue": 68,
+        "runId": "468d4c3ce5c14bdb5e00cbfc9100c6ea06f59276fc4a0d1e6667a53480ea3625",
+        "workflowRunId": "42461472983",
+        "attempt": 1,
+        "sourceRevision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+        "policyRevision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+        "intent": "72bea4600e2baf667bab8d80bef74724b4d88c49c05d99063c4de4ef8ec24401",
+        "policy": "dc2382355434e0b7572f1fce8654fe68a26b0fd9a27086cc89e77ec3adacad6a",
+        "planning": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+      },
+      "publication": {
+        "pr": 71,
+        "head": "e995995c1513ebc65012341dd052646b207a0be8",
+        "tree": "ca05e36b5eaaef328084eb48c20cdba88aa34ef4"
+      },
+      "verificationInputs": {
+        "baseline": "6eb33581502ea7e0091ffd074ad105a878d19920",
+        "current": "6eb33581502ea7e0091ffd074ad105a878d19920",
+        "unchanged": true
+      },
+      "artifact": {
+        "name": "lighthouse-command-evidence-68-1",
+        "member": "implementation-evidence.json",
+        "sha256": "28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8"
+      },
+      "observedAt": "2026-11-08T08:16:11.367Z",
+      "verifiedAt": "2026-11-08T08:19:41.334Z",
+      "producer": {
+        "repository": "juangcarmona/lighthouse-published-consumer-20261104",
+        "workflow": ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+        "revision": "6eb33581502ea7e0091ffd074ad105a878d19920",
+        "runId": "42461472983",
+        "attempt": 1
+      },
+      "checks": [
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:1",
+          "name": "npm ci --ignore-scripts",
+          "command": [
+            "npm",
+            "ci",
+            "--ignore-scripts"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "\nadded 341 packages, and audited 342 packages in 2m\n\n56 packages are looking for funding\n  run `npm fund` for details\n\n4 low severity vulnerabilities\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n",
+            "sha256": "669bccefbc427aedc5d97aeb3818b067b978fd98f2d3ade988d735ca40632bb1",
+            "logSha256": "669bccefbc427aedc5d97aeb3818b067b978fd98f2d3ade988d735ca40632bb1",
+            "logTruncated": false,
+            "truncated": false
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        },
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:2",
+          "name": "npm run verify",
+          "command": [
+            "npm",
+            "run",
+            "verify"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "\n> verify\n> node scripts/consumer-preflight.mjs && node scripts/verify-delivery-profile.mjs && npm test\n\n\n> test\n> node --test src/*.test.mjs\n\n✔ summarizes an empty inventory (1.483929ms)\n✔ does not count unavailable evidence as passed (0.159015ms)\n✔ summarizes an all-passed inventory (0.125751ms)\n✔ summarizes an all-failed inventory (0.146482ms)\n✔ summarizes a mixed inventory (0.153803ms)\n✔ counts a missing status as unavailable (0.122045ms)\n✔ counts only exact passed and failed strings (0.173703ms)\n✔ preserves input contents, object identities and order (0.300916ms)\n✔ supports frozen inventory and observation objects (0.155956ms)\n✔ counts __proto__ as unavailable without changing the observation (0.245243ms)\n✔ counts constructor as unavailable without changing the observation (0.126296ms)\n✔ counts toString as unavailable without changing the observation (0.09593ms)\n✔ counts boxed passed as unavailable without changing the observation (0.219352ms)\n✔ counts boxed failed as unavailable without changing the observation (0.146398ms)\n✔ preserves frozen prototype-key and boxed-string observations in a mixed inventory (0.319613ms)\n✔ reads each accessor status exactly once in inventory order (0.395926ms)\n✔ reads each Proxy status exactly once in inventory order (0.142854ms)\n✔ counts Symbol(passed) as unavailable alongside primitive controls (0.144472ms)\n✔ counts Symbol(failed) as unavailable alongside primitive controls (0.055737ms)\n✔ counts 0 as unavailable alongside primitive controls (0.049038ms)\n✔ counts 1 as unavailable alongside primitive controls (0.051123ms)\n✔ counts -1 as unavailable alongside primitive controls (0.046968ms)\n✔ preserves an abrupt accessor status failure without reading later observations (0.535944ms)\n✔ preserves an abrupt Proxy status failure without reading later observations (0.138958ms)\n✔ classifies an object with throwing Symbol.toPrimitive hooks without coercion (0.244443ms)\n✔ classifies an object with throwing toString/valueOf hooks without coercion (0.090537ms)\n✔ reads a repeated accessor observation once per inventory occurrence without caching (0.266882ms)\n✔ reads a repeated Proxy observation once per inventory occurrence without caching (0.118044ms)\n✔ returns independent mixed-inventory summaries across calls and caller mutation (0.298032ms)\n✔ returns independent empty-inventory summaries without retaining prior counts (0.131298ms)\n✔ preserves frozen numeric, boolean and nullish statuses in a mixed inventory (0.336832ms)\n✔ preserves frozen symbol and throwing-object statuses without coercion (0.212953ms)\n✔ preserves frozen callable and bigint statuses without invocation or coercion (0.201979ms)\nℹ tests 33\nℹ suites 0\nℹ pass 33\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 81.251637\n",
+            "sha256": "5b82acaeb56b045798dc3ca2e2ab325874a759ba977267bff7609b0b654ba949",
+            "logSha256": "5b82acaeb56b045798dc3ca2e2ab325874a759ba977267bff7609b0b654ba949",
+            "logTruncated": false,
+            "truncated": false
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        },
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:3",
+          "name": "npx --no-install lighthouse verify",
+          "command": [
+            "npx",
+            "--no-install",
+            "lighthouse",
+            "verify"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "Lighthouse manifest, repository boundaries and managed projection are valid.\n",
+            "sha256": "a1b382205bb24b6785d0b699bb8f40b1f5dd222bd238243ba5c67f3f25f6a25c",
+            "logSha256": "a1b382205bb24b6785d0b699bb8f40b1f5dd222bd238243ba5c67f3f25f6a25c",
+            "logTruncated": false,
+            "truncated": false
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        },
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:4",
+          "name": "node scripts/lighthouse-guard.mjs verify",
+          "command": [
+            "node",
+            "scripts/lighthouse-guard.mjs",
+            "verify"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "logTruncated": false,
+            "truncated": false
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        },
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:5",
+          "name": "npx --no-install prodshape citations verify --provider openspec --format json",
+          "command": [
+            "npx",
+            "--no-install",
+            "prodshape",
+            "citations",
+            "verify",
+            "--provider",
+            "openspec",
+            "--format",
+            "json"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "{\n  \"schema\": \"product-definition-as-code/citations-provider/v1alpha1\",\n  \"provider\": \"openspec\",\n  \"integrationVersion\": \"0.23.0\",\n  \"root\": \"openspec\",\n  \"includeArchived\": false,\n  \"documents\": [\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/proposal.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/design.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-68-proposal/tasks.md\",\n      \"change\": \"issue-68-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/proposal.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/design.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-59-proposal/tasks.md\",\n      \"change\": \"issue-59-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/proposal.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/design.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 4\n    },\n    {\n      \"path\": \"openspec/changes/issue-54-proposal/tasks.md\",\n      \"change\": \"issue-54-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/proposal.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/design.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-52-proposal/tasks.md\",\n      \"change\": \"issue-52-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/proposal.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"proposal\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/design.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"design\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/tasks.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"tasks\",\n      \"state\": \"bound\",\n      \"declaration\": \"cited\",\n      \"citations\": 2\n    },\n    {\n      \"path\": \"openspec/changes/issue-5-proposal/specs/observation-summary/spec.md\",\n      \"change\": \"issue-5-proposal\",\n      \"archived\": false,\n      \"artifactKind\": \"specs\",\n      \"state\": \"bound\",\n      \"declaration\": \"cite",
+            "sha256": "aa2ac58ed69bab6bf87a6dc6be6e62072c58a6567ddc291ce97aaa283fe16d4e",
+            "logSha256": "659c2f690cf504770719e2d228771263527ca8024bed254c63f1f532879c3cfd",
+            "logTruncated": false,
+            "truncated": true,
+            "jsonSummary": {
+              "totalDocuments": 35,
+              "currentDocuments": 35,
+              "bound": 34,
+              "exempt": 1,
+              "unclassified": 0,
+              "totalCitations": 71,
+              "current": 71,
+              "stale": 0,
+              "tampered": 0,
+              "unresolved": 0,
+              "errors": 0,
+              "warnings": 1
+            },
+            "summarySha256": "b290b890f47b1986faac668d47741ff771389e2d521c781a269f133f1fb1f919",
+            "jsonEvidence": {
+              "schema": "product-definition-as-code/citations-provider/v1alpha1",
+              "provider": "openspec",
+              "integrationVersion": "0.23.0",
+              "root": "openspec",
+              "scope": [
+                "openspec/changes/issue-68-proposal/design.md",
+                "openspec/changes/issue-68-proposal/proposal.md",
+                "openspec/changes/issue-68-proposal/tasks.md"
+              ],
+              "documents": [
+                {
+                  "path": "openspec/changes/issue-68-proposal/proposal.md",
+                  "change": "issue-68-proposal",
+                  "archived": false,
+                  "artifactKind": "proposal",
+                  "state": "bound",
+                  "declaration": "cited",
+                  "citations": 2
+                },
+                {
+                  "path": "openspec/changes/issue-68-proposal/design.md",
+                  "change": "issue-68-proposal",
+                  "archived": false,
+                  "artifactKind": "design",
+                  "state": "bound",
+                  "declaration": "cited",
+                  "citations": 2
+                },
+                {
+                  "path": "openspec/changes/issue-68-proposal/tasks.md",
+                  "change": "issue-68-proposal",
+                  "archived": false,
+                  "artifactKind": "tasks",
+                  "state": "bound",
+                  "declaration": "cited",
+                  "citations": 2
+                }
+              ],
+              "citations": [
+                {
+                  "id": "BR-SUMMARY-001",
+                  "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                  "source": "openspec/changes/issue-68-proposal/proposal.md",
+                  "line": 34,
+                  "form": "inline",
+                  "status": "current"
+                },
+                {
+                  "id": "FR-SUMMARY-001",
+                  "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                  "source": "openspec/changes/issue-68-proposal/proposal.md",
+                  "line": 37,
+                  "form": "inline",
+                  "status": "current"
+                },
+                {
+                  "id": "BR-SUMMARY-001",
+                  "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                  "source": "openspec/changes/issue-68-proposal/design.md",
+                  "line": 20,
+                  "form": "inline",
+                  "status": "current"
+                },
+                {
+                  "id": "FR-SUMMARY-001",
+                  "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                  "source": "openspec/changes/issue-68-proposal/design.md",
+                  "line": 22,
+                  "form": "inline",
+                  "status": "current"
+                },
+                {
+                  "id": "BR-SUMMARY-001",
+                  "digest": "sha256:a21b966ff4747da8ee35ee1366ffeac16f6a6fa3da508ca04d3f0b31380677c4",
+                  "source": "openspec/changes/issue-68-proposal/tasks.md",
+                  "line": 10,
+                  "form": "inline",
+                  "status": "current"
+                },
+                {
+                  "id": "FR-SUMMARY-001",
+                  "digest": "sha256:d422a7f0e7294b9ffbb099871260c2ac5c287609036e808fc160786f294971ac",
+                  "source": "openspec/changes/issue-68-proposal/tasks.md",
+                  "line": 12,
+                  "form": "inline",
+                  "status": "current"
+                }
+              ],
+              "diagnostics": [
+                {
+                  "severity": "warning",
+                  "code": "PRODUCT103",
+                  "message": "Requirement 'FR-SUMMARY-001' is not reachable from any actor",
+                  "file": "docs/product/model/requirements/functional/fr-summary-001.md",
+                  "artifact": "FR-SUMMARY-001"
+                }
+              ]
+            },
+            "evidenceSha256": "5da8c1b5a73e5ac9210737dcf44396ab0a7dd253caf8a44882adae95c6a864ba"
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        },
+        {
+          "evidenceId": "implementation:42461472983:1:28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8:6",
+          "name": "npx --yes --package=@fission-ai/openspec@1.15.0 openspec validate issue-68-proposal --strict --no-interactive",
+          "command": [
+            "npx",
+            "--yes",
+            "--package=@fission-ai/openspec@1.15.0",
+            "openspec",
+            "validate",
+            "issue-68-proposal",
+            "--strict",
+            "--no-interactive"
+          ],
+          "revision": "e995995c1513ebc65012341dd052646b207a0be8",
+          "status": "passed",
+          "state": "passed",
+          "exitCode": 0,
+          "output": {
+            "content": "Change 'issue-68-proposal' is valid\nℹ [INFO] file: skip_specs is set in .openspec.yaml: change declares no spec-level behavior changes, zero deltas accepted\n",
+            "sha256": "d557ab0077b2dd71c380dbf103657f8f14fffed9a6dc50611305973dc66c603a",
+            "logSha256": "d557ab0077b2dd71c380dbf103657f8f14fffed9a6dc50611305973dc66c603a",
+            "logTruncated": false,
+            "truncated": false
+          },
+          "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42461472983/attempts/1"
+        }
+      ]
+    }
+  },
+  "postMerge": [],
+  "continuation": null,
+  "priorIntegration": null,
+  "priorPlanningReview": null
+}

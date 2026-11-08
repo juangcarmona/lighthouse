@@ -1,0 +1,17 @@
+{
+  "base": "6eb33581502ea7e0091ffd074ad105a878d19920",
+  "head": "e995995c1513ebc65012341dd052646b207a0be8",
+  "prior32TestPrefixPreserved": true,
+  "oneCharacterizationTestAdded": true,
+  "productionUnchanged": true,
+  "modelsPoliciesAndWorkflowsUnchanged": true,
+  "changed": [
+    "openspec/changes/issue-68-proposal/.openspec.yaml",
+    "openspec/changes/issue-68-proposal/design.md",
+    "openspec/changes/issue-68-proposal/proposal.md",
+    "openspec/changes/issue-68-proposal/tasks.md",
+    "src/summary.test.mjs"
+  ],
+  "previousTestsSha256": "55528a43eaf8e882b7e5836bba537087dfdbd59fc7fd1c5fa78068cacaa84882",
+  "candidateTestsSha256": "119dfc1361de36db868627762085e7023a87acbe71bea20989e49ffeb476e7dc"
+}

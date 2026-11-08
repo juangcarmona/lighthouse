@@ -1,0 +1,142 @@
+{
+  "sourcePr": 573,
+  "source": "a65e97b1780de5c80c3ce3a2c517a11c87c556ba",
+  "reviewedHead": "4a3059dff009ac9272d78c6ce01b59158247d692",
+  "versionPr": 574,
+  "qualified": "e3a0e01ae0c25bd7521667bbf02c87db0aeb8d2b",
+  "tdd": {
+    "red": "/tmp/lighthouse-567-red.log",
+    "green": "/tmp/lighthouse-567-focused.log",
+    "full": {
+      "tests": 1150,
+      "passed": 1140,
+      "skipped": 10,
+      "failed": 0
+    }
+  },
+  "officialRegistry": {
+    "source": "e3a0e01ae0c25bd7521667bbf02c87db0aeb8d2b",
+    "packages": [
+      {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.22.1",
+        "gitHead": "e3a0e01ae0c25bd7521667bbf02c87db0aeb8d2b",
+        "integrity": "sha512-0iX/izjxl+DMoW/N170bH0UsSNN1i/L5lPwC0fMHAqJmCO6P3ETR3Ji7KATKmt+x2UZd2hM6H4NoXWD1dCuFWg==",
+        "filesCompared": 224
+      },
+      {
+        "name": "@juangcarmona/lighthouse",
+        "version": "0.12.62",
+        "gitHead": "e3a0e01ae0c25bd7521667bbf02c87db0aeb8d2b",
+        "integrity": "sha512-Vs9TOEouvuW1kAsPG2bBLtrnVZ42uKBOS6hF/t4NxDhdYFfsib2UEa80XCQgQ+48n8KoezzLnxJ9NCaXdOSYgg==",
+        "filesCompared": 93
+      }
+    ]
+  },
+  "nativeCI": [
+    {
+      "id": 42460270109,
+      "name": "Lighthouse verification",
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "head_sha": "4a3059dff009ac9272d78c6ce01b59158247d692",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:48:18Z",
+      "updated_at": "2026-11-08T07:50:23Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460270109"
+    },
+    {
+      "id": 42460270111,
+      "name": "Lighthouse package contracts",
+      "path": ".github/workflows/packages.yml",
+      "event": "pull_request",
+      "head_sha": "4a3059dff009ac9272d78c6ce01b59158247d692",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:48:18Z",
+      "updated_at": "2026-11-08T07:50:45Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460270111"
+    },
+    {
+      "id": 42460542644,
+      "name": "Lighthouse verification",
+      "path": ".github/workflows/ci.yml",
+      "event": "pull_request",
+      "head_sha": "ccfb503ddf517dcbdcf6b90ee0bf4122444b2e64",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:52:27Z",
+      "updated_at": "2026-11-08T07:55:11Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460542644"
+    },
+    {
+      "id": 42460542621,
+      "name": "Lighthouse visual verification",
+      "path": ".github/workflows/visual.yml",
+      "event": "pull_request",
+      "head_sha": "ccfb503ddf517dcbdcf6b90ee0bf4122444b2e64",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:52:27Z",
+      "updated_at": "2026-11-08T07:53:49Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460542621"
+    },
+    {
+      "id": 42460542660,
+      "name": "Lighthouse .NET verification",
+      "path": ".github/workflows/dotnet.yml",
+      "event": "pull_request",
+      "head_sha": "ccfb503ddf517dcbdcf6b90ee0bf4122444b2e64",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:52:27Z",
+      "updated_at": "2026-11-08T07:54:16Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460542660"
+    },
+    {
+      "id": 42460542749,
+      "name": "Public engineering site",
+      "path": ".github/workflows/public-site.yml",
+      "event": "pull_request",
+      "head_sha": "ccfb503ddf517dcbdcf6b90ee0bf4122444b2e64",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:52:27Z",
+      "updated_at": "2026-11-08T07:54:16Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460542749"
+    },
+    {
+      "id": 42460542697,
+      "name": "Lighthouse package contracts",
+      "path": ".github/workflows/packages.yml",
+      "event": "pull_request",
+      "head_sha": "ccfb503ddf517dcbdcf6b90ee0bf4122444b2e64",
+      "run_attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:52:27Z",
+      "updated_at": "2026-11-08T07:55:12Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460542697"
+    },
+    {
+      "id": 42460741916,
+      "name": "Release",
+      "path": ".github/workflows/release.yml",
+      "event": "push",
+      "head_sha": "e3a0e01ae0c25bd7521667bbf02c87db0aeb8d2b",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T07:55:26Z",
+      "updated_at": "2026-11-08T07:58:29Z",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42460741916"
+    }
+  ]
+}

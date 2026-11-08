@@ -1,0 +1,279 @@
+{
+  "prepared": "c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+  "resolved": "2e263e5b92d98de95c48435beb57830123ba23e9",
+  "comparison": {
+    "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/compare/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60...2e263e5b92d98de95c48435beb57830123ba23e9",
+    "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/compare/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60...2e263e5b92d98de95c48435beb57830123ba23e9",
+    "permalink_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/compare/juangcarmona:c3c7503...juangcarmona:2e263e5",
+    "diff_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/compare/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60...2e263e5b92d98de95c48435beb57830123ba23e9.diff",
+    "patch_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/compare/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60...2e263e5b92d98de95c48435beb57830123ba23e9.patch",
+    "base_commit": {
+      "sha": "c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "node_id": "C_kwDOVjQrQdoAKGMzYzc1MDM4NDQ5M2Y1M2U3YTViYTBjZjdkMmZiNGY1NTI0OWFjNjA",
+      "commit": {
+        "author": {
+          "name": "github-actions[bot]",
+          "email": "41898282+github-actions[bot]@users.noreply.github.com",
+          "date": "2026-11-08T08:25:14Z"
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com",
+          "date": "2026-11-08T08:25:14Z"
+        },
+        "message": "feat: implement issue #68 (#71)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+        "tree": {
+          "sha": "ca05e36b5eaaef328084eb48c20cdba88aa34ef4",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees/ca05e36b5eaaef328084eb48c20cdba88aa34ef4"
+        },
+        "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJq8DHqCRC1aQ7uu5UhlAAAzGcQAGRIsXEmj1/8XHlZOJRGfTk/\nURR62XCKwjReNG8VYe4C1U10yJTqIPrBm6FjpX9tQjfdgGkLWf+Du7RHDL7HT0HC\nel6lmnluROsV46m4XO30Hp7VSl3sPoRgMEKz55zoUPDKuG/H9qm16X7qzIPfxYBN\nt0YEAWmLsDrqR7U2pyqOrmoQ/GTidmeGNKCJUZjz/076ntLm6St7VUdJ6ohBLDtU\nEgu1YDN+mr7qI1stcl7rE26VEjOHBJv2kkQdws4MQNY+cLbPnVAEFnjjsHNPE0jO\nmxU/Nl2FvjEoOZ5el+5Jm913LnotEKAAgi32GPwVK6EW8A4NLAeicjod1dFgvLkw\n2Bk/MCkXhFsqiVf+Tgcl0h5DM2I+FBodH7ftj7KAgDhVYCo/CxDZ2gsN57HbLloi\n3cvnWS6amkHPhVmPkFhudUiRSSM4QrQUsIfruE5CXZ7D9OMDf6G9DaWYbs82efTi\nkVNUNO2Q3jOqCk3kD50SAcnZSR1mp6/LJrQTShEaqsSQzcHS228NQ5ooP7w/gw/2\nPIkPoTU/OR/MPqMuG1pVcabUqGzexOMS7SOvfNlP5+O+X57axR2Bgz1xOdzhqcrS\nEY4iwJDV1HjtBCB/6AWVWc7gw2aclDgFd5TaBYO987z6eLbXOqxnuhxw5QsQMaK5\n2zwEIGuCPUj/6X94Ny6z\n=14JG\n-----END PGP SIGNATURE-----\n",
+          "payload": "tree ca05e36b5eaaef328084eb48c20cdba88aa34ef4\nparent 6eb33581502ea7e0091ffd074ad105a878d19920\nauthor github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> 1794126314 +0000\ncommitter GitHub <noreply@github.com> 1794126314 +0000\n\nfeat: implement issue #68 (#71)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+          "verified_at": "2026-11-08T08:25:14Z"
+        }
+      },
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60/comments",
+      "author": {
+        "login": "github-actions[bot]",
+        "id": 41898282,
+        "node_id": "MDM6Qm90NDE4OTgyODI=",
+        "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+        "html_url": "https://github.com/apps/github-actions",
+        "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "web-flow",
+        "id": 19864447,
+        "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+        "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/web-flow",
+        "html_url": "https://github.com/web-flow",
+        "followers_url": "https://api.github.com/users/web-flow/followers",
+        "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+        "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+        "organizations_url": "https://api.github.com/users/web-flow/orgs",
+        "repos_url": "https://api.github.com/users/web-flow/repos",
+        "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/web-flow/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/6eb33581502ea7e0091ffd074ad105a878d19920",
+          "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/6eb33581502ea7e0091ffd074ad105a878d19920"
+        }
+      ]
+    },
+    "merge_base_commit": {
+      "sha": "c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "node_id": "C_kwDOVjQrQdoAKGMzYzc1MDM4NDQ5M2Y1M2U3YTViYTBjZjdkMmZiNGY1NTI0OWFjNjA",
+      "commit": {
+        "author": {
+          "name": "github-actions[bot]",
+          "email": "41898282+github-actions[bot]@users.noreply.github.com",
+          "date": "2026-11-08T08:25:14Z"
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com",
+          "date": "2026-11-08T08:25:14Z"
+        },
+        "message": "feat: implement issue #68 (#71)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+        "tree": {
+          "sha": "ca05e36b5eaaef328084eb48c20cdba88aa34ef4",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees/ca05e36b5eaaef328084eb48c20cdba88aa34ef4"
+        },
+        "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+        "comment_count": 0,
+        "verification": {
+          "verified": true,
+          "reason": "valid",
+          "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJq8DHqCRC1aQ7uu5UhlAAAzGcQAGRIsXEmj1/8XHlZOJRGfTk/\nURR62XCKwjReNG8VYe4C1U10yJTqIPrBm6FjpX9tQjfdgGkLWf+Du7RHDL7HT0HC\nel6lmnluROsV46m4XO30Hp7VSl3sPoRgMEKz55zoUPDKuG/H9qm16X7qzIPfxYBN\nt0YEAWmLsDrqR7U2pyqOrmoQ/GTidmeGNKCJUZjz/076ntLm6St7VUdJ6ohBLDtU\nEgu1YDN+mr7qI1stcl7rE26VEjOHBJv2kkQdws4MQNY+cLbPnVAEFnjjsHNPE0jO\nmxU/Nl2FvjEoOZ5el+5Jm913LnotEKAAgi32GPwVK6EW8A4NLAeicjod1dFgvLkw\n2Bk/MCkXhFsqiVf+Tgcl0h5DM2I+FBodH7ftj7KAgDhVYCo/CxDZ2gsN57HbLloi\n3cvnWS6amkHPhVmPkFhudUiRSSM4QrQUsIfruE5CXZ7D9OMDf6G9DaWYbs82efTi\nkVNUNO2Q3jOqCk3kD50SAcnZSR1mp6/LJrQTShEaqsSQzcHS228NQ5ooP7w/gw/2\nPIkPoTU/OR/MPqMuG1pVcabUqGzexOMS7SOvfNlP5+O+X57axR2Bgz1xOdzhqcrS\nEY4iwJDV1HjtBCB/6AWVWc7gw2aclDgFd5TaBYO987z6eLbXOqxnuhxw5QsQMaK5\n2zwEIGuCPUj/6X94Ny6z\n=14JG\n-----END PGP SIGNATURE-----\n",
+          "payload": "tree ca05e36b5eaaef328084eb48c20cdba88aa34ef4\nparent 6eb33581502ea7e0091ffd074ad105a878d19920\nauthor github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> 1794126314 +0000\ncommitter GitHub <noreply@github.com> 1794126314 +0000\n\nfeat: implement issue #68 (#71)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+          "verified_at": "2026-11-08T08:25:14Z"
+        }
+      },
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+      "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60/comments",
+      "author": {
+        "login": "github-actions[bot]",
+        "id": 41898282,
+        "node_id": "MDM6Qm90NDE4OTgyODI=",
+        "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+        "html_url": "https://github.com/apps/github-actions",
+        "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "web-flow",
+        "id": 19864447,
+        "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+        "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/web-flow",
+        "html_url": "https://github.com/web-flow",
+        "followers_url": "https://api.github.com/users/web-flow/followers",
+        "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+        "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+        "organizations_url": "https://api.github.com/users/web-flow/orgs",
+        "repos_url": "https://api.github.com/users/web-flow/repos",
+        "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/web-flow/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "6eb33581502ea7e0091ffd074ad105a878d19920",
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/6eb33581502ea7e0091ffd074ad105a878d19920",
+          "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/6eb33581502ea7e0091ffd074ad105a878d19920"
+        }
+      ]
+    },
+    "status": "ahead",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "2e263e5b92d98de95c48435beb57830123ba23e9",
+        "node_id": "C_kwDOVjQrQdoAKDJlMjYzZTViOTJkOThkZTk1YzQ4NDM1YmViNTc4MzAxMjNiYTIzZTk",
+        "commit": {
+          "author": {
+            "name": "Juan G Carmona",
+            "email": "juan@jgcarmona.com",
+            "date": "2026-11-08T08:29:23Z"
+          },
+          "committer": {
+            "name": "GitHub",
+            "email": "noreply@github.com",
+            "date": "2026-11-08T08:29:23Z"
+          },
+          "message": "docs: advance the controlled review admission revision (#70)\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>",
+          "tree": {
+            "sha": "888bc7e0b9f47a9ab4e569f56766c321bcce7acd",
+            "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/trees/888bc7e0b9f47a9ab4e569f56766c321bcce7acd"
+          },
+          "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/git/commits/2e263e5b92d98de95c48435beb57830123ba23e9",
+          "comment_count": 0,
+          "verification": {
+            "verified": true,
+            "reason": "valid",
+            "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJq8DLjCRC1aQ7uu5UhlAAAFRYQADioRlG7NCLZN1JUO/19JVWI\nNMWjQB5LkDUnGKOAI9Yv0jLwpPeQIbqTBOkyzssDYAKZW6zL3Ez0EB25bTaD3as5\n1Ge2JNY33ghJim+qYCQsfSnYMDM9J3axiq0ULRZ46ieTcx/owHCJErbHaJpROC33\n6xXjqyMVO13iYMCxZ93XX3j1Rs2TVu5UHy6/Hx5psWdle/wA9ObIPT9UUnRv2EZc\nj9Vs2C06fYcgk1kiEPRX2S79VovBW00QNFHCDy/7FbH4p9VA39r86o0YBUcsuYT0\n9DX9489h5bIS5wnoaNVF+bgz+fJESUz8GnPjvmsX5bZ5p4WXQJAKzfLjmMXKb+XK\nbOl1yXYeLlHe1SSulj7IC/vYriQyT9tE/n3PhUNE++jtSt2pZxmYO/qiBqEOGzUO\nVZOoeCVZNF4Y3tUSk82p7cYqy+n40rEV16hhG3CGkdygoKHnD1LReeTFe23WBHUf\ndU0WnNGRkVhrzPIdZuiA/TwWTXdNjseT2RBJUnf9GkJR7pQie+X0mbCOEqQ4aLZH\nti7RCDpyBeiz+tNffzGuTfFia0kIpJECIgg9XvdTKGMWvGJDoUf5voTJAgDVmah0\nDE6/kfYmj9X+2aq+/11DfxHz7zTifiu9o1XdZD66QSfCWNI9tjpJaujyrOOQu497\nRaku//QyGNtJaYNTblOJ\n=h0eb\n-----END PGP SIGNATURE-----\n",
+            "payload": "tree 888bc7e0b9f47a9ab4e569f56766c321bcce7acd\nparent c3c750384493f53e7a5ba0cf7d2fb4f55249ac60\nauthor Juan G Carmona <juan@jgcarmona.com> 1794126563 +0000\ncommitter GitHub <noreply@github.com> 1794126563 +0000\n\ndocs: advance the controlled review admission revision (#70)\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>",
+            "verified_at": "2026-11-08T08:29:24Z"
+          }
+        },
+        "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/2e263e5b92d98de95c48435beb57830123ba23e9",
+        "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/2e263e5b92d98de95c48435beb57830123ba23e9",
+        "comments_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/2e263e5b92d98de95c48435beb57830123ba23e9/comments",
+        "author": {
+          "login": "juangcarmona",
+          "id": 2834629,
+          "node_id": "MDQ6VXNlcjI4MzQ2Mjk=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2834629?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/juangcarmona",
+          "html_url": "https://github.com/juangcarmona",
+          "followers_url": "https://api.github.com/users/juangcarmona/followers",
+          "following_url": "https://api.github.com/users/juangcarmona/following{/other_user}",
+          "gists_url": "https://api.github.com/users/juangcarmona/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/juangcarmona/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/juangcarmona/subscriptions",
+          "organizations_url": "https://api.github.com/users/juangcarmona/orgs",
+          "repos_url": "https://api.github.com/users/juangcarmona/repos",
+          "events_url": "https://api.github.com/users/juangcarmona/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/juangcarmona/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "web-flow",
+          "id": 19864447,
+          "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+          "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/web-flow",
+          "html_url": "https://github.com/web-flow",
+          "followers_url": "https://api.github.com/users/web-flow/followers",
+          "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+          "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+          "organizations_url": "https://api.github.com/users/web-flow/orgs",
+          "repos_url": "https://api.github.com/users/web-flow/repos",
+          "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/web-flow/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+            "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/commits/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60",
+            "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/commit/c3c750384493f53e7a5ba0cf7d2fb4f55249ac60"
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "sha": "e52d47fe995c0a432605b1e1c9922d3918a509a5",
+        "filename": "docs/acceptance/567-late-default.md",
+        "status": "added",
+        "additions": 3,
+        "deletions": 0,
+        "changes": 3,
+        "blob_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/blob/2e263e5b92d98de95c48435beb57830123ba23e9/docs%2Facceptance%2F567-late-default.md",
+        "raw_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/raw/2e263e5b92d98de95c48435beb57830123ba23e9/docs%2Facceptance%2F567-late-default.md",
+        "contents_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/contents/docs%2Facceptance%2F567-late-default.md?ref=2e263e5b92d98de95c48435beb57830123ba23e9",
+        "patch": "@@ -0,0 +1,3 @@\n+# Controlled completion recovery\n+\n+This temporary marker advances the default branch after issue 68's original review request is prepared. It changes no product behavior, policy or approval. The unchanged admission guard must reject the old workflow revision, and native completion must wake the existing bounded reconciler."
+      }
+    ]
+  },
+  "gateComment": 6719258350,
+  "gate": "Controlled transport pause; admission and original request remain unchanged.\n\n<!-- lighthouse-567-gate:{\"schemaVersion\":1,\"fixture\":567,\"issue\":68,\"phase\":\"before-post\",\"run\":\"42462918640\",\"ci\":\"42462865784\",\"requestComment\":\"6719258053\",\"routerRevision\":\"c3c750384493f53e7a5ba0cf7d2fb4f55249ac60\",\"preparedRevision\":\"c3c750384493f53e7a5ba0cf7d2fb4f55249ac60\",\"started\":\"2026-11-08T08:27:02.845Z\",\"transportDeadlineStartsAfterGate\":true} -->"
+}

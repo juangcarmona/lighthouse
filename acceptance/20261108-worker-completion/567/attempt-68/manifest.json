@@ -1,0 +1,961 @@
+{
+  "schemaVersion": 1,
+  "phase": "attempt-68",
+  "repository": "juangcarmona/lighthouse",
+  "prefix": "acceptance/20261108-worker-completion/567/attempt-68",
+  "observedAt": "2026-11-08T09:05:09.715307+00:00",
+  "files": [
+    {
+      "path": "observations/68-wakeup-not-accepted.json",
+      "bytes": 379413,
+      "sha256": "e370871a2865036db62f9c46fdb3c1b047dfd977bb6eee3fd76b612b5929992b",
+      "origin": {
+        "type": "operator-observation",
+        "local": "68-wakeup-not-accepted.json"
+      }
+    },
+    {
+      "path": "observations/68-documentation-advance.json",
+      "bytes": 20279,
+      "sha256": "2a205a7decdacc0d399b262a2f1e50fe23ec9f9964163ae5f4101ac02256d10f",
+      "origin": {
+        "type": "operator-observation",
+        "local": "68-documentation-advance.json"
+      }
+    },
+    {
+      "path": "observations/pre-rejection-authority.json",
+      "bytes": 10661,
+      "sha256": "b368ac968c96a8cc7ffd398e66b5b315f814afe6d7804b99732cbe3941ba0b40",
+      "origin": {
+        "type": "operator-observation",
+        "local": "pre-rejection-authority.json"
+      }
+    },
+    {
+      "path": "observations/68-candidate-proof.json",
+      "bytes": 715,
+      "sha256": "494cded4347924dd5faf2b912b870a19c92c9a15041bdea9daefd38210a3fe7d",
+      "origin": {
+        "type": "operator-observation",
+        "local": "68-candidate-proof.json"
+      }
+    },
+    {
+      "path": "observations/consumer-adoption-proof.json",
+      "bytes": 1530,
+      "sha256": "8ae5ea67b3d0bfdd09c5b1231f97f5043d28e160d5f30591841eb395bf3f9799",
+      "origin": {
+        "type": "operator-observation",
+        "local": "consumer-adoption-proof.json"
+      }
+    },
+    {
+      "path": "observations/consumer-variables-before.json",
+      "bytes": 556,
+      "sha256": "e6787c3822f06c42061a69b506813fa8cb278d84f7dce670867de842937fc137",
+      "origin": {
+        "type": "operator-observation",
+        "local": "consumer-variables-before.json"
+      }
+    },
+    {
+      "path": "observations/source-qualification.json",
+      "bytes": 4990,
+      "sha256": "afd79bd80a76bbdd9411fa76479b6e0e3e0e6fff87593370ae893f956cbd77b1",
+      "origin": {
+        "type": "operator-observation",
+        "local": "source-qualification.json"
+      }
+    },
+    {
+      "path": "observations/registry/verification.json",
+      "bytes": 660,
+      "sha256": "a28aba606b00e14bb8d835557fef54ef5c8f03cb5ba2c8bfd2adc4f7f641f3b8",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/verification.json"
+      }
+    },
+    {
+      "path": "observations/transport-gate-check.log",
+      "bytes": 513,
+      "sha256": "226c8c915db268a2f8a949f880dafb971f2aace510320a1e372c979c4ff280c2",
+      "origin": {
+        "type": "operator-observation",
+        "local": "transport-gate-check.log"
+      }
+    },
+    {
+      "path": "native/68-implementation-run.json",
+      "bytes": 16864,
+      "sha256": "86fb80f352042bbdbbfd5163401714d43e26d58b9df57e33f24dd8a953528f3b",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-implementation-run.json"
+      }
+    },
+    {
+      "path": "native/68-implementation-jobs.json",
+      "bytes": 40499,
+      "sha256": "f83cb87b96668e60b79c5329f1f8a544e27fd9d08369d2764e1fae67c2008011",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-implementation-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-implementation-artifacts.json",
+      "bytes": 12863,
+      "sha256": "521e55e2ee7faec9e317b04c974eb5525d8ef6f124dfa30e205537ddeb865738",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-implementation-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-publication-68-1/published-pr.json",
+      "bytes": 63,
+      "sha256": "6913dfc2ded8f6c2692be7b0bcfd4738f7076b83cf32e67a63859a8d0d570d31",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13610366910,
+        "name": "lighthouse-implement-publication-68-1",
+        "serviceDigest": "sha256:e134237fdf61ed570b9caf7ba9f772ceb1013c72226f8c59e84937eec856fa34",
+        "member": "published-pr.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-publication-68-1/ci-requests.json",
+      "bytes": 896,
+      "sha256": "e93744f454f14596d5f98bb8b252d717776dd4438145394b7e23064b20374af7",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13610366910,
+        "name": "lighthouse-implement-publication-68-1",
+        "serviceDigest": "sha256:e134237fdf61ed570b9caf7ba9f772ceb1013c72226f8c59e84937eec856fa34",
+        "member": "ci-requests.json"
+      }
+    },
+    {
+      "path": "native/68-implementation-lighthouse-implement-publication-68-1.zip",
+      "bytes": 809,
+      "sha256": "e134237fdf61ed570b9caf7ba9f772ceb1013c72226f8c59e84937eec856fa34",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13610366910,
+        "name": "lighthouse-implement-publication-68-1",
+        "serviceDigest": "sha256:e134237fdf61ed570b9caf7ba9f772ceb1013c72226f8c59e84937eec856fa34",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-command-evidence-68-1/implementation-evidence.json",
+      "bytes": 18035,
+      "sha256": "28143946c76683dab8a7ed80231f57b9a3b578ddfe24a2181f816de41aa267a8",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609898409,
+        "name": "lighthouse-command-evidence-68-1",
+        "serviceDigest": "sha256:5cc9189cdc9ed8b3ae2ecb71573d3b335cde8fd818da4ba58beca1480b9669cd",
+        "member": "implementation-evidence.json"
+      }
+    },
+    {
+      "path": "native/68-implementation-lighthouse-command-evidence-68-1.zip",
+      "bytes": 4620,
+      "sha256": "5cc9189cdc9ed8b3ae2ecb71573d3b335cde8fd818da4ba58beca1480b9669cd",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609898409,
+        "name": "lighthouse-command-evidence-68-1",
+        "serviceDigest": "sha256:5cc9189cdc9ed8b3ae2ecb71573d3b335cde8fd818da4ba58beca1480b9669cd",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-input-68-1/admission.json",
+      "bytes": 216,
+      "sha256": "834f1c8982b99c66a97b676e7a78fc4b20349f8a63cedff7a9516a2b21a841ef",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609711631,
+        "name": "lighthouse-implement-input-68-1",
+        "serviceDigest": "sha256:af95a60ed770fa2bf1fa4e8497d49fd05127562b282fc196da3514d95ffb1542",
+        "member": "admission.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-input-68-1/request.json",
+      "bytes": 2174,
+      "sha256": "17364e2149929517b9b83e1a58a17ccb281d3b101bfec95d04e1e9490732c226",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609711631,
+        "name": "lighthouse-implement-input-68-1",
+        "serviceDigest": "sha256:af95a60ed770fa2bf1fa4e8497d49fd05127562b282fc196da3514d95ffb1542",
+        "member": "request.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-result-68-1/envelope.json",
+      "bytes": 5180,
+      "sha256": "a3b854758c1e4bf79b6215549e50455304daa218c6b7d889527690e9e9f85737",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609579896,
+        "name": "lighthouse-implement-result-68-1",
+        "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+        "member": "envelope.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-result-68-1/runtime.json",
+      "bytes": 4791,
+      "sha256": "65634912c541e388a26344b3ac174afe09ffb6df61d71931587922ef6cb451d5",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609579896,
+        "name": "lighthouse-implement-result-68-1",
+        "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+        "member": "runtime.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-result-68-1/changes.json",
+      "bytes": 37800,
+      "sha256": "5d789b143741e6dbe4c6ce7a21bd0a7cc9de2d06cd909784236ae4bec32a8e9f",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609579896,
+        "name": "lighthouse-implement-result-68-1",
+        "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+        "member": "changes.json"
+      }
+    },
+    {
+      "path": "native/68-implementation/lighthouse-implement-result-68-1/checks.json",
+      "bytes": 15558,
+      "sha256": "62bab9419c8f7a635e0f4373fd4259e26ff950c1c6ec5e281d856c89de635fdc",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609579896,
+        "name": "lighthouse-implement-result-68-1",
+        "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+        "member": "checks.json"
+      }
+    },
+    {
+      "path": "native/68-implementation-lighthouse-implement-result-68-1.zip",
+      "bytes": 17556,
+      "sha256": "9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42461472983,
+        "artifact": 13609579896,
+        "name": "lighthouse-implement-result-68-1",
+        "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-integration-run.json",
+      "bytes": 16864,
+      "sha256": "0636b0993945fa1e11553d8adc28eb11e5ac6a0289ecf82a3649761e9a8827a8",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-integration-run.json"
+      }
+    },
+    {
+      "path": "native/68-integration-jobs.json",
+      "bytes": 40022,
+      "sha256": "fca2d0ea674a6a9a007c7d11bfb5ab90693d4d250579e25515e75f500cc5bb42",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-integration-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-integration-artifacts.json",
+      "bytes": 10976,
+      "sha256": "c9e15d7d858848d91e067b73a20edfaf23be58b7451b48df13e6f5ba1b13a3dc",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-integration-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-input-68-1/admission.json",
+      "bytes": 229,
+      "sha256": "781c81aaac0e9cbb9d283f528c066cbdc56eb791eee6d067b29cba9f33561324",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610417113,
+        "name": "lighthouse-input-68-1",
+        "serviceDigest": "sha256:253b5119900617f8f4163b692126a44bf6d4f5cc2a1ec23b8b70beb88ce50294",
+        "member": "admission.json"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-input-68-1/request.json",
+      "bytes": 94606,
+      "sha256": "fb48d460433f3ee79ff88e28d2ca842e05055bf55a0cd78bcb77189e9cda3a03",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610417113,
+        "name": "lighthouse-input-68-1",
+        "serviceDigest": "sha256:253b5119900617f8f4163b692126a44bf6d4f5cc2a1ec23b8b70beb88ce50294",
+        "member": "request.json"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-result-68-1/envelope.json",
+      "bytes": 16501,
+      "sha256": "cd048f33f09973e9bc5015885523c0744dc6bb7be914bf81208babf042bef24b",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610258342,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:7d24fd6e58b75b1594716a13f87f647298eddb851e688ed14e7748663d89bbe0",
+        "member": "envelope.json"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-result-68-1/runtime.json",
+      "bytes": 3812,
+      "sha256": "563bf78afd7857d5282c80bf03c39da21d1132a5783756ab10ab1aa1abe30ce5",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610258342,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:7d24fd6e58b75b1594716a13f87f647298eddb851e688ed14e7748663d89bbe0",
+        "member": "runtime.json"
+      }
+    },
+    {
+      "path": "native/68-integration-lighthouse-result-68-1.zip",
+      "bytes": 7828,
+      "sha256": "7d24fd6e58b75b1594716a13f87f647298eddb851e688ed14e7748663d89bbe0",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610258342,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:7d24fd6e58b75b1594716a13f87f647298eddb851e688ed14e7748663d89bbe0",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-completion-68-1/integration-receipt.json",
+      "bytes": 1339,
+      "sha256": "188271ccb8e69daea21c3fc1f88baa27235fdf894b8976ab95698e79812dc779",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610039064,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:fc129e5e343b9eff7593ae5b812be910dc30551a939adbb86646fd962323c85e",
+        "member": "integration-receipt.json"
+      }
+    },
+    {
+      "path": "native/68-integration/lighthouse-completion-68-1/publication-receipt.json",
+      "bytes": 350,
+      "sha256": "781f03d00418806a876ab1544a6a00033e72e42e2fc3d7f27402e7e397941343",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610039064,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:fc129e5e343b9eff7593ae5b812be910dc30551a939adbb86646fd962323c85e",
+        "member": "publication-receipt.json"
+      }
+    },
+    {
+      "path": "native/68-integration-lighthouse-completion-68-1.zip",
+      "bytes": 1172,
+      "sha256": "fc129e5e343b9eff7593ae5b812be910dc30551a939adbb86646fd962323c85e",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462431099,
+        "artifact": 13610039064,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:fc129e5e343b9eff7593ae5b812be910dc30551a939adbb86646fd962323c85e",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-original-ci-run.json",
+      "bytes": 16828,
+      "sha256": "81ecae71716c4d5ffb4b32ecf616c18224f78e6556de1513aa82e4f9780ca7de",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-ci-run.json"
+      }
+    },
+    {
+      "path": "native/68-original-ci-jobs.json",
+      "bytes": 7166,
+      "sha256": "80dde7cb3f3e4a1e8c88121b592eb90286f574ce4df1dd64f17f53090dff12f4",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-ci-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-original-ci-artifacts.json",
+      "bytes": 42,
+      "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-ci-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-original-router-run.json",
+      "bytes": 16878,
+      "sha256": "7b7cb4de256a9dafdc0dc06dd6a063a55531b13dc955cb67eef3b34f89a66258",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-router-run.json"
+      }
+    },
+    {
+      "path": "native/68-original-router-jobs.json",
+      "bytes": 12741,
+      "sha256": "da6131aaed75a8674ee1b2ada506e01b11a6060936fb627b6718d0fd77d40c5b",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-router-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-original-router-artifacts.json",
+      "bytes": 3790,
+      "sha256": "058c35b6905124d06974efa4e6d49ae10c240ab1cc0ba4eddabd60f10086e6bb",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-original-router-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-original-router/lighthouse-dispatch-8279d6d0688b50e679987e61c0e816f3c1aec2d0d39d30d5db91ed60fd47595e/dispatch.json",
+      "bytes": 9384,
+      "sha256": "787428449108970c14afbbc8d6568de535e3ddd04fa9265458e61bb43c0a581a",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462918640,
+        "artifact": 13610139087,
+        "name": "lighthouse-dispatch-8279d6d0688b50e679987e61c0e816f3c1aec2d0d39d30d5db91ed60fd47595e",
+        "serviceDigest": "sha256:252ada6e02001e116689140bf17214cbcc6d94614deb63201e04b63d6c9585d8",
+        "member": "dispatch.json"
+      }
+    },
+    {
+      "path": "native/68-original-router-lighthouse-dispatch-8279d6d0688b50e679987e61c0e816f3c1aec2d0d39d30d5db91ed60fd47595e.zip",
+      "bytes": 2274,
+      "sha256": "252ada6e02001e116689140bf17214cbcc6d94614deb63201e04b63d6c9585d8",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42462918640,
+        "artifact": 13610139087,
+        "name": "lighthouse-dispatch-8279d6d0688b50e679987e61c0e816f3c1aec2d0d39d30d5db91ed60fd47595e",
+        "serviceDigest": "sha256:252ada6e02001e116689140bf17214cbcc6d94614deb63201e04b63d6c9585d8",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-rejected-review-run.json",
+      "bytes": 16862,
+      "sha256": "0b511abf36fb7378cbae910280528257f317ecac4b070b8ae18dd23b71755776",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-rejected-review-run.json"
+      }
+    },
+    {
+      "path": "native/68-rejected-review-jobs.json",
+      "bytes": 10964,
+      "sha256": "b575be505e825729bfd2b6c11a04cb9700a6c64347f01ce565a8253c2753a546",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-rejected-review-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-rejected-review-artifacts.json",
+      "bytes": 966,
+      "sha256": "0c33849af7af66d6b13bbfefa843705ce8947b252601e5251bd616b1243ab876",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-rejected-review-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-run.json",
+      "bytes": 16604,
+      "sha256": "5ad0f441150cd04478d6da9f41bdb861b63b8747b44628e378e37239be8996ad",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-maintenance-run.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-jobs.json",
+      "bytes": 15902,
+      "sha256": "3b56ff958a43a149422942b450d77a1116a3a7480680cc264c4eca0f097f3bb6",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-maintenance-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-artifacts.json",
+      "bytes": 5617,
+      "sha256": "faf10cd0d0dde522bb58ff8867878e062b22c91e5d7848545dac077c45a2c592",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-maintenance-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance/lighthouse-maintenance-68/observations.json",
+      "bytes": 926,
+      "sha256": "fbf7fc369cb5c55ee3bf9bd1db26144f6b77a0487bb57e79d95e9062fee89ea7",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13611555104,
+        "name": "lighthouse-maintenance-68",
+        "serviceDigest": "sha256:0f34de7ac64e1cafaf827742de23d5d48127dcaf42788f02d7b290fa1fb62ebb",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-lighthouse-maintenance-68.zip",
+      "bytes": 602,
+      "sha256": "0f34de7ac64e1cafaf827742de23d5d48127dcaf42788f02d7b290fa1fb62ebb",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13611555104,
+        "name": "lighthouse-maintenance-68",
+        "serviceDigest": "sha256:0f34de7ac64e1cafaf827742de23d5d48127dcaf42788f02d7b290fa1fb62ebb",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance/lighthouse-dispatch-5fa606c04a3cb7e70bff4b712b8e0bd0730a781c90d59aced7951a3c2b6ac241/dispatch.json",
+      "bytes": 9578,
+      "sha256": "343fbca27c738566da006d927eec1e245eb671b7364bbb82dcec19ee4fbda7fb",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13611096571,
+        "name": "lighthouse-dispatch-5fa606c04a3cb7e70bff4b712b8e0bd0730a781c90d59aced7951a3c2b6ac241",
+        "serviceDigest": "sha256:0a638cb64fa4d37a150a8e26228ba71ee4dd9ac4b9c67f16b23a501c1ebf946d",
+        "member": "dispatch.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-lighthouse-dispatch-5fa606c04a3cb7e70bff4b712b8e0bd0730a781c90d59aced7951a3c2b6ac241.zip",
+      "bytes": 2397,
+      "sha256": "0a638cb64fa4d37a150a8e26228ba71ee4dd9ac4b9c67f16b23a501c1ebf946d",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13611096571,
+        "name": "lighthouse-dispatch-5fa606c04a3cb7e70bff4b712b8e0bd0730a781c90d59aced7951a3c2b6ac241",
+        "serviceDigest": "sha256:0a638cb64fa4d37a150a8e26228ba71ee4dd9ac4b9c67f16b23a501c1ebf946d",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance/lighthouse-observation-68/observations.json",
+      "bytes": 968,
+      "sha256": "7929efd0fd3e4a1d235228a4f3d9d690614d11c566a7ed944f5b43ba9226cd81",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13609929692,
+        "name": "lighthouse-observation-68",
+        "serviceDigest": "sha256:350392898fbd3864ab0faf7e1e2d007d230819e206999783138882e3dc043389",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-maintenance-lighthouse-observation-68.zip",
+      "bytes": 622,
+      "sha256": "350392898fbd3864ab0faf7e1e2d007d230819e206999783138882e3dc043389",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464164905,
+        "artifact": 13609929692,
+        "name": "lighthouse-observation-68",
+        "serviceDigest": "sha256:350392898fbd3864ab0faf7e1e2d007d230819e206999783138882e3dc043389",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review-run.json",
+      "bytes": 16862,
+      "sha256": "afb6ee4d1f318fb547f2b54bbadc91f7865d0907c48c9b8dd203370371609834",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-review-run.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review-jobs.json",
+      "bytes": 39707,
+      "sha256": "8aea3794cf517f476feb36c5181988ad6907009b677e9325a902a4894eae7cfa",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-review-jobs.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review-artifacts.json",
+      "bytes": 10976,
+      "sha256": "be8d7f40ceaf3fbab9c04f3dd5cf4bdfe32f88ff63f0547482122f278b2ca668",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "68-manual-cleanup-review-artifacts.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-result-68-1/envelope.json",
+      "bytes": 20903,
+      "sha256": "bcfaeb83bb5ad2350be11ab979efaa580af0f20ccf34cee4161eb65f77c1c8a0",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610911731,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:2592eac85b6db70406706993d37aa158822e467980e45f236ee3dd8954009be1",
+        "member": "envelope.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-result-68-1/runtime.json",
+      "bytes": 3812,
+      "sha256": "28723a2861a6c345208db7cecdc2d55024ed35da56dddd57e4f2d879dd5e6ca7",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610911731,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:2592eac85b6db70406706993d37aa158822e467980e45f236ee3dd8954009be1",
+        "member": "runtime.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review-lighthouse-result-68-1.zip",
+      "bytes": 8896,
+      "sha256": "2592eac85b6db70406706993d37aa158822e467980e45f236ee3dd8954009be1",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610911731,
+        "name": "lighthouse-result-68-1",
+        "serviceDigest": "sha256:2592eac85b6db70406706993d37aa158822e467980e45f236ee3dd8954009be1",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-input-68-1/admission.json",
+      "bytes": 229,
+      "sha256": "5129593aff9b9dfa1b81faea06ad7140b07e59b40f2ddb72f62089a8c2850f8f",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610713786,
+        "name": "lighthouse-input-68-1",
+        "serviceDigest": "sha256:c3649c549745aecf90a48f5cba88d7d17c01d02908804d850c955090a013e31c",
+        "member": "admission.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-input-68-1/request.json",
+      "bytes": 119085,
+      "sha256": "8ee07c742c22ba13b155cafa444a4e2e26e6627e4638a7916f2b7c30f0f69caf",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610713786,
+        "name": "lighthouse-input-68-1",
+        "serviceDigest": "sha256:c3649c549745aecf90a48f5cba88d7d17c01d02908804d850c955090a013e31c",
+        "member": "request.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-completion-68-1/integration-receipt.json",
+      "bytes": 1290,
+      "sha256": "50745b56fb685aee5450a024a4684b1b63d5b4bb209b52964d7bf0c42ffea99b",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610194880,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:eb8cd8ed5a9aa425a6aefbd893b17f6a439d1b4fa546efbe60bdeea9bccd2b8c",
+        "member": "integration-receipt.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review/lighthouse-completion-68-1/publication-receipt.json",
+      "bytes": 350,
+      "sha256": "5ae2ec0dcf2eba8548a2dcf8072f3a7733cf397d5b6355057320def3903da326",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610194880,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:eb8cd8ed5a9aa425a6aefbd893b17f6a439d1b4fa546efbe60bdeea9bccd2b8c",
+        "member": "publication-receipt.json"
+      }
+    },
+    {
+      "path": "native/68-manual-cleanup-review-lighthouse-completion-68-1.zip",
+      "bytes": 1140,
+      "sha256": "eb8cd8ed5a9aa425a6aefbd893b17f6a439d1b4fa546efbe60bdeea9bccd2b8c",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42464220288,
+        "artifact": 13610194880,
+        "name": "lighthouse-completion-68-1",
+        "serviceDigest": "sha256:eb8cd8ed5a9aa425a6aefbd893b17f6a439d1b4fa546efbe60bdeea9bccd2b8c",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 1859,
+      "sha256": "37820a6e3313e2fc89db1d567c54f156c126bfa8bf307e8b64273ee9b7f52141",
+      "origin": {
+        "type": "acceptance-scope"
+      }
+    }
+  ],
+  "originalArtifacts": [
+    {
+      "type": "github-actions-original",
+      "run": 42461472983,
+      "artifact": 13610366910,
+      "name": "lighthouse-implement-publication-68-1",
+      "serviceDigest": "sha256:e134237fdf61ed570b9caf7ba9f772ceb1013c72226f8c59e84937eec856fa34",
+      "selected": [
+        "published-pr.json",
+        "ci-requests.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42461472983,
+      "artifact": 13609898409,
+      "name": "lighthouse-command-evidence-68-1",
+      "serviceDigest": "sha256:5cc9189cdc9ed8b3ae2ecb71573d3b335cde8fd818da4ba58beca1480b9669cd",
+      "selected": [
+        "implementation-evidence.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42461472983,
+      "artifact": 13609711631,
+      "name": "lighthouse-implement-input-68-1",
+      "serviceDigest": "sha256:af95a60ed770fa2bf1fa4e8497d49fd05127562b282fc196da3514d95ffb1542",
+      "selected": [
+        "admission.json",
+        "request.json"
+      ],
+      "omitted": [
+        "context.json",
+        "issue.json",
+        "reserved"
+      ],
+      "originalZipRetained": false
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42461472983,
+      "artifact": 13609579896,
+      "name": "lighthouse-implement-result-68-1",
+      "serviceDigest": "sha256:9902932d86e013abf802c1ffe5ed78cae678094967dd70d1cf9d2e46113bc2a0",
+      "selected": [
+        "envelope.json",
+        "runtime.json",
+        "changes.json",
+        "checks.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42462431099,
+      "artifact": 13610417113,
+      "name": "lighthouse-input-68-1",
+      "serviceDigest": "sha256:253b5119900617f8f4163b692126a44bf6d4f5cc2a1ec23b8b70beb88ce50294",
+      "selected": [
+        "admission.json",
+        "request.json"
+      ],
+      "omitted": [
+        "issue.json",
+        "context.json",
+        "reserved"
+      ],
+      "originalZipRetained": false
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42462431099,
+      "artifact": 13610258342,
+      "name": "lighthouse-result-68-1",
+      "serviceDigest": "sha256:7d24fd6e58b75b1594716a13f87f647298eddb851e688ed14e7748663d89bbe0",
+      "selected": [
+        "envelope.json",
+        "runtime.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42462431099,
+      "artifact": 13610039064,
+      "name": "lighthouse-completion-68-1",
+      "serviceDigest": "sha256:fc129e5e343b9eff7593ae5b812be910dc30551a939adbb86646fd962323c85e",
+      "selected": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42462918640,
+      "artifact": 13610731745,
+      "name": "lighthouse-567-transport-42462918640",
+      "serviceDigest": "sha256:31258ebd76505e590f432ef1b2b2317f9da58b37a154bf301e04763ce8735798",
+      "selected": [],
+      "omitted": [
+        "567-transport.jsonl"
+      ],
+      "originalZipRetained": false
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42462918640,
+      "artifact": 13610139087,
+      "name": "lighthouse-dispatch-8279d6d0688b50e679987e61c0e816f3c1aec2d0d39d30d5db91ed60fd47595e",
+      "serviceDigest": "sha256:252ada6e02001e116689140bf17214cbcc6d94614deb63201e04b63d6c9585d8",
+      "selected": [
+        "dispatch.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464164905,
+      "artifact": 13611555104,
+      "name": "lighthouse-maintenance-68",
+      "serviceDigest": "sha256:0f34de7ac64e1cafaf827742de23d5d48127dcaf42788f02d7b290fa1fb62ebb",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464164905,
+      "artifact": 13611096571,
+      "name": "lighthouse-dispatch-5fa606c04a3cb7e70bff4b712b8e0bd0730a781c90d59aced7951a3c2b6ac241",
+      "serviceDigest": "sha256:0a638cb64fa4d37a150a8e26228ba71ee4dd9ac4b9c67f16b23a501c1ebf946d",
+      "selected": [
+        "dispatch.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464164905,
+      "artifact": 13609929692,
+      "name": "lighthouse-observation-68",
+      "serviceDigest": "sha256:350392898fbd3864ab0faf7e1e2d007d230819e206999783138882e3dc043389",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464220288,
+      "artifact": 13610911731,
+      "name": "lighthouse-result-68-1",
+      "serviceDigest": "sha256:2592eac85b6db70406706993d37aa158822e467980e45f236ee3dd8954009be1",
+      "selected": [
+        "envelope.json",
+        "runtime.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464220288,
+      "artifact": 13610713786,
+      "name": "lighthouse-input-68-1",
+      "serviceDigest": "sha256:c3649c549745aecf90a48f5cba88d7d17c01d02908804d850c955090a013e31c",
+      "selected": [
+        "admission.json",
+        "request.json"
+      ],
+      "omitted": [
+        "context.json",
+        "issue.json",
+        "reserved"
+      ],
+      "originalZipRetained": false
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42464220288,
+      "artifact": 13610194880,
+      "name": "lighthouse-completion-68-1",
+      "serviceDigest": "sha256:eb8cd8ed5a9aa425a6aefbd893b17f6a439d1b4fa546efbe60bdeea9bccd2b8c",
+      "selected": [
+        "integration-receipt.json",
+        "publication-receipt.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    }
+  ],
+  "excluded": "No raw model context, prompts, sessions, credentials or diagnostic event streams."
+}

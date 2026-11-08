@@ -1,0 +1,9 @@
+# Completion wake qualification: attempt 68 was not accepted
+
+Published SDLC 0.22.1 and CLI 0.12.62 delivered one characterization test through consumer PR 71. The original 32 tests, production code, product model and prior policies were preserved. The owner marked the checked PR ready and approved its exact head before native integration. This was a supervised technical seed.
+
+A held transport forwarded the unchanged original bot review request after one documentation-only default-branch advance. Worker 42463268441 failed preparation at 2026-11-08 08:31:25 UTC; activation, agent and publisher were skipped. No maintenance execution appeared from completion during the recorded ten-minute window, despite the installed subscription and enabled scoped recovery. This records missing observed delivery without assigning a provider-side cause. It does not qualify automatic recovery.
+
+After that failed observation, owner maintenance 42464164905 requested the existing single linked retry for diagnostic cleanup. Review 42464220288 correctly returned blocked because its host context did not expose the original rejection and automatic-wake qualification. Neither that owner signal nor the blocked review counts as acceptance. The source correction is PR 578; the fresh qualification uses issue 72. The original merge, CI and product apply were not replayed by this cleanup.
+
+The isolated fixture also mis-indented the previously inactive issue-54 engine selector in optional unattended.yml. Its parse failure did not execute that composition. The final adoption must restore the prior selector at global env and validate every installed YAML. This operator fixture defect is separate from the missing completion wake. Original selected artifact members retain their service ZIP digests; raw model context, prompts, sessions and credentials are excluded.
