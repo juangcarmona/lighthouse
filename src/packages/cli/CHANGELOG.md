@@ -1,5 +1,18 @@
 # @juangcarmona/lighthouse
 
+## 0.12.61
+
+### Patch Changes
+
+- 63d8d00: # Typed issue controls
+
+  Add an opt-in authenticated issue-control SDK and source router entry for stage-only refinement/proposal, ordinary user comments and explicit continuation. Retain durable intent/result correlation, native grant propagation and reconciliation without automatic resend after uncertainty.
+
+- Updated dependencies [ee3f2e5]
+- Updated dependencies [36ab015]
+- Updated dependencies [63d8d00]
+  - @juangcarmona/lighthouse-sdlc@0.22.0
+
 ## 0.12.60
 
 ### Patch Changes

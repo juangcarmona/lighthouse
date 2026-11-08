@@ -1,5 +1,23 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.0
+
+### Minor Changes
+
+- 63d8d00: # Typed issue controls
+
+  Add an opt-in authenticated issue-control SDK and source router entry for stage-only refinement/proposal, ordinary user comments and explicit continuation. Retain durable intent/result correlation, native grant propagation and reconciliation without automatic resend after uncertainty.
+
+### Patch Changes
+
+- ee3f2e5: # Preserve the authorized delivery deadline
+
+  Use the original authorized delivery deadline while waiting for candidate CI and mergeability, preserving cancellation, owner holds and exact-head validation.
+
+- 36ab015: # Preserve opaque source-link checked-tree identity
+
+  Bind unchanged authenticated source-link metadata into checked candidate Git trees and retained command evidence without following or materializing links in the executable filesystem. Independently reconstruct the metadata from the admitted commit when accepting evidence; retain exact published-tree equality.
+
 ## 0.21.11
 
 ### Patch Changes
