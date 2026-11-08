@@ -20,6 +20,34 @@ async function rejectedJobs(api, { dispatch, run }) {
   return jobs;
 }
 
+export async function signalAdmissionRejection(api, repository, owner, env, event, readArtifact = readActionsJson) {
+  if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true' || env.LIGHTHOUSE_RECOVERY_ENABLED !== 'true' || env.LIGHTHOUSE_STAGE !== 'review' || env.GITHUB_RUN_ATTEMPT !== '1') return null;
+  const scope = (await import('./worker-recovery.mjs')).recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
+  const issue = Number(env.LIGHTHOUSE_ISSUE);
+  if (!Number.isSafeInteger(issue) || issue < 1 || String(issue) !== env.LIGHTHOUSE_ISSUE || scope && !scope.includes(issue)) return null;
+  const run = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/1`);
+  if (!run || String(run.id) !== env.GITHUB_RUN_ID || run.run_attempt !== 1) return null;
+  let rejection;
+  try { await loadDispatch(api, repository, owner, issue, event.inputs?.['dispatch-request'], run, readArtifact); }
+  catch (error) { rejection = error.rejection; }
+  const request = rejection?.dispatch.request, receipt = rejection?.dispatch.receipt;
+  if (!request || request.recovery || request.stage !== 'review' || request.worker || request.handoff || request.completionRecovery || receipt.status !== 'failed' || receipt.admissionRejected?.code !== 'workflow-revision-rejected' || String(receipt.workerRunId) !== String(run.id) || !isBotContinuation(request.event, rejection.parent.event, rejection.parent.actor?.login, rejection.parent.triggering_actor?.login)) return null;
+  // This only wakes observation; the receiver waits for terminal native jobs before considering a retry.
+  await api('actions/workflows/lighthouse-worker-maintenance.yml/dispatches', 'POST', { ref: request.ref, inputs: { issue: String(issue), completed_run: String(run.id) } });
+  return { schemaVersion: 1, issue, runId: String(run.id), attempt: 1, commentId: rejection.dispatch.commentId, status: 'requested' };
+}
+
+export async function completedAdmission(api, repository, owner, runId, readArtifact = readActionsJson, wait = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  if (typeof runId !== 'string' || !/^[1-9][0-9]*$/.test(runId ?? '') || !Number.isSafeInteger(Number(runId))) throw Error('Completed run must be a canonical positive integer');
+  for (let attempt = 0; attempt <= 24; attempt++) {
+    const run = await api(`actions/runs/${runId}/attempts/1`);
+    if (!run || String(run.id) !== runId || run.path !== stagePath('review') || run.repository?.full_name !== repository || run.run_attempt !== 1) return null;
+    if (run.status === 'completed') return admissionCompletion(api, repository, owner, { action: 'completed', workflow_run: run }, readArtifact);
+    if (attempt < 24) await wait(5000);
+  }
+  throw Error('Native review completion is not confirmed; inspect the execution before recovery');
+}
+
 // Completion is a wake-up only: admission still rechecks the original grant and current authority.
 export async function admissionCompletion(api, repository, owner, event, readArtifact = readActionsJson) {
   const signal = event.workflow_run;
@@ -64,7 +92,7 @@ export async function observeAdmissionRejection(api, repository, owner, rejectio
     const current = await inspectCompletion(api, repository, owner, request.completionAuthorization, 'review');
     assertChecks(current);
     if (current.currentRevision !== revision || !same(current.binding, request.admissionBinding) || digest(JSON.stringify(current.pullRequest.reviews)) !== request.admissionReviewsDigest || (await postMergeRuns(api, current, current.merge)).some(check => check.status !== 'passed')) return confirmed();
-    return result('retryable', 'workflow-revision-rejected', 'Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.', { confirmed: true, jobs, revision, workflowRevision: revision });
+    return result('retryable', 'workflow-revision-rejected', 'Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.', { confirmed: true, jobs, revision, workflowRevision: revision, rebase: { from: request.sourceRevision, to: revision, documentationOnly: true, commits: comparison.total_commits, files: comparison.files.length, url: `https://github.com/${repository}/compare/${request.sourceRevision}...${revision}` } });
   } catch { return confirmed(); }
 }
 
@@ -98,9 +126,11 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   try { await loadDispatch(api, repository, owner, request.issue, comment.id, run, readArtifact); }
   catch (error) { rejection = error.rejection; }
   if (!rejection || rejection.dispatch.request.recovery || retry.rootId !== rejection.dispatch.request.id || run.path !== stagePath('review')) throw Error('Invalid original admission rejection');
-  if (!await rejectedJobs(api, rejection)) throw Error('Original admission rejection effects are unconfirmed');
+  const jobs = await rejectedJobs(api, rejection);
+  if (!jobs) throw Error('Original admission rejection effects are unconfirmed');
   let wake;
-  if (parent.event === 'workflow_run') {
+  if (parent.event === 'workflow_run' || retry.wake !== undefined) {
+    if (!['workflow_run', 'workflow_dispatch'].includes(parent.event)) throw Error('Invalid admission completion wake');
     wake = { issue: request.issue, runId: String(run.id), attempt: run.run_attempt, revision: run.head_sha, commentId: Number(comment.id) };
     if (![owner, 'github-actions[bot]'].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login || !same(retry.wake, wake)) throw Error('Invalid admission completion wake');
   } else if (retry.wake !== undefined) throw Error('Unexpected admission completion wake');
@@ -114,4 +144,6 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   const observation = await observeAdmissionRejection(api, repository, owner, rejection, issue, originalComments);
   observation.wake = wake;
   if (observation.state !== 'retryable' || !same(request, admissionRetryRequest(observation, parent))) throw Error('Before-admission recovery authority changed');
+  const original = rejection.dispatch.request;
+  return { schemaVersion: 1, kind: 'before-admission', original: { requestId: original.id, commentId: rejection.dispatch.commentId, workerRunId: String(run.id), expectedRevision: original.workflowRevision, observedRevision: run.head_sha }, jobs: jobs.map(job => ({ name: job.name, conclusion: job.conclusion, completedAt: job.completed_at ?? null })), rebase: observation.rebase, reused: { ci: original.eventRunId, merge: original.admissionBinding.base, head: original.completionAuthorization.head, pr: original.completionAuthorization.pr }, currentAuthorityUnchanged: true, retryLimit: 1, replayScope: 'Review only; merge, original CI and product apply are not authorized for replay.' };
 }

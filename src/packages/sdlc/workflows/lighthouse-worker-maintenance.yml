@@ -7,6 +7,10 @@ on:
     - cron: '17,47 * * * *'
   workflow_dispatch:
     inputs:
+      completed_run:
+        description: Native review run from the trusted preparation callback
+        required: false
+        type: string
       issue:
         description: Optional source issue; empty scans open owner issues
         required: false
@@ -19,7 +23,7 @@ env:
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
   scan:
-    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || (github.event_name == 'workflow_run' && github.actor == 'github-actions[bot]'))
+    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || ((github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.completed_run != '')) && github.actor == 'github-actions[bot]'))
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -41,7 +45,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node src/packages/sdlc/src/worker-maintenance.mjs scan
       - name: Preserve completion wake
-        if: always() && github.event_name == 'workflow_run'
+        if: always() && (github.event_name == 'workflow_run' || inputs.completed_run != '')
         uses: actions/upload-artifact@v7
         with:
           name: lighthouse-admission-wake-${{ github.run_attempt }}

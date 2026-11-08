@@ -70,3 +70,17 @@ test('review context distinguishes scheduled recovery from a manual replay with 
   event.completionRecovery.ci = 41;
   await assert.rejects(readCompletionContinuation(api, 'owner/repo', event), /continuation/);
 });
+
+test('review context observes the authenticated admission wake actor without treating dispatch as a manual replay', async () => {
+  const { readCompletionContinuation } = await import('../packages/sdlc/src/completion-events.mjs');
+  for (const [eventName, actor, wake, automatic] of [['workflow_dispatch','github-actions[bot]',true,true],['workflow_run','github-actions[bot]',true,true],['schedule','owner',false,true],['workflow_dispatch','owner',false,false]]) {
+    const ci={id:40,run_attempt:1,repository:{full_name:'owner/repo'},path:'.github/workflows/ci.yml',event:'workflow_dispatch',status:'completed',conclusion:'success',head_sha:head};
+    const parent={...ci,id:50,path:'.github/workflows/lighthouse-worker-maintenance.yml',event:eventName,head_branch:'main',actor:{login:actor},triggering_actor:{login:actor},status:'in_progress',conclusion:null};
+    const request={routerRunId:'50',routerAttempt:1,routerEventName:eventName,routerRevision:head,routerRef:'main',recovery:{kind:'before-admission',...(wake?{wake:{runId:'30',issue:7,attempt:1}}:{})}};
+    const api=async path=>structuredClone(path==='actions/runs/40'?ci:parent);
+    const observation=await readCompletionContinuation(api,'owner/repo',{workflow_run:{id:40,head_sha:head}},request);
+    assert.equal(observation.ci.id,40);assert.equal(observation.recovery.id,50);assert.equal(observation.recovery.event,eventName);assert.equal(observation.recovery.actor,actor);assert.equal(observation.recovery.automatic,automatic);assert.equal(observation.recovery.status,'in_progress');assert.equal(observation.recovery.conclusion,null);
+    parent.head_sha='f'.repeat(40);
+    await assert.rejects(readCompletionContinuation(api,'owner/repo',{workflow_run:{id:40,head_sha:head}},request),/admission recovery observation/);
+  }
+});

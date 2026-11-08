@@ -33,7 +33,7 @@ export async function authorizeCompletionEvent(api, repository, event, env, stag
 }
 
 // Observation only: authorizeCompletionEvent has already verified the retained grant and recovery artifact.
-export async function readCompletionContinuation(api, repository, event) {
+export async function readCompletionContinuation(api, repository, event, request = null, admission = null) {
   if (!event?.workflow_run) return null;
   const read = async (id, sha = null) => {
     if (!Number.isSafeInteger(id) || id < 1) throw Error('Invalid completion continuation');
@@ -47,6 +47,11 @@ export async function readCompletionContinuation(api, repository, event) {
     if (event.completionRecovery.ci !== ci.id) throw Error('Completion continuation CI changed');
     recovery = await read(event.completionRecovery.maintenance);
     if (recovery.path !== '.github/workflows/lighthouse-worker-maintenance.yml' || recovery.attempt !== event.completionRecovery.attempt || !['schedule', 'workflow_dispatch'].includes(recovery.event)) throw Error('Completion continuation recovery changed');
+  }
+  if (!recovery && request?.recovery?.kind === 'before-admission') {
+    const run = await api(`actions/runs/${request.routerRunId}/attempts/${request.routerAttempt}`);
+    if (String(run.id) !== request.routerRunId || run.run_attempt !== request.routerAttempt || run.repository?.full_name !== repository || run.path !== '.github/workflows/lighthouse-worker-maintenance.yml' || run.event !== request.routerEventName || run.head_sha !== request.routerRevision || run.head_branch !== request.routerRef) throw Error('Authenticated admission recovery observation changed');
+    recovery = { id: run.id, attempt: run.run_attempt, path: run.path, event: run.event, head: run.head_sha, status: run.status, conclusion: run.conclusion, actor: run.actor?.login, triggeringActor: run.triggering_actor?.login, admission, automatic: ['schedule', 'workflow_run'].includes(run.event) || run.actor?.login === 'github-actions[bot]' && run.triggering_actor?.login === run.actor.login && !!request.recovery.wake, wake: request.recovery.wake ?? null, url: `https://github.com/${repository}/actions/runs/${run.id}` };
   }
   return { ci, recovery };
 }

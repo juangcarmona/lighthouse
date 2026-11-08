@@ -27,6 +27,7 @@ runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
 env:
+  LIGHTHOUSE_MAINTENANCE_ENABLED: ${{ vars.LIGHTHOUSE_MAINTENANCE_ENABLED }}
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
   LIGHTHOUSE_STAGE: review
@@ -106,7 +107,7 @@ jobs:
     name: Verify accepted commit, checks and evidence protection
     runs-on: ubuntu-24.04
     permissions:
-      actions: read
+      actions: write
       checks: read
       contents: read
       pull-requests: read
@@ -141,6 +142,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_PREPARE_FAILED: "true"
         run: node src/packages/sdlc/src/completion-actions.mjs cleanup
+      - name: Wake authenticated admission recovery
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/completion-actions.mjs signal-admission-rejection
+      - name: Preserve admission wake receipt
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-admission-signal-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/admission-signal.json
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Observe workflow telemetry
         if: always()
         continue-on-error: true
