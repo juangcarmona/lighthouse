@@ -3,19 +3,27 @@ import { legacyControlComment } from './issue-comment-intent.mjs';
 import { taskDigest } from './digests.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 
+export function pendingStage(comments) {
+  const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
+  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-handoff:v1 -->|<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body)) return null;
+  const changeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
+  const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
+  const stage = declared?.[1] ?? (changeName || /^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
+  return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report, ...(changeName ? { worker: 'product-change', changeName } : {}) } : null;
+}
+
+export function pendingReplyState(issue) {
+  const labels = issue?.labels?.map(label => label.name) ?? [];
+  return issue?.state === 'open' && !issue.pull_request && labels.some(label => ['needs-info', 'waiting-review'].includes(label))
+    && !labels.some(label => ['human-working', 'agent-working'].includes(label));
+}
+
 export function pendingReply(event, comments) {
   if (!legacyControlComment(event.comment)) return null;
-  const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
-  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-handoff:v1 -->|<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
-  const productChangeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
-  const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
-  if (productChangeName) {
-    const stage = declared?.[1] ?? 'propose';
-    if (!['triage', 'refine', 'propose', 'implement'].includes(stage)) return null;
-    return { stage, worker: 'product-change', productFeedback: { action: 'answer', changeName: productChangeName, text: event.comment.body, sourceCommentId: event.comment.id }, report };
-  }
-  const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
-  return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
+  const pending = pendingStage(comments);
+  if (!pending || !event.comment?.body?.trim() || event.comment.created_at <= pending.report.created_at) return null;
+  const { changeName, ...result } = pending;
+  return changeName ? { ...result, productFeedback: { action: 'answer', changeName, text: event.comment.body, sourceCommentId: event.comment.id } } : result;
 }
 
 export const issueCommandLabels = capabilityCatalog.capabilities.find(c => c.id === 'labels').configuration.labels.filter(l => l.role === 'command').map(l => l.name);
@@ -28,7 +36,7 @@ export function routeIssue(event, actor, owner, eventName, comments = []) {
   if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
   if (eventName === 'issues' && event.action === 'unlabeled' && event.label?.name === 'future' && labels.includes('implement')) return { run: true, stage: 'implement', issue: event.issue.number, reason: 'Owner resumed implementation' };
   if (eventName === 'issues' && event.action === 'labeled' && issueCommandLabels.includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
-  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
+  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && pendingReplyState(event.issue)) {
     const pending = pendingReply(event, comments);
     if (pending) return { run: true, ...pending, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
   }
