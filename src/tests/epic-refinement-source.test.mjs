@@ -32,6 +32,8 @@ globalThis.fetch = async (url, options) => {
   let value;
   if (!path) value = { default_branch: 'main' };
   else if (path === 'commits/main') value = { sha: '${main}' };
+  else if (path === 'git/commits/${accepted}') value = { sha: '${accepted}', tree: { sha: '${accepted}' } };
+  else if (path === 'git/trees/${accepted}?recursive=1') value = { truncated: false, tree: [] };
   else if (path === 'issues/18') value = s.issue;
   else if (path.startsWith('issues/18/comments?')) value = [{ id: 10, user: s.issue.user, body: '<!-- lighthouse-stage:triage:passed -->' }];
   else if (path === 'issues/18/labels' && options.method === 'POST') { s.issue.labels.push(...JSON.parse(options.body).labels.map(name => ({ name }))); value = s.issue.labels; }

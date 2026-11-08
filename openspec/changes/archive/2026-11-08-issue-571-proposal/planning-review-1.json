@@ -1,0 +1,47 @@
+{
+  "head": "e726399e06a2402009faa851b043d132982b08c6",
+  "verdict": "request-changes",
+  "findings": [
+    {
+      "dimension": "trusted source/link provenance",
+      "severity": "blocking",
+      "evidence": "The design says entries come from the admitted revision and that committedSource authenticates checkout link metadata, but does not specify how the new request field is produced from that same authenticated inventory or how the evidence reader proves its revision/path/mode/SHA entries correspond to the admitted commit. The reader currently reconstructs commandEvidenceBinding from artifact data and reads the published commit, but does not independently check source-link entries against source revision metadata. Specify and test that provenance path; do not trust an artifact/request-provided descriptor by itself."
+    }
+  ],
+  "dimensions": {
+    "root cause and bounded scope": {
+      "verdict": "accept",
+      "evidence": "proposal.md accurately traces omission of tracked links from committedSource's executable source map to the checked-versus-published tree mismatch and retains exact publication tree equality. Scope is limited to host metadata propagation, candidate tree identity, and evidence; release/adopter/native qualification remain distinct."
+    },
+    "trusted source/link provenance": {
+      "verdict": "request-changes",
+      "evidence": "design.md requires sorted path/mode/SHA metadata from the admitted revision and identifies committedSource/sourceFiles as authentication, but leaves the binding between this new request field, that authenticated inventory, and independent evidence-reader validation underspecified. Establish an explicit source-host-only construction and reader-side correspondence check tied to the exact admitted revision."
+    },
+    "metadata-only Git index construction without target bytes/filesystem symlinks": {
+      "verdict": "accept",
+      "evidence": "design.md proposes an isolated temporary index based on candidate HEAD, insertion of only absent 120000 entries and `write-tree --missing-ok`; it explicitly keeps the original index, HEAD and filesystem unchanged, does not materialize links or include target bytes, and rejects collisions/unsupported entries. The source-links tests already show committed links are authenticated and omitted without following targets."
+    },
+    "command-evidence and caller propagation": {
+      "verdict": "accept",
+      "evidence": "The design identifies the required propagation points: normal native preparation, unattended requests, schema-2 command binding, retained evidence and current evidence reconstruction. This aligns with runImplementationChecks in implementation-runtime.mjs, commandEvidenceBinding/implementationEvidenceBundle/readImplementationEvidence in implementation-evidence.mjs, and unattended execution's request serialization. The existing candidateTree/publication tree comparisons must remain intact."
+    },
+    "fail-closed denial and no-link compatibility": {
+      "verdict": "accept",
+      "evidence": "The proposal requires rejection of malformed/mismatched metadata and collisions, forbids model mutation or weakening, and explicitly preserves the existing request/evidence shape and HEAD-tree behavior when there are no links. These boundaries are also covered in the spec's changed-metadata and no-links scenarios."
+    },
+    "meaningful RED/GREEN and rollback plan": {
+      "verdict": "accept",
+      "evidence": "design.md calls for an isolated tracked ignored-link fixture demonstrating the pre-fix tree mismatch and corrected exact tree match, with no workspace symlink and unchanged index/HEAD; it also lists forged-input/evidence, both callers, regressions and full verification. Rollback is scoped to restoring the workflow source/package/configuration together, and failed deliveries remain negative evidence."
+    },
+    "ownership/security/qualification limits": {
+      "verdict": "accept",
+      "evidence": "The design keeps metadata host-owned, excludes target bytes/model authority, and preserves the publisher equality guard. It explicitly treats release, adopter installation and native delivery as later gates; there is no adopter lifecycle file to modify. This is consistent with the stated owner authorization for necessary source dependency fixes and routine integration after real checks."
+    }
+  },
+  "kind": "plan",
+  "issue": 571,
+  "requestedModel": "openai/gpt-6-luna",
+  "requestedEffort": "high",
+  "reviewedAt": "2026-11-08T03:52:30.782Z",
+  "sourceReadOnly": true
+}

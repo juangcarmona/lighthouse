@@ -71,6 +71,8 @@ flowchart LR
 
 The router and worker use separate concurrency groups; workers serialize by issue. Preparation supplies the issue snapshot, source revision, tool scope and runtime limits. The agent runs in a temporary container and cannot grant itself publication or merge authority. Publication rechecks current intent, owner answers, source and reservation before writing. Cleanup attempts to release the reservation after recording the outcome. A cleanup failure is reported; maintenance rechecks ownership before releasing an abandoned reservation.
 
+The host preserves authenticated source-link Git metadata separately from the executable filesystem. Checked-tree identity combines the regular candidate with those unchanged opaque entries; command-evidence readers reconstruct them from the admitted commit before accepting publication. The [source-link tree implementation](../../../src/packages/sdlc/src/source-link-tree.mjs) enforces this boundary.
+
 Receipts distinguish requested, admitted, waiting, completed and failed executions. An Actions success can contain a blocked assessment. Duplicate events reuse authenticated requests or candidates; an unconfirmed dispatch or uncertain publication needs reconciliation before a retry. Human-working stops new admission and requests termination of active work. See [handoffs and recovery](../../../src/packages/sdlc/handoffs.md).
 
 ## Typed client admission

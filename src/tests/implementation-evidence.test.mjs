@@ -47,11 +47,13 @@ async function fixture({ unattended = false, route = 'ff', product = false } = {
       return { sha: '9'.repeat(40), encoding: 'base64', size: Buffer.byteLength(content), content: Buffer.from(content).toString('base64') };
     }
     if (path.startsWith('contents/.github/workflows/')) return { sha: path.endsWith('ref=' + state.native.head_sha) ? 'e'.repeat(40) : state.workflow };
+    if (/^git\/commits\/[a-f0-9]{40}$/.test(path) && path !== 'git/commits/' + head) { const ref = path.slice(12); return { sha: ref, tree: { sha: ref } }; }
     if (path === 'git/commits/' + head) return { tree: { sha: state.tree } };
     if (/^git\/trees\/[a-f0-9]{40}\?recursive=1$/.test(path)) return { truncated: state.incompleteTree ?? false, tree: [
-      ...(state.productRoot ? [{ path: '.product/config.yaml', sha: '9'.repeat(40) }] : []),
-      { path: (state.productRoot ?? 'docs/product') + '/model', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateModelTree ?? 'f'.repeat(40) : state.modelTree ?? 'f'.repeat(40) },
-      { path: 'openspec/config.yaml', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateSharedPolicy ?? 'f'.repeat(40) : state.sharedPolicy ?? 'f'.repeat(40) },
+      ...(state.sourceLinks ?? []).map(entry => ({ ...entry, type: 'blob' })),
+      ...(state.productRoot ? [{ type: 'blob', mode: '100644', path: '.product/config.yaml', sha: '9'.repeat(40) }] : []),
+      { type: 'tree', mode: '040000', path: (state.productRoot ?? 'docs/product') + '/model', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateModelTree ?? 'f'.repeat(40) : state.modelTree ?? 'f'.repeat(40) },
+      { type: 'blob', mode: '100644', path: 'openspec/config.yaml', sha: path.includes(revision) ? 'f'.repeat(40) : path.includes(head) ? state.candidateSharedPolicy ?? 'f'.repeat(40) : state.sharedPolicy ?? 'f'.repeat(40) },
     ] };
     throw Error('Unexpected API request: ' + path);
   };
@@ -272,7 +274,7 @@ test('an installed tarball accepts authenticated matching inputs, rejects a spoo
       'pulls/23', 'issues/18/comments?per_page=100&page=1', 'actions/runs/700', 'actions/runs/700/attempts/1',
       `contents/.github/workflows/lighthouse-sdlc-implement.lock.yml?ref=${revision}`,
       `contents/.lighthouse/implement.json?ref=${revision}`, `contents/.lighthouse/environment.json?ref=${revision}`,
-      `git/commits/${head}`,
+      `git/commits/${head}`, `git/commits/${revision}`, `git/trees/${revision}?recursive=1`,
     ];
     const responses = Object.fromEntries(await Promise.all(paths.map(async path => [path, await f.api(path)])));
     await writeFile(join(temp, 'inputs.json'), JSON.stringify({ responses, artifact: f.state.artifact, completion: f.completion, now: f.options.now }));
@@ -326,4 +328,22 @@ test('synchronized receipts authenticate immutable base inputs and exact commit 
     const result = await readImplementationEvidence(api, f.completion, f.options);
     assert.equal(result.status, scenario === 'passed' ? 'passed' : 'unavailable', scenario + ': ' + result.reason);
   }
+});
+
+test('source-link command evidence reconstructs admitted entries and rejects a self-consistent forged artifact', async () => {
+  const { sourceLinksDigest } = await import('../packages/sdlc/src/source-link-tree.mjs');
+  const f = await fixture();
+  f.state.sourceLinks = [{ path: '.claude/skills/example', mode: '120000', sha: '1'.repeat(40) }];
+  const sourceLinks = { schemaVersion: 1, sourceRevision: revision, entries: copy(f.state.sourceLinks) };
+  const request = { ...f.request, sourceLinks };
+  const receipt = { ...f.receipt, binding: commandEvidenceBinding(request) };
+  f.state.artifact = implementationEvidenceBundle(request, receipt, f.changes, { pr: 23, head, tree });
+  assert.equal((await readImplementationEvidence(f.api, f.completion, f.options)).status, 'passed');
+  f.state.artifact.sourceLinks.entries[0].sha = '2'.repeat(40);
+  const forged = sourceLinksDigest(f.state.artifact.sourceLinks, revision);
+  f.state.artifact.binding.sourceLinks = forged; f.state.artifact.receipt.binding.sourceLinks = forged;
+  const denied = await readImplementationEvidence(f.api, f.completion, f.options);
+  assert.equal(denied.status, 'unavailable'); assert.match(denied.reason, /source-link provenance/);
+  delete f.state.artifact.sourceLinks; delete f.state.artifact.binding.sourceLinks; delete f.state.artifact.receipt.binding.sourceLinks;
+  assert.match((await readImplementationEvidence(f.api, f.completion, f.options)).reason, /source-link provenance/);
 });
