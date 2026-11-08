@@ -1,28 +1,31 @@
 {
   "workItem": 119,
   "kind": "internal SDK/provenance implementation checkpoint, not public export or integration acceptance",
-  "recordedAt": "2026-11-08T02:41:50.159690+00:00",
+  "recordedAt": "2026-11-08T03:04:04.204831+00:00",
   "implemented": [
     "Read-only source policy/admission facts with injected repository-bound transport and verified actor/permission binding",
     "Strict typed intent and installed-contract parsing, stable namespace and source/input/policy bindings",
     "Current source wait and reservation revocation reuse in legacy routing and continuation eligibility",
     "Internal observe/prepare/submit/reconcile SDK with explicit actual-user transport, stable intent keys, caller atomic claim before POST, restart/lost-response reconciliation and fixed non-disclosing failures",
     "Authenticated source claim and immutable terminal-result artifact readers; edited bot comments cannot invent terminal acceptance and a lost final comment update can reconcile from its artifact",
-    "Canonical existing reply-input checks, transport-order-independent original-grant digest, source question timestamps and readable unsupported questions with disabled continuation"
+    "Canonical existing reply-input checks, transport-order-independent original-grant digest, source question timestamps and readable unsupported questions with disabled continuation",
+    "Case/spacing variants of reserved typed metadata fail closed across legacy command/review/decision parsers",
+    "Reconciliation distinguishes observed equivalent work from a source-owned durable alias, and recovers original source-confirmed continuation before inspecting a later edited/deleted response",
+    "Source invocation revision and originating response comment identity are recorded separately from the requested stale grant, allowing explicit source rejection without fresh work"
   ],
   "verification": {
     "fullRepository": {
       "status": "passed",
       "command": "npm run verify",
-      "tests": 1106,
-      "passed": 1096,
+      "tests": 1120,
+      "passed": 1110,
       "skipped": 10,
       "failed": 0,
       "publicSiteFiles": 136
     },
     "focused": {
-      "tests": 70,
-      "passed": 70,
+      "tests": 73,
+      "passed": 73,
       "failed": 0
     },
     "negativeControls": [
@@ -30,7 +33,10 @@
       "Object key ordering changed the original-grant digest",
       "Ordinary input after the question incorrectly revoked the canonical reply grant",
       "Edited bot comment invented terminal outcome without source result artifact",
-      "Multiple comments for one intent were returned as unknown instead of conflict"
+      "Multiple comments for one intent were returned as unknown instead of conflict",
+      "Uppercase or missing-space metadata entered legacy parsers",
+      "Equivalent old work incorrectly acknowledged a new key without a durable source alias",
+      "A deleted/edited current response hid an already authenticated original continuation outcome"
     ]
   },
   "remaining": [
@@ -40,5 +46,6 @@
     "Actual authorized provider and packed-consumer qualification",
     "Independent final review, protected publication, consumer adoption and integration"
   ],
-  "authority": "No new source job, installed contract or public SDK export is advertised or enabled by this checkpoint. Consumers cannot adopt it as a released control API."
+  "authority": "No new source job, installed contract or public SDK export is advertised or enabled by this checkpoint. Consumers cannot adopt it as a released control API.",
+  "qualifiedBase": "Merged source ee3f2e591b8ad78db87bc28e6242f1d0f0b7b34c without rewriting the work branch; full verification repeated."
 }

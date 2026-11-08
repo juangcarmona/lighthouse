@@ -21,16 +21,16 @@ export function controlResultArtifact(run, attempt) {
   controlRequestArtifact(run, attempt);
   return `lighthouse-issue-control-result-${run}-${attempt}`;
 }
-export function createControlRequest(intent, sourceRevision, routerRunId, routerAttempt) {
+export function createControlRequest(intent, sourceRevision, routerRunId, routerAttempt, { commentId = null } = {}) {
   validateIssueIntent(intent);
   controlRequestArtifact(routerRunId, routerAttempt);
   if (!/^[a-f0-9]{40}$/.test(sourceRevision ?? '') || !['refine', 'propose', 'continue'].includes(intent.action)
-      || intent.binding && intent.binding.sourceRevision !== sourceRevision) throw Error('Unsupported source control request');
-  return { version: 1, intent, sourceRevision, routerRunId, routerAttempt };
+      || (intent.action === 'continue' ? !positive(commentId) : commentId !== null)) throw Error('Unsupported source control request');
+  return { version: 1, intent, sourceRevision, routerRunId, routerAttempt, commentId };
 }
 function validateRequest(request) {
-  if (!exact(request, ['version', 'intent', 'sourceRevision', 'routerRunId', 'routerAttempt']) || request.version !== 1
-      || canonicalIssueIntent(createControlRequest(request.intent, request.sourceRevision, request.routerRunId, request.routerAttempt)) !== canonicalIssueIntent(request))
+  if (!exact(request, ['version', 'intent', 'sourceRevision', 'routerRunId', 'routerAttempt', 'commentId']) || request.version !== 1
+      || canonicalIssueIntent(createControlRequest(request.intent, request.sourceRevision, request.routerRunId, request.routerAttempt, { commentId: request.commentId })) !== canonicalIssueIntent(request))
     throw Error('Malformed source control request');
   return request;
 }

@@ -12,7 +12,7 @@ const report = { id: 80, created_at: '2026-01-01T12:00:00Z', user: { login: 'git
 const event = body => ({ action: 'created', issue, comment: { id: 81, user, body, created_at: '2026-01-01T12:01:00Z' } });
 
 test('typed ordinary or malformed client input never answers a legacy pending stage', () => {
-  for (const body of [text('Continue'), '<!-- lighthouse-issue-control:unknown -->\nContinue']) {
+  for (const body of [text('Continue'), '<!-- lighthouse-issue-control:unknown -->\nContinue', text('Continue').replace('<!-- lighthouse-issue-control:', '<!-- LIGHTHOUSE-ISSUE-CONTROL:'), text('Continue').replace('<!-- lighthouse-issue-control:', '<!--lighthouse-issue-control:')]) {
     assert.equal(pendingReply(event(body), [report]), null);
     assert.equal(routeIssue(event(body), 'owner', 'owner', 'issue_comment', [report]).run, false);
   }

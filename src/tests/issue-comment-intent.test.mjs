@@ -18,7 +18,7 @@ test('ordinary typed source text preserves commands and whitespace as data, with
 
 test('edited text, wrong actor, bot and malformed or unknown metadata cannot reach legacy controls', () => {
   const body = encoded('/approve');
-  for (const value of [body.replace('/approve', '/implement'), body.replace(':v1:', ':v2:'), body + '\n', body.replace(/ -->$/, ''), '<!-- lighthouse-issue-control:broken -->\n/implement', '<!-- lighthouse-issue-control -->\n/approve']) {
+  for (const value of [body.replace('/approve', '/implement'), body.replace(':v1:', ':v2:'), body.replace('<!-- lighthouse-issue-control:', '<!-- LIGHTHOUSE-ISSUE-CONTROL:'), body.replace('<!-- lighthouse-issue-control:', '<!--lighthouse-issue-control:'), body.replace('<!-- lighthouse-issue-control:', '<!--  lighthouse-issue-control:'), body + '\n', body.replace(/ -->$/, ''), '<!-- lighthouse-issue-control:broken -->\n/implement', '<!-- lighthouse-issue-control -->\n/approve']) {
     assert.equal(parseIssueComment(comment(value)).kind, 'invalid'); assert.equal(legacyControlComment(comment(value)), false);
   }
   assert.equal(parseIssueComment({ ...comment(body), user: { id: 72, type: 'User' } }).kind, 'invalid');

@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { createIssueControl } from '../packages/sdlc/src/issue-control.mjs';
 import { createIssueControlManifest } from '../packages/sdlc/src/issue-control-contract.mjs';
 import { createControlRequest, createControlResult, controlResultBody } from '../packages/sdlc/src/issue-control-ledger.mjs';
-import { issueIntentKey, issueIntentDigest, issueIntentEffect } from '../packages/sdlc/src/issue-control-intent.mjs';
+import { createIssueIntent, issueIntentKey, issueIntentDigest, issueIntentEffect } from '../packages/sdlc/src/issue-control-intent.mjs';
 
 const id = '12345678-1234-4234-8234-123456789abc';
 const router = '# lighthouse-issue-control:v1\non:\n  workflow_dispatch:\n    inputs:\n      client_request:\n        type: string\nenv:\n  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose\n  LIGHTHOUSE_AUTO_IMPLEMENT: true\n  LIGHTHOUSE_COMPLETION_ENABLED: true\n  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false\n';
@@ -45,7 +45,7 @@ function fixture() {
       if (path.startsWith('contents/.github/workflows/')) return file(router);
       if (path.startsWith('actions/variables/')) return { name: path.split('/').at(-1), value: path.endsWith('AUTOMATION_ENABLED') && state.automation ? 'true' : 'false' };
       if (path === 'actions/runs/44/attempts/1') return { id: 44, run_attempt: 1, repository: { full_name: 'owner/repo' },
-        path: '.github/workflows/lighthouse-sdlc-router.yml', head_sha: 'a'.repeat(40), actor: owner, triggering_actor: owner, event: 'workflow_dispatch' };
+        path: '.github/workflows/lighthouse-sdlc-router.yml', head_sha: 'a'.repeat(40), actor: owner, triggering_actor: owner, event: state.controlEvent ?? 'workflow_dispatch' };
       throw Error('Unexpected transport path ' + path);
     } };
   const claim = async ({ key, payloadDigest, intent }) => {
@@ -54,7 +54,8 @@ function fixture() {
     state.journal.set(key, { payloadDigest, intent }); return { state: 'claimed' };
   };
   const acknowledge = prepared => {
-    state.controlRequest = createControlRequest(prepared.intent, 'a'.repeat(40), 44, 1);
+    state.controlRequest = createControlRequest(prepared.intent, 'a'.repeat(40), 44, 1, prepared.intent.action === 'continue' ? { commentId: 501 } : {});
+    state.controlEvent = prepared.intent.action === 'continue' ? 'issue_comment' : 'workflow_dispatch';
     state.controlResult = createControlResult(state.controlRequest, { status: 'admitted', dispatchCommentId: 91 });
     state.comments.push({ id: 90, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: 'https://api.github.com/repos/owner/repo/issues/7',
       body: controlResultBody(createControlResult(state.controlRequest, { status: 'admitted', dispatchCommentId: 91 })) });
@@ -186,4 +187,24 @@ test('multiple comments for one persisted intent are a conflict and cannot cause
   state.comments.push({ ...state.comments[0], id: 599, html_url: 'https://github.com/owner/repo/issues/7#issuecomment-599' });
   const result = await sdk.submit(prepared, { claim });
   assert.equal(result.state, 'conflict'); assert.equal(result.reason, 'multiple-comment-effects'); assert.equal(state.posts, 1);
+});
+
+test('equivalent source work does not acknowledge a new client key before a durable alias exists', async () => {
+  const { sdk, acknowledge, state } = fixture();
+  const original = await sdk.prepare({ number: 7, action: 'refine', id }); acknowledge(original);
+  const next = await sdk.prepare({ number: 7, action: 'refine', id: '12345678-1234-4234-8234-123456789abd' });
+  const result = await sdk.reconcile(next);
+  assert.equal(result.state, 'equivalent-observed'); assert.equal(result.sourceAcknowledged, false);
+  assert.equal(result.sourceKey, original.key); assert.equal(state.posts, 0);
+});
+
+test('confirmed original continuation reconciles before an edited or deleted current response comment', async () => {
+  const { sdk, acknowledge, state } = fixture(); const base = await sdk.prepare({ number: 7, action: 'refine', id });
+  const intent = createIssueIntent({ id, action: 'continue', body: 'My original answer', facts: { repository: base.intent.repository, issue: base.intent.issue,
+    actor: { id: base.intent.actorId }, question: { commentId: 71, requestId: 'a'.repeat(64), questionDigest: 'b'.repeat(64), grantDigest: 'c'.repeat(64) } } });
+  const prepared = { version: 1, intent, key: issueIntentKey(intent), payloadDigest: issueIntentDigest(intent), effect: issueIntentEffect(intent) };
+  acknowledge(prepared); state.issue.state = 'closed';
+  const result = await sdk.reconcile(prepared);
+  assert.equal(result.state, 'source-admitted'); assert.equal(result.commentId, 501); assert.equal(result.questionResolved, false);
+  assert.equal(state.posts, 0);
 });

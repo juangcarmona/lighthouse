@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 const marker = '<!-- lighthouse-issue-control';
 const prefix = marker + ':';
+const typedNamespace = /<!--\s*lighthouse-issue-control/i;
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const positive = value => Number.isSafeInteger(value) && value > 0;
@@ -31,7 +32,7 @@ export function formatIssueComment({ body, id, actorId, intent = 'comment', ques
 export function parseIssueComment(comment) {
   const body = comment?.body;
   if (typeof body !== 'string') return { kind: 'invalid', reason: 'missing-body' };
-  if (!body.includes(marker)) return { kind: 'legacy', body };
+  if (!typedNamespace.test(body)) return { kind: 'legacy', body };
   const invalid = reason => ({ kind: 'invalid', reason });
   if (!body.isWellFormed() || Buffer.byteLength(body) > 48 * 1024) return invalid('comment-bound');
   const match = /^([\s\S]*)\n\n<!-- lighthouse-issue-control:v1:([A-Za-z0-9_-]{1,8192}) -->$/.exec(body);
@@ -50,6 +51,6 @@ export function parseIssueComment(comment) {
 }
 
 // Legacy parsers still validate their own required fields, including empty native reviews.
-export const legacyControlComment = comment => typeof comment?.body !== 'string' || !comment.body.includes(marker);
+export const legacyControlComment = comment => typeof comment?.body !== 'string' || !typedNamespace.test(comment.body);
 
 export const legacyControlBody = body => legacyControlComment({ body });

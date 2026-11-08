@@ -110,3 +110,14 @@ test('an authenticated terminal artifact reconciles a lost final comment update'
   assert.equal(found.record.outcomeSource, 'https://github.com/owner/repo/actions/runs/44/attempts/1');
   assert.equal(state.mutations, 0);
 });
+
+test('a rejection records invocation source separately from the stale requested source grant', async () => {
+  const { intent } = fixture();
+  const request = createControlRequest(intent, 'b'.repeat(40), 44, 1);
+  assert.equal(request.intent.binding.sourceRevision, 'a'.repeat(40)); assert.equal(request.sourceRevision, 'b'.repeat(40));
+  assert.equal(createControlResult(request, { status: 'rejected', reason: 'source-binding-changed' }).status, 'rejected');
+  const continuation = { ...intent, action: 'continue', scope: 'original-grant', body: 'Answer', question: { commentId: 1, requestId: 'a'.repeat(64), questionDigest: 'b'.repeat(64), grantDigest: 'c'.repeat(64) } };
+  delete continuation.binding;
+  assert.throws(() => createControlRequest(continuation, 'a'.repeat(40), 44, 1), /Unsupported/);
+  assert.equal(createControlRequest(continuation, 'a'.repeat(40), 44, 1, { commentId: 90 }).commentId, 90);
+});

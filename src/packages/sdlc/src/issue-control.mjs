@@ -75,29 +75,33 @@ export function createIssueControl({ repository, transport, readArtifact, readAu
     if (metadata.id !== intent.repository.id || metadata.owner?.id !== identity.id || metadata.owner.type !== 'User') return rejected('repository-authority-changed');
     const issue = await read(`issues/${intent.issue.number}`);
     if (issue.id !== intent.issue.id || issue.pull_request) return rejected('issue-identity-changed');
-    let published;
-    if (['comment', 'continue'].includes(intent.action)) {
-      const matches = (await issueComments(read, intent.issue.number)).filter(comment => {
-        const value = parseIssueComment(comment);
-        return value.kind === 'typed' && value.actorId === intent.actorId && value.id === intent.id;
-      });
-      if (matches.some(comment => !same(parseIssueComment(comment).question, intent.question) || parseIssueComment(comment).body !== intent.body
-          || parseIssueComment(comment).intent !== (intent.action === 'continue' ? 'continue' : 'comment'))) return { state: 'conflict', reason: 'intent-payload-changed', retry: false };
-      if (matches.length > 1) return { state: 'conflict', reason: 'multiple-comment-effects', retry: false };
-      if (!matches.length) return unknown('comment-effect-not-observed');
-      published = commentReceipt(matches[0], intent);
-      if (intent.action === 'comment') return published;
+    if (intent.action !== 'comment') {
+      const found = await findControlResult({ api: read, repository, intent, actor: identity, metadata, readArtifact });
+      if (found.state === 'conflict') return { state: 'conflict', reason: 'intent-payload-changed', retry: false };
+      if (found.state === 'equivalent') return { state: 'equivalent-observed', key: prepared.key, sourceKey: found.record.result.key,
+        source: found.record.source, sourceAcknowledged: false, questionResolved: false, retry: false };
+      if (found.state === 'recorded') {
+        const { result, source, outcomeSource, request } = found.record;
+        const states = { claimed: 'unknown', rejected: 'rejected', admitted: 'source-admitted', alias: 'source-alias' };
+        return { state: states[result.status], key: prepared.key, sourceKey: result.key, aliasKey: result.aliasKey,
+          routerRunId: result.routerRunId, routerAttempt: result.routerAttempt, dispatchCommentId: result.dispatchCommentId,
+          source, outcomeSource, reason: result.reason, sourceAcknowledged: result.status === 'admitted', questionResolved: false, retry: false,
+          ...(intent.action === 'continue' ? { commentId: request.commentId,
+            commentSource: `https://github.com/${repository}/issues/${intent.issue.number}#issuecomment-${request.commentId}` } : {}) };
+      }
+      if (intent.action !== 'continue') return unknown(found.reason);
     }
-    const found = await findControlResult({ api: read, repository, intent, actor: identity, metadata, readArtifact });
-    if (found.state === 'conflict') return { state: 'conflict', reason: 'intent-payload-changed', retry: false };
-    if (!['recorded', 'equivalent'].includes(found.state)) return published ? { ...published, sourceAcknowledged: false } : unknown(found.reason);
-    const { result, source, outcomeSource } = found.record;
-    const states = { claimed: 'unknown', rejected: 'rejected', admitted: 'source-admitted', alias: 'source-alias' };
-    return { state: states[result.status], key: prepared.key, sourceKey: result.key, aliasKey: result.aliasKey,
-      routerRunId: result.routerRunId, routerAttempt: result.routerAttempt, dispatchCommentId: result.dispatchCommentId,
-      source, outcomeSource, reason: result.reason, sourceAcknowledged: result.status === 'admitted', questionResolved: false, retry: false,
-      ...(published ? { commentId: published.commentId, commentSource: published.source } : {}) };
+    const matches = (await issueComments(read, intent.issue.number)).filter(comment => {
+      const value = parseIssueComment(comment);
+      return value.kind === 'typed' && value.actorId === intent.actorId && value.id === intent.id;
+    });
+    if (matches.some(comment => !same(parseIssueComment(comment).question, intent.question) || parseIssueComment(comment).body !== intent.body
+        || parseIssueComment(comment).intent !== (intent.action === 'continue' ? 'continue' : 'comment'))) return { state: 'conflict', reason: 'intent-payload-changed', retry: false };
+    if (matches.length > 1) return { state: 'conflict', reason: 'multiple-comment-effects', retry: false };
+    if (!matches.length) return unknown('comment-effect-not-observed');
+    return commentReceipt(matches[0], intent);
   };
+
   const reconcile = async prepared => {
     target(prepared);
     try { return await reconcileFor(prepared, await actor()); }
