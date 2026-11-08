@@ -1,3 +1,4 @@
+import { parseIssueComment } from './issue-comment-intent.mjs';
 import { loadRefinement, loadStageReport } from './proposal.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { isIssuePublicationBranch } from './publication-branch.mjs';
@@ -8,7 +9,7 @@ export class IssueAdmissionRefusal extends Error {
 }
 
 export const ownerIntentComments = (comments, owner) => comments.filter(comment => comment.user.login === owner
-  && !comment.body.includes('<!-- lighthouse-run:') && !comment.body.includes('<!-- lighthouse-actions:'));
+  && (parseIssueComment(comment).kind === 'typed' || !comment.body.includes('<!-- lighthouse-run:') && !comment.body.includes('<!-- lighthouse-actions:')));
 
 export async function collectTriageAdmission({ api, repository, owner, issue, comments, sourceRevision, readArtifact }) {
   const report = [...comments].reverse().find(comment => comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot'

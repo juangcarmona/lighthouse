@@ -47,3 +47,11 @@ test('fresh source feedback and correction threads cannot promote ordinary clien
   const delayedEvent = { issue: { number: 60, pull_request: {} }, comment: native };
   await assert.rejects(loadProposalReview(async path => path === 'pulls/60' ? pr : typed, 'owner/repo', 'owner', delayedEvent, 'issue_comment'), /Typed client text/);
 });
+
+test('typed owner body quoting source markers remains attributed input without legacy execution', async () => {
+  const { ownerIntentComments } = await import('../packages/sdlc/src/issue-admission.mjs');
+  const { formatIssueComment } = await import('../packages/sdlc/src/issue-comment-intent.mjs');
+  const comment = { id: 70, user: { login: 'owner', id: 11, type: 'User' }, body: formatIssueComment({ body: 'Quoted source data: <!-- lighthouse-actions:' + 'a'.repeat(64) + ' -->', id: '12345678-1234-4234-8234-123456789abc', actorId: 11 }) };
+  assert.deepEqual(ownerIntentComments([comment], 'owner'), [comment]);
+  assert.equal(routeIssue({ action: 'created', issue: { state: 'open', number: 7, labels: [{ name: 'needs-info' }] }, comment }, 'owner', 'owner', 'issue_comment', []).run, false);
+});

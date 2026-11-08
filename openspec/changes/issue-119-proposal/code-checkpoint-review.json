@@ -1,0 +1,48 @@
+{
+  "head": "50489f9bb424480c312afdeaa7b17e112089dc97",
+  "verdict": "accept",
+  "findings": [],
+  "dimensions": [
+    {
+      "dimension": "product authority and supported scope",
+      "verdict": "accept",
+      "evidence": "The opt-in installer enables only the source-owned client-control router job and writes a router-digest-bound capability manifest. issue-control-admission.mjs permits only refine/propose stage intents or typed comment/continuation; stage dispatch forces stage-only grants and continuation intersects the original grant with current policy. Epic and unsupported pending contexts fail closed. Legacy unmarked routes remain separately handled."
+    },
+    {
+      "dimension": "canonical eligibility and rechecks/permission boundaries",
+      "verdict": "accept",
+      "evidence": "issue-control-facts.mjs gathers canonical repository, issue, actor, source revision, policy, capability, predecessor/question and reservation facts using read-only operations; missing authority/history is unavailable or denied, not eligible. SDK submit rechecks current facts before its single effect, and source admit recollects facts under the per-issue concurrency group. SDK writes require injected transport, verified acting-user/repository capability evidence and an atomic caller claim; source Actions permissions are separately scoped."
+    },
+    {
+      "dimension": "durable key/payload/alias idempotency and source provenance including deleted comments",
+      "verdict": "accept",
+      "evidence": "issue-control-intent.mjs namespaces stable keys by repository/issue/actor/UUID and binds payload separately. issue-control-actions.mjs reconciles before freshness/admission; issue-control-ledger.mjs retains exact key and payload artifact indexes and validates run, attempt, router path, actor, issue and request/result digests. Same-key payload changes conflict; equivalent work uses a durable alias. Incomplete, expired or ambiguous history remains unknown, including when a result comment was deleted. No automatic resend follows uncertainty."
+    },
+    {
+      "dimension": "strict typed comment isolation and explicit continuation original grant",
+      "verdict": "accept",
+      "evidence": "issue-comment-intent.mjs bounds and canonicalizes typed footers, binds body digest and immutable User ID, and classifies malformed typed metadata as invalid rather than legacy. issue-entry.mjs gates legacy reply routing; ordinary typed comments return no source execution intent. Continuation binds exact current question, answer, source comment and original grant; source admission rechecks freshness/current wait, and unsupported grants are rejected. Submission, source acknowledgment, question consumption and resolution are represented separately."
+    },
+    {
+      "dimension": "native snapshot/result/publisher binding and worker correlation/question resolution",
+      "verdict": "accept",
+      "evidence": "issue-control-native.mjs validates originating router run/attempt and event against the immutable request, propagates client identity into native dispatch, and checks the worker snapshot grant. Existing dispatch receipt validation binds client key/payload to the request; issue-control-execution.mjs follows the exact receipt worker run/attempt, validates the retained client dispatch and stage report, and only marks a continuation consumed/resolved from its matching published result."
+    },
+    {
+      "dimension": "meaningful compatibility/denial/race/CLI/packed tests and observed CI",
+      "verdict": "accept",
+      "evidence": "The supplied implementation checkpoint reports focused denial, race, compatibility, parser, alias, source CLI and isolated packed-import regressions, plus npm run verify: 1,130 passed, 10 optional skips, 0 failed; 33 OpenSpec checks; 40 current architecture citations; and four selected official gh-aw 0.93.2 worker compilations. Context records that the hosted changeset-heading failure was corrected and full verification repeated; forge checks remain independent. These are supplied checkpoint results, not independently rerun here."
+    },
+    {
+      "dimension": "docs/spec/task reconciliation and explicit qualification limits",
+      "verdict": "accept",
+      "evidence": "The accepted plan/design/tasks align with the SDK, schema export, issue-control guide, installer/router and architecture entry. The guide and implementation checkpoint explicitly state packed/actual-user native qualification is not complete; task 4.3, independent final-head/forge gates, protected publication, registry verification and consumer adoption remain pending. No adopter lifecycle file is asserted as a prerequisite, and this review does not claim Done, release, or consumer adoption."
+    }
+  ],
+  "kind": "code",
+  "issue": 119,
+  "requestedModel": "openai/gpt-6-luna",
+  "requestedEffort": "high",
+  "reviewedAt": "2026-11-08T03:57:50.085Z",
+  "sourceReadOnly": true
+}
