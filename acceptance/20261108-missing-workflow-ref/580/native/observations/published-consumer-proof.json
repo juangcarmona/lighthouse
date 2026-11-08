@@ -1,0 +1,21 @@
+{
+  "state": "verified",
+  "publicInstalledSdkMatchesSourceAndNativeObservation": true,
+  "allRequestsGet": true,
+  "calls": 20,
+  "packages": [
+    {
+      "package": "@juangcarmona/lighthouse-sdlc",
+      "version": "0.22.4",
+      "integrity": "sha512-DqOU/dra60mVMpkh1lPVllssxq+9HWsngC1/YfuwSOQOPmCi6CgcvC6eluAnU5bnoI/fyirFu0iUYVn//X29xw==",
+      "filesCompared": 224
+    },
+    {
+      "package": "@juangcarmona/lighthouse",
+      "version": "0.12.65",
+      "integrity": "sha512-Kd3dvSst1EPNZ7o1CEU1Azr1/e0DEhzMnOUtM+gaxrX6fT80IHQ0+nH4BppDvU5F4DN//Jxy4quVclv/0lGvqQ==",
+      "filesCompared": 93
+    }
+  ],
+  "originalReceiptStillMatchesNativeIdentity": true
+}

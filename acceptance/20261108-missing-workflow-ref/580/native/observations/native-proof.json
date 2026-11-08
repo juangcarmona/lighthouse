@@ -1,0 +1,265 @@
+{
+  "state": "accepted",
+  "run": {
+    "id": 42497538809,
+    "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+    "event": "workflow_dispatch",
+    "run_attempt": 1,
+    "conclusion": "success",
+    "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809"
+  },
+  "source": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "originalHistoryStillAuthenticated": true,
+  "exactMissingRefBlocker": {
+    "issue": 133,
+    "worker": "review",
+    "runId": "40496296153",
+    "rootId": "19d444d50b0568e31afc03514f8a18a458c3dd3ff709dd6c887f7133f91e0be9",
+    "attempt": 0,
+    "outcome": "technical-failure",
+    "state": "blocked",
+    "code": "workflow-ref-missing",
+    "workflowRef": "codex/independent-stage-workflows",
+    "expectedWorkflowRevision": "540ee1e849b70d31edd4cbdd61e5e5d20bdae001",
+    "requestDigest": "cd4a22504fec4cfc910601901abad34e53eaa1acfe0f7ddeb8f0850767511e99",
+    "requestCommentId": 6440754608,
+    "refLookupStatus": 422,
+    "nextAction": "Maintainer: reconcile the retained execution https://github.com/juangcarmona/lighthouse/actions/runs/40496296153 and select an existing workflow ref under a fresh owner request. Historical provenance remains authenticated; never resend this request or recreate its ref automatically."
+  },
+  "bothObserveAndReconcileJobsPassed": true,
+  "otherBatchIssueObserved": 580,
+  "noSourceIssueOrRequestOrModelOrBranchChanges": true,
+  "before": {
+    "issues": {
+      "133": {
+        "state": "closed",
+        "state_reason": "completed",
+        "titleDigest": "48a79dfb661958c29a8da6bb111de9f107f95d1c120e3ea6888b11a464e51f04",
+        "bodyDigest": "f67b2cc5e0bdbb8d636d9c996e0590c77dcab037bc1911f57f2b7436bab62c27",
+        "labels": [],
+        "comments": [
+          {
+            "id": 6440179943,
+            "bodyDigest": "40833efe85da74188d41253e0961ec3e6a78127c0a97f945a8b170056ceb0840",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T10:57:56Z"
+          },
+          {
+            "id": 6440361397,
+            "bodyDigest": "9228bf3a45e6c976a7794742c3d146f22249b16c6aad1af2daefbf896f8c3e79",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:07:06Z"
+          },
+          {
+            "id": 6440372505,
+            "bodyDigest": "63ead842501a6b9e1c7ca0aeb0b0c28cf86c3820e90f4028f823dec641fbf15a",
+            "author": "juangcarmona",
+            "updated": "2026-10-27T11:07:40Z"
+          },
+          {
+            "id": 6440375981,
+            "bodyDigest": "8877f47a0ee4b1926bcc1d524e98711ee212e0fad53b91d2d6a95371775a07fc",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:07:51Z"
+          },
+          {
+            "id": 6440754608,
+            "bodyDigest": "c4bcb32058d036d62c62021aee0ad457a6b457d35f691abc319ed00b36f367b1",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:27:47Z"
+          },
+          {
+            "id": 6440829746,
+            "bodyDigest": "95dc45933f3b1a2ba6ea878af67a4fdf2fc280fdd3aff6cdcc571739ac3defd7",
+            "author": "juangcarmona",
+            "updated": "2026-10-27T11:31:44Z"
+          },
+          {
+            "id": 6440833064,
+            "bodyDigest": "cb2dd70e99c115aa51f541e20e6332288075c9b50f6fecde85ace9e5c92a64cf",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:31:55Z"
+          }
+        ]
+      },
+      "580": {
+        "state": "open",
+        "state_reason": null,
+        "titleDigest": "da82b7aa84010d3e269a0d1b36f2e0834ff837b84aa1974e626db2a7185c0097",
+        "bodyDigest": "be5025b266425ebb52a655bfdc844fe3eb11bd9aef5c61c8a385df8d7e1c0a32",
+        "labels": [],
+        "comments": []
+      }
+    },
+    "workers": [],
+    "missingRefs": {
+      "heads": [],
+      "tags": []
+    },
+    "main": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567"
+  },
+  "after": {
+    "issues": {
+      "133": {
+        "state": "closed",
+        "state_reason": "completed",
+        "titleDigest": "48a79dfb661958c29a8da6bb111de9f107f95d1c120e3ea6888b11a464e51f04",
+        "bodyDigest": "f67b2cc5e0bdbb8d636d9c996e0590c77dcab037bc1911f57f2b7436bab62c27",
+        "labels": [],
+        "comments": [
+          {
+            "id": 6440179943,
+            "bodyDigest": "40833efe85da74188d41253e0961ec3e6a78127c0a97f945a8b170056ceb0840",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T10:57:56Z"
+          },
+          {
+            "id": 6440361397,
+            "bodyDigest": "9228bf3a45e6c976a7794742c3d146f22249b16c6aad1af2daefbf896f8c3e79",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:07:06Z"
+          },
+          {
+            "id": 6440372505,
+            "bodyDigest": "63ead842501a6b9e1c7ca0aeb0b0c28cf86c3820e90f4028f823dec641fbf15a",
+            "author": "juangcarmona",
+            "updated": "2026-10-27T11:07:40Z"
+          },
+          {
+            "id": 6440375981,
+            "bodyDigest": "8877f47a0ee4b1926bcc1d524e98711ee212e0fad53b91d2d6a95371775a07fc",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:07:51Z"
+          },
+          {
+            "id": 6440754608,
+            "bodyDigest": "c4bcb32058d036d62c62021aee0ad457a6b457d35f691abc319ed00b36f367b1",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:27:47Z"
+          },
+          {
+            "id": 6440829746,
+            "bodyDigest": "95dc45933f3b1a2ba6ea878af67a4fdf2fc280fdd3aff6cdcc571739ac3defd7",
+            "author": "juangcarmona",
+            "updated": "2026-10-27T11:31:44Z"
+          },
+          {
+            "id": 6440833064,
+            "bodyDigest": "cb2dd70e99c115aa51f541e20e6332288075c9b50f6fecde85ace9e5c92a64cf",
+            "author": "github-actions[bot]",
+            "updated": "2026-10-27T11:31:55Z"
+          }
+        ]
+      },
+      "580": {
+        "state": "open",
+        "state_reason": null,
+        "titleDigest": "da82b7aa84010d3e269a0d1b36f2e0834ff837b84aa1974e626db2a7185c0097",
+        "bodyDigest": "be5025b266425ebb52a655bfdc844fe3eb11bd9aef5c61c8a385df8d7e1c0a32",
+        "labels": [],
+        "comments": []
+      }
+    },
+    "workers": [],
+    "missingRefs": {
+      "heads": [],
+      "tags": []
+    },
+    "main": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567"
+  },
+  "artifactObservations": {
+    "observation-133": [
+      {
+        "issue": 133,
+        "worker": "implement",
+        "runId": "40492508680",
+        "rootId": "89193d1325003803313efa27f15e48c85c999cd0e93f53425307eb728a0d83a8",
+        "attempt": 0,
+        "outcome": "completed",
+        "state": "blocked",
+        "code": "issue-paused",
+        "cause": "none",
+        "nextAction": "Inspect the issue decision or reservation before requesting work."
+      },
+      {
+        "issue": 133,
+        "worker": "review",
+        "runId": "40496296153",
+        "rootId": "19d444d50b0568e31afc03514f8a18a458c3dd3ff709dd6c887f7133f91e0be9",
+        "attempt": 0,
+        "outcome": "technical-failure",
+        "state": "blocked",
+        "code": "workflow-ref-missing",
+        "workflowRef": "codex/independent-stage-workflows",
+        "expectedWorkflowRevision": "540ee1e849b70d31edd4cbdd61e5e5d20bdae001",
+        "requestDigest": "cd4a22504fec4cfc910601901abad34e53eaa1acfe0f7ddeb8f0850767511e99",
+        "requestCommentId": 6440754608,
+        "refLookupStatus": 422,
+        "nextAction": "Maintainer: reconcile the retained execution https://github.com/juangcarmona/lighthouse/actions/runs/40496296153 and select an existing workflow ref under a fresh owner request. Historical provenance remains authenticated; never resend this request or recreate its ref automatically."
+      }
+    ],
+    "maintenance-133": [
+      {
+        "issue": 133,
+        "worker": "implement",
+        "runId": "40492508680",
+        "rootId": "89193d1325003803313efa27f15e48c85c999cd0e93f53425307eb728a0d83a8",
+        "attempt": 0,
+        "outcome": "completed",
+        "state": "blocked",
+        "code": "issue-paused",
+        "cause": "none",
+        "nextAction": "Inspect the issue decision or reservation before requesting work."
+      },
+      {
+        "issue": 133,
+        "worker": "review",
+        "runId": "40496296153",
+        "rootId": "19d444d50b0568e31afc03514f8a18a458c3dd3ff709dd6c887f7133f91e0be9",
+        "attempt": 0,
+        "outcome": "technical-failure",
+        "state": "blocked",
+        "code": "workflow-ref-missing",
+        "workflowRef": "codex/independent-stage-workflows",
+        "expectedWorkflowRevision": "540ee1e849b70d31edd4cbdd61e5e5d20bdae001",
+        "requestDigest": "cd4a22504fec4cfc910601901abad34e53eaa1acfe0f7ddeb8f0850767511e99",
+        "requestCommentId": 6440754608,
+        "refLookupStatus": 422,
+        "nextAction": "Maintainer: reconcile the retained execution https://github.com/juangcarmona/lighthouse/actions/runs/40496296153 and select an existing workflow ref under a fresh owner request. Historical provenance remains authenticated; never resend this request or recreate its ref automatically."
+      }
+    ],
+    "observation-580": [],
+    "maintenance-580": []
+  },
+  "newDeliveryOrCiRunsDuringMaintenance": [],
+  "actualJobs": [
+    {
+      "name": "scan",
+      "conclusion": "success"
+    },
+    {
+      "name": "observe (133)",
+      "conclusion": "success"
+    },
+    {
+      "name": "observe (580)",
+      "conclusion": "success"
+    },
+    {
+      "name": "reconcile (133)",
+      "conclusion": "success"
+    },
+    {
+      "name": "reconcile (580)",
+      "conclusion": "success"
+    },
+    {
+      "name": "report",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "report-stalled",
+      "conclusion": "skipped"
+    }
+  ]
+}

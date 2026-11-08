@@ -1,0 +1,14 @@
+{
+  "state": "verified",
+  "base": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "qualifiedSource": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "versions": {
+    "cli": "0.12.65",
+    "sdlc": "0.22.4"
+  },
+  "onlyChangedPath": ".github/workflows/lighthouse-worker-maintenance.yml",
+  "generatedByOwningInstaller": true,
+  "templateBytesMatchExactly": true,
+  "yamlAndActionlintPassed": true,
+  "productModelsPoliciesAndOtherWorkflowsUnchanged": true
+}

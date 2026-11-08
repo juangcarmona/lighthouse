@@ -1,0 +1,40 @@
+$ git status --porcelain
+
+$ git rev-parse HEAD
+879c4e75efebd945f8aea5b8ee09b97db62edbea
+
+$ git init -q
+
+$ node /srv/workspaces/juangcarmona/lighthouse/580-maintenance-adoption/src/packages/sdlc/src/install-workflows.mjs /tmp/lighthouse-580-native/580-workflow-88k08bk9 879c4e75efebd945f8aea5b8ee09b97db62edbea --with-maintenance --apply
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/workflows/lighthouse-worker-maintenance.yml
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/workflows/lighthouse-sdlc-router.yml
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/workflows/lighthouse-sdlc-triage.md
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/workflows/lighthouse-sdlc-refine.md
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/workflows/shared/lighthouse-opencode.md
+Write /tmp/lighthouse-580-native/580-workflow-88k08bk9/.github/ISSUE_TEMPLATE/change-request.yml
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-triage.md (74.6 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+⚠ Action actions/checkout@v5 is outdated; latest available version is v7.0.1.
+  Consider upgrading (update the version tag in your workflow file).
+⚠ Action actions/setup-node@v5 is outdated; latest available version is v7.1.0.
+  Consider upgrading (update the version tag in your workflow file).
+✓ .github/workflows/lighthouse-sdlc-refine.md (75.0 KB)
+✓ Compiled 1 workflow: 1 succeeded, 0 warnings
+Enabled workers: triage, refine. Enable LIGHTHOUSE_AUTOMATION_ENABLED only after provisioning and reviewing the runner. Unselected workflows are never installed or deleted implicitly.
+
+$ node --input-type=module -e import{readFileSync}from'node:fs';import{parse}from'yaml';parse(readFileSync('.github/workflows/lighthouse-worker-maintenance.yml','utf8'));console.log('Installed maintenance YAML parses.');
+Installed maintenance YAML parses.
+
+$ /tmp/lighthouse-541-native/actionlint/actionlint -shellcheck= -ignore unexpected key "queue" for "concurrency" section -ignore label "lighthouse-workflow" is unknown .github/workflows/lighthouse-worker-maintenance.yml
+
+$ git diff --check
+
+$ git diff --name-only
+.github/workflows/lighthouse-worker-maintenance.yml
+
+$ git diff --name-only -- .lighthouse docs/product/model
+

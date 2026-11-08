@@ -1,0 +1,9 @@
+{
+  "state": "failed",
+  "error": "GET commits/codex%2Findependent-stage-workflows: gh: No commit found for SHA: codex/independent-stage-workflows (HTTP 422)",
+  "readOnly": true,
+  "package": "@juangcarmona/lighthouse-sdlc@0.22.3",
+  "issue": 133,
+  "allRequestsGet": true,
+  "calls": 18
+}

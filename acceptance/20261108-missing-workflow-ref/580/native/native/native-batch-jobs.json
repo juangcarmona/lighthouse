@@ -1,0 +1,663 @@
+{
+  "total_count": 7,
+  "jobs": [
+    {
+      "id": 128783035014,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BEqhg",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783035014",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783035014",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T15:59:16Z",
+      "started_at": "2026-11-08T15:59:18Z",
+      "completed_at": "2026-11-08T15:59:25Z",
+      "name": "scan",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T15:59:19Z",
+          "completed_at": "2026-11-08T15:59:19Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T15:59:19Z",
+          "completed_at": "2026-11-08T15:59:21Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T15:59:21Z",
+          "completed_at": "2026-11-08T15:59:21Z"
+        },
+        {
+          "name": "Run node src/packages/sdlc/src/worker-maintenance.mjs scan",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T15:59:21Z",
+          "completed_at": "2026-11-08T15:59:22Z"
+        },
+        {
+          "name": "Preserve completion wake",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-08T15:59:22Z",
+          "completed_at": "2026-11-08T15:59:22Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T15:59:22Z",
+          "completed_at": "2026-11-08T15:59:22Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T15:59:22Z",
+          "completed_at": "2026-11-08T15:59:23Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T15:59:23Z",
+          "completed_at": "2026-11-08T15:59:23Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T15:59:23Z",
+          "completed_at": "2026-11-08T15:59:23Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T15:59:23Z",
+          "completed_at": "2026-11-08T15:59:23Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783035014",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036548,
+      "runner_name": "GitHub Actions 1000036548",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128783070616,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BG1mA",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783070616",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783070616",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T15:59:25Z",
+      "started_at": "2026-11-08T15:59:27Z",
+      "completed_at": "2026-11-08T15:59:39Z",
+      "name": "observe (133)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T15:59:28Z",
+          "completed_at": "2026-11-08T15:59:29Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T15:59:29Z",
+          "completed_at": "2026-11-08T15:59:30Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T15:59:30Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Observe workers without changing issue state",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Preserve observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:37Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T15:59:37Z",
+          "completed_at": "2026-11-08T15:59:37Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T15:59:37Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T15:59:38Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T15:59:38Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T15:59:38Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783070616",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036553,
+      "runner_name": "GitHub Actions 1000036553",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128783070640,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BG1sA",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783070640",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783070640",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T15:59:25Z",
+      "started_at": "2026-11-08T15:59:28Z",
+      "completed_at": "2026-11-08T15:59:44Z",
+      "name": "observe (580)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T15:59:28Z",
+          "completed_at": "2026-11-08T15:59:29Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T15:59:29Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:37Z"
+        },
+        {
+          "name": "Observe workers without changing issue state",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T15:59:37Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        },
+        {
+          "name": "Preserve observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T15:59:38Z",
+          "completed_at": "2026-11-08T15:59:40Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T15:59:40Z",
+          "completed_at": "2026-11-08T15:59:40Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T15:59:40Z",
+          "completed_at": "2026-11-08T15:59:41Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T15:59:41Z",
+          "completed_at": "2026-11-08T15:59:42Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T15:59:42Z",
+          "completed_at": "2026-11-08T15:59:42Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T15:59:42Z",
+          "completed_at": "2026-11-08T15:59:42Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783070640",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036551,
+      "runner_name": "GitHub Actions 1000036551",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128783070718,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BG1_g",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783070718",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783070718",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T15:59:25Z",
+      "started_at": "2026-11-08T15:59:27Z",
+      "completed_at": "2026-11-08T15:59:41Z",
+      "name": "reconcile (133)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T15:59:28Z",
+          "completed_at": "2026-11-08T15:59:29Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T15:59:29Z",
+          "completed_at": "2026-11-08T15:59:30Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T15:59:30Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Reconcile and record one bounded retry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Preserve request before dispatch",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Send the recorded retry once",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Preserve verification recovery evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Resume the recovered completion through the router",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:36Z"
+        },
+        {
+          "name": "Preserve observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T15:59:36Z",
+          "completed_at": "2026-11-08T15:59:37Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T15:59:37Z",
+          "completed_at": "2026-11-08T15:59:38Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T15:59:38Z",
+          "completed_at": "2026-11-08T15:59:39Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T15:59:39Z",
+          "completed_at": "2026-11-08T15:59:39Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-08T15:59:39Z",
+          "completed_at": "2026-11-08T15:59:39Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-08T15:59:39Z",
+          "completed_at": "2026-11-08T15:59:39Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783070718",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036554,
+      "runner_name": "GitHub Actions 1000036554",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128783070727,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BG2Bw",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783070727",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783070727",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T15:59:25Z",
+      "started_at": "2026-11-08T15:59:27Z",
+      "completed_at": "2026-11-08T15:59:37Z",
+      "name": "reconcile (580)",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T15:59:28Z",
+          "completed_at": "2026-11-08T15:59:29Z"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T15:59:29Z",
+          "completed_at": "2026-11-08T15:59:30Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T15:59:30Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Reconcile and record one bounded retry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Preserve request before dispatch",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Send the recorded retry once",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:31Z"
+        },
+        {
+          "name": "Preserve verification recovery evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T15:59:31Z",
+          "completed_at": "2026-11-08T15:59:32Z"
+        },
+        {
+          "name": "Resume the recovered completion through the router",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T15:59:32Z",
+          "completed_at": "2026-11-08T15:59:32Z"
+        },
+        {
+          "name": "Preserve observations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T15:59:32Z",
+          "completed_at": "2026-11-08T15:59:33Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T15:59:33Z",
+          "completed_at": "2026-11-08T15:59:34Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T15:59:34Z",
+          "completed_at": "2026-11-08T15:59:35Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T15:59:35Z",
+          "completed_at": "2026-11-08T15:59:35Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-08T15:59:35Z",
+          "completed_at": "2026-11-08T15:59:35Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-08T15:59:35Z",
+          "completed_at": "2026-11-08T15:59:35Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783070727",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036552,
+      "runner_name": "GitHub Actions 1000036552",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128783136824,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BK4OA",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783136824",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783136824",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-08T15:59:41Z",
+      "started_at": "2026-11-08T15:59:41Z",
+      "completed_at": "2026-11-08T15:59:41Z",
+      "name": "report",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783136824",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 128783151445,
+      "run_id": 42497538809,
+      "workflow_name": "Lighthouse worker maintenance",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/runs/42497538809",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVRh-RM8AAAAd_BLxVQ",
+      "head_sha": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/jobs/128783151445",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497538809/job/128783151445",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-08T15:59:45Z",
+      "started_at": "2026-11-08T15:59:45Z",
+      "completed_at": "2026-11-08T15:59:45Z",
+      "name": "report-stalled",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse/check-runs/128783151445",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    }
+  ]
+}

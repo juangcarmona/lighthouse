@@ -1,0 +1,23 @@
+{
+  "state": "verified",
+  "main": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+  "adoptionPr": 583,
+  "postMergeChecks": [
+    {
+      "id": 42497390708,
+      "name": "Release",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390708"
+    },
+    {
+      "id": 42497390691,
+      "name": "Lighthouse verification",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390691"
+    }
+  ],
+  "settingsRestored": true,
+  "nativeCaseAccepted": true,
+  "publishedConsumerAccepted": true,
+  "onlyMaintenanceWorkflowPinsChanged": true
+}

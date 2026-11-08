@@ -1,0 +1,84 @@
+{
+  "state": "published",
+  "sourcePr": 581,
+  "sourceReviewedHead": "f8f3b2bffe3e857ab57690b6a17a51cfba5744ff",
+  "sourceMerge": "105ce46fb8ae5a176ccd4c5fbe42f504dd37aa34",
+  "versionPr": 582,
+  "qualifiedSource": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "versions": {
+    "cli": "0.12.65",
+    "sdlc": "0.22.4"
+  },
+  "release": {
+    "id": 42496855311,
+    "head_sha": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+    "run_attempt": 1,
+    "conclusion": "success",
+    "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496855311"
+  },
+  "nativeVersionChecks": [
+    {
+      "id": 42496538744,
+      "name": "Lighthouse .NET verification",
+      "head_sha": "b6557cede541d45b8ef1491514386e1405ce9f7f",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496538744"
+    },
+    {
+      "id": 42496538751,
+      "name": "Lighthouse visual verification",
+      "head_sha": "b6557cede541d45b8ef1491514386e1405ce9f7f",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496538751"
+    },
+    {
+      "id": 42496538739,
+      "name": "Public engineering site",
+      "head_sha": "b6557cede541d45b8ef1491514386e1405ce9f7f",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496538739"
+    },
+    {
+      "id": 42496538738,
+      "name": "Lighthouse verification",
+      "head_sha": "b6557cede541d45b8ef1491514386e1405ce9f7f",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496538738"
+    },
+    {
+      "id": 42496538737,
+      "name": "Lighthouse package contracts",
+      "head_sha": "b6557cede541d45b8ef1491514386e1405ce9f7f",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42496538737"
+    }
+  ],
+  "registry": {
+    "source": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+    "packages": [
+      {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.22.4",
+        "gitHead": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+        "integrity": "sha512-DqOU/dra60mVMpkh1lPVllssxq+9HWsngC1/YfuwSOQOPmCi6CgcvC6eluAnU5bnoI/fyirFu0iUYVn//X29xw==",
+        "filesCompared": 224
+      },
+      {
+        "name": "@juangcarmona/lighthouse",
+        "version": "0.12.65",
+        "gitHead": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+        "integrity": "sha512-Kd3dvSst1EPNZ7o1CEU1Azr1/e0DEhzMnOUtM+gaxrX6fT80IHQ0+nH4BppDvU5F4DN//Jxy4quVclv/0lGvqQ==",
+        "filesCompared": 93
+      }
+    ]
+  },
+  "tdd": {
+    "red": "tdd-red.log",
+    "focusedPassed": 84,
+    "repositoryTests": 1164,
+    "repositoryPassed": 1154,
+    "optionalSkipped": 10,
+    "failed": 0,
+    "packagedRealConsumerPassed": true
+  }
+}

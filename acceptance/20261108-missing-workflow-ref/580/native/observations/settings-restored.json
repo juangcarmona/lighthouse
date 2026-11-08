@@ -1,0 +1,10 @@
+{
+  "state": "restored",
+  "originalValuesExactlyPreserved": true,
+  "variables": {
+    "LIGHTHOUSE_AUTOMATION_ENABLED": "true",
+    "LIGHTHOUSE_CI_APP_CLIENT_ID": "Iv23liX3ioQJscpZYrS5",
+    "LIGHTHOUSE_MAINTENANCE_ENABLED": "true",
+    "LIGHTHOUSE_RECOVERY_ENABLED": "true"
+  }
+}

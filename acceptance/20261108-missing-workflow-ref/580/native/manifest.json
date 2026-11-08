@@ -1,0 +1,469 @@
+{
+  "schemaVersion": 1,
+  "phase": "native",
+  "repository": "juangcarmona/lighthouse",
+  "prefix": "acceptance/20261108-missing-workflow-ref/580/native",
+  "observedAt": "2026-11-08T16:07:50.743026+00:00",
+  "files": [
+    {
+      "path": "observations/baseline-native-failure.json",
+      "bytes": 291,
+      "sha256": "7525d56761d66071ed106ff0f94c21b36a3b62456f5b7cb6b3ffd5bf628ea606",
+      "origin": {
+        "type": "operator-observation",
+        "local": "baseline-native-failure.json"
+      }
+    },
+    {
+      "path": "observations/source-observe133-proof.json",
+      "bytes": 1476,
+      "sha256": "0f66c010586e3ae728fa9ac03fd5f60b94ce9a13435ecb3ff0ef68a34dc8f07c",
+      "origin": {
+        "type": "operator-observation",
+        "local": "source-observe133-proof.json"
+      }
+    },
+    {
+      "path": "observations/source-qualification.json",
+      "bytes": 2832,
+      "sha256": "29d579c14d377240f9fca73b8aece8f054a36529394bc3a2775c477a9bb4e68a",
+      "origin": {
+        "type": "operator-observation",
+        "local": "source-qualification.json"
+      }
+    },
+    {
+      "path": "observations/adoption-prepared-proof.json",
+      "bytes": 454,
+      "sha256": "83b5a2e7d162ffb756489cc96ab84e0f8f2b08138c37952ed6f5e177ad6b710c",
+      "origin": {
+        "type": "operator-observation",
+        "local": "adoption-prepared-proof.json"
+      }
+    },
+    {
+      "path": "observations/adoption-proof.json",
+      "bytes": 3530,
+      "sha256": "a3684cf481aec888ccdaee004105b78cae57bd55abf51cd5e0ce9dc31569d834",
+      "origin": {
+        "type": "operator-observation",
+        "local": "adoption-proof.json"
+      }
+    },
+    {
+      "path": "observations/native-before.json",
+      "bytes": 2323,
+      "sha256": "3a15140f2e6b30d0fda1eed51bd6a98d4a17318a6c9a5332204f2314c5b8527c",
+      "origin": {
+        "type": "operator-observation",
+        "local": "native-before.json"
+      }
+    },
+    {
+      "path": "observations/native-proof.json",
+      "bytes": 9778,
+      "sha256": "76cd1811eec1b8ba30b9b86f2e7e19de3e950fa5783f10a298caba06f1bb6249",
+      "origin": {
+        "type": "operator-observation",
+        "local": "native-proof.json"
+      }
+    },
+    {
+      "path": "observations/original-request-receipt.json",
+      "bytes": 2035,
+      "sha256": "c5d08bb093af74628cb789500b5ef063239a56ca69b5d3c3b7136fb4653d22a2",
+      "origin": {
+        "type": "operator-observation",
+        "local": "original-request-receipt.json"
+      }
+    },
+    {
+      "path": "observations/variables-before.json",
+      "bytes": 188,
+      "sha256": "0940dbdd78993b523411c6b73b62ab804624bb0c478214519c25cf96a3aef692",
+      "origin": {
+        "type": "operator-observation",
+        "local": "variables-before.json"
+      }
+    },
+    {
+      "path": "observations/settings-restored.json",
+      "bytes": 282,
+      "sha256": "2ddf0f480e8eaf369b3b5451345264b960bd8b55f73bfcf8d83b2e4392721c08",
+      "origin": {
+        "type": "operator-observation",
+        "local": "settings-restored.json"
+      }
+    },
+    {
+      "path": "observations/published-installed-bytes.json",
+      "bytes": 567,
+      "sha256": "ee3f053bae77dfe53e1a3737f79698d64948138e13227b230d8968f6efaa5673",
+      "origin": {
+        "type": "operator-observation",
+        "local": "published-installed-bytes.json"
+      }
+    },
+    {
+      "path": "observations/published-observe133-proof.json",
+      "bytes": 1497,
+      "sha256": "8eb120afe15ad1efcd1d65e0719c44071785e5611929a4f6c3ae91a117090b8a",
+      "origin": {
+        "type": "operator-observation",
+        "local": "published-observe133-proof.json"
+      }
+    },
+    {
+      "path": "observations/published-consumer-proof.json",
+      "bytes": 668,
+      "sha256": "f5f9673e7f151466ef8197985e640c26847f5ff1d193e32c4fffa7bd93c1fb53",
+      "origin": {
+        "type": "operator-observation",
+        "local": "published-consumer-proof.json"
+      }
+    },
+    {
+      "path": "observations/final-proof.json",
+      "bytes": 649,
+      "sha256": "295763155b12748d8c4e6e9e129ff9574d25c391b95db675764dc598df0e7582",
+      "origin": {
+        "type": "operator-observation",
+        "local": "final-proof.json"
+      }
+    },
+    {
+      "path": "observations/registry/verification.json",
+      "bytes": 660,
+      "sha256": "0b3674ecbf9b1657894a50a59166ddc3b71859501b0897bd6333c69338b8bf5b",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/verification.json"
+      }
+    },
+    {
+      "path": "observations/registry/lighthouse-0.12.65-metadata.json",
+      "bytes": 2462,
+      "sha256": "a6c15a3060a28245966de0067697edb38021b3bb399fe5d6aa97fe7f931e67d6",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/lighthouse-0.12.65-metadata.json"
+      }
+    },
+    {
+      "path": "observations/registry/lighthouse-sdlc-0.22.4-metadata.json",
+      "bytes": 5245,
+      "sha256": "b10109d208f7ed6d879bd785b366bc04d9f056693eb52a4e61e0bf3c569a1ceb",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/lighthouse-sdlc-0.22.4-metadata.json"
+      }
+    },
+    {
+      "path": "observations/registry/lighthouse-0.12.65.tgz",
+      "bytes": 95613,
+      "sha256": "d469e4500bbb9c8b558603bedf8e7e7ffeb267c54d555426b38597bf3d5708c8",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/lighthouse-0.12.65.tgz"
+      }
+    },
+    {
+      "path": "observations/registry/lighthouse-sdlc-0.22.4.tgz",
+      "bytes": 526689,
+      "sha256": "9021ffa15cd707522d86d6c7e7bfb5109841d0b76ab2d6504491a3a7f7bd04d9",
+      "origin": {
+        "type": "operator-observation",
+        "local": "registry/lighthouse-sdlc-0.22.4.tgz"
+      }
+    },
+    {
+      "path": "observations/tdd-red.log",
+      "bytes": 2073,
+      "sha256": "ec4744ab7ccd4cb45cd1cce8898caac035a397e86345e7ed8e55af31c7d4de09",
+      "origin": {
+        "type": "operator-observation",
+        "local": "tdd-red.log"
+      }
+    },
+    {
+      "path": "observations/focused.log",
+      "bytes": 8837,
+      "sha256": "067094c1f613a55d0ed6834b79a834f3dfd27e91a84083154dac76b56e9eb962",
+      "origin": {
+        "type": "operator-observation",
+        "local": "focused.log"
+      }
+    },
+    {
+      "path": "observations/verify.log",
+      "bytes": 108602,
+      "sha256": "f9ab3f1fcdf62f72663328c60b134cf6c04a15c6b9ec4e59a92c65b02cc8a852",
+      "origin": {
+        "type": "operator-observation",
+        "local": "verify.log"
+      }
+    },
+    {
+      "path": "observations/package-consumer.log",
+      "bytes": 176,
+      "sha256": "e72c2303ade1dbae456c4d41ca014a4014fe45025b8d69981dac7719a62b3dc8",
+      "origin": {
+        "type": "operator-observation",
+        "local": "package-consumer.log"
+      }
+    },
+    {
+      "path": "observations/adoption-generation.log",
+      "bytes": 2573,
+      "sha256": "c8f203af6f213fc57087af8434c5e9878f6a91d3847120d71230414c5f9cbe5f",
+      "origin": {
+        "type": "operator-observation",
+        "local": "adoption-generation.log"
+      }
+    },
+    {
+      "path": "observations/published-install-final.log",
+      "bytes": 26,
+      "sha256": "1a399b0441a7094102cda407ce54a27c910423e115f089a3ee44682810dc2385",
+      "origin": {
+        "type": "operator-observation",
+        "local": "published-install-final.log"
+      }
+    },
+    {
+      "path": "observations/observe133-source.mjs",
+      "bytes": 1255,
+      "sha256": "7c466d0beef3fd076f698266262c6d43715554437add533cdd8537556ee467ea",
+      "origin": {
+        "type": "operator-observation",
+        "local": "observe133-source.mjs"
+      }
+    },
+    {
+      "path": "observations/observe133-published.mjs",
+      "bytes": 1302,
+      "sha256": "7b246e3c5393be4a8b1bfa4892775841590ad84bcca38316e24f84c32622e0e1",
+      "origin": {
+        "type": "operator-observation",
+        "local": "observe133-published.mjs"
+      }
+    },
+    {
+      "path": "observations/verify-registry.py",
+      "bytes": 3239,
+      "sha256": "cd18e7f32f6ade9fcdabb05097f98a673d53d775320197d53f4eb6e0dfb48485",
+      "origin": {
+        "type": "operator-observation",
+        "local": "verify-registry.py"
+      }
+    },
+    {
+      "path": "observations/native-case.py",
+      "bytes": 5639,
+      "sha256": "24c62321ca38ed143aecdccdf03ba37e51847c34adfae164755f3e0b28975b96",
+      "origin": {
+        "type": "operator-observation",
+        "local": "native-case.py"
+      }
+    },
+    {
+      "path": "observations/prepare-adoption.py",
+      "bytes": 2470,
+      "sha256": "7b952403b28675059e8fd68dba2a461ebea77249aa992b39dbd22f51405a61b4",
+      "origin": {
+        "type": "operator-observation",
+        "local": "prepare-adoption.py"
+      }
+    },
+    {
+      "path": "native/native-batch-run.json",
+      "bytes": 14619,
+      "sha256": "ff16261b560195f818b0334fc8dd785dd12d6af54aea7e2d5a90d00fa3bec3f1",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "native-batch-run.json"
+      }
+    },
+    {
+      "path": "native/native-batch-jobs.json",
+      "bytes": 22870,
+      "sha256": "58d5caeb80dedf3b24b8ce5aefce1c4327fe0d7267984caf90b8573c6b1899c4",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "native-batch-jobs.json"
+      }
+    },
+    {
+      "path": "native/native-batch-artifacts.json",
+      "bytes": 7819,
+      "sha256": "57ba9f8a1a4ea41935580dc5c6665b8d569e084818c4f3448a71c988e39781b3",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "native-batch-artifacts.json"
+      }
+    },
+    {
+      "path": "native/native-batch/lighthouse-maintenance-580/observations.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13624550383,
+        "name": "lighthouse-maintenance-580",
+        "serviceDigest": "sha256:20d513ad8c548f1472f1927da5dc576a6e64c9bcce87a17a66d01c0d1e9dbaf3",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/native-batch-lighthouse-maintenance-580.zip",
+      "bytes": 152,
+      "sha256": "20d513ad8c548f1472f1927da5dc576a6e64c9bcce87a17a66d01c0d1e9dbaf3",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13624550383,
+        "name": "lighthouse-maintenance-580",
+        "serviceDigest": "sha256:20d513ad8c548f1472f1927da5dc576a6e64c9bcce87a17a66d01c0d1e9dbaf3",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/native-batch/lighthouse-maintenance-133/observations.json",
+      "bytes": 1078,
+      "sha256": "1c986034fc07da12c6c951c58a70e6a332ab35affe277f448c143a0ee1fcfd9a",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13624162420,
+        "name": "lighthouse-maintenance-133",
+        "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/native-batch-lighthouse-maintenance-133.zip",
+      "bytes": 780,
+      "sha256": "63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13624162420,
+        "name": "lighthouse-maintenance-133",
+        "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/native-batch/lighthouse-observation-133/observations.json",
+      "bytes": 1078,
+      "sha256": "1c986034fc07da12c6c951c58a70e6a332ab35affe277f448c143a0ee1fcfd9a",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13623903209,
+        "name": "lighthouse-observation-133",
+        "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/native-batch-lighthouse-observation-133.zip",
+      "bytes": 780,
+      "sha256": "63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13623903209,
+        "name": "lighthouse-observation-133",
+        "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/native-batch/lighthouse-observation-580/observations.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13623857162,
+        "name": "lighthouse-observation-580",
+        "serviceDigest": "sha256:fa4a9afe7204cde5e5ee2ddbdcb5153aee578ad5dc71d9c6edcb25eb196604c6",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/native-batch-lighthouse-observation-580.zip",
+      "bytes": 152,
+      "sha256": "fa4a9afe7204cde5e5ee2ddbdcb5153aee578ad5dc71d9c6edcb25eb196604c6",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42497538809,
+        "artifact": 13623857162,
+        "name": "lighthouse-observation-580",
+        "serviceDigest": "sha256:fa4a9afe7204cde5e5ee2ddbdcb5153aee578ad5dc71d9c6edcb25eb196604c6",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 2465,
+      "sha256": "c84488241f4cd888eee444288512e304740335418e213a89cf06ea34c2fda645",
+      "origin": {
+        "type": "acceptance-scope"
+      }
+    }
+  ],
+  "originalArtifacts": [
+    {
+      "type": "github-actions-original",
+      "run": 42497538809,
+      "artifact": 13624550383,
+      "name": "lighthouse-maintenance-580",
+      "serviceDigest": "sha256:20d513ad8c548f1472f1927da5dc576a6e64c9bcce87a17a66d01c0d1e9dbaf3",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42497538809,
+      "artifact": 13624162420,
+      "name": "lighthouse-maintenance-133",
+      "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42497538809,
+      "artifact": 13623903209,
+      "name": "lighthouse-observation-133",
+      "serviceDigest": "sha256:63bdc69ef9ba0b9166a2ec7c5db3fb47684301eb4824fb0b63978a1dc3b9860b",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42497538809,
+      "artifact": 13623857162,
+      "name": "lighthouse-observation-580",
+      "serviceDigest": "sha256:fa4a9afe7204cde5e5ee2ddbdcb5153aee578ad5dc71d9c6edcb25eb196604c6",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    }
+  ],
+  "excluded": "No raw model context, prompts, sessions, credentials or diagnostic event streams."
+}

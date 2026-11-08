@@ -1,0 +1,79 @@
+{
+  "bin": {
+    "lighthouse": "src/lighthouse.mjs"
+  },
+  "bugs": {
+    "url": "https://github.com/juangcarmona/lighthouse/issues"
+  },
+  "dist": {
+    "shasum": "93f1bc8a1cb221f1cee0528c82b82c1f8f054ddc",
+    "tarball": "https://registry.npmjs.org/@juangcarmona/lighthouse/-/lighthouse-0.12.65.tgz",
+    "fileCount": 93,
+    "integrity": "sha512-Kd3dvSst1EPNZ7o1CEU1Azr1/e0DEhzMnOUtM+gaxrX6fT80IHQ0+nH4BppDvU5F4DN//Jxy4quVclv/0lGvqQ==",
+    "signatures": [
+      {
+        "sig": "MEQCIAid+t1rmNwvGiIxs0scJmlen7uRgkIj3DBvc9fPdhTZAiBvDCB+aXXxxRI94NU6x/jCWXnC7jshRy9dYDLufOQwtA==",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEUCIBU/9m/epWoGOnp6GF/PDqk6Eag9WTFAxKcCDWXo1yU5AiEApS6F8nb2Lifun+nqHsWAJK49gZyINeGxLbSjlN/AZ8E=",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/@juangcarmona%2flighthouse@0.12.65",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 394800
+  },
+  "name": "@juangcarmona/lighthouse",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "gitHead": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "license": "Apache-2.0",
+  "_npmUser": {
+    "name": "GitHub Actions",
+    "email": "npm-oidc-no-reply@github.com",
+    "trustedPublisher": {
+      "id": "github",
+      "oidcConfigId": "1c3f1981-1e4f-4b9a-93e7-3a9138e1617f"
+    }
+  },
+  "homepage": "https://juangcarmona.github.io/lighthouse/",
+  "repository": {
+    "url": "git+https://github.com/juangcarmona/lighthouse.git",
+    "type": "git",
+    "directory": "src/packages/cli"
+  },
+  "_npmVersion": "11.5.1",
+  "description": "Lighthouse adoption and verification CLI",
+  "directories": {},
+  "maintainers": [
+    {
+      "name": "juangcarmona",
+      "email": "juan@jgcarmona.com"
+    }
+  ],
+  "_nodeVersion": "24.22.2",
+  "dependencies": {
+    "@arcshape/cli": "0.4.0",
+    "@prodshape/cli": "0.23.0",
+    "@juangcarmona/lighthouse-ui": "0.2.1",
+    "@juangcarmona/lighthouse-sdlc": "0.22.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "_hasShrinkwrap": false,
+  "_npmOperationalInternal": {
+    "tmp": "tmp/lighthouse_0.12.65_1794153269262_0.3253358937290306",
+    "host": "s3://npm-registry-packages-npm-production"
+  },
+  "_id": "@juangcarmona/lighthouse@0.12.65",
+  "version": "0.12.65"
+}

@@ -1,0 +1,103 @@
+{
+  "state": "verified",
+  "base": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "qualifiedSource": "879c4e75efebd945f8aea5b8ee09b97db62edbea",
+  "versions": {
+    "cli": "0.12.65",
+    "sdlc": "0.22.4"
+  },
+  "onlyChangedPath": ".github/workflows/lighthouse-worker-maintenance.yml",
+  "generatedByOwningInstaller": true,
+  "templateBytesMatchExactly": true,
+  "yamlAndActionlintPassed": true,
+  "productModelsPoliciesAndOtherWorkflowsUnchanged": true,
+  "pr": 583,
+  "head": "81ab6544c4e42beb43b9b67a31c65c29e4e7e43a",
+  "mergedMain": "e6ea62ab0184f517ab2653d3a91c3a90a1d8b567",
+  "rootPreMergeChecks": [
+    {
+      "id": 128782593229,
+      "name": "epic-triage",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497386876/job/128782593229"
+    },
+    {
+      "id": 128782577729,
+      "name": "client-control",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390807/job/128782577729"
+    },
+    {
+      "id": 128782577694,
+      "name": "epic-triage",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390807/job/128782577694"
+    },
+    {
+      "id": 128782577645,
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390807/job/128782577645"
+    },
+    {
+      "id": 128782577642,
+      "name": "route",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390807/job/128782577642"
+    },
+    {
+      "id": 128782576498,
+      "name": "pr-state",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497390807/job/128782576498"
+    },
+    {
+      "id": 128782565461,
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497386876/job/128782565461"
+    },
+    {
+      "id": 128782564874,
+      "name": "route",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497386876/job/128782564874"
+    },
+    {
+      "id": 128782564479,
+      "name": "client-control",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497386876/job/128782564479"
+    },
+    {
+      "id": 128782563684,
+      "name": "pr-state",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497386876/job/128782563684"
+    },
+    {
+      "id": 128781860824,
+      "name": "continue-post-merge-review",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497037887/job/128781860824"
+    },
+    {
+      "id": 128781860358,
+      "name": "reconcile-implementation-pr",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497037887/job/128781860358"
+    },
+    {
+      "id": 128781493113,
+      "name": "ci-app",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497037887/job/128781493113"
+    },
+    {
+      "id": 128781491555,
+      "name": "repository",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42497037887/job/128781491555"
+    }
+  ]
+}
