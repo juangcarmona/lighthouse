@@ -25,7 +25,7 @@
 
 - [x] 4.1 Add meaningful denial/race/compatibility and real-entrypoint regressions, including same-key payload conflict, changed evidence, reservations, delayed events and global-auto-implement scope.
 - [x] 4.2 Run full deterministic verification, package contents and clean packed-consumer checks; update owning package and realized architecture documentation as applicable.
-- [ ] 4.3 Qualify actual authorized user dispatch/comment/continuation and lost-response/restart reconciliation in an isolated source-owned repository, preserving exact source receipts and cleanup proof.
+- [x] 4.3 Qualify actual authorized user dispatch/comment/continuation and lost-response/restart reconciliation in an isolated source-owned repository, preserving exact source receipts and cleanup proof.
 - [ ] 4.4 Obtain independent final-head technical review within the configured correction bound; retain protected publication and forge gates.
 - [ ] 4.5 Publish compatible public packages through the existing protected release flow, verify registry artifacts, adopt the released contract in the consumer, integrate and record the retrospective.
 
