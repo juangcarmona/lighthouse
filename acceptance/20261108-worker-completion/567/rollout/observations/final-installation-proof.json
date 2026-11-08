@@ -1,0 +1,20 @@
+{
+  "state": "verified",
+  "rootMain": "1e76be4b46e6e402e030fa22d3e233a154fe73bc",
+  "consumerMain": "9628bcf6764e3d6e5b93929fcfb401d67d700706",
+  "rootInstalledFilesEqualReviewedHead": true,
+  "rootPoliciesAndProductModelsEqualQualifiedBaseline": true,
+  "consumerFilesEqualVerifiedCleanupHead": true,
+  "bothWorktreesClean": true,
+  "consumerPostMergeCi": {
+    "id": 42472097053,
+    "conclusion": "success",
+    "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42472097053"
+  },
+  "scopeLimitation": {
+    "rootIssue567SmokePassed": true,
+    "independentDeletedBranchObservationStillFails": true,
+    "followup": 580,
+    "noGlobalMaintenanceAcceptanceClaim": true
+  }
+}

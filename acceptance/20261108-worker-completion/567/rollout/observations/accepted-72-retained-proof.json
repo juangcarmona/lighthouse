@@ -1,0 +1,12 @@
+{
+  "phase": "accepted-72",
+  "commit": "468581aca06c8dd9c1184df025ba215177275a4f",
+  "parent": "aab52c457375169a28127a7e24ff37d325b01c7f",
+  "prefix": "acceptance/20261108-worker-completion/567/accepted-72",
+  "url": "https://github.com/juangcarmona/lighthouse/tree/468581aca06c8dd9c1184df025ba215177275a4f/acceptance/20261108-worker-completion/567/accepted-72",
+  "files": 115,
+  "bytes": 1237216,
+  "originalArtifactDigestsVerified": 22,
+  "allRemoteBlobsVerified": true,
+  "protectedNonForcedAppend": true
+}

@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "phase": "rollout",
+  "repository": "juangcarmona/lighthouse",
+  "prefix": "acceptance/20261108-worker-completion/567/rollout",
+  "observedAt": "2026-11-08T10:40:38.192360+00:00",
+  "files": [
+    {
+      "path": "observations/accepted-72-retained-proof.json",
+      "bytes": 512,
+      "sha256": "d3ce706cc6cb1c89405fff4c49621155259144690d3e463ce18c56f98ab50736",
+      "origin": {
+        "type": "operator-observation",
+        "local": "accepted-72-retained-proof.json"
+      }
+    },
+    {
+      "path": "observations/root-callback-adoption-proof.json",
+      "bytes": 2650,
+      "sha256": "673818c3cb063598756d520f483950ed3c40a6f04e04927f6e9386db4d2ad97a",
+      "origin": {
+        "type": "operator-observation",
+        "local": "root-callback-adoption-proof.json"
+      }
+    },
+    {
+      "path": "observations/root-native-smoke-proof.json",
+      "bytes": 1163,
+      "sha256": "1564b2c8bd5466cead01f115ab035fad543f143749bea0a3df22a9d8ca253601",
+      "origin": {
+        "type": "operator-observation",
+        "local": "root-native-smoke-proof.json"
+      }
+    },
+    {
+      "path": "observations/root-variables-before-smoke.json",
+      "bytes": 737,
+      "sha256": "bce2e237a840f25064dee1b7c791273efa63939f9fd31d7d49ed49712d576f75",
+      "origin": {
+        "type": "operator-observation",
+        "local": "root-variables-before-smoke.json"
+      }
+    },
+    {
+      "path": "observations/72-cleanup-proof.json",
+      "bytes": 622,
+      "sha256": "9f6a889ce3b0cef53ff73f43e38f26189ce3b91e1abde0af893b58d36250f064",
+      "origin": {
+        "type": "operator-observation",
+        "local": "72-cleanup-proof.json"
+      }
+    },
+    {
+      "path": "observations/72-restored-settings-proof.json",
+      "bytes": 488,
+      "sha256": "48d5e5079417bbc2489fe373a53afa8799a647721287567baa48fae37e312f8f",
+      "origin": {
+        "type": "operator-observation",
+        "local": "72-restored-settings-proof.json"
+      }
+    },
+    {
+      "path": "observations/72-history-after-cleanup-proof.json",
+      "bytes": 311,
+      "sha256": "ffecad3dc4c0cf080979433bea1ec9f0daf0bdad3ba23f5ac5c69d7562b0b8e8",
+      "origin": {
+        "type": "operator-observation",
+        "local": "72-history-after-cleanup-proof.json"
+      }
+    },
+    {
+      "path": "observations/history-after-cleanup.mjs",
+      "bytes": 2287,
+      "sha256": "54569f7ac4ac2e5b5d85d8636c546766cbda189226887a928716019cabb5b9b0",
+      "origin": {
+        "type": "operator-observation",
+        "local": "history-after-cleanup.mjs"
+      }
+    },
+    {
+      "path": "observations/final-installation-proof.json",
+      "bytes": 719,
+      "sha256": "89839b59dbb710a7811be7c781be097acbbdb017cdca5279cba104d95fc25c4d",
+      "origin": {
+        "type": "operator-observation",
+        "local": "final-installation-proof.json"
+      }
+    },
+    {
+      "path": "observations/root-observe133-current-proof.json",
+      "bytes": 291,
+      "sha256": "7525d56761d66071ed106ff0f94c21b36a3b62456f5b7cb6b3ffd5bf628ea606",
+      "origin": {
+        "type": "operator-observation",
+        "local": "root-observe133-current-proof.json"
+      }
+    },
+    {
+      "path": "observations/observe133-readonly.mjs",
+      "bytes": 1263,
+      "sha256": "a7051e775dae2cee41b9840fa531cff8fdef95ba594f5f5d8952caf4791994d4",
+      "origin": {
+        "type": "operator-observation",
+        "local": "observe133-readonly.mjs"
+      }
+    },
+    {
+      "path": "observations/followup-580.json",
+      "bytes": 1921,
+      "sha256": "ff46658afd027bef73018502ad150992b56e38d58bba0b7d2572122aa39ed931",
+      "origin": {
+        "type": "operator-observation",
+        "local": "followup-580.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke-run.json",
+      "bytes": 15288,
+      "sha256": "d1248c8c8b46e7769ee66dbf7fff5325a9e9448dbfdd90fcfe438c76bd9423d5",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-native-smoke-run.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke-jobs.json",
+      "bytes": 14401,
+      "sha256": "f80fd0c20a9f9ffb76bd6cf4b97f9c10ad07a295c2cd65b7d72677c550b98e62",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-native-smoke-jobs.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke-artifacts.json",
+      "bytes": 4363,
+      "sha256": "22b52dd60bdc07038b73adf69d061cd760e5d7989a19681083998140a8faa5ed",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-native-smoke-artifacts.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke/lighthouse-observation-567/observations.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42472000879,
+        "artifact": 13614255298,
+        "name": "lighthouse-observation-567",
+        "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke-lighthouse-observation-567.zip",
+      "bytes": 152,
+      "sha256": "36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42472000879,
+        "artifact": 13614255298,
+        "name": "lighthouse-observation-567",
+        "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/root-native-smoke/lighthouse-maintenance-567/observations.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42472000879,
+        "artifact": 13613687510,
+        "name": "lighthouse-maintenance-567",
+        "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+        "member": "observations.json"
+      }
+    },
+    {
+      "path": "native/root-native-smoke-lighthouse-maintenance-567.zip",
+      "bytes": 152,
+      "sha256": "36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "origin": {
+        "type": "github-actions-original",
+        "run": 42472000879,
+        "artifact": 13613687510,
+        "name": "lighthouse-maintenance-567",
+        "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+        "member": "original-zip"
+      }
+    },
+    {
+      "path": "native/root-postmerge-ci-run.json",
+      "bytes": 15290,
+      "sha256": "90fd6db6135b16ebfb7f809773e71b3f644d52825e8161326c760587d72162df",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-postmerge-ci-run.json"
+      }
+    },
+    {
+      "path": "native/root-postmerge-ci-jobs.json",
+      "bytes": 8597,
+      "sha256": "f2938e013d3ba832003824f17abc6c4a6b619be310d14125d5ed089421aae0db",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-postmerge-ci-jobs.json"
+      }
+    },
+    {
+      "path": "native/root-postmerge-ci-artifacts.json",
+      "bytes": 42,
+      "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "root-postmerge-ci-artifacts.json"
+      }
+    },
+    {
+      "path": "native/72-cleanup-ci-run.json",
+      "bytes": 16584,
+      "sha256": "9e8c066d35d3058604d5db7171ca3031f2fed09be1464c671a4f3cf27d592b45",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "72-cleanup-ci-run.json"
+      }
+    },
+    {
+      "path": "native/72-cleanup-ci-jobs.json",
+      "bytes": 7166,
+      "sha256": "3822af6ed8bd9ccfebf47fa522646d31c6c629913783682cc2aaa5618757b728",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "72-cleanup-ci-jobs.json"
+      }
+    },
+    {
+      "path": "native/72-cleanup-ci-artifacts.json",
+      "bytes": 42,
+      "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6",
+      "origin": {
+        "type": "github-api-observation",
+        "file": "72-cleanup-ci-artifacts.json"
+      }
+    },
+    {
+      "path": "README.md",
+      "bytes": 1585,
+      "sha256": "17d5959277ee37806e1144766b62232a28c1265b20258d00c80513ce3b61986b",
+      "origin": {
+        "type": "acceptance-scope"
+      }
+    }
+  ],
+  "originalArtifacts": [
+    {
+      "type": "github-actions-original",
+      "run": 42472000879,
+      "artifact": 13614255298,
+      "name": "lighthouse-observation-567",
+      "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    },
+    {
+      "type": "github-actions-original",
+      "run": 42472000879,
+      "artifact": 13613687510,
+      "name": "lighthouse-maintenance-567",
+      "serviceDigest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "selected": [
+        "observations.json"
+      ],
+      "omitted": [],
+      "originalZipRetained": true
+    }
+  ],
+  "excluded": "No raw model context, prompts, sessions, credentials or diagnostic event streams."
+}

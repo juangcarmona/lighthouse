@@ -1,0 +1,14 @@
+{
+  "state": "restored",
+  "onlyOwnFixtureVariablesDeleted": true,
+  "settingsExactlyMatchOriginal": true,
+  "variables": {
+    "LIGHTHOUSE_AUTOMATION_ENABLED": "true",
+    "LIGHTHOUSE_CI_APP_CLIENT_ID": "Iv23liX3ioQJscpZYrS5",
+    "LIGHTHOUSE_MAINTENANCE_ENABLED": "true",
+    "LIGHTHOUSE_RECOVERY_ENABLED": "true"
+  },
+  "consumerCleanupPr": 76,
+  "consumerCleanupHead": "05a42f3fb60d21e398e93fbd77426adf4aedb3dd",
+  "consumerCleanupMerge": "9628bcf6764e3d6e5b93929fcfb401d67d700706"
+}

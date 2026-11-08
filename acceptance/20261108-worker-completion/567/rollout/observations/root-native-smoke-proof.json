@@ -1,0 +1,40 @@
+{
+  "state": "verified",
+  "pr": 575,
+  "head": "6898341d2312e86701820e56f2ccce14f83d0d1a",
+  "main": "1e76be4b46e6e402e030fa22d3e233a154fe73bc",
+  "smoke": {
+    "id": 42472000879,
+    "event": "workflow_dispatch",
+    "actor": "juangcarmona",
+    "conclusion": "success",
+    "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42472000879"
+  },
+  "source": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+  "versions": {
+    "cli": "0.12.64",
+    "sdlc": "0.22.3"
+  },
+  "zeroObservationsAndNoDispatchOrModelExecution": true,
+  "settingsUnchanged": true,
+  "nativePostMergeChecks": [
+    {
+      "id": 42471974090,
+      "name": "Release",
+      "conclusion": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42471974090"
+    },
+    {
+      "id": 42471974118,
+      "name": "Lighthouse verification",
+      "conclusion": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42471974118"
+    },
+    {
+      "id": 42471974105,
+      "name": "Public engineering site",
+      "conclusion": "success",
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/42471974105"
+    }
+  ]
+}

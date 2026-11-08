@@ -1,0 +1,10 @@
+{
+  "state": "verified",
+  "readOnly": true,
+  "currentRevision": "9628bcf6764e3d6e5b93929fcfb401d67d700706",
+  "acceptedReview": 42471120370,
+  "maintenance": 42471035757,
+  "historicalOriginStillAuthenticated": true,
+  "freshClaimDeniedAfterLaterWorkflowChanges": true,
+  "noDispatchOrModelExecution": true
+}

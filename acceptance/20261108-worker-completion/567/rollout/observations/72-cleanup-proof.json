@@ -1,0 +1,19 @@
+{
+  "state": "verified",
+  "base": "160a86940b3df1236181d6c64052d797a2adbc37",
+  "versions": {
+    "cli": "0.12.64",
+    "sdlc": "0.22.3"
+  },
+  "onlyOwnControllerAndMarkerRemoved": true,
+  "canonicalRouterRestoredFromOwningInstaller": true,
+  "maintenanceByteIdenticalToPublishedTemplate": true,
+  "production34TestsModelsAllPoliciesAndGuidanceUnchanged": true,
+  "previousInactiveControlsPreserved": true,
+  "allYamlParsesAndUncompiledActionlintPasses": true,
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    "docs/acceptance/567-late-default-72.md",
+    "scripts/acceptance-567-preload.mjs"
+  ]
+}

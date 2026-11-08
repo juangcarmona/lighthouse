@@ -1,0 +1,62 @@
+{
+  "state": "verified",
+  "source": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+  "versions": {
+    "cli": "0.12.64",
+    "sdlc": "0.22.3"
+  },
+  "head": "6898341d2312e86701820e56f2ccce14f83d0d1a",
+  "pr": 575,
+  "changed": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-epic.yml",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    "docs/architecture/06-runtime-view/maintenance.md",
+    "docs/architecture/06-runtime-view/worker-catalogue.md"
+  ],
+  "workflowProjections": 23,
+  "conciseRuntimeViews": 2,
+  "policiesModelsAndRouterSubscriptionsPreserved": true,
+  "allInstalledSourcePinsMatchQualifiedRegistrySource": true,
+  "directCallbackAndNativeCompletionAndScheduledFallbackInstalled": true,
+  "generatedByOwningInstallerAndGhAw": "0.93.2",
+  "registry": {
+    "source": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+    "packages": [
+      {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.22.3",
+        "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+        "integrity": "sha512-ZeWCx5LA0/Pd2HtJFLWuYnhT1Ges7qHcLPdbajZRcIm8cL4gl5yhmZVi432s9SHXCQCr/u5dT3Tp9oMV4Rn5Fw==",
+        "filesCompared": 224
+      },
+      {
+        "name": "@juangcarmona/lighthouse",
+        "version": "0.12.64",
+        "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+        "integrity": "sha512-//RskeiOqrTGEGbdLQQPrHlb6nEAmcWWtKzbx4jnd6DJEwv3jnwx8kcTStAxNNUeeB0DanXVedkDRb9Nvo/qMA==",
+        "filesCompared": 93
+      }
+    ]
+  }
+}

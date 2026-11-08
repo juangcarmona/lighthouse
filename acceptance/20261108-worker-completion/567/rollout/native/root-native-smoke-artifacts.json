@@ -1,0 +1,105 @@
+{
+  "total_count": 5,
+  "artifacts": [
+    {
+      "id": 13614255298,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxNDI1NTI5OA==",
+      "name": "lighthouse-observation-567",
+      "size_in_bytes": 152,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13614255298",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13614255298/zip",
+      "expired": false,
+      "digest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "created_at": "2026-11-08T10:34:47Z",
+      "updated_at": "2026-11-08T10:34:47Z",
+      "expires_at": "2026-11-22T10:34:47Z",
+      "workflow_run": {
+        "id": 42472000879,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "1e76be4b46e6e402e030fa22d3e233a154fe73bc"
+      }
+    },
+    {
+      "id": 13613687510,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzY4NzUxMA==",
+      "name": "lighthouse-maintenance-567",
+      "size_in_bytes": 152,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613687510",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613687510/zip",
+      "expired": false,
+      "digest": "sha256:36cabbe5d35560a8a0a82b071234272ea92536e94c98cc2aa1f193efe1dd33f2",
+      "created_at": "2026-11-08T10:34:47Z",
+      "updated_at": "2026-11-08T10:34:47Z",
+      "expires_at": "2026-11-22T10:34:47Z",
+      "workflow_run": {
+        "id": 42472000879,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "1e76be4b46e6e402e030fa22d3e233a154fe73bc"
+      }
+    },
+    {
+      "id": 13613679004,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzY3OTAwNA==",
+      "name": "lighthouse-telemetry-observe-1",
+      "size_in_bytes": 1717,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613679004",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613679004/zip",
+      "expired": false,
+      "digest": "sha256:bbc20229e93bbf4b86d631a1099f32da018cb8d6b6c119ffdfe6132d193e4885",
+      "created_at": "2026-11-08T10:34:49Z",
+      "updated_at": "2026-11-08T10:34:49Z",
+      "expires_at": "2026-11-22T10:34:48Z",
+      "workflow_run": {
+        "id": 42472000879,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "1e76be4b46e6e402e030fa22d3e233a154fe73bc"
+      }
+    },
+    {
+      "id": 13613522812,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzUyMjgxMg==",
+      "name": "lighthouse-telemetry-reconcile-1",
+      "size_in_bytes": 1728,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613522812",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13613522812/zip",
+      "expired": false,
+      "digest": "sha256:d916772df6f46b4ea6b3beb165755dab2b933d98dd270025485f655b9433560f",
+      "created_at": "2026-11-08T10:34:48Z",
+      "updated_at": "2026-11-08T10:34:48Z",
+      "expires_at": "2026-11-22T10:34:48Z",
+      "workflow_run": {
+        "id": 42472000879,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "1e76be4b46e6e402e030fa22d3e233a154fe73bc"
+      }
+    },
+    {
+      "id": 13612929233,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMjkyOTIzMw==",
+      "name": "lighthouse-telemetry-scan-1",
+      "size_in_bytes": 1572,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13612929233",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse/actions/artifacts/13612929233/zip",
+      "expired": false,
+      "digest": "sha256:bb4f12f9b37b5481f13cceb5460b990decd9ebda5b2118df32201cccf1967283",
+      "created_at": "2026-11-08T10:34:37Z",
+      "updated_at": "2026-11-08T10:34:37Z",
+      "expires_at": "2026-11-22T10:34:37Z",
+      "workflow_run": {
+        "id": 42472000879,
+        "repository_id": 1427668548,
+        "head_repository_id": 1427668548,
+        "head_branch": "main",
+        "head_sha": "1e76be4b46e6e402e030fa22d3e233a154fe73bc"
+      }
+    }
+  ]
+}
