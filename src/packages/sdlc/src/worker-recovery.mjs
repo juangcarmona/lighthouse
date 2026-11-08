@@ -318,9 +318,10 @@ export async function verifyRecoveryOrigin(api, repository, owner, dispatch, par
   if (decision.state !== 'retryable') throw Error(`Recovery no longer authorized: ${decision.code}`);
 }
 
-export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson, { saveCiRecovery, saveCompletionRecovery, ciTrigger = null } = {}) {
+export async function prepareRecovery(api, repository, owner, issueNumber, parent, enabled, now = Date.now(), readArtifact = readActionsJson, { saveCiRecovery, saveCompletionRecovery, ciTrigger = null, admissionWake } = {}) {
+  if (parent.event === 'workflow_run' && admissionWake?.issue !== issueNumber) return { observations: [] };
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
-  await reconcileUnattendedStop(api, repository, owner, issue, comments);
+  if (parent.event !== 'workflow_run') await reconcileUnattendedStop(api, repository, owner, issue, comments);
   const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.body.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
   const unattended = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-unattended:')).at(-1);
   if (unattended && (!entries.length || unattended.id > entries.at(-1).comment.id)) return { observations: [] };
@@ -331,6 +332,7 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
   for (const { comment } of latest.values()) {
     const observation = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...publicObservation } = observation;
+    if (parent.event === 'workflow_run' && (!observation.admissionRejected || admissionWake.runId !== String(run.id) || admissionWake.attempt !== run.run_attempt || admissionWake.revision !== run.head_sha || admissionWake.commentId !== comment.id)) continue;
     if (observation.admissionRejected) {
       const { admissionRejected, confirmed, ...visible } = publicObservation;
       observations.push(visible);
@@ -340,7 +342,7 @@ export async function prepareRecovery(api, repository, owner, issueNumber, paren
       const freshIssue = await api(`issues/${issueNumber}`), freshComments = await issueComments(api, issueNumber);
       const fresh = await observeDispatch(api, repository, owner, await api(`issues/comments/${comment.id}`), freshIssue, freshComments, now, readArtifact);
       if (fresh.state !== 'retryable') continue;
-      const request = admissionRetryRequest(fresh, parent);
+      const request = admissionRetryRequest({ ...fresh, ...(parent.event === 'workflow_run' ? { wake: admissionWake } : {}) }, parent);
       const recorded = await recordDispatch(api, repository, request);
       return { observations, ...(recorded.send ? { request, commentId: recorded.comment.id } : {}) };
     }

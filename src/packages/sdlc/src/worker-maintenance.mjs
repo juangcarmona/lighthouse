@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { dispatchArtifact, sendDispatch, readDispatchReceipt } from './stage-dispatch.mjs';
 import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } from './worker-recovery.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
+import { admissionCompletion } from './admission-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 
 export async function ownerIssues(api, owner) {
@@ -57,9 +58,11 @@ async function main(command) {
   };
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
   const parent = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
-  if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch'].includes(parent.event) || parent.actor?.login !== owner || parent.triggering_actor?.login !== owner) throw Error('Maintenance is not an authorized execution');
+  if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch', 'workflow_run'].includes(parent.event) || ![owner, ...(parent.event === 'workflow_run' ? ['github-actions[bot]'] : [])].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login) throw Error('Maintenance is not an authorized execution');
   if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
   const scope = recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
+  const event = parent.event === 'workflow_run' || command === 'scan' ? JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')) : null;
+  const admissionWake = parent.event === 'workflow_run' ? await admissionCompletion(api, repository, owner, event) : null;
   if (command === 'report') {
     const root = join(env.RUNNER_TEMP, 'worker-observations'), observations = [], seen = [];
     const directories = await readdir(root);
@@ -80,7 +83,11 @@ async function main(command) {
     return;
   }
   if (command === 'scan') {
-    const event = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
+    if (parent.event === 'workflow_run') {
+      const issues = admissionWake && (!scope || scope.includes(admissionWake.issue)) ? [admissionWake.issue] : [];
+      await writeFile(join(env.RUNNER_TEMP, 'maintenance-wake.json'), JSON.stringify({ schemaVersion: 1, parent: { id: parent.id, attempt: parent.run_attempt, event: parent.event, revision: parent.head_sha }, signal: { id: event.workflow_run?.id, attempt: event.workflow_run?.run_attempt, revision: event.workflow_run?.head_sha }, wake: admissionWake, issues }));
+      await output('issues', JSON.stringify(issues)); return;
+    }
     const requested = event.inputs?.issue;
     if (requested && !/^[1-9][0-9]*$/.test(requested)) throw Error('Issue must be a canonical positive integer');
     if (requested && scope && !scope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
@@ -89,6 +96,7 @@ async function main(command) {
   }
   const issue = Number(env.LIGHTHOUSE_ISSUE);
   if (!Number.isSafeInteger(issue) || issue < 1) throw Error('Invalid issue');
+  if (parent.event === 'workflow_run' && admissionWake?.issue !== issue) throw Error('Completion wake differs from this issue');
   if (scope && !scope.includes(issue)) throw Error('Issue is outside the configured maintenance scope');
   const dir = join(env.RUNNER_TEMP, `lighthouse-maintenance-${env.GITHUB_RUN_ID}-${issue}`);
   if (command === 'observe') {
@@ -118,7 +126,7 @@ async function main(command) {
   if (command !== 'prepare') throw Error('Unknown maintenance command');
   await mkdir(dir, { recursive: true });
   try {
-    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true', Date.now(), undefined, { ciTrigger: githubAppCiTrigger(env), saveCiRecovery: value => writeFile(join(dir, 'ci-recovery.json'), JSON.stringify(value)), saveCompletionRecovery: value => writeFile(join(dir, 'completion-recovery.json'), JSON.stringify(value)) });
+    const result = await prepareRecovery(api, repository, owner, issue, parent, env.LIGHTHOUSE_RECOVERY_ENABLED === 'true', Date.now(), undefined, { admissionWake, ciTrigger: githubAppCiTrigger(env), saveCiRecovery: value => writeFile(join(dir, 'ci-recovery.json'), JSON.stringify(value)), saveCompletionRecovery: value => writeFile(join(dir, 'completion-recovery.json'), JSON.stringify(value)) });
     await writeFile(join(dir, 'observations.json'), JSON.stringify(result.observations));
     if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, result.observations.map(o => `- Issue #${o.issue}, ${o.worker}: ${o.state}. ${o.nextAction}`).join('\n') + '\n');
     await output('send', String(!!result.request));
