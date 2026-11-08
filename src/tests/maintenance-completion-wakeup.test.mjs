@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { matchesGlob } from 'node:path';
 import { admissionCompletion } from '../packages/sdlc/src/admission-recovery.mjs';
 import { prepareRecovery, verifyRecoveryOrigin } from '../packages/sdlc/src/worker-recovery.mjs';
 import { loadDispatch, admitDispatch } from '../packages/sdlc/src/stage-dispatch.mjs';
@@ -85,6 +86,11 @@ test('distributed maintenance subscribes to native review completion and preserv
   assert.match(source, /workflow_run:\n\s+workflows: \[review\]\n\s+types: \[completed\]/);
   assert.match(source, /cron: '17,47 \* \* \* \*'/);
   assert.match(source, /github\.event_name == 'workflow_run'/);
+  const wake = source.match(/name: (lighthouse-[a-z-]+)-\$\{\{ github\.run_attempt \}\}/)[1] + '-1';
+  const reports = source.slice(source.indexOf('  report:'), source.indexOf('  report-stalled:'));
+  const pattern = reports.match(/pattern: (.+)/)[1];
+  assert.equal(matchesGlob('lighthouse-maintenance-7', pattern), true);
+  assert.equal(matchesGlob(wake, pattern), false, 'Wake evidence must not enter the observation-only reporter');
 });
 
 
