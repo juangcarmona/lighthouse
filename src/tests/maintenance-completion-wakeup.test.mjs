@@ -86,3 +86,41 @@ test('distributed maintenance subscribes to native review completion and preserv
   assert.match(source, /cron: '17,47 \* \* \* \*'/);
   assert.match(source, /github\.event_name == 'workflow_run'/);
 });
+
+
+test('the real maintenance scan reads completion events, respects scope and retains the native wake identity', async () => {
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'maintenance-completion-'));
+  try {
+    for (const scope of ['[7]', '[]']) {
+      const f = await completion();
+      await writeFile(join(root, 'event.json'), JSON.stringify(f.event));
+      await writeFile(join(root, 'preload.mjs'), `import { registerHooks } from 'node:module';
+        registerHooks({ load(url, context, next) {
+          if (url.endsWith('/actions-artifact.mjs')) return { format:'module', shortCircuit:true, source:'export async function readActionsJson(...args){return globalThis.acceptanceFixture.readArtifact(...args)}; export function createActionsJsonReader(){throw Error("Unexpected artifact reader")}' };
+          return next(url, context);
+        }});
+        const { fixture } = await import('${new URL('./helpers/continuation-admission-fixture.mjs', import.meta.url).href}');
+        const f = globalThis.acceptanceFixture = await fixture();
+        f.run.display_title = 'review #7 · request 30';
+        f.maintenance.event = 'workflow_run';
+        f.maintenance.actor = f.maintenance.triggering_actor = {login:'github-actions[bot]',type:'Bot'};
+        globalThis.fetch = async (url, options) => {
+          if (options.method !== 'GET') throw Error('Scan attempted a write');
+          const path = url.replace('https://api.github.com/repos/owner/repo/', '');
+          return {ok:true,status:200,json:async()=>f.api(path)};
+        };`);
+      const output = join(root, 'output-' + scope.length);
+      const result = spawnSync(process.execPath, ['--import', join(root, 'preload.mjs'), new URL('../packages/sdlc/src/worker-maintenance.mjs', import.meta.url).pathname, 'scan'], { encoding: 'utf8', timeout: 20000, env: { ...process.env, GITHUB_REPOSITORY:'owner/repo', GITHUB_REPOSITORY_OWNER:'owner', GITHUB_RUN_ID:'300', GITHUB_RUN_ATTEMPT:'1', GITHUB_EVENT_PATH:join(root,'event.json'), GITHUB_OUTPUT:output, RUNNER_TEMP:root, LIGHTHOUSE_MAINTENANCE_ENABLED:'true', LIGHTHOUSE_MAINTENANCE_ISSUES:scope } });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal((await readFile(output, 'utf8')).trim(), 'issues=' + scope);
+      const retained = JSON.parse(await readFile(join(root, 'maintenance-wake.json'), 'utf8'));
+      assert.equal(retained.parent.event, 'workflow_run');
+      assert.equal(retained.signal.id, 200);
+      assert.equal(retained.wake.commentId, 30);
+    }
+  } finally { await rm(root, {recursive:true,force:true}); }
+});
