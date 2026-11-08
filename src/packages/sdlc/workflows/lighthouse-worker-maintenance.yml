@@ -44,7 +44,7 @@ jobs:
         if: always() && github.event_name == 'workflow_run'
         uses: actions/upload-artifact@v7
         with:
-          name: lighthouse-maintenance-wake-${{ github.run_attempt }}
+          name: lighthouse-admission-wake-${{ github.run_attempt }}
           path: ${{ runner.temp }}/maintenance-wake.json
           if-no-files-found: error
           retention-days: 14
