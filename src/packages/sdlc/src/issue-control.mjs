@@ -4,6 +4,7 @@ import { createIssueIntent, validateIssueIntent, issueControlActions, issueInten
 import { parseIssueComment } from './issue-comment-intent.mjs';
 import { issueComments } from './stage-dispatch.mjs';
 import { findControlResult } from './issue-control-ledger.mjs';
+import { resolveControlAlias, observeControlExecution } from './issue-control-execution.mjs';
 
 const positive = value => Number.isSafeInteger(value) && value > 0;
 const same = (left, right) => canonicalIssueIntent(left) === canonicalIssueIntent(right);
@@ -82,10 +83,17 @@ export function createIssueControl({ repository, transport, readArtifact, readAu
         source: found.record.source, sourceAcknowledged: false, questionResolved: false, retry: false };
       if (found.state === 'recorded') {
         const { result, source, outcomeSource, request } = found.record;
+        let original = found.record, execution;
+        try {
+          original = await resolveControlAlias({ api: read, repository, actor: identity, metadata, record: found.record, readArtifact });
+          execution = await observeControlExecution({ api: read, repository, actor: identity, record: original, readArtifact });
+        } catch { execution = { availability: 'unavailable', reason: 'source-execution-unverified', questionConsumed: false, questionResolved: false }; }
         const states = { claimed: 'unknown', rejected: 'rejected', admitted: 'source-admitted', alias: 'source-alias' };
         return { state: states[result.status], key: prepared.key, sourceKey: result.key, aliasKey: result.aliasKey,
           routerRunId: result.routerRunId, routerAttempt: result.routerAttempt, dispatchCommentId: result.dispatchCommentId,
-          source, outcomeSource, reason: result.reason, sourceAcknowledged: result.status === 'admitted', questionResolved: false, retry: false,
+          source, outcomeSource, reason: result.reason, sourceAcknowledged: original.result.status === 'admitted',
+          sourceResult: { status: original.result.status, key: original.result.key, reason: original.result.reason, source: original.source },
+          execution, questionResolved: execution.questionResolved === true, retry: false,
           ...(intent.action === 'continue' ? { commentId: request.commentId,
             commentSource: `https://github.com/${repository}/issues/${intent.issue.number}#issuecomment-${request.commentId}` } : {}) };
       }
@@ -142,3 +150,6 @@ export function createIssueControl({ repository, transport, readArtifact, readAu
   };
   return { observe, prepare, submit, reconcile };
 }
+
+export { parseIssueComment } from './issue-comment-intent.mjs';
+export { validateIssueIntent, parseIssueIntent } from './issue-control-intent.mjs';

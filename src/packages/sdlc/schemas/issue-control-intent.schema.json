@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lighthouse issue-control intent v1",
+  "description": "Wire shape. The SDK validator also enforces canonical sorted JSON, exact UTF-8 byte bounds, repository identity, and attributable comment binding. Maximum serialized intent: 128000 bytes.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "repository",
+        "issue",
+        "actorId",
+        "action",
+        "scope",
+        "binding"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]{1,100}/[a-z0-9_.-]{1,100}$"
+            }
+          }
+        },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "number"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "actorId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "action": {
+          "const": "refine"
+        },
+        "scope": {
+          "const": "stage-only"
+        },
+        "binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceRevision",
+            "defaultBranch",
+            "inputDigest",
+            "policyDigest",
+            "capabilityDigest"
+          ],
+          "properties": {
+            "sourceRevision": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "defaultBranch": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "inputDigest": {
+              "$ref": "#/$defs/hash"
+            },
+            "policyDigest": {
+              "$ref": "#/$defs/hash"
+            },
+            "capabilityDigest": {
+              "$ref": "#/$defs/hash"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "repository",
+        "issue",
+        "actorId",
+        "action",
+        "scope",
+        "binding"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]{1,100}/[a-z0-9_.-]{1,100}$"
+            }
+          }
+        },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "number"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "actorId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "action": {
+          "const": "propose"
+        },
+        "scope": {
+          "const": "stage-only"
+        },
+        "binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceRevision",
+            "defaultBranch",
+            "inputDigest",
+            "policyDigest",
+            "capabilityDigest"
+          ],
+          "properties": {
+            "sourceRevision": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "defaultBranch": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            },
+            "inputDigest": {
+              "$ref": "#/$defs/hash"
+            },
+            "policyDigest": {
+              "$ref": "#/$defs/hash"
+            },
+            "capabilityDigest": {
+              "$ref": "#/$defs/hash"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "repository",
+        "issue",
+        "actorId",
+        "action",
+        "scope",
+        "body"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]{1,100}/[a-z0-9_.-]{1,100}$"
+            }
+          }
+        },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "number"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "actorId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "action": {
+          "const": "comment"
+        },
+        "scope": {
+          "const": "comment-only"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 49152,
+          "description": "Runtime validation additionally enforces Unicode validity, nonblank text, LF normalization and the complete formatted comment limit of 48 KiB UTF-8."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "repository",
+        "issue",
+        "actorId",
+        "action",
+        "scope",
+        "body",
+        "question"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]{1,100}/[a-z0-9_.-]{1,100}$"
+            }
+          }
+        },
+        "issue": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "number"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "actorId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "action": {
+          "const": "continue"
+        },
+        "scope": {
+          "const": "original-grant"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 49152,
+          "description": "Runtime validation additionally enforces Unicode validity, nonblank text, LF normalization and the complete formatted comment limit of 48 KiB UTF-8."
+        },
+        "question": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "commentId",
+            "requestId",
+            "questionDigest",
+            "grantDigest"
+          ],
+          "properties": {
+            "commentId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "requestId": {
+              "$ref": "#/$defs/hash"
+            },
+            "questionDigest": {
+              "$ref": "#/$defs/hash"
+            },
+            "grantDigest": {
+              "$ref": "#/$defs/hash"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

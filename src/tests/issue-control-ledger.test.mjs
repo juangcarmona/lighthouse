@@ -19,6 +19,7 @@ function fixture() {
       if (method !== 'GET') state.mutations++;
       if (path === 'issues/7') return { id: 33, number: 7, state: 'closed' };
       if (path.startsWith('issues/7/comments?')) return state.comments;
+      if (path.startsWith('actions/artifacts?')) return { total_count: 0, artifacts: [] };
       if (path === 'actions/runs/44/attempts/1') return state.run;
       throw Error('Unexpected path ' + path);
     }, readArtifact: async (_api, repository, run, name, member) => {
@@ -120,4 +121,16 @@ test('a rejection records invocation source separately from the stale requested 
   delete continuation.binding;
   assert.throws(() => createControlRequest(continuation, 'a'.repeat(40), 44, 1), /Unsupported/);
   assert.equal(createControlRequest(continuation, 'a'.repeat(40), 44, 1, { commentId: 90 }).commentId, 90);
+});
+
+ test('durable exact-key artifact discovery survives deletion of the bot receipt', async () => {
+  const { state, request, options, record } = fixture(); record('admitted', { dispatchCommentId: 66 }); state.comments = [];
+  const original = options.api, reader = options.readArtifact;
+  options.api = async (path, ...args) => path.startsWith('actions/artifacts?') ? { total_count: 1, artifacts: [{ name: new URLSearchParams(path.split('?')[1]).get('name'), expired: false, workflow_run: { id: 44 } }] } : original(path, ...args);
+  options.readArtifact = async (api, repository, run, name, member) => name.startsWith('lighthouse-issue-control-key-') || name.startsWith('lighthouse-issue-control-payload-') ? request : reader(api, repository, run, name, member);
+  const found = await findControlResult(options);
+  assert.equal(found.state, 'recorded'); assert.equal(found.record.result.dispatchCommentId, 66);
+  assert.equal(found.record.commentId, null); assert.equal(state.mutations, 0);
+  options.api = async path => path.startsWith('actions/artifacts?') ? { total_count: 100, artifacts: [] } : original(path);
+  await assert.rejects(findControlResult(options), /history unavailable/);
 });

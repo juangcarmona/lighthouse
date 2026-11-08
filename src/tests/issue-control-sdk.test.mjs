@@ -1,13 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createIssueControl } from '../packages/sdlc/src/issue-control.mjs';
 import { createIssueControlManifest } from '../packages/sdlc/src/issue-control-contract.mjs';
 import { createControlRequest, createControlResult, controlResultBody } from '../packages/sdlc/src/issue-control-ledger.mjs';
 import { createIssueIntent, issueIntentKey, issueIntentDigest, issueIntentEffect } from '../packages/sdlc/src/issue-control-intent.mjs';
 
 const id = '12345678-1234-4234-8234-123456789abc';
-const router = '# lighthouse-issue-control:v1\non:\n  workflow_dispatch:\n    inputs:\n      client_request:\n        type: string\nenv:\n  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose\n  LIGHTHOUSE_AUTO_IMPLEMENT: true\n  LIGHTHOUSE_COMPLETION_ENABLED: true\n  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false\n';
+const router = '# lighthouse-issue-control:v1\n' + readFileSync(new URL('../packages/sdlc/workflows/lighthouse-sdlc-router.yml', import.meta.url), 'utf8')
+  .replace('  client-control:\n    if: >-\n      false &&', '  client-control:\n    if: >-\n      true &&')
+  .replace('LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review', 'LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose');
 function file(text) {
   const bytes = Buffer.from(text);
   return { type: 'file', size: bytes.length, encoding: 'base64', content: bytes.toString('base64'), sha: createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex') };
@@ -41,6 +44,7 @@ function fixture() {
       if (path === 'issues/7') return state.issue;
       if (path === 'commits/main') return { sha: state.revision };
       if (path.startsWith('issues/7/comments?')) return state.comments;
+      if (path.startsWith('actions/artifacts?')) return { total_count: 0, artifacts: [] };
       if (path.startsWith('contents/.lighthouse/issue-control.json')) return file(JSON.stringify(createIssueControlManifest(router)));
       if (path.startsWith('contents/.github/workflows/')) return file(router);
       if (path.startsWith('actions/variables/')) return { name: path.split('/').at(-1), value: path.endsWith('AUTOMATION_ENABLED') && state.automation ? 'true' : 'false' };

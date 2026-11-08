@@ -1,7 +1,7 @@
 {
   "workItem": 119,
-  "kind": "internal SDK/provenance implementation checkpoint, not public export or integration acceptance",
-  "recordedAt": "2026-11-08T03:04:04.204831+00:00",
+  "kind": "Connected public source implementation checkpoint; native qualification and release pending",
+  "recordedAt": "2026-11-08T03:48:30.741649+00:00",
   "implemented": [
     "Read-only source policy/admission facts with injected repository-bound transport and verified actor/permission binding",
     "Strict typed intent and installed-contract parsing, stable namespace and source/input/policy bindings",
@@ -11,22 +11,27 @@
     "Canonical existing reply-input checks, transport-order-independent original-grant digest, source question timestamps and readable unsupported questions with disabled continuation",
     "Case/spacing variants of reserved typed metadata fail closed across legacy command/review/decision parsers",
     "Reconciliation distinguishes observed equivalent work from a source-owned durable alias, and recovers original source-confirmed continuation before inspecting a later edited/deleted response",
-    "Source invocation revision and originating response comment identity are recorded separately from the requested stale grant, allowing explicit source rejection without fresh work"
+    "Source invocation revision and originating response comment identity are recorded separately from the requested stale grant, allowing explicit source rejection without fresh work",
+    "Opt-in source router job, exact capability declaration and existing per-issue native dispatch serialization",
+    "Immutable source request plus exact stable-key and equivalent-payload indexes survive a deleted result comment",
+    "Source admission/rejection/alias production and explicit stage-only flags, with original-grant continuation intersection",
+    "Native receipt, worker snapshot, result, source report and publisher bind the original client identity and grant",
+    "Authenticated alias resolution and worker run/attempt/result observation; continuation consumption and resolution remain distinct",
+    "Public SDK/parser/schema exports, owning guide, isolated packed-consumer imports and actual source CLI fixture sequence"
   ],
   "verification": {
     "fullRepository": {
       "status": "passed",
       "command": "npm run verify",
-      "tests": 1120,
-      "passed": 1110,
+      "tests": 1140,
+      "passed": 1130,
       "skipped": 10,
       "failed": 0,
       "publicSiteFiles": 136
     },
     "focused": {
-      "tests": 73,
-      "passed": 73,
-      "failed": 0
+      "status": "passed",
+      "coverage": "CLI subprocess intake/admission/single native POST/publication; authenticated execution and aliases; SDK, contract, typed comment and legacy proposal compatibility; isolated packed public imports"
     },
     "negativeControls": [
       "Unsupported pending-worker question was lost despite verified evidence",
@@ -36,16 +41,37 @@
       "Multiple comments for one intent were returned as unknown instead of conflict",
       "Uppercase or missing-space metadata entered legacy parsers",
       "Equivalent old work incorrectly acknowledged a new key without a durable source alias",
-      "A deleted/edited current response hid an already authenticated original continuation outcome"
-    ]
+      "A deleted/edited current response hid an already authenticated original continuation outcome",
+      "Catalogue verification caught an undocumented installer selection; the source-linked catalogue was updated",
+      "Real existing-authority provider validation caught the new guide missing from its copied fixture; copy coverage was restored"
+    ],
+    "openSpec": {
+      "passed": 33,
+      "failed": 0
+    },
+    "architectureCitations": {
+      "current": 40,
+      "stale": 0,
+      "tampered": 0,
+      "unresolved": 0
+    },
+    "officialCompiler": {
+      "version": "0.93.2",
+      "workers": [
+        "triage",
+        "refine",
+        "propose",
+        "apply-review"
+      ],
+      "passed": 4,
+      "failed": 0
+    }
   },
   "remaining": [
-    "Public package export and parser documentation are not enabled",
-    "Official opt-in router handler/manifest generation and canonical native request/snapshot/result propagation",
-    "Source-owned admission/rejection/alias producer and background-producer compatibility proof",
-    "Actual authorized provider and packed-consumer qualification",
-    "Independent final review, protected publication, consumer adoption and integration"
+    "Actual authorized user dispatch/comment/current-question continuation and lost-response/restart qualification in the isolated source-owned repository",
+    "Independent final-head audit and configured forge checks",
+    "Protected public publication, registry verification, released consumer adoption, integration and retrospective"
   ],
-  "authority": "No new source job, installed contract or public SDK export is advertised or enabled by this checkpoint. Consumers cannot adopt it as a released control API.",
+  "authority": "The public SDK and optional router entry exist in this source branch. They are not released or enabled in any adopter by this checkpoint. V1 explicitly declines epic/custom-model/Product Change pending contexts; background issue binding remains unknown when unsupported.",
   "qualifiedBase": "Merged source ee3f2e591b8ad78db87bc28e6242f1d0f0b7b34c without rewriting the work branch; full verification repeated."
 }

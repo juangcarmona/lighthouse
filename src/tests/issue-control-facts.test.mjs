@@ -109,3 +109,10 @@ test('a verified pending question cannot grant continuation after its source wai
   }
   assert.equal(state.mutations, 0);
 });
+
+test('unqualified epic admission never becomes a parallel typed policy', async () => {
+  const { options } = fixture(); options.readPolicy = async () => ({ automationEnabled: true, epicEnabled: true, digest: 'a'.repeat(64) });
+  const facts = await collectIssueControlFacts(options);
+  assert.equal(facts.actions.refine.availability, 'unsupported'); assert.equal(facts.actions.refine.reason, 'epic-admission-contract-unsupported');
+  assert.equal(facts.actions.comment.eligible, true);
+});

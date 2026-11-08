@@ -13,6 +13,11 @@ const readOnly = api => (path, method = 'GET', body, optional = false) => {
   return api(path, method, undefined, optional);
 };
 
+export function controlIndexArtifact(kind, value) {
+  if (!['key', 'payload'].includes(kind) || !hash(value)) throw Error('Invalid control index');
+  return `lighthouse-issue-control-${kind}-${value}`;
+}
+
 export function controlRequestArtifact(run, attempt) {
   if (!positive(run) || !positive(attempt)) throw Error('Invalid control execution identity');
   return `lighthouse-issue-control-${run}-${attempt}`;
@@ -68,13 +73,14 @@ export function parseControlResult(comment, repository, number) {
   return validateResult(result);
 }
 
-export async function loadControlResult({ api, repository, number, issueId, actor, metadata, comment, readArtifact }) {
+export async function loadControlResult({ api, repository, number, issueId, actor, metadata, comment, indexedRequest, readArtifact }) {
   api = readOnly(api);
-  let result = parseControlResult(comment, repository, number);
+  let result = comment ? parseControlResult(comment, repository, number) : createControlResult(validateRequest(indexedRequest), { status: 'claimed' });
   const run = await api(`actions/runs/${result.routerRunId}/attempts/${result.routerAttempt}`);
   const request = validateRequest(await readArtifact(api, repository, String(result.routerRunId), controlRequestArtifact(result.routerRunId, result.routerAttempt), 'request.json'));
   if (run.id !== result.routerRunId || run.run_attempt !== result.routerAttempt || run.repository?.full_name?.toLowerCase() !== repository.toLowerCase()
       || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.head_sha !== request.sourceRevision
+      || indexedRequest && canonicalIssueIntent(indexedRequest) !== canonicalIssueIntent(request)
       || run.actor?.id !== actor.id || run.actor?.type !== 'User' || run.triggering_actor?.id !== actor.id
       || run.triggering_actor?.type !== 'User' || metadata.owner?.id !== actor.id || metadata.owner.type !== 'User'
       || request.routerRunId !== run.id || request.routerAttempt !== run.run_attempt || request.intent.actorId !== actor.id
@@ -90,7 +96,7 @@ export async function loadControlResult({ api, repository, number, issueId, acto
         || result.status !== 'claimed' && canonicalIssueIntent(outcome) !== canonicalIssueIntent(result)) throw Error('Control outcome artifact does not match its receipt');
     result = outcome;
   } else if (result.status !== 'claimed') throw Error('Terminal control outcome is not authenticated');
-  return { result, request, commentId: comment.id, source: `https://github.com/${repository}/issues/${number}#issuecomment-${comment.id}`,
+  return { result, request, commentId: comment?.id ?? null, source: comment ? `https://github.com/${repository}/issues/${number}#issuecomment-${comment.id}` : `https://github.com/${repository}/actions/runs/${result.routerRunId}/attempts/${result.routerAttempt}`,
     outcomeSource: outcome === null ? null : `https://github.com/${repository}/actions/runs/${result.routerRunId}/attempts/${result.routerAttempt}` };
 }
 
@@ -107,6 +113,22 @@ export async function findControlResult({ api, repository, intent, actor, metada
     const result = parseControlResult(comment, repository, intent.issue.number);
     if (result.key !== key && result.payloadDigest !== payload) continue;
     records.push(await loadControlResult({ api, repository, number: intent.issue.number, issueId: issue.id, actor, metadata, comment, readArtifact }));
+  }
+  // Exact artifact names survive a deleted or edited comment index. Incomplete
+  // history stays unknown; it never authorizes a second request.
+  for (const [kind, value] of [['key', key], ['payload', payload]]) {
+    const name = controlIndexArtifact(kind, value);
+    const listing = await api(`actions/artifacts?name=${name}&per_page=100`);
+    if (!Array.isArray(listing?.artifacts) || listing.total_count !== listing.artifacts.length || listing.artifacts.length >= 100)
+      throw Error('Control index history unavailable');
+    for (const artifact of listing.artifacts) {
+      if (artifact.name !== name || !positive(artifact.workflow_run?.id) || artifact.expired !== false) throw Error('Control index expired or invalid');
+      const indexedRequest = validateRequest(await readArtifact(api, repository, String(artifact.workflow_run.id), name, 'request.json'));
+      if (indexedRequest.routerRunId !== artifact.workflow_run.id || (kind === 'key' ? issueIntentKey(indexedRequest.intent) : issueIntentDigest(indexedRequest.intent)) !== value)
+        throw Error('Control index target mismatch');
+      if (records.some(record => record.result.routerRunId === indexedRequest.routerRunId && record.result.routerAttempt === indexedRequest.routerAttempt)) continue;
+      records.push(await loadControlResult({ api, repository, number: intent.issue.number, issueId: issue.id, actor, metadata, indexedRequest, readArtifact }));
+    }
   }
   const same = records.filter(record => record.result.key === key);
   if (same.some(record => record.result.payloadDigest !== payload)) return { state: 'conflict', records: same };

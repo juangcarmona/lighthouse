@@ -47,7 +47,7 @@ async function reservations(api, repository, owner, issue, comments, capability,
 
 // api is repository-bound. The caller supplies authenticated identity, policy and
 // installed-contract readers; all nested provider operations are forced read-only.
-export async function collectIssueControlFacts({ api, repository, number, actor, readArtifact, readPolicy, readCapability, readAuthority, now = () => new Date(), excludeCommentId }) {
+export async function collectIssueControlFacts({ api, repository, number, actor, readArtifact, readPolicy, readCapability, readAuthority, now = () => new Date() }) {
   if (typeof api !== 'function' || typeof readArtifact !== 'function' || typeof readPolicy !== 'function' || typeof readCapability !== 'function'
       || !validControlRepository(repository)
       || !Number.isSafeInteger(number) || number < 1) throw Error('Invalid issue-control reader');
@@ -67,7 +67,7 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
   const sourceRevision = (await read(`commits/${encodeURIComponent(metadata.default_branch)}`)).sha;
   if (!revision(sourceRevision)) return { availability: 'unavailable', reason: 'source-revision-unavailable' };
   const comments = await issueComments(read, number);
-  const answers = ownerIntentComments(comments.filter(comment => comment.id !== excludeCommentId), metadata.owner.login);
+  const answers = ownerIntentComments(comments, metadata.owner.login);
   const inputDigest = taskDigest(issue, answers);
   let capability, policy, authority;
   try { authority = typeof readAuthority === 'function' ? await readAuthority({ api: read, repository, actor, metadata }) : null; } catch { authority = null; }
@@ -87,6 +87,7 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
     if (writeAllowed('dispatchWrite')) { actions[stage] = writeAllowed('dispatchWrite'); continue; }
     if (!policyKnown) { actions[stage] = unavailable('policy-unavailable'); continue; }
     if (!policy.automationEnabled) { actions[stage] = refusal('automation-disabled'); continue; }
+    if (policy.epicEnabled) { actions[stage] = refusal('epic-admission-contract-unsupported', 'unsupported'); continue; }
     const route = routeIssue({ issue, inputs: { issue: String(number), stage } }, actor.login, metadata.owner.login, 'workflow_dispatch', comments);
     if (!route.run || !eligibleIssueAuthor(issue, metadata.owner.login, stage)) { actions[stage] = refusal(route.reason ?? 'issue-author-not-admitted'); continue; }
     if (reservation.availability !== 'available') { actions[stage] = unavailable(reservation.reason); continue; }
@@ -110,7 +111,8 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
         try { checkReplyInputs(evidence.request, issue, answers, pending.report, sourceRevision); inputFreshness = 'available'; }
         catch { inputFreshness = 'changed'; }
       }
-      const unsupported = pending.worker || evidence.request.worker && evidence.request.worker !== evidence.request.stage || evidence.request.epic;
+      const unsupported = pending.worker || evidence.request.worker && evidence.request.worker !== evidence.request.stage || evidence.request.epic
+        || evidence.request.modelSelection || evidence.request.handoff || evidence.request.productResume || evidence.request.productAlignment || evidence.request.productParent;
       if (!positive(pending.report.id) || !text || validateStageEnvelope(evidence.envelope, evidence.request).length || evidence.envelope.result.status !== 'blocked' || evidence.request.stage !== pending.stage)
         question = { availability: 'unavailable', reason: 'pending-question-not-verified' };
       else question = { availability: unsupported ? 'unsupported' : 'available', ...(unsupported ? { reason: 'pending-worker-kind-unsupported' } : {}), stage: pending.stage, text, commentId: pending.report.id, requestId: evidence.request.runId,
@@ -122,7 +124,8 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
     } catch { question = { availability: 'unavailable', reason: 'pending-question-not-verified' }; }
   }
   actions.continue = !supported ? refusal('installed-contract-unsupported', 'unsupported') : writeAllowed('commentWrite') ? writeAllowed('commentWrite') : !policyKnown ? unavailable('policy-unavailable')
-    : !policy.automationEnabled ? refusal('automation-disabled') : question.availability !== 'available' ? unavailable('pending-question-not-verified')
+    : !policy.automationEnabled ? refusal('automation-disabled') : policy.epicEnabled ? refusal('epic-admission-contract-unsupported', 'unsupported')
+      : !capability.stages.includes(question.stage) ? refusal('stage-contract-unsupported', 'unsupported') : question.availability !== 'available' ? unavailable('pending-question-not-verified')
       : question.inputFreshness === 'unavailable' ? unavailable('pending-question-inputs-unavailable')
       : !question.waitCurrent ? refusal('source-wait-not-current') : !question.current ? refusal('pending-question-inputs-changed') : reservation.availability !== 'available' ? unavailable(reservation.reason)
         : reservation.active.length ? refusal('authenticated-source-reservation') : { eligible: true, availability: 'available' };

@@ -73,6 +73,12 @@ The router and worker use separate concurrency groups; workers serialize by issu
 
 Receipts distinguish requested, admitted, waiting, completed and failed executions. An Actions success can contain a blocked assessment. Duplicate events reuse authenticated requests or candidates; an unconfirmed dispatch or uncertain publication needs reconciliation before a retry. Human-working stops new admission and requests termination of active work. See [handoffs and recovery](../../../src/packages/sdlc/handoffs.md).
 
+## Typed client admission
+
+The optional [issue-control entry](../../../src/packages/sdlc/issue-control.md) reuses the router's issue concurrency and native dispatch/worker publication boundary. The caller retains its prepared intent and atomic journal; the source retains the request, stable-key/payload indexes and authenticated outcome artifacts. Source reconciliation precedes fresh admission, so a lost response or deleted result comment cannot authorize an automatic resend. A typed stage request sets its continuation flags explicitly; a typed ordinary comment is excluded from legacy command and reply parsers. A continuation binds its original question and grant through worker input and validated result. [Source admission](../../../src/packages/sdlc/src/issue-control-actions.mjs), [native binding](../../../src/packages/sdlc/src/issue-control-native.mjs) and [execution observation](../../../src/packages/sdlc/src/issue-control-execution.mjs) implement this interaction. Actual-user native and package qualification remain pending for this implementation.
+
+<!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33" -->
+
 ## Evidence and scope
 
 The worker pages link executable sources and tests. Retained native exercises additionally cover [triage and duplicate requests](../../process/20261103-321-delivery-reconciliation/README.md), [same-PR verification](../../process/20261103-318-same-pr-verification/README.md), [integration assessment without merge](../../process/20261103-317-integration-admission/README.md) and [bounded CI correction](../../process/20261104-311-ci-repair/README.md), [confirmed-effect recovery](../../process/20261104-142-recovery/README.md) and [actionable reports](../../process/20261104-143-reports/README.md). Each record states its tested revision and limits; it does not establish acceptance of every route or adopter.

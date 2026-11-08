@@ -18,6 +18,9 @@ function routerPolicy(router) {
 
 export function createIssueControlManifest(router, backgroundWorkflows = []) {
   if (!/^# lighthouse-issue-control:v1$/m.test(router) || !/^      client_request:$/m.test(router)
+      || !/^  client-control:\n    if: >-\n      true && /m.test(router)
+      || !router.includes('group: lighthouse-issue-${{ github.event.issue.number || inputs.issue }}')
+      || ['prepare', 'admit', 'send', 'publish'].some(phase => !router.includes(`issue-control-actions.mjs ${phase}`))
       || !Array.isArray(backgroundWorkflows) || backgroundWorkflows.some(name => !background.includes(name))
       || new Set(backgroundWorkflows).size !== backgroundWorkflows.length) throw Error('Router has no supported client entry contract');
   return { schemaVersion: 1, contractVersion: 1, routerDigest: digest(router), ...routerPolicy(router), backgroundWorkflows };

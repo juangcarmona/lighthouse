@@ -29,6 +29,7 @@ export function pendingReply(event, comments) {
 export const issueCommandLabels = capabilityCatalog.capabilities.find(c => c.id === 'labels').configuration.labels.filter(l => l.role === 'command').map(l => l.name);
 
 export function routeIssue(event, actor, owner, eventName, comments = []) {
+  if (eventName === 'workflow_dispatch' && event.inputs?.client_request) return { run: false, reason: 'Typed requests require explicit source intent admission' };
   if (eventName === 'issue_comment' && !legacyControlComment(event.comment)) return { run: false, reason: 'Typed client comments require explicit source intent admission' };
   if (actor !== owner || event.issue?.pull_request || (event.issue && event.issue.state !== 'open')) return { run: false, reason: 'Unauthorized actor or closed/non-issue target' };
   const labels = event.issue?.labels?.map(x => x.name) ?? [];

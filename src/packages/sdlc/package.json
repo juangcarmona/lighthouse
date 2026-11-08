@@ -45,7 +45,8 @@
     "unattended.md",
     "LICENSE",
     "NOTICE",
-    "telemetry.md"
+    "telemetry.md",
+    "issue-control.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -98,7 +99,9 @@
     "./unattended": "./src/unattended.mjs",
     "./telemetry": "./src/telemetry.mjs",
     "./telemetry-opencode": "./src/telemetry-opencode.mjs",
-    "./schemas/telemetry-event.schema.json": "./schemas/telemetry-event.schema.json"
+    "./schemas/telemetry-event.schema.json": "./schemas/telemetry-event.schema.json",
+    "./issue-control": "./src/issue-control.mjs",
+    "./schemas/issue-control-intent.schema.json": "./schemas/issue-control-intent.schema.json"
   },
   "license": "Apache-2.0"
 }

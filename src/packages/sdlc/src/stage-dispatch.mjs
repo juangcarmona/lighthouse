@@ -28,6 +28,7 @@ export const dispatchIntent = request => digest(JSON.stringify({
   task: request.taskDigest, source: request.sourceRevision, workflow: request.workflowRevision,
   feedback: request.feedbackKey, epic: request.epic, completion: request.completionAuthorization,
   autoImplement: request.autoImplement, productChangeEnabled: request.productChangeEnabled,
+  client: request.client ? { payloadDigest: request.client.payloadDigest, action: request.client.action, scope: request.client.scope } : undefined,
   integration: request.integrationRequest, productApproval: request.productApproval,
   productParent: request.productParent, productResume: request.productResume, productAlignment: request.productAlignment,
   productReview: request.productReview, productFeedback: request.productFeedback,
@@ -42,6 +43,7 @@ export function readDispatchReceipt(comment, repository, issue) {
   const rejected = receipt.admissionRejected;
   if (rejected && (rejected.code !== 'workflow-revision-rejected' || rejected.attempt !== 1 || !sha(rejected.expectedRevision) || !sha(rejected.observedRevision) || rejected.expectedRevision === rejected.observedRevision || !positive(receipt.workerRunId) || receipt.status !== 'failed' || rejected.nextAction !== undefined && (typeof rejected.nextAction !== 'string' || rejected.nextAction.length > 1024))) throw Error('Invalid admission rejection receipt');
   if (receipt.intent !== undefined && !hash(receipt.intent)) throw Error('Invalid dispatch intent');
+  if ((receipt.clientKey !== undefined || receipt.clientPayloadDigest !== undefined) && (!hash(receipt.clientKey) || !hash(receipt.clientPayloadDigest))) throw Error('Invalid client dispatch binding');
   if (receipt.recovery && (!hash(receipt.recovery.rootId) || !positive(receipt.recovery.previousComment) || !Number.isSafeInteger(receipt.recovery.attempt) || receipt.recovery.attempt < 1 || receipt.recovery.attempt > 2 || receipt.recovery.kind !== undefined && (receipt.recovery.kind !== 'before-admission' || receipt.recovery.attempt !== 1))) throw Error('Invalid recovery receipt');
   if (receipt.schemaVersion !== 1 || !hash(receipt.id) || !hash(receipt.digest) || !positive(receipt.routerRunId) || !positive(receipt.routerAttempt) || !stages.includes(receipt.stage ?? 'implement') || !workers.includes(workerFor(receipt)) || (receipt.epicKey !== undefined && !hash(receipt.epicKey)) || (receipt.feedbackKey !== undefined && !hash(receipt.feedbackKey)) || (receipt.eventRunId !== undefined && !positive(receipt.eventRunId)) || receipt.id !== receiptId(repository, receipt) || (receipt.workerRunId !== null && !positive(receipt.workerRunId))) throw Error('Invalid dispatch receipt');
   return receipt;
@@ -100,7 +102,7 @@ export async function recordDispatch(api, repository, request) {
     if (run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
   if (equivalent) return equivalent;
-  const receipt = { schemaVersion: 1, ...(request.intent ? { intent: request.intent } : {}), stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
+  const receipt = { schemaVersion: 1, ...(request.client ? { clientKey: request.client.key, clientPayloadDigest: request.client.payloadDigest } : {}), ...(request.intent ? { intent: request.intent } : {}), stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });
   return { send: true, comment, receipt };
 }
@@ -162,6 +164,7 @@ export function verifyDispatchOrigin(request, receipt, parent, worker, repositor
   const expectedEpicKey = epicTriage ? epicTriageKey(repository, request.epic.parent, issue, request.epic.planDigest) : epicRefinement ? epicRefinementKey(repository, request.epic.parent, issue, request.epic.planDigest, request.event.inputs.epic_run) : undefined;
   if (expectedEpicKey ? request.epicKey !== expectedEpicKey || receipt.epicKey !== expectedEpicKey : request.epicKey !== undefined || receipt.epicKey !== undefined) throw Error('Epic dispatch identity is invalid');
   if (String(parent.id) !== String(receipt.routerRunId) || parent.run_attempt !== receipt.routerAttempt || request.routerRunId !== receipt.routerRunId || request.routerAttempt !== receipt.routerAttempt || parent.path !== originPath || (parent.event !== 'workflow_run' && !continuation && !epicTriage && !epicRefinement && (parent.actor?.login !== owner || parent.triggering_actor?.login !== owner)) || !(recovery ? ['schedule', 'workflow_dispatch'] : events).includes(parent.event) || parent.event !== originEvent || parent.head_sha !== (request.routerRevision ?? request.workflowRevision) || parent.head_branch !== (request.routerRef ?? request.ref) || parent.repository?.full_name !== repository) throw Error('Dispatch origin is not an authorized router execution');
+  if (request.client?.key !== receipt.clientKey || request.client?.payloadDigest !== receipt.clientPayloadDigest) throw Error('Client dispatch receipt binding mismatch');
   if (request.intent !== receipt.intent || request.intent !== undefined && request.intent !== dispatchIntent(request)) throw Error('Dispatch intent binding mismatch');
   executionModelSelection(request);
   const eventRunId = request.eventName === 'workflow_run' ? request.event?.workflow_run?.id : request.event?.inputs?.epic_run ?? request.event?.inputs?.after_run;

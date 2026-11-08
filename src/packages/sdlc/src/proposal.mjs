@@ -1,3 +1,4 @@
+import { loadClientDispatch, checkClientSnapshot } from './issue-control-native.mjs';
 export { changeName, proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { changeName, proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { loadDispatch, checkDispatchClaim } from './stage-dispatch.mjs';
@@ -92,6 +93,8 @@ export async function loadStageReport(api, repo, report, current, readArtifact =
     const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run, readArtifact);
     const dispatchedRevision = request.baseRevision ?? request.sourceRevision;
     if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== dispatchedRevision || dispatch.request.workflowRevision !== request.workflowRevision || !isDeepStrictEqual(dispatch.request.epic, request.epic)) throw Error('Dispatched report identity mismatch');
+    const client = await loadClientDispatch({ api, repository: repo, owner: current.owner, native: dispatch.request, readArtifact });
+    checkClientSnapshot(client, dispatch.request, request);
     await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);
   } else if (!['issues', 'issue_comment', 'workflow_dispatch'].includes(run.event) || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.actor?.login !== current.owner || run.head_sha !== request.sourceRevision) throw Error('Stage report identity mismatch');
   if (run.status !== 'completed' || run.conclusion !== 'success' || String(run.id) !== String(request.workflowRunId) || request.issue !== current.issue || marker !== request.runId) throw Error('Stage report identity mismatch');

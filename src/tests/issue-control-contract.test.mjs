@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createIssueControlManifest, readIssueControlCapability, readIssueControlPolicy } from '../packages/sdlc/src/issue-control-contract.mjs';
 
-const router = '# lighthouse-issue-control:v1\non:\n  workflow_dispatch:\n    inputs:\n      client_request:\n        type: string\nenv:\n  LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose\n  LIGHTHOUSE_AUTO_IMPLEMENT: false\n  LIGHTHOUSE_COMPLETION_ENABLED: false\n  LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false\n';
+const router = '# lighthouse-issue-control:v1\n' + readFileSync(new URL('../packages/sdlc/workflows/lighthouse-sdlc-router.yml', import.meta.url), 'utf8')
+  .replace('  client-control:\n    if: >-\n      false &&', '  client-control:\n    if: >-\n      true &&')
+  .replace('LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose,implement,integrate,review', 'LIGHTHOUSE_ENABLED_STAGES: triage,refine,propose')
+  .replace('LIGHTHOUSE_AUTO_IMPLEMENT: true', 'LIGHTHOUSE_AUTO_IMPLEMENT: false').replaceAll('LIGHTHOUSE_COMPLETION_ENABLED: true', 'LIGHTHOUSE_COMPLETION_ENABLED: false');
 function file(text) {
   const bytes = Buffer.from(text);
   return { type: 'file', size: bytes.length, encoding: 'base64', content: bytes.toString('base64'),
@@ -58,4 +62,9 @@ test('injected provider facts and source environment yield identical policy with
     assert.equal((await readIssueControlPolicy({ capability, api: async () => null })).automationEnabled, false);
     await assert.rejects(readIssueControlPolicy({ capability, api: async () => ({ name: 'wrong', value: 'true' }) }), /Policy source/);
   } finally { globalThis.fetch = original; }
+});
+
+test('disabled or missing source admission cannot advertise the client contract', () => {
+  for (const altered of [router.replace('true && github.actor', 'false && github.actor'), router.replace('issue-control-actions.mjs admit', 'missing-script.mjs admit')])
+    assert.throws(() => createIssueControlManifest(altered), /entry contract/);
 });
