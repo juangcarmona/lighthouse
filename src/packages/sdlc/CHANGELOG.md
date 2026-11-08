@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.3
+
+### Patch Changes
+
+- 60689fd: # Wake recovery from trusted rejected preparation
+
+  Signal the existing maintenance workflow directly from authenticated review preparation after a before-admission rejection. Wait for terminal native jobs before admitting the same bounded retry; preserve completion-event and scheduled fallbacks, current authority checks and historical origin.
+
 ## 0.22.2
 
 ### Patch Changes
