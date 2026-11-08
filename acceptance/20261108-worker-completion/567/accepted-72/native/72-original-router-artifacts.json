@@ -1,0 +1,85 @@
+{
+  "total_count": 4,
+  "artifacts": [
+    {
+      "id": 13613691714,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzY5MTcxNA==",
+      "name": "lighthouse-telemetry-route-1",
+      "size_in_bytes": 3707,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613691714",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613691714/zip",
+      "expired": false,
+      "digest": "sha256:03000bdcdf511c4954ee11a6ce94632584e744df5ab005a02d21532920078f1d",
+      "created_at": "2026-11-08T10:16:47Z",
+      "updated_at": "2026-11-08T10:16:47Z",
+      "expires_at": "2026-11-22T10:16:47Z",
+      "workflow_run": {
+        "id": 42470701816,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df"
+      }
+    },
+    {
+      "id": 13613302888,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzMwMjg4OA==",
+      "name": "lighthouse-dispatch-60b512dd7d1c542fc6afd617ecc7858018fdbed112c38ca5b46250b4421c8e79",
+      "size_in_bytes": 2266,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613302888",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613302888/zip",
+      "expired": false,
+      "digest": "sha256:45424b046e2a650702738362951368abbca552b48743f9c0cd0e880a781a5a78",
+      "created_at": "2026-11-08T10:17:14Z",
+      "updated_at": "2026-11-08T10:17:14Z",
+      "expires_at": "2026-11-22T10:17:13Z",
+      "workflow_run": {
+        "id": 42470701816,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df"
+      }
+    },
+    {
+      "id": 13612989579,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMjk4OTU3OQ==",
+      "name": "lighthouse-telemetry-dispatch-1",
+      "size_in_bytes": 5565,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612989579",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612989579/zip",
+      "expired": false,
+      "digest": "sha256:c89c86e2fcba003d039f48a3e1a152567be20c3ae6197c286daa76448c74d263",
+      "created_at": "2026-11-08T10:20:32Z",
+      "updated_at": "2026-11-08T10:20:32Z",
+      "expires_at": "2026-11-22T10:20:32Z",
+      "workflow_run": {
+        "id": 42470701816,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df"
+      }
+    },
+    {
+      "id": 13612959628,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMjk1OTYyOA==",
+      "name": "lighthouse-567-transport-42470701816",
+      "size_in_bytes": 418,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612959628",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612959628/zip",
+      "expired": false,
+      "digest": "sha256:ef4fff57af68cea22338ba0e94df7073d174ca779a1a828cd9b8d69ae4bb9f68",
+      "created_at": "2026-11-08T10:20:31Z",
+      "updated_at": "2026-11-08T10:20:31Z",
+      "expires_at": "2026-11-22T10:20:30Z",
+      "workflow_run": {
+        "id": 42470701816,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df"
+      }
+    }
+  ]
+}

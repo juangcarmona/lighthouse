@@ -1,0 +1,12 @@
+[
+  {
+    "package": "@juangcarmona/lighthouse",
+    "version": "0.12.64",
+    "filesCompared": 93
+  },
+  {
+    "package": "@juangcarmona/lighthouse-sdlc",
+    "version": "0.22.3",
+    "filesCompared": 224
+  }
+]

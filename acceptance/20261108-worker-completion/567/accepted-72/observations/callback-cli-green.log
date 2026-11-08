@@ -1,0 +1,30 @@
+✔ trusted rejection signals the existing maintenance once, without admitting or publishing anything (22.712806ms)
+✔ signal never broadens disabled recovery, scope, original authority, reruns or admitted effects (10.254494ms)
+✔ a lost wake response is not retried and cannot create a delivery effect (1.337279ms)
+✔ callback waits for the terminal native inventory instead of trusting its supplied run id (1.523336ms)
+✔ a callback with no confirmed completion stops without sending a retry (0.766394ms)
+✔ only trusted review preparation receives write authority for the explicit wake (5.652316ms)
+✔ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (9.117273ms)
+✔ late default-branch move keeps exact worker rejection distinguishable from an untrusted origin (7.130061ms)
+✔ confirmed rejected preparation is retryable once without any admitted effects (3.773174ms)
+✔ maintenance records one terminal rejection and one linked retry, then verifies current authority before admission (7.496479ms)
+✔ uncertain effects never authorize recovery or terminal reconciliation (3.462639ms)
+✔ changed criteria, holds, approval, head, policy and workflow ownership stop a confirmed rejection (9.186054ms)
+✔ disabled recovery observes the rejection without changing receipts (1.757002ms)
+✔ the shared worker adapter records a durable rejection before any claim or stage effect (0.812337ms)
+✔ actual router preparation refreshes a bot continuation while retaining an explicit owner workflow branch (299.409011ms)
+✔ a recovered review admits once and another workflow revision race exhausts its separate one-attempt budget (16.933219ms)
+✔ an admitted recovery keeps its authenticated origin while reserved or after later source changes (10.067243ms)
+✔ terminal authenticated preparation rejection wakes only its original issue, without a scheduler (18.600473ms)
+✔ foreign, mismatched, out-of-order and uncertain completions cannot wake recovery (6.369648ms)
+✔ a completion signal cannot recover another root or enter generic effect recovery (2.89784ms)
+✔ distributed maintenance subscribes to native review completion and preserves its scheduled sweep (7.435573ms)
+✔ the real maintenance scan reads completion events, respects scope and retains the native wake identity (345.82435ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 496.004733

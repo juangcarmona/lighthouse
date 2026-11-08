@@ -1,0 +1,186 @@
+{
+  "state": "qualified",
+  "sourcePr": 578,
+  "reviewedHead": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d",
+  "sourceMerge": "60689fd4fe1d686c990d04c5b6c82c070b00a90b",
+  "versionPr": 579,
+  "qualified": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+  "versions": {
+    "cli": "0.12.64",
+    "sdlc": "0.22.3"
+  },
+  "nativeSourceChecks": [
+    {
+      "id": 128684184631,
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465574677/job/128684184631",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684183964,
+      "name": "epic-triage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465574677/job/128684183964",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684183632,
+      "name": "route",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465574677/job/128684183632",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684182924,
+      "name": "pr-state",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465574677/job/128684182924",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684171388,
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465570501/job/128684171388",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684171303,
+      "name": "route",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465570501/job/128684171303",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684171294,
+      "name": "epic-triage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465570501/job/128684171294",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128684170480,
+      "name": "pr-state",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465570501/job/128684170480",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683850146,
+      "name": "Cloudflare Pages",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/runs/128683850146",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683753176,
+      "name": "reconcile-implementation-pr",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295165/job/128683753176",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683752561,
+      "name": "continue-post-merge-review",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295165/job/128683752561",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683721397,
+      "name": "Exercise a clean consumer",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295139/job/128683721397",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683303082,
+      "name": "ci-app",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295165/job/128683303082",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683302769,
+      "name": "Install CLI in adopter checkout",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295139/job/128683302769",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683302672,
+      "name": "Exercise worker runtime boundaries",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295139/job/128683302672",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683301623,
+      "name": "repository",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295165/job/128683301623",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    },
+    {
+      "id": 128683301614,
+      "name": "Check package contents",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42465295139/job/128683301614",
+      "head_sha": "b08bc3ace2ae835e6109b1f7a5bfe12d1d244e5d"
+    }
+  ],
+  "release": {
+    "id": 42466027306,
+    "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42466027306",
+    "head_sha": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+    "conclusion": "success",
+    "run_attempt": 1
+  },
+  "registry": {
+    "source": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+    "packages": [
+      {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.22.3",
+        "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+        "integrity": "sha512-ZeWCx5LA0/Pd2HtJFLWuYnhT1Ges7qHcLPdbajZRcIm8cL4gl5yhmZVi432s9SHXCQCr/u5dT3Tp9oMV4Rn5Fw==",
+        "filesCompared": 224
+      },
+      {
+        "name": "@juangcarmona/lighthouse",
+        "version": "0.12.64",
+        "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+        "integrity": "sha512-//RskeiOqrTGEGbdLQQPrHlb6nEAmcWWtKzbx4jnd6DJEwv3jnwx8kcTStAxNNUeeB0DanXVedkDRb9Nvo/qMA==",
+        "filesCompared": 93
+      }
+    ]
+  },
+  "tddLogs": [
+    "callback-red.log",
+    "callback-context-red.log",
+    "callback-proof-red.log",
+    "callback-origin-red.log",
+    "callback-green.log",
+    "callback-cli-green.log",
+    "callback-context-green.log",
+    "callback-proof-green.log"
+  ]
+}

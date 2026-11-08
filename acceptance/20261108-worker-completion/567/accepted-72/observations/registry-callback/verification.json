@@ -1,0 +1,19 @@
+{
+  "source": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+  "packages": [
+    {
+      "name": "@juangcarmona/lighthouse-sdlc",
+      "version": "0.22.3",
+      "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+      "integrity": "sha512-ZeWCx5LA0/Pd2HtJFLWuYnhT1Ges7qHcLPdbajZRcIm8cL4gl5yhmZVi432s9SHXCQCr/u5dT3Tp9oMV4Rn5Fw==",
+      "filesCompared": 224
+    },
+    {
+      "name": "@juangcarmona/lighthouse",
+      "version": "0.12.64",
+      "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+      "integrity": "sha512-//RskeiOqrTGEGbdLQQPrHlb6nEAmcWWtKzbx4jnd6DJEwv3jnwx8kcTStAxNNUeeB0DanXVedkDRb9Nvo/qMA==",
+      "filesCompared": 93
+    }
+  ]
+}

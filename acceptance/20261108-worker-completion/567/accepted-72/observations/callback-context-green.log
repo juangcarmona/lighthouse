@@ -1,0 +1,25 @@
+✔ trusted rejection signals the existing maintenance once, without admitting or publishing anything (11.360002ms)
+✔ signal never broadens disabled recovery, scope, original authority, reruns or admitted effects (15.756992ms)
+✔ a lost wake response is not retried and cannot create a delivery effect (2.700211ms)
+✔ callback waits for the terminal native inventory instead of trusting its supplied run id (4.298386ms)
+✔ a callback with no confirmed completion stops without sending a retry (1.909564ms)
+✔ only trusted review preparation receives write authority for the explicit wake (9.772285ms)
+✔ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (11.433778ms)
+✔ the trusted completion CLI sends and retains the wake after rejected preparation (101.983093ms)
+✔ the real PR-state entrypoint wakes retained review on integration and delegated-delivery completion (270.043101ms)
+✔ unadopted, foreign, stale, failed and disabled completion signals do not wake review (783.341853ms)
+✔ review context distinguishes scheduled recovery from a manual replay with original CI identity (34.426629ms)
+✔ review context observes the authenticated admission wake actor without treating dispatch as a manual replay (2.122867ms)
+✔ terminal authenticated preparation rejection wakes only its original issue, without a scheduler (25.699109ms)
+✔ foreign, mismatched, out-of-order and uncertain completions cannot wake recovery (8.800799ms)
+✔ a completion signal cannot recover another root or enter generic effect recovery (4.750335ms)
+✔ distributed maintenance subscribes to native review completion and preserves its scheduled sweep (7.640683ms)
+✔ the real maintenance scan reads completion events, respects scope and retains the native wake identity (465.441721ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1192.200042

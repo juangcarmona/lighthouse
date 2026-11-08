@@ -1,0 +1,21 @@
+✔ the real PR-state entrypoint wakes retained review on integration and delegated-delivery completion (276.333546ms)
+✔ unadopted, foreign, stale, failed and disabled completion signals do not wake review (766.413768ms)
+✔ review context distinguishes scheduled recovery from a manual replay with original CI identity (29.239074ms)
+✖ review context observes the authenticated admission wake actor without treating dispatch as a manual replay (0.693434ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1136.144631
+
+✖ failing tests:
+
+test at src/tests/completion-wakeup-adapter.test.mjs:74:1
+✖ review context observes the authenticated admission wake actor without treating dispatch as a manual replay (0.693434ms)
+  TypeError: Cannot read properties of null (reading 'id')
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/tests/completion-wakeup-adapter.test.mjs:82:74)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

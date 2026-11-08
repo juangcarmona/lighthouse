@@ -1,0 +1,25 @@
+✔ trusted rejection signals the existing maintenance once, without admitting or publishing anything (8.82046ms)
+✔ signal never broadens disabled recovery, scope, original authority, reruns or admitted effects (9.688618ms)
+✔ a lost wake response is not retried and cannot create a delivery effect (0.993887ms)
+✔ callback waits for the terminal native inventory instead of trusting its supplied run id (1.478242ms)
+✔ a callback with no confirmed completion stops without sending a retry (0.735869ms)
+✔ only trusted review preparation receives write authority for the explicit wake (6.56336ms)
+✖ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (5.581186ms)
+✔ the trusted completion CLI sends and retains the wake after rejected preparation (145.417081ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 287.10316
+
+✖ failing tests:
+
+test at src/tests/admission-callback.test.mjs:72:1
+✖ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (5.581186ms)
+  TypeError: Cannot read properties of undefined (reading 'original')
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/tests/admission-callback.test.mjs:83:40)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

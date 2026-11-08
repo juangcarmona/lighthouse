@@ -1,0 +1,2 @@
+{"schemaVersion":1,"fixture":567,"issue":72,"phase":"before-post","run":"100","ci":"90","requestComment":"30","routerRevision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","preparedRevision":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","started":"2026-11-08T09:08:15.082Z","transportDeadlineStartsAfterGate":true,"released":"2026-11-08T09:08:15.083Z","resolvedRevision":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+Transport fixture: one unchanged request; deadline starts after held delivery; other issues untouched.

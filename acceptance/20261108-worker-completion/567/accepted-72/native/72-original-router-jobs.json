@@ -1,0 +1,342 @@
+{
+  "total_count": 5,
+  "jobs": [
+    {
+      "id": 128700534299,
+      "run_id": 42470701816,
+      "workflow_name": "stage #72 \u00b7 github-actions[bot]",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9yZOGw",
+      "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128700534299",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816/job/128700534299",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T10:16:13Z",
+      "started_at": "2026-11-08T10:16:15Z",
+      "completed_at": "2026-11-08T10:16:50Z",
+      "name": "route",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T10:16:16Z",
+          "completed_at": "2026-11-08T10:16:17Z"
+        },
+        {
+          "name": "Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T10:16:17Z",
+          "completed_at": "2026-11-08T10:16:17Z"
+        },
+        {
+          "name": "Install the published Lighthouse harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T10:16:17Z",
+          "completed_at": "2026-11-08T10:16:19Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T10:16:19Z",
+          "completed_at": "2026-11-08T10:16:19Z"
+        },
+        {
+          "name": "Route the authorized event",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T10:16:19Z",
+          "completed_at": "2026-11-08T10:16:46Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T10:16:46Z",
+          "completed_at": "2026-11-08T10:16:47Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T10:16:47Z",
+          "completed_at": "2026-11-08T10:16:48Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-08T10:16:48Z",
+          "completed_at": "2026-11-08T10:16:48Z"
+        },
+        {
+          "name": "Post Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-11-08T10:16:48Z",
+          "completed_at": "2026-11-08T10:16:48Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-08T10:16:48Z",
+          "completed_at": "2026-11-08T10:16:48Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128700534299",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036441,
+      "runner_name": "GitHub Actions 1000036441",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 128700534919,
+      "run_id": 42470701816,
+      "workflow_name": "stage #72 \u00b7 github-actions[bot]",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9yZQhw",
+      "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128700534919",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816/job/128700534919",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-08T10:16:13Z",
+      "started_at": "2026-11-08T10:16:13Z",
+      "completed_at": "2026-11-08T10:16:13Z",
+      "name": "client-control",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128700534919",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 128700535229,
+      "run_id": 42470701816,
+      "workflow_name": "stage #72 \u00b7 github-actions[bot]",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9yZRvQ",
+      "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128700535229",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816/job/128700535229",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-08T10:16:13Z",
+      "started_at": "2026-11-08T10:16:13Z",
+      "completed_at": "2026-11-08T10:16:13Z",
+      "name": "pr-state",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128700535229",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 128700558790,
+      "run_id": 42470701816,
+      "workflow_name": "stage #72 \u00b7 github-actions[bot]",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9yatxg",
+      "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128700558790",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816/job/128700558790",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-08T10:16:20Z",
+      "started_at": "2026-11-08T10:16:20Z",
+      "completed_at": "2026-11-08T10:16:13Z",
+      "name": "epic-triage",
+      "steps": [],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128700558790",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    },
+    {
+      "id": 128700672117,
+      "run_id": 42470701816,
+      "workflow_name": "stage #72 \u00b7 github-actions[bot]",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVjQrQc8AAAAd9yhodQ",
+      "head_sha": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/jobs/128700672117",
+      "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42470701816/job/128700672117",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-08T10:16:50Z",
+      "started_at": "2026-11-08T10:16:53Z",
+      "completed_at": "2026-11-08T10:20:34Z",
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-08T10:16:54Z",
+          "completed_at": "2026-11-08T10:16:54Z"
+        },
+        {
+          "name": "Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-08T10:16:54Z",
+          "completed_at": "2026-11-08T10:16:56Z"
+        },
+        {
+          "name": "Install the published Lighthouse harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-08T10:16:56Z",
+          "completed_at": "2026-11-08T10:16:57Z"
+        },
+        {
+          "name": "Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-08T10:16:57Z",
+          "completed_at": "2026-11-08T10:16:57Z"
+        },
+        {
+          "name": "Load isolated completion acceptance control",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-08T10:16:57Z",
+          "completed_at": "2026-11-08T10:16:58Z"
+        },
+        {
+          "name": "Record the authorized request",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-08T10:16:58Z",
+          "completed_at": "2026-11-08T10:17:13Z"
+        },
+        {
+          "name": "Preserve the request before dispatch",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-08T10:17:13Z",
+          "completed_at": "2026-11-08T10:17:14Z"
+        },
+        {
+          "name": "Dispatch the independent stage",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-08T10:17:14Z",
+          "completed_at": "2026-11-08T10:20:30Z"
+        },
+        {
+          "name": "Preserve controlled transport timing",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-08T10:20:30Z",
+          "completed_at": "2026-11-08T10:20:31Z"
+        },
+        {
+          "name": "Observe workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-08T10:20:31Z",
+          "completed_at": "2026-11-08T10:20:31Z"
+        },
+        {
+          "name": "Preserve workflow telemetry",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-08T10:20:31Z",
+          "completed_at": "2026-11-08T10:20:32Z"
+        },
+        {
+          "name": "Post Load isolated completion acceptance control",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-08T10:20:32Z",
+          "completed_at": "2026-11-08T10:20:32Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-08T10:20:32Z",
+          "completed_at": "2026-11-08T10:20:33Z"
+        },
+        {
+          "name": "Post Select Node for the published harness",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-08T10:20:33Z",
+          "completed_at": "2026-11-08T10:20:33Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-08T10:20:33Z",
+          "completed_at": "2026-11-08T10:20:33Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/check-runs/128700672117",
+      "labels": [
+        "ubuntu-24.04"
+      ],
+      "runner_id": 1000036443,
+      "runner_name": "GitHub Actions 1000036443",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

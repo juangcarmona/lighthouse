@@ -1,0 +1,22 @@
+{
+  "base": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+  "head": "fade175a56687c92564bc8563c123a88e4846d39",
+  "branch": "docs/72-completion-revision-race",
+  "gate": {
+    "schemaVersion": 1,
+    "fixture": 567,
+    "issue": 72,
+    "phase": "before-post",
+    "run": "42470701816",
+    "ci": "42470652745",
+    "requestComment": "6720258177",
+    "routerRevision": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+    "preparedRevision": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+    "started": "2026-11-08T10:17:15.080Z",
+    "transportDeadlineStartsAfterGate": true
+  },
+  "gateComment": 6720258475,
+  "changed": [
+    "docs/acceptance/567-late-default-72.md"
+  ]
+}

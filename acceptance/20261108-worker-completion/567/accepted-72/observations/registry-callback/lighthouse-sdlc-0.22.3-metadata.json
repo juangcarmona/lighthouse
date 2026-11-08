@@ -1,0 +1,125 @@
+{
+  "bin": {
+    "lighthouse-sdlc": "src/sdlc.mjs"
+  },
+  "bugs": {
+    "url": "https://github.com/juangcarmona/lighthouse/issues"
+  },
+  "dist": {
+    "shasum": "ef016658bfb1503dd57999b4554ef5ce50aa5ca2",
+    "tarball": "https://registry.npmjs.org/@juangcarmona/lighthouse-sdlc/-/lighthouse-sdlc-0.22.3.tgz",
+    "fileCount": 224,
+    "integrity": "sha512-ZeWCx5LA0/Pd2HtJFLWuYnhT1Ges7qHcLPdbajZRcIm8cL4gl5yhmZVi432s9SHXCQCr/u5dT3Tp9oMV4Rn5Fw==",
+    "signatures": [
+      {
+        "sig": "MEQCIFy3taS0lC7hh9qOdYKJjq9Tp2TQNaAHD9ePsFE2OHWGAiANAaC9g1J2GILXhltktreuKVQTTy9lHAsjebixOp1suQ==",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      },
+      {
+        "sig": "MEYCIQCZobEHfZJwYrnMZ9rVn3BAAw4IhMJ9DCv/VHlHxz3JXwIhALzeQPbP7ZCmYPSvIJrnOhbkRbV26kQ0YQvrYFifP5Sm",
+        "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+      }
+    ],
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/@juangcarmona%2flighthouse-sdlc@0.22.3",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    },
+    "unpackedSize": 2462381
+  },
+  "name": "@juangcarmona/lighthouse-sdlc",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/sdlc.mjs",
+    "./epic": "./src/epic.mjs",
+    "./github": "./src/github.mjs",
+    "./memory": "./src/memory.mjs",
+    "./routes": "./src/routes.mjs",
+    "./triage": "./src/triage.mjs",
+    "./aliases": "./src/aliases.mjs",
+    "./stacked": "./src/stacked.mjs",
+    "./evidence": "./src/evidence.mjs",
+    "./workflow": "./src/workflow.mjs",
+    "./contracts": "./src/contracts.mjs",
+    "./decompose": "./src/decompose.mjs",
+    "./reconcile": "./src/reconcile.mjs",
+    "./telemetry": "./src/telemetry.mjs",
+    "./unattended": "./src/unattended.mjs",
+    "./browser-e2e": "./src/browser-e2e.mjs",
+    "./epic-github": "./src/epic-github.mjs",
+    "./workflows/*": "./workflows/*",
+    "./capabilities": "./src/capabilities.mjs",
+    "./contract.json": "./contract.json",
+    "./control-plane": "./src/control-plane.mjs",
+    "./host-contract": "./src/host-contract.mjs",
+    "./issue-control": "./src/issue-control.mjs",
+    "./memory-sqlite": "./src/memory-sqlite.mjs",
+    "./github-profile": "./src/github-profile.mjs",
+    "./model-profiles": "./src/model-profiles.mjs",
+    "./product-change": "./src/product-change.mjs",
+    "./request-triage": "./src/request-triage.mjs",
+    "./capabilities.json": "./capabilities.json",
+    "./profile-delegation": "./src/profile-delegation.mjs",
+    "./telemetry-opencode": "./src/telemetry-opencode.mjs",
+    "./command-aliases.json": "./command-aliases.json",
+    "./product-change-actions": "./src/product-change-actions.mjs",
+    "./implementation-evidence": "./src/implementation-evidence.mjs",
+    "./schemas/stages.schema.json": "./schemas/stages.schema.json",
+    "./schemas/triage.schema.json": "./schemas/triage.schema.json",
+    "./schemas/estimate.schema.json": "./schemas/estimate.schema.json",
+    "./schemas/browser-e2e.schema.json": "./schemas/browser-e2e.schema.json",
+    "./schemas/capabilities.schema.json": "./schemas/capabilities.schema.json",
+    "./schemas/stage-result.schema.json": "./schemas/stage-result.schema.json",
+    "./schemas/control-plane.schema.json": "./schemas/control-plane.schema.json",
+    "./schemas/decomposition.schema.json": "./schemas/decomposition.schema.json",
+    "./schemas/evidence-index.schema.json": "./schemas/evidence-index.schema.json",
+    "./schemas/product-change.schema.json": "./schemas/product-change.schema.json",
+    "./schemas/workflow-state.schema.json": "./schemas/workflow-state.schema.json",
+    "./schemas/command-aliases.schema.json": "./schemas/command-aliases.schema.json",
+    "./schemas/evidence-record.schema.json": "./schemas/evidence-record.schema.json",
+    "./schemas/telemetry-event.schema.json": "./schemas/telemetry-event.schema.json",
+    "./schemas/capability-catalog.schema.json": "./schemas/capability-catalog.schema.json",
+    "./schemas/issue-control-intent.schema.json": "./schemas/issue-control-intent.schema.json"
+  },
+  "gitHead": "39a8fd21dd7f81513faf23940e3ae44f296022e6",
+  "license": "Apache-2.0",
+  "_npmUser": {
+    "name": "GitHub Actions",
+    "email": "npm-oidc-no-reply@github.com",
+    "trustedPublisher": {
+      "id": "github",
+      "oidcConfigId": "a48b6f85-f16d-442d-8769-5f005ce08f27"
+    }
+  },
+  "homepage": "https://juangcarmona.github.io/lighthouse/",
+  "repository": {
+    "url": "git+https://github.com/juangcarmona/lighthouse.git",
+    "type": "git",
+    "directory": "src/packages/sdlc"
+  },
+  "_npmVersion": "11.5.1",
+  "description": "Provider-neutral SDLC skills, commands and route contracts for Lighthouse adopters",
+  "directories": {},
+  "maintainers": [
+    {
+      "name": "juangcarmona",
+      "email": "juan@jgcarmona.com"
+    }
+  ],
+  "_nodeVersion": "24.22.2",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "_hasShrinkwrap": false,
+  "_npmOperationalInternal": {
+    "tmp": "tmp/lighthouse-sdlc_0.22.3_1794129397676_0.873125131833955",
+    "host": "s3://npm-registry-packages-npm-production"
+  },
+  "_id": "@juangcarmona/lighthouse-sdlc@0.22.3",
+  "version": "0.22.3"
+}

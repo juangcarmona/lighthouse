@@ -1,0 +1,39 @@
+{
+  "state": "supervised-seed-integrated",
+  "pr": 74,
+  "head": "0a2cd38a37e132b14e626541d6dcc0dc183165f4",
+  "merge": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+  "mergeActor": "github-actions[bot]",
+  "implementation": 42467129541,
+  "blockedIntegrationAssessments": [
+    42468253120,
+    42469678798
+  ],
+  "passedIntegration": 42470199586,
+  "ownerReviews": [
+    {
+      "id": 5817397504,
+      "state": "APPROVED",
+      "head": "0a2cd38a37e132b14e626541d6dcc0dc183165f4",
+      "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/74#pullrequestreview-5817397504",
+      "bodySha256": "ac23b97cc886323fd4fc5ee1bef072f258c43346ebdabf0468220f054a0bcc06"
+    },
+    {
+      "id": 5817457231,
+      "state": "APPROVED",
+      "head": "0a2cd38a37e132b14e626541d6dcc0dc183165f4",
+      "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/74#pullrequestreview-5817457231",
+      "bodySha256": "f9d8efce44d5fa41ebad6f8d0eddaee9faf2b945784721584f9f1ffb1322ec14"
+    },
+    {
+      "id": 5817476574,
+      "state": "APPROVED",
+      "head": "0a2cd38a37e132b14e626541d6dcc0dc183165f4",
+      "url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/pull/74#pullrequestreview-5817476574",
+      "bodySha256": "8f4d70159f6d5bf9a4e2f4d2bfd26f4f4bea4c376a384c020f22e3a234d891b6"
+    }
+  ],
+  "readiness": "Native publisher made PR ready; no owner readiness mutation in this case.",
+  "manualVerification": "Under standing delegated authority, review5817476574 explicitly accepted the actually verified original33-test byte-prefix criterion for exact head. It did not waive it or claim an unavailable assessment-engine execution. Raw/compact proof, output and negative controls retained.",
+  "acceptanceScope": "This supervised seed is not proof of automatic completion recovery; only the later original rejection -> BOT callback -> bounded retry -> passed review qualifies."
+}

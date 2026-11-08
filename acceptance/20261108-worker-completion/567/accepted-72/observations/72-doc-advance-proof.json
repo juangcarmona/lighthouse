@@ -1,0 +1,12 @@
+{
+  "state": "verified",
+  "pr": 75,
+  "base": "dd01785ca28cf5e6c61194d8bcd16aad198b23df",
+  "head": "fade175a56687c92564bc8563c123a88e4846d39",
+  "merge": "160a86940b3df1236181d6c64052d797a2adbc37",
+  "commits": 1,
+  "files": [
+    "docs/acceptance/567-late-default-72.md"
+  ],
+  "guardAndOriginalRequestUnchanged": true
+}

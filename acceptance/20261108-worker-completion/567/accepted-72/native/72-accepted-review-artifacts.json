@@ -1,0 +1,245 @@
+{
+  "total_count": 12,
+  "artifacts": [
+    {
+      "id": 13613801475,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzgwMTQ3NQ==",
+      "name": "info",
+      "size_in_bytes": 707,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613801475",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613801475/zip",
+      "expired": false,
+      "digest": "sha256:ceaecb032a4cb866c1d6c1f6093507182104b4d3d0a147dbb0f63257fe800fa2",
+      "created_at": "2026-11-08T10:23:10Z",
+      "updated_at": "2026-11-08T10:23:10Z",
+      "expires_at": "2027-02-06T10:21:58Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613752819,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzc1MjgxOQ==",
+      "name": "lighthouse-completion-72-1",
+      "size_in_bytes": 1129,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613752819",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613752819/zip",
+      "expired": false,
+      "digest": "sha256:abcb272adf03dc23b7d5520d5164e2b4dcab09629185527341bcb089445dc5c5",
+      "created_at": "2026-11-08T10:29:17Z",
+      "updated_at": "2026-11-08T10:29:17Z",
+      "expires_at": "2026-12-08T10:29:16Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613752665,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzc1MjY2NQ==",
+      "name": "lighthouse-result-72-1",
+      "size_in_bytes": 9262,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613752665",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613752665/zip",
+      "expired": false,
+      "digest": "sha256:2c2d9bfb2db6b2b40f49b9e94ddbff7d3af9984d2bc76b4808b7d35e787a5281",
+      "created_at": "2026-11-08T10:28:02Z",
+      "updated_at": "2026-11-08T10:28:02Z",
+      "expires_at": "2026-11-22T10:27:59Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613608488,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzYwODQ4OA==",
+      "name": "agent-output-fallback",
+      "size_in_bytes": 872,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613608488",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613608488/zip",
+      "expired": false,
+      "digest": "sha256:f8e25cf0456086a4f4ff14296cf34b79cec85721872223743c30378f659163fd",
+      "created_at": "2026-11-08T10:28:10Z",
+      "updated_at": "2026-11-08T10:28:10Z",
+      "expires_at": "2027-02-06T10:21:58Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613573564,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzU3MzU2NA==",
+      "name": "agent",
+      "size_in_bytes": 89398,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613573564",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613573564/zip",
+      "expired": false,
+      "digest": "sha256:8663b1b2d699f05ef01b041efefdb9d24530878d7b9f9cd3e82765743e4f6418",
+      "created_at": "2026-11-08T10:28:13Z",
+      "updated_at": "2026-11-08T10:28:13Z",
+      "expires_at": "2027-02-06T10:21:58Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613532906,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzUzMjkwNg==",
+      "name": "activation",
+      "size_in_bytes": 191711,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613532906",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613532906/zip",
+      "expired": false,
+      "digest": "sha256:35a5dcd8535e32ebd4ef22e0079a5a87fe9fd6ac59148ccedc5810b54a567543",
+      "created_at": "2026-11-08T10:23:11Z",
+      "updated_at": "2026-11-08T10:23:11Z",
+      "expires_at": "2026-11-09T10:23:11Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613503615,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzUwMzYxNQ==",
+      "name": "opencode-events-72-1",
+      "size_in_bytes": 48139,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613503615",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613503615/zip",
+      "expired": false,
+      "digest": "sha256:29347f829a55546c1eefc9f0441c7c9e99ce7dc695630cb3cebcf27bdc5525d4",
+      "created_at": "2026-11-08T10:28:04Z",
+      "updated_at": "2026-11-08T10:28:04Z",
+      "expires_at": "2026-11-22T10:28:02Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613392623,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzM5MjYyMw==",
+      "name": "usage",
+      "size_in_bytes": 51676,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613392623",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613392623/zip",
+      "expired": false,
+      "digest": "sha256:0d5e770f975e5fcd5fb8546969bdb746741b53473f6d841014fb3019a6cb173b",
+      "created_at": "2026-11-08T10:29:34Z",
+      "updated_at": "2026-11-08T10:29:34Z",
+      "expires_at": "2027-02-06T10:21:58Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613384056,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzM4NDA1Ng==",
+      "name": "lighthouse-telemetry-publish-1",
+      "size_in_bytes": 1896,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613384056",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613384056/zip",
+      "expired": false,
+      "digest": "sha256:95eae7ecbb000696e19d3e04626876bdade819cff0bc14da00d95a28b9babb44",
+      "created_at": "2026-11-08T10:29:20Z",
+      "updated_at": "2026-11-08T10:29:20Z",
+      "expires_at": "2026-11-22T10:29:20Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613289186,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzI4OTE4Ng==",
+      "name": "lighthouse-telemetry-agent-1",
+      "size_in_bytes": 45717,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613289186",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613289186/zip",
+      "expired": false,
+      "digest": "sha256:58b1b54f90c151911f1d804fb7592222693dd2858bed1e4c32116fff487090d2",
+      "created_at": "2026-11-08T10:28:08Z",
+      "updated_at": "2026-11-08T10:28:08Z",
+      "expires_at": "2026-11-22T10:28:06Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13612908458,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMjkwODQ1OA==",
+      "name": "lighthouse-telemetry-prepare-1",
+      "size_in_bytes": 1600,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612908458",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612908458/zip",
+      "expired": false,
+      "digest": "sha256:429dc787efc83ae3115273fdfcf205f9efa76c5c372d21cb29ecd9e8830775b3",
+      "created_at": "2026-11-08T10:22:44Z",
+      "updated_at": "2026-11-08T10:22:44Z",
+      "expires_at": "2026-11-22T10:22:43Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13612684369,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMjY4NDM2OQ==",
+      "name": "lighthouse-input-72-1",
+      "size_in_bytes": 89074,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612684369",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13612684369/zip",
+      "expired": false,
+      "digest": "sha256:94109484906cba35d6474cce555fae94e1c129d0ad09334d41fda991227ff407",
+      "created_at": "2026-11-08T10:22:42Z",
+      "updated_at": "2026-11-08T10:22:42Z",
+      "expires_at": "2026-11-22T10:22:41Z",
+      "workflow_run": {
+        "id": 42471120370,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    }
+  ]
+}

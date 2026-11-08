@@ -1,0 +1,41 @@
+✔ trusted rejection signals the existing maintenance once, without admitting or publishing anything (8.815272ms)
+✔ signal never broadens disabled recovery, scope, original authority, reruns or admitted effects (6.862681ms)
+✔ a lost wake response is not retried and cannot create a delivery effect (0.976462ms)
+✔ callback waits for the terminal native inventory instead of trusting its supplied run id (1.446232ms)
+✔ a callback with no confirmed completion stops without sending a retry (0.745845ms)
+✔ only trusted review preparation receives write authority for the explicit wake (5.847306ms)
+✖ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (6.706573ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 155.453275
+
+✖ failing tests:
+
+test at src/tests/admission-callback.test.mjs:71:1
+✖ bot callback, duplicate native completion and scheduled fallback share one retry and preserve historical origin (6.706573ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Dispatch worker identity mismatch: workflow revision changed before admission
+      at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/tests/admission-callback.test.mjs:86:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Dispatch worker identity mismatch: workflow revision changed before admission
+        at verifyDispatchOrigin (file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/packages/sdlc/src/stage-dispatch.mjs:174:19)
+        at file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/tests/admission-callback.test.mjs:86:23
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///srv/workspaces/juangcarmona/lighthouse/567-worker-completion/src/tests/admission-callback.test.mjs:86:12)
+        at async Test.run (node:internal/test_runner/test:1409:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:974:7),
+    operator: 'throws',
+    diff: 'simple'
+  }

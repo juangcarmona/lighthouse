@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13613830994,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzgzMDk5NA==",
+      "name": "lighthouse-admission-signal-72-1",
+      "size_in_bytes": 264,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613830994",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613830994/zip",
+      "expired": false,
+      "digest": "sha256:b74db474d96301df5ae6644604ac3240cd8d4b3d8e79d3e088abc22c1aea6add",
+      "created_at": "2026-11-08T10:20:49Z",
+      "updated_at": "2026-11-08T10:20:49Z",
+      "expires_at": "2026-11-22T10:20:49Z",
+      "workflow_run": {
+        "id": 42471012941,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    },
+    {
+      "id": 13613024235,
+      "node_id": "MDg6QXJ0aWZhY3QxMzYxMzAyNDIzNQ==",
+      "name": "lighthouse-telemetry-prepare-1",
+      "size_in_bytes": 1600,
+      "url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613024235",
+      "archive_download_url": "https://api.github.com/repos/juangcarmona/lighthouse-published-consumer-20261104/actions/artifacts/13613024235/zip",
+      "expired": false,
+      "digest": "sha256:c17459a5cdca97237d201b078f23159fbf0208a7a018a34cda9a84177249ce45",
+      "created_at": "2026-11-08T10:20:51Z",
+      "updated_at": "2026-11-08T10:20:51Z",
+      "expires_at": "2026-11-22T10:20:50Z",
+      "workflow_run": {
+        "id": 42471012941,
+        "repository_id": 1446259521,
+        "head_repository_id": 1446259521,
+        "head_branch": "main",
+        "head_sha": "160a86940b3df1236181d6c64052d797a2adbc37"
+      }
+    }
+  ]
+}
