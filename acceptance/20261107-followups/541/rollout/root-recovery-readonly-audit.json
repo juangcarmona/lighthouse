@@ -1,0 +1,137 @@
+{
+  "source": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+  "repository": "juangcarmona/lighthouse",
+  "readOnly": true,
+  "issues": 19,
+  "retryable": [],
+  "rows": [
+    {
+      "issue": 567,
+      "observations": []
+    },
+    {
+      "issue": 425,
+      "observations": []
+    },
+    {
+      "issue": 390,
+      "observations": [
+        {
+          "issue": 390,
+          "worker": "review",
+          "runId": "42034744125",
+          "rootId": "4629d84db6af28bbee024d11433ee97fe9bf0efd664a773a27ec13b00ff4c2e7",
+          "attempt": 0,
+          "outcome": "blocked",
+          "pr": 431,
+          "head": "e1cebef50255c5d5a45c4fa2c6b9b9d017a5ef51",
+          "state": "blocked",
+          "code": "stage-blocked",
+          "cause": "none",
+          "nextAction": "Resolve the recorded blocker before requesting an authorized continuation."
+        }
+      ]
+    },
+    {
+      "issue": 385,
+      "observations": [
+        {
+          "issue": 385,
+          "worker": "refine",
+          "runId": "41911290800",
+          "rootId": "468b806faf175e4b9314085c938b7aea05778e08a575720f833a6b158be2973c",
+          "attempt": 0,
+          "outcome": "unknown",
+          "state": "blocked",
+          "code": "issue-paused",
+          "cause": "substantive-failure",
+          "nextAction": "Inspect the issue decision or reservation before requesting work."
+        },
+        {
+          "issue": 385,
+          "worker": "refine",
+          "runId": "41915997334",
+          "rootId": "9812cf66df8c004e76087edccc6356f247b89c219e68bc3d219d1423125a953c",
+          "attempt": 0,
+          "outcome": "blocked",
+          "state": "blocked",
+          "code": "stage-blocked",
+          "cause": "none",
+          "nextAction": "Resolve the recorded blocker before requesting an authorized continuation."
+        },
+        {
+          "issue": 385,
+          "worker": "refine",
+          "runId": "41924359951",
+          "rootId": "481458828cc1c5e155613c56c716bfb9b6316315510ff9203692963c13c9243b",
+          "attempt": 0,
+          "outcome": "completed",
+          "state": "succeeded",
+          "code": "worker-completed",
+          "cause": "none",
+          "nextAction": "No recovery needed."
+        }
+      ]
+    },
+    {
+      "issue": 273,
+      "observations": []
+    },
+    {
+      "issue": 271,
+      "observations": []
+    },
+    {
+      "issue": 270,
+      "observations": []
+    },
+    {
+      "issue": 221,
+      "observations": []
+    },
+    {
+      "issue": 220,
+      "observations": []
+    },
+    {
+      "issue": 218,
+      "observations": []
+    },
+    {
+      "issue": 217,
+      "observations": []
+    },
+    {
+      "issue": 214,
+      "observations": []
+    },
+    {
+      "issue": 139,
+      "observations": []
+    },
+    {
+      "issue": 119,
+      "observations": []
+    },
+    {
+      "issue": 104,
+      "observations": []
+    },
+    {
+      "issue": 103,
+      "observations": []
+    },
+    {
+      "issue": 102,
+      "observations": []
+    },
+    {
+      "issue": 99,
+      "observations": []
+    },
+    {
+      "issue": 70,
+      "observations": []
+    }
+  ]
+}

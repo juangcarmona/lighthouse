@@ -1,0 +1,96 @@
+{
+  "originalArchiveCommit": "66fe79305ae64e9afe82596cd229ac39c98bb9fd",
+  "originalArchivePreserved": true,
+  "files": [
+    {
+      "path": "acceptance/20261107-followups/541/rollout/541-final-rollout-proof.json",
+      "sha256": "dfbc2f21f0d4cc478afffd7ac332e2030c54f14c4843d06b0f3720b057987036",
+      "bytes": 3786
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/59-cleanup-proof.json",
+      "sha256": "b2c412c1c32591a708fcd7196712423a2fd1ff386f1a06ca24e31cde1feaa2ae",
+      "bytes": 3877
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/59-history-after-cleanup-proof.json",
+      "sha256": "0c6180138bc658be3c0bb5b9cab753815835ced790b089953e2fa28398b40ae5",
+      "bytes": 311
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/59-operator-profile-qualification.json",
+      "sha256": "b16f344dfa3f4a70a48cd00ca7fd3da943ad97b83cb14b6a3bf0eaae13baf600",
+      "bytes": 541
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/59-variables-restored.json",
+      "sha256": "44d9fbf63b6535e8e5ad4329abee8e8fd489271ba6b40671f71507dc73b8eb79",
+      "bytes": 239
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/README.md",
+      "sha256": "49c4c43d7ca781c047563c668d2a682a9c6cc6ccf34557de4a37aa30c5d8e197",
+      "bytes": 1960
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/original/root-lighthouse-maintenance-541/observations.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/original/root-lighthouse-observation-541/observations.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "bytes": 2
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-activated-variables.json",
+      "sha256": "5df6e5f3047d3bce6a2fa3bcaf11fde1d98cb72c44374ea9b287abbfe8f2f93f",
+      "bytes": 113
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-activation-precheck.json",
+      "sha256": "b51d6e9bda0ace8830b3a1bfc531292c94c5528796f5ba3e7a94ed91c676e5df",
+      "bytes": 621
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-adoption-before-merge.json",
+      "sha256": "8799718d6b4b979680bb2ab9ad268d225b478e33c794851809d83a7e0d02c75c",
+      "bytes": 5139
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-final-adoption-audit.json",
+      "sha256": "a28db88fbbe9d1af4fc0af83148d5ae35867a867a5dd29fb002b5d86cde6518c",
+      "bytes": 1618
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-installed-projection-proof.json",
+      "sha256": "828b00e1c384471b478aedd17764a0d734bacd71f61179388529b0583ea7904b",
+      "bytes": 539
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-maintenance-smoke-artifacts.json",
+      "sha256": "fe3f75e4ccf87c0b5268b167950e48a5ec2bbe63d5314d661e10a4add6b6b330",
+      "bytes": 4363
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-maintenance-smoke-input.json",
+      "sha256": "0b32182ea0e32a78fe7c13d85c22d47ac1a5224829259bffffd48041372ff48a",
+      "bytes": 44
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-maintenance-smoke-jobs.json",
+      "sha256": "c76518f355ad53710502c13e8111165c6e05513b455b27027a34b813ef151b67",
+      "bytes": 14146
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-maintenance-smoke-run.json",
+      "sha256": "ffd8d438200da66589cbae2adf2f4924558e037d7b4cc586019da183cd2103a5",
+      "bytes": 15640
+    },
+    {
+      "path": "acceptance/20261107-followups/541/rollout/root-recovery-readonly-audit.json",
+      "sha256": "4f1ef7ac584294d1def50c0c271d3c125291c08a2d9be6327400bcea44b17289",
+      "bytes": 3109
+    }
+  ]
+}

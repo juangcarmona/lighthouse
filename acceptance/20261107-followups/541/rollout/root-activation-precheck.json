@@ -1,0 +1,31 @@
+{
+  "state": "safe-to-enable-bounded-recovery",
+  "source": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+  "issues": 19,
+  "retryable": [],
+  "unavailable": 0,
+  "existingObservations": [
+    {
+      "issue": 390,
+      "state": "blocked",
+      "code": "stage-blocked"
+    },
+    {
+      "issue": 385,
+      "state": "blocked",
+      "code": "issue-paused"
+    },
+    {
+      "issue": 385,
+      "state": "blocked",
+      "code": "stage-blocked"
+    },
+    {
+      "issue": 385,
+      "state": "succeeded",
+      "code": "worker-completed"
+    }
+  ],
+  "newOwnerGrant": false,
+  "holdsAndBlockedResultsPreserved": true
+}

@@ -1,0 +1,183 @@
+{
+  "state": "verified",
+  "base": "d19d0a4c7f09a4ef54591c206eff337a19462301",
+  "sdk": "0.21.11",
+  "onlyOwnControlsRemoved": true,
+  "originalProviderControlsPreserved": true,
+  "policiesModelsTestsAndProductionUnchanged": true,
+  "changed": [
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".github/workflows/lighthouse-worker-maintenance.yml",
+    "docs/acceptance/541-before-post.md",
+    "docs/acceptance/541-before-preparation.md",
+    "scripts/acceptance-541-gates.mjs",
+    "scripts/acceptance-541-preload.mjs"
+  ],
+  "steps": [
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "origin",
+        "main"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "switch",
+        "-c",
+        "chore/59-remove-continuation-acceptance-controls",
+        "origin/main"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "/srv/workspaces/juangcarmona/lighthouse/541-native-adoption/node_modules/@juangcarmona/lighthouse-sdlc/src/install-workflows.mjs",
+        "/tmp/lighthouse-541-native/lighthouse-541-canonical-neeaccnt",
+        "package",
+        "--apply",
+        "--replace-reviewed",
+        "--with-completion",
+        "--with-product-change",
+        "--with-maintenance",
+        "--with-unattended"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "fd15f531485e95a8aee7ed71255c3f40a13c69b4:.github/workflows/lighthouse-sdlc-implement.md"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-implement"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "fd15f531485e95a8aee7ed71255c3f40a13c69b4:.github/workflows/lighthouse-sdlc-integrate.md"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-integrate"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "fd15f531485e95a8aee7ed71255c3f40a13c69b4:.github/workflows/lighthouse-sdlc-review.md"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "gh",
+        "aw",
+        "compile",
+        "lighthouse-sdlc-review"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "show",
+        "fd15f531485e95a8aee7ed71255c3f40a13c69b4:.github/workflows/lighthouse-sdlc-unattended.yml"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "npx",
+        "--no-install",
+        "lighthouse",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "scripts/lighthouse-guard.mjs",
+        "verify"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--name-only"
+      ],
+      "exitCode": 0
+    }
+  ]
+}

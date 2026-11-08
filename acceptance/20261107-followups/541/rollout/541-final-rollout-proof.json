@@ -1,0 +1,115 @@
+{
+  "state": "installed-and-verified",
+  "root": {
+    "main": "1f45f12e4e3747ed60e5937858c2ed66991f0eb1",
+    "adoptionPr": 564,
+    "harness": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+    "versions": {
+      "cli": "0.12.60",
+      "sdlc": "0.21.11"
+    },
+    "maintenanceEnabled": true,
+    "recoveryEnabled": true,
+    "smoke": {
+      "id": 42434606567,
+      "event": "workflow_dispatch",
+      "conclusion": "success",
+      "observations": [],
+      "modelExecutions": 0,
+      "originalArtifacts": [
+        {
+          "id": 13599056740,
+          "name": "lighthouse-maintenance-541",
+          "sha256": "sha256:0e5f448d80365b3767d469bdc8e37bd9fb6a9f80978cc98c63d415420bcfdcb6",
+          "observations": []
+        },
+        {
+          "id": 13598533646,
+          "name": "lighthouse-observation-541",
+          "sha256": "sha256:e7a94cbc68ca57e4bee892a397003e860b6cc3e718d022c34822cef26f4a49fd",
+          "observations": []
+        }
+      ]
+    },
+    "postMergeChecks": [
+      {
+        "id": 42434430695,
+        "name": "Lighthouse verification",
+        "event": "push",
+        "head_sha": "1f45f12e4e3747ed60e5937858c2ed66991f0eb1",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42434430695"
+      },
+      {
+        "id": 42434430629,
+        "name": "Lighthouse package contracts",
+        "event": "push",
+        "head_sha": "1f45f12e4e3747ed60e5937858c2ed66991f0eb1",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42434430629"
+      },
+      {
+        "id": 42434430751,
+        "name": "Release",
+        "event": "push",
+        "head_sha": "1f45f12e4e3747ed60e5937858c2ed66991f0eb1",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/juangcarmona/lighthouse/actions/runs/42434430751"
+      }
+    ],
+    "oldBlockedResultsRemainBlocked": true
+  },
+  "consumer": {
+    "cleanupPr": 67,
+    "main": "33150681ad1a8c7678b69e131945bddc01d0b633",
+    "postMergeChecks": [
+      {
+        "id": 42434691756,
+        "name": "Consumer verification",
+        "event": "push",
+        "head_sha": "33150681ad1a8c7678b69e131945bddc01d0b633",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42434691756"
+      },
+      {
+        "id": 42434691769,
+        "name": "Lighthouse repository guardrails",
+        "event": "push",
+        "head_sha": "33150681ad1a8c7678b69e131945bddc01d0b633",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/juangcarmona/lighthouse-published-consumer-20261104/actions/runs/42434691769"
+      }
+    ],
+    "variablesRestoredExactly": true,
+    "privateEngineCopyRemoved": true,
+    "original32TestsAndProductionPreserved": true,
+    "historicalOriginAfterCleanup": {
+      "state": "verified",
+      "readOnly": true,
+      "currentRevision": "33150681ad1a8c7678b69e131945bddc01d0b633",
+      "acceptedReview": 42433174218,
+      "maintenance": 42433108280,
+      "historicalOriginStillAuthenticated": true,
+      "freshClaimDeniedAfterLaterWorkflowChanges": true,
+      "noDispatchOrModelExecution": true
+    },
+    "nativeReviewRunsForIssue59": 2,
+    "acceptedFinalReviewExecutions": 1
+  },
+  "closedIssues": [
+    547,
+    414,
+    541
+  ],
+  "schedulerDeliveryProven": false,
+  "remainingFollowup": {
+    "issue": 567,
+    "url": "https://github.com/juangcarmona/lighthouse/issues/567"
+  },
+  "sourceOfNativeRecoveryWakeup": "one explicit existing-maintenance workflow_dispatch, not a new owner decision"
+}

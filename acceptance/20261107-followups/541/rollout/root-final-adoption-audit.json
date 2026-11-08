@@ -1,0 +1,37 @@
+{
+  "state": "prepared",
+  "harness": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+  "versions": {
+    "cli": "0.12.60",
+    "sdlc": "0.21.11"
+  },
+  "onlyWorkflowProjectionsChanged": true,
+  "subscriptionMembershipUnchanged": true,
+  "modelsAndPoliciesUnchanged": true,
+  "otherAgentCommitPreserved": true,
+  "changed": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-product-change.md",
+    ".github/workflows/lighthouse-sdlc-apply-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-apply-review.md",
+    ".github/workflows/lighthouse-sdlc-epic.yml",
+    ".github/workflows/lighthouse-sdlc-implement.lock.yml",
+    ".github/workflows/lighthouse-sdlc-implement.md",
+    ".github/workflows/lighthouse-sdlc-integrate.lock.yml",
+    ".github/workflows/lighthouse-sdlc-integrate.md",
+    ".github/workflows/lighthouse-sdlc-product-change.lock.yml",
+    ".github/workflows/lighthouse-sdlc-product-change.md",
+    ".github/workflows/lighthouse-sdlc-propose.lock.yml",
+    ".github/workflows/lighthouse-sdlc-propose.md",
+    ".github/workflows/lighthouse-sdlc-refine.lock.yml",
+    ".github/workflows/lighthouse-sdlc-refine.md",
+    ".github/workflows/lighthouse-sdlc-review.lock.yml",
+    ".github/workflows/lighthouse-sdlc-review.md",
+    ".github/workflows/lighthouse-sdlc-router.yml",
+    ".github/workflows/lighthouse-sdlc-triage.lock.yml",
+    ".github/workflows/lighthouse-sdlc-triage.md",
+    ".github/workflows/lighthouse-sdlc-unattended.yml",
+    ".github/workflows/lighthouse-worker-maintenance.yml"
+  ]
+}

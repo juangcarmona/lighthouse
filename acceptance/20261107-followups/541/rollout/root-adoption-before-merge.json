@@ -1,0 +1,137 @@
+{
+  "pr": 564,
+  "head": "933356a17a1029aad6354bedf467e84595052c09",
+  "base": "ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a",
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:02:51Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956119/job/128570225744",
+      "name": "ci-app",
+      "startedAt": "2026-11-08T00:02:52Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:04:36Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956114/job/128570225303",
+      "name": "Check package contents",
+      "startedAt": "2026-11-08T00:02:55Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse package contracts"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T01:27:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42434315877/job/128589781077",
+      "name": "pr-state",
+      "startedAt": "2026-11-08T01:27:17Z",
+      "status": "COMPLETED",
+      "workflowName": "router"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:02:52Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956114/job/128570226245",
+      "name": "Exercise worker runtime boundaries",
+      "startedAt": "2026-11-08T00:02:52Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse package contracts"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T01:27:15Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42434315877/job/128589781808",
+      "name": "epic-triage",
+      "startedAt": "2026-11-08T01:27:15Z",
+      "status": "COMPLETED",
+      "workflowName": "router"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:04:28Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956119/job/128570224767",
+      "name": "repository",
+      "startedAt": "2026-11-08T00:02:54Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:02:52Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956114/job/128570226590",
+      "name": "Install CLI in adopter checkout",
+      "startedAt": "2026-11-08T00:02:52Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse package contracts"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:04:28Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956119/job/128570625102",
+      "name": "continue-post-merge-review",
+      "startedAt": "2026-11-08T00:04:28Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T01:27:15Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42434315877/job/128589803269",
+      "name": "route",
+      "startedAt": "2026-11-08T01:27:21Z",
+      "status": "COMPLETED",
+      "workflowName": "router"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:04:28Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956119/job/128570625085",
+      "name": "reconcile-implementation-pr",
+      "startedAt": "2026-11-08T00:04:28Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T01:27:15Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42434315877/job/128589782335",
+      "name": "\ud83d\udce5 Dispatch selected stage",
+      "startedAt": "2026-11-08T01:27:15Z",
+      "status": "COMPLETED",
+      "workflowName": "router"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:05:19Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/42427956114/job/128570655435",
+      "name": "Exercise a clean consumer",
+      "startedAt": "2026-11-08T00:04:39Z",
+      "status": "COMPLETED",
+      "workflowName": "Lighthouse package contracts"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-11-08T00:05:15Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://dash.cloudflare.com/?to=/2c0c4073a19c3990ea0ad6f6f9f0150a/pages/view/lighthouse/185b7d9a-0b1a-4e8b-a3f8-3c6f7a3801f5",
+      "name": "Cloudflare Pages",
+      "startedAt": "2026-11-08T00:05:15Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ]
+}

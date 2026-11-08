@@ -1,0 +1,9 @@
+# Qualified installed rollout
+
+Lighthouse PR #564 is merged at 1f45f12e4e3747ed60e5937858c2ed66991f0eb1. All 24 reviewed workflow projections, including both CI callbacks, match the installed files and use qualified harness ea5ce4fd1e09bb98e2c520d132a826c24cb50e0a: CLI 0.12.60 / SDLC 0.21.11. Post-merge verification, package contracts and release checks passed. Models and policies are preserved; acceptance hooks are absent. Maintenance and recovery are enabled. Native smoke 42434606567 observes an empty issue history and performs no model execution. The broader audit retains existing blocked or completed histories with no eligible automatic retry.
+
+Consumer cleanup PR #67 is merged at 33150681ad1a8c7678b69e131945bddc01d0b633 with both checks green. It restores the normal router subscription and maintenance schedule, removes this case's controls and preserves all 32 tests, production source, models, policies and older provider controls. Repository variables match the initial snapshot exactly; the temporary private engine copy is removed. Native history still authenticates the accepted recovery after cleanup, while explicit current-authority revalidation denies a fresh claim after the later workflow change.
+
+Qualification used a case-specific cancellable 1800-second wait on the normal shared engine lock; the 240-second default and model configuration were unchanged. The review waited for an occupied resource without interrupting its owner. The native recovery maintenance was explicitly invoked once after GitHub did not emit the scheduled wake-up during the observed wait. This establishes bounded recovery, not prompt scheduled delivery; source issue #567 remains open for that gap.
+
+The original archive and its manifest remain unchanged. This supplement records installation, activation and cleanup separately. Original native artifact members are retained byte-for-byte; snapshots and operator observations identify their own scope.

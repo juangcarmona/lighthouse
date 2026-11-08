@@ -1,0 +1,18 @@
+{
+  "kind": "operator-observed-qualification-limit",
+  "issue": 59,
+  "scope": "temporary case-specific engine profile",
+  "engineSlotWaitSeconds": 1800,
+  "observedNativeWaitCommand": [
+    "flock",
+    "--exclusive",
+    "--wait",
+    "1800",
+    "3"
+  ],
+  "observation": "Inspected the owned native review process while waiting, before its model started; the normal shared engine lock remained enforced.",
+  "sharedDefaultWaitSeconds": 240,
+  "globalDefaultChangedByTask": false,
+  "modelsChanged": false,
+  "privateCopyRemoved": true
+}
