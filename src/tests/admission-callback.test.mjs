@@ -78,7 +78,19 @@ test('bot callback, duplicate native completion and scheduled fallback share one
   assert.equal(retry.request.routerEventName,'workflow_dispatch');assert.deepEqual(retry.request.recovery.wake,wake);
   f.artifacts.set(300,retry.request);const worker={...f.run,id:400,status:'in_progress',conclusion:null};f.runs.set(400,worker);
   const env={...f.env,GITHUB_RUN_ID:'400'};
-  assert.equal((await admitDispatch(f.api,'owner/repo','owner',env,{inputs:{'dispatch-request':String(retry.commentId)}},f.readArtifact)).admitted,true);
+  const admitted=await admitDispatch(f.api,'owner/repo','owner',env,{inputs:{'dispatch-request':String(retry.commentId)}},f.readArtifact);
+  assert.equal(admitted.admitted,true);
+  assert.equal(admitted.admissionProof.original.workerRunId,'200');
+  assert.equal(admitted.admissionProof.original.expectedRevision,'a'.repeat(40));
+  assert.equal(admitted.admissionProof.original.observedRevision,'b'.repeat(40));
+  assert.equal(admitted.admissionProof.rebase.documentationOnly,true);
+  assert.equal(admitted.admissionProof.rebase.commits,1);
+  assert.equal(admitted.admissionProof.rebase.files,1);
+  assert.equal(admitted.admissionProof.jobs.find(j=>j.name==='agent').conclusion,'skipped');
+  assert.equal(admitted.admissionProof.reused.ci,'90');
+  assert.equal(admitted.admissionProof.reused.merge,'d'.repeat(40));
+  assert.equal(admitted.admissionProof.retryLimit,1);
+
   for(const scenario of ['reserved','changed-workflow','revoked-approval']){
     if(scenario==='reserved')f.issue.labels.push({name:'agent-working'});else if(scenario==='changed-workflow'){f.issue.labels=[];f.changed[0].filename='.github/workflows/review.yml'}else{f.reviews[0].state='CHANGES_REQUESTED'}
     const loaded=await loadDispatch(f.api,'owner/repo','owner',7,retry.commentId,worker,f.readArtifact);

@@ -56,7 +56,7 @@ async function main(command) {
     if (completion.labels.some(l => ['agent-working', 'human-working'].includes(l))) throw Error('Issue is reserved');
     if (!completion.merged) assertChecks(completion);
     const postMerge = completion.merged ? await postMergeRuns(api, completion, completion.merge) : [];
-    const continuation = stage === 'review' ? await readCompletionContinuation(api, repository, after, dispatch?.request) : null;
+    const continuation = stage === 'review' ? await readCompletionContinuation(api, repository, after, dispatch?.request, dispatch?.admissionProof) : null;
     const id = fingerprint({ repository, stage, issue: authorization.issue, run: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT });
     const request = { reportFormat: 2, ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(dispatch ? { dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest }, dispatchOrigin: { request: dispatch.request, receipt: dispatch.receipt } } : {}), runId: id, issue: authorization.issue, stage, title: completion.title, sourceRevision: completion.merged ? completion.merge : completion.binding.head, taskDigest: completion.binding.intent, workflowRunId: env.GITHUB_RUN_ID, attempt: env.GITHUB_RUN_ATTEMPT, observedAt: new Date().toISOString(), ...await harnessIdentity(), runUrl: `https://github.com/${repository}/actions/runs/${env.GITHUB_RUN_ID}`, authorization, completion, postMerge, continuation };
     if (stage === 'integrate' && authorization.merge && !completion.merged) await preflightProcessPublication(api, { ...request, completion: { ...completion, merged: true } });

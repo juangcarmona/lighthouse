@@ -92,7 +92,7 @@ export async function observeAdmissionRejection(api, repository, owner, rejectio
     const current = await inspectCompletion(api, repository, owner, request.completionAuthorization, 'review');
     assertChecks(current);
     if (current.currentRevision !== revision || !same(current.binding, request.admissionBinding) || digest(JSON.stringify(current.pullRequest.reviews)) !== request.admissionReviewsDigest || (await postMergeRuns(api, current, current.merge)).some(check => check.status !== 'passed')) return confirmed();
-    return result('retryable', 'workflow-revision-rejected', 'Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.', { confirmed: true, jobs, revision, workflowRevision: revision });
+    return result('retryable', 'workflow-revision-rejected', 'Record one linked review retry at the current default revision; reuse the original merge, CI and product apply.', { confirmed: true, jobs, revision, workflowRevision: revision, rebase: { from: request.sourceRevision, to: revision, documentationOnly: true, commits: comparison.total_commits, files: comparison.files.length, url: `https://github.com/${repository}/compare/${request.sourceRevision}...${revision}` } });
   } catch { return confirmed(); }
 }
 
@@ -126,7 +126,8 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   try { await loadDispatch(api, repository, owner, request.issue, comment.id, run, readArtifact); }
   catch (error) { rejection = error.rejection; }
   if (!rejection || rejection.dispatch.request.recovery || retry.rootId !== rejection.dispatch.request.id || run.path !== stagePath('review')) throw Error('Invalid original admission rejection');
-  if (!await rejectedJobs(api, rejection)) throw Error('Original admission rejection effects are unconfirmed');
+  const jobs = await rejectedJobs(api, rejection);
+  if (!jobs) throw Error('Original admission rejection effects are unconfirmed');
   let wake;
   if (parent.event === 'workflow_run' || retry.wake !== undefined) {
     if (!['workflow_run', 'workflow_dispatch'].includes(parent.event)) throw Error('Invalid admission completion wake');
@@ -143,4 +144,6 @@ export async function verifyAdmissionRecovery(api, repository, owner, dispatch, 
   const observation = await observeAdmissionRejection(api, repository, owner, rejection, issue, originalComments);
   observation.wake = wake;
   if (observation.state !== 'retryable' || !same(request, admissionRetryRequest(observation, parent))) throw Error('Before-admission recovery authority changed');
+  const original = rejection.dispatch.request;
+  return { schemaVersion: 1, kind: 'before-admission', original: { requestId: original.id, commentId: rejection.dispatch.commentId, workerRunId: String(run.id), expectedRevision: original.workflowRevision, observedRevision: run.head_sha }, jobs: jobs.map(job => ({ name: job.name, conclusion: job.conclusion, completedAt: job.completed_at ?? null })), rebase: observation.rebase, reused: { ci: original.eventRunId, merge: original.admissionBinding.base, head: original.completionAuthorization.head, pr: original.completionAuthorization.pr }, currentAuthorityUnchanged: true, retryLimit: 1, replayScope: 'Review only; merge, original CI and product apply are not authorized for replay.' };
 }

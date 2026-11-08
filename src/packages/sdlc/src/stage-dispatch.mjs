@@ -293,7 +293,8 @@ export async function admitDispatch(api, repository, owner, env, event, readArti
     if (scope && !scope.includes(Number(issue))) throw Error('Recovery is outside the configured maintenance scope');
     if (dispatch.request.recovery) {
       const parent = await api(`actions/runs/${dispatch.receipt.routerRunId}/attempts/${dispatch.receipt.routerAttempt}`);
-      await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, 0, true);
+      const proof = await (await import('./worker-recovery.mjs')).verifyRecoveryOrigin(api, repository, owner, dispatch, parent, readArtifact, 0, true);
+      if (proof) dispatch.admissionProof = proof;
     }
   }
   const admitted = await claimDispatch(api, repository, dispatch, env.GITHUB_RUN_ID);

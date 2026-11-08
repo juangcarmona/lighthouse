@@ -2,7 +2,8 @@
 set -euo pipefail
 validation_dir=$(mktemp -d)
 trap 'rm -rf "$validation_dir"' EXIT
-curl --fail --silent --show-error --location https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz -o "$validation_dir/actionlint.tar.gz"
+# The browser download endpoint can return 504; keep the immutable asset and pinned checksum.
+gh api repos/rhysd/actionlint/releases/assets/384924896 -H 'Accept: application/octet-stream' > "$validation_dir/actionlint.tar.gz"
 printf '%s  %s\n' 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 "$validation_dir/actionlint.tar.gz" | sha256sum --check
 tar -xzf "$validation_dir/actionlint.tar.gz" -C "$validation_dir" actionlint
 git init -q "$validation_dir/consumer"
