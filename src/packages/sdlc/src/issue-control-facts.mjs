@@ -1,6 +1,6 @@
-import { validControlRepository } from './issue-control-intent.mjs';
+import { validControlRepository, canonicalIssueIntent } from './issue-control-intent.mjs';
 import { digest, taskDigest } from './digests.mjs';
-import { routeIssue, pendingStage, pendingReplyState } from './issue-entry.mjs';
+import { routeIssue, pendingStage, pendingReplyState, checkReplyInputs } from './issue-entry.mjs';
 import { ownerIntentComments, collectTriageAdmission, collectProposalAdmission, IssueAdmissionRefusal } from './issue-admission.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch } from './stage-dispatch.mjs';
@@ -10,6 +10,7 @@ import { pendingQuestion } from './handoff.mjs';
 
 const positive = value => Number.isSafeInteger(value) && value > 0;
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+const sourceTime = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const revision = value => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
 const refusal = (code, availability = 'denied') => ({ eligible: false, availability, reason: code });
 const unavailable = code => refusal(code, 'unavailable');
@@ -104,19 +105,26 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
     try {
       const evidence = await loadStageReport(read, repository, pending.report, { owner: metadata.owner.login, issue: number }, readArtifact);
       const text = pendingQuestion(evidence.envelope.result.output?.handoff?.question);
-      if (pending.worker || evidence.request.worker && evidence.request.worker !== evidence.request.stage || evidence.request.epic)
-        question = { availability: 'unsupported', reason: 'pending-worker-kind-unsupported' };
-      else if (!positive(pending.report.id) || !text || validateStageEnvelope(evidence.envelope, evidence.request).length || evidence.envelope.result.status !== 'blocked' || evidence.request.stage !== pending.stage)
+      let inputFreshness = 'unavailable';
+      if (sourceTime(pending.report.created_at) && answers.every(answer => sourceTime(answer.created_at))) {
+        try { checkReplyInputs(evidence.request, issue, answers, pending.report, sourceRevision); inputFreshness = 'available'; }
+        catch { inputFreshness = 'changed'; }
+      }
+      const unsupported = pending.worker || evidence.request.worker && evidence.request.worker !== evidence.request.stage || evidence.request.epic;
+      if (!positive(pending.report.id) || !text || validateStageEnvelope(evidence.envelope, evidence.request).length || evidence.envelope.result.status !== 'blocked' || evidence.request.stage !== pending.stage)
         question = { availability: 'unavailable', reason: 'pending-question-not-verified' };
-      else question = { availability: 'available', stage: pending.stage, text, commentId: pending.report.id, requestId: evidence.request.runId,
-        questionDigest: digest(text), grantDigest: digest(JSON.stringify(evidence.request)),
-        current: evidence.request.sourceRevision === sourceRevision && evidence.request.taskDigest === inputDigest && pendingReplyState(issue),
+      else question = { availability: unsupported ? 'unsupported' : 'available', ...(unsupported ? { reason: 'pending-worker-kind-unsupported' } : {}), stage: pending.stage, text, commentId: pending.report.id, requestId: evidence.request.runId,
+        sourceCreatedAt: sourceTime(pending.report.created_at) ? pending.report.created_at : null,
+        sourceUpdatedAt: sourceTime(pending.report.updated_at) ? pending.report.updated_at : null,
+        questionDigest: digest(text), grantDigest: digest(canonicalIssueIntent(evidence.request)),
+        inputFreshness, waitCurrent: pendingReplyState(issue), current: inputFreshness === 'available' && pendingReplyState(issue),
         source: `https://github.com/${repository}/issues/${number}#issuecomment-${pending.report.id}`, request: evidence.request };
     } catch { question = { availability: 'unavailable', reason: 'pending-question-not-verified' }; }
   }
   actions.continue = !supported ? refusal('installed-contract-unsupported', 'unsupported') : writeAllowed('commentWrite') ? writeAllowed('commentWrite') : !policyKnown ? unavailable('policy-unavailable')
     : !policy.automationEnabled ? refusal('automation-disabled') : question.availability !== 'available' ? unavailable('pending-question-not-verified')
-      : !question.current ? refusal('pending-question-inputs-changed') : reservation.availability !== 'available' ? unavailable(reservation.reason)
+      : question.inputFreshness === 'unavailable' ? unavailable('pending-question-inputs-unavailable')
+      : !question.waitCurrent ? refusal('source-wait-not-current') : !question.current ? refusal('pending-question-inputs-changed') : reservation.availability !== 'available' ? unavailable(reservation.reason)
         : reservation.active.length ? refusal('authenticated-source-reservation') : { eligible: true, availability: 'available' };
   return { availability: 'available', observedAt: now().toISOString(), repository: { id: Number(metadata.id), name: repository },
     issue: { id: Number(issue.id), number, state: issue.state, updatedAt: issue.updated_at ?? null }, actor: { id: Number(actor.id), login: actor.login },

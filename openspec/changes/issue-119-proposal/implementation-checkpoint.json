@@ -1,38 +1,44 @@
 {
   "workItem": 119,
-  "kind": "internal implementation checkpoint, not public API or integration acceptance",
-  "recordedAt": "2026-11-08T01:50:14.407088+00:00",
+  "kind": "internal SDK/provenance implementation checkpoint, not public export or integration acceptance",
+  "recordedAt": "2026-11-08T02:41:50.159690+00:00",
   "implemented": [
     "Read-only source policy/admission facts with injected repository-bound transport and verified actor/permission binding",
     "Strict typed intent and installed-contract parsing, stable namespace and source/input/policy bindings",
-    "Current source wait and reservation revocation reuse in legacy routing and continuation eligibility"
+    "Current source wait and reservation revocation reuse in legacy routing and continuation eligibility",
+    "Internal observe/prepare/submit/reconcile SDK with explicit actual-user transport, stable intent keys, caller atomic claim before POST, restart/lost-response reconciliation and fixed non-disclosing failures",
+    "Authenticated source claim and immutable terminal-result artifact readers; edited bot comments cannot invent terminal acceptance and a lost final comment update can reconcile from its artifact",
+    "Canonical existing reply-input checks, transport-order-independent original-grant digest, source question timestamps and readable unsupported questions with disabled continuation"
   ],
   "verification": {
     "fullRepository": {
       "status": "passed",
       "command": "npm run verify",
-      "tests": 1087,
-      "passed": 1077,
+      "tests": 1106,
+      "passed": 1096,
       "skipped": 10,
       "failed": 0,
       "publicSiteFiles": 136
     },
     "focused": {
-      "tests": 51,
-      "passed": 51,
+      "tests": 70,
+      "passed": 70,
       "failed": 0
     },
-    "regression": {
-      "waitRevocation": "Verified pending question remains visible after wait removal or human/agent reservation; continuation is refused",
-      "negativeControl": "One focused test failed on the stale-wait grant before correction"
-    }
+    "negativeControls": [
+      "Unsupported pending-worker question was lost despite verified evidence",
+      "Object key ordering changed the original-grant digest",
+      "Ordinary input after the question incorrectly revoked the canonical reply grant",
+      "Edited bot comment invented terminal outcome without source result artifact",
+      "Multiple comments for one intent were returned as unknown instead of conflict"
+    ]
   },
   "remaining": [
-    "Public SDK export and installed router handler/manifest are not enabled",
-    "Source-owned durable result/deduplication and stage-only propagation",
-    "Direct-user submission and uncertain reconciliation",
-    "Actual authorized provider qualification and packed consumer",
-    "Independent final review, publication, adoption and integration"
+    "Public package export and parser documentation are not enabled",
+    "Official opt-in router handler/manifest generation and canonical native request/snapshot/result propagation",
+    "Source-owned admission/rejection/alias producer and background-producer compatibility proof",
+    "Actual authorized provider and packed-consumer qualification",
+    "Independent final review, protected publication, consumer adoption and integration"
   ],
-  "authority": "No control contract is advertised and no new write entry is enabled by this checkpoint."
+  "authority": "No new source job, installed contract or public SDK export is advertised or enabled by this checkpoint. Consumers cannot adopt it as a released control API."
 }
