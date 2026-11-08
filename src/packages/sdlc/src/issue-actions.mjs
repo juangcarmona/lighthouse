@@ -1,3 +1,6 @@
+import { ownerIntentComments, collectTriageAdmission, collectProposalAdmission } from './issue-admission.mjs';
+export { pendingReply, issueCommandLabels, routeIssue, checkHandoff, checkReplyInputs } from './issue-entry.mjs';
+import { pendingReply, issueCommandLabels, routeIssue, checkHandoff, checkReplyInputs } from './issue-entry.mjs';
 import { isIssuePublicationBranch, parsePublicationBranch } from './publication-branch.mjs';
 export { taskDigest } from './digests.mjs';
 import { taskDigest } from './digests.mjs';
@@ -6,7 +9,6 @@ import { createIssueApi } from './github-rest.mjs';
 import { createTelemetry, telemetryContext, routingReason } from './telemetry.mjs';
 import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
-import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
@@ -80,46 +82,6 @@ export async function reportProductApplyStop(api, repo, owner, env, event, readA
   return;
 }
 
-export function pendingReply(event, comments) {
-  const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
-  if (!report || (!report.body.includes('<!-- lighthouse-question -->') && /<!-- lighthouse-handoff:v1 -->|<!-- lighthouse-proposal-review:|\[Review the implementation/.test(report.body)) || !/^Outcome: blocked$/m.test(report.body) || !event.comment?.body?.trim() || event.comment.created_at <= report.created_at) return null;
-  const productChangeName = report.body.match(/<!-- lighthouse-product-workflow:([a-z0-9]+(?:-[a-z0-9]+)*) -->/)?.[1];
-  const declared = report.body.match(/<!-- lighthouse-stage:([a-z]+):blocked -->/);
-  if (productChangeName) {
-    const stage = declared?.[1] ?? 'propose';
-    if (!['triage', 'refine', 'propose', 'implement'].includes(stage)) return null;
-    return { stage, worker: 'product-change', productFeedback: { action: 'answer', changeName: productChangeName, text: event.comment.body, sourceCommentId: event.comment.id }, report };
-  }
-  const stage = declared?.[1] ?? (/^## Proposal: blocked candidate$/m.test(report.body) ? 'propose' : /^## Refinement:/m.test(report.body) ? 'refine' : null);
-  return ['triage', 'refine', 'propose', 'implement'].includes(stage) ? { stage, report } : null;
-}
-
-export const issueCommandLabels = capabilityCatalog.capabilities.find(c => c.id === 'labels').configuration.labels.filter(l => l.role === 'command').map(l => l.name);
-
-export function routeIssue(event, actor, owner, eventName, comments = []) {
-  if (actor !== owner || event.issue?.pull_request || (event.issue && event.issue.state !== 'open')) return { run: false, reason: 'Unauthorized actor or closed/non-issue target' };
-  const labels = event.issue?.labels?.map(x => x.name) ?? [];
-  if (labels.includes('future') && (event.label?.name === 'implement' || event.inputs?.stage === 'implement')) return { run: false, reason: 'Implementation paused by future label' };
-  if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
-  if (eventName === 'issues' && event.action === 'unlabeled' && event.label?.name === 'future' && labels.includes('implement')) return { run: true, stage: 'implement', issue: event.issue.number, reason: 'Owner resumed implementation' };
-  if (eventName === 'issues' && event.action === 'labeled' && issueCommandLabels.includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
-  if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && labels.some(x => ['needs-info', 'waiting-review'].includes(x))) {
-    const pending = pendingReply(event, comments);
-    if (pending) return { run: true, ...pending, issue: event.issue.number, reason: `Owner answered pending ${pending.stage}` };
-  }
-  if (eventName === 'workflow_dispatch' && ['integrate', 'review'].includes(event.inputs?.stage) && (!/^[1-9][0-9]*$/.test(event.inputs?.pull_request ?? '') || !/^[a-f0-9]{40}$/.test(event.inputs?.head ?? ''))) return { run: false, reason: 'Completion needs a PR and accepted full head SHA' };
-  if (eventName === 'workflow_dispatch' && event.inputs?.workflow === 'product-change' && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: ['propose', 'implement'].includes(event.inputs?.stage) ? event.inputs.stage : 'propose', worker: 'product-change', issue: Number(event.inputs.issue), reason: 'Owner requested Product Change preparation from an idea' };
-  if (eventName === 'workflow_dispatch' && ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'].includes(event.inputs?.stage ?? 'refine') && /^[1-9][0-9]*$/.test(event.inputs?.issue ?? '')) return { run: true, stage: event.inputs.stage ?? 'refine', issue: Number(event.inputs.issue), reason: 'Owner requested manual stage' };
-  return { run: false, reason: 'No eligible stage event' };
-}
-export function checkHandoff(request, envelope, issue, answers, revision, runId) {
-  if (request.stage !== 'refine' || request.issue !== issue.number || String(request.workflowRunId) !== String(runId) || request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, answers) || envelope.result?.status !== 'passed' || validateStageEnvelope(envelope, request).length) throw Error('Refinement handoff is not current successful evidence');
-  if (issue.labels.some(x => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(x.name))) throw Error('Issue is paused or reserved');
-}
-export function checkReplyInputs(request, issue, answers, report, revision) {
-  const priorAnswers = answers.filter(c => c.created_at < report.created_at);
-  if (request.sourceRevision !== revision || request.taskDigest !== taskDigest(issue, priorAnswers)) throw Error('Pending stage inputs changed; refresh refinement before continuing');
-}
 export function continuationContext(continuation, answer) {
   const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
   return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
@@ -408,15 +370,8 @@ async function main(command) {
   }
   const issueNumber = Number(env.LIGHTHOUSE_ISSUE ?? route.issue ?? event.issue?.number);
   const issuePath = `issues/${issueNumber}`;
-  const comments = async () => {
-    const all = [];
-    for (let page = 1; page <= 10; page++) {
-      const batch = await api(`${issuePath}/comments?per_page=100&page=${page}`); all.push(...batch);
-      if (batch.length < 100) return all;
-    }
-    throw Error('Comment history exceeds bounded intake');
-  };
-  const ownerAnswers = all => all.filter(c => c.user.login === owner && !c.body.includes('<!-- lighthouse-run:') && !c.body.includes('<!-- lighthouse-actions:'));
+  const comments = () => issueComments(api, issueNumber);
+  const ownerAnswers = all => ownerIntentComments(all, owner);
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !productApproval) {
     const fresh = await api(issuePath);
     route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
@@ -589,14 +544,8 @@ async function main(command) {
     await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
     let predecessor, implementation, seed, planningReference, triage;
     if (!productWorker && (stage === 'refine' || issue.user.login !== owner && !proposalReview && !implementationReview && ['propose', 'implement'].includes(stage))) {
-      const report = [...all].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes('<!-- lighthouse-stage:triage:passed -->'));
-      if (!report && issue.user.login !== owner) throw Error('External request requires authenticated passed triage before later work');
-      if (report) {
-        triage = await loadStageReport(api, repo, report, { owner, issue: issueNumber });
-        const errors = validateStageEnvelope(triage.envelope, triage.request);
-        if (errors.length || triage.request.stage !== 'triage' || triage.envelope.result.status !== 'passed' || triage.request.sourceRevision !== (productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha)) || triage.request.originalRequest !== (issue.body ?? '')) throw Error('Triage evidence is invalid or stale; request triage again');
-        if (stage === 'refine') checkEpicTriageBinding(dispatch?.request.epic, triage);
-      }
+      triage = await collectTriageAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha) });
+      if (stage === 'refine' && triage) checkEpicTriageBinding(dispatch?.request.epic, triage);
     }
     if (stage === 'implement' && !productWorker) {
       if (handoff) {
@@ -620,13 +569,7 @@ async function main(command) {
     }
     if (proposalReview && (!issue.labels.some(x => x.name === 'ready') || proposalReview.base !== repository.default_branch)) throw Error('Proposal is not ready or targets a non-default branch');
     if (stage === 'propose' && !productWorker && !proposalReview && !implementationReview) {
-      if (!issue.labels.some(x => x.name === 'ready')) throw Error('Proposal requires a ready issue');
-      predecessor = continuation?.request.refinement ?? await loadRefinement(api, repo, all, { owner, issue: issueNumber, sourceRevision: productResume?.baseRevision ?? revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers) });
-      if (predecessor.request.stage !== 'refine' || predecessor.request.issue !== issueNumber || predecessor.request.sourceRevision !== (productResume?.baseRevision ?? revision.sha) || predecessor.envelope.result.status !== 'passed') throw Error('Continuation refinement is invalid');
-      const errors = validateStageEnvelope(predecessor.envelope, predecessor.request); if (errors.length) throw Error(errors.join('\n'));
-      if (await api(`contents/${proposalRoot(issueNumber)}?ref=${revision.sha}`, 'GET', undefined, true)) throw Error('Proposal directory already exists; review the existing proposal');
-      const pulls = await api('pulls?state=open&per_page=100');
-      if (pulls.length >= 100 || pulls.some(pr => isIssuePublicationBranch(pr.head.ref, issueNumber, 'propose'))) throw Error('Review the existing proposal PR before requesting another');
+      predecessor = await collectProposalAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: productResume?.baseRevision ?? revision.sha, proposalRevision: revision.sha, taskDigest: continuation?.request.taskDigest ?? taskDigest(issue, answers), predecessor: continuation?.request.refinement });
     }
     const id = digest(`${repo}:${issueNumber}:${stage}:${env.GITHUB_RUN_ID}:${env.GITHUB_RUN_ATTEMPT}`);
     await mkdir(dir, { recursive: true });

@@ -98,9 +98,9 @@ export async function loadStageReport(api, repo, report, current, readArtifact =
   return { request, envelope, report: report.html_url, run, marker };
 }
 
-export async function loadRefinement(api, repo, reports, current) {
+export async function loadRefinement(api, repo, reports, current, readArtifact = readActionsJson) {
   const report = [...reports].reverse().find(c => c.user.login === 'github-actions[bot]' && (/<!-- lighthouse-stage:refine:passed -->/.test(c.body) || /^## Refinement:/m.test(c.body)) && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
-  const evidence = await loadStageReport(api, repo, report, current);
+  const evidence = await loadStageReport(api, repo, report, current, readArtifact);
   checkRefinement(evidence.request, evidence.envelope, evidence.run, current, evidence.marker, !!evidence.request.dispatch);
   return { request: evidence.request, envelope: evidence.envelope, report: evidence.report };
 }
