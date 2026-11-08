@@ -383,7 +383,9 @@ async function main(command) {
   const ownerAnswers = all => ownerIntentComments(all, owner);
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !productApproval) {
     const fresh = await api(issuePath);
-    route = routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, await comments());
+    const currentComments = await comments();
+    route = clientRequest ? clientDispatchRoute(clientRequest, dispatch.request, fresh, currentComments)
+      : routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, currentComments);
     if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
       await api(`issues/comments/${event.comment.id}/reactions`, 'POST', { content: 'eyes' });
     }
