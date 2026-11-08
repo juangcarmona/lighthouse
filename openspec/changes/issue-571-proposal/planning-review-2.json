@@ -1,0 +1,41 @@
+{
+  "head": "ca49dfbc3f1db032177d41ecf32df9c334bd05e2",
+  "verdict": "accept",
+  "findings": [],
+  "dimensions": {
+    "root cause and bounded scope": {
+      "verdict": "accept",
+      "evidence": "proposal.md identifies the mismatch: committed source links are excluded from the executable source map, while publication retains them, causing the checked/published tree equality guard to reject an otherwise matching candidate. Scope remains metadata propagation and checked-tree identity; design.md explicitly retains exact equality and separates release/adopter/native qualification."
+    },
+    "trusted source/link provenance": {
+      "verdict": "accept",
+      "evidence": "design.md addresses the prior provenance gap by specifying a source-host-only producer from git ls-tree at the exact admitted revision, authenticated working-link metadata through existing sourceFiles validation, and independent evidence-reader reconstruction from the authenticated API tree with exact revision/path/mode/SHA comparison. It explicitly rejects self-consistent forged artifact metadata and disallows model-supplied metadata. implementation.mjs sourceFiles (lines 98-137) confirms tracked link path/SHA validation without following links."
+    },
+    "metadata-only Git index construction without target bytes/filesystem symlinks": {
+      "verdict": "accept",
+      "evidence": "design.md specifies a private temporary index based on candidate HEAD, adding only admitted absent 120000 entries and using write-tree --missing-ok, while leaving the original index, HEAD and filesystem unchanged. It rejects collisions and unsupported modes and excludes target bytes. Existing implementation.mjs sourceFiles keeps links out of the executable map; implementation-runtime.mjs writableTree rejects symlinks."
+    },
+    "command-evidence and caller propagation": {
+      "verdict": "accept",
+      "evidence": "design.md names both normal native preparation and unattended request propagation, schema-2 binding, retained evidence, and current evidence reconstruction. These match implementation-runtime.mjs runImplementationChecks and implementation-evidence.mjs commandEvidenceBinding, implementationEvidenceBundle, and readImplementationEvidence. The existing candidateTree/publication tree equality checks in implementation-evidence.mjs and implementation.mjs are explicitly preserved."
+    },
+    "fail-closed denial and no-link compatibility": {
+      "verdict": "accept",
+      "evidence": "design.md and spec.md require rejection of missing, malformed, changed, duplicate, colliding or unsupported metadata and evidence mismatches. They prohibit model mutation or weaker comparisons. Both preserve the existing request/evidence shape and HEAD-tree behavior when there are no links; spec.md includes a no-links scenario."
+    },
+    "meaningful RED/GREEN and rollback plan": {
+      "verdict": "accept",
+      "evidence": "design.md calls for an isolated tracked ignored-link fixture proving the pre-fix tree mismatch and corrected exact match, with no workspace symlink and unchanged index/HEAD. It also requires forged-input/evidence tests, both caller paths and regression coverage. Rollback restores workflow source/package/configuration together, and prior failed deliveries remain negative evidence."
+    },
+    "ownership/security/qualification limits": {
+      "verdict": "accept",
+      "evidence": "The proposal/design keep link metadata host-owned, exclude target bytes from requests/model context, retain publication equality, and treat release, adopter installation and native delivery as separate later gates. No adopter lifecycle file is identified as applicable. Owner authorization covers necessary source dependency fixes and routine integration only after real checks."
+    }
+  },
+  "kind": "plan",
+  "issue": 571,
+  "requestedModel": "openai/gpt-6-luna",
+  "requestedEffort": "high",
+  "reviewedAt": "2026-11-08T03:54:49.935Z",
+  "sourceReadOnly": true
+}

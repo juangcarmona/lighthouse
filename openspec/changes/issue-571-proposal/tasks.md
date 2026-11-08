@@ -3,7 +3,7 @@
 ## 1. Plan
 
 - [x] 1.1 Identify the exact source-link omission and preserve the failed tree-equality outcome.
-- [ ] 1.2 Obtain independent acceptance of the bounded metadata/index approach before implementation.
+- [x] 1.2 Obtain independent acceptance of the bounded metadata/index approach before implementation.
 
 ## 2. Implement and verify
 
