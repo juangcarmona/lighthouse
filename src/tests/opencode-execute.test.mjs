@@ -20,6 +20,79 @@ async function fixtureHarness(root) {
   return join(harness, 'src/opencode-execute.mjs');
 }
 
+test('apply-review host preparation requalifies archived plans without resurrecting an active change', { timeout: 120000 }, async t => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const plan = 'openspec/changes/issue-414-proposal', archive = 'openspec/changes/archive/2026-11-02-issue-414-proposal';
+  const metadata = '# Reviewed metadata\nschema: spec-driven\ncreated: 2026-11-01\nskip_specs: true\n';
+  const proposal = '# Proposal\n\n## Why\nPreserve the verified implementation.\n\n## What Changes\n- Retain verification.\n\n## Capabilities\n\n### New Capabilities\nNone.\n\n### Modified Capabilities\nNone.\n\n## Impact\nVerification only.\n';
+  for (const scenario of ['archive', 'active', 'new', 'incomplete', 'ambiguous', 'missing-metadata', 'conflicting']) await t.test(scenario, async () => {
+    const root = await mkdtemp(join(tmpdir(), 'lighthouse-plan-caller-'));
+    try {
+      const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+      for (const path of [work, bin, runDir]) await mkdir(path);
+      await writeFile(join(work, 'demo.js'), 'export const verified = true;\n');
+      const writePlan = async target => {
+        await mkdir(join(work, target), { recursive: true });
+        for (const [name, content] of Object.entries({ '.openspec.yaml': metadata, 'proposal.md': proposal, 'design.md': '# Design\nPreserve existing verification.\n', 'tasks.md': '- [x] Implemented and checked.\n' })) await writeFile(join(work, target, name), content);
+      };
+      if (scenario !== 'new') await writePlan(scenario === 'active' ? plan : archive);
+      if (scenario === 'incomplete') await writeFile(join(work, archive, 'tasks.md'), '- [ ] Not complete\n');
+      if (scenario === 'ambiguous') await writePlan(archive.replace('2026-11-02', '2026-11-03'));
+      if (scenario === 'missing-metadata') await rm(join(work, archive, '.openspec.yaml'));
+      if (scenario === 'conflicting') await writePlan(plan);
+      execFileSync('git', ['init', '-q', work]); execFileSync('git', ['-C', work, 'add', '.']);
+      execFileSync('git', ['-C', work, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Reviewed source']);
+      const head = execFileSync('git', ['-C', work, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+      const checks = [['node', '-e', `const f=require('node:fs'),a=require('node:assert/strict');a.equal(f.readFileSync('demo.js','utf8'),'export const verified = true;\\n');${scenario === 'archive' ? `a.equal(f.existsSync('${plan}'),false);a.equal(f.readFileSync('${archive}/.openspec.yaml','utf8'),${JSON.stringify(metadata)});` : ''}`]];
+      const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', worker: 'apply-review', issue: 414, sourceRevision: head, baseRevision: 'b'.repeat(40), implementationReview: { issue: 414, approved: false, head, implementationIdentity: 'c'.repeat(64), feedbackDigest: 'e'.repeat(64) }, implementation: { proposal: { root: plan }, policy: { paths: ['*'], checks, reviewRequired: false } } };
+      const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Independent review remains required.' }, effect: { type: 'issue-comment', body: 'Fixture only.' } };
+      await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}');
+      await writeFile(join(root, 'prompt'), 'Verify the existing candidate.');
+      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'f'.repeat(64)}`, implementationImage: `sha256:${'f'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture', lock: join(root, 'lock') }));
+      const cli = fileURLToPath(new URL('../../node_modules/@fission-ai/openspec/bin/openspec.js', import.meta.url));
+      await writeFile(join(bin, 'npx'), `#!${process.execPath}\nconst c=require('node:child_process'),a=process.argv.slice(2),i=a.indexOf('openspec');if(i<0)process.exit(2);const r=c.spawnSync(process.execPath,[${JSON.stringify(cli)},...a.slice(i+1)],{stdio:'inherit'});process.exit(r.status??1);\n`);
+      await chmod(join(bin, 'npx'), 0o755);
+      await writeFile(join(bin, 'docker'), `#!${process.execPath}
+const fs=require('node:fs'),cp=require('node:child_process'),args=process.argv.slice(2);
+require(${JSON.stringify(resourceShim)})(args);
+if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['fixture-engine']}));process.exit(0);}
+if(args.includes('chown'))process.exit(0);
+if(args.includes('--entrypoint')&&!args.some(a=>a.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);}
+const mount=dst=>args.find(a=>a.startsWith('type=bind,src=')&&a.endsWith(',dst='+dst))?.slice(14,-(',dst='+dst).length);
+const output=mount('/output');
+if(output){
+ fs.writeFileSync(${JSON.stringify(join(root, 'engine-started'))},'yes');
+ if(${JSON.stringify(scenario)}==='new'){
+  const target=mount('/workspace')+'/'+${JSON.stringify(plan)};
+  fs.writeFileSync(target+'/proposal.md',${JSON.stringify(proposal)});fs.writeFileSync(target+'/design.md','# Design\\nRetain verification.\\n');fs.writeFileSync(target+'/tasks.md','- [x] Implemented and checked.\\n');fs.appendFileSync(target+'/.openspec.yaml','skip_specs: true\\n');
+ }
+ fs.writeFileSync(output+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))});
+}
+if(mount('/diagnostics')){const r=cp.spawnSync(${JSON.stringify(process.execPath)},${JSON.stringify(checks[0].slice(1))},{cwd:mount('/workspace'),stdio:'inherit'});process.exit(r.status??1);}
+`);
+      await chmod(join(bin, 'docker'), 0o755);
+      const run = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', timeout: 60000, env: { ...process.env, OPENSPEC_TELEMETRY: '0', PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+      if (['archive', 'active', 'new'].includes(scenario)) {
+        assert.equal(run.status, 0, run.stdout + run.stderr);
+        const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
+        if (scenario !== 'new') assert.deepEqual(changes, []);
+        const receipt = JSON.parse(await readFile(join(runDir, 'checks.json')));
+        assert.equal(receipt.checks[0].exitCode, 0);
+        assert.equal(receipt.sourceRevision, head);
+        assert.match(receipt.candidateTree, /^[a-f0-9]{40}$/);
+        assert.equal(JSON.parse(await readFile(join(runDir, 'envelope.json'))).result.status, 'passed');
+        if (scenario === 'archive') assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).planningMetadata, undefined);
+      } else {
+        assert.notEqual(run.status, 0, run.stdout + run.stderr);
+        assert.match(run.stderr, /incomplete|Ambiguous archived|missing .openspec.yaml|Conflicting active/);
+        await assert.rejects(readFile(join(root, 'engine-started')), { code: 'ENOENT' });
+        await assert.rejects(readFile(join(root, 'completion')), { code: 'ENOENT' });
+      }
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+});
+
 test('engine snapshot contains tracked regular files but no checkout credentials or symlink targets', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lh-source-')), out = await mkdtemp(join(tmpdir(), 'lh-snapshot-'));
   try {
