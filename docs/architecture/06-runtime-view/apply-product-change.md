@@ -3,7 +3,7 @@
 Explicit owner approval of the current Product Change authorizes a separate provider apply. ProductShape materializes the reviewed definition on the issue branch; merge remains the baseline-acceptance decision.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Apply Product Change
     accDescr: Explicit owner approval of the current Product Change authorizes a separate provider apply. ProductShape materializes the reviewed definition on the issue branch; merge remains the baseline-acceptance decision.
     Approval[Explicit product approval and review key] --> Auth{Proposal and baseline still current?}

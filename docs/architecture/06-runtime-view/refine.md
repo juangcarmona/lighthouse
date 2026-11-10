@@ -3,7 +3,7 @@
 An owner requests refinement or answers its pending question. The worker makes the scope and acceptance criteria actionable and reports whether implementation can proceed.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Refine
     accDescr: An owner requests refinement or answers its pending question. The worker makes the scope and acceptance criteria actionable and reports whether implementation can proceed.
     Request[Owner refinement request or answer] --> Admit{Current authority and reservation valid?}

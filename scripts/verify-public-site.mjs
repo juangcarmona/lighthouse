@@ -33,13 +33,21 @@ if (!html.includes(`v${cliPackage.version}`) || html.includes('__LIGHTHOUSE_VERS
 for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/gu)) {
   const target = match[1];
   if (/^(?:https?:|mailto:|#|data:)/u.test(target)) continue;
-  const local = resolve(output, target);
+  const local = resolve(output, target.split('#', 1)[0]);
   if (relative(output, local).startsWith('..') || !(await exists(local))) {
     throw new Error(`Missing public-site reference: ${target}`);
   }
 }
 
 if (publicSiteEnabled) {
+  for (const slug of ['triage', 'refine', 'propose', 'implement', 'apply-review', 'integrate', 'review', 'product-change', 'apply-product-change', 'maintenance', 'unattended', 'product-definition-as-code']) {
+    if (!html.includes(`architecture/index.html#/section/06/${slug}`)) {
+      throw new Error(`Public site is missing the ${slug} flow route.`);
+    }
+  }
+  if (html.includes('FLOW_DIAGRAMS') || (html.match(/class="diagram-card"/g) ?? []).length !== 13 || !html.includes('Worker reports')) {
+    throw new Error('Public-site flow gallery is incomplete.');
+  }
   const [productSnapshot, architectureSnapshot] = await Promise.all([
     readFile(join(output, 'model/index.html'), 'utf8'),
     readFile(join(output, 'architecture/index.html'), 'utf8'),

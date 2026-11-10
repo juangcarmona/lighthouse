@@ -50,6 +50,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
           <span>Workflows</span>
         </a>
+        <a class="sidebar-link" href="#diagrams">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v5H4zM14 14h6v5h-6zM10 7h4v9m-4 0h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+          <span>Flow diagrams</span>
+        </a>
         <a class="sidebar-link" href="#run">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg>
           <span>Run it yourself</span>
@@ -152,21 +156,27 @@
       <section class="section" id="workflows" aria-labelledby="workflows-title">
         <div class="section-heading"><div><p class="eyebrow">03 / DELIVERY WORKFLOWS</p><h2 id="workflows-title">From issue to reviewed change.</h2></div><p>With the selected workers installed, an owner requests a stage through GitHub. Each result links to the work and the next decision.</p></div>
         <div class="flow-grid" aria-label="Supervised Lighthouse delivery route">
-          <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess the request and estimate it. Stop for the owner's decision.</p></article>
-          <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Define acceptance criteria or ask a specific question.</p></article>
-          <article class="flow-step"><span class="step-number">03</span><h3>Implement</h3><p>Plan, change code and verify. Publish both plan and code in a draft PR.</p></article>
-          <article class="flow-step"><span class="step-number">04</span><h3>PR &amp; checks</h3><p>Apply feedback in the same PR. Wait for required checks and owner approval.</p></article>
-          <article class="flow-step"><span class="step-number">05</span><h3>Integrate</h3><p>Assess the current approved head and merge only when authorized.</p></article>
-          <article class="flow-step"><span class="step-number">06</span><h3>Review</h3><p>After post-merge CI, record the retrospective and close the issue if passed.</p></article>
+          <article class="flow-step"><span class="step-number">01</span><h3>Triage</h3><p>Assess the request and estimate it. Stop for the owner's decision.</p><a href="architecture/index.html#/section/06/triage">View diagram ↗</a></article>
+          <article class="flow-step"><span class="step-number">02</span><h3>Refine</h3><p>Define acceptance criteria or ask a specific question.</p><a href="architecture/index.html#/section/06/refine">View diagram ↗</a></article>
+          <article class="flow-step"><span class="step-number">03</span><h3>Implement</h3><p>Plan, change code and verify. Publish both plan and code in a draft PR.</p><a href="architecture/index.html#/section/06/implement">View diagram ↗</a></article>
+          <article class="flow-step"><span class="step-number">04</span><h3>PR &amp; checks</h3><p>Apply feedback in the same PR. Wait for required checks and owner approval.</p><a href="architecture/index.html#/section/06/apply-review">View diagram ↗</a></article>
+          <article class="flow-step"><span class="step-number">05</span><h3>Integrate</h3><p>Assess the current approved head and merge only when authorized.</p><a href="architecture/index.html#/section/06/integrate">View diagram ↗</a></article>
+          <article class="flow-step"><span class="step-number">06</span><h3>Review</h3><p>After post-merge CI, record the retrospective and close the issue if passed.</p><a href="architecture/index.html#/section/06/review">View diagram ↗</a></article>
         </div>
         <div class="workflow-detail"><div><span class="meta-label">HUMAN STOPS</span><p>Questions, <code>future</code>, human reservations and failed checks pause continuation. A passing worker run alone does not authorize merge.</p></div><div><span class="meta-label">OTHER ROUTES</span><p><code>propose</code> opens a separate design PR when requested. Product Change, fast-forward and test-first hotfix are optional installations with their own gates.</p></div></div>
         <a class="section-link" href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/sdlc/README.md">Read the workflows and owner actions <span aria-hidden="true">↗</span></a>
+        <div class="diagram-gallery" id="diagrams" aria-labelledby="diagram-gallery-title">
+          <div class="section-heading"><div><p class="eyebrow">FLOW DIAGRAMS</p><h3 id="diagram-gallery-title">Explore each route.</h3></div><p>These diagrams come from the architecture source. Optional routes require their own installation and authority.</p></div>
+          <div class="diagram-list">
+            <!-- FLOW_DIAGRAMS -->
+          </div>
+        </div>
       </section>
 
       <section class="section run-section" id="run" aria-labelledby="run-title">
         <div class="section-heading"><div><p class="eyebrow">THE BASE / RUN IT YOURSELF</p><h2 id="run-title">Start locally. Add workers when you need them.</h2></div><p>The baseline can live in your repository. Automation is a separate, selected installation.</p></div>
         <div class="run-grid">
-          <article class="run-card"><span class="step-number">01 / ADOPT</span><h3>Adopt the baseline</h3><p>Initialize a repository, inspect the generated boundaries and run its local checks. Select stack profiles and external authorities only where they fit.</p><code>lighthouse init --name &lt;product&gt;<br>lighthouse verify</code><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/README.md">Open the package guide <span aria-hidden="true">↗</span></a></article>
+          <article class="run-card"><span class="step-number">01 / ADOPT</span><h3>Adopt the baseline</h3><p>Initialize a repository, inspect the generated boundaries and run its local checks. Select stack profiles and external authorities only where they fit.</p><code tabindex="0">lighthouse init --name &lt;product&gt;<br>lighthouse verify</code><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/cli/README.md">Open the package guide <span aria-hidden="true">↗</span></a></article>
           <article class="run-card"><span class="step-number">02 / OPERATE</span><h3>Run the workers</h3><p>Install selected SDLC workflows, review their configuration and provision a trusted runner and agent engine. The repository owner enables automation after setup.</p><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/packages/sdlc/README.md">Choose workflows <span aria-hidden="true">↗</span></a><a href="https://github.com/juangcarmona/lighthouse/blob/main/src/examples/opencode-engine/README.md">See the single-host runtime example <span aria-hidden="true">↗</span></a></article>
         </div>
       </section>
@@ -193,6 +203,9 @@
           </button>
           <button class="search-option" type="button" data-search-target="#workflows" data-search-name="delivery workflows triage refine propose implement integrate review">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 16h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Delivery Workflows <small>Stages and owner actions</small></span><b aria-hidden="true">↗</b>
+          </button>
+          <button class="search-option" type="button" data-search-target="#diagrams" data-search-name="flow diagrams workers routes product change maintenance fast-forward hotfix">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v5H4zM14 14h6v5h-6zM10 7h4v9m-4 0h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg><span>Flow diagrams <small>Workers and optional routes</small></span><b aria-hidden="true">↗</b>
           </button>
           <button class="search-option" type="button" data-search-target="#run" data-search-name="run it yourself adopt baseline operate workers runtime">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><circle cx="18" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.5"></circle></svg><span>Run it yourself <small>Adopt and operate</small></span><b aria-hidden="true">↗</b>

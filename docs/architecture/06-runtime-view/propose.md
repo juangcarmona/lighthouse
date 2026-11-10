@@ -3,7 +3,7 @@
 The optional engineering-proposal worker prepares an OpenSpec plan after successful refinement. It publishes a separate proposal PR for review.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Propose
     accDescr: The optional engineering-proposal worker prepares an OpenSpec plan after successful refinement. It publishes a separate proposal PR for review.
     Request[Owner propose request] --> Gate{Ready and current refinement evidence?}
