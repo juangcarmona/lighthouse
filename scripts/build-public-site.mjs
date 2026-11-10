@@ -1,5 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -10,6 +10,29 @@ const output = resolve(root, process.argv[2] || 'dist/public-site');
 const brandAssets = join(root, 'assets');
 const execFile = promisify(execFileCallback);
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const flowPages = [
+  ['triage', 'Triage'], ['refine', 'Refine'], ['propose', 'Propose'],
+  ['implement', 'Implement'], ['apply-review', 'Apply review'],
+  ['integrate', 'Integrate'], ['review', 'Review'],
+  ['product-change', 'Product Change'], ['apply-product-change', 'Apply Product Change'],
+  ['maintenance', 'Maintenance and recovery'], ['worker-reports', 'Worker reports', 'maintenance', 2],
+  ['unattended', 'Fast-forward and hotfix'],
+  ['product-definition-as-code', 'Product Definition as Code'],
+];
+
+async function flowDiagrams(architectureRoot) {
+  const diagrams = new Map();
+  for (const entry of await readdir(join(architectureRoot, 'diagrams'), { withFileTypes: true })) {
+    if (!entry.isDirectory() || !/^[a-f0-9]+$/.test(entry.name)) continue;
+    const provenance = JSON.parse(await readFile(join(architectureRoot, 'diagrams', entry.name, 'provenance.json'), 'utf8'));
+    diagrams.set(`${provenance.document}#${provenance.fence}`, entry.name);
+  }
+  return flowPages.map(([slug, title, document = slug, fence = 1]) => {
+    const id = diagrams.get(`06-runtime-view/${document}.md#${fence}`);
+    if (!id) throw new Error(`Published architecture is missing the ${slug} flow diagram.`);
+    return `<details class="diagram-card"${slug === 'triage' ? ' open' : ''}><summary>${title}<span>View diagram</span></summary><p class="diagram-hint">Scroll to inspect the diagram.</p><div class="diagram-scroll" role="region" aria-label="${title} diagram, scroll to explore" tabindex="0"><img src="architecture/diagrams/${id}/diagram.svg" alt="${title} workflow diagram" loading="${slug === 'triage' ? 'eager' : 'lazy'}"></div><a href="architecture/index.html#/section/06/${document}">Open interactive diagram ↗</a></details>`;
+  }).join('\n');
+}
 
 async function readManifest() {
   try { return JSON.parse(await readFile(join(root, 'lighthouse.json'), 'utf8')); }
@@ -40,8 +63,7 @@ try {
   await cp(source, stage, { recursive: true });
   await mkdir(join(stage, 'assets'), { recursive: true });
   const cliPackage = JSON.parse(await readFile(join(root, 'src/packages/cli/package.json'), 'utf8'));
-  const page = await readFile(join(stage, 'index.html'), 'utf8');
-  await writeFile(join(stage, 'index.html'), page.replace('__LIGHTHOUSE_VERSION__', cliPackage.version));
+  let page = (await readFile(join(stage, 'index.html'), 'utf8')).replace('__LIGHTHOUSE_VERSION__', cliPackage.version);
 
   for (const asset of ['lighthouse-icon.svg', 'lighthouse-icon-light.svg', 'github-banner.svg', 'lighthouse-beam.svg']) {
     await cp(join(brandAssets, asset), join(stage, 'assets', asset));
@@ -87,7 +109,10 @@ try {
     } catch (error) {
       throw new Error(`ArcShape snapshot generation failed before public-site publication. ${authorityHint('ArcShape')}\n${error.stderr ?? error.message}`);
     } finally { await rm(sourceConfig, { force: true }); }
+    page = page.replace('<!-- FLOW_DIAGRAMS -->', await flowDiagrams(join(stage, 'architecture')));
   }
+
+  await writeFile(join(stage, 'index.html'), page.replace('<!-- FLOW_DIAGRAMS -->', ''));
 
   await rm(output, { recursive: true, force: true });
   await rename(stage, output);

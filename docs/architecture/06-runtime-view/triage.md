@@ -3,7 +3,7 @@
 An owner admits an open issue for assessment. Triage preserves the request, identifies missing facts and returns a provisional estimate; it does not dispatch refinement.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Triage
     accDescr: An owner admits an open issue for assessment. Triage preserves the request, identifies missing facts and returns a provisional estimate; it does not dispatch refinement.
     Request[Owner triage request] --> Admit{Current issue and authority valid?}

@@ -6,6 +6,7 @@ const baseUrl = process.env.PUBLIC_SITE_URL || 'http://127.0.0.1:4174';
 const output = resolve(process.env.PUBLIC_SITE_SCREENSHOT_DIR || 'test-results/public-site');
 const portals = [
   { name: 'landing', path: '/' },
+  { name: 'flow-gallery', path: '/#diagrams', gallery: true },
   { name: 'product-model', path: '/model/index.html' },
   { name: 'architecture', path: '/architecture/index.html' },
   { name: 'runtime', path: '/architecture/index.html#/section/06', interactive: true },
@@ -35,9 +36,13 @@ try {
         const diagram = await page.request.get(new URL(diagramUrl, page.url()).toString());
         if (!diagram.ok()) throw new Error(`Interactive diagram returned ${diagram.status()}: ${diagramUrl}`);
       }
+      if (portal.gallery) {
+        await page.locator('#diagrams').scrollIntoViewIfNeeded();
+        await page.locator('.diagram-card img').first().evaluate(image => image.decode());
+      }
       await page.screenshot({
         path: resolve(output, `${portal.name}-${viewport.name}.png`),
-        fullPage: true,
+        fullPage: !portal.gallery,
       });
       await page.close();
     }

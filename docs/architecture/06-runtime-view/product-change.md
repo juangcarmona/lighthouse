@@ -3,7 +3,7 @@
 An authorized idea, product answer or in-scope delivery gap enters the installed ProductShape workflow. The worker proposes a product delta and asks for an explicit decision.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Product Change preparation
     accDescr: An authorized idea, product answer or in-scope delivery gap enters the installed ProductShape workflow. The worker proposes a product delta and asks for an explicit decision.
     Idea[Authorized idea] --> Inspect[Inspect accepted product model]

@@ -29,7 +29,7 @@ The [worker catalogue](worker-catalogue.md) maps supported requests, installatio
 ## From request to delivered change
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Supervised delivery in Lighthouse
     accDescr: Refinement can continue to implementation under installed policy. Corrections update the same PR. Integration and closure require current authorization and evidence.
     Request[Owner request] --> Refine[Refine scope and acceptance]
@@ -54,7 +54,7 @@ An in-scope product gap can suspend delivery at a checkpoint and enter [Product 
 ## One worker execution
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Execution and publication boundary
     accDescr: An authenticated event selects one worker. Preparation, agent execution and trusted publication have separate responsibilities.
     Event[GitHub event or owner command] --> Router[Authenticate and route]

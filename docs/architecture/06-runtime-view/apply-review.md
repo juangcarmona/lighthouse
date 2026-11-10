@@ -3,7 +3,7 @@
 Owner feedback on an eligible proposal or implementation PR requests a correction of that same branch. Optional CI repair enters the same worker through a separately authenticated failure event.
 
 ```mermaid
-flowchart LR
+flowchart TD
     accTitle: Apply review
     accDescr: Owner feedback on an eligible proposal or implementation PR requests a correction of that same branch. Optional CI repair enters the same worker through a separately authenticated failure event.
     Feedback[Owner feedback on current PR] --> Admit{Original grant and current head valid?}
