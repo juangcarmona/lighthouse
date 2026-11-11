@@ -1,5 +1,23 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.6
+
+### Patch Changes
+
+- cd79890: # Validate adopted CI correction policy
+
+  Allow the existing bounded CI correction option in adopted GitHub profiles. Profile admission and execution share validation of the explicit issue allowlist and two-attempt limit; unknown fields and malformed policies remain rejected.
+
+- a6e8217: # Recover transient GitHub reads
+
+  Retry transient read-only GitHub responses at most twice within the original thirty-second request budget, respecting Retry-After. Mutations, permanent refusals and uncertain publication effects retain their existing handling.
+
+  Discover worker reports within the bot-owned issue history so unrelated repository activity cannot exhaust the report reconciliation bound.
+
+- a6e8217: # Strict archived plan validation
+
+  Validate completed archived implementation plans in generated independent checks without recreating an active change. Keep strict provider validation and fail-closed archive selection; adopters must install the released package and refresh their workflow source or package-mode installation before requalification.
+
 ## 0.22.5
 
 ### Patch Changes
