@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: 39a8fd21dd7f81513faf23940e3ae44f296022e6
+          ref: cd798905f222903ea8133e6b59aa5eaa7f9c7716
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: 39a8fd21dd7f81513faf23940e3ae44f296022e6
+          ref: cd798905f222903ea8133e6b59aa5eaa7f9c7716
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
