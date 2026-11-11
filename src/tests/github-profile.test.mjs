@@ -5,6 +5,21 @@ import { applyGithubProfile, buildGithubProfilePlan, githubProfilePlanHash, read
 
 const clone = (value) => structuredClone(value);
 
+test('adopted completion profiles admit the bounded CI repair execution contract', async () => {
+  const profile = config();
+  profile.completion = { publishEvidence: true, postMergeWorkflows: ['ci.yml'], ciRepair: { enabled: true, maxAttempts: 2, issues: [18, 19] } };
+  assert.deepEqual(validateGithubProfile(profile), []);
+  const api = github();
+  await readGithubProfile(profile, api.request);
+  assert.equal(api.state.writes.length, 0);
+  for (const policy of [{ enabled: true, maxAttempts: 3, issues: [18] }, { enabled: true, maxAttempts: 2, issues: [] }, { enabled: true, maxAttempts: 2, issues: [18, 18] }, { enabled: true, maxAttempts: 2, issues: [-1] }, { enabled: 'true' }, { enabled: true, maxAttempts: 2, issues: [18], wildcard: true }]) {
+    profile.completion.ciRepair = policy;
+    assert.ok(validateGithubProfile(profile).length);
+  }
+  profile.completion.ciRepair = { enabled: false };
+  assert.deepEqual(validateGithubProfile(profile), []);
+});
+
 
 test('plans are read-only, applications preserve unrelated work and retries do not duplicate rules', async () => {
   const api = github(); const plan = await api.plan();
