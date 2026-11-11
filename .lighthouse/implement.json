@@ -30,7 +30,23 @@
         "--format",
         "json"
       ]
-    ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {}
+    }
   },
   "125": {
     "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
@@ -454,6 +470,58 @@
       ],
       "corrections": {
         "src/tests/lighthouse.test.mjs": "Add meaningful regression coverage for this exact issue; preserve existing assertions and validation. For hotfix, author RED before changing production code and keep the accepted RED test bytes unchanged during repair."
+      }
+    }
+  },
+  "599": {
+    "scope": "Implement only #599: bind maintenance freshness to a successful executed scan job, preserve all existing dispatch/identity/uncertainty controls, and add meaningful regressions without weakening existing assertions.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "scripts/reconcile-worker-maintenance.mjs": "Correct only #599 scan-job observation and freshness computation; preserve dispatch and pending-intent safety.",
+        "src/tests/maintenance-watchdog.test.mjs": "Add actual scan success and skipped/missing/invalid scan regressions for #599; preserve all existing assertions."
       }
     }
   }
