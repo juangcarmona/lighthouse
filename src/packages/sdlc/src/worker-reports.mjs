@@ -170,7 +170,7 @@ async function writeIndex(api, issue, index) {
 async function reportIssues(api) {
   const all = [];
   for (let page = 1; page <= 5; page++) {
-    const rows = await api(`issues?state=all&per_page=100&page=${page}`);
+    const rows = await api(`issues?state=all&creator=github-actions%5Bbot%5D&per_page=100&page=${page}`);
     all.push(...rows.filter(i => !i.pull_request && i.body?.includes(`<!-- ${marker}:`)));
     if (rows.length < 100) return all;
   }
