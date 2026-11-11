@@ -103,7 +103,7 @@ export async function runImplementationChecks({ config, request, changes, worksp
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
     for (let i = 0; i < request.implementation.policy.checks.length; i++) {
-      const deadline = Date.now() + 600000;
+      const deadline = Date.now() + 15 * 60_000;
       const command = request.implementation.policy.checks[i];
       const remaining = deadline - Date.now();
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
