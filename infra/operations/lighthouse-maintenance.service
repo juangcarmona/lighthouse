@@ -1,0 +1,8 @@
+[Unit]
+Description=Reconcile overdue Lighthouse worker maintenance
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node %h/.local/share/lighthouse-operations/reconcile-worker-maintenance.mjs --apply --journal %h/.local/state/lighthouse-operations/maintenance.jsonl
+TimeoutStartSec=240
+UMask=0077

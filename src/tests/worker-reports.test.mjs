@@ -38,6 +38,16 @@ test('three failures share one report; repeated maintenance does not increase co
   assert.equal(f.issues.length, 3);
 });
 
+test('report discovery excludes unrelated repository history before applying its bound', async () => {
+  const f = fixture();
+  const api = async (...args) => {
+    if (args[0].startsWith('issues?') && !args[0].includes('creator=github-actions%5Bbot%5D')) return Array.from({ length: 100 }, (_, i) => ({ number: i + 100, body: 'Unrelated history' }));
+    return f.api(...args);
+  };
+  assert.equal((await publishReports(api, repo, owner, 1, [observation(11)]))[0].count, 1);
+  assert.equal(f.issues.length, 2);
+});
+
 test('confirmed same-root recovery closes the report; new failure reopens the same issue', async () => {
   const f = fixture(); await publishReports(f.api, repo, owner, 1, [observation(11)]);
   await publishReports(f.api, repo, owner, 1, [{ ...observation(12), state: 'succeeded', code: 'worker-completed' }]);
