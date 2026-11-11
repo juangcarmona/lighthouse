@@ -38,6 +38,14 @@ const defaults = {
   'releases.immutable': true,
 };
 
+export function validateCiRepairPolicy(policy) {
+  if (!record(policy) || Object.keys(policy).some(key => !['enabled', 'maxAttempts', 'issues'].includes(key)) || typeof policy.enabled !== 'boolean') return ['CI repair requires an explicit enabled boolean and known policy fields.'];
+  if (policy.enabled || policy.maxAttempts !== undefined || policy.issues !== undefined) {
+    if (policy.maxAttempts !== 2 || !Array.isArray(policy.issues) || policy.enabled && !policy.issues.length || policy.issues.length > 100 || policy.issues.some(n => !Number.isSafeInteger(n) || n < 1) || new Set(policy.issues).size !== policy.issues.length) return ['CI repair needs an explicit issue allowlist and a two-attempt limit.'];
+  }
+  return [];
+}
+
 export function validateGithubProfile(config) {
   const errors = [];
   if (!record(config)) return ['GitHub profile must be an object.'];
@@ -60,8 +68,9 @@ export function validateGithubProfile(config) {
   if (config.releaseWorkflowReady !== undefined && typeof config.releaseWorkflowReady !== 'boolean') errors.push('releaseWorkflowReady must be boolean.');
   if (config.completion !== undefined) {
     const c = config.completion;
-    if (!record(c) || Object.keys(c).filter(k => k !== 'protectionObservations').sort().join(',') !== 'postMergeWorkflows,publishEvidence' || typeof c.publishEvidence !== 'boolean' || !Array.isArray(c.postMergeWorkflows) || !c.postMergeWorkflows.length || c.postMergeWorkflows.length > 8 || new Set(c.postMergeWorkflows).size !== c.postMergeWorkflows.length || c.postMergeWorkflows.some(w => !/^[a-zA-Z0-9][a-zA-Z0-9_-]*\.ya?ml$/.test(w))) errors.push('completion requires publishEvidence and 1-8 unique postMergeWorkflows filenames.');
+    if (!record(c) || Object.keys(c).filter(k => !['protectionObservations', 'ciRepair'].includes(k)).sort().join(',') !== 'postMergeWorkflows,publishEvidence' || typeof c.publishEvidence !== 'boolean' || !Array.isArray(c.postMergeWorkflows) || !c.postMergeWorkflows.length || c.postMergeWorkflows.length > 8 || new Set(c.postMergeWorkflows).size !== c.postMergeWorkflows.length || c.postMergeWorkflows.some(w => !/^[a-zA-Z0-9][a-zA-Z0-9_-]*\.ya?ml$/.test(w))) errors.push('completion requires publishEvidence and 1-8 unique postMergeWorkflows filenames.');
   }
+  if (config.completion?.ciRepair !== undefined) errors.push(...validateCiRepairPolicy(config.completion.ciRepair));
   if (config.completion?.protectionObservations !== undefined) {
     const observations = config.completion.protectionObservations;
     if (!Array.isArray(observations) || !observations.length || observations.length > 8 || observations.some(o => !record(o) || Object.keys(o).sort().join(',') !== 'id,revision' || !Number.isSafeInteger(o.id) || o.id < 1 || !/^[a-f0-9]{64}$/.test(o.revision ?? ''))) errors.push('protectionObservations must contain bounded owner-verified ruleset ids and revision digests.');
