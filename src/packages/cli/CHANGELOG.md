@@ -1,5 +1,18 @@
 # @juangcarmona/lighthouse
 
+## 0.12.67
+
+### Patch Changes
+
+- 3c6b34b: # Patch Aspire hosting dependencies
+
+  Update the .NET reference and packaged creator template to Aspire 13.6.5 for GHSA-f7vh-h5g3-7jrh. Refresh the provider-generated lockfile and the minimum MessagePack version required by the patched AppHost, preserving locked restore and vulnerability checks.
+
+- Updated dependencies [cd79890]
+- Updated dependencies [a6e8217]
+- Updated dependencies [a6e8217]
+  - @juangcarmona/lighthouse-sdlc@0.22.6
+
 ## 0.12.66
 
 ### Patch Changes
