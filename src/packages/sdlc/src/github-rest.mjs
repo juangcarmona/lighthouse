@@ -1,3 +1,5 @@
+import { setTimeout as pause } from 'node:timers/promises';
+
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
 async function denialMessage(response, token) {
@@ -37,9 +39,22 @@ async function denialMessage(response, token) {
   }
 }
 
-export function createIssueApi(repo, env, fetchRequest = fetch) {
+export function createIssueApi(repo, env, fetchRequest = fetch, { now = Date.now, wait = pause } = {}) {
   return async (path, method = 'GET', body, optional = false) => {
-    const r = await fetchRequest(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+    const deadline = now() + 30000;
+    let r;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      r = await fetchRequest(repositoryApiUrl(repo, path), { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(Math.max(1, deadline - now())) });
+      // A failed mutation may already have taken effect; only repeat read-only requests.
+      if (method !== 'GET' || body !== undefined || ![429, 500, 502, 503, 504].includes(r.status) || attempt === 2) break;
+      const retryAfter = r.headers.get('retry-after');
+      const requested = retryAfter === null ? 0 : /^\d+$/.test(retryAfter) ? Number(retryAfter) * 1000 : Date.parse(retryAfter) - now();
+      const delay = Math.max(500 * 2 ** attempt, Number.isFinite(requested) ? requested : 0);
+      if (delay >= deadline - now()) break;
+      try { void r.body?.cancel().catch(() => {}); } catch {}
+      await wait(delay);
+      if (now() >= deadline) break;
+    }
     if (optional && r.status === 404) return null;
     if (!r.ok) {
       const error = Object.assign(Error(`GitHub ${method} ${path}: ${r.status}`), { status: r.status });

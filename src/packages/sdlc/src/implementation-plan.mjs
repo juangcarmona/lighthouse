@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { proposalRoot, changeName } from './proposal-files.mjs';
 import { openSpec } from './openspec-provider.mjs';
 
-function archivedPlanRoot(source, issue) {
+export function archivedPlanRoot(source, issue) {
   const name = changeName(issue), prefix = 'openspec/changes/archive/';
   const matches = new Set();
   for (const path of source.keys()) {
@@ -18,7 +18,7 @@ function archivedPlanRoot(source, issue) {
   return archived;
 }
 
-async function validateArchivedPlan(source, archived, issue, provider, signal) {
+export async function validateArchivedPlan(source, archived, issue, provider, signal) {
   for (const name of ['.openspec.yaml', 'proposal.md', 'design.md', 'tasks.md']) {
     const file = source.get(`${archived}/${name}`);
     if (!file?.content?.toString('utf8').trim()) throw Error(`Archived implementation plan ${archived} is missing ${name}; restore the complete provider-owned plan before requalification`);

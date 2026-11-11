@@ -78,6 +78,7 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'src/browser-e2e.mjs',
     'src/evidence.mjs',
     'src/implementation-plan.mjs',
+    'src/implementation-plan-check.mjs',
     'src/openspec-provider.mjs',
     'capabilities.json',
     'src/contracts.mjs',

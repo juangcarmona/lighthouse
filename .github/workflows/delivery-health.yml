@@ -1,0 +1,34 @@
+name: Delivery health observations
+on:
+  workflow_run:
+    workflows: [Lighthouse worker maintenance]
+    types: [completed]
+  workflow_dispatch:
+  schedule:
+    - cron: '37 6 * * *'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  report:
+    if: vars.LIGHTHOUSE_REPORT_INDEX_ISSUE != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Observe retained worker outcomes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
+        run: node scripts/report-delivery-health.mjs "$LIGHTHOUSE_REPORT_INDEX_ISSUE" delivery-health.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: delivery-health-${{ github.run_id }}
+          path: delivery-health.json
+          retention-days: 30
+          if-no-files-found: error

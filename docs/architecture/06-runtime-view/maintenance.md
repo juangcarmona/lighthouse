@@ -41,6 +41,8 @@ A confirmed review rejection before admission has one separate linked retry. Tru
 
 CI reconciliation observes exact native runs first. Only confirmed unsent or rejected requests can be resent within the existing delay/budget; unknown acknowledgements and legacy missing send-state evidence stop. A confirmed integration can restore its immutable report and missing handoff, then request review under the original grant and existing passing CI. It never repeats merge, agent assessment or CI to replace missing history. Restoring a blocked handoff preserves its blocker.
 
+The repository's optional [host freshness checker](../../../scripts/reconcile-worker-maintenance.mjs) observes maintenance independently of GitHub schedules. An overdue successful scan can request the existing workflow after a fresh repository-identity check and an atomic retained intent. Active executions suppress dispatch; an unconfirmed request cannot be blindly repeated. The checker grants no worker, publication or merge authority. [Operations](../../operations/autonomous-delivery.md) owns installation and observation procedures.
+
 ```mermaid
 flowchart TD
     accTitle: Idempotent worker reporting

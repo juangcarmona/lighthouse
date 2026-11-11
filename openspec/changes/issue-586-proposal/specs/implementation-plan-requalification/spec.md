@@ -20,6 +20,12 @@ The host SHALL recognize one applicable completed archived plan from the admitte
 - **THEN** preparation and finalization preserve the archived tree and create no active change
 - **AND** the existing independent checks, review, proof identity and original execution limits remain required
 
+#### Scenario: Generated independent plan validation after archival
+
+- **WHEN** the independently materialized candidate has one valid completed issue-bound archive and no active plan
+- **THEN** the generated plan check strictly validates that archive under its original identity in a disposable provider workspace
+- **AND** it preserves the candidate tree without scaffolding active metadata or replacing completion evidence
+
 ### Requirement: Reject unusable archived evidence
 
 The host SHALL reject missing required artifacts or metadata, incomplete tasks, invalid provider evidence, conflicting active/archive plans and ambiguous matching archives with an actionable reason. It MUST NOT scaffold an active replacement for an invalid matching archive or accept a candidate rewrite of the archived evidence.
@@ -30,6 +36,11 @@ The host SHALL reject missing required artifacts or metadata, incomplete tasks, 
 
 - **WHEN** applicable archived evidence is incomplete, invalid or has multiple matching copies
 - **THEN** preparation fails with the evidence problem identified and creates no active replacement
+
+#### Scenario: Generated check receives unusable evidence
+
+- **WHEN** the generated independent check encounters missing, incomplete, conflicting or ambiguous applicable archived evidence
+- **THEN** it fails with an actionable reason rather than skipping strict validation
 
 #### Scenario: Candidate changes archived planning evidence
 
@@ -46,3 +57,8 @@ The host SHALL preserve new and active implementation-plan scaffolding and provi
 
 - **WHEN** there is no applicable archive and the issue has either an active plan or no prior plan
 - **THEN** the existing metadata preservation or provider scaffolding behavior applies
+
+#### Scenario: Generated check validates the materialized active plan
+
+- **WHEN** a new or existing active plan reaches independent verification without an applicable archive
+- **THEN** the generated check strictly validates the issue-bound active plan and fails if no plan was materialized
