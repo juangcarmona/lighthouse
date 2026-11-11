@@ -5,11 +5,13 @@ import { loadStageReport } from './proposal.mjs';
 import { loadImplementation } from './implementation.mjs';
 import { taskDigest } from './digests.mjs';
 import { ciRunMatches } from './ci-subject.mjs';
+import { validateCiRepairPolicy } from './github-profile.mjs';
 
 function repairPolicy(completion) {
   const policy = completion?.ciRepair;
   if (policy?.enabled !== true) return null;
-  if (policy.maxAttempts !== 2 || !Array.isArray(policy.issues) || !policy.issues.length || policy.issues.length > 100 || policy.issues.some(n => !Number.isSafeInteger(n) || n < 1)) throw Error('CI repair needs an explicit issue allowlist and a two-attempt limit');
+  const errors = validateCiRepairPolicy(policy);
+  if (errors.length) throw Error(errors.join(' '));
   return policy;
 }
 
