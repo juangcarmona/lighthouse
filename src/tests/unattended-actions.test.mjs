@@ -4,12 +4,14 @@ import { mkdtemp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { closeSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { commandEvidenceBinding } from '../packages/sdlc/src/implementation-evidence.mjs';
 import { changesDigest, validateCheckReceipt } from '../packages/sdlc/src/implementation.mjs';
 import { implementationPrProof, reconcileImplementationPr } from '../packages/sdlc/src/pr-state.mjs';
 import { runGithubUnattended, assertUnattendedPullRequest } from '../packages/sdlc/src/unattended-actions.mjs';
 import { applyCandidate, stageContext, boundedOpenSpecProvider, executeUnattendedStage } from '../packages/sdlc/src/unattended-runtime.mjs';
+import { acquireEngineSlot } from '../packages/sdlc/src/engine-slot.mjs';
 
 async function fixture({ route = 'hotfix', attempt = 1, rejectValidation = 0, specBearing = false, baselineSpecs = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-native-adapter-')), sourceRoot = join(root, 'source');
@@ -171,13 +173,17 @@ test('every FF/hotfix stage and correction retains authenticated rerun and initi
     f.comments.push(answer);
     const intent = createHash('sha256').update(JSON.stringify({ title: f.issue().title, body: f.issue().body,
       comments: [{ id: answer.id, body: answer.body, updated_at: answer.updated_at }] })).digest('hex');
-    let candidateReviews = 0;
+    let candidateReviews = 0, deadline;
     f.execute = async options => {
+      assert.ok(Number.isSafeInteger(options.deadline));
+      deadline ??= options.deadline;
+      assert.equal(options.deadline, deadline);
+      assert.ok(options.deadline > Date.now() && options.deadline <= Date.now() + f.policy.timeoutSeconds * 1000);
       const result = await execute(options);
       if (options.request.stage === 'implement') assert.equal(validateCheckReceipt(syntheticReceipt(options.request, result.changes, result.receipt.checks),
         options.request, result.changes), result.receipt.checks.every(c => c.exitCode === 0));
       // Model-returned identity is untrusted and must never seed a subsequent request.
-      Object.assign(result.envelope.result.output, { workflowRunId: '999', attempt: 99, taskDigest: 'f'.repeat(64) });
+      Object.assign(result.envelope.result.output, { workflowRunId: '999', attempt: 99, taskDigest: 'f'.repeat(64), deadline: Number.MAX_SAFE_INTEGER });
       if (options.context.review?.purpose === 'candidate' && ++candidateReviews === 1) {
         result.envelope.result.status = 'blocked';
         result.envelope.result.output.review = { binding: options.context.review.binding, verdict: 'request-changes', findings: ['Retain the edge correction.'] };
@@ -625,6 +631,22 @@ test('a real child startup failure retains its precise diagnostic without starti
     const failure = JSON.parse(await readFile(join(root, request.runId, 'tmp/lighthouse-123-1/engine-error.json'), 'utf8'));
     assert.equal(failure.message, 'Invalid operator engine configuration');
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('an expired delivery deadline reaches the real child without starting an engine or stealing capacity', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-engine-deadline-')), lock = join(root, 'engine.lock');
+  const occupied = await acquireEngineSlot(lock, 0), config = join(root, 'engine.json');
+  const request = { runId: 'f'.repeat(64), issue: 1, stage: 'triage', worker: 'triage', sourceRevision: 'a'.repeat(40) };
+  try {
+    await writeFile(config, JSON.stringify({ image: 'sha256:' + 'a'.repeat(64), authVolume: 'unused', uid: process.getuid(), model: 'fixture-no-model', lock, engineSlotWaitSeconds: 0 }));
+    await assert.rejects(executeUnattendedStage({ root, request, source: new Map(), context: stageContext(request, {}), prompt: 'Do not execute', deadline: Date.now() - 1,
+      env: { PATH: process.env.PATH, HOME: root, LIGHTHOUSE_ENGINE_CONFIG: config, GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '1' } }), /delivery.*deadline/i);
+    const directory = join(root, request.runId, 'tmp/lighthouse-123-1');
+    const runtime = JSON.parse(await readFile(join(directory, 'runtime.json'), 'utf8'));
+    assert.equal(runtime.execution, undefined);
+    await assert.rejects(readFile(join(directory, 'changes.json')), { code: 'ENOENT' });
+    await assert.rejects(acquireEngineSlot(lock, 0), /capacity unavailable/);
+  } finally { closeSync(occupied); await rm(root, { recursive: true, force: true }); }
 });
 
 

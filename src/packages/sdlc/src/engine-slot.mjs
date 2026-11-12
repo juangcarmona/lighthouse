@@ -7,7 +7,14 @@ function boundedWait(seconds) {
   return seconds;
 }
 
-export const engineSlotWaitSeconds = config => boundedWait(config.engineSlotWaitSeconds === undefined ? 240 : config.engineSlotWaitSeconds);
+export function engineSlotWaitSeconds(config, { deadline, now = Date.now() } = {}) {
+  const configured = boundedWait(config.engineSlotWaitSeconds === undefined ? 240 : config.engineSlotWaitSeconds);
+  if (deadline === undefined) return configured;
+  if (!Number.isSafeInteger(deadline)) throw Error('Invalid delivery execution deadline');
+  const remaining = Math.floor((deadline - now) / 1000);
+  if (remaining <= 0) throw Error('Delivery execution deadline exceeded');
+  return Math.min(config.engineSlotWaitSeconds === undefined ? 3600 : configured, remaining);
+}
 
 export async function acquireEngineSlot(path, seconds = 240, { signal } = {}) {
   if (typeof path !== 'string' || !isAbsolute(path)) throw Error('Operator engine lock must be an absolute path');
