@@ -267,7 +267,19 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
   const tree = verificationRefresh ? commit.tree : await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
   if (synchronization && tree.sha !== checkedTree) throw Error('Synchronized publication differs from the independently checked tree');
   const message = verificationRefresh ? `chore: refresh verification for issue #${snapshot.issue}\n\nLighthouse-CI-Base: ${snapshot.baseRevision}` : `feat: implement issue #${snapshot.issue}`;
-  const created = await api('git/commits', 'POST', { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] });
+  const commitBody = { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] };
+  let created;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { created = await api('git/commits', 'POST', commitBody); break; }
+    catch (error) {
+      // Recover only this explicit refusal, after observing the immutable tree; uncertain writes remain terminal.
+      if (attempt === 2 || error.status !== 422 || error.message !== 'GitHub POST git/commits: 422: Tree SHA does not exist' || !/^[a-f0-9]{40}$/.test(tree.sha ?? '')) throw error;
+      if ((await api(`git/trees/${tree.sha}`, 'GET', undefined, true))?.sha !== tree.sha) throw error;
+      await setTimeout(250 * 2 ** attempt);
+      await beforeWrite();
+      await checkEpicBase();
+    }
+  }
   await beforeWrite();
   await checkEpicBase();
   if (snapshot.productAlignment?.parent.pullRequest) {
