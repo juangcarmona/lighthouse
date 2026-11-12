@@ -1,0 +1,519 @@
+{
+  "binding": "2e65fce4aeed0f292ecb192ef7b99dbc78074edae283642bfc691017fc009e6e",
+  "runId": "43149631957",
+  "attempt": "1",
+  "sourceRevision": "fd1f249aa206fee0bf4f242a8b3fec7b72747f24",
+  "intent": "646d62db61f5e971a118fe1e242fd08490c10d41049101c9ae960fca981f7941",
+  "policyDigest": "e5a2d0819d06ab56ebc57dfc55d91bb3dd547ffaae8034f2aba0eb84a5fd0746",
+  "details": {
+    "refined": {
+      "issue": 599,
+      "route": "ff",
+      "problem": "The repository-specific maintenance checker equates a completed successful workflow with an executed successful scan and measures freshness using workflow updated_at. A skipped scan can therefore look healthy, and workflow updates can conceal an overdue scan or incorrectly reconcile retained dispatch intent.",
+      "affectedUsers": [
+        "Lighthouse maintainers relying on the host maintenance watchdog and its journal for scheduling observations."
+      ],
+      "desiredResult": "Only one confirmed successful scan in the selected successful maintenance run's latest attempt supplies freshness evidence. Incomplete or invalid scan evidence produces an explicit non-healthy, non-dispatching observation while existing dispatch safeguards remain intact.",
+      "scope": {
+        "files": [
+          "scripts/reconcile-worker-maintenance.mjs",
+          "src/tests/maintenance-watchdog.test.mjs"
+        ],
+        "planningArtifacts": "Only the issue-599-bound OpenSpec plan generated and validated by the subsequent FF planning stage; no plan files are created by this refinement.",
+        "outOfScope": [
+          "Workflow definitions, timers, installation or deployment of the host script, credentials and permissions.",
+          "Accepted product model, policy, freshness threshold, recovery budgets or merge authority changes.",
+          "Other tests, verification entrypoints, package manifests, lockfiles, changesets or unrelated cleanup."
+        ],
+        "boundary": "The issue's two-file scope is narrower than context.unattended.scope. The exact two verification correction exceptions in .lighthouse/implement.json:522-525 do not authorize any wider edits."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "AC1",
+          "criterion": "After existing repository/run identity and active-execution checks, read the latest attempt's jobs for the selected completed successful maintenance run. Require complete, unambiguous job evidence containing exactly one job named scan, completed successfully, with a valid non-future completed_at timestamp. Never use a previous attempt's successful scan as current proof.",
+          "verification": "Mock explicit run IDs/attempts and job responses; assert the latest-attempt query, successful scan acceptance, duplicate scan rejection and incomplete/malformed inventory suppression."
+        },
+        {
+          "id": "AC2",
+          "criterion": "Calculate ageMinutes from the validated scan completed_at, not workflow updated_at. Preserve the existing less-than-45-minute healthy threshold and overdue preview/apply behavior when scan evidence is valid.",
+          "verification": "Use deliberately different workflow and scan timestamps. Assert the exact scan-derived age for fresh and overdue scans, including the 45-minute boundary."
+        },
+        {
+          "id": "AC3",
+          "criterion": "A selected successful workflow with skipped, missing, failed, duplicate or malformed scan evidence returns an explicit non-healthy observation with action none. It neither previews nor performs another uncertain dispatch, and does not clear retained pending intent. It cannot present workflow success as confirmed scan success.",
+          "verification": "Exercise preview and apply for these responses, asserting a non-healthy reason, no POST, no checkpoint creation or removal, and retained pending intent where supplied."
+        },
+        {
+          "id": "AC4",
+          "criterion": "A pending request can be reconciled only using confirmed successful scan completion at or after requestedAt, not a later workflow update. Preserve repository name/ID validation, pre-write identity recheck, active-run suppression including old queued executions, read-only preview, exclusive durable intent before POST, and lost-acknowledgement suppression.",
+          "verification": "Preserve every existing assertion and add cases where scan completion precedes requestedAt despite a later workflow update, and where a confirmed scan completes after requestedAt. Assert checkpoint-before-POST ordering and no blind resend. Keep existing malformed workflow-time and identity rejection coverage."
+        },
+        {
+          "id": "AC5",
+          "criterion": "Run focused regressions and every admitted implementation check against the final executable/test edits. Preserve actual terminal receipts and complete logs. After checkbox-only plan updates, rerun Markdown, citations and strict plan validation; repeat the full battery only after executable/test changes, a new failure or a concrete unresolved concern.",
+          "verification": "Use the verification plan below; independent host checks and later forge CI remain separate mandatory evidence."
+        }
+      ],
+      "sourceFindings": [
+        {
+          "source": "scripts/reconcile-worker-maintenance.mjs:10-43",
+          "finding": "reconcileMaintenance selects successful workflows at line 25, computes age from updated_at at line 27, and uses that same workflow timestamp to clear pending intent at line 32. It never reads jobs. Active-run suppression precedes this path; identity recheck and intent checkpoint precede dispatch."
+        },
+        {
+          "source": "scripts/reconcile-worker-maintenance.mjs:46-64",
+          "finding": "The direct CLI caller supplies the gh API adapter, reads retained pending intent, creates it with exclusive wx semantics, removes it on reconciliation, and appends observations to the journal. Preserve this interface and its error behavior."
+        },
+        {
+          "source": "infra/operations/lighthouse-maintenance.service:4-8; infra/operations/lighthouse-maintenance.timer:4-7; docs/operations/autonomous-delivery.md:9-13",
+          "finding": "The operational caller runs an installed copy with --apply --journal under a systemd timer. Source changes do not establish that the installed copy was updated or that scheduling reliability improved; no service/timer edits or live dispatch belong to this task."
+        },
+        {
+          "source": "src/tests/maintenance-watchdog.test.mjs:6-56",
+          "finding": "The direct test caller's fixture currently returns workflow_runs for unrecognized GETs and supplies neither run ID/attempt nor job evidence. Add realistic job routing and scan data rather than accidentally accepting that fallback. Existing tests protect preview, active suppression, identity checks and lost acknowledgements."
+        },
+        {
+          "source": ".github/workflows/lighthouse-worker-maintenance.yml:24-46,73-75,129-131,220-222",
+          "finding": "The actual job key is scan, with an enablement/actor condition and no custom display name. Other jobs depend on scan. This explains why workflow-level success alone is insufficient; the checker dispatches this existing workflow, which does not itself call the freshness checker."
+        }
+      ],
+      "productContext": {
+        "discovery": "/workspace/.lighthouse-product-evidence/index.json and the FR-FAST-FORWARD-DELIVERY, BR-FAIL-CLOSED and BR-WORKFLOW-STATE inspect/impact/citation reports were read together with their model text.",
+        "assessment": "The reports identify these artifacts as draft; their presence is not product approval. Existing operations documentation and docs/architecture/06-runtime-view/maintenance.md:38-44 already distinguish successful scans from uncertain effects. This bounded correction strengthens that existing observation contract without defining a new product outcome, changing recovery authority or editing the model. No missing product meaning was identified.",
+        "citations": [
+          "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+          "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\"",
+          "pdac:cite id=\"BR-WORKFLOW-STATE\" digest=\"sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8\""
+        ]
+      },
+      "estimate": {
+        "points": 2,
+        "status": "confirmed",
+        "rationale": {
+          "scope": "Matches the intake guide's small component behavior anchor: one repository-local observation function, its fixture/regressions, and an issue-bound plan. The actual CLI, timer caller and target scan job have been inspected; no cross-package contract or migration is needed.",
+          "dependencies": "Uses the existing injected API/gh adapter and existing Actions jobs data, with no new dependency, credential, workflow or product decision. The admitted two-file verification exceptions already cover the required source/test corrections.",
+          "verification": "Focused mocked-API behavioral tests cover latest-attempt scan proof, timestamps and no-write uncertainty; the four admitted checks cover repository verification, citations and strict plan validation. Independent review, independent host receipts and later forge CI remain required downstream, not completed refinement evidence."
+        },
+        "confidence": "high",
+        "uncertainty": [
+          "The chosen jobs endpoint must establish complete latest-attempt evidence within existing operational bounds; incomplete or malformed responses must fail closed rather than assume uniqueness.",
+          "Live installed-script revision, prior failed-run effects and future candidate CI are not authenticated by this static source assessment and remain trusted-host/operator checks before dependent execution or integration."
+        ]
+      },
+      "eligibility": {
+        "points": 2,
+        "risk": "low",
+        "reversible": true,
+        "dependenciesResolved": true,
+        "scopeKnown": true,
+        "productChangeNeeded": false,
+        "humanDecisionRequired": false,
+        "reason": "Eligible for FF readiness assessment: scripts/reconcile-worker-maintenance.mjs:25-36 contains a localized evidence/timestamp defect, while its existing caller and dispatch safeguards can remain unchanged. The two named files are admitted verification exceptions (.lighthouse/implement.json:522-525), the existing scan job is identifiable (.github/workflows/lighthouse-worker-maintenance.yml:25-46), and operations already requires uncertainty suppression. The independent two-point estimate fits the 1-3-point low-risk FF rule; allowFivePoint is false and no legacy-label conversion was used. This is a revertible source-only correction with no schema migration or new authority. Reversibility does not undo any dispatch, so retained intents must survive and uncertainty must suppress writes. No new product/human decision is needed for refinement; this assessment grants no implementation, merge or release permission."
+      },
+      "dependencies": [
+        {
+          "dependency": "Latest-attempt Actions job evidence",
+          "resolution": "Existing repository API adapter accepts arbitrary repository-relative GET paths. Planning must select explicit latest-attempt evidence and reject incomplete inventories; no new library or permission expansion is needed.",
+          "source": "scripts/reconcile-worker-maintenance.mjs:51-53; .github/workflows/lighthouse-worker-maintenance.yml:25-46"
+        },
+        {
+          "dependency": "Verification-file correction authority",
+          "resolution": "Both exact files have issue-specific correction reasons; preserve all other protected verification inputs.",
+          "source": ".lighthouse/implement.json:476-525; /input/context.json:unattended"
+        }
+      ],
+      "risks": [
+        {
+          "risk": "Earlier-attempt, truncated or duplicate jobs could falsely establish scan success.",
+          "mitigation": "Bind to the selected latest attempt, establish complete inventory, require exactly one successful completed scan, and test ambiguity as non-healthy/no-write."
+        },
+        {
+          "risk": "Using workflow updated_at to reconcile pending intent could allow another dispatch without a post-request scan.",
+          "mitigation": "Use validated scan completed_at for freshness and pending reconciliation; regress pre-request scans, invalid evidence and lost acknowledgements."
+        },
+        {
+          "risk": "An uncertainty observation can leave the watchdog intentionally blocked rather than restoring scheduling automatically.",
+          "mitigation": "Return a specific non-healthy reason, preserve intent, and retain operator inspection rather than adding retries or changing policy."
+        }
+      ],
+      "definitionOfReady": [
+        {
+          "check": "Problem, affected user and bounded outcome",
+          "status": "passed",
+          "evidence": "Issue #599 acceptance and sourceFindings identify the workflow-versus-scan defect and the operational caller."
+        },
+        {
+          "check": "Testable acceptance and verification plan",
+          "status": "passed",
+          "evidence": "AC1-AC5 name observable behavior, no-write guarantees and the exact admitted checks; existing regression assertions remain protected."
+        },
+        {
+          "check": "Known scope and resolved engineering dependencies",
+          "status": "passed",
+          "evidence": "Two exact correction exceptions, existing API adapter and stable scan job; no new dependencies or configuration changes."
+        },
+        {
+          "check": "Product meaning and decision ownership",
+          "status": "passed",
+          "evidence": "Existing maintenance observation/uncertainty contract covers the requested correction; no product approval is inferred from draft model reports and no new human decision is required."
+        },
+        {
+          "check": "Explained estimate and route constraints",
+          "status": "passed",
+          "evidence": "Confirmed two-point small-component estimate, low risk, known reversible scope and no five-point opt-in reliance."
+        }
+      ],
+      "verificationPlan": {
+        "executionStatus": "Planned only. No shell checks, dependency installation, behavioral reproduction or live GitHub operation were executed in this refinement. The admitted inventory is not an execution receipt.",
+        "workingDirectory": "/workspace",
+        "admittedImplementationChecks": [
+          {
+            "argv": [
+              "npm",
+              "ci",
+              "--ignore-scripts"
+            ],
+            "timeoutMs": 600000
+          },
+          {
+            "argv": [
+              "env",
+              "GITHUB_ACTIONS=true",
+              "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+              "npm",
+              "run",
+              "verify"
+            ],
+            "timeoutMs": 600000
+          },
+          {
+            "argv": [
+              "npx",
+              "--no-install",
+              "prodshape",
+              "citations",
+              "verify",
+              "--provider",
+              "openspec",
+              "--format",
+              "json"
+            ]
+          },
+          {
+            "argv": [
+              "node",
+              "/harness/src/implementation-plan-check.mjs",
+              "599",
+              "--strict",
+              "--no-interactive"
+            ]
+          }
+        ],
+        "additionalAgentChecks": [
+          {
+            "argv": [
+              "node",
+              "--test",
+              "src/tests/maintenance-watchdog.test.mjs"
+            ],
+            "purpose": "Focused behavior regressions after final executable/test edits; additional agent observation, not a substitute for any admitted independent check."
+          },
+          {
+            "argv": [
+              "npm",
+              "run",
+              "markdownlint"
+            ],
+            "purpose": "After final checkbox-only plan updates, rerun this plus the admitted citations and strict plan checks."
+          }
+        ],
+        "sequence": "Install dependencies with an explicit 600000 ms command timeout; after final script/test edits run focused tests and the complete admitted verification battery. Use 600000 ms for complete repository verification within the unchanged overall delivery deadline. After checkbox-only plan updates, rerun Markdown, citations and strict plan validation. Repeat the full test battery only for executable/test changes, a new failure or a concrete unresolved concern.",
+        "receipts": "Retain complete command logs in files and inspect terminal exit receipts plus bounded tails. Report agent observations separately from fresh independent host checks bound to the actual candidate; neither replaces later forge CI.",
+        "laterGates": "The trusted host must reconcile effects of prior attempt 43145975774 and recheck current authority before dependent execution. Provider plan validation and independent readiness/plan review precede code changes. Independent host checks, candidate review, current-head required forge CI and separate integration authority remain mandatory. The issue's account of earlier exit-zero commands and no PR is historical task data, not an authenticated current receipt."
+      },
+      "agentObservations": [
+        "This assessment is based on direct file reads of the mounted snapshot associated by context with source revision fd1f249aa206fee0bf4f242a8b3fec7b72747f24. It does not establish a live deployed revision, current Git branch or remote effects.",
+        "CodeGraph context lookup was unavailable and symbol search did not locate the target function; the relevant implementation, CLI/service/test callers, workflow and architecture were inspected directly instead. The repository-referenced ponytail skill could not be loaded. These are context-tool limitations, not missing product checks or successful execution evidence.",
+        "No context.triage estimate was supplied, so no prior triage or estimateRevision is fabricated. This estimate independently applies the linked relative anchors. The route is ff; unrelated admitted hotfix configuration is not a regression plan for #599."
+      ]
+    },
+    "plan": {
+      "files": [
+        {
+          "path": "openspec/changes/issue-599-proposal/proposal.md",
+          "content": "# Proposal\n\n<!-- pdac-scope: cited -->\n\n## Why\n\nThe host freshness checker currently treats workflow success and `updated_at` as proof of a completed maintenance scan. [Issue #599](https://github.com/juangcarmona/lighthouse/issues/599) corrects that evidence before maintainers rely on it for scheduling observations.\n\n## What Changes\n\n- Read the selected successful run's latest-attempt jobs and require exactly one completed, successful `scan` with a strictly validated, non-future UTC `completed_at`.\n- Derive freshness and pending-intent reconciliation from that scan completion, never from workflow updates.\n- Return an explicit non-healthy, non-dispatching observation for missing, skipped, failed, ambiguous, malformed or unavailable scan evidence; retain uncertain intent.\n- Add meaningful mocked-API regressions while preserving existing assertions, identity checks, active-run suppression, preview and durable dispatch safeguards.\n\n## Capabilities\n\n### New Capabilities\n\nNone. This is a repository-local tooling correction to the existing successful-scan observation contract documented in `docs/architecture/06-runtime-view/maintenance.md` and `docs/operations/autonomous-delivery.md`.\n\n### Modified Capabilities\n\nNone. The host's source-bound inventory lists `issue-control`, `opaque-source-link-tree` and `unattended-ci-wait`; this correction does not change their requirements or scenarios. Set `skip_specs: true` rather than manufacture a capability for this implementation repair.\n\n## Impact\n\nOnly `scripts/reconcile-worker-maintenance.mjs`, `src/tests/maintenance-watchdog.test.mjs` and this issue-bound plan may change. Keep the injected API, CLI options, journal/pending format, repository identities, 45-minute threshold and existing dispatch endpoint. Add no dependency, credential, workflow, timer, deployment, policy, package or product-model change. The two issue-specific verification exceptions in `.lighthouse/implement.json:522-525` do not authorize other edits.\n\n## Product and Architecture Context\n\nRetain the previous plan's whole-model discovery assessment, widened with the prepared ProductShape inspect/impact reports under `.lighthouse-product-evidence/`. This correction rereads the relevant canonical text and reports, not a new CLI inventory. Applicable source revision: `fd1f249aa206fee0bf4f242a8b3fec7b72747f24`; product evidence baseline digest: `aadf9f79babb120d907d505344b04129353ede3efc549abae44cc6ce5683b07e`. The trusted host supplied the pinned OpenSpec inventory and provider instructions.\n\n- `BR-FAIL-CLOSED`: uncertain scan evidence must remain explicit, not become healthy evidence.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n- `BR-WORKFLOW-STATE`: preserve durable intent and require evidence before reconciling it.\n<!-- pdac:cite id=\"BR-WORKFLOW-STATE\" digest=\"sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8\" -->\n- `FR-FAST-FORWARD-DELIVERY`: retain bounded work, independent verification and separate integration authority.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\nImpact neighbours checked in the retained assessment but excluded from the changed-behaviour set include `BR-ENTRY-AUTHORITY`, `BR-HUMAN-AUTHORITY`, `BR-STAGE-GATES`, `UC-RUN-SDLC` and `UC-CONTINUE-AGENT-RUN`: no entry, gate, human decision or continuation contract changes. `FR-WORKFLOW-STATE`, `FR-WORKFLOW-HANDOFFS` and `FR-AGENT-CONTROL-PLANE` remain unchanged because this repair adds no lifecycle state, handoff mechanism or configuration. The remaining model areas cover adoption, profiles, packaging, telemetry and other capabilities outside this two-file correction.\n\nProduct definition drift: none identified for this correction. These cited artifacts are marked `draft`; citations and host reports supply context, not product approval. No altered product behaviour or Product Change is proposed. ArcShape's canonical `docs/architecture/06-runtime-view/maintenance.md:38-44` already separates scan freshness from uncertain effects; this plan preserves that architecture without creating an ADR or editing its authority.\n\n## Completion Boundary\n\nThis remains a two-point, low-risk, source-only correction. Completion requires the regressions, all admitted checks with actual receipts and independent candidate review; current-head required forge CI and separate integration authority remain downstream gates. No check was run in this planning worker, and source acceptance does not prove installation or scheduling reliability.\n"
+        },
+        {
+          "path": "openspec/changes/issue-599-proposal/design.md",
+          "content": "# Design\n\n<!-- pdac-scope: cited -->\n\n## Context\n\nSee `proposal.md` for motivation, scope and authority discovery. `reconcileMaintenance` already checks repository/run identity, suppresses active runs through separate status queries, and retains intent before dispatch. Its selected successful workflow currently supplies both freshness and pending reconciliation through `updated_at`; its CLI adapter already accepts repository-relative GET paths. The actual workflow has one job named `scan`, with no display-name override.\n\n## Goals / Non-Goals\n\n**Goals:** prove scan execution in the selected run's latest observed attempt, use the scan's actual completion for both time comparisons, and preserve no-write uncertainty and existing caller interfaces.\n\n**Non-Goals:** change successful-run selection, the latest-100-runs coverage, the 45-minute threshold, recovery policy or deployment. Do not search older successful runs or attempts to turn invalid selected evidence into health, add a scheduler, or introduce a new public API or storage schema.\n\n## Decisions\n\n### 1. Read bounded, attempt-specific job evidence\n\nAfter existing repository/run identity and active-execution checks, retain the current successful-workflow selection. Preserve rejection of invalid/future workflow `updated_at` as inventory validation, but never use it as scan age or proof. Validate the selected run's positive safe-integer `id` and `run_attempt`; query `actions/runs/{id}/attempts/{run_attempt}/jobs?per_page=100` through the existing adapter. Do not use an all-attempts endpoint or a generic fixture fallback.\n\nRequire an object with a `jobs` array and non-negative safe-integer `total_count`, with `total_count === jobs.length` and at most 100 jobs. Reject malformed entries and inconsistent job identity, including a mismatched run ID/attempt or duplicate job IDs. Require exactly one job named `scan`, `status: completed`, `conclusion: success`, and a strictly validated completion timestamp as defined below. A successful scan in an earlier attempt cannot satisfy this query.\n\nAccept `completed_at` only as a string in one of two exact UTC forms: `YYYY-MM-DDTHH:mm:ssZ` or `YYYY-MM-DDTHH:mm:ss.sssZ` (exactly three fractional digits). Use four ASCII year digits in 0001–9999, uppercase `T`/`Z`, two-digit fields, a real Gregorian calendar date, hour 00–23 and minute/second 00–59. Match the entire string with no whitespace, suffix or implicit coercion; do not trim or accept date-only, numeric, local-time, offset or locale forms. First enforce this grammar and field ranges, then parse to a finite epoch value and require a canonical UTC round trip: append `.000` before `Z` to a seconds-only input, otherwise keep it unchanged, and require `new Date(parsed).toISOString()` to equal that normalized input exactly. This rejects rollover dates and times rather than normalizing them. Finally require completion no later than `now`. Only that validated epoch value may establish health or reconcile pending intent.\n\nFinite `Date.parse` output alone was rejected because values such as `\"0\"` are parseable without being valid API timestamps. A format regex alone is also insufficient because impossible dates can normalize to real ones. Supporting both UTC seconds and millisecond forms covers API timestamps and existing `toISOString()` fixtures without adding a general-purpose parser or changing validation of unrelated stored fields.\n\nUse one bounded page and explicitly reject overflow or truncation rather than adding unbounded pagination within the service's existing time/API limits. A complete inventory larger than this bound remains uncertain; it does not authorize a dispatch. Workflow success alone and first-matching-job selection were rejected because neither proves execution or uniqueness.\n\n### 2. Keep invalid scan evidence on a no-effect path\n\nFor invalid selected run/job evidence or a failed jobs read, return `action: none` with a distinct non-healthy reason such as `scan-unconfirmed` and a bounded diagnostic cause. Leave `ageMinutes` and `lastSuccess` null rather than label workflow success as confirmed scan success; preserve retained pending intent in the observation. Never fall through to overdue preview/apply, call `checkpoint`, or POST in this path. Keep existing retained-intent identity/time validation so an early return cannot silently accept corrupt pending state. Existing identity and malformed workflow-time errors remain errors, not healthy observations.\n\nThis applies the existing explicit-evidence boundary; treating unknown scan evidence as merely overdue was rejected because it could create duplicate uncertain work.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n### 3. Share validated scan completion between both time decisions\n\nWith confirmed evidence, retain the workflow run link as `lastSuccess` and calculate `ageMinutes = (now - scanCompletedAt) / 60000`. Preserve health for ages strictly below 45 minutes and existing overdue preview/apply behaviour at or above 45 minutes. Preserve the no-successful-workflow path; this correction concerns the selected successful workflow's scan proof.\n\nReconcile pending intent only when the confirmed scan completed at or after `pending.requestedAt`. An older scan remains `dispatch-unconfirmed` even if the workflow was updated later; only apply may clear confirmed intent. Preserve the repository name/ID checks, active suppression including old queued runs, read-only preview, pre-dispatch identity recheck, exclusive durable checkpoint before POST and lost-acknowledgement suppression. Changing the journal format or adding retries was rejected as unnecessary and outside scope.\n<!-- pdac:cite id=\"BR-WORKFLOW-STATE\" digest=\"sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8\" -->\n\n### 4. Land regressions with each correction\n\nOnly `src/tests/maintenance-watchdog.test.mjs` changes alongside the script. Give fixtures explicit run IDs/attempts, realistic jobs with completion timestamps and strict GET routing that rejects unknown paths. Assert the exact attempt endpoint, including a rerun whose earlier attempt succeeded but latest scan did not. Preserve all existing assertions and cover the following within the implementation slice:\n\n- Successful workflows with skipped, missing, failed, duplicate or incomplete/malformed scan evidence, invalid run/attempt binding, overflow and job-read failure: non-healthy `action: none` in preview and apply, no POST, no checkpoint creation/removal, and unchanged supplied pending intent.\n- Strict timestamp rejection: `\"0\"`, numeric `0`, empty/null/non-string values, date-only and locale strings, missing timezone, numeric offsets, surrounding whitespace, trailing junk, wrong separators, unsupported fractional precision, impossible dates such as `2026-02-30T12:00:00Z` and non-leap February 29, `24:00:00`, leap seconds and out-of-range fields. Also reject otherwise valid future completion. For malformed strings that permissive parsing would accept, choose an injected clock and valid pending request so that permissive parsing would otherwise establish health or clear the request; for example use `\"0\"` with `now` at `2000-01-01T00:10:00Z` and `requestedAt` at `1999-12-31T23:59:00Z`, with valid workflow time for that clock. Assert explicit non-health, null age/lastSuccess, no preview dispatch, no POST or checkpoint calls, and unchanged pending intent in preview/apply, both with and without pending intent.\n- Positive timestamp controls: both accepted UTC forms, a real leap-day date with an appropriate clock, and completion equal to `now`. Verify exact ages including millisecond precision, and equal/post-request reconciliation only after strict validation.\n- One actual successful scan with workflow and scan timestamps deliberately different: exact scan-derived fresh/overdue ages and the 45-minute boundary.\n- Pending intent with a pre-request scan despite a later workflow update, and confirmed scan completion equal to or after the request; preview never clears intent, apply clears only confirmed intent.\n- Existing repository identity, malformed workflow-time, changed-target, old queued-run, preview and lost-acknowledgement cases; explicitly assert checkpoint-before-POST ordering.\n\nThe focused command is `node --test src/tests/maintenance-watchdog.test.mjs`; it is an additional agent observation, not a substitute for admitted checks or independent verification.\n\n## Risks / Trade-offs\n\n- [Jobs are unavailable, malformed or exceed one page] → return explicit uncertainty and preserve intent; operator inspection is preferable to a blind resend.\n- [Permissive date parsing admits malformed or normalized values] → enforce exact supported UTC forms and calendar-preserving round trips before either time decision; reject unsupported forms as uncertainty.\n- [Reruns or unrelated workflow updates obscure scan age] → bind job reads to the selected attempt and use only validated scan completion for age and reconciliation.\n- [Fixtures conceal an incorrect API path] → use strict routing and assert the exact run/attempt query.\n- [A source fix is mistaken for operational recovery] → report installed revision and scheduling observations as unverified; no live dispatch or installation belongs to this change.\n\n## Verification and Definition of Done\n\nFrom `/workspace`, after final script/test edits, run focused tests and all admitted commands: `npm ci --ignore-scripts`; `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify`; `npx --no-install prodshape citations verify --provider openspec --format json`; `node /harness/src/implementation-plan-check.mjs 599 --strict --no-interactive`. Set an explicit 600000 ms command timeout for installation and complete repository verification, within the original delivery deadline. Retain complete logs outside the repository diff and inspect terminal exit receipts plus bounded tails.\n\nAfter checkbox-only task updates, run `npm run markdownlint`, citations and strict plan validation again. Repeat the full battery only after executable/test changes, a new failure or a concrete unresolved concern. All acceptance regressions and existing assertions must pass; only the two named source/test files and the issue-bound plan may differ from the admitted baseline. Refresh citations through the provider only if its validator identifies a changed canonical dependency; never edit the model or weaken scope declarations.\n\nThe host must first reconcile prior attempt `43145975774`, materialize/validate this plan and obtain independent plan review. Fresh independent host checks and independent candidate review remain mandatory; later required forge CI must bind the current head and integration requires separate current authority. Planned commands, historical receipts and agent observations cannot replace those gates.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n## Migration Plan\n\nNo data migration, dependency update or automatic installation is needed. Deliver only reviewed source and tests through the existing route; the installed operational copy remains outside scope. If rollback is separately authorized, revert only this correction through normal review and checks; retain journals and pending intent, because reverting source cannot undo an earlier dispatch or establish safe resend authority.\n"
+        },
+        {
+          "path": "openspec/changes/issue-599-proposal/tasks.md",
+          "content": "# Tasks\n\n<!-- pdac-scope: cited -->\n\nAll tasks are planned and unchecked. Only the two files named in `proposal.md` and this issue-bound plan may change. Follow `design.md`; no unresolved design question changes this breakdown.\n\n## 1. Scan evidence and freshness correction\n\n- [ ] 1.1 In `scripts/reconcile-worker-maintenance.mjs`, add the bounded explicit latest-attempt jobs read and complete/unique successful-scan validation from design decisions 1–2; update only `src/tests/maintenance-watchdog.test.mjs` with realistic run/job fixtures and strict GET routing. Implement the exact UTC seconds/millisecond grammar, field ranges and calendar-preserving ISO round trip before accepting scan time. Verify exact attempt selection and skipped, missing, failed, duplicate, truncated, oversized, malformed, wrong-binding, future timestamp and read-failure cases in preview/apply with `node --test src/tests/maintenance-watchdog.test.mjs`. Include design decision 4's malformed timestamp matrix, especially `\"0\"` under a clock/pending request that exposes false health or reconciliation, rollover dates and `24:00:00`; assert explicit non-health, null age/lastSuccess, no POST or checkpoint creation/removal and retained pending intent. Verify positive controls for both supported UTC forms, real leap day and completion equal to now.\n<!-- pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\" -->\n\n- [ ] 1.2 Use the validated scan completion for age while preserving workflow-time inventory rejection and current run selection. In the same test file, verify actual successful fresh/overdue scans with deliberately different workflow timestamps, exact ages including milliseconds and the unchanged strictly-less-than-45-minute healthy boundary; rerun the focused command and preserve every existing assertion.\n\n- [ ] 1.3 Use that same strictly validated completion to reconcile pending intent only at/after `requestedAt`. Add pre-request-scan/later-workflow-update and equal/post-request-scan regressions, read-only preview and explicit checkpoint-before-POST ordering assertions. Verify malformed timestamps cannot clear pending intent even when permissive parsing would place them after the request. Verify the focused suite preserves repository name/ID and pre-write rechecks, old queued-run suppression, atomic intent and lost-acknowledgement/no-blind-resend behaviour; inspect the diff to confirm no CLI or journal-format change.\n<!-- pdac:cite id=\"BR-WORKFLOW-STATE\" digest=\"sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8\" -->\n\n## 2. Final candidate integration checks\n\n- [ ] 2.1 After final executable/test edits, run the focused suite and every admitted check from `/workspace`: `npm ci --ignore-scripts`; `env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify`; `npx --no-install prodshape citations verify --provider openspec --format json`; `node /harness/src/implementation-plan-check.mjs 599 --strict --no-interactive`. Use explicit 600000 ms command timeouts for installation and complete repository verification within the existing overall deadline. Verify actual terminal exits, inspect bounded tails, retain complete stdout/stderr logs outside the repository diff and report candidate-bound receipts separately from additional agent observations.\n\n- [ ] 2.2 Mark only evidenced completed tasks, then rerun `npm run markdownlint`, the admitted citations command and strict plan command after checkbox-only updates. Verify all three exit successfully, every Markdown plan document has exactly one cited scope declaration and current citations, and the final diff stays inside the two-file plus issue-plan boundary. Repeat the full battery only after executable/test changes, a new failure or a concrete unresolved concern; resolve citation findings through their provider without changing product meaning or verification policy.\n\nThese checks preserve the bounded FF evidence contract; they do not complete independent host checks, independent candidate review, later current-head forge CI or integration authority.\n<!-- pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\" -->\n\n## Workflow follow-up\n\n- Before dependent code work, the trusted host reconciles prior attempt `43145975774`, rechecks current authority, materializes provider-owned metadata and validates this plan through the pinned provider, citations and Markdown checks; independent plan review follows.\n- After implementation, the trusted host retains fresh independent check receipts and independent candidate review; later required forge CI must pass for the current head before separately authorized integration. No historical command account substitutes for current evidence.\n- Installation, timer operations, credentials, live dispatch and operational scheduling reliability measurement remain outside this change. Archive only through the provider after applicable completion requirements are met.\n"
+        },
+        {
+          "path": "openspec/changes/issue-599-proposal/.openspec.yaml",
+          "content": "schema: spec-driven\ncreated: 2026-11-12\nskip_specs: true\n"
+        }
+      ],
+      "refinement": {
+        "issue": 599,
+        "route": "ff",
+        "problem": "The repository-specific maintenance checker equates a completed successful workflow with an executed successful scan and measures freshness using workflow updated_at. A skipped scan can therefore look healthy, and workflow updates can conceal an overdue scan or incorrectly reconcile retained dispatch intent.",
+        "affectedUsers": [
+          "Lighthouse maintainers relying on the host maintenance watchdog and its journal for scheduling observations."
+        ],
+        "desiredResult": "Only one confirmed successful scan in the selected successful maintenance run's latest attempt supplies freshness evidence. Incomplete or invalid scan evidence produces an explicit non-healthy, non-dispatching observation while existing dispatch safeguards remain intact.",
+        "scope": {
+          "files": [
+            "scripts/reconcile-worker-maintenance.mjs",
+            "src/tests/maintenance-watchdog.test.mjs"
+          ],
+          "planningArtifacts": "Only the issue-599-bound OpenSpec plan generated and validated by the subsequent FF planning stage; no plan files are created by this refinement.",
+          "outOfScope": [
+            "Workflow definitions, timers, installation or deployment of the host script, credentials and permissions.",
+            "Accepted product model, policy, freshness threshold, recovery budgets or merge authority changes.",
+            "Other tests, verification entrypoints, package manifests, lockfiles, changesets or unrelated cleanup."
+          ],
+          "boundary": "The issue's two-file scope is narrower than context.unattended.scope. The exact two verification correction exceptions in .lighthouse/implement.json:522-525 do not authorize any wider edits."
+        },
+        "acceptanceCriteria": [
+          {
+            "id": "AC1",
+            "criterion": "After existing repository/run identity and active-execution checks, read the latest attempt's jobs for the selected completed successful maintenance run. Require complete, unambiguous job evidence containing exactly one job named scan, completed successfully, with a valid non-future completed_at timestamp. Never use a previous attempt's successful scan as current proof.",
+            "verification": "Mock explicit run IDs/attempts and job responses; assert the latest-attempt query, successful scan acceptance, duplicate scan rejection and incomplete/malformed inventory suppression."
+          },
+          {
+            "id": "AC2",
+            "criterion": "Calculate ageMinutes from the validated scan completed_at, not workflow updated_at. Preserve the existing less-than-45-minute healthy threshold and overdue preview/apply behavior when scan evidence is valid.",
+            "verification": "Use deliberately different workflow and scan timestamps. Assert the exact scan-derived age for fresh and overdue scans, including the 45-minute boundary."
+          },
+          {
+            "id": "AC3",
+            "criterion": "A selected successful workflow with skipped, missing, failed, duplicate or malformed scan evidence returns an explicit non-healthy observation with action none. It neither previews nor performs another uncertain dispatch, and does not clear retained pending intent. It cannot present workflow success as confirmed scan success.",
+            "verification": "Exercise preview and apply for these responses, asserting a non-healthy reason, no POST, no checkpoint creation or removal, and retained pending intent where supplied."
+          },
+          {
+            "id": "AC4",
+            "criterion": "A pending request can be reconciled only using confirmed successful scan completion at or after requestedAt, not a later workflow update. Preserve repository name/ID validation, pre-write identity recheck, active-run suppression including old queued executions, read-only preview, exclusive durable intent before POST, and lost-acknowledgement suppression.",
+            "verification": "Preserve every existing assertion and add cases where scan completion precedes requestedAt despite a later workflow update, and where a confirmed scan completes after requestedAt. Assert checkpoint-before-POST ordering and no blind resend. Keep existing malformed workflow-time and identity rejection coverage."
+          },
+          {
+            "id": "AC5",
+            "criterion": "Run focused regressions and every admitted implementation check against the final executable/test edits. Preserve actual terminal receipts and complete logs. After checkbox-only plan updates, rerun Markdown, citations and strict plan validation; repeat the full battery only after executable/test changes, a new failure or a concrete unresolved concern.",
+            "verification": "Use the verification plan below; independent host checks and later forge CI remain separate mandatory evidence."
+          }
+        ],
+        "sourceFindings": [
+          {
+            "source": "scripts/reconcile-worker-maintenance.mjs:10-43",
+            "finding": "reconcileMaintenance selects successful workflows at line 25, computes age from updated_at at line 27, and uses that same workflow timestamp to clear pending intent at line 32. It never reads jobs. Active-run suppression precedes this path; identity recheck and intent checkpoint precede dispatch."
+          },
+          {
+            "source": "scripts/reconcile-worker-maintenance.mjs:46-64",
+            "finding": "The direct CLI caller supplies the gh API adapter, reads retained pending intent, creates it with exclusive wx semantics, removes it on reconciliation, and appends observations to the journal. Preserve this interface and its error behavior."
+          },
+          {
+            "source": "infra/operations/lighthouse-maintenance.service:4-8; infra/operations/lighthouse-maintenance.timer:4-7; docs/operations/autonomous-delivery.md:9-13",
+            "finding": "The operational caller runs an installed copy with --apply --journal under a systemd timer. Source changes do not establish that the installed copy was updated or that scheduling reliability improved; no service/timer edits or live dispatch belong to this task."
+          },
+          {
+            "source": "src/tests/maintenance-watchdog.test.mjs:6-56",
+            "finding": "The direct test caller's fixture currently returns workflow_runs for unrecognized GETs and supplies neither run ID/attempt nor job evidence. Add realistic job routing and scan data rather than accidentally accepting that fallback. Existing tests protect preview, active suppression, identity checks and lost acknowledgements."
+          },
+          {
+            "source": ".github/workflows/lighthouse-worker-maintenance.yml:24-46,73-75,129-131,220-222",
+            "finding": "The actual job key is scan, with an enablement/actor condition and no custom display name. Other jobs depend on scan. This explains why workflow-level success alone is insufficient; the checker dispatches this existing workflow, which does not itself call the freshness checker."
+          }
+        ],
+        "productContext": {
+          "discovery": "/workspace/.lighthouse-product-evidence/index.json and the FR-FAST-FORWARD-DELIVERY, BR-FAIL-CLOSED and BR-WORKFLOW-STATE inspect/impact/citation reports were read together with their model text.",
+          "assessment": "The reports identify these artifacts as draft; their presence is not product approval. Existing operations documentation and docs/architecture/06-runtime-view/maintenance.md:38-44 already distinguish successful scans from uncertain effects. This bounded correction strengthens that existing observation contract without defining a new product outcome, changing recovery authority or editing the model. No missing product meaning was identified.",
+          "citations": [
+            "pdac:cite id=\"FR-FAST-FORWARD-DELIVERY\" digest=\"sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e\"",
+            "pdac:cite id=\"BR-FAIL-CLOSED\" digest=\"sha256:1a8bdc2e330fb683bd1354d898b1072d4a5fe30aeab26d3c02b2036352a7fc8d\"",
+            "pdac:cite id=\"BR-WORKFLOW-STATE\" digest=\"sha256:d438b58d35667a01f2d0121554dc57681df8cd1f48d3eba07c0ee9b23035f1b8\""
+          ]
+        },
+        "estimate": {
+          "points": 2,
+          "status": "confirmed",
+          "rationale": {
+            "scope": "Matches the intake guide's small component behavior anchor: one repository-local observation function, its fixture/regressions, and an issue-bound plan. The actual CLI, timer caller and target scan job have been inspected; no cross-package contract or migration is needed.",
+            "dependencies": "Uses the existing injected API/gh adapter and existing Actions jobs data, with no new dependency, credential, workflow or product decision. The admitted two-file verification exceptions already cover the required source/test corrections.",
+            "verification": "Focused mocked-API behavioral tests cover latest-attempt scan proof, timestamps and no-write uncertainty; the four admitted checks cover repository verification, citations and strict plan validation. Independent review, independent host receipts and later forge CI remain required downstream, not completed refinement evidence."
+          },
+          "confidence": "high",
+          "uncertainty": [
+            "The chosen jobs endpoint must establish complete latest-attempt evidence within existing operational bounds; incomplete or malformed responses must fail closed rather than assume uniqueness.",
+            "Live installed-script revision, prior failed-run effects and future candidate CI are not authenticated by this static source assessment and remain trusted-host/operator checks before dependent execution or integration."
+          ]
+        },
+        "eligibility": {
+          "points": 2,
+          "risk": "low",
+          "reversible": true,
+          "dependenciesResolved": true,
+          "scopeKnown": true,
+          "productChangeNeeded": false,
+          "humanDecisionRequired": false,
+          "reason": "Eligible for FF readiness assessment: scripts/reconcile-worker-maintenance.mjs:25-36 contains a localized evidence/timestamp defect, while its existing caller and dispatch safeguards can remain unchanged. The two named files are admitted verification exceptions (.lighthouse/implement.json:522-525), the existing scan job is identifiable (.github/workflows/lighthouse-worker-maintenance.yml:25-46), and operations already requires uncertainty suppression. The independent two-point estimate fits the 1-3-point low-risk FF rule; allowFivePoint is false and no legacy-label conversion was used. This is a revertible source-only correction with no schema migration or new authority. Reversibility does not undo any dispatch, so retained intents must survive and uncertainty must suppress writes. No new product/human decision is needed for refinement; this assessment grants no implementation, merge or release permission."
+        },
+        "dependencies": [
+          {
+            "dependency": "Latest-attempt Actions job evidence",
+            "resolution": "Existing repository API adapter accepts arbitrary repository-relative GET paths. Planning must select explicit latest-attempt evidence and reject incomplete inventories; no new library or permission expansion is needed.",
+            "source": "scripts/reconcile-worker-maintenance.mjs:51-53; .github/workflows/lighthouse-worker-maintenance.yml:25-46"
+          },
+          {
+            "dependency": "Verification-file correction authority",
+            "resolution": "Both exact files have issue-specific correction reasons; preserve all other protected verification inputs.",
+            "source": ".lighthouse/implement.json:476-525; /input/context.json:unattended"
+          }
+        ],
+        "risks": [
+          {
+            "risk": "Earlier-attempt, truncated or duplicate jobs could falsely establish scan success.",
+            "mitigation": "Bind to the selected latest attempt, establish complete inventory, require exactly one successful completed scan, and test ambiguity as non-healthy/no-write."
+          },
+          {
+            "risk": "Using workflow updated_at to reconcile pending intent could allow another dispatch without a post-request scan.",
+            "mitigation": "Use validated scan completed_at for freshness and pending reconciliation; regress pre-request scans, invalid evidence and lost acknowledgements."
+          },
+          {
+            "risk": "An uncertainty observation can leave the watchdog intentionally blocked rather than restoring scheduling automatically.",
+            "mitigation": "Return a specific non-healthy reason, preserve intent, and retain operator inspection rather than adding retries or changing policy."
+          }
+        ],
+        "definitionOfReady": [
+          {
+            "check": "Problem, affected user and bounded outcome",
+            "status": "passed",
+            "evidence": "Issue #599 acceptance and sourceFindings identify the workflow-versus-scan defect and the operational caller."
+          },
+          {
+            "check": "Testable acceptance and verification plan",
+            "status": "passed",
+            "evidence": "AC1-AC5 name observable behavior, no-write guarantees and the exact admitted checks; existing regression assertions remain protected."
+          },
+          {
+            "check": "Known scope and resolved engineering dependencies",
+            "status": "passed",
+            "evidence": "Two exact correction exceptions, existing API adapter and stable scan job; no new dependencies or configuration changes."
+          },
+          {
+            "check": "Product meaning and decision ownership",
+            "status": "passed",
+            "evidence": "Existing maintenance observation/uncertainty contract covers the requested correction; no product approval is inferred from draft model reports and no new human decision is required."
+          },
+          {
+            "check": "Explained estimate and route constraints",
+            "status": "passed",
+            "evidence": "Confirmed two-point small-component estimate, low risk, known reversible scope and no five-point opt-in reliance."
+          }
+        ],
+        "verificationPlan": {
+          "executionStatus": "Planned only. No shell checks, dependency installation, behavioral reproduction or live GitHub operation were executed in this refinement. The admitted inventory is not an execution receipt.",
+          "workingDirectory": "/workspace",
+          "admittedImplementationChecks": [
+            {
+              "argv": [
+                "npm",
+                "ci",
+                "--ignore-scripts"
+              ],
+              "timeoutMs": 600000
+            },
+            {
+              "argv": [
+                "env",
+                "GITHUB_ACTIONS=true",
+                "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+                "npm",
+                "run",
+                "verify"
+              ],
+              "timeoutMs": 600000
+            },
+            {
+              "argv": [
+                "npx",
+                "--no-install",
+                "prodshape",
+                "citations",
+                "verify",
+                "--provider",
+                "openspec",
+                "--format",
+                "json"
+              ]
+            },
+            {
+              "argv": [
+                "node",
+                "/harness/src/implementation-plan-check.mjs",
+                "599",
+                "--strict",
+                "--no-interactive"
+              ]
+            }
+          ],
+          "additionalAgentChecks": [
+            {
+              "argv": [
+                "node",
+                "--test",
+                "src/tests/maintenance-watchdog.test.mjs"
+              ],
+              "purpose": "Focused behavior regressions after final executable/test edits; additional agent observation, not a substitute for any admitted independent check."
+            },
+            {
+              "argv": [
+                "npm",
+                "run",
+                "markdownlint"
+              ],
+              "purpose": "After final checkbox-only plan updates, rerun this plus the admitted citations and strict plan checks."
+            }
+          ],
+          "sequence": "Install dependencies with an explicit 600000 ms command timeout; after final script/test edits run focused tests and the complete admitted verification battery. Use 600000 ms for complete repository verification within the unchanged overall delivery deadline. After checkbox-only plan updates, rerun Markdown, citations and strict plan validation. Repeat the full test battery only for executable/test changes, a new failure or a concrete unresolved concern.",
+          "receipts": "Retain complete command logs in files and inspect terminal exit receipts plus bounded tails. Report agent observations separately from fresh independent host checks bound to the actual candidate; neither replaces later forge CI.",
+          "laterGates": "The trusted host must reconcile effects of prior attempt 43145975774 and recheck current authority before dependent execution. Provider plan validation and independent readiness/plan review precede code changes. Independent host checks, candidate review, current-head required forge CI and separate integration authority remain mandatory. The issue's account of earlier exit-zero commands and no PR is historical task data, not an authenticated current receipt."
+        },
+        "agentObservations": [
+          "This assessment is based on direct file reads of the mounted snapshot associated by context with source revision fd1f249aa206fee0bf4f242a8b3fec7b72747f24. It does not establish a live deployed revision, current Git branch or remote effects.",
+          "CodeGraph context lookup was unavailable and symbol search did not locate the target function; the relevant implementation, CLI/service/test callers, workflow and architecture were inspected directly instead. The repository-referenced ponytail skill could not be loaded. These are context-tool limitations, not missing product checks or successful execution evidence.",
+          "No context.triage estimate was supplied, so no prior triage or estimateRevision is fabricated. This estimate independently applies the linked relative anchors. The route is ff; unrelated admitted hotfix configuration is not a regression plan for #599."
+        ]
+      }
+    }
+  },
+  "result": {
+    "schemaVersion": 1,
+    "runId": "b42ca17b847261e7de763d6f6105027869d8befb8ff108f756675e8d5d58dee8",
+    "stage": "integrate",
+    "gate": "done",
+    "status": "passed",
+    "evidence": [],
+    "missingEvidence": [],
+    "unavailableChecks": [],
+    "pendingReview": [],
+    "output": {
+      "review": {
+        "binding": "2e65fce4aeed0f292ecb192ef7b99dbc78074edae283642bfc691017fc009e6e",
+        "verdict": "accept",
+        "findings": []
+      }
+    },
+    "nextAction": "Return to the trusted host for the remaining delivery gates."
+  },
+  "proposalRunId": "593038386dc7e8ece7ed1a73a941b15593f477e61d4f5fe454aebdd5bd47a2d4",
+  "reviewRunId": "b42ca17b847261e7de763d6f6105027869d8befb8ff108f756675e8d5d58dee8",
+  "verdict": "accept",
+  "configuredModels": {
+    "producer": "openai/gpt-6.1-sol",
+    "reviewer": "openai/gpt-6-luna"
+  },
+  "providerSettings": "unverified",
+  "artifact": "lighthouse-unattended-43149631957-1",
+  "runUrl": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957"
+}
