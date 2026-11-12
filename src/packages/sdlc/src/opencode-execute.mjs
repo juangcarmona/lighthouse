@@ -153,16 +153,25 @@ async function main() {
   const phaseStarted = new Map();
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
+  let child, timer, heartbeat, controllerWatch, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const preparation = new AbortController();
   const cancel = (reason = 'cancelled') => { cancelled = true; preparation.abort(); stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
+  const controllerPid = env.LIGHTHOUSE_ENGINE_CONTROLLER_PID === undefined ? (process.ppid > 1 ? process.ppid : null) : Number(env.LIGHTHOUSE_ENGINE_CONTROLLER_PID);
+  const checkController = () => {
+    if (controllerPid === null || process.ppid === controllerPid) return true;
+    cancel('controller-exited'); return false;
+  };
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
+    if (controllerPid !== null && (!Number.isSafeInteger(controllerPid) || controllerPid < 1)) throw Error('Invalid engine controller identity');
+    if (!checkController()) throw Error('Engine controller is no longer active');
+    if (controllerPid !== null) controllerWatch = setInterval(checkController, 500).unref();
     console.log('Waiting for the operator host engine slot');
     const waitStarted = Date.now(); telemetry.emit('execution.host-wait.started', { status: 'waiting' });
     const deliveryDeadline = env.LIGHTHOUSE_DELIVERY_DEADLINE === undefined ? undefined : Number(env.LIGHTHOUSE_DELIVERY_DEADLINE);
     slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config, { deadline: deliveryDeadline }), { signal: preparation.signal });
+    if (!checkController()) throw Error('Engine controller is no longer active');
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
@@ -172,7 +181,7 @@ async function main() {
     await recordPhase('running');
     runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
     await recordPhase('passed');
-    if (cancelled) throw Error('Execution cancelled before agent startup');
+    if (cancelled || !checkController()) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
     if (request.worker === 'product-change') {
@@ -388,7 +397,7 @@ async function main() {
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(eventsPath, join(runDir, 'evidence/host/engine-events.jsonl')); }
       catch { console.error('Engine events could not be retained; inspect the runner diagnostics.'); }
     }
-    clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
+    clearTimeout(timer); clearInterval(heartbeat); clearInterval(controllerWatch); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
     try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
     stopCodegraph(codegraph?.sidecar, config);
     runtime?.cleanup();

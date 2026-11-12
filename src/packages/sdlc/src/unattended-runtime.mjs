@@ -97,7 +97,7 @@ export async function executeUnattendedStage({ env, root, request, source, conte
   const promptPath = join(step, 'prompt.md'); await writeFile(promptPath, prompt);
   const childEnv = {};
   for (const key of ['PATH', 'HOME', 'TMPDIR', 'LIGHTHOUSE_ENGINE_CONFIG', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT']) if (env[key]) childEnv[key] = env[key];
-  Object.assign(childEnv, { RUNNER_TEMP: runnerTemp, GITHUB_WORKSPACE: workspace, GH_AW_PROMPT: promptPath, GH_AW_SAFE_OUTPUTS: join(step, 'safe-outputs.json'), LIGHTHOUSE_WORKER: request.worker ?? request.stage });
+  Object.assign(childEnv, { RUNNER_TEMP: runnerTemp, GITHUB_WORKSPACE: workspace, GH_AW_PROMPT: promptPath, GH_AW_SAFE_OUTPUTS: join(step, 'safe-outputs.json'), LIGHTHOUSE_WORKER: request.worker ?? request.stage, LIGHTHOUSE_ENGINE_CONTROLLER_PID: String(process.pid) });
   if (modelProfile) childEnv.LIGHTHOUSE_MODEL_PROFILE = modelProfile;
   if (deadline !== undefined) childEnv.LIGHTHOUSE_DELIVERY_DEADLINE = String(deadline);
   await new Promise((resolve, reject) => {
