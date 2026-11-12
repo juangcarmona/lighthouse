@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "runId": "a0b51655ba26449ac11261158cb71230421a3228453416c98409c44b545a6769",
+  "stage": "review",
+  "gate": null,
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "integration:43149631957:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/60b6cf3fb35fc66199dbe40d75f2a9d884d51f9a/docs/process/20261112-599-bind-maintenance-freshness-to-the-executed-scan-job/runs/43149631957/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained receipt records accepted head e73b497f9104058ca59989a938f0d1311dd4f68d merged as 2169e9e03a26fb6b030cb1735ea08e7d4b5eef64 under separate merge:true delegation, with an accepting independent candidate review. The present dispatch has merge:false."
+    },
+    {
+      "id": "github-check:130968128273",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43153547952/job/130968128273",
+      "reason": "Authenticated repository check from app 15368 passed on the accepted PR head."
+    },
+    {
+      "id": "github-check:130969578437",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43153997236/job/130969578437",
+      "reason": "Authenticated repository check from app 15368 passed on the actual merged revision. The host records adopted post-merge ci.yml run 43153997236, attempt 1, workflow_dispatch, completed successfully at that revision."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified candidate-bound npm ci --ignore-scripts receipt has exitCode 0. Its three low-severity audit advisories do not establish a defect introduced by this change."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified complete repository verification command has exitCode 0 and includes Markdown, all src/tests/*.test.mjs, documentation links and public-site verification. The excerpt is truncated, not the retained capture; omitted output does not independently prove the separately requested focused invocation or post-checkbox sequence."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified citations command exited 0. Retained provider rows cover all three changed Markdown plan files and nine current citations with no diagnostics; complete-output summary records zero stale, tampered or unresolved citations."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified strict implementation plan validation for issue 599 exited 0. This validates the plan; it does not authenticate every command mentioned by a checked task."
+    },
+    {
+      "id": "planning-review:2e65fce4aeed0f292ecb192ef7b99dbc78074edae283642bfc691017fc009e6e",
+      "status": "passed",
+      "source": "/input/context.json:priorPlanningReview",
+      "reason": "Host-verified independent FF planning review accepted the retained proposal/refinement with no findings. Configured model names are not provider-authenticated settings."
+    },
+    {
+      "id": "review:source-and-regression-inspection",
+      "status": "passed",
+      "source": "/workspace/scripts/reconcile-worker-maintenance.mjs:10-69; /workspace/src/tests/maintenance-watchdog.test.mjs:65-222",
+      "reason": "Static inspection supports the accepted latest-attempt, unique successful scan, strict completion-time, scan-derived freshness and no-effect uncertainty contracts. Regression assertions exercise the meaningful positive/negative controls and retained dispatch safeguards; no new source defect established. No tests were executed in this review."
+    },
+    {
+      "id": "review:focused-command-receipt",
+      "status": "unavailable",
+      "source": "/input/context.json:completion.implementationEvidence.checks",
+      "reason": "No terminal receipt is supplied for node --test src/tests/maintenance-watchdog.test.mjs, explicitly required by the work item and accepted plan. The PR's 64-test claim and task checkboxes are assertions; successful repository verification proves broader execution, not this distinct invocation."
+    },
+    {
+      "id": "review:post-checkbox-markdown-receipt",
+      "status": "unavailable",
+      "source": "/workspace/openspec/changes/issue-599-proposal/tasks.md:19-21; /input/context.json:completion.implementationEvidence.checks",
+      "reason": "No separate terminal receipt or sequencing evidence establishes the explicitly required npm run markdownlint rerun after checkbox-only updates. The Markdown pass within repository verification is genuine but does not establish that subsequent rerun."
+    },
+    {
+      "id": "review:finalization-policy",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/completion.md:38; /input/context.json:completion.finalization",
+      "reason": "The adopted policy closes the issue and removes delivery labels only after a passed review. This blocked result retains the open issue and existing labels, preserves PR labels, and leaves reservation cleanup to the host."
+    }
+  ],
+  "missingEvidence": [
+    "Candidate-bound terminal receipt and retained log reference for the explicitly required focused command node --test src/tests/maintenance-watchdog.test.mjs after final executable/test edits.",
+    "Terminal receipt and ordering evidence for the explicitly required npm run markdownlint rerun after checkbox-only plan updates; supplied successful verification does not establish that sequence."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "The delivery evidence owner (juangcarmona with the trusted host maintainer) must recover and supply the original candidate-bound focused-test and post-checkbox Markdown terminal receipts with sequencing evidence, or record an explicit authorized resolution if those receipts do not exist; then request review again. Do not repeat integration or weaken checks to fill missing history.",
+  "output": {
+    "summary": "PR #624 is confirmed merged and adopted post-merge CI passed. The implementation and regression assertions support the requested source correction, with no new source defect established. Closing review is blocked only by missing evidence for two explicit verification steps; no failed required check or unresolved product decision was observed.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 599,
+      "pullRequest": 624,
+      "acceptedHead": "e73b497f9104058ca59989a938f0d1311dd4f68d",
+      "integratedRevision": "2169e9e03a26fb6b030cb1735ea08e7d4b5eef64",
+      "checkedRevision": "2169e9e03a26fb6b030cb1735ea08e7d4b5eef64",
+      "intent": "646d62db61f5e971a118fe1e242fd08490c10d41049101c9ae960fca981f7941",
+      "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+      "changedPathsDigest": "8808aa508aedf57701d6b470a2d1be6141531faa35d546d8f9a44b39a4f441cb",
+      "dispatchRequestId": "566b35078d8e66011bad3ec2006c2a6048fd4918fb675ba83e6d31b1990e3f7b",
+      "dispatchDigest": "dcbbedb0fcada0ebcac286c703e95f9d68bb0eba5f42dfcc7aff66e11e6f7435",
+      "workflowRunId": "43154363109",
+      "attempt": "1",
+      "provenance": "Host-supplied authenticated delivery identity; no independent GitHub or git reauthentication was attempted."
+    },
+    "delivery": {
+      "state": "merged",
+      "basis": "Retained integration receipt, not a passed agent assessment alone.",
+      "integrationRecordSha256": "2ec30a7284f59e65679299a9fbad11ceb7cecdc59942563ce4f99b89c2706a2d",
+      "integrationEvidenceCommit": "60b6cf3fb35fc66199dbe40d75f2a9d884d51f9a",
+      "historicalAuthorization": "Receipt binds owner juangcarmona's bounded FF merge:true delegation and independent accepting candidate review to the accepted head.",
+      "currentAuthorization": "Review only; merge:false. No integration, deployment, issue creation, guidance edit or new stage requested.",
+      "postMerge": {
+        "workflow": "ci.yml",
+        "runId": 43153997236,
+        "attempt": 1,
+        "event": "workflow_dispatch",
+        "state": "completed",
+        "conclusion": "success",
+        "revision": "2169e9e03a26fb6b030cb1735ea08e7d4b5eef64",
+        "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43153997236",
+        "recovery": null,
+        "interpretation": "Authenticated post-merge execution, not proof of a schedule event, installed host-script revision or measured reliability."
+      }
+    },
+    "scopeAssessment": {
+      "status": "passed",
+      "changedPaths": [
+        "scripts/reconcile-worker-maintenance.mjs",
+        "src/tests/maintenance-watchdog.test.mjs",
+        "openspec/changes/issue-599-proposal/.openspec.yaml",
+        "openspec/changes/issue-599-proposal/proposal.md",
+        "openspec/changes/issue-599-proposal/design.md",
+        "openspec/changes/issue-599-proposal/tasks.md"
+      ],
+      "reason": "Host-supplied changed paths match the two-file correction plus issue-bound plan. No workflow, timer, credential, dependency, product-model or policy changes appear in that inventory."
+    },
+    "acceptanceAssessment": [
+      {
+        "criterion": "Latest-attempt, complete and unique scan proof",
+        "assessment": "Supported by source inspection and executed full-suite receipt",
+        "references": [
+          "scripts/reconcile-worker-maintenance.mjs:17-31",
+          "src/tests/maintenance-watchdog.test.mjs:87-143"
+        ],
+        "reason": "Explicit run/attempt endpoint, complete bounded job count, matching identities and unique IDs precede exactly one completed successful scan. Earlier-attempt, missing, skipped, failed, duplicate and unavailable cases assert non-health without effects."
+      },
+      {
+        "criterion": "Actual scan completion determines freshness",
+        "assessment": "Supported by source inspection and executed full-suite receipt",
+        "references": [
+          "scripts/reconcile-worker-maintenance.mjs:10-14,54-62",
+          "src/tests/maintenance-watchdog.test.mjs:116-169"
+        ],
+        "reason": "Exact supported UTC forms, finite non-future time and canonical calendar round trip reject coercion and rollover. Positive controls establish both forms, leap day, equality and millisecond precision; ages straddle the unchanged 45-minute boundary independently of workflow updated_at."
+      },
+      {
+        "criterion": "Uncertainty preserves pending intent and suppresses dispatch",
+        "assessment": "Supported by source inspection and executed full-suite receipt",
+        "references": [
+          "scripts/reconcile-worker-maintenance.mjs:51-60",
+          "src/tests/maintenance-watchdog.test.mjs:65-85,172-207"
+        ],
+        "reason": "Unconfirmed scan returns action none with null age/lastSuccess before checkpoint or POST. Tests exercise preview/apply with and without intent, pre/equal/post-request completion, corrupt intent rejection and checkpoint-before-POST ordering."
+      },
+      {
+        "criterion": "Existing dispatch safeguards",
+        "assessment": "Supported by source inspection and executed full-suite receipt",
+        "references": [
+          "scripts/reconcile-worker-maintenance.mjs:35-48,64-86",
+          "src/tests/maintenance-watchdog.test.mjs:23-61,196-222"
+        ],
+        "reason": "Repository name/ID checks, separate old-active queries, pre-write target recheck, preview, exclusive wx intent and lost-acknowledgement suppression remain present."
+      },
+      {
+        "criterion": "Required verification execution and retained receipts",
+        "assessment": "Incomplete evidence, not failed checks",
+        "reason": "All four admitted host command receipts passed, and forge checks passed before and after merge. The separate focused invocation and post-checkbox Markdown rerun are claimed in task/PR prose but lack supplied terminal receipts and sequence proof."
+      }
+    ],
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "owner": "juangcarmona / maintenance checker maintainer",
+        "summary": "Workflow success and updated_at previously substituted for actual successful scan evidence.",
+        "evidence": [
+          "Issue #599 accepted problem",
+          "scripts/reconcile-worker-maintenance.mjs:10-31,49-62",
+          "src/tests/maintenance-watchdog.test.mjs:87-186"
+        ],
+        "followUpReference": "PR #624; this review F1",
+        "disposition": "Source correction and meaningful regression assertions are present. No further source defect was established; completion evidence gap F2 remains separate."
+      },
+      {
+        "id": "F2",
+        "classification": "accepted",
+        "kind": "verification-evidence-gap",
+        "owner": "juangcarmona / trusted delivery evidence maintainer",
+        "summary": "Explicit focused-test and post-checkbox Markdown execution requirements are not fully evidenced in the supplied review handoff.",
+        "evidence": [
+          "Issue #599 verification instructions",
+          "openspec/changes/issue-599-proposal/tasks.md:19-21",
+          "completion.implementationEvidence.checks contains four admitted commands only",
+          "PR #624 body claims 64 focused tests"
+        ],
+        "followUpReference": "Issue #599; this review F2",
+        "disposition": "Accepted as an unresolved evidence finding, not a waiver or owner acceptance of missing verification. Blocks closing this review. Recover original receipts first; do not represent missing proof as a failed check or manufacture historical execution."
+      },
+      {
+        "id": "F3",
+        "classification": "deferred",
+        "kind": "guidance-wording-gap",
+        "owner": "juangcarmona / operations documentation maintainer",
+        "summary": "Operations wording still describes a successful maintenance run as establishing freshness without explicitly requiring its validated latest-attempt scan.",
+        "evidence": [
+          "docs/operations/autonomous-delivery.md:11",
+          "docs/architecture/06-runtime-view/maintenance.md:44",
+          "scripts/reconcile-worker-maintenance.mjs:17-31,53"
+        ],
+        "followUpReference": "Issue #599 review record F3; no new issue opened",
+        "disposition": "Non-blocking documentation clarification candidate, not a newly established source defect. The issue deliberately excluded operations-document edits. Record for separate owner-reviewed follow-up; do not change guidance in this stage."
+      }
+    ],
+    "affectedGuidance": {
+      "reviewed": [
+        "AGENTS.md:5-19",
+        "src/packages/cli/README.md",
+        "src/packages/sdlc/README.md:96,139,145",
+        "src/packages/sdlc/completion.md:20,38,44-69",
+        "docs/operations/autonomous-delivery.md:9-25",
+        "docs/architecture/06-runtime-view/maintenance.md:38-44",
+        "openspec/changes/issue-599-proposal/proposal.md",
+        "openspec/changes/issue-599-proposal/design.md",
+        "openspec/changes/issue-599-proposal/tasks.md"
+      ],
+      "assessment": "Architecture guidance and issue-bound design agree with the correction; F3 identifies the narrow operations wording gap. The workflow scan has no custom display name and a condition that can skip it (.github/workflows/lighthouse-worker-maintenance.yml:25-46), supporting the need for job proof. Its pinned package execution is distinct from the separately installed host checker, not guidance drift.",
+      "productContext": "Prepared ProductShape index and inspect/impact/citation reports for BR-FAIL-CLOSED, BR-WORKFLOW-STATE and FR-FAST-FORWARD-DELIVERY were compared with canonical model text and plan citations. They remain draft context, not product approval. No product or architecture meaning gap was established and no change to those authorities is proposed."
+    },
+    "checkInterpretation": {
+      "requiredForgeGate": "repository from app 15368 only, as supplied by completion.policy.checks",
+      "failedRequiredChecks": [],
+      "optionalSkippedChecks": "Skipped ci-app, routing and continuation jobs are not failed tests and are not adopted merge gates. They do not create review blockers.",
+      "scanObservation": "The supplied successful maintenance scan check is not a receipt that the installed external watchdog used the corrected script or measured scan freshness. It is not used to claim operational acceptance.",
+      "truncation": "Trust authenticated exit receipts and retained provider citation rows. Do not infer omitted test counts, timings or command sequence from truncated excerpts."
+    },
+    "finalization": {
+      "policyReference": "src/packages/sdlc/completion.md:38; completion.finalization",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedCurrentTransition": {
+        "closeIssue": false,
+        "add": [],
+        "remove": [],
+        "pullRequestLabels": "preserve"
+      },
+      "onLaterPassedReview": {
+        "closeIssue": true,
+        "add": [],
+        "remove": [
+          "waiting-review",
+          "ready",
+          "pr-draft",
+          "pr-ready",
+          "integrate",
+          "review"
+        ],
+        "pullRequestLabels": "preserve"
+      },
+      "executor": "Trusted publisher after current-stage validation and fresh authority/check/reservation observations. Host cleanup releases agent-working for every outcome. Final labels and this review publication have not yet occurred."
+    },
+    "limits": [
+      "No review-local commands or tests were executed. CodeGraph context was unavailable; direct source, test and guidance reads supplied context. Ponytail and Humanizer could not be loaded. These tooling limits are not product-check failures.",
+      "Original focused-test execution, post-checkbox Markdown execution and their ordering remain unverified, rather than asserted not to have happened.",
+      "The prior provider HTTP 400 and claimed transient dependency failure concern attempts on this one work item. No recurrence across independent work items, cause frequency, attention time or cost is established.",
+      "Installed host-script revision, timer operation and seven-day scheduling observations remain unverified and outside issue #599 acceptance. No deployment or reliability improvement is claimed.",
+      "This engine writes only the review envelope. The trusted host validates it, publishes any authorized review effects and records the terminal completion signal; safeoutputs is not invoked inside this adapter."
+    ],
+    "retrospective": "## What went well\n- The two-file correction stayed within the host-authenticated changed-path boundary, with an issue-bound plan. Latest-attempt job proof, strict scan timestamps and no-effect uncertainty match the accepted intent (script:10–69; tests:65–222). Owner: maintenance checker maintainer.\n- Independent planning and candidate review accepted the work; four authenticated implementation commands, accepted-head forge CI and actual-merge post-merge CI passed. Integration is established by a retained merge receipt, not inferred from an assessment. Owner: trusted delivery host.\n\n## What went wrong\n- Original defect: workflow success/updated_at could masquerade as scan execution and freshness (issue #599; F1). The source correction addresses it; no new source defect was established.\n- Evidence handoff: the separately required focused invocation and post-checkbox Markdown rerun have no supplied terminal receipts despite PR/task claims (F2). This is missing proof, not a failed check, and blocks closing review.\n- Operations wording still omits the explicit scan-proof requirement (docs/operations/autonomous-delivery.md:11; F3). Architecture guidance remains consistent.\n- A prior provider error is reported for this same work item; recurrence across work items and any time/cost impact are unknown.\n\n## Start doing\n- Delivery evidence owner: carry explicit work-item verification receipts and their ordering into closing review, alongside admitted host checks; recover original logs before considering any new authorized execution.\n- Operations documentation owner: describe latest-attempt scan proof and distinguish source acceptance from installed operation. Installation and reliability observation remain separately owned and unverified.\n\n## Stop doing\n- Do not substitute a green workflow for scan proof, or checked tasks/PR prose for terminal receipts. Do not equate successful merge with deployment or measured scheduling reliability.\n- Do not count retries of issue #599 as independent recurrence or invent attention/cost metrics.\n\n## Improvement candidates\n1. **Evidence completeness (F2).** Observed failure: review lacks two explicitly requested execution receipts. Evidence: accepted design:54,66–70; tasks:19–21; supplied four-command receipt list. Owner: trusted delivery evidence maintainer with juangcarmona. Smallest useful guard: retain and surface a requirement-to-receipt checklist for explicit extra commands and required sequencing, without rerunning integration or adding forge gates. Reproduce in a separate regression fixture by supplying this four-command handoff plus prose claims but omitting focused/post-checkbox receipts; it must remain incomplete. Then add correctly bound original receipts and prove completeness, while missing, wrong-tree or wrong-sequence receipts still block. Any host/policy change requires its own review and regression proof; none is implemented here.\n2. **Operations wording (F3).** Observed gap: successful-run language can obscure the now-required scan evidence. Evidence: operations:11 versus script:17–31,53 and skipped-scan regression:87–114. Owner: operations documentation maintainer, juangcarmona. Smallest useful correction: clarify that only the unique successful latest-attempt scan's valid completion establishes freshness; unknown evidence preserves intent and suppresses dispatch. Before correction, use the existing successful-workflow/skipped-scan fixture to demonstrate why the sentence is insufficient, then review revised wording against that negative control and the actual-success controls:145–186. Validate links/Markdown in the separately reviewed documentation change; do not expand authority or modify provider-owned guidance here.\n\nNo additional product or architecture defect, cross-work-item recurrence, or need for a new permission was established. Follow-up references remain issue #599 and this review's F2/F3; no issue or next stage was opened."
+  }
+}
