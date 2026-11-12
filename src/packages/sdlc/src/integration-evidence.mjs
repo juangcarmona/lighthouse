@@ -35,7 +35,8 @@ export async function readIntegrationEvidence(api, completion, pinned = null, { 
   for (const path of candidates) {
     const raw = await read(path), record = JSON.parse(raw), payload = record.payload;
     if (payload?.stage !== 'integrate' || record.status !== 'passed') continue;
-    if (['repository', 'issue', 'pr', 'head', 'intent', 'policy', 'prIntent', 'files'].some(k => payload.binding?.[k] !== binding[k])) continue;
+    if (['repository', 'issue', 'pr', 'head', 'intent', 'policy', 'files'].some(k => payload.binding?.[k] !== binding[k])) continue;
+    if (payload.binding.prIntent !== binding.prIntent && (!/^[a-f0-9]{64}$/.test(completion.integrationPrIntent ?? '') || payload.binding.prIntent !== completion.integrationPrIntent)) continue;
     if (validateEvidenceRecord(record).length) throw Error('Invalid retained integration record');
     const prefix = path.slice(0, -'evidence-record.json'.length), index = JSON.parse(await read(prefix + 'evidence-index.json'));
     if (validateEvidenceIndex(index).length || index.repository !== binding.repository || index.revision !== completion.merge || !index.records.some(r => r.id === record.id && r.path === 'evidence-record.json' && r.sha256 === digest(raw))) throw Error('Retained integration index does not bind the record');
@@ -89,7 +90,7 @@ export async function readIntegrationEvidence(api, completion, pinned = null, { 
     }
     const interrupted = String(run.id) === String(interruptedRun) && !workflow.recovery && ['failure', 'timed_out'].includes(run.conclusion);
     if (run.repository?.full_name !== binding.repository || !(delegated || manual || approved) || run.path !== expectedPath || String(run.run_attempt) !== String(workflow.attempt) || run.status !== 'completed' || !(run.conclusion === 'success' || (recovered || interrupted) && ['failure', 'timed_out'].includes(run.conclusion))) throw Error('Retained integration workflow is not authenticated and successful');
-    return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'] };
+    return { evidenceId: `integration:${workflow.runId}:${workflow.attempt}`, commit, path, recordSha256: digest(raw), url: `https://github.com/${binding.repository}/blob/${commit}/${prefix}report.md`, receipt, workflow: { ...workflow, conclusion: run.conclusion, actor: run.actor.login }, report: files['report.md'], ...(payload.binding.prIntent !== binding.prIntent ? { postMergeDiscussion: true } : {}) };
   }
   if (pinned) throw Error('Previously supplied integration evidence is unavailable or stale');
   return null;
