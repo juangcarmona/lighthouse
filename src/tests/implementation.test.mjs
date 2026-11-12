@@ -130,6 +130,47 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
 });
 
+test('publication recovers only an explicitly rejected commit with the same observed tree and current authority', async () => {
+  const tree = 'd'.repeat(40), calls = [], rejection = Object.assign(Error('GitHub POST git/commits: 422: Tree SHA does not exist'), { status: 422 });
+  let commits = 0;
+  const api = async (path, method = 'GET', body) => {
+    calls.push({ path, method, body });
+    if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+    if (path.startsWith('git/commits/')) return { tree: { sha: 'base-tree' } };
+    if (path === 'git/trees/' + tree) return { sha: tree };
+    if (path === 'git/commits' && ++commits < 3) throw rejection;
+    return { sha: path === 'git/trees' ? tree : 'created', html_url: 'https://example.test/pr/34' };
+  };
+  await createImplementationPullRequest(api, request, [change], 'Verified candidate', '', true, async () => calls.push({ path: 'authorize' }));
+  assert.equal(commits, 3);
+  const writes = calls.filter(call => call.path === 'git/commits');
+  assert.deepEqual(writes.map(call => call.body), Array(3).fill({ message: 'feat: implement issue #18', tree, parents: [request.sourceRevision] }));
+  assert.equal(calls.filter(call => call.path === 'git/blobs').length, 1);
+  assert.equal(calls.filter(call => call.path === 'git/trees').length, 1);
+  assert.equal(calls.filter(call => call.path === 'git/trees/' + tree).length, 2);
+  for (const call of writes.slice(1)) assert.equal(calls[calls.indexOf(call) - 1].path, 'authorize');
+  assert.ok(calls.indexOf(writes.at(-1)) < calls.findIndex(call => call.path === 'git/refs'));
+});
+
+test('publication never retries uncertain or other refusals, and stops on absent tree proof or revoked authority', async () => {
+  for (const scenario of ['network', 'server', 'other-rejection', 'exhausted', 'missing-tree', 'wrong-tree', 'revoked']) {
+    const tree = 'd'.repeat(40), calls = [], denial = scenario === 'network' ? Error('connection lost') : Object.assign(Error(scenario === 'server' ? 'GitHub POST git/commits: 503' : scenario === 'other-rejection' ? 'GitHub POST git/commits: 422: Invalid parents' : 'GitHub POST git/commits: 422: Tree SHA does not exist'), { status: scenario === 'server' ? 503 : 422 });
+    let commits = 0;
+    const api = async (path, method = 'GET') => {
+      calls.push({ path, method });
+      if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+      if (path.startsWith('git/commits/')) return { tree: { sha: 'base-tree' } };
+      if (path === 'git/trees/' + tree) return scenario === 'missing-tree' ? null : { sha: scenario === 'wrong-tree' ? 'e'.repeat(40) : tree };
+      if (path === 'git/commits') { commits++; throw denial; }
+      return { sha: path === 'git/trees' ? tree : 'blob' };
+    };
+    await assert.rejects(createImplementationPullRequest(api, request, [change], '', '', true, async () => { if (scenario === 'revoked') throw Error('authority revoked'); }));
+    assert.equal(commits, scenario === 'exhausted' ? 3 : 1, scenario);
+    assert.equal(calls.some(call => call.path === 'git/refs' || call.path === 'pulls'), false, scenario);
+    assert.equal(calls.filter(call => call.path === 'git/trees').length, 1, scenario);
+  }
+});
+
 test('aligned implementation resumes the authenticated draft PR and rejects changed state', async () => {
   const repository = 'owner/repo', branch = 'lighthouse/implement-18-aaaaaaaaaaaa';
   const alignment = { defaultBranch: 'main', parent: { issue: 18, stage: 'implement', pullRequest: { number: 34, branch, head: request.sourceRevision } } };
