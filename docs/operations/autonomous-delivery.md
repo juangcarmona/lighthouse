@@ -14,7 +14,7 @@ Disable the timer with `systemctl --user disable --now lighthouse-maintenance.ti
 
 ## Shared engine admission
 
-FF and hotfix stages wait for the shared engine within their remaining delivery deadline. Queue time reduces the time left for execution and integration; it never extends the configured delivery budget. An explicit operator `engineSlotWaitSeconds` remains an upper bound, including a zero-wait policy. Ordinary workers retain the four-minute default. Cancellation stops the waiting request while preserving the active engine and its ownership records.
+FF and hotfix stages wait for the shared engine within their remaining delivery deadline. Queue time reduces the time left for execution and integration; it never extends the configured delivery budget. An explicit operator `engineSlotWaitSeconds` remains an upper bound, including a zero-wait policy. Ordinary workers retain the four-minute default. Engines monitor their originating controller and stop when it exits, including abrupt workflow cancellation. Cancellation preserves the active engine and its ownership records.
 
 Run deterministic worker-runtime acceptance on an otherwise idle host. Its isolated test journals cannot reconcile resources belonging to another active engine. Retain the shared job reservation and ownership checks when testing the runtime.
 
