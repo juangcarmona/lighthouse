@@ -286,9 +286,9 @@ test('current completion jobs cannot become external acceptance evidence or eras
   await assert.rejects(observeChecks(async p => p.startsWith('actions/') ? { jobs: [{}] } : api(p), head, '99'), /check identity/);
 });
 
-function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, dispatchOrigin, symlink = false, recovery = null } = {}) {
+function retainedIntegration({ mutateFile, runOverrides = {}, receiptOverrides = {}, dispatchOrigin, symlink = false, recovery = null, completion = request.completion } = {}) {
   const receipt = { state: 'merged', sha: merged, acceptedHead: head, authorization: { merge: true, issue: 42, pr: 50, head }, ...receiptOverrides };
-  const files = completionBundle({ ...request, stage: 'integrate', ...(dispatchOrigin ? { dispatchOrigin } : {}), ...(recovery ? { workflowRunId: recovery.runId, attempt: recovery.attempt, recoveryPublication: { runId: '123', attempt: '1', url: request.runUrl, revision: recovery.revision } } : {}) }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
+  const files = completionBundle({ ...request, completion, stage: 'integrate', ...(dispatchOrigin ? { dispatchOrigin } : {}), ...(recovery ? { workflowRunId: recovery.runId, attempt: recovery.attempt, recoveryPublication: { runId: '123', attempt: '1', url: request.runUrl, revision: recovery.revision } } : {}) }, { ...envelope, result: { ...envelope.result, stage: 'integrate' } }, receipt);
   if (mutateFile) mutateFile(files);
   const prefix = `docs/process/20261025-42-a-change/runs/${recovery?.runId ?? '123'}/attempt-0001/post-integration/`;
   const blobs = new Map(), paths = new Map();
@@ -322,6 +322,60 @@ test('review receives hashed retained integration authorization and a permanent 
   const unrelated = { ...completion, binding: { ...completion.binding, head: 'e'.repeat(40) } };
   assert.equal(await readIntegrationEvidence(retainedIntegration(), unrelated), null);
   await assert.rejects(readIntegrationEvidence(retainedIntegration(), unrelated, result), /unavailable or stale/);
+});
+
+test('post-merge PR evidence comments preserve authenticated history while remaining current review input', async () => {
+  const { readIntegrationEvidence } = await import('../packages/sdlc/src/integration-evidence.mjs');
+  const fixture = () => {
+    const profile = { schemaVersion: 1, profileVersion: 1, repository: 'owner/repo', intake: 'collaborators', requiredChecks: [{ context: 'test', integrationId: 7 }], requiredApprovals: 0, evidenceBranch: 'process/retrospectives', completion: { publishEvidence: true, postMergeWorkflows: ['verify.yml'] } };
+    const issue = { number: 42, html_url: 'https://github.com/owner/repo/issues/42', user: { login: 'owner' }, title: 'A change', body: 'Original scope.', state: 'open', labels: [] };
+    const pr = { number: 50, html_url: 'https://github.com/owner/repo/pull/50', title: 'Original title', body: `<!-- lighthouse-implementation:${'b'.repeat(64)} -->`, user: { login: 'github-actions[bot]', type: 'Bot' }, state: 'closed', merged: true, merged_at: '2026-10-25T12:00:00Z', merge_commit_sha: merged, head: { sha: head, ref: 'lighthouse/implement-42-bbbbbbbbbbbb', repo: { full_name: 'owner/repo' } }, base: { ref: 'main', repo: { full_name: 'owner/repo' } }, changed_files: 1 };
+    const comments = [{ id: 1, user: { login: 'owner' }, body: 'Original evidence.', created_at: '2026-10-25T11:00:00Z', updated_at: '2026-10-25T11:00:00Z', html_url: 'https://github.com/owner/repo/pull/50#issuecomment-1' }];
+    const files = [{ filename: 'src/feature.mjs', sha: 'e'.repeat(40), status: 'modified' }];
+    const api = async path => {
+      if (!path) return { default_branch: 'main' };
+      if (path === 'commits/main') return { sha: merged };
+      if (path.startsWith('contents/.lighthouse/github.json')) return { content: Buffer.from(JSON.stringify(profile)).toString('base64') };
+      if (path.startsWith('rules/branches/process')) return ['deletion', 'non_fast_forward'].map(type => ({ type, ruleset_source_type: 'Repository', ruleset_id: 1 }));
+      if (path === 'rulesets/1') return { enforcement: 'active', bypass_actors: [] };
+      if (path.startsWith('rules/branches/main')) return [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'test', integration_id: 7 }] } }];
+      if (path === 'branches/main') return { protection: { enabled: false } };
+      if (path === 'pulls/50') return pr;
+      if (path === 'issues/42') return issue;
+      if (path.startsWith('issues/42/comments?') || path.startsWith('pulls/50/reviews?') || path.includes('/statuses?')) return [];
+      if (path.startsWith('issues/50/comments?')) return comments;
+      if (path.startsWith('pulls/50/files?')) return files;
+      if (path.includes('/check-runs?')) return { check_runs: [{ name: 'test', head_sha: path.split('/')[1], app: { id: 7 }, status: 'completed', conclusion: 'success' }] };
+      throw Error('Unexpected completion input: ' + path);
+    };
+    return { api, issue, pr, comments, files, inspect: () => inspectCompletion(api, 'owner/repo', 'owner', { issue: 42, pr: 50, head }, 'review') };
+  };
+  for (const scenario of ['after-merge', 'before-merge', 'at-merge', 'edited-earlier', 'missing-time', 'invalid-merge-time', 'title', 'body', 'issue', 'files']) {
+    const f = fixture(), before = await f.inspect();
+    const retained = retainedIntegration({ completion: { ...before, binding: { ...before.binding, base } } });
+    f.comments.push({ id: 2, user: { login: 'owner' }, body: 'Recovered original receipts; assess them.', created_at: '2026-10-25T12:01:00Z', updated_at: '2026-10-25T12:01:00Z', html_url: 'https://github.com/owner/repo/pull/50#issuecomment-2' });
+    if (scenario === 'before-merge') f.comments[1].created_at = '2026-10-25T11:59:59Z';
+    if (scenario === 'at-merge') f.comments[1].created_at = f.pr.merged_at;
+    if (scenario === 'edited-earlier') { f.comments[0].body = 'Changed original feedback'; f.comments[0].updated_at = '2026-10-25T12:02:00Z'; }
+    if (scenario === 'missing-time') delete f.comments[1].created_at;
+    if (scenario === 'invalid-merge-time') f.pr.merged_at = 'unavailable';
+    if (scenario === 'title') f.pr.title += ' changed';
+    if (scenario === 'body') f.pr.body += '\nChanged acceptance';
+    if (scenario === 'issue') f.issue.body += ' changed';
+    if (scenario === 'files') f.files[0].sha = 'f'.repeat(40);
+    const after = await f.inspect(), recovered = await readIntegrationEvidence(retained, after);
+    assert.notEqual(after.binding.prIntent, before.binding.prIntent, scenario);
+    assert.throws(() => assertFresh(before, after), /stale/, scenario);
+    if (scenario !== 'after-merge') { assert.equal(recovered, null, scenario); continue; }
+    assert.ok(recovered, 'the original merge remains an authenticated historical fact');
+    assert.equal(recovered.receipt.sha, merged);
+    assert.equal(after.integrationPrIntent, before.binding.prIntent);
+    assert.equal(after.pullRequest.ownerAnswers.at(-1).id, 2);
+    f.comments[1].body += ' Updated current feedback.';
+    const changed = await f.inspect();
+    assert.throws(() => assertFresh(after, changed), /stale/);
+    assert.ok(await readIntegrationEvidence(retained, changed), 'historical evidence does not approve the changed feedback');
+  }
 });
 
 test('review rejects tampered artifacts, links, uncertain source runs and wrong authorization', async () => {
