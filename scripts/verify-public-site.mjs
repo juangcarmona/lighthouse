@@ -1,5 +1,5 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
@@ -21,6 +21,17 @@ const required = [
 if (publicSiteEnabled) required.push('model/index.html', 'architecture/index.html');
 const exists = async (path) => stat(path).then(() => true).catch(() => false);
 
+async function verifyReferences(html, file) {
+  for (const match of html.matchAll(/\b(?:href|src)=["']([^"']+)["']/gu)) {
+    const target = match[1];
+    if (/^(?:https?:|mailto:|#|data:|\/\/)/u.test(target)) continue;
+    const local = resolve(dirname(join(output, file)), target.split(/[?#]/u, 1)[0]);
+    if (relative(output, local).startsWith('..') || !(await exists(local))) {
+      throw new Error(`Missing public-site reference in ${file}: ${target}`);
+    }
+  }
+}
+
 for (const file of required) {
   if (!(await exists(join(output, file)))) throw new Error(`Missing public-site output: ${file}`);
 }
@@ -30,14 +41,7 @@ const cliPackage = JSON.parse(await readFile(join(root, 'src/packages/cli/packag
 if (!html.includes(`v${cliPackage.version}`) || html.includes('__LIGHTHOUSE_VERSION__')) {
   throw new Error('Published Lighthouse version does not match the CLI package.');
 }
-for (const match of html.matchAll(/\b(?:href|src)="([^"]+)"/gu)) {
-  const target = match[1];
-  if (/^(?:https?:|mailto:|#|data:)/u.test(target)) continue;
-  const local = resolve(output, target.split('#', 1)[0]);
-  if (relative(output, local).startsWith('..') || !(await exists(local))) {
-    throw new Error(`Missing public-site reference: ${target}`);
-  }
-}
+await verifyReferences(html, 'index.html');
 
 if (publicSiteEnabled) {
   for (const slug of ['triage', 'refine', 'propose', 'implement', 'apply-review', 'integrate', 'review', 'product-change', 'apply-product-change', 'maintenance', 'unattended', 'product-definition-as-code']) {
@@ -48,13 +52,14 @@ if (publicSiteEnabled) {
   if (html.includes('FLOW_DIAGRAMS') || (html.match(/class="diagram-card"/g) ?? []).length !== 13 || !html.includes('Worker reports')) {
     throw new Error('Public-site flow gallery is incomplete.');
   }
-  const [productSnapshot, architectureSnapshot] = await Promise.all([
+  const [productExplorer, architectureSnapshot] = await Promise.all([
     readFile(join(output, 'model/index.html'), 'utf8'),
     readFile(join(output, 'architecture/index.html'), 'utf8'),
   ]);
-  if (!productSnapshot.includes('<title>Product Snapshot</title>')) {
-    throw new Error('Published ProductShape snapshot is missing or stale.');
+  if (!productExplorer.includes('<title>Lighthouse’s Product Explorer</title>')) {
+    throw new Error('Published ProductShape Explorer is missing or stale.');
   }
+  await verifyReferences(productExplorer, 'model/index.html');
   if (!architectureSnapshot.includes('ArcShape') || !architectureSnapshot.includes('Architecture Snapshot')) {
     throw new Error('Published ArcShape snapshot is missing or stale.');
   }
