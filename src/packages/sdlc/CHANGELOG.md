@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.11
+
+### Patch Changes
+
+- 5ff8c4c: # Keep disposable Git metadata stable
+
+  Disable automatic maintenance and garbage collection in newly created validation repositories before their first commit. This prevents background Git tasks from removing lock files while the host prepares workspace permissions. Candidate history, branch checks and source validation continue normally.
+
+- efc4ad6: # Preserve integration history after post-merge discussion
+
+  Keep authenticated integration and planning evidence available when an owner adds a PR comment after the confirmed merge. The current discussion remains bound to the new review and must be assessed. Changes to earlier feedback, the PR title or body, issue intent, code, policy or retained artifact integrity still invalidate the historical match.
+
 ## 0.22.10
 
 ### Patch Changes
