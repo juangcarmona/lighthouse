@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat, readdir } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, symlink, rm, chmod, lstat, truncate, stat, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -66,6 +66,11 @@ test('candidate Git metadata passes the baseline branch guard without copying re
     assert.equal(execFileSync('git', ['-C', workspace, 'remote'], { encoding: 'utf8' }).trim(), '');
     assert.equal(execFileSync('git', ['-C', workspace, 'rev-list', '--all', '--count'], { encoding: 'utf8' }).trim(), '1');
     await assert.rejects(lstat(join(workspace, '.git/hooks')));
+    const trace = join(root, 'git-trace.jsonl');
+    execFileSync('git', ['-C', workspace, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '--allow-empty', '-qm', 'Next validation snapshot'], {
+      env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0', GIT_TRACE2_EVENT: trace },
+    });
+    assert.doesNotMatch(await readFile(trace, 'utf8'), /"event":"child_start"[^\n]*"(?:maintenance|gc)"/, 'disposable validation Git must not spawn maintenance while the host traverses its metadata');
   } finally { process.env.PATH = previousPath; await rm(root, { recursive: true, force: true }); }
 });
 
