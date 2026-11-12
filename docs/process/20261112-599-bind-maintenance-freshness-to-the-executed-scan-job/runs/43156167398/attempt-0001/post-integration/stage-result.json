@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "runId": "5047155c1b300fbeaadb67a731f4d52f732c860c85255437ab644255397f0eec",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "evidence": [
+    {
+      "id": "source-scan-validation",
+      "status": "passed",
+      "source": "/workspace/scripts/reconcile-worker-maintenance.mjs:10-69",
+      "reason": "Read-only inspection confirms bounded attempt-specific jobs, complete inventory and unique successful scan validation, strict completion timestamps, scan-derived freshness and pending reconciliation, and a no-effect scan-unconfirmed path. This is source assessment, not a newly executed test."
+    },
+    {
+      "id": "acceptance-regression-inspection",
+      "status": "passed",
+      "source": "/workspace/src/tests/maintenance-watchdog.test.mjs:23-222",
+      "reason": "Inspected meaningful negative and positive controls: skipped/missing/failed and ambiguous scans, exact latest-attempt endpoint, malformed inventories and timestamps, differing workflow/scan times, 45-minute boundary, pending preservation, preview, identity checks, active suppression, checkpoint ordering and lost acknowledgement. No tests were executed by this review."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified npm ci --ignore-scripts receipt, exit 0, bound to accepted candidate. Its dependency audit warning is not a failed command or an established defect in this correction."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified full repository verification receipt, exit 0. The excerpt is truncated; the authenticated terminal result remains usable, but omitted test details are not inferred from that excerpt."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified OpenSpec citations receipt, exit 0; retained scoped rows cover all three issue-plan Markdown files and their nine current citations, with no diagnostics. Shared verification inputs are host-observed unchanged."
+    },
+    {
+      "id": "implementation:43149631957:1:3d71fef2a77847451eecc8429b46bd95d737c8fa42968effc2af8bff0001cdca:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43149631957/attempts/1",
+      "reason": "Host-verified strict issue-599 implementation-plan validation, exit 0. This authenticates validation, not independent plan or candidate review."
+    },
+    {
+      "id": "github-check:130968128273",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43153547952/job/130968128273",
+      "reason": "Authenticated required repository check from app 15368 passed on accepted head e73b497f9104058ca59989a938f0d1311dd4f68d."
+    },
+    {
+      "id": "github-check:130969578437",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43153997236/job/130969578437",
+      "reason": "Authenticated repository check passed on merged and checked revision 2169e9e03a26fb6b030cb1735ea08e7d4b5eef64; host postMerge also confirms adopted ci.yml run 43153997236 passed on that revision."
+    },
+    {
+      "id": "affected-guidance-and-scope",
+      "status": "passed",
+      "source": "/workspace/openspec/changes/issue-599-proposal/proposal.md:20-47",
+      "reason": "Host changed-path inventory contains only the two authorized script/test paths and four issue-plan files. Reviewed AGENTS.md, SDLC delivery/completion/unattended guidance, adopted implementation exceptions, architecture maintenance guidance and operations guidance. No definite instruction conflict or required product-model change was established."
+    },
+    {
+      "id": "historical-planning-review",
+      "status": "unavailable",
+      "source": "/input/context.json#priorPlanningReview",
+      "reason": "Host supplies null. The plan and FF guide require an independent plan review; checked task boxes and green validation do not authenticate that review."
+    },
+    {
+      "id": "historical-candidate-review",
+      "status": "unavailable",
+      "source": "/input/context.json#completion",
+      "reason": "No authenticated independent candidate-review verdict and binding are supplied. PR prose asserts independent review, but host command receipts prove execution rather than review; an empty GitHub reviews array alone does not prove the native independent review failed or never ran."
+    },
+    {
+      "id": "historical-integration-record",
+      "status": "unavailable",
+      "source": "/input/context.json#priorIntegration",
+      "reason": "Host supplies null, so the protected integration report/receipt and its historical authorization cannot be reviewed. Host-observed merged=true and successful post-merge CI establish the observed merge and checks, not the missing historical audit record."
+    }
+  ],
+  "missingEvidence": [
+    "Authenticated original independent planning-review result and binding for issue #599; priorPlanningReview is null.",
+    "Authenticated original independent candidate-review verdict and binding for PR #624 accepted head/tree, intent, policy, allowed corrections and executed checks.",
+    "Matching retained integration report and receipt, including historical merge authorization and originating execution; priorIntegration is null."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Repository maintainer and trusted completion-host owner: recover and authenticate the original planning review, candidate review and retained integration bundle for #599 / PR #624, supply them to a fresh review context, and reassess without repeating integration. If they cannot be recovered, record that limitation and obtain a separately reviewed recovery decision rather than invent historical evidence.",
+  "output": {
+    "summary": "The bounded scan-observation correction is supported by source inspection, substantial regression coverage and passed authenticated command/CI receipts. Final review is blocked on historical review and integration continuity evidence, not a failed source check. No new source defect was established.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 599,
+      "pullRequest": 624,
+      "acceptedHead": "e73b497f9104058ca59989a938f0d1311dd4f68d",
+      "candidateTree": "0a66c9e4ed3036be47c2318e0c2868e34e140814",
+      "mergedRevision": "2169e9e03a26fb6b030cb1735ea08e7d4b5eef64",
+      "intent": "646d62db61f5e971a118fe1e242fd08490c10d41049101c9ae960fca981f7941",
+      "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+      "changedPathsFingerprint": "8808aa508aedf57701d6b470a2d1be6141531faa35d546d8f9a44b39a4f441cb",
+      "dispatchRequest": "b801ad54d8f0cf0794813b6d768222424df55bd7a228ddf3721f44a58c834d80",
+      "mergeAuthorizedByThisDispatch": false,
+      "provenance": "Host-supplied identities and GitHub observations; no independent Git/API authentication was attempted by the engine. Source package version 0.22.10 and router harness pin f2982ccd448d0f4e6bbbd6bdbe491c47a3c02cd8 were inspected. Host reports branch main; deployed host freshness-checker installation remains unverified and out of scope."
+    },
+    "findings": [
+      {
+        "id": "scan-proof-correction",
+        "kind": "source-defect",
+        "classification": "fixed",
+        "owner": "Repository maintenance-script maintainer",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/624",
+        "decision": "The reported workflow-success-as-scan-proof defect is corrected in the inspected accepted source. observeScan requires complete latest-attempt evidence and exactly one successful completed scan. scanCompletion rejects unsupported, normalized and future times. Uncertainty returns no action and preserves pending intent; confirmed completion alone drives both freshness and reconciliation."
+      },
+      {
+        "id": "recovered-agent-verification",
+        "kind": "evidence-provenance",
+        "classification": "accepted",
+        "owner": "Repository owner juangcarmona",
+        "followUpReference": "https://github.com/juangcarmona/lighthouse/pull/624#issuecomment-6814680959",
+        "decision": "Retain the owner's recovered original focused-test and final-Markdown receipts as explicitly attributed historical evidence, not new commands or independent host checks. The account reports focused exit 0 with 64 pass/0 fail/0 skip after final script/test patches, full verify exit 0 with 1248 pass/0 fail/10 skip, then only task-checkbox edits and final Markdown exit 0 over 368 files. It supplies log hashes, terminal receipts, sequencing and claimed byte matches. Those artifact and byte comparisons were performed by the owner, not independently by this engine. No passing host-check identity is fabricated for these supplemental receipts."
+      },
+      {
+        "id": "delivery-continuity-gap",
+        "kind": "process-evidence-gap",
+        "classification": "accepted",
+        "owner": "Repository maintainer and trusted completion-host owner",
+        "followUpReference": "Issue #599 review record; completion.md:38,69 and unattended.md:49,65",
+        "decision": "Keep final review blocked until the missing bound historical planning review, independent candidate review and integration record are supplied or a separately reviewed recovery disposition is established. This is an absence of auditable evidence, not a finding that reviews failed, never executed, or that the observed merge was unauthorized. The owner's recovered command receipts do not waive these separate requirements."
+      },
+      {
+        "id": "evidence-handoff-improvement",
+        "kind": "process-improvement-candidate",
+        "classification": "deferred",
+        "owner": "SDLC evidence/host adapter maintainer",
+        "followUpReference": "Issue #599 review record, retrospective improvement candidate",
+        "decision": "Consider a separately reviewed completeness manifest that carries required supplemental command sequencing and existing plan/candidate-review and integration references into final review. No issue is opened, policy changed or guard implemented by this review. Proposed regression proof is described in the retrospective."
+      }
+    ],
+    "guidanceAssessment": {
+      "outcome": "No definite stale or conflicting affected instruction established.",
+      "references": [
+        "AGENTS.md:5,16-19",
+        ".lighthouse/implement.json:476-525",
+        ".lighthouse/github.json:6-19",
+        "src/packages/sdlc/completion.md:30-38,44-69",
+        "src/packages/sdlc/unattended.md:35,43-65",
+        "docs/architecture/06-runtime-view/maintenance.md:38-44",
+        "docs/operations/autonomous-delivery.md:9-11,21-27",
+        "openspec/changes/issue-599-proposal/design.md:17-70"
+      ],
+      "reason": "Architecture already describes successful-scan freshness and uncertain-send suppression. Operations' successful-run wording must not be treated as independent proof that scan executed; the corrected script implements that evidence requirement. Source acceptance does not establish deployment or seven-day scheduling observations. Product reports and canonical citations are draft context, not new product approval. No provider-owned guidance is changed.",
+      "hostSpecificDifference": "The custom adapter delegates gh-aw terminal signaling to the trusted host after envelope validation. No safeoutputs invocation is required or attempted inside this engine."
+    },
+    "verificationLimits": {
+      "newCommandsExecuted": false,
+      "failedRequiredChecks": [],
+      "requiredCommandReceipts": "All four supplied host-verified implementation command receipts passed; required head and merged-revision repository checks and adopted post-merge ci.yml passed.",
+      "optionalSkippedChecks": "ci-app and unrelated routing/maintenance jobs include skipped/unavailable observations. They are not declared forge gates or explicit issue verification requirements and are not promoted to blockers.",
+      "historicalEvidence": "No matching prior integration or planning-review record was supplied. No bound native independent candidate-review verdict was supplied. These missing records are preserved as current review-continuity blockers, not replaced with green CI or owner prose.",
+      "tools": "CodeGraph context query was unavailable; direct read-only inspection supplied source context. No mandatory product check failed because of that tooling limitation. No external service, deployment, timer or live dispatch was used."
+    },
+    "finalization": {
+      "policySource": "completion.finalization and src/packages/sdlc/completion.md:38",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "pr-ready"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedCurrentTransition": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve"
+      },
+      "onFuturePassedReview": "After a separately validated passed result, the publisher may remove waiting-review, ready, pr-draft, pr-ready, integrate and review from the issue and close it, preserving PR labels. Those effects have not happened in this engine.",
+      "reservation": "Trusted host releases its own agent-working reservation for every outcome; this review does not require cleanup to precede its result.",
+      "integration": "Host reports PR #624 already merged. Current merge:false grants no integration effect; do not repeat merge or CI to replace missing history."
+    },
+    "retrospective": "## What went well\n- The correction stayed within the two named executable/test files and issue-bound plan. Source inspection shows actual latest-attempt scan proof, strict timestamp validation and preserved no-write uncertainty. Regressions exercise both positive controls and malformed evidence, including pending-intent safety. Owner: maintenance-script maintainer; evidence: script lines 10–69 and test lines 65–222.\n- Four authenticated host command receipts and required head/post-merge repository CI passed. The owner recovered focused-test and post-checkbox Markdown receipts without presenting them as new or independent checks. Evidence: implementation run 43149631957 and PR #624 comment 6814680959.\n\n## What went wrong\n- Final review still lacks authenticated original planning/candidate-review bindings and the retained integration record: priorPlanningReview and priorIntegration are null, and command receipts do not supply a candidate-review verdict. This is a process-evidence gap, not an established source defect or failed check. Owner: completion-host maintainer.\n- The owner's account documents an earlier provider HTTP 400 interruption and later evidence recovery for this same issue. These do not establish recurrence across work items, a product regression, or measured attention/cost. Missing history leaves the underlying handoff-loss cause unknown.\n\n## Start doing\n- Carry explicit provenance and terminal sequencing for issue-required supplemental checks alongside the independent receipts, and surface missing historical review/integration references before final closure. Owner: SDLC evidence/host adapter maintainer; follow-up: this #599 review record.\n\n## Stop doing\n- Do not use a green workflow, task checkboxes or PR prose as proof of executed scan behavior, historical independent review, installation or merge authorization. Do not rerun integration to fill an audit gap. No evidence establishes that all these misinterpretations occurred; these are boundaries to preserve.\n\n## Improvement candidates\n- **Evidence-handoff completeness (deferred):** observed problem is owner-assisted recovery of focused/final-Markdown receipts plus absent review/integration references in this review context. Evidence: comment 6814680959, the four-item implementationEvidence.checks inventory, null priorPlanningReview/priorIntegration and no authenticated candidate-review result. Owner: SDLC evidence/host adapter maintainer. Smallest useful guard: a bounded manifest referencing existing receipts, candidate/tree and sequence, independent review bindings and integration record, with explicit missing states; never manufacture receipts or make optional jobs universal gates. **Reproduce first:** in an isolated adapter regression, supply passed host commands and CI but omit supplemental receipts and the historical bindings; demonstrate exactly which fields are absent and require blocked rather than failed/passed. **Correction proof:** retain that negative case, add an exact-bound complete bundle that can pass, and reject wrong-tree, stale-intent/policy and merely prose-supplied bindings without replaying merge. This proposal requires its own review and regression evidence; no guard is implemented here.\n- No new source defect, definite guidance drift or further product/architecture change was established. Installed timer revision and operational scheduling reliability remain outside this correction; operator-owned observation requirements in docs/operations/autonomous-delivery.md:25 are not waived or claimed complete."
+  }
+}

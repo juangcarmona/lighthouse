@@ -1,0 +1,17 @@
+## What went well
+- The correction stayed within the two named executable/test files and issue-bound plan. Source inspection shows actual latest-attempt scan proof, strict timestamp validation and preserved no-write uncertainty. Regressions exercise both positive controls and malformed evidence, including pending-intent safety. Owner: maintenance-script maintainer; evidence: script lines 10–69 and test lines 65–222.
+- Four authenticated host command receipts and required head/post-merge repository CI passed. The owner recovered focused-test and post-checkbox Markdown receipts without presenting them as new or independent checks. Evidence: implementation run 43149631957 and PR #624 comment 6814680959.
+
+## What went wrong
+- Final review still lacks authenticated original planning/candidate-review bindings and the retained integration record: priorPlanningReview and priorIntegration are null, and command receipts do not supply a candidate-review verdict. This is a process-evidence gap, not an established source defect or failed check. Owner: completion-host maintainer.
+- The owner's account documents an earlier provider HTTP 400 interruption and later evidence recovery for this same issue. These do not establish recurrence across work items, a product regression, or measured attention/cost. Missing history leaves the underlying handoff-loss cause unknown.
+
+## Start doing
+- Carry explicit provenance and terminal sequencing for issue-required supplemental checks alongside the independent receipts, and surface missing historical review/integration references before final closure. Owner: SDLC evidence/host adapter maintainer; follow-up: this #599 review record.
+
+## Stop doing
+- Do not use a green workflow, task checkboxes or PR prose as proof of executed scan behavior, historical independent review, installation or merge authorization. Do not rerun integration to fill an audit gap. No evidence establishes that all these misinterpretations occurred; these are boundaries to preserve.
+
+## Improvement candidates
+- **Evidence-handoff completeness (deferred):** observed problem is owner-assisted recovery of focused/final-Markdown receipts plus absent review/integration references in this review context. Evidence: comment 6814680959, the four-item implementationEvidence.checks inventory, null priorPlanningReview/priorIntegration and no authenticated candidate-review result. Owner: SDLC evidence/host adapter maintainer. Smallest useful guard: a bounded manifest referencing existing receipts, candidate/tree and sequence, independent review bindings and integration record, with explicit missing states; never manufacture receipts or make optional jobs universal gates. **Reproduce first:** in an isolated adapter regression, supply passed host commands and CI but omit supplemental receipts and the historical bindings; demonstrate exactly which fields are absent and require blocked rather than failed/passed. **Correction proof:** retain that negative case, add an exact-bound complete bundle that can pass, and reject wrong-tree, stale-intent/policy and merely prose-supplied bindings without replaying merge. This proposal requires its own review and regression evidence; no guard is implemented here.
+- No new source defect, definite guidance drift or further product/architecture change was established. Installed timer revision and operational scheduling reliability remain outside this correction; operator-owned observation requirements in docs/operations/autonomous-delivery.md:25 are not waived or claimed complete.
