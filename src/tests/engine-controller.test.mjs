@@ -15,8 +15,8 @@ test('a queued engine stops when its real controller dies and preserves the occu
   let parent, child, waiter;
   const running = async pid => {
     if (!pid) return false;
-    try { return (await readFile(`/proc/${pid}/stat`, 'utf8')).split(') ')[1].split(' ')[0] !== 'Z'; }
-    catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+    try { return (await readFile(`/proc/${pid}/stat`, 'utf8')).split(') ')[1]?.split(' ')[0] !== 'Z'; }
+    catch (error) { if (['ENOENT', 'ESRCH'].includes(error.code)) return false; throw error; }
   };
   const until = async predicate => {
     for (let i = 0; i < 100; i++) { const value = await predicate(); if (value) return value; await delay(25); }
@@ -42,7 +42,7 @@ await executeUnattendedStage({ root: ${JSON.stringify(root)}, request, source: n
       try {
         const ids = (await readFile(`/proc/${child}/task/${child}/children`, 'utf8')).trim().split(/\s+/).filter(Boolean);
         for (const id of ids) if ((await readFile(`/proc/${id}/comm`, 'utf8')).trim() === 'flock') return Number(id);
-      } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) throw error; }
     });
     const exited = once(parent, 'exit'); parent.kill('SIGKILL'); await exited;
     await until(async () => !await running(child));
