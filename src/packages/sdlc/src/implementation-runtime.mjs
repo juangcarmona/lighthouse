@@ -43,6 +43,9 @@ export async function prepareImplementationWorkspace(workspace, config, issue, r
     env: { PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_AUTHOR_NAME: 'Lighthouse validation', GIT_AUTHOR_EMAIL: 'validation@localhost', GIT_COMMITTER_NAME: 'Lighthouse validation', GIT_COMMITTER_EMAIL: 'validation@localhost' }, stdio: 'pipe',
   });
   git(['init', '--template=', `--initial-branch=fix/${issue}-validation`]);
+  // Disposable snapshots need stable metadata while ownership and permissions are prepared.
+  git(['config', 'maintenance.auto', 'false']);
+  git(['config', 'gc.auto', '0']);
   if (origin) git(['remote', 'add', 'origin', origin]);
   git(['add', '--force', '--all']);
   git(['commit', '--allow-empty', '-m', 'Candidate snapshot; repository history is checked separately']);
