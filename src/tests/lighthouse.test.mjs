@@ -480,7 +480,7 @@ test('authority initialization JSON previews report real providers and preserve 
       assert.equal(report.status, 'ready');
       assert.equal(report.apply, 'lighthouse authorities --apply');
       assert.deepEqual(report.authorities.map(({ label, provider, version, command, repair }) => ({ label, provider, version, command, repair })), [
-        { label: 'ProductShape', provider: '@prodshape/cli', version: '0.23.0', command: 'prodshape init --full --sdd none --gitignore --dry-run', repair: 'prodshape init --full --sdd none --gitignore' },
+        { label: 'ProductShape', provider: '@prodshape/cli', version: '0.26.0', command: 'prodshape init --full --sdd none --gitignore --dry-run', repair: 'prodshape init --full --sdd none --gitignore' },
         { label: 'ArcShape', provider: '@arcshape/cli', version: '0.4.0', command: 'arcshape init --no-agents --dry-run', repair: 'arcshape init --no-agents --yes' },
       ]);
       for (const authority of report.authorities) {
@@ -642,7 +642,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
     assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
     const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
-    assert.deepEqual(manifest.integrations, { productShape: '0.23.0', arcShape: '0.4.0' });
+    assert.deepEqual(manifest.integrations, { productShape: '0.26.0', arcShape: '0.4.0' });
     for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
