@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse",
-  "version": "0.12.72",
+  "version": "0.12.73",
   "type": "module",
   "description": "Lighthouse adoption and verification CLI",
   "repository": {

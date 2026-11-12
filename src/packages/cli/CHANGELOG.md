@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse
 
+## 0.12.73
+
+### Patch Changes
+
+- 17606cd: # Upgrade the ProductShape authority
+
+  Upgrade the bundled ProductShape CLI to 0.26.0 so authority initialization and adoption use the same version as the repository and Product Explorer publication.
+
 ## 0.12.72
 
 ### Patch Changes
