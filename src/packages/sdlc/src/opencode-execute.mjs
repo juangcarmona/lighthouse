@@ -161,7 +161,8 @@ async function main() {
   try {
     console.log('Waiting for the operator host engine slot');
     const waitStarted = Date.now(); telemetry.emit('execution.host-wait.started', { status: 'waiting' });
-    slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config), { signal: preparation.signal });
+    const deliveryDeadline = env.LIGHTHOUSE_DELIVERY_DEADLINE === undefined ? undefined : Number(env.LIGHTHOUSE_DELIVERY_DEADLINE);
+    slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config, { deadline: deliveryDeadline }), { signal: preparation.signal });
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);

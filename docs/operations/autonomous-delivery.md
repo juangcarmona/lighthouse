@@ -12,6 +12,12 @@ The checker previews by default. Applied checks dispatch only overdue maintenanc
 
 Disable the timer with `systemctl --user disable --now lighthouse-maintenance.timer`. Removing the report-index variable stops consolidated publication. Recovery and CI repair retain their separate switches.
 
+## Shared engine admission
+
+FF and hotfix stages wait for the shared engine within their remaining delivery deadline. Queue time reduces the time left for execution and integration; it never extends the configured delivery budget. An explicit operator `engineSlotWaitSeconds` remains an upper bound, including a zero-wait policy. Ordinary workers retain the four-minute default. Cancellation stops the waiting request while preserving the active engine and its ownership records.
+
+Run deterministic worker-runtime acceptance on an otherwise idle host. Its isolated test journals cannot reconcile resources belonging to another active engine. Retain the shared job reservation and ownership checks when testing the runtime.
+
 ## Evidence and observation period
 
 `Delivery health observations` runs after maintenance and retains a JSON artifact for thirty days. Run `node scripts/report-delivery-health.mjs <index-issue> <output.json>` for the same read-only report. Counts identify requests with reported failures and confirmed recovery across retained history; each source report remains linked. Accepted deliveries, attention minutes and autonomous recovery rate remain unavailable until their own evidence exists.
