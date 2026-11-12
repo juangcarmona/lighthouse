@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.8
+
+### Patch Changes
+
+- 9cea6eb: # Allow full container verification to finish
+
+  Give each independent implementation check up to 15 minutes. A Control Center Release verification exceeded the previous 10-minute limit after the isolated scratch mount was repaired; the per-command deadline, cancellation and resource limits remain in force.
+
+- b17396d: # Wait for capacity within the existing delivery budget
+
+  Let FF and hotfix stages wait for the shared engine within their remaining delivery budget. Explicit operator admission limits still apply, and the original delivery cancellation and deadline remain in force. Ordinary workers retain the four-minute default.
+
 ## 0.22.7
 
 ### Patch Changes
