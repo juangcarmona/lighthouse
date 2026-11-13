@@ -73,7 +73,7 @@ export function validateProductChangeOutput(value) {
 export async function productModelDigest(root) {
   const modelRoot = await productModelDirectory(root);
   const base = resolve(root, modelRoot);
-  const files = [];
+  const files = []; let bytes = 0;
   async function collect(directory, relative = '') {
     for (const entry of await (await import('node:fs/promises')).readdir(directory, { withFileTypes: true })) {
       const path = relative ? `${relative}/${entry.name}` : entry.name;
@@ -81,13 +81,13 @@ export async function productModelDigest(root) {
       if (stat.isSymbolicLink() || !stat.isDirectory() && !stat.isFile()) throw Error(`Unsafe accepted product model path: ${path}`);
       if (stat.isDirectory()) await collect(target, path);
       else {
-        if (files.length >= 512 || stat.size > 65536) throw Error('Accepted product model exceeds fingerprint bounds');
-        files.push({ path, content: await readFile(target) });
+        if (stat.size > 65536 || (bytes += stat.size) > 8 * 1024 * 1024) throw Error('Accepted product model exceeds fingerprint bounds');
+        files.push({ path, hash: sha(await readFile(target)) });
       }
     }
   }
   await collect(base);
-  return digest(files.sort((a, b) => a.path.localeCompare(b.path)).map(file => `${file.path}\0${sha(file.content)}\n`).join(''));
+  return digest(files.sort((a, b) => a.path.localeCompare(b.path)).map(file => `${file.path}\0${file.hash}\n`).join(''));
 }
 
 export async function productModelDirectory(root) {
@@ -261,7 +261,7 @@ export async function prepareProductEvidence(root, destination, core, { baseline
   const errors = baseline.diagnostics.filter(item => item.severity === 'error');
   if (errors.length) throw Error(`ProductShape baseline has ${errors.length} blocking diagnostic(s); validate the adopter model before retrying`);
   const nodes = baseline.graph.nodes;
-  if (!Array.isArray(nodes) || nodes.length > 512) throw Error('ProductShape evidence exceeds the artifact bound');
+  if (!Array.isArray(nodes)) throw Error('ProductShape evidence graph is invalid');
   await mkdir(destination, { recursive: true });
   const index = []; let bytes = 0;
   for (const node of nodes) {
@@ -273,7 +273,9 @@ export async function prepareProductEvidence(root, destination, core, { baseline
     index.push({ id: node.id, type: node.type, title: node.title, report: `${node.id}.json` });
   }
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed during evidence preparation');
-  await writeFile(join(destination, 'index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n', { flag: 'wx' });
+  const content = JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n';
+  if (Buffer.byteLength(content) > 512 * 1024) throw Error('ProductShape evidence index exceeds the byte bound');
+  await writeFile(join(destination, 'index.json'), content, { flag: 'wx' });
   return { artifacts: index.length, bytes };
 }
 
