@@ -56,9 +56,12 @@ export async function installProductEvidence(input, source, expectedBaseline) {
   const stat = await lstat(input);
   if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('ProductShape evidence directory is unavailable or unsafe');
   const names = await readdir(input);
-  if (!names.includes('index.json') || names.length > 513 || names.some(name => name !== 'index.json' && !/^[A-Z0-9][A-Z0-9-]{0,159}\.json$/.test(name))) throw Error('ProductShape evidence inventory is invalid');
+  const inventory = new Set(names);
+  if (!inventory.has('index.json') || names.some(name => name !== 'index.json' && !/^[A-Z0-9][A-Z0-9-]{0,159}\.json$/.test(name))) throw Error('ProductShape evidence inventory is invalid');
+  const indexStat = await lstat(join(input, 'index.json'));
+  if (!indexStat.isFile() || indexStat.isSymbolicLink() || indexStat.size > 512 * 1024) throw Error('ProductShape evidence index is unsafe or exceeds bounds');
   const index = JSON.parse(await readFile(join(input, 'index.json'), 'utf8'));
-  if (index.schemaVersion !== 1 || index.source !== '@prodshape/core' || index.version !== '0.25.0' || expectedBaseline && index.baselineDigest !== expectedBaseline || !Array.isArray(index.artifacts) || index.artifacts.length !== names.length - 1 || new Set(index.artifacts.map(item => item.report)).size !== index.artifacts.length || index.artifacts.some(item => !names.includes(item.report) || item.report !== `${item.id}.json`)) throw Error('ProductShape evidence index is invalid');
+  if (index.schemaVersion !== 1 || index.source !== '@prodshape/core' || index.version !== '0.25.0' || expectedBaseline && index.baselineDigest !== expectedBaseline || !Array.isArray(index.artifacts) || index.artifacts.length !== names.length - 1 || new Set(index.artifacts.map(item => item.report)).size !== index.artifacts.length || index.artifacts.some(item => !inventory.has(item.report) || item.report !== `${item.id}.json`)) throw Error('ProductShape evidence index is invalid');
   let bytes = 0;
   const destination = join(source, '.lighthouse-product-evidence');
   await mkdir(destination, { mode: 0o755 });
