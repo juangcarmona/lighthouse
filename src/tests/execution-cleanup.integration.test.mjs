@@ -133,3 +133,27 @@ test('real disposable runtime fault matrix preserves unrelated resources and sha
     else console.error(`Preserved ownership journals for operator reconciliation: ${directory}`);
   }
 });
+
+test('phase removal deletes anonymous volumes and preserves a shared named volume', { skip: !image, timeout: 30000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'lh-phase-volume-'));
+  const suffix = randomBytes(8).toString('hex'), shared = `lighthouse-volume-control-${suffix}`;
+  const owner = createExecutionOwner(directory, { repository: 'qualification/disposable', runId: suffix.padEnd(64, '0'), workflowRunId: '2', attempt: 1 });
+  const config = { resourceOwner: owner }, name = `${owner.prefix}-work`;
+  let anonymous;
+  try {
+    docker(['volume', 'create', shared]);
+    runOwnedDocker(config, ['run', '-d', '--name', name, '--volume', '/disposable', '--mount', `type=volume,src=${shared},dst=/shared`, '--entrypoint', 'node', image, '-e', 'setInterval(()=>{},1000)'], { stdio: 'pipe' });
+    const mounts = JSON.parse(docker(['inspect', '--format', '{{json .Mounts}}', name]));
+    anonymous = mounts.find(mount => mount.Destination === '/disposable').Name;
+    docker(['exec', '--user', '0', name, 'node', '-e', 'require("fs").writeFileSync("/shared/sentinel","preserved")']);
+    runOwnedDocker(config, ['rm', '-f', name], { stdio: 'pipe' });
+    assert.throws(() => docker(['volume', 'inspect', anonymous]));
+    assert.equal(owner.cleanup().status, 'clean');
+    assert.equal(docker(['run', '--rm', '--network', 'none', '--mount', `type=volume,src=${shared},dst=/shared,readonly`, '--entrypoint', 'node', image, '-e', 'process.stdout.write(require("fs").readFileSync("/shared/sentinel","utf8"))']), 'preserved');
+  } finally {
+    owner.cleanup();
+    if (anonymous) { try { docker(['volume', 'rm', anonymous]); } catch {} }
+    docker(['volume', 'rm', shared]);
+    await rm(directory, { recursive: true, force: true });
+  }
+});

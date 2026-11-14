@@ -601,6 +601,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await mkdir(join(dir, 'src/examples/opencode-engine'), { recursive: true });
     await cp(join(process.cwd(), 'src/examples/opencode-engine/README.md'), join(dir, 'src/examples/opencode-engine/README.md'));
     await cp(join(process.cwd(), 'src/examples/opencode-engine/ENVIRONMENTS.md'), join(dir, 'src/examples/opencode-engine/ENVIRONMENTS.md'));
+    await cp(join(process.cwd(), 'src/examples/opencode-engine/job-start.sh'), join(dir, 'src/examples/opencode-engine/job-start.sh'));
     await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
     for (const file of ['handoffs.md', 'completion.md', 'request-triage.md', 'epic-delivery.md', 'telemetry.md', 'issue-control.md']) {
