@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.4
+
+### Patch Changes
+
+- 57afde5: # Provide portable code and architecture review guidance
+
+  Ship an explicit manual review fallback for repositories that authorize it when their named helper is unavailable. Preserve review findings, missing evidence and lifecycle authority without installing global host skills or claiming an upstream helper ran.
+
 ## 0.23.3
 
 ### Patch Changes
