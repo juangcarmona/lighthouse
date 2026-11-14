@@ -28,12 +28,13 @@ test('cold npm installation releases downloads before real .NET verification in 
   try {
     docker(['volume', 'create', name]);
     docker(['volume', 'create', name + '-harness']);
-    const source = execFileSync('tar', ['--exclude=node_modules', '--exclude=bin', '--exclude=obj', '-C', root, '-cf', '-', 'package.json', 'package-lock.json', 'src'], { maxBuffer: 100 * 1024 * 1024 });
+    const source = execFileSync('tar', ['--exclude=node_modules', '--exclude=bin', '--exclude=obj', '-C', root, '-cf', '-', 'package.json', 'package-lock.json', '.editorconfig', 'src'], { maxBuffer: 100 * 1024 * 1024 });
     docker(['run', '--rm', '-i', '--user', '0:0', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${name},dst=/workspace`, '--mount', `type=volume,src=${name}-harness,dst=/harness`, '--entrypoint', 'sh', image, '-ec', 'tar --no-same-owner --no-same-permissions -xf - -C /workspace && cp -R /workspace/src/packages/sdlc/. /harness/ && chown -R 20003:20003 /workspace /harness'], { input: source });
     const args = ['run', '--rm', '--init', '--name', name, '--user', '20003:20003', '--cpus', '2', '--memory', '4g', '--pids-limit', '1024', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=2g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', '--env', 'TMPDIR=/tmp', '--env', 'LIGHTHOUSE_COMMAND_NPM_CACHE=1', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1', '--env', 'DOTNET_CLI_HOME=/tmp/dotnet', '--env', 'NUGET_PACKAGES=/tmp/nuget-packages', '--env', 'DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1', '--env', 'DOTNET_NOLOGO=1', '--env', 'DOTNET_CLI_TELEMETRY_OPTOUT=1', '--mount', `type=volume,src=${name},dst=/workspace`, '--mount', `type=volume,src=${name}-harness,dst=/harness,readonly`, '--mount', `type=bind,src=${output}/receipts,dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', image, '-ec'];
     const command = (id, command) => `node /harness/src/managed-command.mjs run /diagnostics ${id} -- sh -ec '${command}'`;
     const install = 'npm ci --ignore-scripts && du -sk "$NPM_CONFIG_CACHE" /tmp && df -k /tmp';
     const verify = 'npm run verify:dotnet && du -sk /tmp && df -k /tmp';
+    capture('preflightLog', [...args, 'cd src/dotnet && dotnet --version && aspire --version']);
     capture('localLog', [...args, command('local-install', install) + ' && ' + command('local-dotnet', verify)]);
     // A new container gives the independent verifier fresh private scratch.
     capture('independentLog', [...args, command('independent-dotnet', verify)]);

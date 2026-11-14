@@ -85,4 +85,6 @@ Managed receipts include available scratch bytes before execution and around cle
 
 Qualify a .NET consumer on a supported host using a cold install and unchanged verification under these limits. Retain the local receipts and separate independent results for the exact same candidate. Small synthetic demand regressions establish cleanup boundaries, not native capacity acceptance or installed rollout.
 
+From the source repository root, run `LIGHTHOUSE_TEST_SCRATCH_IMAGE=sha256:<image-id> LIGHTHOUSE_SCRATCH_EVIDENCE=<absolute-json-path> node --test src/tests/command-scratch.integration.test.mjs` for the real npm-to-.NET regression. The supplied image must satisfy the example's current SDK and Aspire CLI bundle prerequisites. The test keeps failure logs and completed receipts, uses cold private scratch for installation and .NET verification in sequence, and repeats .NET verification in a separate container. This standalone test does not establish a native workflow result or installed rollout.
+
 Adapter and mounted-skill updates require a new workflow source pin, without an engine-image rebuild. Rebuild only when changing tools, the engine binary or baked image policy. Follow the [workflow update procedure](README.md#install-or-update-workflows), validate on one consumer, then roll out to the remaining repositories between runs.
