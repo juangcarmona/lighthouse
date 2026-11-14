@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 848c06aac16f51383c8b2ff3b8cc2d1d11aae081
+          ref: afabd771b031e4756456ca8eff0609e925677c62
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
