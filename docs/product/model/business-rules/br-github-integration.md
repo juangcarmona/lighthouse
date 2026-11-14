@@ -3,7 +3,7 @@ id: BR-GITHUB-INTEGRATION
 type: business-rule
 title: GitHub is an adapter, not a second lifecycle
 status: draft
-applies-to: [BC-FOUNDATION, UC-TRIAGE-WORK-ITEM, UC-MANAGE-STACKED-CHANGE]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-INTEGRATION, TERM-LABEL-STATE, TERM-STACKED-CHANGE]
 ---
 

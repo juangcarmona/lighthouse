@@ -267,16 +267,21 @@ export async function prepareProductEvidence(root, destination, core, { baseline
   for (const node of nodes) {
     if (!/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) throw Error('ProductShape evidence has an unsafe artifact identity');
     const report = { inspect: core.inspectArtifact(baseline.graph, node.id), impact: core.analyzeImpact(baseline.graph, node.id), citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }) };
+    if (['domain-lifecycle', 'structured-behaviour'].includes(node.type)) {
+      const artifact = baseline.artifacts.find(item => item.frontmatter.id === node.id);
+      if (!artifact) throw Error('ProductShape lifecycle or behaviour definition is missing');
+      report.definition = { frontmatter: artifact.frontmatter, body: artifact.body };
+    }
     const content = JSON.stringify(report, null, 2) + '\n'; bytes += Buffer.byteLength(content);
     if (Buffer.byteLength(content) > 512 * 1024 || bytes > 16 * 1024 * 1024) throw Error('ProductShape evidence exceeds the byte bound');
     await writeFile(join(destination, `${node.id}.json`), content, { flag: 'wx' });
     index.push({ id: node.id, type: node.type, title: node.title, report: `${node.id}.json` });
   }
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed during evidence preparation');
-  const content = JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n';
+  const content = JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, serializationVersion: repository.config?.version ?? null, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n';
   if (Buffer.byteLength(content) > 512 * 1024) throw Error('ProductShape evidence index exceeds the byte bound');
   await writeFile(join(destination, 'index.json'), content, { flag: 'wx' });
-  return { artifacts: index.length, bytes };
+  return { artifacts: index.length, bytes, serializationVersion: repository.config?.version ?? null };
 }
 
 export function productReviewBinding(input) {

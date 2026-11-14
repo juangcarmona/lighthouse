@@ -3,7 +3,7 @@ id: BR-STAGE-GATES
 type: business-rule
 title: Lifecycle stages stop at their gates
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-SDLC]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-WORKFLOW-STAGE, TERM-GATE, TERM-GUARDRAIL]
 ---
 

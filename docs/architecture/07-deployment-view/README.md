@@ -50,7 +50,7 @@ When an adopter enables the optional memory provider, its host provisions a priv
 | `dist/public-site/` | GitHub Pages artifact | Published static site |
 | Adopter projections | Adopter repository and its CI | Consumer-owned environment |
 
-<!-- pdac:cite id="BR-PUBLIC-SITE-PROJECTION" digest="sha256:e300dc42b79accf48aafa2877f68d42d5ce77edd218057f29b61ff81f97b47b9" -->
+<!-- pdac:cite id="BR-PUBLIC-SITE-PROJECTION" digest="sha256:a27873214727fa78daad09440b1a3a9040a5914003c1fed97541db0084c5928e" -->
 
 ## Adopter execution host
 

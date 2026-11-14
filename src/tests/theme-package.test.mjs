@@ -94,10 +94,12 @@ test('the UI artifact contains the complete visual contract', () => {
       'src/guardrails.mjs',
       'src/init-plan.mjs',
       'src/lighthouse.mjs',
+      'src/product-definition.mjs',
       'src/profiles.mjs',
       'src/verify-dotnet.mjs',
       'upgrades/0.3.0.md',
-      'upgrades/0.4.0.md'
+      'upgrades/0.4.0.md',
+      'upgrades/pdac-v1alpha2.md'
     ]],
     ['@juangcarmona/lighthouse-ui', ['DESIGN.md', 'README.md', 'components.css', 'index.css', 'package.json', 'skills/ui-design/SKILL.md', 'tokens.css']]
   ];

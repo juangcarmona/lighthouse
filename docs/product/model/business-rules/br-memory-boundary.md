@@ -3,7 +3,7 @@ id: BR-MEMORY-BOUNDARY
 type: business-rule
 title: Memory has explicit scope and ownership
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-AGENT, UC-CONTINUE-AGENT-RUN]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-AGENT-MEMORY, TERM-AGENT-RUN, TERM-AUTHORITY-MAP, TERM-GUARDRAIL]
 ---
 

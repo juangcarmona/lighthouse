@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { initialReviewStatus, readGuardrailCatalog } from '../packages/cli/src/guardrails.mjs';
 import { composeProfiles, readProfileCatalog } from '../packages/cli/src/profiles.mjs';
 import { buildEvidenceIndex } from '../packages/sdlc/src/evidence.mjs';
+import { seedProductModel } from './fixtures/product-model.mjs';
 
 const tool = new URL('../packages/cli/src/lighthouse.mjs', import.meta.url).pathname;
 const sdlcPackage = JSON.parse(await readFile(new URL('../packages/sdlc/package.json', import.meta.url), 'utf8'));
@@ -27,7 +28,7 @@ const manifest = {
     }
   }
 };
-async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); return dir; }
+async function fixture() { const dir = await mkdtemp(join(tmpdir(), 'lighthouse-test-')); await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(manifest)); await seedProductModel(dir); return dir; }
 function run(dir, command, args = [], options = {}) { return spawnSync(process.execPath, [tool, command, ...args], { cwd: dir, encoding: 'utf8', ...options, env: { ...process.env, ...options.env } }); }
 
 async function initializationSnapshot(dir) {
@@ -182,7 +183,9 @@ test('legacy init JSON previews project the local plan and preserve target bytes
         if (existing) assert.deepEqual(report.manifest, selected);
         assert.deepEqual(report.repository, report.manifest.repository);
         assert.deepEqual(report.conflicts, []);
-        assert.deepEqual(report.adoptionGaps, existing ? [] : ['ProductShape', 'ArcShape'].map(authority => ({ authority, nextAction: 'review lighthouse authorities --dry-run, then run lighthouse authorities --apply' })));
+        assert.deepEqual(report.adoptionGaps.map(gap => gap.authority), existing ? ['ProductShape'] : ['ProductShape', 'ArcShape']);
+        assert.equal(report.adoptionGaps[0].requiredSerializationVersion, 'v1alpha2');
+        assert.match(report.adoptionGaps[0].nextAction, /serialization-version v1alpha2/);
         assert.equal(report.operations.some(operation => operation.path === 'lighthouse.json'), !existing);
         for (const path of ['src/', 'infra/.gitkeep', 'LIGHTHOUSE.md', '.lighthouse/upgrade.json', '.husky/pre-push']) {
           assert.ok(report.operations.some(operation => operation.path === path && operation.action === 'create'), path);
@@ -203,7 +206,7 @@ test('legacy init JSON previews project the local plan and preserve target bytes
           const report = JSON.parse(result.stdout);
           assert.deepEqual(report.manifest, selected);
           assert.equal(report.status, 'ready');
-          assert.deepEqual(report.adoptionGaps.map(gap => gap.authority), Object.entries(integrations).filter(([, version]) => version === null).map(([key]) => key === 'productShape' ? 'ProductShape' : 'ArcShape'));
+          assert.deepEqual(report.adoptionGaps.map(gap => gap.authority), ['ProductShape', ...(integrations.arcShape === null ? ['ArcShape'] : [])]);
           assertTextInitialization(run(dir, 'init', ['--dry-run'], { env }), report, 0);
           assert.deepEqual(await initializationSnapshot(dir), before);
         }
@@ -355,6 +358,8 @@ test('greenfield init creates the repository boundaries and a default manifest',
     assert.match(baseline, /Repository roots/);
     assert.match(baseline, /node_modules\/@juangcarmona\/lighthouse-sdlc\/README\.md/);
     assert.match(baseline, /workflow source pin and current branch/);
+    assert.equal(run(dir, 'verify').status, 1);
+    await seedProductModel(dir);
     assert.equal(spawnSync(process.execPath, [tool, 'verify'], { cwd: dir }).status, 0);
     assert.match(await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8'), /npx --no-install lighthouse verify/);
     const aliases = JSON.parse(await readFile(join(dir, '.lighthouse/commands.json'), 'utf8'));
@@ -407,6 +412,8 @@ test('semantic init previews without a reference and applies only after explicit
     assert.deepEqual(manifest.application, { shape: 'frontend', stacks: ['react'] });
     assert.deepEqual(manifest.profiles, ['visual-theme', 'react-web-platform']);
     await access(join(dir, '.agents/skills/lighthouse-init/SKILL.md'));
+    assert.equal(run(dir, 'verify').status, 1);
+    await seedProductModel(dir);
     assert.equal(run(dir, 'verify').status, 0);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
@@ -480,7 +487,7 @@ test('authority initialization JSON previews report real providers and preserve 
       assert.equal(report.status, 'ready');
       assert.equal(report.apply, 'lighthouse authorities --apply');
       assert.deepEqual(report.authorities.map(({ label, provider, version, command, repair }) => ({ label, provider, version, command, repair })), [
-        { label: 'ProductShape', provider: '@prodshape/cli', version: '0.26.0', command: 'prodshape init --full --sdd none --gitignore --dry-run', repair: 'prodshape init --full --sdd none --gitignore' },
+        { label: 'ProductShape', provider: '@prodshape/cli', version: '0.26.1', command: 'prodshape --serialization-version v1alpha2 init --full --sdd none --gitignore --dry-run', repair: 'prodshape --serialization-version v1alpha2 init --full --sdd none --gitignore' },
         { label: 'ArcShape', provider: '@arcshape/cli', version: '0.4.0', command: 'arcshape init --no-agents --dry-run', repair: 'arcshape init --no-agents --yes' },
       ]);
       for (const authority of report.authorities) {
@@ -537,7 +544,7 @@ test('authority JSON previews preserve unsuccessful, conflicting and missing pro
       assert.equal(report.authorities[1].preflight.status, 0);
       assert.equal(report.authorities[1].preflight.output, '["init","--no-agents","--dry-run"]\nprovider diagnostic\n');
       assert.deepEqual(report.authorities.map(authority => authority.version), ['9.8.7', '9.8.7']);
-      assert.match(preview.stderr, /ProductShape preflight failed; repair with: prodshape init --full --sdd none --gitignore/);
+      assert.match(preview.stderr, /ProductShape preflight failed; repair with: prodshape --serialization-version v1alpha2 init --full --sdd none --gitignore/);
       const text = execute(['--dry-run']);
       assert.equal(text.status, 1);
       assert.match(text.stdout, /ProductShape preflight:/);
@@ -604,7 +611,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     await cp(join(process.cwd(), 'src/examples/opencode-engine/job-start.sh'), join(dir, 'src/examples/opencode-engine/job-start.sh'));
     await mkdir(join(dir, 'src/packages/sdlc'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/sdlc/host-contract.md'), join(dir, 'src/packages/sdlc/host-contract.md'));
-    for (const file of ['handoffs.md', 'completion.md', 'request-triage.md', 'epic-delivery.md', 'telemetry.md', 'issue-control.md']) {
+    for (const file of ['handoffs.md', 'completion.md', 'request-triage.md', 'epic-delivery.md', 'telemetry.md', 'issue-control.md', 'product-verification.md']) {
       await cp(join(process.cwd(), 'src/packages/sdlc', file), join(dir, 'src/packages/sdlc', file));
     }
     await cp(join(process.cwd(), 'src/packages/sdlc/execution-environments.md'), join(dir, 'src/packages/sdlc/execution-environments.md'));
@@ -622,6 +629,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
       await mkdir(join(dir, 'src/packages', pkg, 'src'), { recursive: true });
       await cp(join(process.cwd(), 'src/packages', pkg, 'src/github-profile.mjs'), join(dir, 'src/packages', pkg, 'src/github-profile.mjs'));
     }
+    await cp(join(process.cwd(), 'src/packages/cli/upgrades'), join(dir, 'src/packages/cli/upgrades'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/cli/README.md'), join(dir, 'src/packages/cli/README.md'));
     await mkdir(join(dir, 'src/packages/cli/assets/profiles'), { recursive: true });
     await cp(join(process.cwd(), 'src/packages/cli/assets/profiles/identity.md'), join(dir, 'src/packages/cli/assets/profiles/identity.md'));
@@ -643,7 +651,7 @@ test('existing-authority adoption validates providers, records only Lighthouse f
     assert.deepEqual(manifestBeforeApply.integrations, { productShape: null, arcShape: null });
     assert.equal(run(dir, 'authorities', ['--adopt-existing', '--apply']).status, 0);
     const manifest = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
-    assert.deepEqual(manifest.integrations, { productShape: '0.26.0', arcShape: '0.4.0' });
+    assert.deepEqual(manifest.integrations, { productShape: '0.26.1', arcShape: '0.4.0' });
     for (const [path, content] of before) assert.equal(await readFile(join(dir, path), 'utf8'), content);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, `${verified.stdout}\n${verified.stderr}`);
@@ -1208,7 +1216,7 @@ test('generated guidance follows adopted authorities and scopes the documentatio
         const after = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
         assert.deepEqual(after.integrations, integrations);
         assert.equal(after.repository.publicSite.enabled, enabled);
-        await assert.rejects(access(join(dir, '.product')));
+        assert.equal(await readFile(join(dir, '.product/config.yaml'), 'utf8'), 'version: v1alpha2\nproduct-root: docs/product\n');
       } finally { await rm(dir, { recursive: true, force: true }); }
     }
   }

@@ -3,7 +3,7 @@ id: BR-AUTHORITY-BOUNDARIES
 type: business-rule
 title: Each authority keeps its boundary
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-SDLC, UC-IMPLEMENT-CHANGE]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-AUTHORITY-MAP, TERM-HARNESS, TERM-INTEGRATION]
 ---
 

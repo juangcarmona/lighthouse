@@ -76,10 +76,6 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   signal?.throwIfAborted();
   try { await lstat(join(source, '.product/config.yaml')); }
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-  try {
-    const manifest = JSON.parse(await readFile(join(source, 'lighthouse.json'), 'utf8'));
-    if (manifest.integrations?.productShape === null) return null;
-  } catch (error) { if (error.code !== 'ENOENT') throw error; }
   if (!core) {
     const prefix = join(runDir, 'product-provider'), home = join(prefix, 'home');
     await mkdir(home, { recursive: true });
@@ -103,10 +99,11 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   const result = await prepareProductEvidence(source, reports, core, { baselineDigest });
   signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
-  const evidence = { provider: '@prodshape/core', version: core.version, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
+  const evidence = { provider: '@prodshape/core', version: core.version, serializationVersion: result.serializationVersion, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
   const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
   context.productEvidence = evidence;
   context.contract.rules += ' The host prepared current ProductShape inspect, impact and citation reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  context.contract.rules += ' For refinement, proposals, implementation and review, follow /harness/product-verification.md. Lifecycle and structured-behaviour reports include provider-parsed definitions; derive relevant transition, forbidden/terminal and invariant checks, trace behaviours to actual tests and results, and retain source/model revisions and current citations. Report justified non-applicability and model gaps. Model coverage, test existence, execution and acceptance are separate facts.';
   signal?.throwIfAborted();
   await writeFile(path, JSON.stringify(context));
   return evidence;

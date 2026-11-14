@@ -22,11 +22,13 @@
   "dependencies": {
     "@arcshape/cli": "0.4.0",
     "@juangcarmona/lighthouse-ui": "0.2.1",
-    "@prodshape/cli": "0.26.0",
+    "@prodshape/cli": "0.26.1",
+    "@prodshape/core": "0.25.0",
     "@juangcarmona/lighthouse-sdlc": "0.22.11"
   },
   "files": [
     "src/lighthouse.mjs",
+    "src/product-definition.mjs",
     "src/aliases.mjs",
     "src/init-plan.mjs",
     "src/guardrails.mjs",

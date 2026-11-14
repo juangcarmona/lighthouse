@@ -152,6 +152,8 @@ For immediate post-merge review, a trusted pinned CI job runs after successful v
 
 Automatic continuations select the current default-branch workflow revision while retaining their original router identity. An exact worker revision mismatch fails admission and records the rejected execution. Scoped maintenance can retry a final review once after a documentation-only default-branch advance (excluding product definitions), provided native jobs confirm no agent or publication ran and the accepted head, owner intent, reviews, checks and policy are unchanged. Other changes or uncertain effects require a fresh decision; direct owner workflow references are preserved.
 
+For lifecycle- and structured-behaviour-derived scenarios, test traceability, external evidence verification and stale citations, follow [product-derived verification](product-verification.md). Model coverage, test existence, actual execution and acceptance remain separate evidence.
+
 ## License
 
 Lighthouse-authored material in this package is licensed under [Apache-2.0](LICENSE); retain [NOTICE](NOTICE) and the applicable license and attribution when redistributing it. Copied or adapted guidance, workflows, scripts, styles and templates keep those terms. This does not assign a license to unrelated consumer code. External dependencies and integrations retain their own licenses.

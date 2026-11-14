@@ -5,6 +5,8 @@ description: Use for admitted refinement, after triage or a verified direct engi
 
 # Refine
 
+For product context, scenario selection, tests or evidence review, read and apply [product-derived verification](../../product-verification.md). Trace applicable lifecycle and structured-behaviour meaning to actual tests and results; record justified non-applicability and unresolved model gaps.
+
 Turn the admitted work item into a problem that can be designed. Direct engineering authorization permits refinement without a triage predecessor; it does not approve implementation or integration.
 
 For human-facing problem statements or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md) before returning the result. Record the pinned helper or fallback review used.

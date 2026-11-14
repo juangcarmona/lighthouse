@@ -18,7 +18,7 @@ The product model describes a broader application initializer that selects an ap
 
 The product-dependent statements in this section are grounded in the current ProductShape model. The model validates with zero errors and warnings, but its artifacts remain marked `draft` and therefore describe intent rather than an accepted product baseline.
 
-<!-- pdac:cite id="UC-INITIALIZE-PROJECT" digest="sha256:10a0edc89444b645253a801fb3bf35dc8c3bcf858396e50de2057091c4d8f7fa" -->
+<!-- pdac:cite id="UC-INITIALIZE-PROJECT" digest="sha256:0c792cb5a42271618a3c5011c210b037f9d5072b11de79e7ebbfd82407f90d37" -->
 
 ## Architecture viewpoints
 

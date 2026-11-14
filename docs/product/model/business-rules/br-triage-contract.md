@@ -3,7 +3,7 @@ id: BR-TRIAGE-CONTRACT
 type: business-rule
 title: Requester intake produces an explicit triage result
 status: draft
-applies-to: [BC-FOUNDATION, UC-TRIAGE-WORK-ITEM, UC-RUN-SDLC]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-TRIAGE, TERM-WORK-ITEM-SIZE, TERM-BLAST-RADIUS, TERM-LABEL-STATE]
 ---
 

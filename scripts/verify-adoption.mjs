@@ -10,6 +10,8 @@ const target = join(parent, 'Workshop');
 try {
   for (const [command, args, cwd] of [
     [process.execPath, [resolve(root, 'src/packages/cli/internal/create-dotnet.mjs'), target, '--name', 'Workshop'], root],
+    ['npm', ['install', '--ignore-scripts'], target],
+    [process.execPath, ['scripts/lighthouse.mjs', 'authorities', '--apply'], target],
     ['dotnet', ['restore', 'Workshop.slnx'], target],
     ['npm', ['run', 'verify'], target]
   ]) {

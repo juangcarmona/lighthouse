@@ -5,6 +5,8 @@ description: Use when a ready work item needs a solution proposal, OpenSpec chan
 
 # Propose
 
+For product context, scenario selection, tests or evidence review, read and apply [product-derived verification](../../product-verification.md). Trace applicable lifecycle and structured-behaviour meaning to actual tests and results; record justified non-applicability and unresolved model gaps.
+
 Describe the smallest implementable solution for a Ready item.
 
 For proposals, change overviews, PR descriptions or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used. Visual proposals also use its scoped visual review.
