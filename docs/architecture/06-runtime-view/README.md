@@ -49,7 +49,7 @@ This map shows the supervised delivery path, not a mandatory sequence of labels.
 
 An in-scope product gap can suspend delivery at a checkpoint and enter [Product Change preparation](product-change.md). After explicit product approval and provider apply, the host rechecks whether the original stage may resume. An idea-only request does not acquire implementation authority through that product decision.
 
-<!-- pdac:cite id="BR-PRODUCT-CHANGE-HANDOFF" digest="sha256:d7ddebbfaf4767d79f645d510806e446b7f81cca03e5f8650ea0fff072b225d1" -->
+<!-- pdac:cite id="BR-PRODUCT-CHANGE-HANDOFF" digest="sha256:78a85b31789efb8160bb10d404f53aff4dca3a11f326088960904631ceddda78" -->
 
 ## One worker execution
 
@@ -71,6 +71,8 @@ flowchart TD
 
 The router and worker use separate concurrency groups; workers serialize by issue. Preparation supplies the issue snapshot, source revision, tool scope and runtime limits. The agent runs in a temporary container and cannot grant itself publication or merge authority. Publication rechecks current intent, owner answers, source and reservation before writing. Cleanup attempts to release the reservation after recording the outcome. A cleanup failure is reported; maintenance rechecks ownership before releasing an abandoned reservation.
 
+On a shared host, the optional [job-start hook](../../../src/examples/opencode-engine/job-start.sh) holds a separate operator lock across gh-aw gateway startup, execution and teardown. The [shared workflow configuration](../../../src/packages/sdlc/workflows/shared/lighthouse-opencode.md) gives the whole job a queue budget while retaining the bounded agent-execution step. The hook reports waiting separately, stops at its configured deadline and releases the gateway slot when its Actions worker exits; engine admission and resource limits remain independently enforced.
+
 The host preserves authenticated source-link Git metadata separately from the executable filesystem. Checked-tree identity combines the regular candidate with those unchanged opaque entries; command-evidence readers reconstruct them from the admitted commit before accepting publication. The [source-link tree implementation](../../../src/packages/sdlc/src/source-link-tree.mjs) enforces this boundary.
 
 Receipts distinguish requested, admitted, waiting, completed and failed executions. An Actions success can contain a blocked assessment. Duplicate events reuse authenticated requests or candidates; an unconfirmed dispatch or uncertain publication needs reconciliation before a retry. Human-working stops new admission and requests termination of active work. See [handoffs and recovery](../../../src/packages/sdlc/handoffs.md).
@@ -79,7 +81,7 @@ Receipts distinguish requested, admitted, waiting, completed and failed executio
 
 The optional [issue-control entry](../../../src/packages/sdlc/issue-control.md) reuses the router's issue concurrency and native dispatch/worker publication boundary. The caller retains its prepared intent and atomic journal; the source retains the request, stable-key/payload indexes and authenticated outcome artifacts. Source reconciliation precedes fresh admission, so a lost response or deleted result comment cannot authorize an automatic resend. A typed stage request sets its continuation flags explicitly; a typed ordinary comment is excluded from legacy command and reply parsers. A continuation binds its original question and grant through worker input and validated result. [Source admission](../../../src/packages/sdlc/src/issue-control-actions.mjs), [native binding](../../../src/packages/sdlc/src/issue-control-native.mjs) and [execution observation](../../../src/packages/sdlc/src/issue-control-execution.mjs) implement this interaction. Actual-user native and package qualification remain pending for this implementation.
 
-<!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:f57d0272ff0c5f7ce8bfc534d6d9adba6c294d9c00b8bc109d8243ccc90b2b33" -->
+<!-- pdac:cite id="BR-ENTRY-AUTHORITY" digest="sha256:23b079974fa943d0081d496a8ac59ce0502c4e5ff4cd5b4720d78d033eb0e93e" -->
 
 ## Evidence and scope
 
@@ -151,7 +153,7 @@ sequenceDiagram
 
 Existing-authority adoption leaves provider-owned files unchanged. The same boundary applies to capability adoption: the package owns the catalog and adapter contract, the CLI owns local declaration and evidence, and the provider remains the authority for remote state.
 
-<!-- pdac:cite id="UC-INITIALIZE-AUTHORITIES" digest="sha256:7243c8af149a2199dd2e9e9f9984a6b7a72de8d98b24917af07fa40861058a51" -->
+<!-- pdac:cite id="UC-INITIALIZE-AUTHORITIES" digest="sha256:1b0190718f5ff2d36fda08cbdd959337cee99604140b89ee220093f68b7a7fdb" -->
 
 ## Verify package and site contracts
 

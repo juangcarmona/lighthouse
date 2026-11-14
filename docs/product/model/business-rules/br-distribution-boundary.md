@@ -3,7 +3,7 @@ id: BR-DISTRIBUTION-BOUNDARY
 type: business-rule
 title: Keep the adoption release reproducible
 status: draft
-applies-to: [BC-FOUNDATION, UC-ADOPT-CONSUMER]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-PACKAGE-ARTIFACT, TERM-ADOPTION-RELEASE, TERM-ADOPTION]
 ---
 

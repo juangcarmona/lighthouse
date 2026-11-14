@@ -86,10 +86,10 @@ try {
     await mkdir(join(stage, 'model'), { recursive: true });
     await mkdir(join(stage, 'architecture'), { recursive: true });
     try {
-      await execFile(npx, ['prodshape', 'graph', '--format', 'html'], { cwd: root });
-      await cp(join(root, '.product/generated/snapshot.html'), join(stage, 'model/index.html'));
+      await execFile(npx, ['prodshape', 'graph', '--format', 'html', '--product-name', 'Lighthouse'], { cwd: root });
+      await cp(join(root, '.product/generated/explorer.html'), join(stage, 'model/index.html'));
     } catch (error) {
-      throw new Error(`ProductShape snapshot generation failed before public-site publication. ${authorityHint('ProductShape')}\n${error.stderr ?? error.message}`);
+      throw new Error(`ProductShape Explorer generation failed before public-site publication. ${authorityHint('ProductShape')}\n${error.stderr ?? error.message}`);
     }
 
     const architectureArgs = [
@@ -116,7 +116,7 @@ try {
 
   await rm(output, { recursive: true, force: true });
   await rename(stage, output);
-  console.log(`Built Lighthouse public site at ${output}${publicSiteEnabled ? ', including ProductShape and ArcShape snapshots.' : '.'}`);
+  console.log(`Built Lighthouse public site at ${output}${publicSiteEnabled ? ', including the Product Explorer and ArcShape snapshot.' : '.'}`);
 } catch (error) {
   await rm(stage, { recursive: true, force: true });
   throw error;

@@ -77,6 +77,17 @@ try {
   }
   await access(join(temp, guide));
 
+  if (process.env.LIGHTHOUSE_AUTHORITIES_APPLY === 'true') {
+    run(bin, ['authorities', '--apply'], temp);
+    for (const path of ['docs/product/README.md', 'docs/architecture/README.md']) {
+      await access(join(temp, path));
+    }
+    const adopted = JSON.parse(await readFile(join(temp, 'lighthouse.json'), 'utf8'));
+    if (adopted.integrations.productShape !== '0.26.1' || adopted.integrations.arcShape !== '0.4.0') {
+      console.error('Expected the authority versions to be recorded after application.');
+      process.exit(1);
+    }
+  }
   const visualFixture = join(temp, '.fixture/visual-profile');
   await mkdir(visualFixture, { recursive: true });
   const visualInit = spawnSync(bin, ['init', '--name', 'Visual', '--profile', 'visual-theme'], { cwd: visualFixture, encoding: 'utf8' });
@@ -85,6 +96,7 @@ try {
     process.stderr.write(visualInit.stderr);
     process.exit(visualInit.status || 1);
   }
+  run(join(temp, 'node_modules/.bin/prodshape'), ['--serialization-version', 'v1alpha2', 'init', '--full', '--sdd', 'none', '--gitignore'], visualFixture);
   const visualVerify = spawnSync(bin, ['verify', '--format', 'json'], { cwd: visualFixture, encoding: 'utf8' });
   if (visualVerify.status !== 0 || !JSON.parse(visualVerify.stdout).results.some((item) => item.id === 'visual.design-contract' && item.status === 'passed')) {
     process.stderr.write(visualVerify.stdout);
@@ -101,6 +113,9 @@ try {
     console.error('Expected the packed .NET profile creator to seed guidance and the verifier.');
     process.exit(dotnetCreate.status || 1);
   }
+  run(process.execPath, ['scripts/lighthouse.mjs', 'authorities', '--apply'], dotnetFixture);
+  const dotnetVerify = JSON.parse(run(process.execPath, ['scripts/lighthouse.mjs', 'verify', '--format', 'json'], dotnetFixture));
+  if (dotnetVerify.results.find(item => item.id === 'foundation.pdac')?.status !== 'passed') throw new Error('The packed .NET starter must validate its initialized PDaC v1alpha2 authority.');
 
   const labelsPath = join(temp, '.fixture/github-labels.json');
   const callsPath = join(temp, '.fixture/github-calls.json');
@@ -250,19 +265,7 @@ if (args[1] === '--method' && args[2] === 'POST') {
     console.error('Expected a future plan to expose provider drift from adoption evidence.');
     process.exit(drift.status || 1);
   }
-  if (process.env.LIGHTHOUSE_AUTHORITIES_APPLY === 'true') {
-    run(bin, ['authorities', '--apply'], temp);
-    for (const path of ['docs/product/README.md', 'docs/architecture/README.md']) {
-      await access(join(temp, path));
-    }
-    const adopted = JSON.parse(await readFile(join(temp, 'lighthouse.json'), 'utf8'));
-    if (adopted.integrations.productShape !== '0.23.0' || adopted.integrations.arcShape !== '0.4.0') {
-      console.error('Expected the authority versions to be recorded after application.');
-      process.exit(1);
-    }
-  } else if (process.env.LIGHTHOUSE_AUTHORITIES_DRY_RUN === 'true') {
-    run(bin, ['authorities', '--dry-run'], temp);
-  }
+  if (process.env.LIGHTHOUSE_AUTHORITIES_DRY_RUN === 'true') run(bin, ['authorities', '--dry-run'], temp);
   run(bin, ['verify'], temp);
 
   await writeFile(join(temp, 'LIGHTHOUSE.md'), 'drift');
@@ -272,6 +275,9 @@ if (args[1] === '--method' && args[2] === 'POST') {
     process.exit(1);
   }
 
+  const pdac = consumerRun(process.execPath, ['--test', join(root, 'src/tests/product-definition.test.mjs')], root, { LIGHTHOUSE_TEST_PACKED_CLI: bin, LIGHTHOUSE_TEST_PACKED_SDLC: join(temp, 'node_modules/@juangcarmona/lighthouse-sdlc'), LIGHTHOUSE_TEST_PACKED_PROVIDER: join(temp, 'node_modules/.bin/prodshape') });
+  if (pdac.status !== 0) throw new Error(pdac.stdout + pdac.stderr);
+  console.log(pdac.stdout);
   console.log('CLI package installs and verifies against the adopter checkout.');
 } finally {
   await rm(temp, { recursive: true, force: true });

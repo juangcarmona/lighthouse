@@ -6,7 +6,7 @@ The root Apache-2.0 license covers Lighthouse-authored material. The following p
 | --- | --- |
 | `.agents/skills/arc-architecture/references/arc42/` | CC BY-SA 4.0; Dr. Gernot Starke. The [source register](.agents/skills/arc-architecture/references/arc42/SOURCES.md) records the pinned source, individual pages and attribution. Its [license notice](.agents/skills/arc-architecture/references/arc42/ARC42-LICENSE) remains in place. |
 | ArcShape-managed `.agents/skills/arc-*` outside that reference subtree | Apache-2.0, as declared by `@arcshape/cli@0.4.0`; ArcShape retains managed-file ownership. |
-| ProductShape-managed `.product/` templates, `.agents/commands/product/`, product skills and `openspec/schemas/product-*` | Apache-2.0, as declared by the installed provider and its `@prodshape/cli@0.22.0` installation record. The workspace's CLI dependency is separately pinned to `0.23.0`, also Apache-2.0. ProductShape retains managed-file ownership. |
+| ProductShape-managed `.product/` templates, `.agents/commands/product/`, product skills and `openspec/schemas/product-*` | Apache-2.0, as declared by the installed provider and its `@prodshape/cli@0.26.0` installation record. The workspace and packaged CLI dependencies are also pinned to `0.26.0`. ProductShape retains managed-file ownership. |
 
 The arc42 reference files are included in the source repository, not the CLI, SDLC or UI npm tarballs. Their share-alike terms apply to that material and its adaptations. Remote illustrations referenced by those files are not bundled.
 

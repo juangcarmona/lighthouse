@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from '@playwright/test';
@@ -7,7 +8,7 @@ const output = resolve(process.env.PUBLIC_SITE_SCREENSHOT_DIR || 'test-results/p
 const portals = [
   { name: 'landing', path: '/' },
   { name: 'flow-gallery', path: '/#diagrams', gallery: true },
-  { name: 'product-model', path: '/model/index.html' },
+  { name: 'product-model', path: '/model/index.html', explorer: true },
   { name: 'architecture', path: '/architecture/index.html' },
   { name: 'runtime', path: '/architecture/index.html#/section/06', interactive: true },
   { name: 'product-flow', path: '/architecture/index.html#/section/06/product-definition-as-code', interactive: true },
@@ -25,6 +26,12 @@ try {
     const context = await browser.newContext({ viewport });
     for (const portal of portals) {
       const page = await context.newPage();
+      const explorerErrors = [];
+      if (portal.explorer) {
+        page.on('pageerror', error => explorerErrors.push(error.message));
+        page.on('requestfailed', request => explorerErrors.push(`${request.url()}: ${request.failure()?.errorText}`));
+        page.on('response', response => { if (response.status() >= 400) explorerErrors.push(`${response.status()}: ${response.url()}`); });
+      }
       const response = await page.goto(new URL(portal.path, baseUrl).toString(), { waitUntil: 'networkidle' });
       if (!response || !response.ok()) {
         throw new Error(`Portal returned ${response?.status() ?? 'no response'}: ${portal.path}`);
@@ -44,6 +51,15 @@ try {
         path: resolve(output, `${portal.name}-${viewport.name}.png`),
         fullPage: !portal.gallery,
       });
+      if (portal.explorer) {
+        assert.match(await page.title(), /(?:^| · )Lighthouse’s Product Explorer$/u);
+        await page.goto(new URL('#/artifacts', page.url()).toString(), { waitUntil: 'networkidle' });
+        const group = page.locator('#artifact-list button[data-group]').first();
+        if (await group.getAttribute('aria-expanded') === 'false') await group.click();
+        await page.locator('#artifact-list a').first().click();
+        await page.locator('#detail h3').first().waitFor();
+        assert.deepEqual(explorerErrors, [], `Product Explorer failed at ${viewport.name}`);
+      }
       await page.close();
     }
     await context.close();

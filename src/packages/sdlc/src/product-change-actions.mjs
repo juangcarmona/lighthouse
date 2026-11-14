@@ -98,7 +98,7 @@ export async function productModelDigestFromApi(api, revision, overrides = []) {
   }
   if (!safeRelative(modelRoot) || modelRoot.split('/').some(part => part.startsWith('.'))) throw Error('ProductShape product-root is unsafe');
   const entries = tree.tree.filter(item => item.path.startsWith(`${modelRoot}/`) && item.type === 'blob').sort((a, b) => a.path.localeCompare(b.path));
-  if (!entries.length || entries.length > 512) throw Error('Accepted product model file list is empty or exceeds its bound');
+  if (!entries.length) throw Error('Accepted product model file list is empty');
   const changed = new Map(overrides.filter(file => file.path.startsWith(`${modelRoot}/`)).map(file => [file.path, file.deleted ? null : Buffer.from(file.content, 'utf8')]));
   const rows = [];
   let bytes = 0;
@@ -119,7 +119,6 @@ export async function productModelDigestFromApi(api, revision, overrides = []) {
     if (content.length > 65536 || bytes > 8 * 1024 * 1024) throw Error('Applied product model exceeds its aggregate bound');
     rows.push(`${path.slice(`${modelRoot}/`.length)}\0${createHash('sha256').update(content).digest('hex')}\n`);
   }
-  if (rows.length > 512) throw Error('Applied product model file list exceeds its bound');
   return { digest: createHash('sha256').update(rows.sort((a, b) => a.split('\0')[0].localeCompare(b.split('\0')[0])).join('')).digest('hex'), modelRoot };
 }
 

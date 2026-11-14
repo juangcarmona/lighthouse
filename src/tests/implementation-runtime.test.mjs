@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, symlink, rm, chmod, lstat, truncate, stat, readdir } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, symlink, rm, chmod, lstat, truncate, stat, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -66,6 +66,11 @@ test('candidate Git metadata passes the baseline branch guard without copying re
     assert.equal(execFileSync('git', ['-C', workspace, 'remote'], { encoding: 'utf8' }).trim(), '');
     assert.equal(execFileSync('git', ['-C', workspace, 'rev-list', '--all', '--count'], { encoding: 'utf8' }).trim(), '1');
     await assert.rejects(lstat(join(workspace, '.git/hooks')));
+    const trace = join(root, 'git-trace.jsonl');
+    execFileSync('git', ['-C', workspace, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '--allow-empty', '-qm', 'Next validation snapshot'], {
+      env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_COUNT: '0', GIT_TRACE2_EVENT: trace },
+    });
+    assert.doesNotMatch(await readFile(trace, 'utf8'), /"event":"child_start"[^\n]*"(?:maintenance|gc)"/, 'disposable validation Git must not spawn maintenance while the host traverses its metadata');
   } finally { process.env.PATH = previousPath; await rm(root, { recursive: true, force: true }); }
 });
 
@@ -139,11 +144,12 @@ test('container checks install workspace bins and execute temporary tools', { sk
     const checks = [
       ['npm', 'ci', '--ignore-scripts'],
       ['./node_modules/.bin/workspace-tool'],
+      ['node', '-e', 'const {statfsSync}=require("node:fs"); const {strict:assert}=require("node:assert"); const tmp=statfsSync("/tmp"); assert.ok(tmp.blocks*tmp.bsize>=2*1024**3);'],
       ['node', '-e', 'const {execFileSync:git}=require("node:child_process"); const assert=require("node:assert/strict"); assert.equal(git("git",["branch","--show-current"],{encoding:"utf8"}).trim(),"fix/53-validation"); assert.equal(git("git",["rev-list","--all","--count"],{encoding:"utf8"}).trim(),"1"); assert.equal(git("git",["remote","get-url","origin"],{encoding:"utf8"}).trim(),"https://github.com/owner/repo.git"); assert.equal(require("node:fs").existsSync(".git/hooks"),false);'],
       ['node', '-e', 'require("node:fs").writeFileSync("/tmp/tool", "#!/bin/sh\\nexit 0\\n", {mode:0o755}); require("node:child_process").execFileSync("/tmp/tool");'],
     ];
     const receipt = await runImplementationChecks({ config, request: { repository: 'owner/repo', issue: 53, runId: 'workspace-test', sourceRevision: 'test', implementation: { policy: { checks } } }, changes: [], workspace, output: join(root, 'output'), name: `workspace-test-${process.pid}`, redact: text => text, cancelled: () => false });
-    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0], JSON.stringify(receipt.checks.map(check => check.reason)));
+    assert.deepEqual(receipt.checks.map(check => check.exitCode), [0, 0, 0, 0, 0], JSON.stringify(receipt.checks.map(check => check.reason)));
   } finally {
     execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '0:0', '--mount', `type=bind,src=${root},dst=/cleanup`, '--entrypoint', 'chown', image, '-R', `${process.getuid()}:${process.getgid()}`, '/cleanup']);
     await rm(root, { recursive: true, force: true });

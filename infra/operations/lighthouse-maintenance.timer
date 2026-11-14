@@ -1,0 +1,10 @@
+[Unit]
+Description=Check Lighthouse maintenance freshness every fifteen minutes
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=15m
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

@@ -3,7 +3,7 @@ id: BR-BOUNDED-WORKFLOW
 type: business-rule
 title: Each workflow stage has a bounded contract
 status: draft
-applies-to: [BC-FOUNDATION, UC-IMPLEMENT-CHANGE]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-CHANGE-FLOW, TERM-WORKFLOW-STAGE, TERM-GUARDRAIL]
 ---
 

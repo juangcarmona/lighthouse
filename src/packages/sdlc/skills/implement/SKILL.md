@@ -5,7 +5,11 @@ description: Use when an authorized issue needs planning, implementation, verifi
 
 # Implement
 
+For product context, scenario selection, tests or evidence review, read and apply [product-derived verification](../../product-verification.md). Trace applicable lifecycle and structured-behaviour meaning to actual tests and results; record justified non-applicability and unresolved model gaps.
+
 Deliver the issue in one branch, including its OpenSpec plan.
+
+For human-facing explanations, PR summaries, agent-facing instructions or UI/visual changes, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used; visual acceptance follows the accepted UI contract.
 
 ## Steps
 
@@ -13,7 +17,7 @@ Deliver the issue in one branch, including its OpenSpec plan.
 2. Read `/harness/skills/propose/SKILL.md` for planning and use the supplied OpenSpec instructions to create or update the proposal, specifications, design and tasks before changing production code. This is the planning part of implementation; return one final implementation envelope. Keep tasks coarse and dependency ordered. Reuse existing planning work where it still applies.
 3. Implement the tasks, with tests that exercise the changed behavior. Follow the repository's architecture and allowed write scope.
 4. Run dependency installation, builds and tests through the workspace command slot below. Capture their completed exit status and evidence before marking tasks done.
-5. Write a short PR summary: what changed, how it was checked, and any blocker. Put logs, screenshots and the retrospective in the evidence output. Apply Humanizer when available; otherwise remove repetition and unexplained process jargon yourself.
+5. Write a short PR summary: what changed, how it was checked, and any blocker. Put logs, screenshots and the retrospective in the evidence output. Complete the audience policy's human-writing reviews and evidence comparison, using its explicit fallback when the pinned helper is unavailable.
 6. Return the implementation stage result and envelope. Keep missing evidence, failed checks and required decisions explicit. The host publishes the branch for review.
 
 ## Completion

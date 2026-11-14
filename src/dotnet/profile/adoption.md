@@ -7,6 +7,9 @@ From a Lighthouse checkout:
 ```sh
 npm run create:dotnet -- /tmp/Workshop --name Workshop
 cd /tmp/Workshop
+npm install --ignore-scripts
+node scripts/lighthouse.mjs authorities --dry-run
+node scripts/lighthouse.mjs authorities --apply
 dotnet restore Workshop.slnx
 npm run verify
 ```

@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse-sdlc",
-  "version": "0.22.5",
+  "version": "0.22.11",
   "type": "module",
   "description": "Provider-neutral SDLC skills, commands and route contracts for Lighthouse adopters",
   "repository": {
@@ -30,6 +30,7 @@
     "github-actions.md",
     "handoffs.md",
     "request-triage.md",
+    "product-verification.md",
     "epic-delivery.md",
     "templates",
     "host-contract.md",

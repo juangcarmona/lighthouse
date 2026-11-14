@@ -4,7 +4,7 @@
 
 ## Context
 
-See proposal.md for motivation. The source map already represents the admitted candidate. Preparation checks only active metadata, while finalization also assumes an active plan. Provider-owned archived metadata must not be rewritten or treated as a completion receipt.
+See proposal.md for motivation. Preparation and finalization already validate and preserve the archive; the generated independent command still assumes an active plan. Provider-owned archived metadata must not be rewritten or treated as a completion receipt.
 
 <!-- pdac:cite id="FR-CHANGE-FLOW" digest="sha256:54e13b356ccefff812cd070c86511c6c2aba61499094e8f5b789e030fd5b5808" -->
 
@@ -20,6 +20,8 @@ See proposal.md for motivation. The source map already represents the admitted c
 - Require provider-owned metadata and the three implementation planning documents. Copy only the matching plan and source OpenSpec configuration/specifications/schemas to a disposable provider workspace. Validate the copied plan under its original active identity there, using strict validation, planning status and apply progress. Never restore it in the candidate. This reuses provider semantics instead of maintaining a second YAML/schema/task parser.
 - Recheck archived selection during final metadata materialization and require the archive to remain identical to the preparation baseline. Candidate edits cannot substitute new archived evidence or recreate an active plan.
 - Keep normal active/new-plan metadata and skip-specs handling unchanged. The caller still performs exact-tree checks, independent review, forge qualification and publication under existing authority.
+- Replace the generated active-only command with a packaged read-only harness entrypoint. Read bounded OpenSpec evidence from the candidate and reuse archive selection and provider validation; active plans retain strict pinned-provider validation. The existing independent-check mount supplies the harness path, not candidate-controlled module resolution. Tests execute the generated argv with that mount path mapped to the owning package.
+- Keep one deterministic policy command rather than selecting argv from mutable remote archive state. The command inspects the independently materialized candidate, preserving policy and receipt identity reconstruction.
 
 ## Risks / Trade-offs
 

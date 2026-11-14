@@ -62,6 +62,8 @@ function openOwner(path, record, run) {
           if (present.some(row => row.owner !== record.key || !record.resources.some(item => item.type === row.type && item.name === row.name))) throw Error('Resource ownership mismatch');
           for (const row of present) record.resources.find(item => item.type === row.type && item.name === row.name).pending = false;
           persist(path, record);
+          // A phase can remove its container before final cleanup can discover its anonymous volumes.
+          if (removing === 'container' && !flags.some(flag => ['-v', '--volumes'].includes(flag))) flags.push('-v');
           return present.length ? [...args.slice(0, start), ...flags, ...new Set(present.map(row => row.id))] : [];
         } catch {
           record.removalBlocked = true; persist(path, record);

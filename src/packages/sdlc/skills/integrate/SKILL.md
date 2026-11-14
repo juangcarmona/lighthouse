@@ -7,6 +7,8 @@ description: Use when an implemented slice is ready for dependency checks, pull 
 
 Prepare a completed slice for the project's forge and branch policy.
 
+For human-facing integration reports or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md) before returning the result. Record the pinned helper or fallback review used.
+
 ## Steps
 
 1. Recheck the Done evidence and the declared dependency order.

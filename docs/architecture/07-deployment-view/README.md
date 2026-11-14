@@ -50,11 +50,11 @@ When an adopter enables the optional memory provider, its host provisions a priv
 | `dist/public-site/` | GitHub Pages artifact | Published static site |
 | Adopter projections | Adopter repository and its CI | Consumer-owned environment |
 
-<!-- pdac:cite id="BR-PUBLIC-SITE-PROJECTION" digest="sha256:e300dc42b79accf48aafa2877f68d42d5ce77edd218057f29b61ff81f97b47b9" -->
+<!-- pdac:cite id="BR-PUBLIC-SITE-PROJECTION" digest="sha256:a27873214727fa78daad09440b1a3a9040a5914003c1fed97541db0084c5928e" -->
 
 ## Adopter execution host
 
-The example runner image includes the [telemetry startup wrapper](../../../src/packages/sdlc/src/telemetry-runner.mjs). Its operator supplies private persistent journal storage; an optional external collector receives OTLP log batches. Engine containers receive only the native observer and its bounded output path, without exporter credentials. The independent consumer example runs separately with a read-only script mount and its own output volume. [Installation and consumption](../../../src/packages/sdlc/telemetry.md) describe adoption for existing images and workflow pins; source availability does not establish rollout to an adopter.
+The example runner image starts the [telemetry startup wrapper](../../../src/packages/sdlc/src/telemetry-runner.mjs) under Tini so orphaned descendants are reaped. Its operator supplies private persistent journal storage; an optional external collector receives OTLP log batches. Engine containers receive only the native observer and its bounded output path, without exporter credentials. The independent consumer example runs separately with a read-only script mount and its own output volume. [Installation and consumption](../../../src/packages/sdlc/telemetry.md) describe adoption for existing images and workflow pins; source availability does not establish rollout to an adopter.
 
 <!-- pdac:cite id="FR-RUNNER-TELEMETRY" digest="sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068" -->
 
@@ -67,3 +67,5 @@ This subscription profile uses Docker resource and filesystem isolation, with ou
 Implementation repositories can opt into [execution environments](../../../src/packages/sdlc/execution-environments.md). The host maps repository profile names to pinned local image IDs, checks prerequisites before agent startup and records the selected images. Optional PostgreSQL uses phase-specific bridge networks and disposable storage; independent validation receives a fresh database without provider credentials. The host owns provisioning and teardown, and neither the agent nor its checks receives Docker access. Undeclared consumers retain their existing image configuration. Local recipes and operating procedures are in the [environment build guide](../../../src/examples/opencode-engine/ENVIRONMENTS.md).
 
 The packaged execution adapter supervises the image entrypoint and independent checks inside their existing containers. A shared command helper serializes implementation checks and terminates each command's background process group before releasing its slot. It samples cgroup resource counters before container teardown; host receipts retain those observations and the exit status without treating diagnostics as lifecycle authority. Operator task limits apply to both implementation phases. See the [resource and completion procedure](../../../src/examples/opencode-engine/README.md#browser-resources-and-command-completion).
+
+This repository can install the optional [maintenance timer](../../../infra/operations/lighthouse-maintenance.timer) on an operator-owned host. It uses that host's existing GitHub identity to request the existing maintenance workflow and keeps dispatch intent locally. Host availability and credentials are operational dependencies; disabling the timer leaves native event and schedule triggers intact. The [operations guide](../../operations/autonomous-delivery.md) owns provisioning and rollback.

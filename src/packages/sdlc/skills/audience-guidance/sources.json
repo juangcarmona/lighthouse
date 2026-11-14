@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-11-14",
+  "distribution": "References only; upstream code, hooks and assets are not bundled. Lighthouse-authored manual fallbacks are in SKILL.md.",
+  "sources": [
+    {
+      "id": "plain-english",
+      "name": "Plain English",
+      "repository": "https://github.com/Tradelord223/plain-english",
+      "revision": "d108f2b61544cdabb33cd67f6365faf3f51259a9",
+      "path": "skills/plain-english/SKILL.md",
+      "sha256": "9a14a5e41916d2c6f18ee24868f4bedc6111796ac055d8049ba065172f053ea6",
+      "version": "No version declared; pinned by commit and content digest.",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Raqz",
+      "licensePath": "LICENSE",
+      "review": "Clarity and audience fit must preserve truth anchors, exact tokens and delivery state. Precision and voice references belong to the upstream skill; use the complete reviewed installation or the local fallback, not an isolated downloaded entrypoint.",
+      "fallback": "SKILL.md#plain-english-fallback"
+    },
+    {
+      "id": "humanizer",
+      "name": "Humanizer",
+      "repository": "https://github.com/blader/humanizer",
+      "revision": "b48c832f0f809c1b5658edbb838c2521b72f2413",
+      "path": "SKILL.md",
+      "sha256": "804a119e924ac30295b298213e0b71b3e38b2667b8ef4fb7b69e9246369b9045",
+      "version": "4.0.0",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2025 Siqi Chen",
+      "licensePath": "LICENSE",
+      "review": "Natural wording follows the clarity pass. Preserve meaning, exact technical artifacts and neutral factual voice; do not invent reactions or turn pattern lists into universal word bans.",
+      "fallback": "SKILL.md#humanizer-fallback"
+    },
+    {
+      "id": "writing-for-agents",
+      "name": "Writing for Agents by Matt Pocock",
+      "repository": "https://github.com/mattpocock/skills",
+      "revision": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+      "path": "skills/productivity/writing-for-agents/SKILL.md",
+      "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "version": "No version declared; pinned by commit and content digest.",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Matt Pocock",
+      "licensePath": "LICENSE",
+      "review": "Use for skills, entrypoints and pointed-to agent documents. Explicit triggers, information hierarchy, ownership and observable completion criteria matter more than prose smoothing. Skill mechanics remain an upstream reference; fallback avoids requiring an external installation.",
+      "fallback": "SKILL.md#writing-for-agents-fallback"
+    },
+    {
+      "id": "taste",
+      "name": "Taste (design-taste-frontend by Leonxlnx)",
+      "repository": "https://github.com/Leonxlnx/taste-skill",
+      "revision": "f6b76575f949707b4e3c37cd86cb44b0b98643e8",
+      "path": "skills/taste-skill/SKILL.md",
+      "sha256": "0c7a5852a5217be79cab422c6d58329b776f0c25bd6da8a7a01707ce75be6206",
+      "version": "2.5.1 (description); heading says 2.5",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Leonxlnx",
+      "licensePath": "LICENSE",
+      "review": "Visual critique only. Do not adopt generation rules, replacement tokens, mandatory animations, hooks, scripts or assets. The accepted Lighthouse UI contract governs accessibility, native semantics, palette, density, evidence and human review; fallback is the default when an installation cannot respect those boundaries.",
+      "fallback": "SKILL.md#taste-fallback"
+    }
+  ]
+}

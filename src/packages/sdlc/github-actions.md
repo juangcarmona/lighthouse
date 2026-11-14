@@ -132,6 +132,12 @@ The [router](workflows/lighthouse-sdlc-router.yml) and [event handler](src/issue
 
 The `apply-review` worker is installed with proposal support. It also handles implementation feedback when implementation is installed, preserving its `implement` result. Verified feedback has a stable dispatch identity across repeated events. Approval retains its separate integration route.
 
+## GitHub read recovery
+
+Bodyless GitHub GET requests can make up to three total HTTP attempts, including the initial attempt, for responses 429, 500, 502, 503 and 504. All attempts and waits share the original thirty-second request budget; `Retry-After` is respected only when its delay fits the remaining budget. This transport retry does not automatically repeat POST/PATCH/PUT/DELETE, permanent refusals, thrown network errors or uncertain publication effects.
+
+This reduces transient-read interruptions during unattended observation, but does not establish publication or delivery success. Exhausted HTTP reads retain their terminal diagnostic, including a safe provider message when available. Unknown publication still requires inspecting and reconciling actual effects through [Worker maintenance](#worker-maintenance) and [Worker error reports](#worker-error-reports) before another request.
+
 ## Worker maintenance
 
 Install the optional deterministic workflow with `--with-maintenance`. After reviewing its permissions, set `LIGHTHOUSE_MAINTENANCE_ENABLED=true` and the existing `LIGHTHOUSE_AUTOMATION_ENABLED=true` to observe owner issues every 30 minutes, or dispatch a single issue manually. Failed `review` preparation sends an authenticated callback to maintenance when recovery is enabled. The receiver waits for terminal native jobs before considering a retry. Native `workflow_run` completion also wakes this same reconciler; unrelated or uncertain completions select no issue. Observation alone performs no retry. Set `LIGHTHOUSE_RECOVERY_ENABLED=true` separately to permit bounded recovery; removing it also stops admission of already-requested retries.

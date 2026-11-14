@@ -3,7 +3,7 @@ id: BR-AGENT-LAUNCH
 type: business-rule
 title: Agent launches stay bounded and traceable
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-AGENT, UC-CONTINUE-AGENT-RUN]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-AGENT-ROLE, TERM-AGENT-RUN, TERM-WORKFLOW-STATE, TERM-GUARDRAIL]
 ---
 
