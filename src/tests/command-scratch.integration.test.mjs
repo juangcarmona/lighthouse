@@ -19,7 +19,12 @@ test('cold npm installation releases downloads before real .NET verification in 
   // The execution UID writes only this disposable diagnostics directory.
   await chmod(output, 0o755);
   await chmod(join(output, 'receipts'), 0o777);
-  const receipts = [];
+  const receipts = [], logs = {}, ids = ['local-install', 'local-dotnet', 'independent-dotnet'];
+  let passed = false;
+  const capture = (phase, args) => {
+    try { return logs[phase] = docker(args); }
+    catch (error) { logs[phase] = String(error.stdout ?? '') + String(error.stderr ?? ''); console.error(logs[phase]); throw error; }
+  };
   try {
     docker(['volume', 'create', name]);
     docker(['volume', 'create', name + '-harness']);
@@ -29,12 +34,10 @@ test('cold npm installation releases downloads before real .NET verification in 
     const command = (id, command) => `node /harness/src/managed-command.mjs run /diagnostics ${id} -- sh -ec '${command}'`;
     const install = 'npm ci --ignore-scripts && du -sk "$NPM_CONFIG_CACHE" /tmp && df -k /tmp';
     const verify = 'npm run verify:dotnet && du -sk /tmp && df -k /tmp';
-    const localLog = docker([...args, command('local-install', install) + ' && ' + command('local-dotnet', verify)]);
-    await writeFile(join(output, 'local.log'), localLog);
+    capture('localLog', [...args, command('local-install', install) + ' && ' + command('local-dotnet', verify)]);
     // A new container gives the independent verifier fresh private scratch.
-    const independentLog = docker([...args, command('independent-dotnet', verify)]);
-    await writeFile(join(output, 'independent.log'), independentLog);
-    for (const id of ['local-install', 'local-dotnet', 'independent-dotnet']) {
+    capture('independentLog', [...args, command('independent-dotnet', verify)]);
+    for (const id of ids) {
       const receipt = JSON.parse(await readFile(join(output, 'receipts', id + '.json'), 'utf8'));
       assert.equal(receipt.exitCode, 0, id);
       assert.equal(receipt.scratch.npmCache, 'released', id);
@@ -43,10 +46,19 @@ test('cold npm installation releases downloads before real .NET verification in 
       receipts.push({ id, ...receipt });
     }
     assert.ok(receipts[0].scratch.afterCleanup.availableBytes > receipts[0].scratch.beforeCleanup.availableBytes, 'actual npm downloads were reclaimed');
-    if (process.env.LIGHTHOUSE_SCRATCH_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_SCRATCH_EVIDENCE, JSON.stringify({ image, receipts, localLog, independentLog }, null, 2) + '\n');
+    passed = true;
   } finally {
-    try { docker(['rm', '-f', name], { stdio: 'ignore' }); } catch { /* --rm normally already removed this test-owned container. */ }
-    docker(['volume', 'rm', name, name + '-harness']);
-    await rm(output, { recursive: true, force: true });
+    try {
+      const retained = [];
+      for (const id of ids) {
+        try { retained.push({ id, ...JSON.parse(await readFile(join(output, 'receipts', id + '.json'), 'utf8')) }); }
+        catch (error) { if (error.code !== 'ENOENT') throw error; }
+      }
+      if (process.env.LIGHTHOUSE_SCRATCH_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_SCRATCH_EVIDENCE, JSON.stringify({ image, passed, receipts: retained, ...logs }, null, 2) + '\n');
+    } finally {
+      try { docker(['rm', '-f', name], { stdio: 'ignore' }); } catch { /* --rm normally already removed this test-owned container. */ }
+      docker(['volume', 'rm', name, name + '-harness']);
+      await rm(output, { recursive: true, force: true });
+    }
   }
 });
