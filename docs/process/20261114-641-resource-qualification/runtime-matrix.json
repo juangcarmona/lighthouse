@@ -1,0 +1,388 @@
+{
+  "image": "sha256:8f5848b325135c4d0a685e211960a146de33eff3a3c1b911c8274d020411ef10",
+  "receipts": [
+    {
+      "scenario": "success",
+      "execution": {
+        "status": "passed",
+        "code": 0,
+        "signal": null
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 1
+      },
+      "owner": "e1ef6a53929299f45a3044e3e0470fe31aac390922816332b89d458326c405e6",
+      "observedAt": "2026-11-14T14:51:10.607Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-e1ef6a53929299f45a3044e3-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-e1ef6a53929299f45a3044e3-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "agent-failure",
+      "execution": {
+        "status": "failed",
+        "code": 7,
+        "signal": null
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 2
+      },
+      "owner": "37b6ff022cdce921817e36770ab41cfbe104eaeb8a86e4f8c7aea86385211952",
+      "observedAt": "2026-11-14T14:51:11.924Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-37b6ff022cdce921817e3677-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-37b6ff022cdce921817e3677-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "timeout",
+      "execution": {
+        "status": "timeout",
+        "code": 137,
+        "signal": null
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 3
+      },
+      "owner": "65ce7cf497af340791fbeb9e8a579dc2f8f0d91d15df4be60e42a8ecb04ad9c4",
+      "observedAt": "2026-11-14T14:51:13.459Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-65ce7cf497af340791fbeb9e-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-65ce7cf497af340791fbeb9e-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "cancel",
+      "execution": {
+        "status": "cancelled",
+        "code": 137,
+        "signal": null
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 4
+      },
+      "owner": "4881970aa6cce46d21f688634711ac78eb7546468e1f71e91be3e70c60d91a01",
+      "observedAt": "2026-11-14T14:51:14.881Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-4881970aa6cce46d21f68863-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-4881970aa6cce46d21f68863-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "no-op-remove",
+      "execution": null,
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 5
+      },
+      "owner": "f40ea186436d008b04e2a6fc45c68c09e99cba5b71592669fd5eeef1a45d605d",
+      "observedAt": "2026-11-14T14:51:16.006Z",
+      "status": "failed",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-f40ea186436d008b04e2a6fc-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-f40ea186436d008b04e2a6fc-work",
+          "pending": false
+        }
+      ],
+      "remaining": [
+        {
+          "type": "container",
+          "id": "c69c81ec3617a9d61a863e08bf65412d080ddd0bd86afb958e5e7eb6f6d3b868",
+          "name": "lighthouse-f40ea186436d008b04e2a6fc-work"
+        },
+        {
+          "type": "network",
+          "id": "939992d18d868577df7dca6ff808cae79cc1eff081e439b447bf4bcffe805055",
+          "name": "lighthouse-f40ea186436d008b04e2a6fc-private"
+        }
+      ],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "lost-create",
+      "execution": null,
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 6
+      },
+      "owner": "38434625f359a28746ac04cb047ccdfaa5424c5d11cdca008fda056ebeabd35f",
+      "observedAt": "2026-11-14T14:51:17.393Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-38434625f359a28746ac04cb-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-38434625f359a28746ac04cb-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "lost-remove",
+      "execution": null,
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 7
+      },
+      "owner": "587bec3edf22fe3e0795582575e27658fcebd56c4ef31f5878436525bfd40488",
+      "observedAt": "2026-11-14T14:51:18.691Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-587bec3edf22fe3e07955825-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-587bec3edf22fe3e07955825-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 2
+    },
+    {
+      "scenario": "runtime-outage",
+      "execution": null,
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 8
+      },
+      "owner": "90cf8660ce2cec2a7d6a0db414d53f1c8d8e349b9e98292c3758f1fbf12ecbec",
+      "observedAt": "2026-11-14T14:51:19.958Z",
+      "status": "unknown",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-90cf8660ce2cec2a7d6a0db4-private",
+          "pending": false
+        },
+        {
+          "type": "container",
+          "name": "lighthouse-90cf8660ce2cec2a7d6a0db4-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0,
+      "action": "Restore runtime inventory and verify this execution ownership before retrying; never prune shared resources."
+    },
+    {
+      "scenario": "foreign-container-at-owned-name",
+      "preserved": {
+        "type": "container",
+        "id": "3f79c3e318cc8271f3d05f7d88c252fc29430039d37dd04c678ac585d7844a4c"
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 40
+      },
+      "owner": "b9f8f48f6caeedc0956efafd4e7c79c1c4324338c038c26a7f1c2a647f9a84ed",
+      "observedAt": "2026-11-14T14:51:21.331Z",
+      "status": "unknown",
+      "resources": [
+        {
+          "type": "container",
+          "name": "lighthouse-b9f8f48f6caeedc0956efafd-substituted",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0,
+      "action": "Restore runtime inventory and verify this execution ownership before retrying; never prune shared resources."
+    },
+    {
+      "scenario": "foreign-network-at-owned-name",
+      "preserved": {
+        "type": "network",
+        "id": "99287f0d648623a1b4872b7e7bbaefef05d054aca0d9ec45378a2944ce5cf419"
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 41
+      },
+      "owner": "0a673b7e38faa5b367ea6dc97e1ce114859e13e74addd113667e326f650f3136",
+      "observedAt": "2026-11-14T14:51:22.175Z",
+      "status": "unknown",
+      "resources": [
+        {
+          "type": "network",
+          "name": "lighthouse-0a673b7e38faa5b367ea6dc9-substituted",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0,
+      "action": "Restore runtime inventory and verify this execution ownership before retrying; never prune shared resources."
+    },
+    {
+      "scenario": "phase-no-op-removal",
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 45
+      },
+      "owner": "ec4c8634db5ea4a1fd8a10a133c0391ee8312cead821c40fd4f93aad620d58cb",
+      "observedAt": "2026-11-14T14:51:24.554Z",
+      "status": "failed",
+      "resources": [
+        {
+          "type": "container",
+          "name": "lighthouse-ec4c8634db5ea4a1fd8a10a1-work",
+          "pending": false
+        }
+      ],
+      "remaining": [
+        {
+          "type": "container",
+          "id": "081ecbecead305656c53bc3400251a200fc968f678943d5623440cbdf94cea13",
+          "name": "lighthouse-ec4c8634db5ea4a1fd8a10a1-work"
+        }
+      ],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "phase-lost-response-removal",
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 46
+      },
+      "owner": "5832a59d2ef145b192725faefcf5702b63541133e891b80c5124f36760e99f72",
+      "observedAt": "2026-11-14T14:51:28.582Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "container",
+          "name": "lighthouse-5832a59d2ef145b192725fae-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    },
+    {
+      "scenario": "abrupt-process-loss",
+      "execution": {
+        "status": "process-lost",
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "schemaVersion": 1,
+      "identity": {
+        "repository": "qualification/disposable",
+        "runId": "2a2cb1c110ec51eb000000000000000000000000000000000000000000000000",
+        "workflowRunId": "1",
+        "attempt": 50
+      },
+      "owner": "f3bc1978ed52db370c980cd120e7413b2c02cbea5586d6cf33ce28865e32330c",
+      "observedAt": "2026-11-14T14:51:30.516Z",
+      "status": "clean",
+      "resources": [
+        {
+          "type": "container",
+          "name": "lighthouse-f3bc1978ed52db370c980cd1-work",
+          "pending": false
+        }
+      ],
+      "remaining": [],
+      "removalErrors": 0
+    }
+  ]
+}
