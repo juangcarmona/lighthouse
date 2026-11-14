@@ -7,6 +7,8 @@ description: Use after integration to record delivery evidence, findings, follow
 
 Close the delivery record and make the next improvement visible.
 
+For human-facing reports, retrospectives or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md) before returning the result. Record the pinned helper or fallback review used.
+
 ## Steps
 
 1. Read the change overview, implementation evidence, integration result and review findings.

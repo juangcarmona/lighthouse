@@ -6,8 +6,8 @@ For delivery, labels or GitHub workflows, read [the SDLC delivery guide](src/pac
 
 Keep implementation under `src/`, including packages and examples. Package documentation stays with its owning package; repository documentation belongs under `docs/`; repository automation stays in the conventional `scripts/` root. Root-level tool directories (`.agents/`, `.github/`, `.product/`, `.vscode/`, `openspec/`) and package entrypoint metadata are integration contracts; do not relocate them without checking their owning tool. The optional .NET profile and its guidance are scoped under `src/dotnet/` and do not make the repository a root-level .NET solution.
 
-- For agent-facing documents, use the installed `writing-for-agents` skill. For code and architecture work, use the installed `ponytail` skill.
-- For human-facing prose in docs, proposals, reports and change descriptions, run the Humanizer skill when available; preserve facts, links, commands, frontmatter and code.
+- For human explanations, agent instructions or UI/visual changes, read [the audience policy and offline reviews](src/packages/sdlc/skills/audience-guidance/SKILL.md): Plain English then Humanizer for human prose, Matt Pocock's Writing for Agents for agent-facing material and pointed-to documents, and Taste only for visual review under the accepted UI contract. Use the pinned helper or its explicit packaged fallback; preserve evidence and authority.
+- For code and architecture work, use the installed `ponytail` skill.
 
 - Keep documentation concise, original and consistent with executable examples.
 - Keep client, downstream client and employer project identities, repository paths, domains, assets and source provenance outside this repository. General engineering patterns may be documented without attribution to those sources.

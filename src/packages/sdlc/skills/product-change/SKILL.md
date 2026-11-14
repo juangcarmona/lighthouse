@@ -5,6 +5,8 @@ description: Prepare and refine one ProductShape change from an authorized idea 
 
 # Prepare a Product Change
 
+For human-facing proposals, decision requests or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used; preserve provider-owned product semantics and approval state.
+
 Use this skill only when the host dispatches the `product-change` worker and supplies its authenticated request and product workflow context. An idea request authorizes product discovery and a candidate only. A parent handoff also carries the issue's existing scope and authorization; do not broaden it.
 
 Read the accepted model at `context.productChange.acceptedModelPath` and inspect the adopter through absolute paths under `/workspace`. Read `index.json` under `context.productChange.evidenceRoot`, then the relevant artifact reports: each contains the pinned provider's inspection, impact and citation payload. Read authoring templates under `/workspace/.product/templates`. Read the installed ProductShape `product-change` schema and its intent, delta, refinement and validation instructions from the repository's OpenSpec configuration. Use those provider instructions as the authority for product artifacts. Do not copy a ProductShape workflow into Lighthouse or guess artifact fields.
