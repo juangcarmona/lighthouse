@@ -1,5 +1,29 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.0
+
+### Minor Changes
+
+- 1e13729: # PDaC v1alpha2 adoption and verification
+
+  Require explicit, provider-validated PDaC v1alpha2 for Lighthouse adoption and verification. Report missing, legacy, conflicting and unsupported product configuration with reviewed migration guidance. Include lifecycle and structured-behaviour definitions in worker context, trace scenarios to actual test results, and preserve historical outcomes when evidence citations become stale.
+
+### Patch Changes
+
+- 6d4d3e1: # Add audience-specific writing guidance
+
+  Ship audience-specific writing and review guidance with pinned source references and offline fallback reviews. Apply Plain English and Humanizer to human explanations, Writing for Agents to agent instructions, and Taste only to visual work under the accepted UI contract.
+
+- c0e8e7f: # Support large ProductShape models
+
+  Remove fixed artifact-count ceilings from local and API model fingerprints and from planning evidence preparation and installation. Models with 640 artifacts now retain all reports and index entries when they fit the resource budgets.
+
+  Keep the 64 KiB model-file, 512 KiB report/index, 16 MiB prepared-report and 17 MiB installed-evidence limits. Local fingerprints now use the API fingerprint's explicit 8 MiB aggregate-model budget. Baseline binding, provider validation, safe paths and read-only installation remain unchanged.
+
+- e9a5ecb: # Runner resource cleanup
+
+  Remove anonymous volumes during owned container phase cleanup, while preserving named volumes. Run the example runner image under Tini to reap orphaned child processes. Separate an operator-bounded host queue from the unchanged execution-step limits with a 180-minute agent job budget and a shared-host job-start hook.
+
 ## 0.22.11
 
 ### Patch Changes
