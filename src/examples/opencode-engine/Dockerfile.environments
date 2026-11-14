@@ -25,7 +25,12 @@ FROM ${SDK_IMAGE} AS sdk
 FROM base AS dotnet
 USER 0:0
 COPY --from=sdk /usr/share/dotnet /usr/share/dotnet
+COPY dotnet-prerequisites.mjs /usr/local/lib/lighthouse/dotnet-prerequisites.mjs
+ENV DOTNET_ROOT=/usr/share/dotnet DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_NOLOGO=1 \
+    PATH=/opt/aspire/cli:$PATH ASPIRE_LAYOUT_PATH=/opt/aspire AspireCliBundlePath=/opt/aspire/bundle
 RUN ln -s /usr/share/dotnet/dotnet /usr/local/bin/dotnet \
-    && test "$(dotnet --version)" = '10.0.100'
-ENV DOTNET_ROOT=/usr/share/dotnet DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_NOLOGO=1
+    && dotnet tool install Aspire.Cli --version 13.6.5 --tool-path /opt/aspire/cli --source https://api.nuget.org/v3/index.json \
+    && aspire setup --install-path /opt/aspire \
+    && node /usr/local/lib/lighthouse/dotnet-prerequisites.mjs > /opt/aspire/prerequisites.json \
+    && chmod -R a+rX /opt/aspire
 USER 20003:20003

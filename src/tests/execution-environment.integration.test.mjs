@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { startEnvironment } from '../packages/sdlc/src/execution-environment.mjs';
+import { compatibleSdk, compatibleAspire, bundleProbe } from '../packages/sdlc/src/dotnet-prerequisites.mjs';
 import { runImplementationChecks } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 const image = process.env.LIGHTHOUSE_TEST_DOTNET_IMAGE;
@@ -16,7 +17,36 @@ const absent = name => {
   assert.equal(docker(['network', 'ls', '-q', '--filter', `name=^${name}`]), '');
 };
 
+test('real pinned .NET image provides compatible SDK and Aspire bundle without writable root or network', { skip: !image }, async () => {
+  assert.match(image, /^sha256:[a-f0-9]{64}$/);
+  const calls = [];
+  const run = args => { calls.push(args); return docker(args); };
+  const runtime = await startEnvironment({ selected: { profile: 'dotnet', image }, name: `lighthouse-real-prerequisites-${process.pid}`, uid: 20003, run });
+  try {
+    const sdk = calls.find(args => args.includes('--list-sdks'));
+    const cli = calls.find(args => args.includes('aspire'));
+    const bundle = calls.find(args => args.includes(bundleProbe));
+    assert.equal(compatibleSdk(docker(sdk)), true);
+    assert.equal(compatibleAspire(docker(cli)), true);
+    assert.equal(JSON.parse(docker(bundle)).version, '13.6.5');
+    for (const args of calls) {
+      assert.ok(args.includes('--read-only'));
+      assert.equal(args[args.indexOf('--user') + 1], '20003:20003');
+      assert.equal(args[args.indexOf('--network') + 1], 'none');
+      assert.ok(args.includes('ALL')); assert.ok(args.includes('no-new-privileges'));
+      assert.ok(!args.includes('--mount') && !args.includes('-v'));
+    }
+    // Break only the probe's bundle location, not the immutable image or source.
+    await assert.rejects(startEnvironment({ selected: { profile: 'dotnet', image }, name: `lighthouse-real-absent-bundle-${process.pid}`, uid: 20003, run: args => {
+      if (!args.includes(bundleProbe)) return docker(args);
+      const index = args.indexOf('--entrypoint');
+      return docker([...args.slice(0, index), '--env', 'AspireCliBundlePath=/tmp/absent-bundle', ...args.slice(index)]);
+    } }), /prerequisite failed: Aspire bundle 13.6.5/);
+  } finally { assert.equal(runtime.cleanup(), true); }
+});
+
 test('real PostgreSQL is fresh between phases and leaves no container or network', { skip: !image || !postgresImage }, async () => {
+  for (const value of [image, postgresImage]) assert.match(value, /^sha256:[a-f0-9]{64}$/);
   const name = `lighthouse-real-environment-${process.pid}`;
   for (const phase of ['agent', 'validation']) {
     const runtime = await startEnvironment({ selected, name: `${name}-${phase}`, uid: 20003 });
