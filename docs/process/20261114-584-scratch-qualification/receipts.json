@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "kind": "maintainer-standalone-docker-qualification",
+  "sourceCommit": "926f7f704a77f4e390fd207101883fac94152c78",
+  "files": {
+    "src/packages/sdlc/src/command-scratch.mjs": "3ba206d5dbc4c333680a14c449b9c1fc4331d4682614223e61f31f202b9b906b",
+    "src/packages/sdlc/src/managed-command.mjs": "21b2aeb2e5415de535fec704caf9022e393fde26f0640356d786bd3f59c5b1c0",
+    "src/packages/sdlc/src/execution-resources.mjs": "5ef7c2865a328517ff1b80a7fbcc5ea86dfda234760e4816213bbdd901bc4a06",
+    "src/packages/sdlc/src/implementation-runtime.mjs": "492a2c2f8a41a5d0569c9031d1dfc9b85d49bd37849204bf7b843d63d47a457b",
+    "src/tests/command-scratch.integration.test.mjs": "a787a76d0f0412d8db5334c9560705e131fe73146893c18e59edf7b550bb5f0a",
+    "src/tests/command-scratch.test.mjs": "bb28af85b2158362ca01bd4b4a6e768a7479b9224131acd49423b8cead09357e",
+    "package.json": "70b35320d2b6dc9b76cd3c6383f72ec5a5d27cee9a628c25b416d3f7b8fb4188",
+    "package-lock.json": "ed7bb9c8eb0c1e6d68a5b9e163492d4b47dbefa41b7027762c5b44729c82ddbb",
+    ".editorconfig": "61078c11afe148dd34389865c6b5ac56a1e5a279bf6f2eebb8e39a47f845bedd"
+  },
+  "image": "sha256:1f1036ca13c535509c10b154ac6bcd8bebe0e8c5588e2ff0fbd27ee79a8a1141",
+  "limits": {
+    "cpus": 2,
+    "memoryBytes": 4294967296,
+    "pids": 1024,
+    "scratchBytes": 2147483648,
+    "uid": 20003,
+    "readOnlyRoot": true,
+    "capabilities": "ALL dropped",
+    "noNewPrivileges": true
+  },
+  "toolchain": [
+    "10.0.115",
+    "13.6.5+b33d222049f1ecc3bc7257ec07b622fe550b2580"
+  ],
+  "passed": true,
+  "receipts": [
+    {
+      "id": "local-install",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 22,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 1151246336,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2017669120
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        }
+      }
+    },
+    {
+      "id": "local-dotnet",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 195,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 2378477568,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266343936
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266348032
+        }
+      }
+    },
+    {
+      "id": "independent-dotnet",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 171,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 1390649344,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266343936
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266348032
+        }
+      }
+    }
+  ],
+  "verification": {
+    "localLog": [
+      "Build succeeded.",
+      "Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 918 ms - Lighthouse.Example.Tests.dll (net10.0)",
+      "Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 2 s - Lighthouse.Analyzers.Tests.dll (net10.0)",
+      "Every implementation module in the solution activates the analyzer.",
+      "Build rejection rehearsal passed: LH1001 and LH1002 blocked the invalid module."
+    ],
+    "independentLog": [
+      "Build succeeded.",
+      "Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration: 1 s - Lighthouse.Example.Tests.dll (net10.0)",
+      "Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 3 s - Lighthouse.Analyzers.Tests.dll (net10.0)",
+      "Every implementation module in the solution activates the analyzer.",
+      "Build rejection rehearsal passed: LH1001 and LH1002 blocked the invalid module."
+    ]
+  },
+  "priorFailures": [
+    {
+      "scope": "native implementation 43608858064",
+      "cause": "verification-input correction guard",
+      "outcome": "failed; no validated publication"
+    },
+    {
+      "scope": "SDK-only qualification image",
+      "cause": "ASPIRE009 missing Aspire CLI bundle",
+      "outcome": "failed; 1266352128 scratch bytes available after cleanup"
+    },
+    {
+      "scope": "first complete-toolchain attempt",
+      "cause": "npm ECONNRESET",
+      "outcome": "failed; separately retained before one successful retry"
+    }
+  ],
+  "boundary": "Standalone maintainer evidence, not a native stage receipt, installed adoption or accepted delivery."
+}
