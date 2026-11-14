@@ -452,6 +452,21 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
       observations.push({ attempt, before, after: await workspaceUsage(root), resources: runtime.cleanup.remaining, outcome: runtime.execution.status });
     }
     if (process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE, JSON.stringify({ kind: 'complete-adapter-executions-with-docker-shim', observations }, null, 2) + '\n');
+    await writeFile(shim, (await readFile(shim, 'utf8')).replace('process.exitCode=134;', "fs.mkdirSync(out+'/evidence');fs.symlinkSync('/input/context.json',out+'/evidence/unsafe-link');process.exitCode=134;"));
+    const next = join(root, 'lighthouse-1-4'); await mkdir(next);
+    await cp(join(runDir, 'request.json'), join(next, 'request.json')); await cp(join(runDir, 'context.json'), join(next, 'context.json'));
+    const failedCleanup = spawnSync(process.execPath, [harness], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '4', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    assert.equal(failedCleanup.status, 1, failedCleanup.stdout + failedCleanup.stderr);
+    const failedRuntime = JSON.parse(await readFile(join(next, 'runtime.json')));
+    assert.equal(failedRuntime.failure.phase, 'execution');
+    const originalFailure = JSON.parse(await readFile(join(next, 'engine-error.json')));
+    assert.equal(originalFailure.phase, 'execution');
+    assert.match(originalFailure.message, /Container process\/thread limit reached/);
+    assert.equal(failedRuntime.cleanup.status, 'clean');
+    assert.equal(failedRuntime.workspaceCleanup.status, 'failed');
+    assert.match(failedCleanup.stderr, /Workspace cleanup is not verified/);
+    assert.equal((await workspaceUsage(root)).paths.length, 1);
+    await assert.rejects(readFile(join(root, 'completion')));
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

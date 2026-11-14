@@ -204,7 +204,9 @@ console.log(JSON.stringify({type:'text',part:{text:'Private final evidence writt
             else {
               assert.equal(runtime.execution.status, 'passed');
               assert.equal(failure.phase, 'evidence');
+              assert.equal(runtime.failure.phase, 'evidence');
               assert.equal(runtime.phases.evidence, 'failed');
+              assert.equal(runtime.workspaceCleanup.status, 'failed');
               assert.equal(JSON.parse(await readFile(join(runDir, 'evidence/candidate-envelope.json'))).result.runId, request.runId);
               await assert.rejects(readFile(join(runDir, 'evidence/agent/a-final.log')), { code: 'ENOENT' });
             }
