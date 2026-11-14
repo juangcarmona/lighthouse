@@ -110,23 +110,40 @@ jobs:
         with:
           node-version: 24
       - run: npm ci --ignore-scripts
-      - name: Select the operator's pinned implementation image
+      - name: Select the operator's pinned runtime images
+        id: runtime-images
         run: |
           node --input-type=module <<'JS'
           import { readFileSync, appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
           import { join } from 'node:path';
-          const config = JSON.parse(readFileSync(process.env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8'));
-          if (!/^sha256:[a-f0-9]{64}$/.test(config.implementationImage)) throw Error('Provision and pin the implementation image before runtime acceptance');
+          import { createHash } from 'node:crypto';
+          const rawConfig = readFileSync(process.env.LIGHTHOUSE_ENGINE_CONFIG, 'utf8');
+          const config = JSON.parse(rawConfig), pinned = /^sha256:[a-f0-9]{64}$/;
+          if (!pinned.test(config.implementationImage)) throw Error('Provision and pin the implementation image before runtime acceptance');
           appendFileSync(process.env.GITHUB_ENV, `LIGHTHOUSE_TEST_IMAGE=${config.implementationImage}\n`);
-          const directory = join(process.env.RUNNER_TEMP, 'worker-runtime-acceptance');
+          const directory = join(process.env.RUNNER_TEMP, 'worker-runtime-acceptance', `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}`);
           mkdirSync(directory, { recursive: true });
-          writeFileSync(join(directory, 'receipt.json'), JSON.stringify({ sourceRevision: process.env.GITHUB_SHA, run: process.env.GITHUB_RUN_ID, attempt: process.env.GITHUB_RUN_ATTEMPT, implementationImage: config.implementationImage, node: process.version, package: JSON.parse(readFileSync('src/packages/sdlc/package.json', 'utf8')).version, worker: 'deterministic; no model invoked' }, null, 2));
+          appendFileSync(process.env.GITHUB_ENV, `LIGHTHOUSE_RUNTIME_EVIDENCE=${directory}\n`);
+          const dotnet = config.environments?.dotnet;
+          if (dotnet) {
+            if (!pinned.test(dotnet.image) || !pinned.test(dotnet.postgresImage)) throw Error('Pin both .NET and PostgreSQL images before .NET runtime acceptance');
+            appendFileSync(process.env.GITHUB_ENV, `LIGHTHOUSE_TEST_DOTNET_IMAGE=${dotnet.image}\nLIGHTHOUSE_TEST_POSTGRES_IMAGE=${dotnet.postgresImage}\nLIGHTHOUSE_TEST_SCRATCH_IMAGE=${dotnet.image}\nLIGHTHOUSE_SCRATCH_EVIDENCE=${join(directory, 'dotnet-scratch.json')}\n`);
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `dotnet=${Boolean(dotnet)}\n`);
+          writeFileSync(join(directory, 'receipt.json'), JSON.stringify({ sourceRevision: process.env.GITHUB_SHA, run: process.env.GITHUB_RUN_ID, attempt: process.env.GITHUB_RUN_ATTEMPT, implementationImage: config.implementationImage, operatorConfigSha256: createHash('sha256').update(rawConfig).digest('hex'), dotnet: dotnet ? { image: dotnet.image, postgresImage: dotnet.postgresImage } : null, node: process.version, package: JSON.parse(readFileSync('src/packages/sdlc/package.json', 'utf8')).version, worker: 'deterministic; no model invoked' }, null, 2));
           JS
       - name: Exercise different UIDs, prerequisites and failed evidence collection
         run: |
-          mkdir -p "$RUNNER_TEMP/worker-runtime-acceptance"
-          if ! node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs src/tests/verification-publication.test.mjs src/tests/pr-state.test.mjs > "$RUNNER_TEMP/worker-runtime-acceptance/results.log" 2>&1; then
-            cat "$RUNNER_TEMP/worker-runtime-acceptance/results.log"
+          mkdir -p "$LIGHTHOUSE_RUNTIME_EVIDENCE"
+          if ! node --test src/tests/worker-evidence.integration.test.mjs src/tests/implementation-runtime.test.mjs src/tests/execution-environment.test.mjs src/tests/verification-publication.test.mjs src/tests/pr-state.test.mjs > "$LIGHTHOUSE_RUNTIME_EVIDENCE/results.log" 2>&1; then
+            cat "$LIGHTHOUSE_RUNTIME_EVIDENCE/results.log"
+            exit 1
+          fi
+      - name: Qualify the configured .NET SDK, Aspire and cold scratch lifecycle
+        if: steps.runtime-images.outputs.dotnet == 'true'
+        run: |
+          if ! node --test src/tests/execution-environment.integration.test.mjs src/tests/command-scratch.integration.test.mjs > "$LIGHTHOUSE_RUNTIME_EVIDENCE/dotnet-results.log" 2>&1; then
+            cat "$LIGHTHOUSE_RUNTIME_EVIDENCE/dotnet-results.log"
             exit 1
           fi
       - name: Retain acceptance results
@@ -134,7 +151,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: worker-runtime-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/worker-runtime-acceptance/
+          path: ${{ runner.temp }}/worker-runtime-acceptance/${{ github.run_id }}-${{ github.run_attempt }}/
           if-no-files-found: error
           retention-days: 30
 

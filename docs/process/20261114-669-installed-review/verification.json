@@ -1,0 +1,172 @@
+{
+  "kind": "maintainer-verification-recap",
+  "createdAt": "2026-11-14T21:58:05.050949+00:00",
+  "subject": {
+    "issue": 669,
+    "sourceCorrectionPR": 671,
+    "publishedSource": "afabd771b031e4756456ca8eff0609e925677c62",
+    "installedAssessmentSource": "156ea5520b97390ceace695fa3f19069df85f058",
+    "package": "@juangcarmona/lighthouse-sdlc@0.23.4",
+    "fileSha256": {
+      "AGENTS.md": "697599958aaaa0d70410d83fddd781548ed771880942d2be68b647f2ca64a508",
+      "src/packages/sdlc/skills/audience-guidance/SKILL.md": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771",
+      "src/packages/sdlc/README.md": "78f197079a1fa04eca76ac741e8f53327cbd4a8d6c2a30d10e6c0a8e7c9ae4bf",
+      "src/packages/sdlc/src/opencode-execute.mjs": "b7fbc2c0dc2a7a55ea85c0a60bfadbc3a79dbd36fbd18d5315e97256d67ee281",
+      "src/tests/audience-guidance.test.mjs": "5d024dd22337bb5550e7774dff8e2f2f521498801ffa0a29df758a81563b21c3",
+      "src/tests/sdlc-package.test.mjs": "e54e77b0b346e04b7ba338d498a57c76e3d9d6279459c1ad7edd892065e86b26",
+      "src/tests/workflow-guide.test.mjs": "21155a0a2ab5483833d62979955467a56efaecc4859f4d85fa76992427a07f9b",
+      "src/tests/workflow-distribution.test.mjs": "f4e6cdd5231c12fc585ef963d03cccb8b5878b5b1f395ee22b0a1d51417e6574"
+    }
+  },
+  "evidenceOrigin": "GitHub Actions completed job metadata and downloaded job logs, published registry metadata and downloaded tarballs, authenticated native result artifact. This is a maintainer recap, not a newly minted host execution or accepted-delivery receipt.",
+  "checks": [
+    {
+      "id": 132596576438,
+      "run": 43643691116,
+      "head": "156ea5520b97390ceace695fa3f19069df85f058",
+      "name": "repository",
+      "command": "npm run verify",
+      "conclusion": "success",
+      "lines": [
+        "2026-11-14T21:36:37.4242479Z \u2714 audience policy covers each audience, fallback and authority boundary (10.391768ms)",
+        "2026-11-14T21:36:37.4258140Z \u2714 review fixture rejects missing or contradictory audience guidance (3.909521ms)",
+        "2026-11-14T21:36:37.4286697Z \u2714 repository and every packaged delivery skill point to the shared audience policy (6.425327ms)",
+        "2026-11-14T21:38:18.2669814Z \u2139 tests 1304",
+        "2026-11-14T21:38:18.2670269Z \u2139 pass 1290",
+        "2026-11-14T21:38:18.2670508Z \u2139 fail 0",
+        "2026-11-14T21:38:18.2670966Z \u2139 skipped 14",
+        "2026-11-14T21:38:18.4426126Z Local Markdown links checked in 1036 documents.",
+        "2026-11-14T21:39:04.4315277Z Verified Lighthouse public site: 136 files, package CSS is current, local references resolve."
+      ],
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43643691116/job/132596576438"
+    },
+    {
+      "id": 132592720474,
+      "run": 43642433984,
+      "head": "afabd771b031e4756456ca8eff0609e925677c62",
+      "name": "Check package contents",
+      "command": "npm test; bash scripts/verify-issue-workflows.sh",
+      "conclusion": "success",
+      "lines": [
+        "2026-11-14T21:22:21.8295114Z \u2714 audience policy covers each audience, fallback and authority boundary (12.431563ms)",
+        "2026-11-14T21:22:21.8324478Z \u2714 review fixture rejects missing or contradictory audience guidance (3.707894ms)",
+        "2026-11-14T21:22:21.8387147Z \u2714 repository and every packaged delivery skill point to the shared audience policy (10.363073ms)",
+        "2026-11-14T21:24:00.7706761Z \u2139 tests 1304",
+        "2026-11-14T21:24:00.7707167Z \u2139 pass 1290",
+        "2026-11-14T21:24:00.7707367Z \u2139 fail 0",
+        "2026-11-14T21:24:00.7707772Z \u2139 skipped 14"
+      ],
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43642433984/job/132592720474"
+    },
+    {
+      "id": 132593370258,
+      "run": 43642433984,
+      "head": "afabd771b031e4756456ca8eff0609e925677c62",
+      "name": "Exercise a clean consumer",
+      "command": "npm run verify:package-consumer",
+      "conclusion": "success",
+      "lines": [
+        "2026-11-14T21:25:23.4033927Z \u2139 tests 9",
+        "2026-11-14T21:25:23.4034871Z \u2139 pass 9",
+        "2026-11-14T21:25:23.4035527Z \u2139 fail 0",
+        "2026-11-14T21:25:23.4037141Z \u2139 skipped 0"
+      ],
+      "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43642433984/job/132593370258"
+    }
+  ],
+  "repositoryOutcome": {
+    "tests": 1304,
+    "passed": 1290,
+    "failed": 0,
+    "optionalSkipped": 14,
+    "siteFiles": 136
+  },
+  "scopeOfChecks": "The executed npm test glob includes the audience-guidance, sdlc-package, workflow-guide and workflow-distribution suites. No new execution of those four files alone is claimed.",
+  "registry": {
+    "observedAt": "2026-11-14T21:28:27.736566+00:00",
+    "sourceCommit": "afabd771b031e4756456ca8eff0609e925677c62",
+    "publicationRun": "43642433966",
+    "packages": [
+      {
+        "name": "@juangcarmona/lighthouse",
+        "version": "0.13.4",
+        "verified": true,
+        "status": 200,
+        "metadataEndpoint": "full packument",
+        "publishedAt": "2026-11-14T21:26:44.644Z",
+        "gitHead": "afabd771b031e4756456ca8eff0609e925677c62",
+        "latest": "0.13.4",
+        "integrity": "sha512-D2qYTVd2jcDGD1CzsGfp7XSv/YnRoWRaX+FSy8NOWNAek0ACiU3TOefXFaOAjvUc7IVnnFtK8bLnSld8FrXUKw==",
+        "tarball": "https://registry.npmjs.org/@juangcarmona/lighthouse/-/lighthouse-0.13.4.tgz",
+        "tarballIntegrityVerified": true,
+        "manifestVerified": true
+      },
+      {
+        "name": "@juangcarmona/lighthouse-sdlc",
+        "version": "0.23.4",
+        "verified": true,
+        "workspaceHelperSha256": "fc976efad5723757d1be2d0581cec482b90f983d083a5d26a25c6db129ebea15",
+        "portableReviewGuidanceSha256": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771",
+        "status": 200,
+        "metadataEndpoint": "full packument",
+        "publishedAt": "2026-11-14T21:28:07.486Z",
+        "gitHead": "afabd771b031e4756456ca8eff0609e925677c62",
+        "latest": "0.23.4",
+        "integrity": "sha512-vRSfkgTk+sxkg8MpXeJLCKx3Cds5PTP2shFg5T79UlLx8766DgZhLTizao6mzakJnlFcMiGfFvmwG2RZ6ebryA==",
+        "tarball": "https://registry.npmjs.org/@juangcarmona/lighthouse-sdlc/-/lighthouse-sdlc-0.23.4.tgz",
+        "tarballIntegrityVerified": true,
+        "manifestVerified": true
+      }
+    ],
+    "allVerified": true,
+    "history": []
+  },
+  "native": {
+    "workflowRun": "43644310583",
+    "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43644310583",
+    "artifact": {
+      "id": 14133786176,
+      "run": 43644310583,
+      "source": "156ea5520b97390ceace695fa3f19069df85f058",
+      "digest": "sha256:576828b26aa0308ba259b7e196ebf4c3f30005e22036bd922d7dfa35b492aa5c",
+      "verified": true
+    },
+    "originalStatus": "blocked",
+    "executionPhases": {
+      "preflight": "passed",
+      "execution": "passed",
+      "evidence": "passed",
+      "completion": "passed"
+    },
+    "method": "lighthouse-code-architecture-fallback-v1",
+    "upstreamHelperExecuted": false,
+    "findings": [
+      {
+        "id": "F1",
+        "kind": "verification-evidence-gap",
+        "blockingForCurrentAssessment": true,
+        "source": "context.issue.body installed-source assessment; src/tests/audience-guidance.test.mjs; src/tests/sdlc-package.test.mjs; docs/process/20261114-641-workspace-review/review-receipt.json",
+        "detail": "The supplied issue says release/adoption and tarball verification completed, but it supplies no underlying correction-bound check commands, completed results or integrity receipts. The concrete receipt read concerns #641. Test source cannot stand in for executed results for the reviewed guidance correction.",
+        "owner": "Maintainer",
+        "nextAction": "Attach the existing correction/release check receipts with exact revision, commands, exit status and skips, or arrange the checks in an authorized environment. Then reassess the evidence without recreating implementation."
+      },
+      {
+        "id": "F2",
+        "kind": "regression-coverage-risk",
+        "blockingForCurrentAssessment": false,
+        "source": "src/tests/audience-guidance.test.mjs:14-50,90-105; src/tests/sdlc-package.test.mjs:24-106",
+        "detail": "The inspected focused tests check generic audience policy and package inclusion but do not explicitly guard the code fallback authorization condition, exact method ID or caller/trust/data/failure review dimensions. This is a bounded coverage observation, not a claim that every repository test was searched or that a runtime defect was reproduced.",
+        "owner": "SDLC maintainer",
+        "nextAction": "During any separately authorized source follow-up, assess focused mutation tests for these fallback-specific obligations and worker-discovery configuration. This run makes no source change."
+      }
+    ],
+    "cleanup": {
+      "ownedContainers": 9,
+      "remaining": [],
+      "ownedWorkspace": "clean",
+      "preexistingUnownedWorkspace": "preserved"
+    },
+    "notCompleteImplementationQualification": true
+  },
+  "remaining": "Reassess the previously missing correction-bound verification evidence; preserve the original blocked assessment and the nonblocking test-coverage observation. #641 and #661/#584 require separate qualification."
+}
