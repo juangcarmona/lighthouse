@@ -22,7 +22,7 @@ Agent workflows are opt-in through the SDLC package installer. Initialization do
 
 The harness package owns the baseline command and verification contract. The SDLC package owns lifecycle skills, commands, metacommands, routes and gates, and `lighthouse init` records its selected version in `.lighthouse/sdlc.json`. The UI package owns visual tokens, native recipes, `DESIGN.md` and its agent skill. Selecting `visual-theme` projects the guide and skill into the adopter and enables its deterministic guardrail. Stack profiles own their source templates, guidance and checks; the .NET creator is the packaged entry point for the selected backend profile.
 
-ProductShape, ArcShape and OpenSpec keep their own files and commands. Add them through their supported integration routes when the project needs them, and keep their versions and managed paths visible in the project configuration. In an existing repository, run `lighthouse authorities --adopt-existing` to validate the current ProductShape and ArcShape surfaces without running either initializer; review the dry-run plan and add `--apply` only to record both exact versions in Lighthouse-owned configuration.
+ProductShape, ArcShape and OpenSpec keep their own files and commands. Adopt the required ProductShape authority through its supported integration route; select the other integrations according to the project's contracts. Keep their versions and managed paths visible in the project configuration. In an existing repository, run `lighthouse authorities --adopt-existing` to validate the current ProductShape and ArcShape surfaces without running either initializer; review the dry-run plan and add `--apply` only to record both exact versions in Lighthouse-owned configuration.
 
 Use `lighthouse authorities` to prepare the two baseline authorities through their own CLIs. The command previews both plans by default; `--apply` runs ProductShape's full model initialization and ArcShape's architecture initialization without installing agent capabilities. Provider-owned files remain owned by the provider, and Lighthouse records the exact adopted versions in `lighthouse.json` only after both applications succeed.
 
@@ -30,11 +30,13 @@ The generated manifest enables the public-site route for greenfield repositories
 
 Initialization reports missing ProductShape and ArcShape authority inputs as adoption gaps. It does not copy or replace their provider-owned files. The SDLC package remains provider-neutral; an agent host decides where its skills and commands are projected.
 
+Every adopter requires explicit PDaC `v1alpha2`, including when the public site is disabled. The required `foundation.pdac` check validates this contract separately from the provider package version. Follow the [reviewed migration guide](upgrades/pdac-v1alpha2.md) for existing models, active changes and citations; legacy or missing configuration cannot count as compliant adoption.
+
 ## New repository
 
 1. Install the harness and the profile artifacts required by the application.
 2. Run `lighthouse init --name <product>` and review the proposed repository boundaries.
-3. Review the generated manifest and `LIGHTHOUSE.md`, then run `lighthouse verify`.
+3. Review the generated manifest and `LIGHTHOUSE.md`, initialize the required PDaC v1alpha2 authority through `lighthouse authorities --apply` after its dry run, then run `lighthouse verify`.
 4. Add the selected profile checks to the repository verification command and CI workflow.
 5. Record project-owned exceptions with an owner and review date.
 

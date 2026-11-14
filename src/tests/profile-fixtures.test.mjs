@@ -1,3 +1,4 @@
+import { seedProductModel } from './fixtures/product-model.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -47,6 +48,7 @@ test('consumer initialization projects the complete private web composition with
     const planned = run(dir, 'profiles', ['--format', 'json']);
     assert.equal(planned.status, 0, planned.stderr);
     assert.equal(JSON.parse(planned.stdout).status, 'passed');
+    await seedProductModel(dir);
     const verified = run(dir, 'verify', ['--format', 'json']);
     assert.equal(verified.status, 0, verified.stderr);
     assert.equal(JSON.parse(verified.stdout).results.find((result) => result.id === 'foundation.profile-composition').status, 'passed');

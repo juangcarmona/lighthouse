@@ -3,7 +3,7 @@ id: BR-PRODUCT-CHANGE-HANDOFF
 type: business-rule
 title: Product preparation, approval, apply and continuation remain separate
 status: draft
-applies-to: [UC-PREPARE-PRODUCT-CHANGE, UC-RUN-SDLC, UC-IMPLEMENT-CHANGE, UC-CONTINUE-AGENT-RUN]
+applies-to: []
 uses-terms: [TERM-AUTHORITY-MAP, TERM-INTEGRATION, TERM-AGENT-RUN, TERM-WORKFLOW-STATE, TERM-GATE]
 ---
 

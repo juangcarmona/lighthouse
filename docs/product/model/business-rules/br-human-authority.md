@@ -3,7 +3,7 @@ id: BR-HUMAN-AUTHORITY
 type: business-rule
 title: Human decisions remain explicit
 status: draft
-applies-to: [BC-FOUNDATION, UC-IMPLEMENT-CHANGE, UC-UPDATE-FOUNDATION]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-INTEGRATION]
 ---
 

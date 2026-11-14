@@ -5,6 +5,8 @@ description: Use when an authorized issue needs planning, implementation, verifi
 
 # Implement
 
+For product context, scenario selection, tests or evidence review, read and apply [product-derived verification](../../product-verification.md). Trace applicable lifecycle and structured-behaviour meaning to actual tests and results; record justified non-applicability and unresolved model gaps.
+
 Deliver the issue in one branch, including its OpenSpec plan.
 
 For human-facing explanations, PR summaries, agent-facing instructions or UI/visual changes, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used; visual acceptance follows the accepted UI contract.

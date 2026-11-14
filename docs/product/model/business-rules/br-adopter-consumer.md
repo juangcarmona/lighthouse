@@ -3,7 +3,7 @@ id: BR-ADOPTER-CONSUMER
 type: business-rule
 title: An adopter consumes Lighthouse without owning it
 status: draft
-applies-to: [BC-FOUNDATION, UC-ADOPT-CONSUMER]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-ADOPTION-RELEASE, TERM-AUTHORITY-MAP, TERM-INTEGRATION]
 ---
 

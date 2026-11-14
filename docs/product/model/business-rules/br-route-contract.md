@@ -3,7 +3,7 @@ id: BR-ROUTE-CONTRACT
 type: business-rule
 title: Every delivery route preserves the lifecycle contract
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-SDLC]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-DELIVERY-ROUTE, TERM-GATE, TERM-TOOL-CONTRACT, TERM-LABEL-STATE, TERM-TRIAGE]
 ---
 

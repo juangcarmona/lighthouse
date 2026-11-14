@@ -3,7 +3,7 @@ id: BR-ENTRY-AUTHORITY
 type: business-rule
 title: Authorize entry and continuation independently from autonomy
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-SDLC, UC-TRIAGE-WORK-ITEM, UC-CONTINUE-AGENT-RUN]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-DELIVERY-ROUTE, TERM-AGENT-RUN, TERM-GATE, TERM-WORKFLOW-STATE]
 ---
 

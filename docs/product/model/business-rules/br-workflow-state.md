@@ -3,7 +3,7 @@ id: BR-WORKFLOW-STATE
 type: business-rule
 title: Workflow state is explicit and rebuildable
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-SDLC, UC-CONTINUE-AGENT-RUN]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-WORKFLOW-STATE, TERM-AGENT-RUN, TERM-GATE, TERM-LABEL-STATE]
 ---
 

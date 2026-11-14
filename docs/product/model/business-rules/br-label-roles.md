@@ -3,7 +3,7 @@ id: BR-LABEL-ROLES
 type: business-rule
 title: A label has one tracker role
 status: draft
-applies-to: [BC-FOUNDATION, UC-TRIAGE-WORK-ITEM, UC-RUN-SDLC]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-LABEL-STATE, TERM-WORKFLOW-STATE, TERM-DELIVERY-ROUTE, TERM-WORK-ITEM-SIZE]
 ---
 

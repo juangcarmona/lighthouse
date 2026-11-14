@@ -14,7 +14,15 @@ Lighthouse owns its initializer, package contracts, repository checks and adopte
 
 The SDLC package owns lifecycle skills, commands, meta-commands, routes and gates. The CLI records its selected version and host adapters in `.lighthouse/sdlc.json`; the file is configuration and evidence, not agent runtime state.
 
-<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
+<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:6e73f2c3acc3e82ed600a89c36a399a955cdfa2cdba4ba9df9a62443a0a9d6f7" -->
+
+## Product-derived verification
+
+The [host evidence builder](../../../src/packages/sdlc/src/product-change.mjs) uses pinned ProductShape core inspection, impact and citation APIs. Its report index records the serialization contract independently from the provider version and baseline digest; lifecycle and behaviour reports retain provider-parsed definitions. The source tree remains available for governing rules and other context. Existing byte and inventory bounds still apply.
+
+[Packaged verification guidance](../../../src/packages/sdlc/product-verification.md) connects refinement, proposals, implementation and review to lifecycle transitions, terminal states, invariants and structured behaviours. Evidence records distinguish model coverage, executable tests, completed runs and acceptance. ProductShape verifies supported external evidence targets; stale applicability preserves historical outcomes and requires a new validation/run rather than revised historical claims.
+
+<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:90af94bb73cab9bf61e3a4c6eb7d44f68b42513063adadaa629ba72e69150f69" -->
 
 ## Profile and guardrail catalogs
 
@@ -91,7 +99,7 @@ Three independent checks govern proposed host execution: the host validates oper
 
 The initial adapter should grant the engine local workspace capabilities and model access only. Branch publication, issue edits and integration use narrowly scoped publisher credentials. Enforcement loads validators and policy from a pinned trusted installation outside the agent-writable checkout; edits to repository dependencies or workflow files cannot replace the validator for the active run. The adapter must demonstrate its own isolation, cancellation and egress controls; naming gh-aw in a workflow does not preserve gh-aw's controls after replacing its engine path.
 
-<!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:10c5293cdbafffda987b287968e141daceed8a063da166faa339793ebe10c1ed" -->
+<!-- pdac:cite id="BR-AGENT-LAUNCH" digest="sha256:1c13d980e9adc3c245bd133cc9fff99029525daf277e4ba943644510a4060146" -->
 
 ## Application identity
 

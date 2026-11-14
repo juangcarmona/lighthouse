@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 
 const source = fileURLToPath(new URL('../../../../', import.meta.url));
+const cliPackage = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const args = process.argv.slice(2);
 const target = args[0] ? resolve(args[0]) : null;
 const name = args.includes('--name') ? args[args.indexOf('--name') + 1] : null;
@@ -51,6 +52,8 @@ try {
     ['src/dotnet/examples/src', 'src'], ['src/dotnet/tests', 'tests/dotnet'],
     ['src/packages/cli/internal/verify-dotnet.mjs', 'scripts/verify-dotnet.mjs'],
     ['src/packages/cli/src/lighthouse.mjs', 'scripts/lighthouse.mjs'],
+    ['src/packages/cli/src/product-definition.mjs', 'scripts/product-definition.mjs'],
+    ['src/packages/cli/upgrades/pdac-v1alpha2.md', 'docs/upgrades/pdac-v1alpha2.md'],
     ['src/packages/cli/src/aliases.mjs', 'scripts/aliases.mjs'],
     ['src/packages/cli/src/github-profile.mjs', 'scripts/github-profile.mjs'],
     ['src/packages/cli/src/init-plan.mjs', 'scripts/init-plan.mjs'],
@@ -87,15 +90,16 @@ try {
   }, null, 2) + '\n');
   await writeFile(resolve(stage, 'package.json'), JSON.stringify({
     name: `@juangcarmona/${name.toLowerCase()}`, private: true, type: 'module', engines: { node: '>=22' },
-    scripts: { verify: 'node scripts/lighthouse.mjs verify && node scripts/verify-dotnet.mjs' }
+    scripts: { verify: 'node scripts/lighthouse.mjs verify && node scripts/verify-dotnet.mjs' },
+    devDependencies: Object.fromEntries(['@prodshape/cli', '@prodshape/core', '@arcshape/cli'].map(name => [name, cliPackage.dependencies[name]]))
   }, null, 2) + '\n');
-  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse 0.1.0. The Lighthouse-derived starter remains under Apache-2.0; preserve Lighthouse.LICENSE and Lighthouse.NOTICE. Your own application additions keep their own licensing decision.\n\nRun \`dotnet restore ${name}.slnx\` once to create lockfiles, then \`npm run verify\`. Commit lockfiles.\n\nStart \`dotnet run --project src/root/${name}.Api\` or the optional \`src/root/${name}.AppHost\`. Configure Authentication__Authority and Authentication__Audience using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n\nManage integration versions in lighthouse.json. LIGHTHOUSE.md is the only generated projection. Review Lighthouse source upgrades manually; the creator does not synchronize product files.\n`);
+  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse 0.1.0. The Lighthouse-derived starter remains under Apache-2.0; preserve Lighthouse.LICENSE and Lighthouse.NOTICE. Your own application additions keep their own licensing decision.\n\nRun npm install --ignore-scripts. Review node scripts/lighthouse.mjs authorities --dry-run, then run node scripts/lighthouse.mjs authorities --apply to initialize PDaC v1alpha2 and architecture. Read docs/upgrades/pdac-v1alpha2.md before handling existing product content. Run dotnet restore ${name}.slnx, then npm run verify. Commit npm and NuGet lockfiles.\n\nStart \`dotnet run --project src/root/${name}.Api\` or the optional \`src/root/${name}.AppHost\`. Configure Authentication__Authority and Authentication__Audience using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n\nManage integration versions in lighthouse.json. LIGHTHOUSE.md is the only generated projection. Review Lighthouse source upgrades manually; the creator does not synchronize product files.\n`);
   await writeFile(resolve(stage, 'AGENTS.md'), `# ${name} engineering guidance\n\nUse the Lighthouse .NET profile from the pinned baseline revision. Keep Minimal API commands/queries as complete single-file slices. Handlers remain internal sealed and independent of HTTP. Modules use sibling Contracts assemblies. Run npm run verify.\n\nMaintain application and tooling source in this product. Preserve Lighthouse.LICENSE and Lighthouse.NOTICE for the Lighthouse-derived starter. Do not hand-edit LIGHTHOUSE.md. Record narrow, expiring exceptions for suppressed diagnostics; CI status is required only when the repository's hosting rules say so.\n`);
   await mkdir(resolve(stage, '.github/workflows'), { recursive: true });
-  await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm run verify\n`);
+  await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm ci --ignore-scripts\n      - run: npm run verify\n`);
   const initialized = spawnSync(process.execPath, [resolve(stage, 'scripts/lighthouse.mjs'), 'init'], { cwd: stage, encoding: 'utf8' });
   if (initialized.status !== 0) throw new Error(initialized.stderr || 'Projection generation failed.');
   if (existing) await rmdir(target);
   await rename(stage, target);
-  process.stdout.write(`Created ${name} in ${target}. Run dotnet restore ${name}.slnx, then npm run verify.\n`);
+  process.stdout.write(`Created ${name} in ${target}. Install npm dependencies and initialize the authorities as described in README.md, then run dotnet restore ${name}.slnx and npm run verify.\n`);
 } catch (error) { await rm(stage, { recursive: true, force: true }); throw error; }

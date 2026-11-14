@@ -3,7 +3,7 @@ id: BR-HOTFIX
 type: business-rule
 title: Hotfixes stay expedited and controlled
 status: draft
-applies-to: [BC-FOUNDATION, UC-RUN-HOTFIX]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-HOTFIX-ROUTE, TERM-TRIAGE, TERM-GATE, TERM-LABEL-STATE]
 ---
 

@@ -37,4 +37,4 @@ The product model requires an application-aware initializer to include Aspire as
 
 The CLI implements manifest validation, semantic and direct initialization, managed projections, profile composition, authority validation and adoption, package upgrade planning, capability discovery and explicit provider reconciliation. The SDLC package validates lifecycle contracts but does not run agents, persist transcripts or dispatch across repositories.
 
-<!-- pdac:cite id="BR-SDLC-PACKAGE-BOUNDARY" digest="sha256:4ba55af58f445e06672a1a7cc82a2f35fad20051acb9f172ba297998e6af5a71" -->
+<!-- pdac:cite id="BR-SDLC-PACKAGE-BOUNDARY" digest="sha256:e3963f4adb31fd849bf23a9861439143274a32850bb1240c7ddca1a8f56ced3f" -->

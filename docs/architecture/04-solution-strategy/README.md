@@ -18,9 +18,9 @@ Initialization, reconciliation, upgrade planning and authority adoption are prev
 
 ## Provider-owned authorities
 
-ProductShape, ArcShape and OpenSpec retain their own files and validators. Greenfield authority initialization delegates to the provider CLIs; brownfield adoption runs provider validators read-only and records exact versions only in `lighthouse.json`.
+ProductShape, ArcShape and OpenSpec retain their own files and validators. Greenfield authority initialization explicitly selects PDaC v1alpha2 through the ProductShape CLI. Brownfield adoption inspects provider configuration through the supported ProductShape core API, runs provider validators read-only and records exact provider versions in `lighthouse.json`; the serialization contract stays explicit in ProductShape configuration and separate report fields. The required `foundation.pdac` check also runs when no authority is recorded. Missing, legacy, conflicting or unsupported product configuration remains an adoption gap. Reconciliation and upgrades expose the same gap while preserving provider files. The [migration guide](../../../src/packages/cli/upgrades/pdac-v1alpha2.md) defines the reviewed conversion and recovery route.
 
-<!-- pdac:cite id="UC-INITIALIZE-AUTHORITIES" digest="sha256:7243c8af149a2199dd2e9e9f9984a6b7a72de8d98b24917af07fa40861058a51" -->
+<!-- pdac:cite id="UC-INITIALIZE-AUTHORITIES" digest="sha256:1b0190718f5ff2d36fda08cbdd959337cee99604140b89ee220093f68b7a7fdb" -->
 
 ## Explicit evidence states
 

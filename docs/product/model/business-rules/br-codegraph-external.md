@@ -3,7 +3,7 @@ id: BR-CODEGRAPH-EXTERNAL
 type: business-rule
 title: CodeGraph stays external to the repository
 status: draft
-applies-to: [BC-FOUNDATION, UC-INITIALIZE-PROJECT, UC-CHECK-CODEGRAPH]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-CODEGRAPH-SERVICE, TERM-INTEGRATION, TERM-MANAGED-PROJECTION]
 ---
 
