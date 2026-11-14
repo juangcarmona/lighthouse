@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, renameSync, lstatSync, statSync, readdirSync, openSync, fsyncSync, closeSync } from 'node:fs';
 import { join, dirname, isAbsolute } from 'node:path';
+import { allocateWorkspace, checkpointWorkspace, disposeWorkspace, checkRetentionCapacity } from './execution-workspace.mjs';
 
 const label = 'io.lighthouse.execution';
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -52,6 +53,9 @@ function openOwner(path, record, run) {
   const prefix = `lighthouse-${record.key.slice(0, 24)}`;
   return {
     prefix,
+    allocateWorkspace(parent) { return allocateWorkspace(record, parent, () => persist(path, record), dirname(path)); },
+    checkpointWorkspace(baseline, tracked, policy) { return checkpointWorkspace(record, baseline, tracked, policy, () => persist(path, record)); },
+    cleanupWorkspace(options) { return disposeWorkspace(record, () => persist(path, record), dirname(path), options); },
     prepare(args) {
       const removing = args[0] === 'rm' || args[0] === 'container' && args[1] === 'rm' ? 'container' : args[0] === 'network' && args[1] === 'rm' ? 'network' : null;
       if (removing) {
@@ -158,6 +162,19 @@ export function recoverExecutionOwners(directory, { run = docker, isStopped = st
   return receipts;
 }
 export const ownedDockerArgs = (config, args) => config.resourceOwner?.prepare(args) ?? args;
+export async function recoverExecutionWorkspaces(directory, { isStopped = stopped } = {}) {
+  for (const name of readdirSync(directory).filter(name => name.endsWith('.json'))) {
+    const path = join(directory, name), stat = lstatSync(path);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 1024 * 1024) throw Error('Unsafe execution ownership journal');
+    const record = JSON.parse(readFileSync(path, 'utf8')); validate(record);
+    if (name !== `${record.key}.json`) throw Error('Execution ownership journal identity mismatch');
+    if (!record.workspace || record.workspace.status === 'clean') continue;
+    if (isStopped(record.process) !== true) throw Error('Workspace owner is active or unknown; retain its state');
+    if (record.cleanup?.status !== 'clean') throw Error('Owned runtime resources must be absent before workspace recovery');
+    await disposeWorkspace(record, () => persist(path, record), directory);
+  }
+  await checkRetentionCapacity(directory);
+}
 export function runOwnedDocker(config, args, options = {}) {
   const owned = ownedDockerArgs(config, args);
   if (!owned.length) return options.encoding ? '' : Buffer.alloc(0);

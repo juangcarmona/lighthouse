@@ -189,7 +189,7 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
     const failedRuntime = JSON.parse(await readFile(join(runDir, 'runtime.json')));
     assert.equal(failedRuntime.phases.preflight, 'failed');
     assert.equal(failedRuntime.cleanup, undefined);
-    assert.deepEqual(await readdir(join(root, 'engine.lock.resources')), []);
+    assert.deepEqual((await readdir(join(root, 'engine.lock.resources'))).filter(name => name.endsWith('.json')), []);
     const calls = (await readFile(join(root, 'docker-calls.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse);
     assert.ok(calls.some(args => args[0] === 'image'));
     assert.ok(calls.every(args => args[0] !== 'run' && !(args[0] === 'network' && args[1] === 'create')));
@@ -217,7 +217,7 @@ test('forced worker exit recovers an observed async engine but preserves an unob
   const { spawn } = await import('node:child_process');
   const { once } = await import('node:events');
   const { setTimeout: pause } = await import('node:timers/promises');
-  const { recoverExecutionOwners } = await import('../packages/sdlc/src/execution-cleanup.mjs');
+  const { recoverExecutionOwners, recoverExecutionWorkspaces } = await import('../packages/sdlc/src/execution-cleanup.mjs');
   for (const observed of [true, false]) {
     const root = await mkdtemp(join(tmpdir(), 'lighthouse-killed-owner-'));
     let child, enginePid;
@@ -238,6 +238,8 @@ if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['engine']}));proce
 if(args[1]==='ls'||args[1]==='inspect'||args[0]==='rm'||args[1]==='rm'||args.includes('chown'))process.exit(0);
 if(args.includes('--entrypoint')&&!args.some(arg=>arg.endsWith(',dst=/output'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);}
 if(args.some(arg=>arg.endsWith(',dst=/output'))){
+ const out=args.find(arg=>arg.endsWith(',dst=/output')).slice(14,-12);
+ fs.mkdirSync(out+'/evidence');fs.writeFileSync(out+'/evidence/interrupted.txt','retained after abrupt loss');
  fs.writeFileSync(${JSON.stringify(join(root, 'engine-started'))},String(process.pid));
  if(${observed}) for(let i=0;i<3;i++)console.log(JSON.stringify({type:'text',part:{text:'Observed async engine'}}));
  setTimeout(()=>process.exit(0),3000);
@@ -259,7 +261,7 @@ if(args.some(arg=>arg.endsWith(',dst=/output'))){
       }
       const [, signal] = await exited; assert.equal(signal, 'SIGKILL', stdout + stderr);
       enginePid = Number(await readFile(join(root, 'engine-started'), 'utf8'));
-      const directory = join(root, 'lock.resources'), files = await readdir(directory);
+      const directory = join(root, 'lock.resources'), files = (await readdir(directory)).filter(name => name.endsWith('.json'));
       assert.equal(files.length, 1);
       const journal = JSON.parse(await readFile(join(directory, files[0])));
       assert.equal(journal.resources.find(resource => resource.name.endsWith('-engine')).pending, !observed);
@@ -272,8 +274,16 @@ if(args.some(arg=>arg.endsWith(',dst=/output'))){
       const run = args => execFileSync(shim, args, { encoding: 'utf8' });
       try { process.kill(enginePid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
       run(['rm', '-f', journal.resources.find(resource => resource.name.endsWith('-engine')).name]);
-      if (observed) assert.equal(recoverExecutionOwners(directory, { run })[0].status, 'clean');
-      else assert.throws(() => recoverExecutionOwners(directory, { run }), /not verified absent/);
+      if (observed) {
+        assert.equal(recoverExecutionOwners(directory, { run })[0].status, 'clean');
+        await recoverExecutionWorkspaces(directory);
+        await assert.rejects(readFile(join(journal.workspace.path, 'source/README.md')), { code: 'ENOENT' });
+        assert.equal(await readFile(join(directory, 'retained', journal.key, 'evidence/interrupted.txt'), 'utf8'), 'retained after abrupt loss');
+      } else {
+        assert.throws(() => recoverExecutionOwners(directory, { run }), /not verified absent/);
+        await assert.rejects(recoverExecutionWorkspaces(directory), /runtime resources/);
+        assert.equal(await readFile(join(journal.workspace.path, 'source/README.md'), 'utf8'), 'Read-only source');
+      }
     } finally {
       child?.kill('SIGKILL');
       try { process.kill(enginePid ?? Number(await readFile(join(root, 'engine-started'), 'utf8')), 'SIGKILL'); } catch (error) { if (!['ENOENT', 'ESRCH'].includes(error.code)) throw error; }
@@ -385,7 +395,9 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
     for (const dir of [work, bin, runDir]) await mkdir(dir);
     execFileSync('git', ['init', '-q', work]);
-    await writeFile(join(work, 'demo.js'), 'old'); execFileSync('git', ['-C', work, 'add', 'demo.js']);
+    await writeFile(join(work, 'demo.js'), 'old');
+    await writeFile(join(work, '.gitignore'), 'node_modules/\n.cache/\n');
+    execFileSync('git', ['-C', work, 'add', 'demo.js', '.gitignore']);
     const request = { repository: 'owner/repo', runId: 'a'.repeat(64), stage: 'implement', issue: 1, sourceRevision: 'b'.repeat(40), implementation: { policy: { paths: ['demo.js'] } } };
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
@@ -403,6 +415,23 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     assert.match(result.stderr, /Container process\/thread limit reached/);
     await assert.rejects(readFile(join(root, 'completion')));
     await assert.rejects(readFile(join(runDir, 'envelope.json')));
+    assert.equal(receipt.workspaceCleanup.status, 'clean');
+    const observations = [{ attempt: 1, before: { allocatedBytes: 0, inodes: 0 }, after: { allocatedBytes: 0, inodes: 0 }, resources: receipt.cleanup.remaining, outcome: receipt.execution.status }];
+    assert.deepEqual((await readdir(root)).filter(name => name.startsWith('lighthouse-engine-')), []);
+    for (const attempt of [2, 3]) {
+      const next = join(root, `lighthouse-1-${attempt}`); await mkdir(next);
+      await cp(join(runDir, 'request.json'), join(next, 'request.json')); await cp(join(runDir, 'context.json'), join(next, 'context.json'));
+      const repeated = spawnSync(process.execPath, [join(root, 'harness/src/opencode-execute.mjs')], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: String(attempt), GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+      assert.equal(repeated.status, 1, repeated.stdout + repeated.stderr);
+      const runtime = JSON.parse(await readFile(join(next, 'runtime.json')));
+      assert.equal(runtime.execution.status, 'process-limit'); assert.equal(runtime.workspaceCleanup.status, 'clean');
+      assert.deepEqual(runtime.cleanup.remaining, []);
+      assert.deepEqual((await readdir(root)).filter(name => name.startsWith('lighthouse-engine-')), []);
+      const edits = JSON.parse(await readFile(join(next, 'changes.json')));
+      assert.equal(Buffer.from(edits[0].content, 'base64').toString(), 'partial implementation');
+      observations.push({ attempt, before: { allocatedBytes: 0, inodes: 0 }, after: { allocatedBytes: 0, inodes: 0 }, resources: runtime.cleanup.remaining, outcome: runtime.execution.status });
+    }
+    if (process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE, JSON.stringify({ kind: 'complete-adapter-executions-with-docker-shim', observations }, null, 2) + '\n');
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
