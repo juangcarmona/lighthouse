@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, symlink, rm, readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
@@ -20,11 +20,12 @@ async function until(check, milliseconds = 5000) {
 
 test('a busy host waits within its own budget, preserves the live owner, and releases on worker exit', { skip: !linux, timeout: 20000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'lighthouse-host-slot-'));
-  const executable = join(directory, 'Runner.Worker'), lock = join(directory, 'gateway.lock');
-  await symlink(process.execPath, executable);
+  const lock = join(directory, 'gateway.lock');
   const workers = [];
   const launch = limit => {
-    const child = spawn(executable, ['-e', `
+    const child = spawn(process.execPath, ['-e', `
+      process.title='Runner.Worker';
+      if(require('node:fs').readFileSync('/proc/self/comm','utf8').trim()!=='Runner.Worker')throw Error('Fixture worker identity was not established');
       const {spawnSync}=require('node:child_process');
       const result=spawnSync('bash',[process.argv[1]],{stdio:'inherit'});
       if(result.status!==0)process.exit(result.status??1);
