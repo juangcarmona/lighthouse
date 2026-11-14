@@ -37,7 +37,7 @@ Every terminal path MUST retain bounded candidate changes and diagnostics before
 
 ### Requirement: Local retention is bounded independently of remote artifacts
 
-Local recovery storage MUST have explicit count and byte limits. Reaching a limit MUST stop admission until an operator releases retained state. Remote artifact retention MUST NOT itself authorize deleting local evidence or modified source.
+Local recovery storage MUST have explicit bundle count, byte and filesystem-entry limits, including empty files and directories. Reaching a limit MUST stop admission until an operator releases retained state. Remote artifact retention MUST NOT itself authorize deleting local evidence or modified source.
 
 #### Scenario: Recovery storage is full
 

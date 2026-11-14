@@ -1,0 +1,110 @@
+{
+  "kind": "real-process-filesystem-not-native-docker",
+  "observations": [
+    {
+      "attempt": 1,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "before": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "during": {
+        "allocatedBytes": 217088,
+        "inodes": 53
+      },
+      "after": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "resources": [],
+      "retainedBundles": 1
+    },
+    {
+      "attempt": 2,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "before": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "during": {
+        "allocatedBytes": 217088,
+        "inodes": 53
+      },
+      "after": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "resources": [],
+      "retainedBundles": 2
+    },
+    {
+      "attempt": 3,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "before": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "during": {
+        "allocatedBytes": 217088,
+        "inodes": 53
+      },
+      "after": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "resources": [],
+      "retainedBundles": 3
+    },
+    {
+      "attempt": 4,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "before": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "during": {
+        "allocatedBytes": 217088,
+        "inodes": 53
+      },
+      "after": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "resources": [],
+      "retainedBundles": 4
+    },
+    {
+      "attempt": 5,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "before": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "during": {
+        "allocatedBytes": 217088,
+        "inodes": 53
+      },
+      "after": {
+        "allocatedBytes": 12288,
+        "inodes": 3
+      },
+      "resources": [],
+      "retainedBundles": 5
+    }
+  ]
+}

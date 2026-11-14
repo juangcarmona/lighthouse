@@ -1,7 +1,7 @@
 import { closeSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, readFile, symlink, rm, cp, readdir } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, symlink, rm, cp, readdir, lstat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -18,6 +18,18 @@ async function fixtureHarness(root) {
   execFileSync('git', ['-C', harness, 'add', '.']);
   execFileSync('git', ['-C', harness, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Fixture harness']);
   return join(harness, 'src/opencode-execute.mjs');
+}
+
+async function workspaceUsage(root) {
+  const paths = (await readdir(root)).filter(name => name.startsWith('lighthouse-engine-'));
+  const usage = { paths, allocatedBytes: 0, apparentBytes: 0, inodes: 0 };
+  async function visit(path) {
+    const stat = await lstat(path);
+    usage.allocatedBytes += stat.blocks * 512; usage.apparentBytes += stat.size; usage.inodes++;
+    if (stat.isDirectory()) for (const name of await readdir(path)) await visit(join(path, name));
+  }
+  for (const name of paths) await visit(join(root, name));
+  return usage;
 }
 
 test('apply-review host preparation requalifies archived plans without resurrecting an active change', { timeout: 120000 }, async t => {
@@ -402,9 +414,16 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Implement');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, implementationImage: `sha256:${'b'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
-    await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
+    await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); for(const folder of ['node_modules','.cache']){fs.mkdirSync(source+'/'+folder);fs.writeFileSync(source+'/'+folder+'/generated',Buffer.alloc(8192));} const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
     await chmod(shim, 0o755);
-    const result = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+    const harness = await fixtureHarness(root);
+    const probe = join(root, 'lighthouse-engine-measurement-control');
+    await mkdir(probe); await writeFile(join(probe, 'data'), Buffer.alloc(8192));
+    const measured = await workspaceUsage(root);
+    assert.equal(measured.inodes, 2); assert.ok(measured.allocatedBytes >= 8192);
+    await rm(probe, { recursive: true });
+    const before = await workspaceUsage(root);
+    const result = spawnSync(process.execPath, [harness], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
     assert.equal(result.status, 1, result.stdout + result.stderr);
     const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
     assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'partial implementation');
@@ -416,11 +435,12 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await assert.rejects(readFile(join(root, 'completion')));
     await assert.rejects(readFile(join(runDir, 'envelope.json')));
     assert.equal(receipt.workspaceCleanup.status, 'clean');
-    const observations = [{ attempt: 1, before: { allocatedBytes: 0, inodes: 0 }, after: { allocatedBytes: 0, inodes: 0 }, resources: receipt.cleanup.remaining, outcome: receipt.execution.status }];
+    const observations = [{ attempt: 1, before, after: await workspaceUsage(root), resources: receipt.cleanup.remaining, outcome: receipt.execution.status }];
     assert.deepEqual((await readdir(root)).filter(name => name.startsWith('lighthouse-engine-')), []);
     for (const attempt of [2, 3]) {
       const next = join(root, `lighthouse-1-${attempt}`); await mkdir(next);
       await cp(join(runDir, 'request.json'), join(next, 'request.json')); await cp(join(runDir, 'context.json'), join(next, 'context.json'));
+      const before = await workspaceUsage(root);
       const repeated = spawnSync(process.execPath, [join(root, 'harness/src/opencode-execute.mjs')], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: String(attempt), GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
       assert.equal(repeated.status, 1, repeated.stdout + repeated.stderr);
       const runtime = JSON.parse(await readFile(join(next, 'runtime.json')));
@@ -429,7 +449,7 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
       assert.deepEqual((await readdir(root)).filter(name => name.startsWith('lighthouse-engine-')), []);
       const edits = JSON.parse(await readFile(join(next, 'changes.json')));
       assert.equal(Buffer.from(edits[0].content, 'base64').toString(), 'partial implementation');
-      observations.push({ attempt, before: { allocatedBytes: 0, inodes: 0 }, after: { allocatedBytes: 0, inodes: 0 }, resources: runtime.cleanup.remaining, outcome: runtime.execution.status });
+      observations.push({ attempt, before, after: await workspaceUsage(root), resources: runtime.cleanup.remaining, outcome: runtime.execution.status });
     }
     if (process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE, JSON.stringify({ kind: 'complete-adapter-executions-with-docker-shim', observations }, null, 2) + '\n');
   } finally { await rm(root, { recursive: true, force: true }); }

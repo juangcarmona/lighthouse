@@ -228,6 +228,17 @@ test('local recovery byte limits are enforced before allocation without evicting
     assert.equal(existsSync(join(root, 'retained-report')), true);
   } finally { f.dispose(); }
 });
+test('local recovery entry limits block inode growth even when retained files contain no bytes', async () => {
+  const f = fixture();
+  try {
+    const root = join(f.directory, 'retained'); mkdirSync(root);
+    const bundle = join(root, 'held'); mkdirSync(bundle);
+    for (let index = 0; index < 8192; index++) writeFileSync(join(bundle, String(index)), '');
+    await assert.rejects(f.owner.allocateWorkspace(f.directory), /retention.*limit/);
+    assert.equal(readdirSync(bundle).length, 8192);
+    assert.equal(readdirSync(f.directory).filter(name => name.startsWith('lighthouse-engine-')).length, 0);
+  } finally { f.dispose(); }
+});
 test('interrupted workspace removal retries from sealed retention and rejects changed retained evidence', async () => {
   for (const tampered of [false, true]) {
     const f = fixture();

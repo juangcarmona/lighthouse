@@ -4,7 +4,7 @@ import { join, dirname, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const maxBundles = 32, maxBytes = 512 * 1024 * 1024;
+const maxBundles = 32, maxBytes = 512 * 1024 * 1024, maxEntries = 8192;
 const identity = stat => ({ dev: stat.dev, ino: stat.ino });
 const matches = (stat, expected) => stat.isDirectory() && !stat.isSymbolicLink() && stat.dev === expected.dev && stat.ino === expected.ino;
 async function sync(path) {
@@ -12,8 +12,9 @@ async function sync(path) {
   try { await fd.sync(); } finally { await fd.close(); }
 }
 async function seal(root) {
-  const files = []; let bytes = 0;
+  const files = []; let bytes = 0, entries = 0;
   async function visit(path, relative = '') {
+    if (++entries > maxEntries) throw Error('Retained workspace evidence exceeds entry bounds');
     const stat = await lstat(path);
     if (stat.isSymbolicLink() || !stat.isFile() && !stat.isDirectory()) throw Error('Unsafe retained workspace evidence');
     if (stat.isDirectory()) {
@@ -28,13 +29,13 @@ async function seal(root) {
   await visit(root);
   return hash(JSON.stringify(files));
 }
-async function size(path) {
+async function size(path, total = { bytes: 0, entries: 0 }) {
+  if (++total.entries > maxEntries) throw Error('Local recovery retention entry limit reached; operator must archive and explicitly release retained bundles before admission');
   const stat = await lstat(path);
   if (stat.isSymbolicLink() || !stat.isDirectory() && !stat.isFile()) throw Error('Unsafe local recovery storage');
-  if (stat.isFile()) return stat.size;
-  let bytes = 0;
-  for (const name of await readdir(path)) bytes += await size(join(path, name));
-  return bytes;
+  if (stat.isFile()) total.bytes += stat.size;
+  else for (const name of await readdir(path)) await size(join(path, name), total);
+  return total;
 }
 export async function checkRetentionCapacity(directory, additionalBytes = 0, additionalBundles = 1) {
   const root = join(directory, 'retained');
@@ -42,7 +43,8 @@ export async function checkRetentionCapacity(directory, additionalBytes = 0, add
   const stat = await lstat(root);
   if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Unsafe local recovery storage');
   const entries = await readdir(root);
-  if (entries.length + additionalBundles > maxBundles || await size(root) + additionalBytes > maxBytes) throw Error('Local recovery retention limit reached; operator must archive and explicitly release retained bundles before admission');
+  const usage = await size(root);
+  if (entries.length + additionalBundles > maxBundles || usage.bytes + additionalBytes > maxBytes || usage.entries + additionalBundles * 3 > maxEntries) throw Error('Local recovery retention limit reached; operator must archive and explicitly release retained bundles before admission');
 }
 export async function allocateWorkspace(record, parent, persist, directory) {
   await checkRetentionCapacity(directory);

@@ -19,7 +19,7 @@ See proposal.md for motivation. The existing Docker journal records process iden
 - Reuse the existing process identity check. Workspace recovery follows Docker cleanup and refuses active or unknown owners. Use an async recovery entrypoint for filesystem retention rather than changing the synchronous Docker API.
 - Save a bounded, digest-bound baseline and policy in adapter-private workspace storage before worker startup. Recover changes through the existing source collector and validation, excluding ignored dependencies without following links. Never execute candidate Git hooks.
 - Retain evidence and changes atomically under the ownership directory. Recovery is diagnostic only and never emits publication or completion. Failed collection preserves the original workspace and blocks new admission.
-- Keep at most 32 local recovery bundles and 512 MiB of retained content per ownership directory. Reaching either limit blocks admission until an operator explicitly archives/releases retained bundles; there is no age-based deletion of modified source. This is independent of remote artifact lifetime.
+- Keep at most 32 local recovery bundles, 512 MiB of retained content and 8,192 retained filesystem entries per ownership directory. Reaching a limit blocks admission until an operator explicitly archives/releases retained bundles; there is no age-based deletion of modified source. This is independent of remote artifact lifetime.
 - Keep parent/source identity checks and absence checks in the deletion path. Nested symlinks are unlinked, never traversed; substituted roots are preserved. Existing Docker cleanup must finish before disposal.
 
 ## Risks / Trade-offs

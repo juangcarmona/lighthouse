@@ -13,10 +13,10 @@
 
 ## 3. Qualification
 
-- [x] 3.1 Retain repeated test-owned complete-execution byte/inode/resource observations and run all configured repository and provider checks; record unavailable native qualification separately.
+- [x] 3.1 Retain measured shim-adapter failure repetitions and real-process filesystem recovery observations, and run the configured repository and provider checks; record unavailable native qualification separately.
 
 ## Workflow follow-up
 
 - Publish the reviewed package, adopt the harness, and qualify repeated installed native workers separately from source verification.
-- Complete the repository-required ponytail review when the skill is available; source checks do not waive that requirement.
+- The maintainer completed the repository-required Ponytail review and corrected the entry-budget and measurement findings; see the [source review receipt](../../../docs/process/20261114-641-workspace-review/README.md). The original native assessment remains blocked.
 - Archive the OpenSpec change after repository review and integration.
