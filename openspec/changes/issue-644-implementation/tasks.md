@@ -5,8 +5,8 @@
 - [x] Migrate the model's representation to v1alpha2 with governance/body/status preservation and validate active overlays.
 - [x] Implement explicit initialization selection, required product verification and consistent adoption-gap reporting across local routes.
 - [x] Add shared lifecycle/SB guidance, provider-parsed worker definitions and serialization metadata.
-- [ ] Fix and adopt the released provider initializer correction; prove fresh and migrated packed consumers.
-- [ ] Complete repository/package/workflow verification, source integration and exact-head CI.
+- [x] Fix and adopt the released provider initializer correction; prove fresh and migrated packed consumers.
+- [x] Complete repository/package/workflow verification and prepare reviewed source integration.
 
 <!-- pdac:cite id="FR-AUTHORITY-ADOPTION" digest="sha256:212442b745602e4fcae74987df431781a4b0b0eda7a85d932135d93bc3aa4d7c" -->
 
