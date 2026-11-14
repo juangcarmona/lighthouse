@@ -629,5 +629,58 @@
         "src/tests/execution-environment.integration.test.mjs": "Extend real Docker preflight qualification for the compatible SDK and pinned Aspire CLI/bundle required by #661; preserve opt-in behavior, immutable image inputs, non-root/read-only restrictions and cleanup assertions."
       }
     }
+  },
+  "641": {
+    "scope": "Complete only residual #641 acceptance. Preserve already-merged Docker ownership cleanup, anonymous-volume removal, Tini reaping and command-owned npm scratch; do not reimplement them. Classify disposable workspace/dependency/cache ownership and local evidence retention, qualify recovery after abrupt adapter loss, and retain repeated complete-execution byte/inode/resource observations. Remove only proven stopped execution-owned disposable resources after evidence retention; preserve active/unknown owners, modified source, shared named data/authentication volumes, provider-owned paths and other runs. Historical unowned cleanup remains outside scope. Put regression additions in the three admitted test files; stop and identify any additional protected input needed before changing it. Keep source checks, package release, installed image adoption and native acceptance separate; allow 600000 ms for repository verification and use an H1 after changeset frontmatter.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "src/tests/execution-cleanup.test.mjs": "Add #641 ownership, stopped-process, bounded retention and abrupt workspace/cache recovery regressions; preserve active/unknown owner, foreign-resource and failure-visibility assertions.",
+        "src/tests/execution-cleanup.integration.test.mjs": "Qualify remaining #641 disposable workspace/cache recovery and repeated byte/inode/resource behavior using test-owned paths and resources; preserve named-volume contents, foreign executions, existing Docker fault scenarios and idle-host constraints.",
+        "src/tests/opencode-execute.test.mjs": "Extend #641 adapter terminal-path and abrupt-loss evidence/cleanup regressions; preserve candidate recovery, source/credential isolation, cancellation semantics and existing resource-limit assertions."
+      }
+    }
   }
 }
