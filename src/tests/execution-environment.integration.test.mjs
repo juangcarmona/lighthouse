@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { startEnvironment } from '../packages/sdlc/src/execution-environment.mjs';
 import { compatibleSdk, compatibleAspire, bundleProbe } from '../packages/sdlc/src/dotnet-prerequisites.mjs';
-import { runImplementationChecks } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { writableTree } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 const image = process.env.LIGHTHOUSE_TEST_DOTNET_IMAGE;
 const postgresImage = process.env.LIGHTHOUSE_TEST_POSTGRES_IMAGE;
@@ -62,6 +63,11 @@ test('real PostgreSQL is fresh between phases and leaves no container or network
 test('real host checks preserve failure and cancellation and clean services', { skip: !image || !postgresImage }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-environment-checks-'));
   try {
+    // Docker reads a disposable harness copy even when the source checkout is private.
+    const harness = join(root, 'harness');
+    await cp(new URL('../packages/sdlc/', import.meta.url), harness, { recursive: true, filter: path => !path.split('/').includes('node_modules') });
+    await writableTree(harness);
+    const { runImplementationChecks } = await import(pathToFileURL(join(harness, 'src/implementation-runtime.mjs')).href);
     for (const scenario of ['failure', 'cancel']) {
       const name = `lighthouse-real-${scenario}-${process.pid}`;
       const workspace = join(root, scenario);

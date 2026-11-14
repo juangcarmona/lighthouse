@@ -1,5 +1,9 @@
 # managed-command-scratch Specification
 
+<!-- pdac-scope: cited -->
+<!-- pdac:cite id="FR-AGENT-LAUNCH" digest="sha256:892d98b8746f9267d258ba1fc01447ed9354908c9af168f7269a5d21317d54ce" -->
+<!-- pdac:cite id="BR-BOUNDED-WORKFLOW" digest="sha256:c07c375e4fa1788978ca5d900bc8f0ea9bc009bc71a1fff5d7602ebed6b00894" -->
+
 ## Purpose
 
 Bound disposable npm download accumulation between commands without weakening private workload isolation or changing verification outcomes.
