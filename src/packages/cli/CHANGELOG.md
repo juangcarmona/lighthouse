@@ -1,5 +1,21 @@
 # @juangcarmona/lighthouse
 
+## 0.13.0
+
+### Minor Changes
+
+- 1e13729: # PDaC v1alpha2 adoption and verification
+
+  Require explicit, provider-validated PDaC v1alpha2 for Lighthouse adoption and verification. Report missing, legacy, conflicting and unsupported product configuration with reviewed migration guidance. Include lifecycle and structured-behaviour definitions in worker context, trace scenarios to actual test results, and preserve historical outcomes when evidence citations become stale.
+
+### Patch Changes
+
+- Updated dependencies [6d4d3e1]
+- Updated dependencies [c0e8e7f]
+- Updated dependencies [1e13729]
+- Updated dependencies [e9a5ecb]
+  - @juangcarmona/lighthouse-sdlc@0.23.0
+
 ## 0.12.73
 
 ### Patch Changes
