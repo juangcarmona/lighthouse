@@ -73,4 +73,16 @@ The [implementation skill](skills/implement/SKILL.md#workspace-command-slot) use
 
 The adapter supervises the image's existing entrypoint and each independent check with the same packaged Node helper. On Linux cgroup v2, it records task peak/limit, task-limit rejections, peak memory and OOM kills while the container still exists. `runtime.json.execution` and each `checks.json` entry retain the sanitized diagnostic summary, exit code and signal. Unsupported counters remain `null`. A confirmed resource rejection, abort, timeout or cancellation fails the attempt; diagnostics do not grant publication or retry authority.
 
+### Private scratch and npm downloads
+
+Both the agent and each independent check have a private 2 GiB `/tmp` mount. This is a byte limit, not host free space; tmpfs usage also competes with the workload's 4 GiB memory limit. The agent retains scratch across commands, while independent checks receive fresh scratch for each command. Passing independent checks cannot turn a failed local attempt into success.
+
+The runtime enables command-owned npm caches through `LIGHTHOUSE_COMMAND_NPM_CACHE=1`. Each managed invocation gives its command group a fresh private directory under `/tmp`, through both npm cache environment spellings. The helper removes only that directory after stopping the group's descendants and before releasing its slot. Success, failure, spawn failure and handled cancellation all dispose downloads; installed workspace dependencies, NuGet packages, .NET state, evidence and inherited caches are not cleanup targets. Nested managed commands own separate directories. Abrupt process death relies on final container removal.
+
+Run cold `npm ci` as one managed attempt, wait for its terminal receipt, then run the unchanged .NET restore/verification as the next attempt. Downloads are reusable within a command group, not across groups. Combining installation and verification in a single shell command retains that group's cache until both finish. Explicit npm `--cache` or other cache overrides remain caller-owned and are not reclaimed by this lifecycle. Do not redirect them to host or shared caches.
+
+Managed receipts include available scratch bytes before execution and around cleanup when measurable, and the npm cleanup outcome. Allocation or cleanup failure cannot report success. Original failing command output and status remain visible, with capacity diagnostics; `NU1301` alone is not proof of ENOSPC. This lifecycle removes cross-command npm accumulation, not peak demand within a command: NuGet, .NET, browser data and other temporary files must still fit the private byte and memory limits. No arbitrary-workload capacity guarantee is implied.
+
+Qualify a .NET consumer on a supported host using a cold install and unchanged verification under these limits. Retain the local receipts and separate independent results for the exact same candidate. Small synthetic demand regressions establish cleanup boundaries, not native capacity acceptance or installed rollout.
+
 Adapter and mounted-skill updates require a new workflow source pin, without an engine-image rebuild. Rebuild only when changing tools, the engine binary or baked image policy. Follow the [workflow update procedure](README.md#install-or-update-workflows), validate on one consumer, then roll out to the remaining repositories between runs.
