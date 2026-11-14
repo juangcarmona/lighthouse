@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.6
+
+### Patch Changes
+
+- c14d00a: # Preserve original worker failures
+
+  Preserve the original worker failure when workspace retention or resource cleanup also fails. Keep cleanup failures visible in runtime receipts and diagnostics, retain unsafe workspaces for reconciliation, and continue to fail attempts whose only failure is cleanup.
+
 ## 0.23.5
 
 ### Patch Changes
