@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "kind": "maintainer-standalone-full-builder-qualification",
+  "sourceCommit": "c2fb8ce81fb7b6bab7e4292a288aeac12b04c961",
+  "image": "sha256:7137c919fea5359bab538485306e7c091804fa527835fef88b510ee5fe291406",
+  "passed": true,
+  "dockerTests": 4,
+  "skipped": 0,
+  "totalDurationMs": 348744.874106,
+  "receipts": [
+    {
+      "id": "local-install",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 22,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 1140338688,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2017669120
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        }
+      }
+    },
+    {
+      "id": "local-dotnet",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 193,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 2412584960,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266343936
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266348032
+        }
+      }
+    },
+    {
+      "id": "independent-dotnet",
+      "state": "completed",
+      "exitCode": 0,
+      "signal": null,
+      "resources": {
+        "pidsLimit": 1024,
+        "pidsPeak": 171,
+        "pidsDenied": 0,
+        "memoryPeakBytes": 1386995712,
+        "oomKills": 0
+      },
+      "scratch": {
+        "npmCache": "released",
+        "beforeCommand": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 2147483648
+        },
+        "beforeCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266343936
+        },
+        "afterCleanup": {
+          "capacityBytes": 2147483648,
+          "availableBytes": 1266348032
+        }
+      }
+    }
+  ],
+  "limits": {
+    "uid": 20003,
+    "cpus": 2,
+    "memoryBytes": 4294967296,
+    "pids": 1024,
+    "scratchBytes": 2147483648,
+    "readOnlyRoot": true,
+    "dropAllCapabilities": true,
+    "noNewPrivileges": true
+  },
+  "localRepositoryVerify": {
+    "passed": 1283,
+    "failed": 0,
+    "optionalSkipped": 14,
+    "publicSiteFiles": 136
+  },
+  "sourceCitationComparison": {
+    "baselineErrors": 1,
+    "candidateErrors": 0,
+    "baselineWarnings": 309,
+    "candidateWarnings": 309,
+    "staleCitationsUnchanged": 295
+  },
+  "hostedChecks": {
+    "repositoryRun": "43628805701",
+    "packageRun": "43628805776",
+    "sourceHead": "c2fb8ce81fb7b6bab7e4292a288aeac12b04c961"
+  },
+  "writingReview": "Packaged Plain English and Humanizer fallback, then source comparison; Writing for Agents fallback for the reproduction command. No upstream helper execution is claimed.",
+  "installationConfirmed": false,
+  "nativeAcceptedDeliveryConfirmed": false
+}

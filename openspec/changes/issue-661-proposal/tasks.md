@@ -12,9 +12,9 @@ Prerequisite failures must remain explicit and stop dependent work.
 
 ## 2. Verify the complete candidate
 
-- [ ] 2.1 Obtain passing admitted install, full repository verification, citation and strict plan checks; retain completed receipts, product traceability, writing review and retrospective in Actions evidence.
+- [x] 2.1 Obtain passing admitted install, full repository verification, citation and strict plan checks; retain completed receipts, product traceability, writing review and retrospective in Actions evidence.
 
-All admitted commands ran. Installation, focused tests and strict plan validation passed. Full verification is blocked by the protected SDK 10.0.100 shim at `src/tests/opencode-execute.test.mjs:442`, which is not in #661's admitted correction list. Citation verification is blocked by the pre-existing missing scope declaration in `openspec/specs/managed-command-scratch/spec.md`; #661's six new citations are current. Neither protected fixture corrections nor unrelated spec edits were made. Documentation links and public-site verification passed separately after the full command stopped at the test failure.
+The original native attempt published a blocked candidate after the old SDK shim failed host verification; that outcome remains unchanged. Maintainer correction `c2fb8ce81fb7b6bab7e4292a288aeac12b04c961` corrected the remaining fixture, restored archived citation metadata and qualified the actual operator builder. Full repository verification passed (1,283 tests; 14 optional skips), citation verification has zero errors with unchanged baseline warnings, and strict plan validation passed. All four real Docker tests passed without skips, including cold npm plus unchanged local/separate .NET verification. [Retained report and receipts](../../../docs/process/20261114-661-image-qualification/README.md) bind the checked source and immutable image. Package publication, installed adoption and native acceptance remain separate.
 
 ## Workflow follow-up
 
