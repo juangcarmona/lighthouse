@@ -3,7 +3,7 @@ id: CHG-590-DELIVERY-ACCEPTANCE
 type: product-change
 title: Define source-bound accepted-delivery receipts
 status: draft
-base-revision: '60df0e5a371c0bdfb100cbd985910357ca89451a'
+base-revision: '4d88940cd356f92ec4fb87cdb32206cad41340e9'
 operations:
   add:
     - BR-DELIVERY-ACCEPTANCE
