@@ -56,9 +56,12 @@ export async function installProductEvidence(input, source, expectedBaseline) {
   const stat = await lstat(input);
   if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('ProductShape evidence directory is unavailable or unsafe');
   const names = await readdir(input);
-  if (!names.includes('index.json') || names.length > 513 || names.some(name => name !== 'index.json' && !/^[A-Z0-9][A-Z0-9-]{0,159}\.json$/.test(name))) throw Error('ProductShape evidence inventory is invalid');
+  const inventory = new Set(names);
+  if (!inventory.has('index.json') || names.some(name => name !== 'index.json' && !/^[A-Z0-9][A-Z0-9-]{0,159}\.json$/.test(name))) throw Error('ProductShape evidence inventory is invalid');
+  const indexStat = await lstat(join(input, 'index.json'));
+  if (!indexStat.isFile() || indexStat.isSymbolicLink() || indexStat.size > 512 * 1024) throw Error('ProductShape evidence index is unsafe or exceeds bounds');
   const index = JSON.parse(await readFile(join(input, 'index.json'), 'utf8'));
-  if (index.schemaVersion !== 1 || index.source !== '@prodshape/core' || index.version !== '0.25.0' || expectedBaseline && index.baselineDigest !== expectedBaseline || !Array.isArray(index.artifacts) || index.artifacts.length !== names.length - 1 || new Set(index.artifacts.map(item => item.report)).size !== index.artifacts.length || index.artifacts.some(item => !names.includes(item.report) || item.report !== `${item.id}.json`)) throw Error('ProductShape evidence index is invalid');
+  if (index.schemaVersion !== 1 || index.source !== '@prodshape/core' || index.version !== '0.25.0' || expectedBaseline && index.baselineDigest !== expectedBaseline || !Array.isArray(index.artifacts) || index.artifacts.length !== names.length - 1 || new Set(index.artifacts.map(item => item.report)).size !== index.artifacts.length || index.artifacts.some(item => !inventory.has(item.report) || item.report !== `${item.id}.json`)) throw Error('ProductShape evidence index is invalid');
   let bytes = 0;
   const destination = join(source, '.lighthouse-product-evidence');
   await mkdir(destination, { mode: 0o755 });
@@ -73,10 +76,6 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   signal?.throwIfAborted();
   try { await lstat(join(source, '.product/config.yaml')); }
   catch (error) { if (error.code === 'ENOENT') return null; throw error; }
-  try {
-    const manifest = JSON.parse(await readFile(join(source, 'lighthouse.json'), 'utf8'));
-    if (manifest.integrations?.productShape === null) return null;
-  } catch (error) { if (error.code !== 'ENOENT') throw error; }
   if (!core) {
     const prefix = join(runDir, 'product-provider'), home = join(prefix, 'home');
     await mkdir(home, { recursive: true });
@@ -100,10 +99,11 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   const result = await prepareProductEvidence(source, reports, core, { baselineDigest });
   signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
-  const evidence = { provider: '@prodshape/core', version: core.version, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
+  const evidence = { provider: '@prodshape/core', version: core.version, serializationVersion: result.serializationVersion, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
   const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
   context.productEvidence = evidence;
   context.contract.rules += ' The host prepared current ProductShape inspect, impact and citation reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  context.contract.rules += ' For refinement, proposals, implementation and review, follow /harness/product-verification.md. Lifecycle and structured-behaviour reports include provider-parsed definitions; derive relevant transition, forbidden/terminal and invariant checks, trace behaviours to actual tests and results, and retain source/model revisions and current citations. Report justified non-applicability and model gaps. Model coverage, test existence, execution and acceptance are separate facts.';
   signal?.throwIfAborted();
   await writeFile(path, JSON.stringify(context));
   return evidence;
@@ -153,15 +153,25 @@ async function main() {
   const phaseStarted = new Map();
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
+  let child, timer, heartbeat, controllerWatch, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const preparation = new AbortController();
   const cancel = (reason = 'cancelled') => { cancelled = true; preparation.abort(); stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
+  const controllerPid = env.LIGHTHOUSE_ENGINE_CONTROLLER_PID === undefined ? (process.ppid > 1 ? process.ppid : null) : Number(env.LIGHTHOUSE_ENGINE_CONTROLLER_PID);
+  const checkController = () => {
+    if (controllerPid === null || process.ppid === controllerPid) return true;
+    cancel('controller-exited'); return false;
+  };
   process.once('SIGTERM', onSignal); process.once('SIGINT', onSignal);
   try {
+    if (controllerPid !== null && (!Number.isSafeInteger(controllerPid) || controllerPid < 1)) throw Error('Invalid engine controller identity');
+    if (!checkController()) throw Error('Engine controller is no longer active');
+    if (controllerPid !== null) controllerWatch = setInterval(checkController, 500).unref();
     console.log('Waiting for the operator host engine slot');
     const waitStarted = Date.now(); telemetry.emit('execution.host-wait.started', { status: 'waiting' });
-    slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config), { signal: preparation.signal });
+    const deliveryDeadline = env.LIGHTHOUSE_DELIVERY_DEADLINE === undefined ? undefined : Number(env.LIGHTHOUSE_DELIVERY_DEADLINE);
+    slot = await acquireEngineSlot(config.lock, engineSlotWaitSeconds(config, { deadline: deliveryDeadline }), { signal: preparation.signal });
+    if (!checkController()) throw Error('Engine controller is no longer active');
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
@@ -171,7 +181,7 @@ async function main() {
     await recordPhase('running');
     runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
     await recordPhase('passed');
-    if (cancelled) throw Error('Execution cancelled before agent startup');
+    if (cancelled || !checkController()) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
     if (request.worker === 'product-change') {
@@ -244,7 +254,7 @@ async function main() {
     nativeTimer = setInterval(nativeCollect, 1000);
     phase = 'execution'; await recordPhase('running');
     const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', name, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only',
-      '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
+      '--tmpfs', '/tmp:rw,exec,size=2g,mode=1777', '--tmpfs', `/home/engine/.cache:rw,size=1g,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.config:rw,size=16m,uid=${config.uid},gid=${config.uid}`, '--tmpfs', `/home/engine/.local/state:rw,size=64m,uid=${config.uid},gid=${config.uid}`,
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`] : []),
       ...(workerConfigPath ? ['--mount', `type=bind,src=${workerConfigPath},dst=/etc/opencode/opencode.json,readonly`, '--env', 'LIGHTHOUSE_NATIVE_TELEMETRY_FILE=/output/execution/native-events.jsonl'] : []),
@@ -387,7 +397,7 @@ async function main() {
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(eventsPath, join(runDir, 'evidence/host/engine-events.jsonl')); }
       catch { console.error('Engine events could not be retained; inspect the runner diagnostics.'); }
     }
-    clearTimeout(timer); clearInterval(heartbeat); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
+    clearTimeout(timer); clearInterval(heartbeat); clearInterval(controllerWatch); process.removeListener('SIGTERM', onSignal); process.removeListener('SIGINT', onSignal);
     try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
     stopCodegraph(codegraph?.sidecar, config);
     runtime?.cleanup();

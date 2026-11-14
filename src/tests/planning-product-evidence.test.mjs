@@ -37,19 +37,16 @@ test('a read-only planner receives current provider inspect, impact and citation
   } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
 
-test('missing configuration and explicitly unadopted scaffolds neither install nor adopt a provider', async () => {
-  for (const unadopted of [false, true]) {
-    const f = await fixture();
-    try {
-      if (unadopted) await writeFile(join(f.source, 'lighthouse.json'), JSON.stringify({ integrations: { productShape: null } }));
-      else await rm(join(f.source, '.product/config.yaml'));
-      const before = await readFile(join(f.run, 'context.json'));
-      const install = async () => { throw Error('Must not install'); };
-      assert.equal(await preparePlanningProductEvidence(f.source, f.run, { install }), null);
-      assert.deepEqual(await readFile(join(f.run, 'context.json')), before);
-      await assert.rejects(stat(join(f.source, '.lighthouse-product-evidence')), { code: 'ENOENT' });
-    } finally { await rm(f.dir, { recursive: true, force: true }); }
-  }
+test('missing configuration does not install a provider or claim product adoption', async () => {
+  const f = await fixture();
+  try {
+    await rm(join(f.source, '.product/config.yaml'));
+    const before = await readFile(join(f.run, 'context.json'));
+    const install = async () => { throw Error('Must not install'); };
+    assert.equal(await preparePlanningProductEvidence(f.source, f.run, { install }), null);
+    assert.deepEqual(await readFile(join(f.run, 'context.json')), before);
+    await assert.rejects(stat(join(f.source, '.lighthouse-product-evidence')), { code: 'ENOENT' });
+  } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
 
 test('invalid or changed baselines and preexisting report directories cannot yield planning evidence', async () => {

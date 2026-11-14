@@ -1,6 +1,6 @@
 {
   "provider": "openspec",
-  "version": "0.22.0",
+  "version": "0.26.0",
   "openspecVersion": "1.14.3",
   "installedAt": "2026-10-20T12:52:37.214Z",
   "configPath": "openspec/config.yaml",
@@ -45,7 +45,7 @@
       "openspec/schemas/product-change/schema.yaml": "sha256:b1442da5f418a81d959b9294848923dffb873124719116ff5efbb317563106bc",
       "openspec/schemas/product-change/scripts/product-apply.mjs": "sha256:4493c80d2892aa84f1607023adbff74c3e2f256a63cfbb3d549673f1d7018911",
       "openspec/schemas/product-change/scripts/product-validate.mjs": "sha256:c423f92f308a9b9e3bc7c70663f7dc33e93bc85a9d6c5fb91dfb1f91a91f55c1",
-      "openspec/schemas/product-change/templates/change.md": "sha256:af4fd10511f53a83ff5f452981178d62b74ae7128f8a84f1ad5ca5bd1b6748bb",
+      "openspec/schemas/product-change/templates/change.md": "sha256:daf9085976ef6663b807728c930757059b3614ab68c0b1353d8e3c3438eabc2b",
       "openspec/schemas/product-change/templates/proposal.md": "sha256:150c2d313f939e1ceeac3416b073cc076487c990868a5cb1a22d2781a8b01f3d"
     }
   },
@@ -57,5 +57,6 @@
       "openspec/schemas/product-recovery/templates/brief.md": "sha256:b00607c5c3f55fef6021c2377eaf52b189571f484aa2645c252f941a3d94f57b",
       "openspec/schemas/product-recovery/templates/report.md": "sha256:b38d3a49f51f9b1a18b4ba7ddb3998ba46b625cdbec521a811f4c758f432fa14"
     }
-  }
+  },
+  "updatedAt": "2026-11-12T22:03:58.780Z"
 }

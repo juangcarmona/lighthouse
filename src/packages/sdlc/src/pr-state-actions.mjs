@@ -7,16 +7,9 @@ import { checkImplementationPullRequest } from './proposal-review.mjs';
 import { authorizedCiCallback, draftIntentMarker, isCurrentPullRequestEvent, pendingDraftIntent, productOnlyCheckpoint, isStaleProductDecision, projectImplementationPrState, reconcileImplementationPr, scheduledImplementationPulls, setPullRequestDraft } from './pr-state.mjs';
 import { handoff } from './handoff.mjs';
 import { productProposalProof } from './product-change.mjs';
+import { createIssueApi } from './github-rest.mjs';
 
-const apiFor = (repo, token) => async (path, method = 'GET', body, optional = false) => {
-  const response = await fetch(`https://api.github.com/repos/${repo}${path ? `/${path}` : ''}`, {
-    method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30000),
-  });
-  if (optional && response.status === 404) return null;
-  if (!response.ok) throw Error(`GitHub ${method} ${path}: ${response.status}`);
-  return response.status === 204 ? null : response.json();
-};
+const apiFor = (repo, token) => createIssueApi(repo, { GH_TOKEN: token });
 const commentsFor = async (api, issue) => {
   const comments = [];
   for (let page = 1; page <= 10; page++) {

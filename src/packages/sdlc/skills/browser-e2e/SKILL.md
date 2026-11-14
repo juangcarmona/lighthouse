@@ -5,7 +5,11 @@ description: Validate Playwright browser evidence for a selected product journey
 
 # Browser E2E
 
+For product context, scenario selection, tests or evidence review, read and apply [product-derived verification](../../product-verification.md). Trace applicable lifecycle and structured-behaviour meaning to actual tests and results; record justified non-applicability and unresolved model gaps.
+
 Use this skill only when the selected application has a browser surface and the product definition names a journey to verify.
+
+For human-facing reports, agent-facing test instructions or UI/visual review, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used; Taste does not replace browser evidence or required human visual acceptance.
 
 Read the journey, bounded context and acceptance evidence before writing or changing a test. Keep the test in the adopter repository and use the project's existing Playwright configuration when one exists.
 

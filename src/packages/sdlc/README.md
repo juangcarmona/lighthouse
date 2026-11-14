@@ -6,6 +6,12 @@ Use GitHub labels to request work. The router authenticates the owner, dispatche
 
 Before explaining or changing an adopter's process, read its installed `@juangcarmona/lighthouse-sdlc/package.json`, this guide and `.github/workflows/lighthouse-sdlc-router.yml`. Check the router's pinned Lighthouse commit, enabled stages, `LIGHTHOUSE_AUTO_IMPLEMENT`, repository variable `LIGHTHOUSE_AUTOMATION_ENABLED` and current Git branch. Package installation, workflow installation and successful execution are separate facts. An older checkout cannot establish what is deployed on GitHub.
 
+## Writing and review
+
+Read the [audience policy](skills/audience-guidance/SKILL.md) when writing human explanations, agent instructions or UI/visual work. Human-facing outputs, including issue reports, PR summaries and change overviews, use Plain English then Humanizer and a final evidence comparison. Agent-facing instructions use Matt Pocock's Writing for Agents. Taste reviews visual work only and stays subordinate to the accepted UI contract.
+
+The policy includes reviewed immutable [source pins](skills/audience-guidance/sources.json) and explicit manual fallback reviews. A clean checkout or installed SDLC package needs no global writing skills or network access; delivery workers read the same packaged policy. Record which helper revision or fallback was used, without claiming an external skill ran. Existing workers receive the change only after their package or pinned source harness is updated through the normal installation route; this adds no workflow, gate or automatic installation.
+
 ## GitHub Actions
 
 These actions require installed workers, enabled automation and the repository owner as actor. Opening an issue alone starts no agent. Every result links to its execution; an Actions success can contain a blocked assessment.
@@ -28,6 +34,8 @@ These actions require installed workers, enabled automation and the repository o
 For direct implementation, the host scaffolds OpenSpec metadata before the agent starts. The agent preserves those fields and declares `skip_specs: true` only for a plan without specification changes. Before independent checks, the host materializes the final metadata while preserving existing provider bytes and completed implementation tasks.
 
 When the admitted source already contains one completed, issue-bound archived implementation plan, the host validates its provider metadata, planning artifacts and task completion without recreating an active change. Incomplete evidence, multiple matching archives, active/archive conflicts or candidate rewrites stop requalification with a repair reason. The archive is planning evidence, not a completion receipt: independent checks, required review, forge checks and the original correction/deadline limits still apply. Adopters need the released SDLC correction and an updated workflow source/package-mode installation before retrying a real candidate; a source fix alone does not establish installed adoption.
+
+The generated independent plan check runs from the read-only harness against the materialized candidate. It strictly validates the selected archive under its original active identity only in a disposable provider workspace, leaving the candidate unchanged. Without an applicable archive it retains strict active-plan validation; missing plans fail rather than skipping the check.
 
 An owner correction can revalidate an existing implementation PR without editing source. The host runs independent checks, rechecks the current head, intent, policy and feedback, and publishes fresh completion evidence for that same head. Initial implementations still require source changes; failed checks and pending decisions remain blockers.
 
@@ -143,6 +151,8 @@ For immediate failed-CI continuation, the trusted pinned CI reconciliation job r
 For immediate post-merge review, a trusted pinned CI job runs after successful verification on the default branch and invokes `issue-actions.mjs signal-post-merge-review` with `LIGHTHOUSE_CI_RESULT` set from its actual dependency and `actions: write`. It wakes the existing router, which waits for terminal adopted CI and authenticates the exact merge and retained integration. Native completion and explicit signals share dispatch identity. Adopters own this CI callback; scheduled maintenance remains a recovery path.
 
 Automatic continuations select the current default-branch workflow revision while retaining their original router identity. An exact worker revision mismatch fails admission and records the rejected execution. Scoped maintenance can retry a final review once after a documentation-only default-branch advance (excluding product definitions), provided native jobs confirm no agent or publication ran and the accepted head, owner intent, reviews, checks and policy are unchanged. Other changes or uncertain effects require a fresh decision; direct owner workflow references are preserved.
+
+For lifecycle- and structured-behaviour-derived scenarios, test traceability, external evidence verification and stale citations, follow [product-derived verification](product-verification.md). Model coverage, test existence, actual execution and acceptance remain separate evidence.
 
 ## License
 

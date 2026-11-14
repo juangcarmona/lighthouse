@@ -43,6 +43,9 @@ export async function prepareImplementationWorkspace(workspace, config, issue, r
     env: { PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_AUTHOR_NAME: 'Lighthouse validation', GIT_AUTHOR_EMAIL: 'validation@localhost', GIT_COMMITTER_NAME: 'Lighthouse validation', GIT_COMMITTER_EMAIL: 'validation@localhost' }, stdio: 'pipe',
   });
   git(['init', '--template=', `--initial-branch=fix/${issue}-validation`]);
+  // Disposable snapshots need stable metadata while ownership and permissions are prepared.
+  git(['config', 'maintenance.auto', 'false']);
+  git(['config', 'gc.auto', '0']);
   if (origin) git(['remote', 'add', 'origin', origin]);
   git(['add', '--force', '--all']);
   git(['commit', '--allow-empty', '-m', 'Candidate snapshot; repository history is checked separately']);
@@ -103,14 +106,14 @@ export async function runImplementationChecks({ config, request, changes, worksp
   redact = text => originalRedact(redactEnvironmentLog(runtime, text));
   try {
     for (let i = 0; i < request.implementation.policy.checks.length; i++) {
-      const deadline = Date.now() + 600000;
+      const deadline = Date.now() + 15 * 60_000;
       const command = request.implementation.policy.checks[i];
       const remaining = deadline - Date.now();
       if (cancelled() || remaining <= 0) { receipt.checks.push({ command, exitCode: 124 }); continue; }
       console.log(`Host check ${i + 1}: ${command.join(' ')}`);
       const checkStarted = Date.now(); telemetry?.emit('check.started', { callId: `check-${i + 1}`, status: 'running' });
       let log = '', pending = '', logTruncated = false;
-      const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=1g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command]);
+      const args = ownedDockerArgs(config, ['run', '--rm', '--init', '--name', `${name}-checks`, '--user', `${config.uid}:${config.uid}`, ...resourceArgs(limits), '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--read-only', '--tmpfs', '/tmp:rw,exec,size=2g,mode=1777', '--env', 'HOME=/tmp', '--env', 'CI=true', ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--mount', `type=bind,src=${workspace},dst=/workspace`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`, '--mount', `type=bind,src=${output},dst=/diagnostics`, '--workdir', '/workspace', '--entrypoint', 'sh', config.image, '-c', checkOutputCommand, 'lighthouse-check', `check-${i + 1}`, '--', ...command]);
       let reason = null;
       const exit = await new Promise(resolve => {
         const child = spawn('docker', args, { stdio: ['ignore', 'pipe', 'pipe'] });

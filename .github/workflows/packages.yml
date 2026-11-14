@@ -109,6 +109,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+      - run: npm ci --ignore-scripts
       - name: Select the operator's pinned implementation image
         run: |
           node --input-type=module <<'JS'

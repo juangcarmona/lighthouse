@@ -3,7 +3,7 @@ id: BR-DECOMPOSITION
 type: business-rule
 title: Decomposition preserves parent accountability
 status: draft
-applies-to: [BC-FOUNDATION, UC-DECOMPOSE-WORK-ITEM, UC-MANAGE-STACKED-CHANGE]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-WORK-ITEM-SLICE, TERM-STACKED-CHANGE, TERM-LABEL-STATE]
 ---
 

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { setTimeout } from 'node:timers/promises';
-import { proposalRoot, changeName } from './proposal-files.mjs';
+import { proposalRoot } from './proposal-files.mjs';
 import { validateEnvironment } from './execution-environment.mjs';
 import { checkProductResumePullRequest, productImplementationProof, productModelDirectoryFromConfig } from './product-change.mjs';
 import { checkAlignedImplementationPullRequest, checkReviewCurrent } from './proposal-review.mjs';
@@ -53,7 +53,7 @@ export async function loadImplementation(api, issue, owner, revision, defaultBra
     if (!pkg.scripts?.verify) throw Error('Configure repository implementation checks in .lighthouse/implement.json defaults, or provide npm run verify');
     policy = { scope: 'Implement only this issue and its acceptance criteria.', paths: ['*'], checks: [['npm', 'ci', '--ignore-scripts'], ['npm', 'run', 'verify']], reviewRequired: false };
   }
-  const planCheck = ['npx', '--yes', '--package=@fission-ai/openspec@1.15.0', 'openspec', 'validate', changeName(issue), '--strict', '--no-interactive'];
+  const planCheck = ['node', '/harness/src/implementation-plan-check.mjs', String(issue), '--strict', '--no-interactive'];
   policy = validateImplementationPolicy(policy, issue);
   if (route === 'epic') policy = validateImplementationPolicy({ ...policy, paths: [...new Set([...policy.paths, `${proposalRoot(issue)}/`])] }, issue);
   policy = { ...policy, checks: [...policy.checks, ...(route === 'hotfix' ? [] : [planCheck])] };
@@ -267,7 +267,19 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
   const tree = verificationRefresh ? commit.tree : await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
   if (synchronization && tree.sha !== checkedTree) throw Error('Synchronized publication differs from the independently checked tree');
   const message = verificationRefresh ? `chore: refresh verification for issue #${snapshot.issue}\n\nLighthouse-CI-Base: ${snapshot.baseRevision}` : `feat: implement issue #${snapshot.issue}`;
-  const created = await api('git/commits', 'POST', { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] });
+  const commitBody = { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] };
+  let created;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { created = await api('git/commits', 'POST', commitBody); break; }
+    catch (error) {
+      // Recover only this explicit refusal, after observing the immutable tree; uncertain writes remain terminal.
+      if (attempt === 2 || error.status !== 422 || error.message !== 'GitHub POST git/commits: 422: Tree SHA does not exist' || !/^[a-f0-9]{40}$/.test(tree.sha ?? '')) throw error;
+      if ((await api(`git/trees/${tree.sha}`, 'GET', undefined, true))?.sha !== tree.sha) throw error;
+      await setTimeout(250 * 2 ** attempt);
+      await beforeWrite();
+      await checkEpicBase();
+    }
+  }
   await beforeWrite();
   await checkEpicBase();
   if (snapshot.productAlignment?.parent.pullRequest) {

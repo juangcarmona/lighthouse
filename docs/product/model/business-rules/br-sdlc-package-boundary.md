@@ -3,7 +3,7 @@ id: BR-SDLC-PACKAGE-BOUNDARY
 type: business-rule
 title: Keep the SDLC package boundary explicit
 status: draft
-applies-to: [BC-FOUNDATION, UC-INITIALIZE-PROJECT, UC-RUN-SDLC, UC-ADOPT-CONSUMER]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-SDLC-PACKAGE, TERM-HARNESS, TERM-INTEGRATION, TERM-AUTHORITY-MAP]
 ---
 

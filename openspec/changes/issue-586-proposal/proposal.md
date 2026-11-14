@@ -4,13 +4,14 @@
 
 ## Why
 
-Verification-only corrections currently recreate active OpenSpec metadata after the completed plan has been archived. Strict checks then reject that empty change instead of checking the unchanged implementation.
+The merged preparation/finalization repair preserves completed archived plans, but the independently generated validation command still targets an absent active change. It rejects an otherwise valid archived candidate instead of validating its plan.
 
 ## What Changes
 
 - Resolve the issue-bound archived plan from the admitted source and validate its provider metadata, planning artifacts and completed tasks before preparation proceeds.
 - Preserve archive bytes and modes without scaffolding an active change; reject incomplete, conflicting or ambiguous evidence with an actionable error.
 - Retain active/new-plan behavior and metadata ownership rules, and exercise the preparation and final materialization caller path.
+- Generate a harness-owned independent plan check that strictly validates the selected archive under its temporary active identity, retaining normal active validation.
 - Include an SDLC patch changeset and adopter guidance; publication and installed adoption remain separate follow-up work.
 
 ## Capabilities

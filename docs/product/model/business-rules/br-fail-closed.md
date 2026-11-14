@@ -3,7 +3,7 @@ id: BR-FAIL-CLOSED
 type: business-rule
 title: Verification reports failure honestly
 status: draft
-applies-to: [BC-FOUNDATION, UC-VERIFY-FOUNDATION, UC-UPDATE-FOUNDATION]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-GUARDRAIL, TERM-MANAGED-PROJECTION]
 ---
 

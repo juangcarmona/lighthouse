@@ -1,5 +1,63 @@
 # @juangcarmona/lighthouse
 
+## 0.12.73
+
+### Patch Changes
+
+- 17606cd: # Upgrade the ProductShape authority
+
+  Upgrade the bundled ProductShape CLI to 0.26.0 so authority initialization and adoption use the same version as the repository and Product Explorer publication.
+
+## 0.12.72
+
+### Patch Changes
+
+- Updated dependencies [5ff8c4c]
+- Updated dependencies [efc4ad6]
+  - @juangcarmona/lighthouse-sdlc@0.22.11
+
+## 0.12.71
+
+### Patch Changes
+
+- Updated dependencies [ee63e07]
+  - @juangcarmona/lighthouse-sdlc@0.22.10
+
+## 0.12.70
+
+### Patch Changes
+
+- Updated dependencies [c7ddbf4]
+  - @juangcarmona/lighthouse-sdlc@0.22.9
+
+## 0.12.69
+
+### Patch Changes
+
+- Updated dependencies [9cea6eb]
+- Updated dependencies [b17396d]
+  - @juangcarmona/lighthouse-sdlc@0.22.8
+
+## 0.12.68
+
+### Patch Changes
+
+- Updated dependencies [08d2f99]
+  - @juangcarmona/lighthouse-sdlc@0.22.7
+
+## 0.12.67
+
+### Patch Changes
+
+- 3c6b34b: # Patch Aspire hosting dependencies
+
+  Update the .NET reference and packaged creator template to Aspire 13.6.5 for GHSA-f7vh-h5g3-7jrh. Refresh the provider-generated lockfile and the minimum MessagePack version required by the patched AppHost, preserving locked restore and vulnerability checks.
+
+- Updated dependencies [cd79890]
+- Updated dependencies [a6e8217]
+- Updated dependencies [a6e8217]
+  - @juangcarmona/lighthouse-sdlc@0.22.6
+
 ## 0.12.66
 
 ### Patch Changes

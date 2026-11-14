@@ -1,5 +1,71 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.22.11
+
+### Patch Changes
+
+- 5ff8c4c: # Keep disposable Git metadata stable
+
+  Disable automatic maintenance and garbage collection in newly created validation repositories before their first commit. This prevents background Git tasks from removing lock files while the host prepares workspace permissions. Candidate history, branch checks and source validation continue normally.
+
+- efc4ad6: # Preserve integration history after post-merge discussion
+
+  Keep authenticated integration and planning evidence available when an owner adds a PR comment after the confirmed merge. The current discussion remains bound to the new review and must be assessed. Changes to earlier feedback, the PR title or body, issue intent, code, policy or retained artifact integrity still invalidate the historical match.
+
+## 0.22.10
+
+### Patch Changes
+
+- ee63e07: # Recover rejected implementation commits
+
+  Recover an implementation commit explicitly rejected because its tree is unavailable. Retry at most twice, using the same tree and parents, only after reading that exact tree and rechecking delivery authority. Other refusals and uncertain write failures still stop publication.
+
+## 0.22.9
+
+### Patch Changes
+
+- c7ddbf4: # Stop engines when their controller exits
+
+  Stop queued and running engines when their originating controller exits, including abrupt workflow cancellation. Unattended stages pass their controller identity explicitly; existing workers monitor their identified parent. Cancellation preserves another engine's slot and uses the existing ownership cleanup.
+
+## 0.22.8
+
+### Patch Changes
+
+- 9cea6eb: # Allow full container verification to finish
+
+  Give each independent implementation check up to 15 minutes. A Control Center Release verification exceeded the previous 10-minute limit after the isolated scratch mount was repaired; the per-command deadline, cancellation and resource limits remain in force.
+
+- b17396d: # Wait for capacity within the existing delivery budget
+
+  Let FF and hotfix stages wait for the shared engine within their remaining delivery budget. Explicit operator admission limits still apply, and the original delivery cancellation and deadline remain in force. Ordinary workers retain the four-minute default.
+
+## 0.22.7
+
+### Patch Changes
+
+- 08d2f99: # Sufficient scratch for implementation checks
+
+  Increase the isolated `/tmp` mount for implementation agents and host checks from 1 GiB to 2 GiB. A Control Center requalification exhausted the previous mount during .NET restore and Release publish. The container memory limit and verification commands remain unchanged.
+
+## 0.22.6
+
+### Patch Changes
+
+- cd79890: # Validate adopted CI correction policy
+
+  Allow the existing bounded CI correction option in adopted GitHub profiles. Profile admission and execution share validation of the explicit issue allowlist and two-attempt limit; unknown fields and malformed policies remain rejected.
+
+- a6e8217: # Recover transient GitHub reads
+
+  Retry transient read-only GitHub responses at most twice within the original thirty-second request budget, respecting Retry-After. Mutations, permanent refusals and uncertain publication effects retain their existing handling.
+
+  Discover worker reports within the bot-owned issue history so unrelated repository activity cannot exhaust the report reconciliation bound.
+
+- a6e8217: # Strict archived plan validation
+
+  Validate completed archived implementation plans in generated independent checks without recreating an active change. Keep strict provider validation and fail-closed archive selection; adopters must install the released package and refresh their workflow source or package-mode installation before requalification.
+
 ## 0.22.5
 
 ### Patch Changes

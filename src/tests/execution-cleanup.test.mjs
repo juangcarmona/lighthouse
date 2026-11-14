@@ -144,7 +144,8 @@ test('phase removal resolves checked ownership to immutable IDs and handles conf
   const f = fixture();
   try {
     f.allocate(); const resource = f.resources[0];
-    assert.deepEqual(f.owner.prepare(['rm', '-f', resource.name, `${f.owner.prefix}-never-created`]), ['rm', '-f', resource.id]);
+    assert.deepEqual(f.owner.prepare(['rm', '-f', resource.name, `${f.owner.prefix}-never-created`]), ['rm', '-f', '-v', resource.id]);
+    assert.deepEqual(f.owner.prepare(['container', 'rm', '--force', '--volumes', resource.name]), ['container', 'rm', '--force', '--volumes', resource.id]);
     f.resources.length = 0;
     assert.deepEqual(f.owner.prepare(['rm', '-f', resource.name]), []);
   } finally { f.dispose(); }

@@ -19,6 +19,10 @@ engine:
         const events = require("path").join(process.env.RUNNER_TEMP, "gh-aw", `opencode-events-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}.jsonl`);
         return require("./parse_opencode_log.cjs").parseOpenCodeLog(fs.existsSync(events) ? fs.readFileSync(events, "utf8") : logContent);
       }
+jobs:
+  agent:
+    # Allow an operator-bounded host queue before the unchanged execution step.
+    timeout-minutes: 180
 post-steps:
   - name: Observe agent workflow telemetry
     if: always()

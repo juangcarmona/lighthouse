@@ -16,6 +16,12 @@ These tasks repair the existing OpenSpec-compatible delivery flow without changi
 - [x] 2.1 Document archive requalification and add an SDLC patch changeset; verify the owning package includes the correction through its normal package-content checks.
 - [x] 2.2 Run the required repository, citation and strict proposal checks; retain receipts and a concise retrospective and mark only completed tasks.
 
+## 3. Generated independent validation correction
+
+- [x] 3.1 Reproduce the remaining failure through loadImplementation and its generated command with generic archived evidence; retain failed-before evidence and preserve historical completed tasks.
+- [x] 3.2 Share strict archive validation with a packaged harness command and cover archived, active, new, missing, invalid, conflicting and ambiguous evidence through generated checks; verify focused owning-package and caller tests.
+- [x] 3.3 Document the generated check, add patch release metadata and verify package inclusion, repository verification, citations and strict proposal validation; retain command receipts and retrospective.
+
 ## Workflow follow-up
 
 - Trusted host reruns checks against a clean candidate and publishes the implementation PR for review.

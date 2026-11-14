@@ -2,12 +2,18 @@
   "schemaVersion": 1,
   "enabled": true,
   "routes": [
+    "ff",
     "hotfix"
   ],
   "paths": [
-    "src/packages/cli/src/lighthouse.mjs",
-    "src/tests/lighthouse.test.mjs",
-    ".changeset/fresh-git-hook-activation.md"
+    "src/packages/cli/src/",
+    "src/packages/sdlc/src/",
+    "src/packages/sdlc/README.md",
+    "src/packages/sdlc/github-actions.md",
+    "src/tests/",
+    ".changeset/",
+    "docs/operations/",
+    "scripts/reconcile-worker-maintenance.mjs"
   ],
   "reviewerProfile": "fast",
   "allowFivePoint": false,

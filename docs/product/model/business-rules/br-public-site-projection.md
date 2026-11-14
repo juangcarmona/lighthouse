@@ -3,7 +3,7 @@ id: BR-PUBLIC-SITE-PROJECTION
 type: business-rule
 title: Generate the public story from canonical sources
 status: draft
-applies-to: [BC-FOUNDATION, UC-BUILD-PUBLIC-STORY]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-PUBLIC-SITE-PROJECTION, TERM-MANAGED-PROJECTION, TERM-AUTHORITY-MAP]
 ---
 

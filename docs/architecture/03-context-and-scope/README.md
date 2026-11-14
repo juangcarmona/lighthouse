@@ -25,7 +25,7 @@ flowchart LR
 
 The current system boundary is the Lighthouse workspace plus the package contracts it emits. In a consuming repository, the CLI reads `lighthouse.json`, loads installed package assets, plans owned changes and writes only declared Lighthouse-managed paths. Provider-owned paths and remote state remain outside the Lighthouse boundary.
 
-<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
+<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:6e73f2c3acc3e82ed600a89c36a399a955cdfa2cdba4ba9df9a62443a0a9d6f7" -->
 
 ## External interfaces
 
@@ -54,6 +54,6 @@ The product-defined CodeGraph MCP and Aspire application boundary are planned ad
 | Agent execution and inference | Selected engine and model provider | The factory supervises execution; stage names grant no provider credentials. |
 | Approval and autonomy policy | Named adopter authority | Machines evaluate the recorded policy and retain attributable decisions. |
 
-<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:927ca94ef20deb83a84734978c82c5647cd1cd41eeaed9935eda7f4a6c61f611" -->
+<!-- pdac:cite id="BR-OWNED-AUTHORITY" digest="sha256:6e73f2c3acc3e82ed600a89c36a399a955cdfa2cdba4ba9df9a62443a0a9d6f7" -->
 
 Lighthouse can be installed and verified without a factory process. A factory consumes its contract without importing Lighthouse's repository layout or replacing its product authorities. [ADR-0007](../09-architecture-decisions/0007-host-execution-boundary.md) defines the accepted execution/publication seam; [the roadmap](../../roadmap/factory-reconciliation.md) records the current gaps.

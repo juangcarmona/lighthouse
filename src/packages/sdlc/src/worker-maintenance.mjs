@@ -6,6 +6,7 @@ import { maintenancePath, prepareRecovery, observeRecovery, recoveryIssues } fro
 import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { admissionCompletion, completedAdmission } from './admission-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
+import { createIssueApi } from './github-rest.mjs';
 
 export async function ownerIssues(api, owner) {
   const issues = [];
@@ -45,17 +46,7 @@ export async function maintenanceIssues(api, owner, repository) {
 async function main(command) {
   const env = process.env, repository = env.GITHUB_REPOSITORY, owner = env.GITHUB_REPOSITORY_OWNER;
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '')) throw Error('Invalid repository');
-  const api = async (path, method = 'GET', body, optional = false) => {
-    const response = await fetch(`https://api.github.com/repos/${repository}${path ? '/' + path : ''}`, { method, headers: { authorization: `Bearer ${env.GH_TOKEN}`, accept: 'application/vnd.github+json', 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(30000) });
-    if (optional && response.status === 404) return null;
-    if (!response.ok) throw Object.assign(Error(`GitHub ${method} ${path}: ${response.status}`), { status: response.status });
-    if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
-      const log = await response.text();
-      if (Buffer.byteLength(log) > 4 * 1024 * 1024) throw Error('Job log exceeds recovery bounds');
-      return log;
-    }
-    return response.status === 204 ? null : response.json();
-  };
+  const api = createIssueApi(repository, env);
   const output = async (name, value) => { if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `${name}=${value}\n`); };
   const parent = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);
   const event = env.GITHUB_EVENT_PATH ? JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')) : null;

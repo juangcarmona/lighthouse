@@ -1,3 +1,4 @@
+import { seedProductModel } from './fixtures/product-model.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, chmod } from 'node:fs/promises';
@@ -35,6 +36,7 @@ try {
     const env = { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, GH_HOST: 'untrusted.invalid', GH_FIXTURE_STATE: join(root, 'provider.json') };
     const run = (...args) => spawnSync(process.execPath, [cli, ...args], { cwd: root, env, encoding: 'utf8' });
     assert.equal(run('init', '--name', 'Profile fixture').status, 0);
+    await seedProductModel(root);
     const upgrade = JSON.parse(run('upgrade', '--format', 'json').stdout);
     assert.equal(upgrade.adoption.capabilities['github-profile'].status, 'available');
     assert.equal(upgrade.adoption.capabilities['github-profile'].selection, 'opt-in');

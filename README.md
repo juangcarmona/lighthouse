@@ -64,7 +64,7 @@ The older negative controls, interruption recovery, upgrade and rollback keep th
 ## Explore
 
 - [Public site](https://juangcarmona.github.io/lighthouse/)
-- [Product snapshot](https://juangcarmona.github.io/lighthouse/model/)
+- [Product Explorer](https://juangcarmona.github.io/lighthouse/model/)
 - [Architecture snapshot](https://juangcarmona.github.io/lighthouse/architecture/)
 - [Harness package guide](src/packages/cli/README.md)
 - [Delivery guide](src/packages/sdlc/README.md)

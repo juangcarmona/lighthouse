@@ -17,7 +17,12 @@ test('creator seeds an independent product and refuses an occupied target', asyn
     assert.equal(await readFile(resolve(target, 'Lighthouse.LICENSE'), 'utf8'), await readFile('LICENSE', 'utf8'));
     assert.equal(await readFile(resolve(target, 'Lighthouse.NOTICE'), 'utf8'), await readFile('NOTICE', 'utf8'));
     assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /starter remains under Apache-2\.0/);
-    assert.equal(JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8')).license, undefined);
+    const packageJson = JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8'));
+    assert.equal(packageJson.license, undefined);
+    assert.equal(packageJson.devDependencies['@prodshape/cli'], '0.26.1');
+    assert.equal(packageJson.devDependencies['@prodshape/core'], '0.25.0');
+    assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /authorities --apply/);
+    await access(resolve(target, 'docs/upgrades/pdac-v1alpha2.md'));
     const solution = await readFile(resolve(target, 'Workshop.slnx'), 'utf8');
     assert.match(solution, /src\/root\/Workshop.Api/);
     assert.equal((solution.match(/<Project Path=/g) ?? []).length, 7);
@@ -54,13 +59,20 @@ test('packaged creator seeds the profile assets and verifier without remote writ
     assert.equal(await readFile(resolve(target, 'Lighthouse.LICENSE'), 'utf8'), await readFile('LICENSE', 'utf8'));
     assert.equal(await readFile(resolve(target, 'Lighthouse.NOTICE'), 'utf8'), await readFile('NOTICE', 'utf8'));
     assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /starter remains under Apache-2\.0/);
-    assert.equal(JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8')).license, undefined);
+    const packageJson = JSON.parse(await readFile(resolve(target, 'package.json'), 'utf8'));
+    assert.equal(packageJson.license, undefined);
+    assert.equal(packageJson.devDependencies['@prodshape/cli'], '0.26.1');
+    assert.equal(packageJson.devDependencies['@prodshape/core'], '0.25.0');
+    assert.match(await readFile(resolve(target, 'README.md'), 'utf8'), /authorities --apply/);
+    assert.match(await readFile(resolve(target, '.github/workflows/ci.yml'), 'utf8'), /npm ci --ignore-scripts/);
+    await access(resolve(target, 'docs/upgrades/pdac-v1alpha2.md'));
     assert.match(await readFile(resolve(target, 'docs/profiles/dotnet/README.md'), 'utf8'), /Minimal APIs/);
     assert.match(await readFile(resolve(target, '.agents/skills/lighthouse-dotnet/SKILL.md'), 'utf8'), /Aspire/);
     assert.match(await readFile(resolve(target, 'scripts/verify-dotnet.mjs'), 'utf8'), /LighthouseModule/);
     assert.match(await readFile(resolve(target, 'Product.slnx'), 'utf8'), /src\/root\/Product.Api/);
     await access(resolve(target));
     const verify = spawnSync(process.execPath, [resolve(target, 'scripts/lighthouse.mjs'), 'verify', '--format', 'json'], { cwd: target, encoding: 'utf8' });
-    assert.equal(verify.status, 0, `${verify.stdout}\n${verify.stderr}`);
+    assert.equal(verify.status, 1, `${verify.stdout}\n${verify.stderr}`);
+    assert.deepEqual(JSON.parse(verify.stdout).blocking, ['foundation.pdac']);
   } finally { await rm(parent, { recursive: true, force: true }); }
 });

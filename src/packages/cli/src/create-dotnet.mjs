@@ -77,6 +77,8 @@ try {
   await writeFile(solutionFile, `<Solution>\n${projects.map((project) => `  ${project}`).join('\n')}\n</Solution>\n`);
 
   await copy(resolve(packageRoot, 'src/lighthouse.mjs'), resolve(stage, 'scripts/lighthouse.mjs'));
+  await copy(resolve(packageRoot, 'src/product-definition.mjs'), resolve(stage, 'scripts/product-definition.mjs'));
+  await copy(resolve(packageRoot, 'upgrades/pdac-v1alpha2.md'), resolve(stage, 'docs/upgrades/pdac-v1alpha2.md'));
   await copy(resolve(packageRoot, 'src/aliases.mjs'), resolve(stage, 'scripts/aliases.mjs'));
   await copy(resolve(packageRoot, 'src/github-profile.mjs'), resolve(stage, 'scripts/github-profile.mjs'));
   await copy(resolve(packageRoot, 'src/init-plan.mjs'), resolve(stage, 'scripts/init-plan.mjs'));
@@ -103,17 +105,18 @@ try {
   await writeFile(resolve(stage, 'package.json'), `${JSON.stringify({
     name: `@juangcarmona/${name.toLowerCase()}`, private: true, type: 'module', engines: { node: '>=22' },
     scripts: { verify: 'node scripts/lighthouse.mjs verify && node scripts/verify-dotnet.mjs' },
+    devDependencies: Object.fromEntries(['@prodshape/cli', '@prodshape/core', '@arcshape/cli'].map(name => [name, cliPackage.dependencies[name]])),
   }, null, 2)}\n`);
-  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse ${cliPackage.version}. The Lighthouse-derived starter remains under Apache-2.0; preserve Lighthouse.LICENSE and Lighthouse.NOTICE. Your own application additions keep their own licensing decision.\n\nRun dotnet restore ${name}.slnx once to create lockfiles, then npm run verify. Commit lockfiles.\n\nStart dotnet run --project src/root/${name}.Api or the optional src/root/${name}.AppHost. Configure authentication using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n`);
+  await writeFile(resolve(stage, 'README.md'), `# ${name}\n\nBackend seeded from Lighthouse ${cliPackage.version}. The Lighthouse-derived starter remains under Apache-2.0; preserve Lighthouse.LICENSE and Lighthouse.NOTICE. Your own application additions keep their own licensing decision.\n\nRun npm install --ignore-scripts. Review node scripts/lighthouse.mjs authorities --dry-run, then run node scripts/lighthouse.mjs authorities --apply to initialize PDaC v1alpha2 and architecture. Read docs/upgrades/pdac-v1alpha2.md before handling existing product content. Run dotnet restore ${name}.slnx, then npm run verify. Commit npm and NuGet lockfiles.\n\nStart dotnet run --project src/root/${name}.Api or the optional src/root/${name}.AppHost. Configure authentication using a trusted OIDC provider for manual API access. Test identities exist only in tests.\n\nThe sample catalog uses disposable in-memory storage. Add real persistence, data isolation, telemetry and deployment policy according to product requirements. Keep each command/query's endpoint, DTOs, validation and internal sealed handler together.\n`);
   await writeFile(resolve(stage, 'AGENTS.md'), `# ${name} engineering guidance\n\nUse the Lighthouse .NET profile from the pinned baseline revision. Keep Minimal API commands/queries as complete single-file slices. Handlers remain internal sealed and independent of HTTP. Modules use sibling Contracts assemblies. Run npm run verify.\n\nMaintain application and tooling source in this product. Preserve Lighthouse.LICENSE and Lighthouse.NOTICE for the Lighthouse-derived starter. Do not hand-edit LIGHTHOUSE.md. Record narrow, expiring exceptions for suppressed diagnostics.\n`);
   await mkdir(resolve(stage, '.github/workflows'), { recursive: true });
-  await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm run verify\n`);
+  await writeFile(resolve(stage, '.github/workflows/ci.yml'), `name: Backend verification\non: [push, pull_request]\npermissions:\n  contents: read\njobs:\n  dotnet:\n    runs-on: ubuntu-latest\n    timeout-minutes: 15\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - uses: actions/setup-dotnet@v4\n        with:\n          global-json-file: global.json\n      - run: npm ci --ignore-scripts\n      - run: npm run verify\n`);
 
   const initialized = (await import('node:child_process')).spawnSync(process.execPath, [resolve(stage, 'scripts/lighthouse.mjs'), 'init'], { cwd: stage, encoding: 'utf8' });
   if (initialized.status !== 0) throw new Error(initialized.stderr || 'Projection generation failed.');
   if (existing) await rmdir(target);
   await rename(stage, target);
-  process.stdout.write(`Created ${name} in ${target}. Run dotnet restore ${name}.slnx, then npm run verify.\n`);
+  process.stdout.write(`Created ${name} in ${target}. Install npm dependencies and initialize the authorities as described in README.md, then run dotnet restore ${name}.slnx and npm run verify.\n`);
 } catch (error) {
   await rm(stage, { recursive: true, force: true });
   throw error;

@@ -3,7 +3,7 @@ id: BR-OWNED-AUTHORITY
 type: business-rule
 title: Each concern keeps its authority
 status: draft
-applies-to: [BC-FOUNDATION, UC-INITIALIZE-PROJECT, UC-ADOPT-PROFILE, UC-UPDATE-FOUNDATION]
+applies-to: [BC-FOUNDATION]
 uses-terms: [TERM-INTEGRATION, TERM-MANAGED-PROJECTION, TERM-AUTHORITY-MAP, TERM-HARNESS]
 ---
 
