@@ -1,5 +1,7 @@
 # GitHub Actions operator reference
 
+Native workers disable both gh-aw failure-issue reporters (`report-failure-as-issue` and `report-failed-jobs`). Failed jobs remain failed in Actions, with logs and the authenticated stop on their source issue. Reinstall and recompile existing workflows to adopt this policy; updating a package alone does not change their executable locks. Worker job reruns do not provide fresh authorization. Recover through the existing bounded maintenance path or a new authorized stage request after reconciling prior effects.
+
 For labels, everyday actions and automatic continuation, start with the [delivery guide](README.md). Read this reference when installing workflows, provisioning the runtime or recovering a failed execution.
 
 ## Installation and runtime

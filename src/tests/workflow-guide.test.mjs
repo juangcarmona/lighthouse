@@ -4,6 +4,7 @@ import { readFile, mkdtemp, rm } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { parse } from 'yaml';
 import { routeIssue } from '../packages/sdlc/src/issue-actions.mjs';
 import { buildLabelReconciliationPlan } from '../packages/sdlc/src/reconcile.mjs';
 import { declarationFromCatalog } from '../packages/sdlc/src/capabilities.mjs';
@@ -65,4 +66,23 @@ test('packed delivery instructions resolve without the source repository', async
       }
     }
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+// Inspect the executable projection as well as frontmatter: these are separate gh-aw switches.
+test('native workers keep failed-job reports out of the issue backlog', async () => {
+  for (const name of [...names.filter(name => name !== 'router'), 'product-change', 'apply-product-change']) {
+    for (const prefix of ['src/packages/sdlc/workflows/', '.github/workflows/']) {
+      const source = await readFile(`${prefix}lighthouse-sdlc-${name}.md`, 'utf8');
+      const config = parse(source.split('---')[1]);
+      assert.equal(config['safe-outputs']['report-failure-as-issue'], false, `${prefix}${name}`);
+      assert.equal(config['safe-outputs']['report-failed-jobs'], false, `${prefix}${name}`);
+      const compiled = parse(await readFile(`${prefix}lighthouse-sdlc-${name}.lock.yml`, 'utf8'));
+      const steps = Object.values(compiled.jobs).flatMap(job => job.steps ?? []);
+      for (const step of steps) {
+        assert.notEqual(step.env?.GH_AW_REPORT_FAILED_JOBS, 'true', `${prefix}${name}: failed-job reporter`);
+        assert.notEqual(step.env?.GH_AW_FAILURE_REPORT_AS_ISSUE, 'true', `${prefix}${name}: agent failure reporter`);
+      }
+      assert.ok(steps.some(step => /(?:issue|completion)-actions\.mjs (?:cleanup|product-apply-cleanup)/.test(step.run ?? '')), `${prefix}${name}: retain source-bound cleanup`);
+    }
+  }
 });
