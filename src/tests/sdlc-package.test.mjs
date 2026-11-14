@@ -54,6 +54,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'skills/integrate/SKILL.md',
     'skills/review/SKILL.md',
     'skills/browser-e2e/SKILL.md',
+    'skills/audience-guidance/SKILL.md',
+    'skills/audience-guidance/sources.json',
     'meta-commands/ff.md',
     'meta-commands/hotfix.md',
     'meta-commands/decompose.md',

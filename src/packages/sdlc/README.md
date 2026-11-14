@@ -6,6 +6,12 @@ Use GitHub labels to request work. The router authenticates the owner, dispatche
 
 Before explaining or changing an adopter's process, read its installed `@juangcarmona/lighthouse-sdlc/package.json`, this guide and `.github/workflows/lighthouse-sdlc-router.yml`. Check the router's pinned Lighthouse commit, enabled stages, `LIGHTHOUSE_AUTO_IMPLEMENT`, repository variable `LIGHTHOUSE_AUTOMATION_ENABLED` and current Git branch. Package installation, workflow installation and successful execution are separate facts. An older checkout cannot establish what is deployed on GitHub.
 
+## Writing and review
+
+Read the [audience policy](skills/audience-guidance/SKILL.md) when writing human explanations, agent instructions or UI/visual work. Human-facing outputs, including issue reports, PR summaries and change overviews, use Plain English then Humanizer and a final evidence comparison. Agent-facing instructions use Matt Pocock's Writing for Agents. Taste reviews visual work only and stays subordinate to the accepted UI contract.
+
+The policy includes reviewed immutable [source pins](skills/audience-guidance/sources.json) and explicit manual fallback reviews. A clean checkout or installed SDLC package needs no global writing skills or network access; delivery workers read the same packaged policy. Record which helper revision or fallback was used, without claiming an external skill ran. Existing workers receive the change only after their package or pinned source harness is updated through the normal installation route; this adds no workflow, gate or automatic installation.
+
 ## GitHub Actions
 
 These actions require installed workers, enabled automation and the repository owner as actor. Opening an issue alone starts no agent. Every result links to its execution; an Actions success can contain a blocked assessment.
