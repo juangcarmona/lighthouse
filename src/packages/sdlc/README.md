@@ -119,6 +119,7 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 - [Commands](contract.json) and [aliases](command-aliases.json): CLI utilities and agent commands; the configured host exposes aliases.
 - [Operator reference](github-actions.md): installation, credentials, receipts, runtime limits, maintenance and recovery.
 - [Execution environments](execution-environments.md) and [model profiles](model-profiles.md): optional runtime configuration.
+- [Execution cleanup](src/execution-cleanup.md): workspace ownership, interrupted recovery and local retention limits.
 - [External host contract](host-contract.md): legacy host integration; enable only one router for the same events.
 - [Evidence](commands/evidence.md) and [browser evidence](commands/browser-e2e.md): validation contracts. Missing evidence, unavailable checks and pending review remain separate from success.
 - [Scoped memory](commands/memory.md): opt-in host-side SQLite retention and selective recall, independent of worker storage and approval authority.

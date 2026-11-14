@@ -1,0 +1,56 @@
+{
+  "kind": "complete-adapter-executions-with-docker-shim",
+  "observations": [
+    {
+      "attempt": 1,
+      "before": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "after": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "resources": [],
+      "outcome": "process-limit"
+    },
+    {
+      "attempt": 2,
+      "before": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "after": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "resources": [],
+      "outcome": "process-limit"
+    },
+    {
+      "attempt": 3,
+      "before": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "after": {
+        "paths": [],
+        "allocatedBytes": 0,
+        "apparentBytes": 0,
+        "inodes": 0
+      },
+      "resources": [],
+      "outcome": "process-limit"
+    }
+  ]
+}

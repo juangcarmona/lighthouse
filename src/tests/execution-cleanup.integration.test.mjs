@@ -1,14 +1,64 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, readFile, mkdir, readdir, lstat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { createExecutionOwner, recoverExecutionOwners, runOwnedDocker } from '../packages/sdlc/src/execution-cleanup.mjs';
+import { createExecutionOwner, recoverExecutionOwners, recoverExecutionWorkspaces, runOwnedDocker } from '../packages/sdlc/src/execution-cleanup.mjs';
 
 const image = process.env.LIGHTHOUSE_TEST_CLEANUP_IMAGE;
 const docker = args => execFileSync('docker', args, { encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'pipe'] });
+
+test('repeated real-process workspace loss retains edits and evidence without disposable byte or inode growth', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lh-workspace-recovery-'));
+  const scratch = join(root, 'scratch'), journals = join(root, 'journals'), observations = [];
+  const moduleUrl = new URL('../packages/sdlc/src/execution-cleanup.mjs', import.meta.url).href;
+  const measure = async path => {
+    const stat = await lstat(path);
+    const total = { allocatedBytes: stat.blocks * 512, inodes: 1 };
+    if (stat.isDirectory()) for (const name of await readdir(path)) {
+      const child = await measure(join(path, name)); total.allocatedBytes += child.allocatedBytes; total.inodes += child.inodes;
+    }
+    return total;
+  };
+  try {
+    await mkdir(scratch); await mkdir(join(scratch, 'foreign'));
+    await writeFile(join(scratch, 'foreign/sentinel'), 'another execution');
+    const before = await measure(scratch);
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const identity = { repository: 'qualification/disposable', runId: 'c'.repeat(64), workflowRunId: '1', attempt };
+      const script = `import {createExecutionOwner} from ${JSON.stringify(moduleUrl)};import {mkdir,writeFile} from 'node:fs/promises';import {join} from 'node:path';
+const owner=createExecutionOwner(${JSON.stringify(journals)},${JSON.stringify(identity)},{run:()=>''});
+const path=await owner.allocateWorkspace(${JSON.stringify(scratch)});await mkdir(join(path,'source'));await mkdir(join(path,'output/evidence'),{recursive:true});
+const baseline=new Map([['demo.js',{content:Buffer.from('original'),mode:'100644'}],['.gitignore',{content:Buffer.from('node_modules/\\n.cache/\\n'),mode:'100644'}]]);
+for(const [name,file]of baseline)await writeFile(join(path,'source',name),file.content);
+await owner.checkpointWorkspace(baseline,baseline,{paths:['*']});await writeFile(join(path,'source/demo.js'),'recovered edit');
+for(const folder of ['node_modules','.cache']){await mkdir(join(path,'source',folder));for(let i=0;i<20;i++)await writeFile(join(path,'source',folder,String(i)),Buffer.alloc(4096));}
+await writeFile(join(path,'output/evidence/report.txt'),'bounded diagnostic');process.kill(process.pid,'SIGKILL');`;
+      const child = spawn(process.execPath, ['--input-type=module', '-e', script], { stdio: 'pipe' });
+      let stderr = ''; child.stderr.on('data', chunk => { stderr += chunk; });
+      const exit = await new Promise(resolve => child.on('close', (code, signal) => resolve({ code, signal })));
+      assert.equal(exit.signal, 'SIGKILL', stderr);
+      const during = await measure(scratch);
+      const receipts = recoverExecutionOwners(journals, { run: () => '' });
+      assert.equal(receipts.length, 1); assert.equal(receipts[0].status, 'clean');
+      await recoverExecutionWorkspaces(journals);
+      const after = await measure(scratch);
+      assert.equal(after.inodes, before.inodes);
+      assert.ok(after.allocatedBytes <= before.allocatedBytes + 4096);
+      assert.ok(during.inodes > after.inodes + 40);
+      assert.equal(await readFile(join(scratch, 'foreign/sentinel'), 'utf8'), 'another execution');
+      const bundle = join(journals, 'retained', receipts[0].owner);
+      const changes = JSON.parse(await readFile(join(bundle, 'changes.json')));
+      assert.equal(changes.length, 1); assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'recovered edit');
+      assert.equal(await readFile(join(bundle, 'evidence/report.txt'), 'utf8'), 'bounded diagnostic');
+      observations.push({ attempt, exit, before, during, after, resources: receipts[0].remaining, retainedBundles: (await readdir(join(journals, 'retained'))).length });
+    }
+    if (process.env.LIGHTHOUSE_WORKSPACE_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_WORKSPACE_CLEANUP_EVIDENCE, JSON.stringify({ kind: 'real-process-filesystem-not-native-docker', observations }, null, 2) + '\n');
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('real disposable runtime fault matrix preserves unrelated resources and shared state', { skip: !image, timeout: 60000 }, async () => {
   assert.match(image, /^sha256:[a-f0-9]{64}$/);
   const directory = await mkdtemp(join(tmpdir(), 'lh-live-cleanup-')), suffix = randomBytes(8).toString('hex');

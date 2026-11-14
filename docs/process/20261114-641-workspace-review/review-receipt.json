@@ -1,0 +1,60 @@
+{
+  "reviewedAt": "2026-11-14T20:51:12.663672+00:00",
+  "issue": 641,
+  "pullRequest": 668,
+  "originalNativeRun": "43633353118",
+  "originalPublishedHead": "8cc1a857949e89809fdddbefce237408f231f205",
+  "originalOutcome": "blocked: required Ponytail skill unavailable in isolated worker",
+  "originalArtifact": {
+    "id": 14130673329,
+    "digest": "sha256:f5cf7b4b32b87438a3660cab8e28187b1cfe5e2564e6ab633d8317d86575d026"
+  },
+  "maintainerAssessment": {
+    "method": "Installed Ponytail full code and architecture review; packaged audience manual fallbacks and final source comparison",
+    "ponytailSha256": "9badd22a32e19cb884e46dfa8d3aae82bb81dfa5484105b8b4f0262df823a509",
+    "findingsCorrected": [
+      "Bound retained filesystem entries as well as bundle count and content bytes.",
+      "Replace fixed-zero metric records with filesystem observations and a nonzero measurement control."
+    ],
+    "boundaries": "Existing ownership journal, slot and source collector reused; no dependency, daemon, runner-image or publication authority changes."
+  },
+  "codeSha256": {
+    "src/packages/sdlc/src/execution-workspace.mjs": "fc976efad5723757d1be2d0581cec482b90f983d083a5d26a25c6db129ebea15",
+    "src/packages/sdlc/src/execution-cleanup.mjs": "c67aecea121a2e9b19f54bdf25cb095b733960798b931502b19ed473aa83b5b9",
+    "src/packages/sdlc/src/opencode-execute.mjs": "b7fbc2c0dc2a7a55ea85c0a60bfadbc3a79dbd36fbd18d5315e97256d67ee281",
+    "src/tests/execution-cleanup.test.mjs": "d72acad888e04732209d90ed21d89d7779e6357a2918d597f542dc0e883f39de",
+    "src/tests/execution-cleanup.integration.test.mjs": "819e00e87bffb6cffe2475618b99312fa62bb02ee1cd6d5aaa9f6c909e586e4f",
+    "src/tests/opencode-execute.test.mjs": "5a13b19fddf9aaa3c1332863531bfa961c0c83319c8587f391fa56243bf4cb2f"
+  },
+  "localRetention": {
+    "maxBundles": 32,
+    "maxContentBytes": 536870912,
+    "maxFilesystemEntries": 8192,
+    "expiry": "operator archive and explicit release; no age eviction"
+  },
+  "focusedChecks": {
+    "command": "node --test src/tests/execution-cleanup.test.mjs src/tests/execution-cleanup.integration.test.mjs src/tests/opencode-execute.test.mjs",
+    "passed": 36,
+    "failed": 0,
+    "optionalRealDockerSkipped": 2
+  },
+  "providerChecks": {
+    "strictOpenSpec": "passed",
+    "citationErrors": 0,
+    "citationWarnings": 309,
+    "preexistingStaleCitations": 295
+  },
+  "qualificationLimits": [
+    "Three process-limit adapter repetitions use a Docker shim.",
+    "Five real SIGKILL/recovery process repetitions exercise the filesystem owner, not complete native workers.",
+    "No candidate installed-native, real-Docker fault-matrix or five-outcome complete-worker acceptance is claimed.",
+    "Original native outcomes remain unchanged; #641 stays open."
+  ],
+  "repositoryVerification": {
+    "command": "npm run verify",
+    "passed": 1290,
+    "failed": 0,
+    "optionalSkipped": 14,
+    "publicSiteFilesVerified": 136
+  }
+}
