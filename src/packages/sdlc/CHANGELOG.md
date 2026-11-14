@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.1
+
+### Patch Changes
+
+- 6adeb66: # Bound managed npm scratch
+
+  Release command-owned private npm downloads between managed commands and retain scratch capacity and cleanup diagnostics without changing workload isolation limits.
+
 ## 0.23.0
 
 ### Minor Changes
