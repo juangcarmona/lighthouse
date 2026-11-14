@@ -22,7 +22,7 @@ on:
         required: true
         type: string
   needs: [prepare]
-if: needs.prepare.outputs.eligible == 'true'
+if: github.run_attempt == 1 && needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 15
@@ -102,6 +102,7 @@ post-steps:
       retention-days: 14
 jobs:
   prepare:
+    if: github.run_attempt == 1
     outputs:
       eligible: ${{ steps.prepare.outputs.eligible }}
       revision: ${{ steps.prepare.outputs.revision }}
@@ -180,7 +181,7 @@ jobs:
       cancel-in-progress: false
     name: Validate, publish and release
     needs: [prepare, agent]
-    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
+    if: always() && github.run_attempt == 1 && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
       actions: write

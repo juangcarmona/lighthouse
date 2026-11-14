@@ -77,6 +77,11 @@ test('native workers keep failed-job reports out of the issue backlog', async ()
       assert.equal(config['safe-outputs']['report-failure-as-issue'], false, `${prefix}${name}`);
       assert.equal(config['safe-outputs']['report-failed-jobs'], false, `${prefix}${name}`);
       const compiled = parse(await readFile(`${prefix}lighthouse-sdlc-${name}.lock.yml`, 'utf8'));
+      if (name !== 'apply-product-change') {
+        for (const job of ['prepare', 'agent', 'publish']) {
+          assert.ok(compiled.jobs[job].if.includes('github.run_attempt == 1'), `${prefix}${name}: ${job} must not replay a consumed request`);
+        }
+      }
       const steps = Object.values(compiled.jobs).flatMap(job => job.steps ?? []);
       for (const step of steps) {
         assert.notEqual(step.env?.GH_AW_REPORT_FAILED_JOBS, 'true', `${prefix}${name}: failed-job reporter`);
