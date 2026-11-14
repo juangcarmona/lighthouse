@@ -3,7 +3,7 @@ id: CHG-ENGINEERING-PRACTICE-EVIDENCE-001
 type: product-change
 title: Report source-bound engineering practice evidence
 status: draft
-base-revision: '7e0fc49241433cbfc4d8795f2adf7c1b814a42a7'
+base-revision: '60df0e5a371c0bdfb100cbd985910357ca89451a'
 operations:
   add:
     - TERM-PRACTICE-EVIDENCE
@@ -22,7 +22,7 @@ An adopter can publish a source-bound observation for one declared practice at a
 
 ## Rationale
 
-A practice report lets an adopter explain what its own verification established without giving a dashboard authority over CI policy. Starting with one existing check makes the source contract testable before adding further practices.
+A practice report lets an adopter explain what its own verification established without giving a dashboard authority over CI policy. Starting with one existing check makes the source contract testable before adding further practices. The owner confirmed that optional engineering levels remain in scope; their names, rules and evidence authority still require product decisions before approval.
 
 ## Affected Product Areas
 
