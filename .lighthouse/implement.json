@@ -577,5 +577,57 @@
         "src/tests/large-product-model.test.mjs": "Add regression coverage proving models above 512 artifacts are fingerprinted, prepared and installed completely, while byte and aggregate resource bounds remain enforced."
       }
     }
+  },
+  "661": {
+    "scope": "Implement only #661: align the reproducible .NET environment builder and credential-free preflight with src/dotnet/global.json SDK 10.0.112/latestPatch and pinned Aspire CLI/bundle 13.6.5. Preserve the unchanged example, verification commands, incompatible/missing SDK and absent-bundle rejection, private scratch, non-root/read-only restrictions and existing resource limits. Keep image build receipts, installed configuration adoption and native qualification separate. Retain proposal, design, specs and tasks with the code; allow 600000 ms for repository verification and use an H1 after changeset frontmatter.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "src/tests/execution-environment.test.mjs": "Correct SDK 10.0.100 fixture assumptions for the accepted 10.0.112/latestPatch profile and pinned Aspire CLI/bundle 13.6.5; add compatible, incompatible, missing-SDK and absent-bundle coverage while preserving existing security, image identity and lifecycle assertions.",
+        "src/tests/execution-environment.integration.test.mjs": "Extend real Docker preflight qualification for the compatible SDK and pinned Aspire CLI/bundle required by #661; preserve opt-in behavior, immutable image inputs, non-root/read-only restrictions and cleanup assertions."
+      }
+    }
   }
 }
