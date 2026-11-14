@@ -11,7 +11,7 @@
 ## 2. Qualification and integration
 
 - [x] 2.1 Exercise accumulated sequential demand with a bounded regression fixture and retain its completed result, distinguishing synthetic demand from native runtime qualification.
-- [ ] 2.2 Reproduce cold npm installation followed by .NET restore/verification under current published runtime limits, retain local and independent results for the same candidate, and document observed byte demand and cleanup boundaries.
+- [x] 2.2 Reproduce cold npm installation followed by .NET restore/verification under current published runtime limits, retain local and independent results for the same candidate, and document observed byte demand and cleanup boundaries.
 - [x] 2.3 Run all configured repository and provider checks, record product-derived traceability and writing reviews, and retain a concise retrospective and final assessment with missing evidence explicit.
 
 ## Workflow follow-up
