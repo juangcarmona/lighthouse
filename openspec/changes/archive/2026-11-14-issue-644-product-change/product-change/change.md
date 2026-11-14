@@ -2,7 +2,7 @@
 id: CHG-PDAC-V1ALPHA2-VERIFICATION
 type: product-change
 title: Require PDaC v1alpha2 and behaviour-derived verification
-status: draft
+status: applied
 base-revision: '384584a'
 operations:
   add:

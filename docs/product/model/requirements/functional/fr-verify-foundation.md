@@ -5,24 +5,23 @@ title: Verify the adopted foundation, authorities and profiles
 status: draft
 derived-from: [UC-VERIFY-FOUNDATION, BR-FAIL-CLOSED, BR-AUTHORITY-BOUNDARIES]
 verification:
-  - scenario: A project with a valid manifest, passing applicable guardrails, passing recorded authorities and passing selected profiles reports success with the inspected paths and evidence.
-  - scenario: A project with drift, a failed guardrail, an unavailable dependency, an unconfigured integration, an invalid recorded authority or a pending semantic or human review reports the condition explicitly and does not report full compliance.
-  - scenario: A project with a guardrail or authority that does not apply to the selected baseline or profiles reports it as not-applicable rather than as a failure or success.
+  - scenario: A valid foundation with passing applicable guardrails, compliant PDaC v1alpha2, compatible recorded authorities and passing selected profiles reports success with inspected scope and evidence.
+  - scenario: Drift, failed guardrails, unavailable dependencies, unconfigured integrations, invalid authorities and pending semantic or human review remain explicit and do not report full compliance.
+  - scenario: A guardrail outside the selected baseline or profiles reports justified non-applicability without exempting the universal product contract.
+  - scenario: Missing product configuration, v1alpha1, conflicting versions and unsupported providers each prevent compliant adoption and yield equivalent human-readable and JSON evidence and supported repair routes, including for Lighthouse itself.
 uses-terms: [TERM-GUARDRAIL, TERM-MANAGED-PROJECTION, TERM-PUBLIC-SITE-PROJECTION, TERM-AUTHORITY-MAP]
 ---
 
 ## Requirement
 
-The product MUST provide deterministic verification for the declared foundation, recorded authorities and profiles and MUST distinguish `passed`, `failed`, `drift`, `unavailable`, `unconfigured`, `pending-review` and `not-applicable` results.
+Lighthouse MUST provide deterministic verification for the declared foundation, authorities and profiles and distinguish passed, failed, drift, unavailable, unconfigured, pending-review and not-applicable results.
 
-The verifier MUST resolve the applicable existing guardrails from the selected baseline and profiles, preserve each guardrail's independent `level` and `kind`, and report the verification method, evidence and next supported action for every result.
+The verifier MUST resolve applicable existing guardrails from the selected baseline and profiles, preserve each guardrail's independent level and kind, and report verification method, evidence and the next supported action for every result. Pending-review MUST identify required unresolved semantic or human judgement; unconfigured MUST identify an applicable integration or check not declared or enabled; unavailable MUST identify a declared check that cannot run or produce evidence. None is passing evidence for a required obligation.
 
-`pending-review` MUST mean that a semantic or human judgement is required and has not been completed. `unconfigured` MUST mean that an applicable integration or check has not been declared or enabled. `unavailable` MUST mean that a declared check cannot currently run or produce its evidence. None of these states is a passing result for a required guardrail or recorded authority.
+Verification MUST check repository conventions, selected hard guardrails, managed projections, recorded ProductShape and ArcShape authorities and public-site authority requirements when enabled. Every adopter, including Lighthouse, MUST also be checked for explicit provider-validated PDaC v1alpha2 and compatible ProductShape, even when product authority has not been recorded. Missing configuration, v1alpha1, version conflicts and unsupported providers MUST report an adoption gap and supported repair or reviewed migration route, never compliant adoption or a not-applicable product contract.
 
-Verification MUST check the repository convention contract, selected hard guardrails, managed projections, recorded ProductShape and ArcShape authorities and public-site authority requirements when that route is enabled. A failure MUST include the affected surface and the next supported action.
-
-The product MUST preserve the existing human-readable verification route and MUST provide an equivalent machine-readable result for the same verification run.
+The product MUST preserve human-readable verification and provide an equivalent JSON result for the same run. A failure or evidence gap MUST identify the affected surface and next supported action.
 
 ## Rationale
 
-Verification is the mechanism that turns reusable guidance into an adoptable and trustworthy baseline. Authority checks ensure that recording an integration is evidence of a valid provider surface rather than a stale manifest value.
+Verification turns guidance into a trustworthy adoption contract. Recording an authority or selecting a profile cannot hide absent or incompatible product authority.

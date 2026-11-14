@@ -93,3 +93,7 @@ The integrity pass above was repeated for this correction. No accepted model, pr
 ## Proposal validation
 
 The recovered draft passes strict OpenSpec validation with 1.15.0 and provider overlay validation through `@prodshape/integration-openspec@0.6.6` with `@prodshape/core@0.25.0`, with no blocking diagnostics. The accepted baseline still validates through `@prodshape/cli@0.26.0`. All ten citations in this proposal are current, with no stale, unresolved or tampered citations. Repository Markdown checks pass. These checks validate a proposed delta; they do not approve or apply it, migrate Lighthouse or prove implementation.
+
+## Owner approval
+
+The owner approved PR #651 at revision `4d37df8a31e4408204e4442fa7c5c28b1b942939` in the orchestration conversation on 2026-11-14. Asked whether to apply this concrete proposal and continue implementation, the owner answered verbatim: “Si”. This authorizes provider apply of the reviewed delta and continued implementation; no approval event from GitHub or automatic release authority is claimed.
