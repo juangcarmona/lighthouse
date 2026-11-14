@@ -145,7 +145,7 @@ test('phase removal deletes anonymous volumes and preserves a shared named volum
     runOwnedDocker(config, ['run', '-d', '--name', name, '--volume', '/disposable', '--mount', `type=volume,src=${shared},dst=/shared`, '--entrypoint', 'node', image, '-e', 'setInterval(()=>{},1000)'], { stdio: 'pipe' });
     const mounts = JSON.parse(docker(['inspect', '--format', '{{json .Mounts}}', name]));
     anonymous = mounts.find(mount => mount.Destination === '/disposable').Name;
-    docker(['exec', name, 'node', '-e', 'require("fs").writeFileSync("/shared/sentinel","preserved")']);
+    docker(['exec', '--user', '0', name, 'node', '-e', 'require("fs").writeFileSync("/shared/sentinel","preserved")']);
     runOwnedDocker(config, ['rm', '-f', name], { stdio: 'pipe' });
     assert.throws(() => docker(['volume', 'inspect', anonymous]));
     assert.equal(owner.cleanup().status, 'clean');
