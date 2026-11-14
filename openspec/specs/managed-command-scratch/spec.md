@@ -1,6 +1,7 @@
 # managed-command-scratch Specification
 
 ## Purpose
+
 Bound disposable npm download accumulation between commands without weakening private workload isolation or changing verification outcomes.
 
 ## Requirements
