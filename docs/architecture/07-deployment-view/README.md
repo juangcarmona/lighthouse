@@ -54,7 +54,7 @@ When an adopter enables the optional memory provider, its host provisions a priv
 
 ## Adopter execution host
 
-The example runner image includes the [telemetry startup wrapper](../../../src/packages/sdlc/src/telemetry-runner.mjs). Its operator supplies private persistent journal storage; an optional external collector receives OTLP log batches. Engine containers receive only the native observer and its bounded output path, without exporter credentials. The independent consumer example runs separately with a read-only script mount and its own output volume. [Installation and consumption](../../../src/packages/sdlc/telemetry.md) describe adoption for existing images and workflow pins; source availability does not establish rollout to an adopter.
+The example runner image starts the [telemetry startup wrapper](../../../src/packages/sdlc/src/telemetry-runner.mjs) under Tini so orphaned descendants are reaped. Its operator supplies private persistent journal storage; an optional external collector receives OTLP log batches. Engine containers receive only the native observer and its bounded output path, without exporter credentials. The independent consumer example runs separately with a read-only script mount and its own output volume. [Installation and consumption](../../../src/packages/sdlc/telemetry.md) describe adoption for existing images and workflow pins; source availability does not establish rollout to an adopter.
 
 <!-- pdac:cite id="FR-RUNNER-TELEMETRY" digest="sha256:bd00878a103d0df0929644c53cace71def31b42de73d92dffed61ba22159a068" -->
 

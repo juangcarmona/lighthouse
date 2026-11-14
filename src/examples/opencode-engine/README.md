@@ -12,6 +12,10 @@ The included `Dockerfile.runner` supplies Node, GitHub CLI, Docker CLI and Linux
 
 Rebuild the runner image and recreate idle runner containers to adopt its entrypoint. Updating the SDLC package alone does not replace a running container. Execution-owned container removal also deletes its anonymous volumes, including during phase cleanup; named authentication and shared volumes persist. Previously orphaned volumes require separate inspection because the removed container can no longer establish their execution ownership.
 
+For multiple repository runners sharing this host, install [the job-start hook](job-start.sh) through `ACTIONS_RUNNER_HOOK_JOB_STARTED`. Set `LIGHTHOUSE_HOST_GATEWAY_LOCK` to the same absolute lock file on every runner, with its parent directory mounted at the same host path. The hook holds that gateway slot for the whole Actions job, releases it when the worker exits, and reports elapsed queue time. Its default wait is 1,800 seconds; set `LIGHTHOUSE_HOST_SLOT_WAIT_SECONDS=7200` only after adopting workflows with the 180-minute agent job budget. The existing 30/55-minute execution-step limits and adapter resource limits stay unchanged. This permits up to two hours of host waiting plus execution and teardown; it does not add parallel model capacity. Native unattended delivery skips the gateway slot and retains its own engine admission.
+
+Use a disk-backed operator scratch directory for manual checkouts and test fixtures when the host `/tmp` is a small tmpfs. Check both available bytes and inodes before installing dependencies. Keep manifests and source when retiring generated dependency trees; execution cleanup cannot claim ownership of a manually created checkout.
+
 Set `LIGHTHOUSE_ENGINE_CONFIG` in the runner service environment to a private JSON file:
 
 ```json
