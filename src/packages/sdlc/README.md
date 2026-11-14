@@ -12,6 +12,8 @@ Read the [audience policy](skills/audience-guidance/SKILL.md) when writing human
 
 The policy includes reviewed immutable [source pins](skills/audience-guidance/sources.json) and explicit manual fallback reviews. A clean checkout or installed SDLC package needs no global writing skills or network access; delivery workers read the same packaged policy. Record which helper revision or fallback was used, without claiming an external skill ran. Existing workers receive the change only after their package or pinned source harness is updated through the normal installation route; this adds no workflow, gate or automatic installation.
 
+When repository instructions explicitly authorize it, the [code and architecture fallback](skills/audience-guidance/SKILL.md#code-and-architecture-review) lets an isolated worker complete its required review without a missing global helper. Record the fallback method, reviewed source, findings and missing evidence. Packaging that guidance does not prove a native worker used it or change any approval gate.
+
 ## GitHub Actions
 
 These actions require installed workers, enabled automation and the repository owner as actor. Opening an issue alone starts no agent. Every result links to its execution; an Actions success can contain a blocked assessment.

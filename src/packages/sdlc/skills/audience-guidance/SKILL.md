@@ -1,6 +1,6 @@
 ---
 name: lighthouse-audience-guidance
-description: Review human explanations, agent instructions and UI or visual work using the audience policy and offline fallbacks.
+description: Review human explanations, agent instructions and UI or visual work; perform repository-authorized code review when its named helper is unavailable.
 ---
 
 # Audience writing and review
@@ -14,6 +14,7 @@ Use this policy when drafting or reviewing issues, PR summaries, change overview
 | Human explanations: issues, PR descriptions and summaries, change overviews, proposals, reports, product documentation | Plain English → Humanizer → evidence comparison |
 | Agent instructions: AGENTS.md, skills, workflow prompts, documents reached through agent pointers | Writing for Agents → instruction comparison |
 | UI and visual changes: layouts, components, themes, visual assets | Taste → accepted UI contract and visual evidence |
+| Repository-required code or architecture review with an unavailable named helper | Code and architecture review below, only when the repository explicitly authorizes that fallback |
 
 For mixed documents, apply the human reviews to explanatory prose and Writing for Agents to instructions, commands, constraints, ownership and completion criteria. Review UI copy as human prose; invoke Taste only when UI or visual work changes. Taste is not a general prose requirement. Preserve normative specification language; explain it separately rather than simplifying its obligations.
 
@@ -24,6 +25,15 @@ The [source register](sources.json) identifies the canonical repositories, exact
 These Lighthouse-authored fallbacks ship in the source checkout and the SDLC npm package under `skills/audience-guidance/`; workers read the same files under `/harness/skills/audience-guidance/`. They require no global skill discovery, network access or host-specific installation. They are manual reviews, not bundled copies or claims that upstream skills ran. Record the helper revision used or the fallback method in `result.output` or the review evidence; keep routine method details out of public summaries.
 
 When updating a pin, review the source, referenced requirements, license and compatibility again, update the digest and review notes, then run the audience-guidance and package tests. Do not follow a mutable branch or silently substitute another skill named Taste or Humanizer.
+
+## Code and architecture review
+
+Use this Lighthouse-authored manual fallback only when the repository explicitly authorizes it for an unavailable code/architecture helper. It is not execution of Ponytail or another upstream skill, and it does not waive the required review. Do not install or copy global host skills during the run.
+
+1. Read the request, accepted architecture and actual diff. Trace every affected caller, test, fixture, configuration and export. Identify changed behavior, trust boundaries and source/data that must survive. This step is complete when every affected path and preservation rule is accounted for.
+2. Review the smallest complete correction using existing mechanisms and dependencies. Check input validation, failure/status propagation, ownership, concurrent activity and recovery before destructive effects. Record concrete defects and unnecessary changes against source locations; preserve original failures and unknown outcomes.
+3. Run the required checks for the reviewed revision and retain their results. Use regressions that exercise changed behavior and failure boundaries. Distinguish executed checks from skips, fixtures from connected execution, and source verification from publication, installation and native acceptance. Missing required evidence remains a blocker under the current stage contract.
+4. Record method `lighthouse-code-architecture-fallback-v1`, reviewed source, findings, checks and remaining risks in the existing result output or review evidence. Never claim the unavailable named helper ran. The review is complete when all affected paths were assessed and every unresolved defect or missing check has an explicit finding and next action; completion does not turn those findings into a passing assessment.
 
 ## Human explanations
 
@@ -61,6 +71,6 @@ The reviewed Taste source is Leonxlnx's `design-taste-frontend` skill. Its websi
 
 ## Authority and final comparison
 
-Product intent, accepted architecture, source evidence and lifecycle policy remain authoritative. Writing and design helpers guide presentation only; skill output cannot override product or architecture authority, change scope, waive evidence or human approval, or grant merge, release or deployment permission. Report conflicts to the responsible owner and preserve the accepted contract.
+Product intent, accepted architecture, source evidence and lifecycle policy remain authoritative. Writing and design helpers guide presentation only; skill output cannot override product or architecture authority, change scope, waive evidence or human approval, or grant merge, release or deployment permission. The code/architecture fallback supplies review evidence within those same boundaries. Report conflicts to the responsible owner and preserve the accepted contract.
 
 Before finishing, compare the reviewed artifact with its source. Keep missing evidence, failed checks, unavailable checks and pending required review distinct. If the fallback itself cannot be completed, report that limitation; never mark an unperformed required review as passed.
