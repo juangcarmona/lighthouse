@@ -17,7 +17,7 @@ import { selectEnvironment, startEnvironment, environmentArgs, environmentReceip
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
 import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
-import { createExecutionOwner, recoverExecutionOwners, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
+import { createExecutionOwner, recoverExecutionOwners, recoverExecutionWorkspaces, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
 import { verificationIntegrity } from './verification-integrity.mjs';
 import { implementationPlanMetadata, prepareImplementationPlanMetadata } from './implementation-plan.mjs';
@@ -142,10 +142,7 @@ async function main() {
     config.image = config.implementationImage;
   }
   if (!/^[a-f0-9]{64}$/.test(request.runId)) throw Error('Invalid execution identity');
-  const dir = await mkdtemp(join(env.RUNNER_TEMP, 'lighthouse-engine-'));
-  await chmod(dir, 0o755);
-  const source = join(dir, 'source'), output = join(dir, 'output');
-  await mkdir(source); await mkdir(output); await chmod(output, 0o777);
+  let dir, source, output;
   let name;
   const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const runtimeReceipt = { ...await harnessIdentity(harness), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
@@ -175,8 +172,12 @@ async function main() {
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
+    await recoverExecutionWorkspaces(ownershipDirectory);
     const command = imageCommand(config.image);
     config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
+    dir = await config.resourceOwner.allocateWorkspace(env.RUNNER_TEMP);
+    source = join(dir, 'source'); output = join(dir, 'output');
+    await mkdir(source); await mkdir(output); await chmod(output, 0o777);
     name = `${config.resourceOwner.prefix}-engine`;
     await recordPhase('running');
     runtime = await startEnvironment({ selected, image: config.image, commands: implementing ? [['git'], ['sh'], ...(request.implementation.policy.checks ?? [])] : [], name: `${name}-agent`, uid: config.uid, run: args => runOwnedDocker(config, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30000 }) });
@@ -184,12 +185,14 @@ async function main() {
     if (cancelled || !checkController()) throw Error('Execution cancelled before agent startup');
     console.log('Engine slot acquired; starting isolated OpenCode');
     await snapshotSource(env.GITHUB_WORKSPACE, source);
+    if (!implementing) await config.resourceOwner.checkpointWorkspace(null, null, undefined);
     if (request.worker === 'product-change') {
       if (!/^[a-f0-9]{64}$/.test(request.baselineDigest ?? '')) throw Error('ProductShape evidence lacks its authenticated baseline');
       await installProductEvidence(join(runDir, 'product-evidence'), source, request.baselineDigest);
     } else if (!implementing) runtimeReceipt.productEvidence = await preparePlanningProductEvidence(source, runDir, { signal: preparation.signal });
     baseline = implementing ? await sourceFiles(source) : null;
     trackedSource = baseline ? new Map(baseline) : null;
+    if (implementing) await config.resourceOwner.checkpointWorkspace(baseline, trackedSource, request.implementation.policy);
     if (implementing) {
       if (request.sourceSynchronization) {
         if (!isVerificationOnlyCorrection(request) || request.epic || request.productResume || request.productAlignment || request.seedDigest || request.implementation.policy.verification?.synchronizeBase !== true || request.sourceSynchronization.source !== request.sourceRevision || request.sourceSynchronization.base !== request.baseRevision) throw Error('Unauthorized source synchronization');
@@ -219,6 +222,7 @@ async function main() {
       }
       await prepareImplementationWorkspace(source, config, request.issue, repository);
     }
+    await config.resourceOwner.checkpointWorkspace(baseline, trackedSource, request.implementation?.policy);
     const context = join(dir, 'context.json');
     await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
     if (reviewOutput) {
@@ -376,6 +380,8 @@ async function main() {
     telemetry.emit('execution.result', { status: outcome, reasonCode: outcome === 'blocked' ? envelope.result.pendingReview.length ? 'pending-review' : 'missing-evidence' : 'validated-result' });
   } catch (error) {
     error.phase = phase;
+    runtimeReceipt.failure = { phase, message: redactLog(error.message).slice(0, 3000) };
+    console.error(progressText('Failure', runtimeReceipt.failure.message));
     await recordPhase('failed');
     if (implementing && baseline) {
       try {
@@ -407,10 +413,19 @@ async function main() {
     try {
       if (config.resourceOwner) { runtimeReceipt.cleanup = config.resourceOwner.cleanup(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); }
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(join(output, 'execution/native-events.jsonl'), join(runDir, 'evidence/host/native-events.jsonl')); } catch { telemetry.emit('collection.capability', { capability: 'opencode-native', status: 'unavailable', reasonCode: 'native-file-unavailable' }); }
+      let workspaceCleanupError;
+      if (config.resourceOwner) {
+        try { runtimeReceipt.workspaceCleanup = await config.resourceOwner.cleanupWorkspace(); }
+        catch (error) {
+          runtimeReceipt.workspaceCleanup = { status: 'failed', action: 'Retain the workspace and reconcile local evidence and candidate recovery before retrying.' };
+          workspaceCleanupError = Object.assign(Error(`Workspace cleanup is not verified: ${error.message}`), { phase: 'cleanup' });
+        }
+        await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+      }
       if (runtimeReceipt.execution?.resourceSamplesDropped) telemetry.emit('collection.gap', { reasonCode: 'resource-sample-capacity', omittedEvents: runtimeReceipt.execution.resourceSamplesDropped });
       telemetry.emit('execution.resources', { ...runtimeReceipt.execution?.resources });
-      telemetry.emit('execution.cleanup', { status: runtimeReceipt.cleanup?.status ?? 'unknown' });
-      telemetry.emit('execution.ended', { status: stopReason ?? (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean' ? 'cleanup-failed' : outcome), exitCode: runtimeReceipt.execution?.exitCode, signal: runtimeReceipt.execution?.signal });
+      telemetry.emit('execution.cleanup', { status: workspaceCleanupError ? 'failed' : runtimeReceipt.cleanup?.status ?? 'unknown' });
+      telemetry.emit('execution.ended', { status: workspaceCleanupError ? 'cleanup-failed' : stopReason ?? (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean' ? 'cleanup-failed' : outcome), exitCode: runtimeReceipt.execution?.exitCode, signal: runtimeReceipt.execution?.signal });
       telemetry.close(outcome);
       try {
         const events = readTelemetry(telemetry.directory, { stream: telemetry.stream });
@@ -419,7 +434,7 @@ async function main() {
         await writeFile(join(runDir, 'evidence/host/telemetry-usage.json'), JSON.stringify(usageSummary(events, { health: [telemetry.health()] })));
         runtimeReceipt.telemetry = telemetry.health(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
       } catch { console.error('Telemetry retention incomplete; inspect collector health.'); }
-      await rm(dir, { recursive: true, force: true });
+      if (workspaceCleanupError) throw workspaceCleanupError;
     } finally { if (slot !== undefined) closeSync(slot); }
     if (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean') throw Object.assign(Error('Execution cleanup is not verified; inspect runtime.json and the operator ownership journal before retrying'), { phase: 'cleanup' });
   }

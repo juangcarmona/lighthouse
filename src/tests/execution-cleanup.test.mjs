@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, readFileSync, readdirSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, readdirSync, symlinkSync, mkdirSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createExecutionOwner, recoverExecutionOwners } from '../packages/sdlc/src/execution-cleanup.mjs';
+import { createExecutionOwner, recoverExecutionOwners, recoverExecutionWorkspaces } from '../packages/sdlc/src/execution-cleanup.mjs';
 
 const identity = { repository: 'owner/repo', runId: 'a'.repeat(64), workflowRunId: '123', attempt: 1 };
 function fixture() {
@@ -160,4 +160,90 @@ test('a phase no-op removal prevents another allocation until owned absence is o
     f.resources.length = 0; assert.doesNotThrow(() => f.owner.removed(args));
     assert.equal(f.owner.cleanup().status, 'clean');
   } finally { f.dispose(); }
+});
+
+async function workspaceFixture(f) {
+  const path = await f.owner.allocateWorkspace(f.directory);
+  mkdirSync(join(path, 'source')); mkdirSync(join(path, 'output/evidence'), { recursive: true });
+  const baseline = new Map([['demo.js', { content: Buffer.from('original'), mode: '100644' }], ['.gitignore', { content: Buffer.from('node_modules/\n.cache/\n'), mode: '100644' }]]);
+  for (const [name, file] of baseline) writeFileSync(join(path, 'source', name), file.content);
+  await f.owner.checkpointWorkspace(baseline, baseline, { paths: ['*'] });
+  writeFileSync(join(path, 'source/demo.js'), 'modified source');
+  mkdirSync(join(path, 'source/node_modules')); writeFileSync(join(path, 'source/node_modules/dependency'), 'disposable');
+  mkdirSync(join(path, 'source/.cache')); writeFileSync(join(path, 'source/.cache/download'), 'disposable');
+  writeFileSync(join(path, 'output/evidence/report.txt'), 'diagnostic');
+  return path;
+}
+test('workspace recovery requires stopped ownership and runtime absence, then retains edits before disposal', async () => {
+  const f = fixture();
+  try {
+    const path = await workspaceFixture(f);
+    for (const isStopped of [() => false, () => null]) {
+      await assert.rejects(recoverExecutionWorkspaces(f.directory, { isStopped }), /active|unknown/);
+      assert.equal(existsSync(path), true);
+    }
+    await assert.rejects(recoverExecutionWorkspaces(f.directory, { isStopped: () => true }), /runtime resources/);
+    f.owner.cleanup();
+    await recoverExecutionWorkspaces(f.directory, { isStopped: () => true });
+    assert.equal(existsSync(path), false);
+    const bundle = join(f.directory, 'retained', readdirSync(join(f.directory, 'retained'))[0]);
+    const changes = JSON.parse(readFileSync(join(bundle, 'changes.json')));
+    assert.equal(changes.length, 1); assert.equal(Buffer.from(changes[0].content, 'base64').toString(), 'modified source');
+    assert.equal(readFileSync(join(bundle, 'evidence/report.txt'), 'utf8'), 'diagnostic');
+    await recoverExecutionWorkspaces(f.directory, { isStopped: () => true });
+  } finally { f.dispose(); }
+});
+test('workspace identity substitution, unsafe evidence and checkpoint changes preserve original recovery state', async () => {
+  for (const fault of ['substitution', 'evidence', 'checkpoint']) {
+    const f = fixture();
+    try {
+      const path = await workspaceFixture(f); f.owner.cleanup();
+      if (fault === 'substitution') { renameSync(path, `${path}-original`); mkdirSync(path); writeFileSync(join(path, 'foreign'), 'preserve'); }
+      if (fault === 'evidence') symlinkSync(join(path, 'source/demo.js'), join(path, 'output/evidence/link'));
+      if (fault === 'checkpoint') writeFileSync(join(path, 'recovery.json'), '{}');
+      await assert.rejects(f.owner.cleanupWorkspace(), /identity|Unsafe evidence|baseline changed/);
+      assert.equal(existsSync(path), true);
+      assert.equal(readFileSync(join(fault === 'substitution' ? `${path}-original` : path, 'source/demo.js'), 'utf8'), 'modified source');
+    } finally { f.dispose(); }
+  }
+});
+test('local recovery count limits block admission without deleting retained candidates or foreign paths', async () => {
+  const f = fixture();
+  try {
+    const root = join(f.directory, 'retained'); mkdirSync(root);
+    for (let index = 0; index < 32; index++) writeFileSync(join(root, `held-${index}`), 'candidate');
+    await assert.rejects(f.owner.allocateWorkspace(f.directory), /retention limit/);
+    assert.equal(readdirSync(root).length, 32);
+    assert.equal(readdirSync(f.directory).filter(name => name.startsWith('lighthouse-engine-')).length, 0);
+  } finally { f.dispose(); }
+});
+test('local recovery byte limits are enforced before allocation without evicting retained evidence', async () => {
+  const { openSync, ftruncateSync, closeSync } = await import('node:fs');
+  const f = fixture();
+  try {
+    const root = join(f.directory, 'retained'); mkdirSync(root);
+    const fd = openSync(join(root, 'retained-report'), 'w');
+    try { ftruncateSync(fd, 512 * 1024 * 1024 + 1); } finally { closeSync(fd); }
+    await assert.rejects(f.owner.allocateWorkspace(f.directory), /retention limit/);
+    assert.equal(existsSync(join(root, 'retained-report')), true);
+  } finally { f.dispose(); }
+});
+test('interrupted workspace removal retries from sealed retention and rejects changed retained evidence', async () => {
+  for (const tampered of [false, true]) {
+    const f = fixture();
+    try {
+      const path = await workspaceFixture(f); f.owner.cleanup();
+      await assert.rejects(f.owner.cleanupWorkspace({ remove: async () => {} }), /remains after removal/);
+      assert.equal(existsSync(path), true);
+      const retained = join(f.directory, 'retained', readdirSync(join(f.directory, 'retained'))[0]);
+      if (tampered) {
+        writeFileSync(join(retained, 'changes.json'), '[]');
+        await assert.rejects(recoverExecutionWorkspaces(f.directory, { isStopped: () => true }), /evidence changed/);
+        assert.equal(existsSync(path), true);
+      } else {
+        await recoverExecutionWorkspaces(f.directory, { isStopped: () => true });
+        assert.equal(existsSync(path), false);
+      }
+    } finally { f.dispose(); }
+  }
 });
