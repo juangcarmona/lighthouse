@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { sdkRequirement, aspireVersion, compatibleSdk, compatibleAspire, bundleProbe } from './dotnet-prerequisites.mjs';
 
 const imageId = value => /^sha256:[a-f0-9]{64}$/.test(value ?? '');
 export function validateEnvironment(value) {
@@ -53,7 +54,11 @@ export async function startEnvironment({ selected, image, commands = [], agent =
     if (!/^v24\./.test(probe('Node.js 24', ['node', '--version']))) throw Error('Environment requires Node.js 24');
     if (selected) { probe('npm', ['npm', '--version']); probe('Git', ['git', '--version']); probe('Chromium', ['chromium', '--version']); }
     if ((selected || agent) && probe('OpenCode 2.1.0', ['opencode', '--version']) !== 'opencode v2.1.0') throw Error('Environment requires OpenCode 2.1.0');
-    if (selected?.profile === 'dotnet' && probe('.NET SDK 10.0.100', ['dotnet', '--version']) !== '10.0.100') throw Error('Environment requires .NET SDK 10.0.100');
+    if (selected?.profile === 'dotnet') {
+      if (!compatibleSdk(probe(sdkRequirement, ['dotnet', '--list-sdks']))) throw Error(`Environment requires ${sdkRequirement}`);
+      if (!compatibleAspire(probe(`Aspire CLI ${aspireVersion}`, ['aspire', '--version']))) throw Error(`Environment requires Aspire CLI ${aspireVersion}`);
+      probe(`Aspire bundle ${aspireVersion}`, ['node', '-e', bundleProbe]);
+    }
     // Check image executables without running repository commands before their workspace exists.
     const executables = new Set(commands.flatMap(command => command[0] === 'env' ? ['env', command.slice(1).find(arg => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(arg))] : [command[0]]));
     for (const executable of executables) {

@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, rm, cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { startEnvironment } from '../packages/sdlc/src/execution-environment.mjs';
-import { runImplementationChecks } from '../packages/sdlc/src/implementation-runtime.mjs';
+import { compatibleSdk, compatibleAspire, bundleProbe } from '../packages/sdlc/src/dotnet-prerequisites.mjs';
+import { writableTree } from '../packages/sdlc/src/implementation-runtime.mjs';
 
 const image = process.env.LIGHTHOUSE_TEST_DOTNET_IMAGE;
 const postgresImage = process.env.LIGHTHOUSE_TEST_POSTGRES_IMAGE;
@@ -16,7 +18,36 @@ const absent = name => {
   assert.equal(docker(['network', 'ls', '-q', '--filter', `name=^${name}`]), '');
 };
 
+test('real pinned .NET image provides compatible SDK and Aspire bundle without writable root or network', { skip: !image }, async () => {
+  assert.match(image, /^sha256:[a-f0-9]{64}$/);
+  const calls = [];
+  const run = args => { calls.push(args); return docker(args); };
+  const runtime = await startEnvironment({ selected: { profile: 'dotnet', image }, name: `lighthouse-real-prerequisites-${process.pid}`, uid: 20003, run });
+  try {
+    const sdk = calls.find(args => args.includes('--list-sdks'));
+    const cli = calls.find(args => args.includes('aspire'));
+    const bundle = calls.find(args => args.includes(bundleProbe));
+    assert.equal(compatibleSdk(docker(sdk)), true);
+    assert.equal(compatibleAspire(docker(cli)), true);
+    assert.equal(JSON.parse(docker(bundle)).version, '13.6.5');
+    for (const args of calls) {
+      assert.ok(args.includes('--read-only'));
+      assert.equal(args[args.indexOf('--user') + 1], '20003:20003');
+      assert.equal(args[args.indexOf('--network') + 1], 'none');
+      assert.ok(args.includes('ALL')); assert.ok(args.includes('no-new-privileges'));
+      assert.ok(!args.includes('--mount') && !args.includes('-v'));
+    }
+    // Break only the probe's bundle location, not the immutable image or source.
+    await assert.rejects(startEnvironment({ selected: { profile: 'dotnet', image }, name: `lighthouse-real-absent-bundle-${process.pid}`, uid: 20003, run: args => {
+      if (!args.includes(bundleProbe)) return docker(args);
+      const index = args.indexOf('--entrypoint');
+      return docker([...args.slice(0, index), '--env', 'AspireCliBundlePath=/tmp/absent-bundle', ...args.slice(index)]);
+    } }), /prerequisite failed: Aspire bundle 13.6.5/);
+  } finally { assert.equal(runtime.cleanup(), true); }
+});
+
 test('real PostgreSQL is fresh between phases and leaves no container or network', { skip: !image || !postgresImage }, async () => {
+  for (const value of [image, postgresImage]) assert.match(value, /^sha256:[a-f0-9]{64}$/);
   const name = `lighthouse-real-environment-${process.pid}`;
   for (const phase of ['agent', 'validation']) {
     const runtime = await startEnvironment({ selected, name: `${name}-${phase}`, uid: 20003 });
@@ -32,6 +63,11 @@ test('real PostgreSQL is fresh between phases and leaves no container or network
 test('real host checks preserve failure and cancellation and clean services', { skip: !image || !postgresImage }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-environment-checks-'));
   try {
+    // Docker reads a disposable harness copy even when the source checkout is private.
+    const harness = join(root, 'harness');
+    await cp(new URL('../packages/sdlc/', import.meta.url), harness, { recursive: true, filter: path => !path.split('/').includes('node_modules') });
+    await writableTree(harness);
+    const { runImplementationChecks } = await import(pathToFileURL(join(harness, 'src/implementation-runtime.mjs')).href);
     for (const scenario of ['failure', 'cancel']) {
       const name = `lighthouse-real-${scenario}-${process.pid}`;
       const workspace = join(root, scenario);

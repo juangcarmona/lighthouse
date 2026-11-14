@@ -439,7 +439,7 @@ if(args.includes('--entrypoint') && !mount('/output')) {
  const cmd=args[args.indexOf('--entrypoint')+1];
  if(cmd==='dotnet' && ${JSON.stringify(outcome)}==='missing-sdk') process.exit(1);
  if(cmd==='opencode' && ${JSON.stringify(outcome)}==='missing-agent') process.exit(1);
- console.log(cmd==='node'?'v24.13.0':cmd==='dotnet'?'10.0.100':cmd==='opencode'?'opencode v2.1.0':'ok'); process.exit(0);
+ console.log(cmd==='node'?'v24.13.0':cmd==='dotnet'?'10.0.115 [/usr/share/dotnet/sdk]':cmd==='aspire'?'13.6.5+fixture':cmd==='opencode'?'opencode v2.1.0':'ok'); process.exit(0);
 }
 if(mount('/output')) {
  fs.writeFileSync(mount('/workspace')+'/demo.js','new');

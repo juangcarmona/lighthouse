@@ -25,14 +25,17 @@ async function main() {
   const inspect = image => execFileSync('docker', ['image', 'inspect', image, '--format', '{{.Id}}'], { encoding: 'utf8' }).trim();
   try {
     for (const file of ['Dockerfile.environments', 'entrypoint.sh', 'opencode-implement.json']) await copyFile(join(here, file), join(context, file));
+    await copyFile(join(here, '../../packages/sdlc/src/dotnet-prerequisites.mjs'), join(context, 'dotnet-prerequisites.mjs'));
     await copyFile(binary, join(context, 'opencode'));
     const build = ['build', '--platform', 'linux/amd64', '-f', join(context, 'Dockerfile.environments'), '--build-arg', `NODE_IMAGE=${inputs.nodeImage}`, '--build-arg', `SDK_IMAGE=${inputs.sdkImage}`, '--build-arg', `OPENCODE_SHA256=${inputs.opencodeSha256}`];
     docker([...build, '--target', 'base', '-t', 'lighthouse-environment:base', context]);
     const base = inspect('lighthouse-environment:base');
     docker([...build, '--target', 'dotnet', '-t', 'lighthouse-environment:dotnet', context]);
+    const dotnetImage = inspect('lighthouse-environment:dotnet');
+    const prerequisites = JSON.parse(execFileSync('docker', ['run', '--rm', '--network', 'none', '--user', '20003:20003', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,exec,size=128m', '--env', 'HOME=/tmp', '--env', 'DOTNET_CLI_HOME=/tmp/dotnet', '--entrypoint', 'node', dotnetImage, '/usr/local/lib/lighthouse/dotnet-prerequisites.mjs'], { encoding: 'utf8' }));
     docker(['pull', '--platform', 'linux/amd64', inputs.postgresImage]);
     const postgresImage = inspect(inputs.postgresImage);
-    const receipt = { schemaVersion: 1, platform: 'linux/amd64', inputs, environments: { base: { image: base, postgresImage }, dotnet: { image: inspect('lighthouse-environment:dotnet'), postgresImage } } };
+    const receipt = { schemaVersion: 1, platform: 'linux/amd64', inputs, prerequisites, environments: { base: { image: base, postgresImage }, dotnet: { image: dotnetImage, postgresImage } } };
     await mkdir(dirname(resolve(receiptFile)), { recursive: true });
     await writeFile(receiptFile, JSON.stringify(receipt, null, 2) + '\n');
   } finally { await rm(context, { recursive: true, force: true }); }
