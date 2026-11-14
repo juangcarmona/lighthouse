@@ -434,9 +434,16 @@ async function main() {
         await writeFile(join(runDir, 'evidence/host/telemetry-usage.json'), JSON.stringify(usageSummary(events, { health: [telemetry.health()] })));
         runtimeReceipt.telemetry = telemetry.health(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
       } catch { console.error('Telemetry retention incomplete; inspect collector health.'); }
-      if (workspaceCleanupError) throw workspaceCleanupError;
+      if (workspaceCleanupError) {
+        console.error(progressText('Cleanup', redactLog(workspaceCleanupError.message)));
+        if (!runtimeReceipt.failure) throw workspaceCleanupError;
+      }
     } finally { if (slot !== undefined) closeSync(slot); }
-    if (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean') throw Object.assign(Error('Execution cleanup is not verified; inspect runtime.json and the operator ownership journal before retrying'), { phase: 'cleanup' });
+    if (runtimeReceipt.cleanup && runtimeReceipt.cleanup.status !== 'clean') {
+      const cleanupError = Object.assign(Error('Execution cleanup is not verified; inspect runtime.json and the operator ownership journal before retrying'), { phase: 'cleanup' });
+      console.error(progressText('Cleanup', cleanupError.message));
+      if (!runtimeReceipt.failure) throw cleanupError;
+    }
   }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(async error => {
