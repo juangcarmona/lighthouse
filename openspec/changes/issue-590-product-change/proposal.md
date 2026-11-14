@@ -12,11 +12,11 @@ Lighthouse can report delivery acceptance only from a distinct, explicit reposit
 
 ## Impacted Product Areas
 
-- FR-CHANGE-EVIDENCE is modified in place: preserve the existing change report and add its missing accepted-delivery evidence, verification and handoff obligations.
-<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:9207c491167fcdb5cebf14dc750bb0ac5441f847c4607cd94111385128b692f0" -->
+- FR-CHANGE-EVIDENCE is modified in place: preserve the current lifecycle-derived scenarios, executable-test and run traceability, stale-evidence handling and published-consumer obligations, and add distinct accepted-delivery evidence, verification and handoff obligations.
+<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:90af94bb73cab9bf61e3a4c6eb7d44f68b42513063adadaa629ba72e69150f69" -->
 
 - BR-HUMAN-AUTHORITY is a governing dependency, retained unchanged. The new BR-DELIVERY-ACCEPTANCE specializes acceptance without expanding the existing bounded-delegation exception or granting a worker authority.
-<!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:c26daacd93dfc059f9ff99cdac179a2ee0d136d5c02cd146b92b3c46e49752e8" -->
+<!-- pdac:cite id="BR-HUMAN-AUTHORITY" digest="sha256:404ea1496978d61bee268ee8dbd95709620c12725b2f65e8cd44bb450878e403" -->
 
 - FR-DELIVERY-ROUTES is an affected compatibility boundary, retained unchanged: the new acceptance route must identify its producer and decision owner, but is not a new composition of delivery stages. Existing delivery-route selection is not acceptance.
 <!-- pdac:cite id="FR-DELIVERY-ROUTES" digest="sha256:d6d9af3bca75d4e3d52464e4dabadfb73b2576f98fc495edd1806aadb0982cf8" -->
@@ -60,6 +60,8 @@ The host's pinned provider evidence index supplies the accepted artifact invento
 Pass repeated before the first delta: the two-node delta remains sufficient. No uncertain candidate or material widening was identified. Domain vocabulary is defined within the rule and evidence obligation; no separate term, behaviour, actor, use case, quality requirement or context is needed to express this bounded outcome. Unchanged categories above are exclusions, not implicit authorizations. A fresh proportional pass is required before any later approval or material widening.
 
 ## Refinement pass
+
+The proposal is synchronized with the current PDaC v1alpha2 baseline. The proposed FR-CHANGE-EVIDENCE retains every current lifecycle, structured-behaviour, test-execution and historical-evidence obligation; its acceptance rules remain additional draft obligations. This synchronization does not approve or apply the Product Change.
 
 This resumes the host-assigned issue-590-product-change. No candidate directory was supplied in the read-only checkout; the previous run stopped for the source decision rather than producing an approved delta. The supplied continuation and answer history are the resumable evidence for this sitting.
 

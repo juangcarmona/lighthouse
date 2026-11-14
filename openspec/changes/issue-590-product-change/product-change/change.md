@@ -3,13 +3,20 @@ id: CHG-590-DELIVERY-ACCEPTANCE
 type: product-change
 title: Define source-bound accepted-delivery receipts
 status: draft
-base-revision: '7e0fc49'
+base-revision: '60df0e5a371c0bdfb100cbd985910357ca89451a'
 operations:
   add:
     - BR-DELIVERY-ACCEPTANCE
   modify:
     - FR-CHANGE-EVIDENCE
   remove: []
+unaffected:
+  - id: BC-FOUNDATION
+    cause: BR-DELIVERY-ACCEPTANCE
+    relationship: applies-to
+    digest: sha256:b286bdefecf1a005e993a0fb626dd73c466f46ea9a5f517a5b8bb454398852b3
+    cause-digest: sha256:f4af99445ffb3af45e2a871cf40dd2b97d1c31e91c3bd90597e437fb15067ff1
+    reason: The existing foundation context owns delivery evidence; the additional acceptance rule does not change its responsibilities or boundaries.
 ---
 
 ## Problem

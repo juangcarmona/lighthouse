@@ -5,7 +5,13 @@ title: Report evidence for a foundation-governed change
 status: draft
 derived-from: [UC-IMPLEMENT-CHANGE, BR-HUMAN-AUTHORITY, BR-DELIVERY-ACCEPTANCE]
 verification:
-  - scenario: A completed change report names the inspected scope, checks, findings, preserved human decisions and source paths needed to review the result.
+  - scenario: A change report names inspected scope, checks, findings, preserved human decisions and source evidence needed to review the result.
+  - scenario: Applicable lifecycle scenarios cover valid transitions, forbidden transitions, terminal-state behaviour and invariants using structured behaviour context, stimulus and observable outcomes with required relationships retained.
+  - scenario: Affected behaviours trace to executable tests at justified domain, integration or end-to-end levels and actual run results; missing coverage and unexecuted scenarios remain visible.
+  - scenario: Model coverage, test existence, test execution and acceptance are reported separately, and a coverage association alone cannot establish execution or acceptance.
+  - scenario: External evidence is verified through supported ProductShape interfaces against supported structured behaviour, functional requirement and quality requirement targets, with lifecycle transitions linked through their structured behaviours.
+  - scenario-ref: SB-STALE-BEHAVIOUR-EVIDENCE
+  - scenario: A published-package consumer demonstrates a representative applicable lifecycle with structured-behaviour-derived tests, passing and failing execution evidence, and stale evidence detection while preserving historical results.
   - scenario: An authenticated explicit repository-owner decision accepts an exact work item and candidate against retained scope, criteria and policy; its receipt verifies independently of worker output.
   - scenario: A green run without the distinct acceptance decision is pending on a healthy supported acceptance route and never accepted.
   - scenario: A merged PR without the distinct acceptance decision remains unaccepted regardless of planning approval, PR review, release, deployment, labels or closure.
@@ -21,7 +27,17 @@ uses-terms: [TERM-GUARDRAIL, TERM-INTEGRATION, TERM-DELIVERY-ROUTE, TERM-AGENT-R
 
 ## Requirement
 
-The product MUST provide a reviewable evidence report for a foundation-governed change and MUST identify unresolved findings or owner decisions instead of treating them as implementation success.
+Lighthouse MUST provide a reviewable evidence report for each foundation-governed change and identify unresolved findings or owner decisions rather than treat them as implementation success.
+
+For applicable domain lifecycles, verification planning MUST derive scenarios from valid transitions, forbidden transitions, terminal-state behaviour and invariants. Scenarios MUST use structured behaviour context, stimulus and observable outcomes and retain provider-required illustrates relationships and applicable lifecycle and transition coverage associations. Non-applicability MUST have a reason; missing model meaning MUST return to the Product Change process instead of invented lifecycles or behaviours.
+
+Affected behaviours MUST trace to executable tests and actual execution results. The test level MUST fit the observable behaviour: domain or integration checks where sufficient, and end-to-end checks where the observable outcome requires them. Reports MUST expose missing coverage and unexecuted scenarios and keep model coverage, test existence, execution and acceptance distinguishable. A relationship or coverage association MUST NOT be treated as proof of execution. Passing execution MUST NOT imply human acceptance or release authority.
+
+Evidence MUST retain source and model revisions, provider-generated citations, test identity, run identity and observed results sufficient to review the trace. External test evidence MUST be verified through supported ProductShape interfaces using its supported structured behaviour, functional requirement and quality requirement targets. Lifecycle transitions MUST link to test evidence through their structured behaviours rather than invent unsupported direct evidence targets.
+
+Stale citations MUST be reported with the need for revalidation. Historical run outcomes and their original revisions MUST be preserved; they MUST NOT be rewritten as failures solely due to later model changes or silently presented as current acceptance. Missing, unverifiable, failed or unexecuted required evidence MUST remain explicit.
+
+Published-package consumer evidence MUST demonstrate a representative applicable domain lifecycle with structured-behaviour-derived tests, passing and failing execution evidence and stale evidence detection. It MUST retain source and model revisions and provider citations and distinguish model coverage, test existence, execution and acceptance. Owning guidance, projections, examples and continuous-integration consumers MUST express this contract consistently.
 
 ### Distinct accepted-delivery evidence
 
@@ -74,4 +90,4 @@ The downstream handoff MUST identify the accepted versioned contract, accountabl
 
 ## Rationale
 
-People and agents need a shared account of what was checked and what remains their responsibility. Independent consumers also need to distinguish an authority's actual acceptance decision from engineering activity, retain exact provenance and explain when that evidence is absent or no longer applicable. Append-only correction and stable decision identity preserve accountability without counting retries or silently changing historical meaning.
+People and agents need to distinguish model coverage, executable tests, actual execution and acceptance while preserving historical outcomes. Independent consumers also need to distinguish an authority's actual acceptance decision from engineering activity, retain exact provenance and explain when that evidence is absent or no longer applicable. Append-only correction and stable decision identity preserve accountability without counting retries or silently changing historical meaning.
