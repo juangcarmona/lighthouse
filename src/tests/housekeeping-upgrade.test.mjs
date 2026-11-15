@@ -11,6 +11,29 @@ const version = JSON.parse(await readFile(new URL('../packages/sdlc/package.json
 const workflow = '.github/workflows/lighthouse-worker-maintenance.yml';
 const run = (cwd, ...args) => spawnSync(process.execPath, [tool, ...args], { cwd, encoding: 'utf8' });
 
+test('an older profileless ownership inventory can upgrade a selected profile without accepting unknown paths', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'housekeeping-legacy-profile-'));
+  try {
+    const initialized = run(root, 'init', '--name', 'Existing adopter', '--profile', 'dotnet-backend');
+    assert.equal(initialized.status, 0, initialized.stderr);
+    const manifestPath = join(root, 'lighthouse.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    manifest.managed = manifest.managed.filter(path => ![workflow, '.lighthouse/housekeeping.json'].includes(path) && !path.startsWith('docs/') && !path.startsWith('.agents/skills/lighthouse-dotnet/'));
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    await rm(join(root, workflow));
+    const profile = await readFile(join(root, 'docs/profiles/dotnet/README.md'), 'utf8');
+    const preview = run(root, 'upgrade', '--scope', 'sdlc', '--format', 'json');
+    assert.equal(preview.status, 0, preview.stderr);
+    assert.equal(JSON.parse(preview.stdout).changes.find(change => change.path === workflow).classification, 'additive');
+    const applied = run(root, 'upgrade', '--scope', 'sdlc', '--apply');
+    assert.equal(applied.status, 0, applied.stderr);
+    assert.equal(await readFile(join(root, 'docs/profiles/dotnet/README.md'), 'utf8'), profile);
+    manifest.managed.push('unrelated.txt');
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    assert.notEqual(run(root, 'upgrade', '--scope', 'sdlc').status, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('packed CLI and SDLC artifacts generate and upgrade housekeeping in an isolated consumer', async () => {
   const root = await mkdtemp(join(tmpdir(), 'housekeeping-packed-'));
   try {

@@ -684,6 +684,10 @@ function validate(manifest) {
   const profilelessManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === managedPaths.length
     && manifest.managed.every((entry, index) => entry === managedPaths[index]);
+  const beforeHousekeepingProfileless = managedPaths.filter(path => !['.github/workflows/lighthouse-worker-maintenance.yml', '.lighthouse/housekeeping.json'].includes(path));
+  const preHousekeepingProfilelessManaged = Array.isArray(manifest.managed)
+    && manifest.managed.length === beforeHousekeepingProfileless.length
+    && manifest.managed.every((entry, index) => entry === beforeHousekeepingProfileless[index]);
   const previousCompleteManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === previousManagedPaths.length
     && manifest.managed.every((entry, index) => entry === previousManagedPaths[index]);
@@ -697,7 +701,7 @@ function validate(manifest) {
   // the foundation now leaves those files to explicit workflow adoption and never deletes them.
   const withoutOldWorkflows = Array.isArray(manifest.managed) ? manifest.managed.filter(path => !isOptionalWorkflow(path)) : [];
   const previousWorkflowManaged = withoutOldWorkflows.length === expectedManagedPaths.length && withoutOldWorkflows.every((path, index) => path === expectedManagedPaths[index]);
-  if (!preHousekeepingManaged && !previousWorkflowManaged && !legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
+  if (!preHousekeepingProfilelessManaged && !preHousekeepingManaged && !previousWorkflowManaged && !legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
     problems.push(`managed must be ${legacyManagedPaths.join(', ')}, the previous Lighthouse guardrail set or the selected profile set`);
   }
   if ('repository' in manifest) {
