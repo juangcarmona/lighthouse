@@ -224,6 +224,42 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('retention-denied admissions do not allocate journals, workspaces or Docker helpers', async () => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-denied-owner-'));
+  try {
+    const work = join(root, 'work'), bin = join(root, 'bin'), lock = join(root, 'engine.lock');
+    const journals = lock + '.resources', retained = join(journals, 'retained');
+    for (const dir of [work, bin, retained]) await mkdir(dir, { recursive: true });
+    for (let i = 0; i < 32; i++) await mkdir(join(retained, `retained-${i}`));
+    await writeFile(join(retained, 'retained-0', 'candidate.txt'), 'Preserve the retained candidate.');
+    const adapter = await fixtureHarness(root);
+    await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture', lock }));
+    await writeFile(join(root, 'prompt'), 'Must stop before allocation.');
+    await writeFile(join(bin, 'docker'), `#!${process.execPath}
+const fs=require('node:fs'),args=process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(join(root, 'docker-calls'))},JSON.stringify(args)+'\\n');
+if(args[0]==='image')console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));
+`);
+    await chmod(join(bin, 'docker'), 0o755);
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const runDir = join(root, `lighthouse-1-${attempt}`); await mkdir(runDir);
+      await writeFile(join(runDir, 'request.json'), JSON.stringify({ repository: 'owner/repo', runId: 'b'.repeat(64), stage: 'refine', issue: 1, sourceRevision: 'c'.repeat(40) }));
+      await writeFile(join(runDir, 'context.json'), '{}');
+      const execution = spawnSync(process.execPath, [adapter], { encoding: 'utf8', env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: String(attempt), GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+      assert.equal(execution.status, 1, execution.stdout + execution.stderr);
+      assert.match(execution.stderr, /retention limit reached/);
+      assert.deepEqual((await readdir(journals)).filter(name => name.endsWith('.json')), []);
+      assert.deepEqual(await workspaceUsage(root), { paths: [], allocatedBytes: 0, apparentBytes: 0, inodes: 0 });
+    }
+    assert.equal((await readdir(retained)).length, 32);
+    assert.equal(await readFile(join(retained, 'retained-0', 'candidate.txt'), 'utf8'), 'Preserve the retained candidate.');
+    const calls = (await readFile(join(root, 'docker-calls'), 'utf8')).trim().split('\n').map(JSON.parse);
+    assert.ok(calls.every(args => args[0] !== 'run' && !(args[0] === 'network' && args[1] === 'create')));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('forced worker exit recovers an observed async engine but preserves an unobserved create', async () => {
   const { mkdir, chmod } = await import('node:fs/promises');
   const { spawn } = await import('node:child_process');
