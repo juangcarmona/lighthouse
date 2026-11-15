@@ -152,6 +152,17 @@ jobs:
             cat "$LIGHTHOUSE_RUNTIME_EVIDENCE/dotnet-results.log"
             exit 1
           fi
+      - name: Qualify complete adapter cleanup and interrupted recovery
+        timeout-minutes: 10
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          export LIGHTHOUSE_TEST_CLEANUP_IMAGE="$LIGHTHOUSE_TEST_IMAGE"
+          export LIGHTHOUSE_ADAPTER_TERMINAL_EVIDENCE="$LIGHTHOUSE_RUNTIME_EVIDENCE/adapter-terminal.json"
+          if ! node --test --test-name-pattern='complete Docker adapter terminal paths' src/tests/execution-cleanup.integration.test.mjs > "$LIGHTHOUSE_RUNTIME_EVIDENCE/cleanup-results.log" 2>&1; then
+            cat "$LIGHTHOUSE_RUNTIME_EVIDENCE/cleanup-results.log"
+            exit 1
+          fi
       - name: Retain acceptance results
         if: always()
         uses: actions/upload-artifact@v7
