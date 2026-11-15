@@ -150,12 +150,22 @@ export async function observeDispatch(api, repository, owner, comment, issue, co
 // Reporting is read-only so it can observe an active worker without acquiring its lease.
 export async function observeRecovery(api, repository, owner, issueNumber, now = Date.now(), readArtifact = readActionsJson) {
   const issue = await api(`issues/${issueNumber}`), comments = await issueComments(api, issueNumber);
-  const entries = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-dispatch:')).map(comment => ({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }));
+  const entries = [], invalid = [];
+  for (const comment of comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-dispatch:'))) {
+    try { entries.push({ comment, receipt: readDispatchReceipt(comment, repository, issueNumber) }); }
+    catch {
+      let receipt;
+      try { const matches = [...comment.body.matchAll(/<!-- lighthouse-dispatch:(\{[^\n]*\}) -->/g)]; if (matches.length === 1) receipt = JSON.parse(matches[0][1]); } catch {}
+      let worker = 'unknown';
+      try { stagePath(workerFor(receipt)); worker = workerFor(receipt); } catch {}
+      invalid.push({ issue: issueNumber, worker, outcome: 'unknown', state: 'uncertain', code: 'receipt-invalid', requestCommentId: comment.id, ...(receipt ? { rootId: receipt.recovery?.rootId ?? receipt.id, observedRunId: String(receipt.workerRunId) } : {}), nextAction: `Maintainer: inspect historical receipt https://github.com/${repository}/issues/${issueNumber}#issuecomment-${comment.id}. It cannot authenticate recovery; preserve its original bytes and reconcile its repository identity and effects.` });
+    }
+  }
   const unattended = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes('<!-- lighthouse-unattended:')).at(-1);
-  if (unattended && (!entries.length || unattended.id > entries.at(-1).comment.id)) return [];
+  if (!invalid.length && unattended && (!entries.length || unattended.id > entries.at(-1).comment.id)) return [];
   const latest = new Map();
   for (const entry of entries) latest.set(entry.receipt.recovery?.rootId ?? entry.receipt.id, entry);
-  const observations = [];
+  const observations = [...invalid];
   for (const { comment } of latest.values()) {
     const { dispatch, stop, run, jobs, revision, workflowRevision, ...observation } = await observeDispatch(api, repository, owner, comment, issue, comments, now, readArtifact);
     observations.push(observation);
