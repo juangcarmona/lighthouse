@@ -172,9 +172,9 @@ async function main() {
     telemetry.emit('execution.host-wait.ended', { status: 'acquired', durationMs: Date.now() - waitStarted });
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
-    await recoverExecutionWorkspaces(ownershipDirectory);
     const command = imageCommand(config.image);
     config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
+    await recoverExecutionWorkspaces(ownershipDirectory, { restoreOwnership: root => restoreWorkspaceOwnership(root, config) });
     dir = await config.resourceOwner.allocateWorkspace(env.RUNNER_TEMP);
     source = join(dir, 'source'); output = join(dir, 'output');
     await mkdir(source); await mkdir(output); await chmod(output, 0o777);
@@ -409,7 +409,7 @@ async function main() {
     runtime?.cleanup();
     try { if (config.resourceOwner) docker(['run', '--rm', '--network', 'none', '--user', `${config.uid}:${config.uid}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, config.image, 'cleanup-session', `ses_${request.runId}`]); } catch { console.error('Session cleanup failed; operator inspection required'); }
     // Read-only stages also create engine-owned command receipt directories.
-    try { if (config.resourceOwner) restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
+    try { if (config.resourceOwner && dir) restoreWorkspaceOwnership(dir, config); } catch { console.error('Workspace ownership cleanup failed; operator inspection required'); }
     try {
       if (config.resourceOwner) { runtimeReceipt.cleanup = config.resourceOwner.cleanup(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); }
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(join(output, 'execution/native-events.jsonl'), join(runDir, 'evidence/host/native-events.jsonl')); } catch { telemetry.emit('collection.capability', { capability: 'opencode-native', status: 'unavailable', reasonCode: 'native-file-unavailable' }); }

@@ -162,7 +162,7 @@ export function recoverExecutionOwners(directory, { run = docker, isStopped = st
   return receipts;
 }
 export const ownedDockerArgs = (config, args) => config.resourceOwner?.prepare(args) ?? args;
-export async function recoverExecutionWorkspaces(directory, { isStopped = stopped } = {}) {
+export async function recoverExecutionWorkspaces(directory, { isStopped = stopped, restoreOwnership } = {}) {
   for (const name of readdirSync(directory).filter(name => name.endsWith('.json'))) {
     const path = join(directory, name), stat = lstatSync(path);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 1024 * 1024) throw Error('Unsafe execution ownership journal');
@@ -171,7 +171,7 @@ export async function recoverExecutionWorkspaces(directory, { isStopped = stoppe
     if (!record.workspace || record.workspace.status === 'clean') continue;
     if (isStopped(record.process) !== true) throw Error('Workspace owner is active or unknown; retain its state');
     if (record.cleanup?.status !== 'clean') throw Error('Owned runtime resources must be absent before workspace recovery');
-    await disposeWorkspace(record, () => persist(path, record), directory);
+    await disposeWorkspace(record, () => persist(path, record), directory, { restoreOwnership });
   }
   await checkRetentionCapacity(directory);
 }
