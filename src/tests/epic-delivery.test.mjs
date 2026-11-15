@@ -51,6 +51,13 @@ test('a planned decomposition must identify the current GitHub parent', () => {
   assert.ok(validateStageEnvelope(envelope, { issue: 146, stage: 'refine', runId: 'run' }).some(error => /current parent/.test(error)));
 });
 
+test('repository-qualified decomposition parents bind the admitted repository and issue', () => {
+  const request = { repository: 'owner/repo', issue: 146, stage: 'refine', runId: 'run' };
+  const errors = parent => validateStageEnvelope({ schemaVersion: 1, result: { schemaVersion: 1, runId: 'run', stage: 'refine', gate: 'ready', status: 'passed', output: { estimate: estimate(13), decomposition: { ...input(), parent: { title: 'Parent request', ...parent } } }, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Review the plan.' }, effect: { type: 'issue-comment', body: 'The plan is ready.' } }, request);
+  for (const parent of [{ id: 'owner/repo#146' }, { id: 'owner/repo#146', number: 146 }, { id: '146' }, { id: 'GH-146' }, { id: 'local-plan', number: 146 }]) assert.deepEqual(errors(parent), [], JSON.stringify(parent));
+  for (const parent of [{ id: 'another/repo#146' }, { id: 'another/repo#146', number: 146 }, { id: 'owner/repo#147' }, { id: 'owner/repo#147', number: 146 }, { id: 'owner/repo#146', number: 147 }, { id: 'owner/repo-more#146' }, { id: 'owner/repo#0146' }, { id: 'owner/repo#146/extra' }]) assert.ok(errors(parent).some(error => /current parent/.test(error)), JSON.stringify(parent));
+});
+
 test('malformed arrays never throw or accidentally become valid', () => {
   for (const field of ['dependencies', 'acceptance', 'scope', 'labels']) {
     for (const value of [null, {}, 3, 'abc', [null]]) {
