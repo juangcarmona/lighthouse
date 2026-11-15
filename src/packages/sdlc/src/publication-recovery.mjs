@@ -8,6 +8,21 @@ import { issueComments } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
 
+// This is an observation, never an authorization to operate on a terminal PR.
+// Call only after authenticating the original request and publication receipt.
+export function terminalPublication(pr, repository, issue, proof) {
+  if (pr.state === 'open' && pr.merged === false) return null;
+  const stopped = (code, nextAction) => ({ pr: proof.pr, head: proof.head, state: 'uncertain', code, nextAction });
+  if (pr.state !== 'closed' || typeof pr.merged !== 'boolean') return stopped('publication-unconfirmed', 'Maintainer: inspect the current PR lifecycle evidence before any recovery.');
+  try {
+    const target = checkImplementationPullRequest({ ...pr, state: 'open', merged: false }, repository);
+    if (pr.number !== proof.pr || target.issue !== issue || target.head !== proof.head) throw Error('Publication subject changed');
+  } catch {
+    return stopped('publication-authority-invalid', 'Maintainer: the terminal PR does not match its admitted publication; reconcile authority before requesting work.');
+  }
+  return { pr: proof.pr, head: proof.head, state: 'observed', code: pr.merged ? 'publication-merged' : 'publication-closed', nextAction: pr.merged ? 'Owner: evaluate the owning lifecycle completion and release evidence; merge alone does not close the issue. Do not repeat candidate CI or implementation.' : 'Owner: inspect why the published PR was closed and decide the next authorized action; do not automatically recreate it.' };
+}
+
 // Resume verification of a confirmed publication; never replay the agent or branch write.
 export async function reconcilePublishedCi(api, repository, owner, issue, comments, observation, parent, enabled, now = Date.now(), { readArtifact = readActionsJson, readReport = loadStageReport, save = null, ciTrigger = null } = {}) {
   const { dispatch, run, revision } = observation;
@@ -21,12 +36,19 @@ export async function reconcilePublishedCi(api, repository, owner, issue, commen
   if (proof.complete !== true || proof.run !== Number(run.id)) return null;
   const subject = { pr: proof.pr, head: proof.head };
   const stopped = (code, nextAction) => ({ ...subject, state: 'uncertain', code, nextAction });
-  const retained = await readReport(api, repository, report, { issue: issue.number, owner }, readArtifact);
+  let retained;
+  try { retained = await readReport(api, repository, report, { issue: issue.number, owner }, readArtifact); }
+  catch { return stopped('publication-unconfirmed', 'Maintainer: restore the original admitted request and validated result before classifying the publication.'); }
   const request = retained.request;
   if (String(request.workflowRunId) !== String(run.id) || request.stage !== 'implement' || retained.envelope.result.status !== 'passed' || validateStageEnvelope(retained.envelope, request).length) return stopped('publication-unconfirmed', 'Inspect the original publication and validated outcome.');
-  const published = await readArtifact(api, repository, run.id, `lighthouse-implement-publication-${issue.number}-${run.run_attempt}`, 'published-pr.json', true);
+  let published;
+  try { published = await readArtifact(api, repository, run.id, `lighthouse-implement-publication-${issue.number}-${run.run_attempt}`, 'published-pr.json', true); }
+  catch { return stopped('publication-unconfirmed', 'Maintainer: restore the original authenticated publication receipt before recovery.'); }
   if (published?.number !== proof.pr || published.head !== proof.head) return stopped('publication-unconfirmed', 'Restore the original authenticated publication receipt before recovery.');
-  const pr = await api(`pulls/${proof.pr}`), target = checkImplementationPullRequest(pr, repository);
+  const pr = await api(`pulls/${proof.pr}`);
+  const terminal = terminalPublication(pr, repository, issue.number, proof);
+  if (terminal) return terminal;
+  const target = checkImplementationPullRequest(pr, repository);
   if (target.issue !== issue.number || pr.head.sha !== proof.head || issue.state !== 'open' || issue.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info', 'waiting-review'].includes(label.name))) return null;
   const reviewCurrent = async () => {
     const reviews = await api(`pulls/${pr.number}/reviews?per_page=100`);

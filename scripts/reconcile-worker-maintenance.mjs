@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFile, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { housekeepingFreshness, readHousekeepingSummary, observeDailyCoverage } from '../src/packages/sdlc/src/repository-housekeeping.mjs';
 
 const repository = 'juangcarmona/lighthouse', repositoryId = 1427668548;
 const workflow = 'lighthouse-worker-maintenance.yml';
@@ -31,10 +32,11 @@ async function observeScan(api, run, now) {
   return completedAt === null ? { cause: 'invalid-scan-completion' } : { completedAt };
 }
 
-export async function reconcileMaintenance(api, { now = Date.now(), apply = false, pending = null, checkpoint } = {}) {
+export async function reconcileMaintenance(api, { now = Date.now(), apply = false, pending = null, checkpoint, daily = null } = {}) {
   const target = await api('');
   if (target.full_name !== repository || target.id !== repositoryId || !target.default_branch) throw Error('Maintenance repository identity mismatch');
-  const result = { schemaVersion: 1, repository, repositoryId, observedAt: new Date(now).toISOString(), action: 'none' };
+  const dailyState = daily?.summary ? await observeDailyCoverage(api, repository, repository.split('/')[0], daily.summary, { now, readArtifact: daily.readArtifact }) : daily ? housekeepingFreshness({ ...daily, now }) : { status: 'unconfigured', reason: 'daily-summary-not-selected', nextAction: 'Maintainer: supply --report-index <issue> to assess actual complete daily coverage separately from recovery freshness.' };
+  const result = { schemaVersion: 1, repository, repositoryId, observedAt: new Date(now).toISOString(), action: 'none', daily: dailyState };
   const inventory = await api(`actions/workflows/${workflow}/runs?per_page=100`);
   if (!Array.isArray(inventory.workflow_runs)) throw Error('Maintenance run inventory unavailable');
   const runs = inventory.workflow_runs;
@@ -72,8 +74,8 @@ export async function reconcileMaintenance(api, { now = Date.now(), apply = fals
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     const args = process.argv.slice(2), journalIndex = args.indexOf('--journal');
-    const journal = journalIndex < 0 ? null : args[journalIndex + 1];
-    if (args.some((arg, i) => arg !== '--apply' && arg !== '--journal' && !(journalIndex >= 0 && i === journalIndex + 1)) || journalIndex >= 0 && (!journal || journal.startsWith('--')) || args.includes('--apply') && !journal) throw Error('Usage: reconcile-worker-maintenance.mjs [--apply --journal <operator-owned-file>]');
+    const journal = journalIndex < 0 ? null : args[journalIndex + 1], reportIndex = args.indexOf('--report-index');
+    if (args.some((arg, i) => !['--apply', '--journal', '--report-index'].includes(arg) && !(journalIndex >= 0 && i === journalIndex + 1) && !(reportIndex >= 0 && i === reportIndex + 1)) || reportIndex >= 0 && !/^[1-9][0-9]*$/.test(args[reportIndex + 1] ?? '') || journalIndex >= 0 && (!journal || journal.startsWith('--')) || args.includes('--apply') && !journal) throw Error('Usage: reconcile-worker-maintenance.mjs [--report-index <issue>] [--apply --journal <operator-owned-file>]');
     const api = async (path, method = 'GET', data) => {
       const output = execFileSync('gh', ['api', `repos/${repository}${path ? '/' + path : ''}`, ...(method === 'GET' ? [] : ['--method', method, '--input', '-'])], { encoding: 'utf8', timeout: 30000, maxBuffer: 4 * 1024 * 1024, input: data ? JSON.stringify(data) : undefined });
       return output.trim() ? JSON.parse(output) : null;
@@ -84,7 +86,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       try { pending = JSON.parse(await readFile(journal + '.pending', 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
     const checkpoint = async value => value === null ? rm(journal + '.pending') : writeFile(journal + '.pending', JSON.stringify(value) + '\n', { mode: 0o600, flag: 'wx' });
-    const observation = await reconcileMaintenance(api, { apply: args.includes('--apply'), pending, checkpoint });
+    let daily = null;
+    if (reportIndex >= 0) {
+      const index = await api(`issues/${args[reportIndex + 1]}`);
+      if (index.user?.login !== repository.split('/')[0] || index.pull_request || index.state !== 'open') throw Error('Daily report index authority is invalid');
+      daily = { summary: readHousekeepingSummary(index.body) };
+    }
+    const observation = await reconcileMaintenance(api, { apply: args.includes('--apply'), pending, checkpoint, daily });
     if (journal) { await mkdir(dirname(journal), { recursive: true }); await appendFile(journal, JSON.stringify(observation) + '\n', { mode: 0o600 }); }
     console.log(JSON.stringify(observation));
   } catch (error) { console.error(error.message); process.exitCode = 1; }

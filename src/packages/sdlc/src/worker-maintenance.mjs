@@ -7,6 +7,7 @@ import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { admissionCompletion, completedAdmission } from './admission-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 import { createIssueApi } from './github-rest.mjs';
+import { scanHousekeeping, publishHousekeepingSummary } from './repository-housekeeping.mjs';
 
 export async function ownerIssues(api, owner) {
   const issues = [];
@@ -53,8 +54,21 @@ async function main(command) {
   const callback = parent.event === 'workflow_dispatch' && event?.inputs?.completed_run !== undefined && event.inputs.completed_run !== '';
   const completionWake = parent.event === 'workflow_run' || callback;
   if (parent.path !== maintenancePath || parent.repository?.full_name !== repository || !['schedule', 'workflow_dispatch', 'workflow_run'].includes(parent.event) || ![owner, ...(completionWake ? ['github-actions[bot]'] : [])].includes(parent.actor?.login) || parent.triggering_actor?.login !== parent.actor?.login) throw Error('Maintenance is not an authorized execution');
-  if (env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
+  const housekeepingDryRun = command === 'housekeeping' && parent.event === 'workflow_dispatch' && event?.inputs?.dry_run !== 'false';
+  if (!housekeepingDryRun && env.LIGHTHOUSE_MAINTENANCE_ENABLED !== 'true') throw Error('Maintenance is not enabled');
   const scope = recoveryIssues(env.LIGHTHOUSE_MAINTENANCE_ISSUES);
+  if (command === 'housekeeping') {
+    if (completionWake) throw Error('A completion wake cannot claim daily coverage');
+    const requested = event?.inputs?.issue;
+    if (requested && !/^[1-9][0-9]*$/.test(requested)) throw Error('Issue must be a canonical positive integer');
+    if (requested && scope && !scope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
+    const scan = await scanHousekeeping({ api, repository, owner, run: { id: Number(parent.id), attempt: Number(parent.run_attempt), revision: parent.head_sha }, scope: requested || scope ? 'selected-issues' : 'repository', dryRun: housekeepingDryRun, discover: () => requested ? [Number(requested)] : scope ?? maintenanceIssues(api, owner, repository) });
+    await writeFile(join(env.RUNNER_TEMP, 'daily-housekeeping.json'), JSON.stringify(scan, null, 2));
+    if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, `Daily housekeeping: ${scan.complete ? 'complete' : 'incomplete'} ${scan.mode}, scope ${scan.scope}; ${scan.items.length} item(s). Installation, explicit activation and verified effects are separate.\n`);
+    if (!housekeepingDryRun) await publishHousekeepingSummary(api, repository, owner, env.LIGHTHOUSE_REPORT_INDEX_ISSUE, scan);
+    if (!scan.complete) throw Error('Daily housekeeping coverage is incomplete; inspect retained item evidence');
+    return;
+  }
   const admissionWake = parent.event === 'workflow_run' ? await admissionCompletion(api, repository, owner, event) : callback ? await completedAdmission(api, repository, owner, event.inputs.completed_run) : null;
   if (callback && admissionWake && event.inputs.issue !== String(admissionWake.issue)) throw Error('Callback issue differs from its authenticated review');
   if (command === 'report') {
