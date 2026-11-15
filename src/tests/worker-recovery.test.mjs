@@ -996,3 +996,15 @@ test('maintenance includes closed issues from the bounded native review window w
   assert.deepEqual(await maintenanceIssues(async path => path.startsWith('issues?') ? [{ number: 1, user: { login: owner } }] : null, owner, repository), [1]);
   await assert.rejects(maintenanceIssues(async path => path.startsWith('issues?') ? [] : { workflow_runs: {} }, owner, repository), /inventory/);
 });
+
+test('completed closed review inventory survives a repository rename without authenticating legacy dispatches', async () => {
+  const { maintenanceIssues } = await import('../packages/sdlc/src/worker-maintenance.mjs');
+  const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/2`, body: dispatchReceiptBody('owner/previous-name', { schemaVersion: 1, stage: 'review', id: dispatchId('owner/previous-name', '100', 'review'), digest: 'd'.repeat(64), routerRunId: '100', routerAttempt: 1, workerRunId: '202', status: 'completed' }) };
+  const run = { id: 202, path: '.github/workflows/lighthouse-sdlc-review.lock.yml', status: 'completed', conclusion: 'success', display_title: 'review #2 · request 10' };
+  const api = async path => path.startsWith('issues?') ? [{ number: 1, state: 'open', user: { login: owner } }] : path.startsWith('actions/workflows/') ? { workflow_runs: [run] } : path === 'issues/2' ? { number: 2, state: 'closed', user: { login: owner } } : comment;
+  assert.deepEqual(await maintenanceIssues(api, owner, repository), [1]);
+  run.conclusion = 'failure';
+  await assert.rejects(maintenanceIssues(api, owner, repository), /Invalid dispatch receipt/);
+  run.conclusion = 'success'; comment.user.login = 'other';
+  await assert.rejects(maintenanceIssues(api, owner, repository), /Untrusted dispatch receipt/);
+});

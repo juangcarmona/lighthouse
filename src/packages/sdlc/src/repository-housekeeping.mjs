@@ -1,5 +1,5 @@
 import { observeRecovery } from './worker-recovery.mjs';
-import { issueComments } from './stage-dispatch.mjs';
+import { issueComments, readDispatchReceipt, stagePath, workerFor } from './stage-dispatch.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 
 const start = '<!-- lighthouse-housekeeping:start -->';
@@ -8,6 +8,46 @@ const marker = /<!-- lighthouse-housekeeping:(\{[^\n]*\}) -->/g;
 const positive = value => Number.isSafeInteger(value) && value > 0;
 const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
 const incompleteCodes = new Set(['evidence-unavailable', 'dispatch-origin-unavailable', 'dispatch-unconfirmed', 'execution-rerun', 'publication-uncertain']);
+const uncertainItem = (workers, dependencies) => workers.some(item => item.state === 'uncertain' || incompleteCodes.has(item.code)) || dependencies.some(item => item.state === 'unknown');
+
+// An owner can retire historical monitoring without rewriting receipts or granting recovery.
+export function housekeepingReconciler(api, repository, owner, indexNumber) {
+  let decisions;
+  const read = async () => {
+    if (!positive(Number(indexNumber))) return [];
+    const index = await api(`issues/${indexNumber}`);
+    if (index.number !== Number(indexNumber) || index.pull_request || index.state !== 'open' || index.user?.login !== owner) throw Error('Invalid reconciliation index');
+    const result = [];
+    for (const comment of await issueComments(api, Number(indexNumber))) {
+      if (comment.user?.login !== owner || comment.user.type !== 'User' || comment.created_at !== comment.updated_at || !Number.isFinite(Date.parse(comment.created_at)) || comment.issue_url !== `https://api.github.com/repos/${repository}/issues/${indexNumber}`) continue;
+      for (const match of (comment.body ?? '').matchAll(/<!-- lighthouse-housekeeping-reconciliation:(\{[^\n]*\}) -->/g)) {
+        const value = JSON.parse(match[1]);
+        const localEvidence = url => typeof url === 'string' && url.startsWith(`https://github.com/${repository}/`) && /^(?:issues\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?|pull\/[1-9][0-9]*|actions\/runs\/[1-9][0-9]*(?:\/attempts\/[1-9][0-9]*)?)$/.test(url.slice(`https://github.com/${repository}/`.length));
+        if (value.schemaVersion !== 1 || value.repository !== repository || value.disposition !== 'retire' || ![value.issue, value.requestCommentId, value.workerRunId, value.runAttempt].every(positive) || !/^[a-f0-9]{64}$/.test(value.requestId ?? '') || !/^[a-f0-9]{64}$/.test(value.requestDigest ?? '') || typeof value.reason !== 'string' || !value.reason.trim() || value.reason.length > 2000 || !Array.isArray(value.evidence) || !value.evidence.length || value.evidence.length > 20 || !value.evidence.every(localEvidence)) throw Error('Invalid owner reconciliation');
+        result.push({ value, comment });
+      }
+    }
+    return result;
+  };
+  return async item => {
+    if (!item.workers?.some(worker => worker.state === 'uncertain' || incompleteCodes.has(worker.code))) return item;
+    decisions ??= read();
+    const retained = await decisions, workers = [];
+    for (const worker of item.workers) {
+      const decision = retained.filter(({ value }) => value.issue === item.issue && String(value.workerRunId) === String(worker.runId ?? worker.observedRunId)).at(-1);
+      if (!decision || !(worker.state === 'uncertain' || incompleteCodes.has(worker.code))) { workers.push(worker); continue; }
+      const { value, comment } = decision;
+      const receiptComment = await api(`issues/comments/${value.requestCommentId}`);
+      const receipt = readDispatchReceipt(receiptComment, repository, item.issue);
+      const run = await api(`actions/runs/${value.workerRunId}`);
+      if (receipt.id !== value.requestId || receipt.digest !== value.requestDigest || String(receipt.workerRunId) !== String(value.workerRunId) || (receipt.recovery?.rootId ?? receipt.id) !== worker.rootId || Number(comment.id) <= Number(receiptComment.id) || run.id !== value.workerRunId || run.run_attempt !== value.runAttempt || run.repository?.full_name !== repository || run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' || !Number.isFinite(Date.parse(run.updated_at)) || Date.parse(run.updated_at) > Date.parse(comment.created_at)) throw Error('Owner reconciliation no longer matches the terminal execution');
+      const url = `https://github.com/${repository}/issues/${indexNumber}#issuecomment-${comment.id}`;
+      workers.push({ ...worker, state: 'reconciled', code: 'owner-retired', original: worker, reconciliation: { ...value, commentId: comment.id, url }, nextAction: `Historical monitoring retired by the owner: ${url}. Preserve the original outcome and existing candidates; no retry or lifecycle transition is authorized.` });
+    }
+    const replaced = item.workers.filter((worker, i) => workers[i] !== worker).map(worker => worker.nextAction);
+    return { ...item, workers, status: uncertainItem(workers, item.dependencies) ? 'incomplete' : 'inspected', nextActions: [...new Set([...item.nextActions.filter(action => !replaced.includes(action)), ...workers.filter(worker => worker.code === 'owner-retired').map(worker => worker.nextAction)])] };
+  };
+}
 
 function boundedRows(rows) {
   if (!Array.isArray(rows) || rows.length >= 100 || rows.some(row => !positive(row?.number) || !['open', 'closed'].includes(row.state))) throw Error('Incomplete relationship inventory');
@@ -31,7 +71,7 @@ export async function inspectHousekeepingItem(api, repository, owner, number, no
       published.push({ number: pr.number, url: pr.html_url, state: pr.merged === true ? 'merged' : pr.state, authority: 'requires-retained-publication', nextAction: 'Reconcile the original publication through existing maintenance before considering another implementation; merge is not lifecycle acceptance.' });
     }
   }
-  const uncertain = workers.some(item => item.state === 'uncertain' || incompleteCodes.has(item.code)) || dependencies.some(item => item.state === 'unknown');
+  const uncertain = uncertainItem(workers, dependencies);
   const nextActions = workers.filter(item => !['worker-completed', 'ci-observed'].includes(item.code)).map(item => item.nextAction);
   if (dependencies.length && dependencies.every(item => item.state === 'resolved')) nextActions.push('Owner: blockers appear resolved; continuation still requires current authority, pause/reservation checks and bounded admission.');
   if (children.length && children.every(item => item.state === 'closed')) nextActions.push('Owner: evaluate aggregate lifecycle acceptance; closed children alone do not complete this parent.');
@@ -41,7 +81,7 @@ export async function inspectHousekeepingItem(api, repository, owner, number, no
 }
 
 // Discovery and item failures stay distinct. A genuinely empty inventory can complete.
-export async function scanHousekeeping({ api, repository, owner, run, discover, scope = 'repository', dryRun = true, now = () => Date.now(), inspect = inspectHousekeepingItem }) {
+export async function scanHousekeeping({ api, repository, owner, run, discover, scope = 'repository', dryRun = true, now = () => Date.now(), inspect = inspectHousekeepingItem, reconcile = async item => item }) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !positive(run.id) || !positive(run.attempt)) throw Error('Invalid housekeeping identity');
   const startedAt = new Date(now()).toISOString(), items = [], failures = [];
   let issues = [];
@@ -50,8 +90,9 @@ export async function scanHousekeeping({ api, repository, owner, run, discover, 
     if (!Array.isArray(issues) || issues.length > 100 || issues.some(number => !positive(number)) || new Set(issues).size !== issues.length) throw Error('Invalid or incomplete issue inventory');
   } catch { failures.push({ code: 'discovery-unavailable', nextAction: 'Maintainer: restore complete repository inventory before claiming daily coverage.' }); }
   for (const number of issues.toSorted((a, b) => a - b)) {
-    try { items.push(await inspect(api, repository, owner, number, now())); }
-    catch { items.push({ issue: number, url: `https://github.com/${repository}/issues/${number}`, status: 'incomplete', nextActions: ['Maintainer: inspect unavailable issue, relationship or original execution evidence; preserve reservations and uncertain effects.'] }); }
+    let item;
+    try { item = await inspect(api, repository, owner, number, now()); items.push(await reconcile(item)); }
+    catch { items.push({ ...(item ?? { issue: number, url: `https://github.com/${repository}/issues/${number}` }), status: 'incomplete', nextActions: [...(item?.nextActions ?? []), 'Maintainer: inspect unavailable issue, relationship, execution or owner reconciliation evidence; preserve reservations and uncertain effects.'] }); }
   }
   const complete = failures.length === 0 && items.every(item => item.status === 'inspected');
   return { schemaVersion: 1, repository, run, mode: dryRun ? 'dry-run' : 'inspection', scope, startedAt, observedAt: new Date(now()).toISOString(), completedAt: complete ? new Date(now()).toISOString() : null, complete, issues, items, failures, effects: 'none; existing maintenance owns recovery and lifecycle transitions' };
