@@ -2,7 +2,7 @@
 id: CHG-DAILY-REPOSITORY-HOUSEKEEPING
 type: product-change
 title: Provide daily repository housekeeping to every eligible adopter
-status: draft
+status: applied
 base-revision: '2d5c7ce'
 operations:
   add:

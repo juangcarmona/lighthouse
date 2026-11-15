@@ -97,3 +97,11 @@ Audience review used the packaged manual Plain English and Humanizer fallbacks f
 ## Open Questions for the Product Owner
 
 None. The ambiguity pass found no missing choice that would change product behaviour, scope, policy or acceptance.
+
+## Owner decision · 2026-11-15
+
+The owner approved PR #657 and requested immediate implementation in the maintainer session:
+
+> Apruebo 657, que se implemente ahora.
+
+This decision authorizes applying CHG-DAILY-REPOSITORY-HOUSEKEEPING through ProductShape, integrating the applied definition and starting implementation of #652. The earlier refinement-only boundary describes preparation before this decision. Package publication, adopter activation and native daily-scan acceptance retain their separate evidence and authority requirements.
