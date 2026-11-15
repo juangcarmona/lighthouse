@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.8
+
+### Patch Changes
+
+- da842ab: # Reject admission before ownership allocation
+
+  Avoid creating an ownership journal or Docker helper when recovery storage is full and no workspace recovery is needed. Interrupted workspace recovery still records helper ownership before allocation.
+
 ## 0.23.7
 
 ### Patch Changes
