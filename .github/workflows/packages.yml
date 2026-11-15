@@ -144,6 +144,9 @@ jobs:
       - name: Qualify the configured .NET SDK, Aspire and cold scratch lifecycle
         if: steps.runtime-images.outputs.dotnet == 'true'
         timeout-minutes: 15
+        env:
+          # The host Docker daemon can bind the shared runner path, not container /tmp.
+          TMPDIR: ${{ runner.temp }}
         run: |
           if ! node --test src/tests/execution-environment.integration.test.mjs src/tests/command-scratch.integration.test.mjs > "$LIGHTHOUSE_RUNTIME_EVIDENCE/dotnet-results.log" 2>&1; then
             cat "$LIGHTHOUSE_RUNTIME_EVIDENCE/dotnet-results.log"
