@@ -57,6 +57,19 @@ test('read-only observation preserves an unconfirmed dispatch for operator inspe
   assert.equal(f.calls.every(call => call.method === 'GET'), true);
 });
 
+test('invalid historical receipt stays uncertain alongside valid observations and cannot authenticate recovery', async () => {
+  const f = fixture();
+  f.comments.push({ ...f.comment, id: 31 });
+  f.comment.body = dispatchReceiptBody('owner/old-name', { ...f.receipt, id: dispatchId('owner/old-name', '100') });
+  const rows = await observeRecovery(f.api, repository, owner, 7, Date.now(), f.readArtifact);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].state, 'uncertain'); assert.equal(rows[0].code, 'receipt-invalid');
+  assert.equal(rows[0].requestCommentId, 30); assert.equal(rows[0].observedRunId, '200');
+  assert.equal(rows[1].runId, '200');
+  await assert.rejects(prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact), /Invalid dispatch receipt/);
+  assert.equal(f.calls.every(c => c.method === 'GET'), true);
+});
+
 test('recovery rejects an incomplete job inventory before it can infer a safe retry', async () => {
   const f = fixture();
   const incomplete = async (path, ...rest) => path.endsWith('/jobs?per_page=100') ? { total_count: f.jobs.length + 1, jobs: f.jobs } : f.api(path, ...rest);
