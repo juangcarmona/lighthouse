@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse
 
+## 0.13.11
+
+### Patch Changes
+
+- 4901b4e: # Preserve earlier ownership inventories
+
+  Allow existing adopters with selected profiles and the earlier base ownership inventory to upgrade to managed housekeeping. Preserve profile files and continue rejecting unknown ownership paths.
+
 ## 0.13.10
 
 ### Patch Changes
