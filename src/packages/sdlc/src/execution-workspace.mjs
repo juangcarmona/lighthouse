@@ -75,7 +75,7 @@ export async function checkpointWorkspace(record, baseline, tracked, policy, per
   await sync(join(workspace.path, 'recovery.json')); await sync(workspace.path);
   workspace.checkpoint = hash(content); persist();
 }
-export async function disposeWorkspace(record, persist, directory, { remove = rm } = {}) {
+export async function disposeWorkspace(record, persist, directory, { remove = rm, restoreOwnership } = {}) {
   if (!record.workspace) return { status: 'not-applicable' };
   const workspace = record.workspace;
   if (record.cleanup?.status !== 'clean') throw Error('Owned runtime cleanup must be clean before workspace disposal');
@@ -96,8 +96,10 @@ export async function disposeWorkspace(record, persist, directory, { remove = rm
         if (error.code !== 'ENOENT' || await lstat(workspace.path).then(() => true, e => { if (e.code === 'ENOENT') return false; throw e; })) throw error;
         workspace.status = 'clean'; persist(); return { status: 'clean', retained: workspace.retained };
       }
+      await restoreOwnership?.(workspace.path);
     } else {
       await verify(record);
+      await restoreOwnership?.(workspace.path);
       const { copyEvidence } = await import('./implementation-runtime.mjs');
       const { sourceFiles, collectChanges } = await import('./implementation.mjs');
       let changes = [];

@@ -207,6 +207,28 @@ test('workspace identity substitution, unsafe evidence and checkpoint changes pr
     } finally { f.dispose(); }
   }
 });
+test('workspace recovery restores ownership only for stopped, absent and verified owners and preserves failed restoration', async () => {
+  for (const fault of ['active', 'unknown', 'runtime', 'substitution', 'restore', 'none']) {
+    const f = fixture();
+    try {
+      const path = await workspaceFixture(f), restored = [];
+      if (fault !== 'runtime') f.owner.cleanup();
+      if (fault === 'substitution') { renameSync(path, `${path}-original`); mkdirSync(path); }
+      const recovery = recoverExecutionWorkspaces(f.directory, {
+        isStopped: () => fault === 'active' ? false : fault === 'unknown' ? null : true,
+        restoreOwnership: root => { restored.push(root); assert.equal(root, path); if (fault === 'restore') throw Error('Ownership restoration unavailable'); }
+      });
+      if (fault === 'none') {
+        await recovery; assert.deepEqual(restored, [path]); assert.equal(existsSync(path), false);
+      } else {
+        await assert.rejects(recovery, /active|unknown|runtime resources|identity changed|restoration unavailable/);
+        assert.deepEqual(restored, fault === 'restore' ? [path] : []);
+        assert.equal(existsSync(path), true);
+        if (fault === 'restore') assert.equal(readFileSync(join(path, 'source/demo.js'), 'utf8'), 'modified source');
+      }
+    } finally { f.dispose(); }
+  }
+});
 test('local recovery count limits block admission without deleting retained candidates or foreign paths', async () => {
   const f = fixture();
   try {
@@ -247,12 +269,15 @@ test('interrupted workspace removal retries from sealed retention and rejects ch
       await assert.rejects(f.owner.cleanupWorkspace({ remove: async () => {} }), /remains after removal/);
       assert.equal(existsSync(path), true);
       const retained = join(f.directory, 'retained', readdirSync(join(f.directory, 'retained'))[0]);
+      const restored = [], options = { isStopped: () => true, restoreOwnership: root => restored.push(root) };
       if (tampered) {
         writeFileSync(join(retained, 'changes.json'), '[]');
-        await assert.rejects(recoverExecutionWorkspaces(f.directory, { isStopped: () => true }), /evidence changed/);
+        await assert.rejects(recoverExecutionWorkspaces(f.directory, options), /evidence changed/);
+        assert.deepEqual(restored, []);
         assert.equal(existsSync(path), true);
       } else {
-        await recoverExecutionWorkspaces(f.directory, { isStopped: () => true });
+        await recoverExecutionWorkspaces(f.directory, options);
+        assert.deepEqual(restored, [path]);
         assert.equal(existsSync(path), false);
       }
     } finally { f.dispose(); }
