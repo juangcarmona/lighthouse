@@ -125,13 +125,18 @@ if(scenario==='failure')process.exit(7);
     for (const scenario of ['success', 'failure', 'timeout', 'cancel', 'abrupt', 'recovery']) await run(scenario);
     const retained = join(journals, 'retained'), existing = await readdir(retained);
     for (let i = existing.length; i < 32; i++) await mkdir(join(retained, `capacity-fixture-${i}`));
-    await run('capacity'); assert.equal((await readdir(retained)).length, 32);
+    const admittedJournals = (await records()).map(record => record.key).sort();
+    for (let i = 0; i < 3; i++) {
+      await run('capacity');
+      assert.deepEqual((await records()).map(record => record.key).sort(), admittedJournals);
+    }
+    assert.equal((await readdir(retained)).length, 32);
     // Explicit operator archive of this test's own bundle frees capacity without deleting its evidence.
     const archived = join(root, 'archived-bundle'), first = join(retained, existing[0]);
     const candidate = await readFile(join(first, 'changes.json'));
     await rename(first, archived); assert.deepEqual(await readFile(join(archived, 'changes.json')), candidate);
     await run('success'); assert.equal((await readdir(retained)).length, 32);
-    observations.push({ scenario: 'retention-capacity', syntheticEmptyBundles: 32 - existing.length, admissionAt32: 'rejected-before-engine', explicitOperatorArchive: true, archivedCandidatePreserved: true, retainedAfterResume: 32 });
+    observations.push({ scenario: 'retention-capacity', syntheticEmptyBundles: 32 - existing.length, admissionAt32: 'rejected-before-engine', rejectedAttempts: 3, rejectedAdmissionsAddedJournals: 0, explicitOperatorArchive: true, archivedCandidatePreserved: true, retainedAfterResume: 32 });
     complete = true;
   } finally {
     for (const child of children) child.kill('SIGTERM');

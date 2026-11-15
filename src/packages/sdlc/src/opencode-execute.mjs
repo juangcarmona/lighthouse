@@ -173,8 +173,9 @@ async function main() {
     const ownershipDirectory = `${config.lock}.resources`;
     runtimeReceipt.recoveredCleanup = recoverExecutionOwners(ownershipDirectory);
     const command = imageCommand(config.image);
-    config.resourceOwner = createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
-    await recoverExecutionWorkspaces(ownershipDirectory, { restoreOwnership: root => restoreWorkspaceOwnership(root, config) });
+    const ensureOwner = () => config.resourceOwner ??= createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
+    await recoverExecutionWorkspaces(ownershipDirectory, { restoreOwnership: root => { ensureOwner(); restoreWorkspaceOwnership(root, config); } });
+    ensureOwner();
     dir = await config.resourceOwner.allocateWorkspace(env.RUNNER_TEMP);
     source = join(dir, 'source'); output = join(dir, 'output');
     await mkdir(source); await mkdir(output); await chmod(output, 0o777);
