@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.24.1
+
+### Patch Changes
+
+- 58b8c6a: # Reconcile historical housekeeping
+
+  Allow explicit owner retirement of terminal historical housekeeping observations, preserving original receipts and unknown outcomes without authorizing recovery. Support a full daily inspection while retaining the existing bounded recovery scope.
+
 ## 0.24.0
 
 ### Minor Changes
