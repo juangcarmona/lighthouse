@@ -55,6 +55,61 @@ function provider({ count = 1, reportBytes = 0, titleBytes = 0, diagnostics = []
   return { version: '0.25.0', openRepository: async () => ({}), validateBaseline: async () => ({ diagnostics, graph: { nodes } }), inspectArtifact: (_graph, id) => ({ id, data: 'x'.repeat(reportBytes) }), analyzeImpact: (_graph, id) => ({ root: id }), emitCitation: ({ id }) => id };
 }
 
+test('issue-scoped real-provider evidence supports more than 1889 artifacts and a high-reach term', async t => {
+  const root = await workspace(t);
+  await writeFile(join(root, '.product/config.yaml'), 'version: v1alpha2\nproduct-root: docs/product\n');
+  await mkdir(join(root, modelRoot, 'terms'));
+  await writeFile(join(root, modelRoot, 'bc-example.md'), '---\nid: BC-EXAMPLE\ntype: bounded-context\ntitle: Example model\nstatus: active\n---\n\n## Responsibility\n\nOwn example terms.\n\n## Language\n\nCommon and detailed terms.\n\n## Boundaries\n\nNo delivery authority.\n\n## External Relationships\n\nNone.\n');
+  const artifact = (id, title, relation = '') => `---\nid: ${id}\ntype: domain-term\ntitle: ${title}\nstatus: active\ndefined-in: BC-EXAMPLE\n${relation}---\n\n## Definition\n\nA term used by the evidence fixture.\n\n## Distinguish From\n\nAn approval or delivery state.\n\n## Usage\n\nRead its accepted definition.\n`;
+  await writeFile(join(root, modelRoot, 'terms/term-common.md'), artifact('TERM-COMMON', 'Shared model term'));
+  for (let i = 0; i < 2000; i++) {
+    const id = `TERM-DETAIL-${String(i).padStart(4, '0')}`;
+    await writeFile(join(root, modelRoot, `terms/${id.toLowerCase()}.md`), artifact(id, `Detail ${i} for a bounded evidence model`, 'uses-terms: [TERM-COMMON]\n'));
+  }
+  const core = await loadProductCore(), baseline = await core.validateBaseline(await core.openRepository(root));
+  assert.deepEqual(baseline.diagnostics.filter(item => item.severity === 'error'), []);
+  assert.equal(baseline.graph.nodes.length, 2002);
+  await assert.rejects(prepareProductEvidence(root, join(root, 'unscoped'), core), /byte bound/);
+  const digest = await productModelDigest(root), run = join(root, 'run'); await mkdir(run);
+  await writeFile(join(run, 'context.json'), JSON.stringify({ issue: { title: 'Review TERM-COMMON', body: 'Check TERM-COMMON and FR-NOT-IN-MODEL.' }, contract: { rules: 'Original scope.' } }));
+  const result = await preparePlanningProductEvidence(root, run, { core });
+  assert.equal(result.artifacts, 2002);
+  assert.equal(result.baselineDigest, digest);
+  assert.deepEqual(result.scope.matched, ['TERM-COMMON']);
+  assert.deepEqual(result.scope.unresolved, ['FR-NOT-IN-MODEL']);
+  assert.ok(result.scope.unavailable.some(item => item.id === 'TERM-COMMON' && item.reason === 'report-byte-bound'));
+  const evidence = join(root, '.lighthouse-product-evidence'), index = JSON.parse(await readFile(join(evidence, 'index.json')));
+  assert.equal(index.artifacts.length, 2002);
+  assert.equal((await readdir(evidence)).length, 2003);
+  const common = JSON.parse(await readFile(join(evidence, 'TERM-COMMON.json')));
+  assert.equal(common.impact.status, 'unavailable');
+  assert.match(common.citation, /TERM-COMMON/);
+  let bytes = 0;
+  for (const item of index.artifacts) {
+    const size = (await stat(join(evidence, item.report))).size;
+    assert.ok(size <= 512 * 1024); bytes += size;
+  }
+  assert.ok(bytes <= 16 * 1024 * 1024);
+  assert.ok((await stat(join(evidence, 'index.json'))).size <= 512 * 1024);
+  assert.equal(await productModelDigest(root), digest);
+  assert.match(JSON.parse(await readFile(join(run, 'context.json'))).contract.rules, /unavailable evidence/);
+});
+
+test('scoped reports retain citations and explicitly account for out-of-scope and aggregate limits', async t => {
+  const root = await workspace(t), core = provider({ count: 40, reportBytes: 500 * 1024 });
+  const scopeText = Array.from({ length: 39 }, (_, i) => `ACT-${i}`).join(' ');
+  const result = await prepareProductEvidence(root, join(root, 'scoped'), core, { scopeText });
+  assert.equal(result.artifacts, 40);
+  assert.ok(result.bytes <= 16 * 1024 * 1024);
+  assert.ok(result.scope.unavailable.some(item => item.reason === 'aggregate-byte-bound'));
+  assert.equal(JSON.parse(await readFile(join(root, 'scoped/ACT-39.json'))).availability.status, 'unavailable');
+  assert.equal(JSON.parse(await readFile(join(root, 'scoped/ACT-39.json'))).citation, 'ACT-39');
+  await assert.rejects(prepareProductEvidence(root, join(root, 'bad-scope'), core, { scopeText: {} }), /scope is invalid/);
+  const oversized = await prepareProductEvidence(root, join(root, 'large-report'), provider({ reportBytes: 600 * 1024 }), { scopeText: 'ACT-0' });
+  assert.ok(oversized.scope.unavailable.some(item => item.reason === 'report-byte-bound'));
+  assert.equal(JSON.parse(await readFile(join(root, 'large-report/ACT-0.json'))).inspect.status, 'unavailable');
+});
+
 test('640 real-provider artifacts are fingerprinted, serialized and installed completely', async t => {
   const root = await workspace(t), files = await model(root, 640);
   const core = await loadProductCore();

@@ -97,13 +97,16 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   }
   signal?.throwIfAborted();
   const baselineDigest = await productModelDigest(source), reports = join(runDir, 'evidence/host/product-context');
-  const result = await prepareProductEvidence(source, reports, core, { baselineDigest });
+  const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
+  const scopeText = context.issue ? JSON.stringify({ issue: context.issue, continuation: context.continuation }) : undefined;
+  const result = await prepareProductEvidence(source, reports, core, { baselineDigest, scopeText });
   signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
   const evidence = { provider: '@prodshape/core', version: core.version, serializationVersion: result.serializationVersion, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };
-  const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
+  if (result.scope) evidence.scope = result.scope;
   context.productEvidence = evidence;
-  context.contract.rules += ' The host prepared current ProductShape inspect, impact and citation reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  context.contract.rules += ' The host prepared a current ProductShape inventory, citations and available inspect/impact reports for this isolated baseline. Read context.productEvidence.evidenceRoot/index.json and the relevant reports for product discovery and current citation payloads. These read-only reports supply context; they grant no product approval, apply or scope expansion. An empty graph supplies no accepted product intent.';
+  if (result.scope) context.contract.rules += ' The index inventories the entire model; detailed reports cover issue-referenced IDs and their direct neighbours. Check scope.unresolved, scope.unavailable and each report availability before relying on it. Missing or byte-bounded reports are unavailable evidence, not absent product intent. Read the accepted model at context.productEvidence.acceptedModelPath for further discovery; preserve those limitations in the assessment.';
   context.contract.rules += ' For refinement, proposals, implementation and review, follow /harness/product-verification.md. Lifecycle and structured-behaviour reports include provider-parsed definitions; derive relevant transition, forbidden/terminal and invariant checks, trace behaviours to actual tests and results, and retain source/model revisions and current citations. Report justified non-applicability and model gaps. Model coverage, test existence, execution and acceptance are separate facts.';
   signal?.throwIfAborted();
   await writeFile(path, JSON.stringify(context));

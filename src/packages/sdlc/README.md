@@ -63,6 +63,8 @@ The `future` overlay pauses delivery, not an explicitly approved Product Change 
 
 Product preparation checks out the adopter's current source separately from the harness. The pinned ProductShape core supplies read-only inspection, impact and citation reports for the accepted model; the host validates candidate files in a temporary workspace before publishing them. The adopter does not need a Node project or preinstalled dependencies for this worker.
 
+Planning and Product Change workers select detailed evidence from artifact IDs in the admitted issue and owner context, plus direct graph neighbours. The index retains every artifact and citation. Scope metadata records unmatched references and detail that exceeds report or aggregate byte limits; unselected reports explicitly mark detail unavailable. Workers use the accepted source model for further discovery. These limitations do not establish absent product intent or grant product approval.
+
 See [workflow handoffs](handoffs.md) for outcome meanings, publication order, interruption reconciliation and bounded retry evidence.
 
 ## Label catalog
