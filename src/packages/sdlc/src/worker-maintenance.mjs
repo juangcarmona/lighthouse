@@ -7,7 +7,9 @@ import { githubAppCiTrigger } from './github-app-ci.mjs';
 import { admissionCompletion, completedAdmission } from './admission-recovery.mjs';
 import { publishReports } from './worker-reports.mjs';
 import { createIssueApi } from './github-rest.mjs';
-import { scanHousekeeping, publishHousekeepingSummary } from './repository-housekeeping.mjs';
+import { scanHousekeeping, publishHousekeepingSummary, housekeepingReconciler } from './repository-housekeeping.mjs';
+
+export const housekeepingScope = (env, recoveryScope) => env.LIGHTHOUSE_HOUSEKEEPING_REPOSITORY === 'true' ? null : recoveryScope;
 
 export async function ownerIssues(api, owner) {
   const issues = [];
@@ -37,7 +39,15 @@ export async function maintenanceIssues(api, owner, repository) {
     if (run.status !== 'completed' || !['success', 'failure', 'timed_out'].includes(run.conclusion)) continue;
     const issue = await api(`issues/${number}`);
     if (issue.number !== number || issue.state !== 'closed' || issue.user?.login !== owner || issue.pull_request) continue;
-    const receipt = readDispatchReceipt(await api(`issues/comments/${match[2]}`), repository, number);
+    const comment = await api(`issues/comments/${match[2]}`);
+    // Terminal summaries only prune closed inventory; they never authenticate recovery.
+    // This also leaves completed receipts from a previous repository name in history.
+    const markers = [...(comment.body ?? '').matchAll(/<!-- lighthouse-dispatch:(\{[^\n]*\}) -->/g)];
+    if (run.conclusion === 'success' && comment.user?.login === 'github-actions[bot]' && comment.user.type === 'Bot' && comment.issue_url === `https://api.github.com/repos/${repository}/issues/${number}` && markers.length === 1) {
+      const summary = JSON.parse(markers[0][1]);
+      if (summary.schemaVersion === 1 && summary.stage === 'review' && summary.status === 'completed' && String(summary.workerRunId) === String(run.id)) continue;
+    }
+    const receipt = readDispatchReceipt(comment, repository, number);
     if (receipt.stage === 'review' && String(receipt.workerRunId) === String(run.id) && ['requested', 'running', 'unknown', 'failed'].includes(receipt.status)) issues.add(number);
   }
   if (issues.size > 100) throw Error('Maintenance exceeds 100 owner issues');
@@ -60,9 +70,10 @@ async function main(command) {
   if (command === 'housekeeping') {
     if (completionWake) throw Error('A completion wake cannot claim daily coverage');
     const requested = event?.inputs?.issue;
+    const dailyScope = housekeepingScope(env, scope);
     if (requested && !/^[1-9][0-9]*$/.test(requested)) throw Error('Issue must be a canonical positive integer');
-    if (requested && scope && !scope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
-    const scan = await scanHousekeeping({ api, repository, owner, run: { id: Number(parent.id), attempt: Number(parent.run_attempt), revision: parent.head_sha }, scope: requested || scope ? 'selected-issues' : 'repository', dryRun: housekeepingDryRun, discover: () => requested ? [Number(requested)] : scope ?? maintenanceIssues(api, owner, repository) });
+    if (requested && dailyScope && !dailyScope.includes(Number(requested))) throw Error('Issue is outside the configured maintenance scope');
+    const scan = await scanHousekeeping({ api, repository, owner, run: { id: Number(parent.id), attempt: Number(parent.run_attempt), revision: parent.head_sha }, scope: requested || dailyScope ? 'selected-issues' : 'repository', dryRun: housekeepingDryRun, discover: () => requested ? [Number(requested)] : dailyScope ?? maintenanceIssues(api, owner, repository), reconcile: housekeepingReconciler(api, repository, owner, env.LIGHTHOUSE_REPORT_INDEX_ISSUE) });
     await writeFile(join(env.RUNNER_TEMP, 'daily-housekeeping.json'), JSON.stringify(scan, null, 2));
     if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, `Daily housekeeping: ${scan.complete ? 'complete' : 'incomplete'} ${scan.mode}, scope ${scan.scope}; ${scan.items.length} item(s). Installation, explicit activation and verified effects are separate.\n`);
     if (!housekeepingDryRun) await publishHousekeepingSummary(api, repository, owner, env.LIGHTHOUSE_REPORT_INDEX_ISSUE, scan);

@@ -48,6 +48,7 @@ jobs:
       pull-requests: read
     env:
       LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
+      LIGHTHOUSE_HOUSEKEEPING_REPOSITORY: ${{ vars.LIGHTHOUSE_HOUSEKEEPING_REPOSITORY }}
     steps:
       - name: Select Node for the published harness
         uses: actions/setup-node@v5

@@ -1,10 +1,68 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scanHousekeeping, inspectHousekeepingItem, publishHousekeepingSummary, readHousekeepingSummary, housekeepingFreshness, observeDailyCoverage } from '../packages/sdlc/src/repository-housekeeping.mjs';
+import { scanHousekeeping, inspectHousekeepingItem, publishHousekeepingSummary, readHousekeepingSummary, housekeepingFreshness, observeDailyCoverage, housekeepingReconciler } from '../packages/sdlc/src/repository-housekeeping.mjs';
+import { dispatchId } from '../packages/sdlc/src/stage-dispatch.mjs';
+import { housekeepingScope } from '../packages/sdlc/src/worker-maintenance.mjs';
 
 const now = Date.parse('2026-11-15T12:00:00.000Z');
 const options = { api: async () => { throw Error('Unexpected effect'); }, repository: 'owner/repo', owner: 'owner', run: { id: 10, attempt: 1 }, now: () => now };
 const inspected = async (_api, _repo, _owner, issue) => ({ issue, url: `https://github.com/owner/repo/issues/${issue}`, status: 'inspected', nextActions: [] });
+
+test('repository inspection requires explicit opt-in and preserves the recovery issue restriction', () => {
+  const recovery = [53, 119];
+  assert.equal(housekeepingScope({}, recovery), recovery);
+  assert.equal(housekeepingScope({ LIGHTHOUSE_HOUSEKEEPING_REPOSITORY: 'false' }, recovery), recovery);
+  assert.equal(housekeepingScope({ LIGHTHOUSE_HOUSEKEEPING_REPOSITORY: 'true' }, recovery), null);
+  assert.deepEqual(recovery, [53, 119]);
+});
+
+function retirementFixture() {
+  const receipt = { schemaVersion: 1, id: dispatchId('owner/repo', 11, 'implement'), digest: 'b'.repeat(64), stage: 'implement', routerRunId: '11', routerAttempt: 1, workerRunId: '22', status: 'failed' };
+  const decision = { schemaVersion: 1, repository: 'owner/repo', issue: 1, requestCommentId: 3, requestId: receipt.id, requestDigest: receipt.digest, workerRunId: 22, runAttempt: 2, disposition: 'retire', reason: 'Reviewed both terminal attempts and retained the existing candidate. Original dispatch bytes are unavailable.', evidence: ['https://github.com/owner/repo/pull/4'] };
+  const comment = { id: 5, user: { login: 'owner', type: 'User' }, issue_url: 'https://api.github.com/repos/owner/repo/issues/99', created_at: '2026-11-15T11:00:00Z', updated_at: '2026-11-15T11:00:00Z' };
+  const run = { id: 22, run_attempt: 2, path: '.github/workflows/lighthouse-sdlc-implement.lock.yml', repository: { full_name: 'owner/repo' }, status: 'completed', updated_at: '2026-11-15T10:00:00Z' };
+  const worker = { issue: 1, rootId: receipt.id, observedRunId: '22', state: 'uncertain', code: 'dispatch-origin-unavailable', outcome: 'unknown', nextAction: 'Inspect missing origin.' };
+  const item = { issue: 1, status: 'incomplete', workers: [worker], dependencies: [], nextActions: [worker.nextAction] };
+  const api = async (path, method = 'GET') => {
+    assert.equal(method, 'GET');
+    if (path === 'issues/99') return { number: 99, state: 'open', user: { login: 'owner' } };
+    if (path === 'issues/99/comments?per_page=100&page=1') return [{ ...comment, body: `Reviewed; no retry authorized.\n<!-- lighthouse-housekeeping-reconciliation:${JSON.stringify(decision)} -->` }];
+    if (path === 'issues/comments/3') return { id: 3, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: 'https://api.github.com/repos/owner/repo/issues/1', body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` };
+    if (path === 'actions/runs/22') return run;
+    throw Error(`Unexpected ${path}`);
+  };
+  return { receipt, decision, comment, run, worker, item, api };
+}
+
+test('owner retirement completes inspection while preserving unknown outcome, receipts and recovery authority', async () => {
+  const f = retirementFixture();
+  const result = await housekeepingReconciler(f.api, 'owner/repo', 'owner', 99)(f.item);
+  assert.equal(result.status, 'inspected');
+  assert.equal(result.workers[0].code, 'owner-retired');
+  assert.equal(result.workers[0].outcome, 'unknown');
+  assert.deepEqual(result.workers[0].original, f.worker);
+  assert.equal(f.worker.state, 'uncertain');
+  assert.match(result.nextActions[0], /no retry or lifecycle transition is authorized/);
+  const blocked = await housekeepingReconciler(f.api, 'owner/repo', 'owner', 99)({ ...f.item, dependencies: [{ state: 'unknown' }] });
+  assert.equal(blocked.status, 'incomplete');
+});
+
+test('edited, foreign and bot decisions cannot retire historical monitoring', async () => {
+  for (const change of [f => { f.comment.updated_at = '2026-11-15T11:01:00Z'; }, f => { f.comment.user.login = 'other'; }, f => { f.comment.user.type = 'Bot'; }, f => { f.comment.issue_url = 'https://api.github.com/repos/other/repo/issues/99'; }]) {
+    const f = retirementFixture(); change(f);
+    assert.equal((await housekeepingReconciler(f.api, 'owner/repo', 'owner', 99)(f.item)).status, 'incomplete');
+  }
+});
+
+test('stale, mismatched, active and malformed retirement stays incomplete and retains observed history', async () => {
+  for (const change of [f => { f.decision.requestDigest = 'c'.repeat(64); }, f => { f.decision.repository = 'other/repo'; }, f => { f.run.run_attempt = 3; }, f => { f.run.status = 'in_progress'; }, f => { f.run.updated_at = '2026-11-15T11:01:00Z'; }, f => { f.run.path = 'foreign.yml'; }, f => { f.decision.evidence = ['https://example.com/forged']; }]) {
+    const f = retirementFixture(); change(f);
+    const scan = await scanHousekeeping({ ...options, discover: async () => [1], inspect: async () => f.item, reconcile: housekeepingReconciler(f.api, 'owner/repo', 'owner', 99) });
+    assert.equal(scan.complete, false);
+    assert.deepEqual(scan.items[0].workers, [f.worker]);
+    assert.equal(scan.completedAt, null);
+  }
+});
 
 test('native freshness authenticates actual complete-scan evidence and rejects dry-run, skipped and partial coverage', async () => {
   const scan = await scanHousekeeping({ ...options, run: { ...options.run, revision: 'a'.repeat(40) }, dryRun: false, discover: async () => [1], inspect: inspected });
