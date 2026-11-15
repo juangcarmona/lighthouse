@@ -29,7 +29,7 @@ on:
 if: github.run_attempt == 1 && needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
-timeout-minutes: 55
+timeout-minutes: 150
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
@@ -75,7 +75,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
+      ref: c8637b4cfea576ba457db8c8ca3ce8c6333a09ca
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -116,6 +116,9 @@ post-steps:
       if-no-files-found: ignore
       retention-days: 14
 jobs:
+  agent:
+    # Cover the bounded host admission hook, engine slot wait and execution step.
+    timeout-minutes: 360
   prepare:
     if: github.run_attempt == 1
     concurrency:
@@ -140,7 +143,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
+          ref: c8637b4cfea576ba457db8c8ca3ce8c6333a09ca
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -202,7 +205,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
+          ref: c8637b4cfea576ba457db8c8ca3ce8c6333a09ca
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

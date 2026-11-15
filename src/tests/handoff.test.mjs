@@ -66,7 +66,12 @@ test('confirmed failed execution labels first, publishes once and ignores stale 
     return null;
   };
   const input = { repository: repo, issue: 18, stage: 'implement', run: '200', attempt: '1', sourceRevision: 'a'.repeat(40), dispatch, observation: 'failure', answerRetained: true };
-  assert.equal(await publishObservedStop(api, input), true);
+  assert.equal(await publishObservedStop(api, input, async (_api, _repo, run, artifact, member) => {
+    assert.equal(run, '200'); assert.equal(artifact, 'lighthouse-implement-result-18-1'); assert.equal(member, 'runtime.json');
+    return { execution: { status: 'timeout' }, budget: { timeoutMs: 3600000 }, lastCommand: { id: 'verify-final', state: 'running' } };
+  }), true);
+  assert.match(comments.at(-1).body, /execution deadline.*60 minute budget/);
+  assert.match(comments.at(-1).body, /verify-final/);
   assert.ok(calls.findIndex(x => x[0] === 'issues/18/labels') < calls.findIndex(x => x[0] === 'issues/18/comments' && x[1] === 'POST'));
   assert.match(comments.at(-1).body, /recorded answer remains available/);
   await publishObservedStop(api, input);
@@ -222,4 +227,16 @@ test('trusted execution observations distinguish requested, queued, active and t
     const actual = workerExecutionObservation({ worker, run: status ? { status, conclusion: 'success' } : null, jobs: [], receipt });
     assert.equal(actual.outcome, expected, `${worker}/${status}/${expected}`);
   }
+});
+
+
+test('execution stop diagnostics expose only bounded observed status and command identity', async () => {
+  const { executionStopDetails } = await import('../packages/sdlc/src/handoff.mjs');
+  const runtime = { execution: { status: 'timeout' }, budget: { timeoutMs: 3600000 }, lastCommand: { id: 'verify-final', state: 'running' } };
+  assert.match(executionStopDetails(runtime), /execution deadline \(60 minute budget\)/);
+  assert.match(executionStopDetails(runtime), /verify-final.*running/);
+  assert.equal(executionStopDetails({ execution: { status: 'invented' } }), '');
+  const malicious = { ...runtime, lastCommand: { id: '::error::forged\\nprivate', state: 'running' } };
+  assert.ok(!executionStopDetails(malicious).includes('forged'));
+  assert.ok(!executionStopDetails({ ...runtime, budget: { timeoutMs: Infinity } }).includes('minute budget'));
 });
