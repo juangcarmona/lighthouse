@@ -24,6 +24,7 @@ export function housekeepingReconciler(api, repository, owner, indexNumber) {
         const value = JSON.parse(match[1]);
         const localEvidence = url => typeof url === 'string' && url.startsWith(`https://github.com/${repository}/`) && /^(?:issues\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?|pull\/[1-9][0-9]*|actions\/runs\/[1-9][0-9]*(?:\/attempts\/[1-9][0-9]*)?)$/.test(url.slice(`https://github.com/${repository}/`.length));
         if (value.schemaVersion !== 1 || value.repository !== repository || value.disposition !== 'retire' || ![value.issue, value.requestCommentId, value.workerRunId, value.runAttempt].every(positive) || !/^[a-f0-9]{64}$/.test(value.requestId ?? '') || !/^[a-f0-9]{64}$/.test(value.requestDigest ?? '') || typeof value.reason !== 'string' || !value.reason.trim() || value.reason.length > 2000 || !Array.isArray(value.evidence) || !value.evidence.length || value.evidence.length > 20 || !value.evidence.every(localEvidence)) throw Error('Invalid owner reconciliation');
+        if (value.requestRepository !== undefined && (!new RegExp(`^${owner}/[A-Za-z0-9_.-]+$`).test(value.requestRepository) || value.requestRepository === repository || !positive(value.repositoryId))) throw Error('Invalid historical repository identity');
         result.push({ value, comment });
       }
     }
@@ -38,8 +39,16 @@ export function housekeepingReconciler(api, repository, owner, indexNumber) {
       if (!decision || !(worker.state === 'uncertain' || incompleteCodes.has(worker.code))) { workers.push(worker); continue; }
       const { value, comment } = decision;
       const receiptComment = await api(`issues/comments/${value.requestCommentId}`);
-      const receipt = readDispatchReceipt(receiptComment, repository, item.issue);
+      let receipt;
+      if (value.requestRepository !== undefined) {
+        const current = await api('');
+        if (worker.code !== 'receipt-invalid' || worker.requestCommentId !== value.requestCommentId || receiptComment.issue_url !== `https://api.github.com/repos/${repository}/issues/${item.issue}` || current.full_name !== repository || current.id !== value.repositoryId) throw Error('Historical receipt repository is not confirmed');
+        // Validate the original identifier under the explicitly recorded old namespace.
+        // The fetched comment and native execution must still belong to the current numeric repository.
+        receipt = readDispatchReceipt({ ...receiptComment, issue_url: `https://api.github.com/repos/${value.requestRepository}/issues/${item.issue}` }, value.requestRepository, item.issue);
+      } else receipt = readDispatchReceipt(receiptComment, repository, item.issue);
       const run = await api(`actions/runs/${value.workerRunId}`);
+      if (value.requestRepository !== undefined && run.repository?.id !== value.repositoryId) throw Error('Historical execution belongs to a different repository');
       if (receipt.id !== value.requestId || receipt.digest !== value.requestDigest || String(receipt.workerRunId) !== String(value.workerRunId) || (receipt.recovery?.rootId ?? receipt.id) !== worker.rootId || Number(comment.id) <= Number(receiptComment.id) || run.id !== value.workerRunId || run.run_attempt !== value.runAttempt || run.repository?.full_name !== repository || run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' || !Number.isFinite(Date.parse(run.updated_at)) || Date.parse(run.updated_at) > Date.parse(comment.created_at)) throw Error('Owner reconciliation no longer matches the terminal execution');
       const url = `https://github.com/${repository}/issues/${indexNumber}#issuecomment-${comment.id}`;
       workers.push({ ...worker, state: 'reconciled', code: 'owner-retired', original: worker, reconciliation: { ...value, commentId: comment.id, url }, nextAction: `Historical monitoring retired by the owner: ${url}. Preserve the original outcome and existing candidates; no retry or lifecycle transition is authorized.` });

@@ -25,6 +25,7 @@ function retirementFixture() {
   const item = { issue: 1, status: 'incomplete', workers: [worker], dependencies: [], nextActions: [worker.nextAction] };
   const api = async (path, method = 'GET') => {
     assert.equal(method, 'GET');
+    if (path === '') return { full_name: 'owner/repo', id: 42 };
     if (path === 'issues/99') return { number: 99, state: 'open', user: { login: 'owner' } };
     if (path === 'issues/99/comments?per_page=100&page=1') return [{ ...comment, body: `Reviewed; no retry authorized.\n<!-- lighthouse-housekeeping-reconciliation:${JSON.stringify(decision)} -->` }];
     if (path === 'issues/comments/3') return { id: 3, user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: 'https://api.github.com/repos/owner/repo/issues/1', body: `<!-- lighthouse-dispatch:${JSON.stringify(receipt)} -->` };
@@ -33,6 +34,26 @@ function retirementFixture() {
   };
   return { receipt, decision, comment, run, worker, item, api };
 }
+
+test('retirement after a rename requires the original identifier and the same current numeric repository', async () => {
+  const setup = () => {
+    const f = retirementFixture();
+    f.receipt.id = f.worker.rootId = f.decision.requestId = dispatchId('owner/old-name', 11, 'implement');
+    Object.assign(f.decision, { requestRepository: 'owner/old-name', repositoryId: 42 });
+    Object.assign(f.worker, { code: 'receipt-invalid', requestCommentId: 3 });
+    f.run.repository.id = 42;
+    return f;
+  };
+  const f = setup();
+  const result = await housekeepingReconciler(f.api, 'owner/repo', 'owner', 99)(f.item);
+  assert.equal(result.status, 'inspected');
+  assert.equal(result.workers[0].original.code, 'receipt-invalid');
+  assert.equal(result.workers[0].outcome, 'unknown');
+  for (const change of [f => { f.decision.requestRepository = 'owner/another-name'; }, f => { f.decision.requestRepository = 'other/old-name'; }, f => { f.decision.repositoryId = 43; }, f => { f.run.repository.id = 43; }, f => { delete f.decision.requestRepository; }]) {
+    const bad = setup(); change(bad);
+    await assert.rejects(housekeepingReconciler(bad.api, 'owner/repo', 'owner', 99)(bad.item));
+  }
+});
 
 test('owner retirement completes inspection while preserving unknown outcome, receipts and recovery authority', async () => {
   const f = retirementFixture();
