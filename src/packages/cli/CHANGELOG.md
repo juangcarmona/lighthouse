@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse
 
+## 0.13.10
+
+### Patch Changes
+
+- e4323cc: # Daily repository housekeeping
+
+  Deliver the shared daily maintenance inspection through reviewed init, reconcile and SDLC upgrades without activating execution. Preserve custom files, retain complete-scan evidence separately from recovery effects, and classify authenticated terminal PR publications without repeating candidate CI. Package publication and native adopter activation remain separate release steps.
+
+- Updated dependencies [e4323cc]
+- Updated dependencies [c8637b4]
+  - @juangcarmona/lighthouse-sdlc@0.24.0
+
 ## 0.13.9
 
 ### Patch Changes

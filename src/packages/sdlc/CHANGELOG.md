@@ -1,5 +1,19 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.24.0
+
+### Minor Changes
+
+- e4323cc: # Daily repository housekeeping
+
+  Deliver the shared daily maintenance inspection through reviewed init, reconcile and SDLC upgrades without activating execution. Preserve custom files, retain complete-scan evidence separately from recovery effects, and classify authenticated terminal PR publications without repeating candidate CI. Package publication and native adopter activation remain separate release steps.
+
+### Patch Changes
+
+- c8637b4: # Preserve implementation time and expose command progress
+
+  Allow up to 60 minutes for OpenCode implementation, respect enclosing delivery deadlines and give implementation/correction steps time for independent checks and cleanup. Show managed command starts, bounded redacted log excerpts, remaining time and failure causes with recovery links. Adopters must update their package or immutable harness pin and regenerate installed workflows to receive the correction.
+
 ## 0.23.9
 
 ### Patch Changes
