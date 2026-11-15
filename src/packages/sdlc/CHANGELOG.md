@@ -1,5 +1,77 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.9
+
+### Patch Changes
+
+- f34b8c9: # Bind repository-qualified refinement parents
+
+  Accept a decomposition parent ID such as `owner/repo#123` when it matches the admitted repository and issue, without requiring a redundant parent number. Preserve legacy IDs and reject another repository, another issue or a conflicting explicit number.
+
+## 0.23.8
+
+### Patch Changes
+
+- da842ab: # Reject admission before ownership allocation
+
+  Avoid creating an ownership journal or Docker helper when recovery storage is full and no workspace recovery is needed. Interrupted workspace recovery still records helper ownership before allocation.
+
+## 0.23.7
+
+### Patch Changes
+
+- 1213fc7: # Recover engine-owned files after abrupt adapter loss
+
+  Restore filesystem ownership before retaining and removing a stopped execution's verified workspace. Register the recovery helper under the new execution so failed helpers remain recoverable, and preserve active, unknown or substituted workspaces.
+
+## 0.23.6
+
+### Patch Changes
+
+- c14d00a: # Preserve original worker failures
+
+  Preserve the original worker failure when workspace retention or resource cleanup also fails. Keep cleanup failures visible in runtime receipts and diagnostics, retain unsafe workspaces for reconciliation, and continue to fail attempts whose only failure is cleanup.
+
+## 0.23.5
+
+### Patch Changes
+
+- a2ab1c9: # Keep workflow failures in their source context
+
+  Disable failed-job issue creation in native workflow templates as well as agent failure reports. Keep failed Actions checks and source-bound stop receipts, without creating a backlog item for each execution or retry. Agent preparation, execution and publication refuse job-only reruns of consumed authorizations; recovery keeps using a fresh authenticated dispatch. Existing adopters must regenerate their workflow locks.
+
+## 0.23.4
+
+### Patch Changes
+
+- 57afde5: # Provide portable code and architecture review guidance
+
+  Ship an explicit manual review fallback for repositories that authorize it when their named helper is unavailable. Preserve review findings, missing evidence and lifecycle authority without installing global host skills or claiming an upstream helper ran.
+
+## 0.23.3
+
+### Patch Changes
+
+- bd94698: # Preserve interrupted execution workspaces until recovery is retained
+
+  Journal disposable adapter workspaces, retain bounded candidate changes and diagnostics before disposal, and recover stopped owners after runtime cleanup. Preserve uncertain ownership and failed collection, and stop admission when local recovery storage reaches its explicit limits. Existing Docker volume cleanup, Tini and command-owned npm scratch remain unchanged.
+
+## 0.23.2
+
+### Patch Changes
+
+- f281900: # Align .NET execution prerequisites
+
+  Accept stable SDK patches compatible with the example's 10.0.112/latestPatch requirement. Require pinned Aspire CLI/bundle 13.6.5 before agent or check work, and update the operator builder and guidance without changing workload restrictions or verification commands. Image builds, runner adoption and native qualification remain separate operator steps.
+
+## 0.23.1
+
+### Patch Changes
+
+- 6adeb66: # Bound managed npm scratch
+
+  Release command-owned private npm downloads between managed commands and retain scratch capacity and cleanup diagnostics without changing workload isolation limits.
+
 ## 0.23.0
 
 ### Minor Changes

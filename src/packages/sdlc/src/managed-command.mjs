@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:os';
+import { commandScratch, scratchCapacity, scratchDiagnostic, scratchErrorCode } from './command-scratch.mjs';
 
 const number = path => { try { const value = Number(readFileSync(path, 'utf8').trim()); return Number.isSafeInteger(value) && value >= 0 ? value : null; } catch { return null; } };
 const counter = (path, key) => { try { const line = readFileSync(path, 'utf8').split('\n').find(line => line.startsWith(key + ' ')); return line ? Number(line.split(' ')[1]) : null; } catch { return null; } };
@@ -17,7 +18,7 @@ export function workloadResources() {
   return { cpuUsageUsec: counter('/sys/fs/cgroup/cpu.stat', 'usage_usec'), memoryBytes: number('/sys/fs/cgroup/memory.current'), memoryPeakBytes: number('/sys/fs/cgroup/memory.peak'), pids: number('/sys/fs/cgroup/pids.current'), readBytes: io?.rbytes ?? null, writeBytes: io?.wbytes ?? null, networkRxBytes: network?.rx ?? null, networkTxBytes: network?.tx ?? null };
 }
 
-export async function managedCommand(directory, id, command) {
+export async function managedCommand(directory, id, command, { createScratch = commandScratch } = {}) {
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id) || !command.length) throw Error('Use a unique command ID and an executable');
   mkdirSync(directory, { recursive: true });
   const lock = join(directory, '.active'), receipt = join(directory, id + '.json');
@@ -25,7 +26,7 @@ export async function managedCommand(directory, id, command) {
     if (error.code !== 'EEXIST') throw error;
     throw Error('Another command owns this workspace command slot; wait for its receipt or stop it before retrying');
   }
-  let child, interval, stopping = false;
+  let child, interval, scratch, stopping = false;
   const signalGroup = signal => { if (child?.pid) { try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; } } };
   const stop = () => { stopping = true; signalGroup('SIGTERM'); };
   process.once('SIGTERM', stop); process.once('SIGINT', stop);
@@ -50,7 +51,16 @@ export async function managedCommand(directory, id, command) {
     if (existsSync(receipt)) throw Error('Command ID already has a receipt; use a new ID for the next attempt');
     atomic(join(lock, 'owner.json'), { pid: process.pid, startTicks: state.startTicks });
     sample();
-    child = spawn(command[0], command.slice(1), { stdio: 'inherit', detached: true });
+    try { scratch = createScratch(process.env); }
+    catch (error) {
+      state.scratch = { npmCache: 'allocation-failed', errorCode: scratchErrorCode(error), beforeCommand: scratchCapacity() };
+      state.state = 'completed'; state.exitCode = 125;
+      console.error(scratchDiagnostic(state.scratch));
+      sample();
+      return state.exitCode;
+    }
+    if (scratch) state.scratch = scratch.receipt;
+    child = spawn(command[0], command.slice(1), { stdio: 'inherit', detached: true, env: scratch?.environment ?? process.env });
     let killTimer;
     const forceStop = () => { stop(); killTimer = setTimeout(() => signalGroup('SIGKILL'), 1000); };
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
@@ -66,15 +76,20 @@ export async function managedCommand(directory, id, command) {
       await new Promise(resolve => setTimeout(resolve, 100));
       signalGroup('SIGKILL');
       clearTimeout(killTimer);
+      const released = scratch?.release() ?? true;
       state.state = stopping ? 'cancelled' : 'completed';
       state.signal = exit.signal;
       state.exitCode = exit.code ?? 128 + (constants.signals[exit.signal] ?? 0);
+      if (stopping && state.exitCode === 0) state.exitCode = 143;
+      if (!released && state.exitCode === 0) state.exitCode = 125;
+      if (state.exitCode !== 0 && state.scratch) console.error(scratchDiagnostic(state.scratch));
       sample();
       return state.exitCode;
     } finally { process.removeListener('SIGTERM', forceStop); process.removeListener('SIGINT', forceStop); }
   } finally {
     clearInterval(interval);
     signalGroup('SIGKILL');
+    scratch?.release();
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
     rmSync(lock, { recursive: true, force: true });
   }

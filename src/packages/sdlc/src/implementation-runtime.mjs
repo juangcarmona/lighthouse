@@ -84,7 +84,7 @@ export async function copyEvidence(source, destination) {
 }
 
 // Scratch belongs to the disposable container, never the retained evidence tree.
-export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
+export const scratchArgs = ['--env', 'TMPDIR=/tmp', '--env', 'NPM_CONFIG_CACHE=/tmp/npm-cache', '--env', 'LIGHTHOUSE_COMMAND_NPM_CACHE=1', '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'NODE_DISABLE_COMPILE_CACHE=1'];
 // A regular-file stdout prevents providers using process.exit() from truncating pending pipe writes.
 const checkOutputCommand = 'node /harness/src/managed-command.mjs run /diagnostics "$@" > /tmp/lighthouse-check.log 2>&1; check_exit=$?; cat /tmp/lighthouse-check.log || exit 125; exit "$check_exit"';
 export async function runImplementationChecks({ config, request, changes, workspace, output, name, redact, cancelled, selected = null, repository = request.repository, telemetry }) {

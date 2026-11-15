@@ -12,6 +12,8 @@ Read the [audience policy](skills/audience-guidance/SKILL.md) when writing human
 
 The policy includes reviewed immutable [source pins](skills/audience-guidance/sources.json) and explicit manual fallback reviews. A clean checkout or installed SDLC package needs no global writing skills or network access; delivery workers read the same packaged policy. Record which helper revision or fallback was used, without claiming an external skill ran. Existing workers receive the change only after their package or pinned source harness is updated through the normal installation route; this adds no workflow, gate or automatic installation.
 
+When repository instructions explicitly authorize it, the [code and architecture fallback](skills/audience-guidance/SKILL.md#code-and-architecture-review) lets an isolated worker complete its required review without a missing global helper. Record the fallback method, reviewed source, findings and missing evidence. Packaging that guidance does not prove a native worker used it or change any approval gate.
+
 ## GitHub Actions
 
 These actions require installed workers, enabled automation and the repository owner as actor. Opening an issue alone starts no agent. Every result links to its execution; an Actions success can contain a blocked assessment.
@@ -119,6 +121,7 @@ Install `--with-unattended` explicitly to add fast-forward and test-first hotfix
 - [Commands](contract.json) and [aliases](command-aliases.json): CLI utilities and agent commands; the configured host exposes aliases.
 - [Operator reference](github-actions.md): installation, credentials, receipts, runtime limits, maintenance and recovery.
 - [Execution environments](execution-environments.md) and [model profiles](model-profiles.md): optional runtime configuration.
+- [Execution cleanup](src/execution-cleanup.md): workspace ownership, interrupted recovery and local retention limits.
 - [External host contract](host-contract.md): legacy host integration; enable only one router for the same events.
 - [Evidence](commands/evidence.md) and [browser evidence](commands/browser-e2e.md): validation contracts. Missing evidence, unavailable checks and pending review remain separate from success.
 - [Scoped memory](commands/memory.md): opt-in host-side SQLite retention and selective recall, independent of worker storage and approval authority.

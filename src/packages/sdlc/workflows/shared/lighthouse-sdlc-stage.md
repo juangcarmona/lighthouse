@@ -12,6 +12,7 @@ tools:
     toolsets: [repos, issues, pull_requests]
 safe-outputs:
   report-failure-as-issue: false
+  report-failed-jobs: false
   create-issue: false
   noop:
     max: 1

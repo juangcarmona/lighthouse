@@ -26,7 +26,7 @@ on:
         required: false
         type: string
   needs: [prepare]
-if: needs.prepare.outputs.eligible == 'true'
+if: github.run_attempt == 1 && needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
 timeout-minutes: 55
@@ -57,6 +57,7 @@ safe-outputs:
   report-incomplete: false
   threat-detection: false
   report-failure-as-issue: false
+  report-failed-jobs: false
   report-missing-tool: false
   report-missing-data: false
   noop:
@@ -73,7 +74,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 1e13729e49756c43627fd4c7257e193be7944142
+      ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -115,6 +116,7 @@ post-steps:
       retention-days: 14
 jobs:
   prepare:
+    if: github.run_attempt == 1
     concurrency:
       group: ${{ inputs.epic-parent && format('lighthouse-issue-{0}', inputs.epic-parent) || format('lighthouse-prepare-{0}', github.run_id) }}
       cancel-in-progress: false
@@ -136,7 +138,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -185,7 +187,7 @@ jobs:
       queue: max
     name: Validate, publish and release
     needs: [prepare, pre_activation, activation, agent]
-    if: always() && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
+    if: always() && github.run_attempt == 1 && needs.prepare.result == 'success' && needs.prepare.outputs.eligible == 'true'
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -198,7 +200,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

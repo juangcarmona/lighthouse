@@ -46,6 +46,7 @@ tools:
 safe-outputs:
   create-issue: false
   report-failure-as-issue: false
+  report-failed-jobs: false
   report-incomplete: false
   threat-detection: false
   noop:

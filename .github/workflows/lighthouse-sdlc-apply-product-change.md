@@ -46,6 +46,7 @@ tools:
 safe-outputs:
   create-issue: false
   report-failure-as-issue: false
+  report-failed-jobs: false
   report-incomplete: false
   threat-detection: false
   noop:
@@ -74,7 +75,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -151,7 +152,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
@@ -224,7 +225,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -290,7 +291,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1e13729e49756c43627fd4c7257e193be7944142
+          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:

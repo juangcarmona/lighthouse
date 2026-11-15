@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFile, lstat } from 'node:fs/promises';
+import { scratchErrorCode } from './command-scratch.mjs';
 
 export function executionLimits(config, implementing = true) {
   const resources = config.resources === undefined ? {} : config.resources;
@@ -35,8 +36,19 @@ export async function executionReceipt(path, exit, reason = null) {
   }
   const signal = /^SIG[A-Z0-9]+$/.test(observed.signal ?? '') ? observed.signal : exit.signal ?? null;
   const exitCode = Number.isInteger(exit.code) ? exit.code : null;
-  const status = reason ?? (observed.state === 'cancelled' ? 'cancelled' : resources.oomKills > 0 ? 'out-of-memory' : resources.pidsDenied > 0 ? 'process-limit' : exitCode === 0 ? 'passed' : signal === 'SIGABRT' || exitCode === 134 ? 'aborted' : 'failed');
-  return { status, exitCode, signal, resources, ...(Number.isSafeInteger(observed.resourceSamplesDropped) && observed.resourceSamplesDropped > 0 ? { resourceSamplesDropped: observed.resourceSamplesDropped } : {}) };
+  const scratchFailed = ['active', 'allocation-failed', 'cleanup-failed'].includes(observed.scratch?.npmCache);
+  const status = reason ?? (observed.state === 'cancelled' ? 'cancelled' : resources.oomKills > 0 ? 'out-of-memory' : resources.pidsDenied > 0 ? 'process-limit' : scratchFailed ? 'failed' : exitCode === 0 ? 'passed' : signal === 'SIGABRT' || exitCode === 134 ? 'aborted' : 'failed');
+  let scratch;
+  if (['active', 'released', 'allocation-failed', 'cleanup-failed'].includes(observed.scratch?.npmCache)) {
+    scratch = { npmCache: observed.scratch.npmCache };
+    const errorCode = scratchErrorCode({ code: observed.scratch.errorCode });
+    if (errorCode) scratch.errorCode = errorCode;
+    for (const key of ['beforeCommand', 'beforeCleanup', 'afterCleanup']) {
+      const value = observed.scratch[key];
+      scratch[key] = value && Number.isSafeInteger(value.capacityBytes) && Number.isSafeInteger(value.availableBytes) && value.capacityBytes >= 0 && value.availableBytes >= 0 && value.availableBytes <= value.capacityBytes ? { capacityBytes: value.capacityBytes, availableBytes: value.availableBytes } : null;
+    }
+  }
+  return { status, exitCode, signal, resources, ...(scratch ? { scratch } : {}), ...(Number.isSafeInteger(observed.resourceSamplesDropped) && observed.resourceSamplesDropped > 0 ? { resourceSamplesDropped: observed.resourceSamplesDropped } : {}) };
 }
 
 export function executionFailure(receipt) {

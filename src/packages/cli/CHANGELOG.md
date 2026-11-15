@@ -1,5 +1,68 @@
 # @juangcarmona/lighthouse
 
+## 0.13.9
+
+### Patch Changes
+
+- Updated dependencies [f34b8c9]
+  - @juangcarmona/lighthouse-sdlc@0.23.9
+
+## 0.13.8
+
+### Patch Changes
+
+- Updated dependencies [da842ab]
+  - @juangcarmona/lighthouse-sdlc@0.23.8
+
+## 0.13.7
+
+### Patch Changes
+
+- Updated dependencies [1213fc7]
+  - @juangcarmona/lighthouse-sdlc@0.23.7
+
+## 0.13.6
+
+### Patch Changes
+
+- Updated dependencies [c14d00a]
+  - @juangcarmona/lighthouse-sdlc@0.23.6
+
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [a2ab1c9]
+  - @juangcarmona/lighthouse-sdlc@0.23.5
+
+## 0.13.4
+
+### Patch Changes
+
+- Updated dependencies [57afde5]
+  - @juangcarmona/lighthouse-sdlc@0.23.4
+
+## 0.13.3
+
+### Patch Changes
+
+- Updated dependencies [bd94698]
+  - @juangcarmona/lighthouse-sdlc@0.23.3
+
+## 0.13.2
+
+### Patch Changes
+
+- Updated dependencies [f281900]
+  - @juangcarmona/lighthouse-sdlc@0.23.2
+
+## 0.13.1
+
+### Patch Changes
+
+- Updated dependencies [6adeb66]
+  - @juangcarmona/lighthouse-sdlc@0.23.1
+
 ## 0.13.0
 
 ### Minor Changes
