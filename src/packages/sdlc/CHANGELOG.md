@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.23.9
+
+### Patch Changes
+
+- f34b8c9: # Bind repository-qualified refinement parents
+
+  Accept a decomposition parent ID such as `owner/repo#123` when it matches the admitted repository and issue, without requiring a redundant parent number. Preserve legacy IDs and reject another repository, another issue or a conflicting explicit number.
+
 ## 0.23.8
 
 ### Patch Changes
