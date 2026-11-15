@@ -50,7 +50,7 @@ if(scenario==='failure')process.exit(7);
     await writeFile(join(root, 'Dockerfile'), `FROM ${tag}\nCOPY engine.mjs /fixture-engine.mjs\nENTRYPOINT ["node", "/fixture-engine.mjs"]\nCMD []\n`);
     fixtureImage = docker(['build', '-q', root]).trim();
     docker(['volume', 'create', volume]);
-    docker(['run', '--rm', '--mount', `type=volume,src=${volume},dst=/shared`, '--entrypoint', 'node', fixtureImage, '-e', 'require("fs").writeFileSync("/shared/sentinel","preserved")']);
+    docker(['run', '--rm', '--user', '0:0', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--mount', `type=volume,src=${volume},dst=/shared`, '--entrypoint', 'node', fixtureImage, '-e', 'require("fs").writeFileSync("/shared/sentinel","preserved")']);
     await mkdir(join(root, 'foreign')); await writeFile(join(root, 'foreign/sentinel'), 'another execution');
     // Accelerate only the existing implementation deadline; the adapter and Docker path stay unchanged.
     await writeFile(join(root, 'clock.mjs'), 'const timer=globalThis.setTimeout;globalThis.setTimeout=(fn,ms,...args)=>timer(fn,ms===1800000?10000:ms,...args);');
@@ -135,7 +135,7 @@ if(scenario==='failure')process.exit(7);
     complete = true;
   } finally {
     for (const child of children) child.kill('SIGTERM');
-    if (process.env.LIGHTHOUSE_ADAPTER_TERMINAL_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_TERMINAL_EVIDENCE, JSON.stringify({ kind: 'complete-real-docker-adapter-fixtures-no-model-or-forge-publication', image, fixtureImage, complete, timeoutClock: { originalMilliseconds: 1800000, fixtureMilliseconds: 10000 }, observations }, null, 2) + '\n');
+    if (process.env.LIGHTHOUSE_ADAPTER_TERMINAL_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_TERMINAL_EVIDENCE, JSON.stringify({ kind: 'complete-real-docker-adapter-fixtures-no-model-or-forge-publication', image, fixtureImage, fixtureRoot: root, fixtureTag: tag, authVolume: volume, complete, timeoutClock: { originalMilliseconds: 1800000, fixtureMilliseconds: 10000 }, observations }, null, 2) + '\n');
     if (complete) {
       restoreWorkspaceOwnership(root, { image: fixtureImage });
       docker(['volume', 'rm', volume]); docker(['image', 'rm', fixtureImage]);
