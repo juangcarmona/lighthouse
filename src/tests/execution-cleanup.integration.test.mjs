@@ -39,6 +39,7 @@ const {request,scenario}=JSON.parse(fs.readFileSync('/input/context.json'));
 fs.writeFileSync('/workspace/demo.js','export const repaired = true;');
 for(const folder of ['node_modules','.cache']){fs.mkdirSync('/workspace/'+folder,{recursive:true});for(let i=0;i<32;i++)fs.writeFileSync('/workspace/'+folder+'/'+i,Buffer.alloc(4096));}
 fs.mkdirSync('/output/evidence',{recursive:true});fs.writeFileSync('/output/evidence/report.txt','retained fixture diagnostic');
+console.log(JSON.stringify({type:'text',part:{text:'Deterministic fixture ready; no model invoked.'}}));
 fs.writeFileSync('/output/ready','ready');
 while(!fs.existsSync('/output/continue'))await new Promise(resolve=>setTimeout(resolve,25));
 const envelope={schemaVersion:1,result:{schemaVersion:1,runId:request.runId,stage:'implement',gate:'done',status:'passed',evidence:[{id:'fixture',status:'passed'}],missingEvidence:[],unavailableChecks:[],pendingReview:[],nextAction:'Inspect deterministic fixture only.'},effect:{type:'issue-comment',body:'Test fixture; no model or forge publication.'}};
@@ -77,7 +78,7 @@ if(scenario==='failure')process.exit(7);
       while (!exited && Date.now() < deadline) {
         try {
           record = (await records()).find(value => value.identity.attempt === attempt);
-          if (record?.workspace && await readFile(join(record.workspace.path, 'output/ready'), 'utf8') === 'ready') {
+          if (record?.workspace && record.resources.some(value => value.name.endsWith('-engine') && !value.pending) && await readFile(join(record.workspace.path, 'output/ready'), 'utf8') === 'ready') {
             during = await measure(record.workspace.path); break;
           }
         } catch (error) { if (error.code !== 'ENOENT') throw error; }
