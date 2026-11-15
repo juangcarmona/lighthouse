@@ -682,5 +682,64 @@
         "src/tests/opencode-execute.test.mjs": "Extend #641 adapter terminal-path and abrupt-loss evidence/cleanup regressions; preserve candidate recovery, source/credential isolation, cancellation semantics and existing resource-limit assertions."
       }
     }
+  },
+  "652": {
+    "scope": "Implement only #652 and applied CHG-DAILY-REPOSITORY-HOUSEKEEPING from PR #657. Reuse existing maintenance, reports, ownership, freshness and admission. First classify the recorded #633 merged/closed-PR failure from its original request and current lifecycle evidence; then deliver deterministic daily per-adopter housekeeping through the packaged Lighthouse upgrade/init/reconcile routes. Preserve active/unknown reservations, future holds, lifecycle completion authority, inaccessible dependencies, owner report notes and uncertain-effect recovery. Keep installation, explicit activation, runtime scan coverage and publication separate. Use the admitted test files below for meaningful regressions and preserve existing assertions; do not change other protected verification inputs. Keep proposal, design, specs and tasks with the code, allow 600000 ms for repository verification, and use an H1 after changeset frontmatter. No fleet service, named pilot prerequisite, model-dependent ordinary sweep or implicit activation.",
+    "paths": [
+      "*"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "src/tests/workflow-distribution.test.mjs": "Verify packaged daily-housekeeping generation and projection drift while preserving existing worker ownership and immutable pin assertions.",
+        "src/tests/lighthouse.test.mjs": "Verify upgrade/init/reconcile previews and application, customized-file preservation and explicit activation for daily housekeeping; preserve all existing assertions.",
+        "src/tests/sdlc-package.test.mjs": "Verify daily-housekeeping source/support files ship in the package; preserve the current package contract.",
+        "src/tests/maintenance-watchdog.test.mjs": "Verify freshness uses actual complete daily scans and exposes disabled, skipped, missing and partial coverage; preserve run identity and recovery safeguards.",
+        "src/tests/completion-maintenance.test.mjs": "Add evidence-based terminal-PR and lifecycle reconciliation regressions without replacing completion authority or treating merge as acceptance.",
+        "src/tests/maintenance-completion-wakeup.test.mjs": "Verify housekeeping continuation retains current source, owner authority, pause, reservation and bounded-recovery checks.",
+        "src/tests/repository-housekeeping.test.mjs": "Add deterministic coverage for closed/merged PRs, old active runs, inaccessible dependencies, partial failure, deduplication, out-of-order sweeps and uncertain effects.",
+        "src/tests/housekeeping-upgrade.test.mjs": "Verify clean-consumer packaged upgrade generation, managed ownership conflicts, configuration gaps and separation of installation from activation.",
+        "scripts/reconcile-worker-maintenance.mjs": "Reuse the existing maintenance freshness/reconciliation path for actual complete daily-scan evidence, preserving current admission, uncertainty and pending-intent checks."
+      }
+    }
   }
 }
