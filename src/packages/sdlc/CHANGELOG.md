@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.24.3
+
+### Patch Changes
+
+- 0e7d69e: # Scoped product evidence
+
+  Prepare issue-scoped ProductShape reports for large models while preserving the full citation inventory, baseline binding and byte limits. Report unavailable detail explicitly instead of failing every planning worker on unrelated transitive reports.
+
 ## 0.24.2
 
 ### Patch Changes
