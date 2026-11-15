@@ -15,7 +15,8 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
-import { executionLimits, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
+import { executionLimits, executionBudget, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
+import { commandProgress } from './command-progress.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
 import { createExecutionOwner, recoverExecutionOwners, recoverExecutionWorkspaces, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
 import { harnessIdentity } from './harness-identity.mjs';
@@ -150,7 +151,7 @@ async function main() {
   const phaseStarted = new Map();
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
-  let child, timer, heartbeat, controllerWatch, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
+  let child, timer, heartbeat, controllerWatch, commandWatch, progress, slot, baseline, trackedSource, planningBaseline, runtime, codegraph, eventsPath, cancelled = false, stopReason = null;
   const preparation = new AbortController();
   const cancel = (reason = 'cancelled') => { cancelled = true; preparation.abort(); stopReason ??= reason; try { config.resourceOwner?.observe(); } catch {} child?.kill('SIGTERM'); try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {} };
   const onSignal = () => cancel();
@@ -225,7 +226,7 @@ async function main() {
     }
     await config.resourceOwner.checkpointWorkspace(baseline, trackedSource, request.implementation?.policy);
     const context = join(dir, 'context.json');
-    await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o444);
+    await copyFile(join(runDir, 'context.json'), context); await chmod(context, 0o644);
     if (reviewOutput) {
       await writeFile(join(output, 'envelope.json'), JSON.stringify(reviewTemplate(reviewOutput)));
       await chmod(join(output, 'envelope.json'), 0o666);
@@ -263,25 +264,38 @@ async function main() {
       '--mount', `type=bind,src=${source},dst=/workspace${implementing ? '' : ',readonly'}`, '--mount', `type=bind,src=${output},dst=/output`, '--mount', `type=bind,src=${context},dst=/input/context.json,readonly`, '--mount', `type=bind,src=${prompt},dst=/input/prompt.txt,readonly`, '--mount', `type=bind,src=${harness},dst=/harness,readonly`,
       ...(codegraph.status === 'available' ? ['--mount', `type=bind,src=${codegraph.state},dst=/codegraph,readonly`] : []),
       ...(workerConfigPath ? ['--mount', `type=bind,src=${workerConfigPath},dst=/etc/opencode/opencode.json,readonly`, '--env', 'LIGHTHOUSE_NATIVE_TELEMETRY_FILE=/output/execution/native-events.jsonl'] : []),
-      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, ...(telemetry.health().status !== 'disabled' ? ['--env', 'LIGHTHOUSE_RESOURCE_TELEMETRY_FILE=/output/execution/resource-events.jsonl'] : []), '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
+      '--mount', `type=volume,src=${config.authVolume},dst=/home/engine/.local/share/opencode`, ...(telemetry.health().status !== 'disabled' ? ['--env', 'LIGHTHOUSE_RESOURCE_TELEMETRY_FILE=/output/execution/resource-events.jsonl'] : []), '--env', 'LIGHTHOUSE_COMMAND_PROGRESS_ROOT=/output/evidence/commands', '--env', `ENGINE_SESSION=ses_${request.runId}`, '--env', `ENGINE_MODEL=${modelSelection.engineModel}`, '--env', `ENGINE_STAGE=${request.stage}`, ...scratchArgs, '--env', 'PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright', ...environmentArgs(runtime), '--entrypoint', 'node', config.image, '/harness/src/managed-command.mjs', 'run', '/output/execution', 'engine', '--', ...command]);
     eventsPath = join(env.RUNNER_TEMP, 'gh-aw', `opencode-events-${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT}.jsonl`);
     await mkdir(dirname(eventsPath), { recursive: true });
     await writeFile(eventsPath, '', { mode: 0o600 });
-    const started = Date.now();
+    const budget = executionBudget(implementing, { deadline: deliveryDeadline });
+    runtimeReceipt.budget = budget;
+    const executionContext = JSON.parse(await readFile(context, 'utf8'));
+    executionContext.executionBudget = budget;
+    await writeFile(context, JSON.stringify(executionContext)); await chmod(context, 0o444);
+    await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
+    const started = budget.startedAt;
     let lastVisible = started, engineError = false;
     const redact = text => redactLog(redactEnvironmentLog(runtime, text));
     const report = text => { lastVisible = Date.now(); console.log(redact(text)); };
+    progress = commandProgress(output, report);
+    commandWatch = setInterval(() => progress.poll(), 1000);
     const eventLine = line => {
-      const redacted = redact(line);
+      let normalized = line;
+      try { normalized = JSON.stringify(JSON.parse(line)); } catch {}
+      const redacted = redact(normalized);
       try { observeCli(telemetry, JSON.parse(redacted)); } catch { /* Non-event engine logs have no telemetry payload. */ }
       try { if (JSON.parse(redacted).type === 'error') engineError = true; } catch {}
       appendFileSync(eventsPath, redacted + '\n');
       const visible = formatOpenCodeEvent(redacted);
       if (visible) report(visible);
     };
-    report(progressText('Run', `${request.stage} for issue #${request.issue}. Public progress and tool activity appear below; structured events are retained as an artifact.`));
+    report(progressText('Run', `${request.stage} for issue #${request.issue}. OpenCode budget: ${Math.ceil(budget.timeoutMs / 60000)} minutes; deadline ${new Date(budget.deadline).toISOString()}. Public progress, managed command output and diagnostic artifacts are available.`));
+    let warned = false;
     heartbeat = setInterval(() => {
-      if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed). No new public update; waiting for the next event.`));
+      const remaining = Math.max(0, Math.ceil((budget.deadline - Date.now()) / 1000));
+      if (!warned && remaining <= 300) { warned = true; report(progressText('Budget', `${remaining}s remain. Finish the active command and return the result before the execution deadline.`)); }
+      if (Date.now() - lastVisible >= 30000) report(progressText('Run', `OpenCode is still running (${Math.floor((Date.now() - started) / 1000)}s elapsed; ${remaining}s remaining). ${progress.last?.state === 'running' ? `Active managed command: ${progress.last.id} (${Math.floor((Date.now() - progress.last.startedAt) / 1000)}s elapsed).` : 'Waiting for the next public event.'}`));
     }, 10000);
     const exit = await new Promise((ok, no) => {
       if (cancelled) throw Error('Execution cancelled before agent startup');
@@ -304,7 +318,7 @@ async function main() {
         stream.on('end', () => { if (!cancelled) lines.end(); });
       }
       child.on('error', () => ok({ code: 127, signal: null })); child.on('close', (code, signal) => { if (Number.isInteger(code) && ![125, 126, 127].includes(code)) config.resourceOwner?.completed(args); ok({ code, signal }); });
-      timer = setTimeout(() => cancel('timeout'), implementing ? 1800000 : 600000);
+      timer = setTimeout(() => cancel('timeout'), budget.timeoutMs);
     });
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
     await recordPhase(runtimeReceipt.execution.status);
@@ -380,6 +394,8 @@ async function main() {
     outcome = envelope.result.status;
     telemetry.emit('execution.result', { status: outcome, reasonCode: outcome === 'blocked' ? envelope.result.pendingReview.length ? 'pending-review' : 'missing-evidence' : 'validated-result' });
   } catch (error) {
+    progress?.poll();
+    runtimeReceipt.lastCommand = progress?.last ?? null;
     error.phase = phase;
     runtimeReceipt.failure = { phase, message: redactLog(error.message).slice(0, 3000) };
     console.error(progressText('Failure', runtimeReceipt.failure.message));
@@ -399,6 +415,8 @@ async function main() {
     }
     throw error;
   } finally {
+    clearInterval(commandWatch); progress?.poll();
+    runtimeReceipt.lastCommand = progress?.last ?? null;
     clearInterval(nativeTimer); nativeCollect();
     if (eventsPath) {
       try { await mkdir(join(runDir, 'evidence/host'), { recursive: true }); await copyFile(eventsPath, join(runDir, 'evidence/host/engine-events.jsonl')); }

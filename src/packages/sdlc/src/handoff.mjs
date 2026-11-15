@@ -1,3 +1,5 @@
+import { readActionsJson } from './actions-artifact.mjs';
+
 const headings = {
   requested: 'Requested', queued: 'Queued', working: 'Working', question: 'Waiting for your answer',
   review: 'Ready for your review', failed: 'Execution failed', cancelled: 'Cancelled',
@@ -97,7 +99,18 @@ export function handoff({ status, stage, happened, action, next, link, details }
 }
 
 // A newer authenticated dispatch owns current status, even if an older cleanup finishes late.
-export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false, preparationReason, recovery }) {
+export function executionStopDetails(runtime) {
+  const status = runtime?.execution?.status;
+  const descriptions = { timeout: 'OpenCode reached its execution deadline', 'out-of-memory': 'The container exceeded its memory limit', 'process-limit': 'The container exhausted its process/thread limit', aborted: 'The engine aborted', cancelled: 'The engine was cancelled', failed: 'The engine exited unsuccessfully' };
+  if (!Object.hasOwn(descriptions, status)) return '';
+  const budget = runtime.budget?.timeoutMs;
+  const duration = status === 'timeout' && Number.isSafeInteger(budget) && budget > 0 && budget <= 3600000 ? ` (${Math.ceil(budget / 60000)} minute budget)` : '';
+  const command = runtime.lastCommand;
+  const last = /^[a-z0-9][a-z0-9-]{0,63}$/.test(command?.id ?? '') && ['running', 'completed', 'cancelled'].includes(command.state) ? ` Last managed command: \`${command.id}\` (${command.state}).` : '';
+  return `${descriptions[status]}${duration}.${last} Inspect the OpenCode progress step and retained runtime, command logs and candidate artifacts before recovery.`;
+}
+
+export async function publishObservedStop(api, { repository, issue, stage, run, attempt, dispatch, observation, sourceRevision, answerRetained = false, preparationReason, recovery }, readArtifact = readActionsJson) {
   if (!['failure', 'cancelled', 'pre-agent-cancelled', 'preparation-failure', 'provider-preparation-failure', 'preparation-cancelled', 'activation-failure', 'provider-failure', 'provider-cancelled', 'publication-unknown', 'cleanup-failure'].includes(observation) || !dispatch?.commentId) return false;
   const { checkDispatchClaim, issueComments, readDispatchReceipt } = await import('./stage-dispatch.mjs');
   await checkDispatchClaim(api, repository, issue, dispatch, run);
@@ -128,7 +141,12 @@ export async function publishObservedStop(api, { repository, issue, stage, run, 
   const reservation = item.labels.some(l => l.name === 'agent-working') ? ' The maintainer must also inspect the remaining agent-working reservation and release it only after verifying that no newer worker owns it.' : '';
   const action = (missingChecks ? 'The repository maintainer must configure checks in .lighthouse/implement.json or add npm run verify before requesting implementation again.' : observation === 'publication-unknown' ? 'The workflow maintainer must inspect the linked execution and compare the issue and any linked PR with its publication steps.' : 'The workflow maintainer must inspect the failed or cancelled execution and the configured recovery policy.') + reservation;
   const recoveryNext = recovery?.state === 'exhausted' ? 'The two-retry budget is exhausted; the owner must inspect the failure and make a new decision.' : recovery?.state === 'retryable' || recovery?.state === 'delayed' ? `The ${recovery.cause} observation is eligible for bounded recovery after ${recovery.retryAt}, only when recovery is enabled and authority still matches.` : 'Recovery follows the configured policy and requires its existing authorization.';
-  const body = handoff({ status, stage, happened: `${result}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : recoveryNext, link: `[Execution](https://github.com/${repository}/actions/runs/${run})`, details: `${marker}${recovery?.cause ? `\nRecovery observation: ${recovery.cause}.` : ''}` });
+  let diagnostic = '';
+  if (observation === 'failure') {
+    try { diagnostic = executionStopDetails(await readArtifact(api, repository, run, `${stage === 'implement' ? 'lighthouse-implement-result' : 'lighthouse-result'}-${issue}-${attempt}`, 'runtime.json', true)); }
+    catch { /* Artifact absence leaves the original failure visible and grants no retry. */ }
+  }
+  const body = handoff({ status, stage, happened: `${result}${diagnostic ? `\n\n${diagnostic}` : ''}${answerRetained ? ' The recorded answer remains available.' : ''}${gap}`, action, next: observation === 'publication-unknown' ? 'Reconcile the actual effects before any authorized retry.' : recoveryNext, link: `[Execution](https://github.com/${repository}/actions/runs/${run}) · [Logs and artifacts](https://github.com/${repository}/actions/runs/${run}#artifacts)`, details: `${marker}${recovery?.cause ? `\nRecovery observation: ${recovery.cause}.` : ''}` });
   await checkDispatchClaim(api, repository, issue, dispatch, run);
   const current = await issueComments(api, issue);
   for (const comment of current) {

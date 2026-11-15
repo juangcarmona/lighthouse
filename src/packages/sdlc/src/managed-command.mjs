@@ -1,5 +1,6 @@
 // Runs inside the workload: one command group, one receipt, bounded child cleanup.
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync, openSync, closeSync, createReadStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -26,13 +27,13 @@ export async function managedCommand(directory, id, command, { createScratch = c
     if (error.code !== 'EEXIST') throw error;
     throw Error('Another command owns this workspace command slot; wait for its receipt or stop it before retrying');
   }
-  let child, interval, scratch, stopping = false;
+  let child, interval, scratch, logFd, stopping = false;
   const signalGroup = signal => { if (child?.pid) { try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; } } };
   const stop = () => { stopping = true; signalGroup('SIGTERM'); };
   process.once('SIGTERM', stop); process.once('SIGINT', stop);
   const baselineDenied = counter('/sys/fs/cgroup/pids.events', 'max');
   const baselineOom = counter('/sys/fs/cgroup/memory.events', 'oom_kill');
-  const state = { state: 'running', pid: process.pid, startTicks: ticks(process.pid), exitCode: null, signal: null, resources: { pidsLimit: number('/sys/fs/cgroup/pids.max'), pidsPeak: null, pidsDenied: null, memoryPeakBytes: null, oomKills: null } };
+  const state = { state: 'running', startedAt: Date.now(), pid: process.pid, startTicks: ticks(process.pid), exitCode: null, signal: null, resources: { pidsLimit: number('/sys/fs/cgroup/pids.max'), pidsPeak: null, pidsDenied: null, memoryPeakBytes: null, oomKills: null } };
   let lastResourceSample = 0, resourceBytes = 0;
   const sample = () => {
     const current = number('/sys/fs/cgroup/pids.current'), denied = counter('/sys/fs/cgroup/pids.events', 'max'), oom = counter('/sys/fs/cgroup/memory.events', 'oom_kill');
@@ -60,7 +61,10 @@ export async function managedCommand(directory, id, command, { createScratch = c
       return state.exitCode;
     }
     if (scratch) state.scratch = scratch.receipt;
-    child = spawn(command[0], command.slice(1), { stdio: 'inherit', detached: true, env: scratch?.environment ?? process.env });
+    const log = process.env.LIGHTHOUSE_COMMAND_PROGRESS_ROOT && resolve(directory) === resolve(process.env.LIGHTHOUSE_COMMAND_PROGRESS_ROOT) ? join(directory, id + '.log') : null;
+    if (log) logFd = openSync(log, 'wx', 0o644);
+    // Regular-file output also survives commands that exit without flushing pipe writes.
+    child = spawn(command[0], command.slice(1), { stdio: log ? ['inherit', logFd, logFd] : 'inherit', detached: true, env: scratch?.environment ?? process.env });
     let killTimer;
     const forceStop = () => { stop(); killTimer = setTimeout(() => signalGroup('SIGKILL'), 1000); };
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
@@ -84,11 +88,13 @@ export async function managedCommand(directory, id, command, { createScratch = c
       if (!released && state.exitCode === 0) state.exitCode = 125;
       if (state.exitCode !== 0 && state.scratch) console.error(scratchDiagnostic(state.scratch));
       sample();
+      if (log) { closeSync(logFd); logFd = undefined; await pipeline(createReadStream(log), process.stdout, { end: false }); }
       return state.exitCode;
     } finally { process.removeListener('SIGTERM', forceStop); process.removeListener('SIGINT', forceStop); }
   } finally {
     clearInterval(interval);
     signalGroup('SIGKILL');
+    if (logFd !== undefined) closeSync(logFd);
     scratch?.release();
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
     rmSync(lock, { recursive: true, force: true });

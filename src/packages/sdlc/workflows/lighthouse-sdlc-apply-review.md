@@ -29,7 +29,7 @@ on:
 if: github.run_attempt == 1 && needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
-timeout-minutes: 55
+timeout-minutes: 150
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
@@ -116,6 +116,9 @@ post-steps:
       if-no-files-found: ignore
       retention-days: 14
 jobs:
+  agent:
+    # Cover the bounded host admission hook, engine slot wait and execution step.
+    timeout-minutes: 360
   prepare:
     if: github.run_attempt == 1
     concurrency:

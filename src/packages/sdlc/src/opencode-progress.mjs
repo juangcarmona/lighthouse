@@ -18,7 +18,10 @@ export function formatOpenCodeEvent(line) {
     const patchPaths = typeof input.patchText === 'string' ? [...input.patchText.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map(m => m[1]) : [];
     const target = input.path ?? input.filePath ?? input.file_path ?? (part.tool === 'shell' ? input.command?.split('\n')[0] : patchPaths.length ? patchPaths.slice(0, 3).join(', ') + (patchPaths.length > 3 ? ` (+${patchPaths.length - 3} files)` : '') : undefined);
     const description = `${part.tool ?? 'tool'}${typeof target === 'string' ? ` ${target}` : ''}`.slice(0, 240);
-    if (state.status === 'completed') return progressText('Tool', `${description} — completed`);
+    if (state.status === 'completed') {
+      const output = part.tool === 'shell' && typeof state.output === 'string' ? state.output.slice(-2400).split('\n').slice(-12).join('\n').trim() : '';
+      return progressText('Tool', `${description} — completed`) + (output ? '\n' + progressText('Tool output', output) : '');
+    }
     if (state.status === 'error') return progressText('Tool error', `${description}: ${String(state.error ?? 'see diagnostic events').slice(0, 500)}`);
     if (state.status === 'running') return progressText('Tool', `${description} — running`);
   }
