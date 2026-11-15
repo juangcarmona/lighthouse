@@ -14,8 +14,8 @@ A versioned observation of one practice in the shared engineering-practice catal
 
 ## Distinguish From
 
-A guardrail sets an expectation and failure consequence. Practice evidence reports what an identified source measured; it does not make that expectation binding, assign a score or prove other practices passed. Tool detection and subjective attestation do not supply the required execution and quality evidence.
+A guardrail sets an expectation and failure consequence. Practice evidence reports what an identified source measured; it does not make that expectation binding, assign a score or prove other practices passed. Tool detection and subjective attestation do not supply the required execution and quality evidence. A historical aggregate summarizes identified observations and their coverage; it cannot certify a different or current revision.
 
 ## Usage
 
-An adopter publishes practice evidence from its own verification. A read-only consumer preserves the source identity and unknown states when showing it.
+An adopter publishes practice evidence from its own verification. A read-only consumer preserves source identity, definition versions, enforcement evidence and unknown states. Exact evidence supports the assessed revision; less granular historical summaries retain their period, coverage and source trace separately.
