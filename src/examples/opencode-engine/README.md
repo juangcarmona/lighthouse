@@ -47,6 +47,8 @@ Engine and validation containers use Docker’s init process to reap orphaned br
 
 ## Provider transport
 
+Product Change preparation projects the [bounded retained-composition tools](../../packages/sdlc/skills/product-change/retained-composition.md) through OpenCode 2.1.0's local MCP configuration. The tools load from the pinned read-only harness, so compatible images need only the normal package/workflow update. A projected `configured` receipt is not evidence of a connected tool or successful native preparation. Qualify inspection and a complete synthetic composition on the selected image after installation; if its local MCP policy is incompatible, rebuild and repin through this image's normal owning path. Never add shell access to the planning profile as a workaround. Package publication, clean installation and native qualification remain separate receipts.
+
 Both example policies select HTTP streaming for OpenAI through `providers.openai.settings.transport`. A provider WebSocket closure can leave OpenCode with a nonzero exit status even after subsequent steps finish. HTTP avoids that connection-reuse path while preserving the model, authentication and permissions. See the [OpenCode transport settings](https://opencode.ai/v2/docs/providers/#websockets).
 
 Rebuild the affected engine images and update their immutable operator pins between executions. Provider errors still fail the worker; a completed model message does not replace a successful engine exit, independent checks or required review.

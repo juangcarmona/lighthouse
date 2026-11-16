@@ -27,6 +27,8 @@ export { acquireEngineSlot } from './engine-slot.mjs';
 import { prepareProductEvidence, productEvidenceScopeText, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
 import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
+import { configureProductCompositionWorker } from './product-composition-runtime.mjs';
+import { engineResultByteLimit } from './engine-result-limits.mjs';
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -248,6 +250,23 @@ async function main() {
     if (codegraph.status === 'pending') codegraph = await startCodegraph({ config, source, harness, dir, name, docker });
     runtimeReceipt.codegraph = { status: codegraph.status, ...(codegraph.reason ? { reason: codegraph.reason } : {}), ...(codegraph.tools ? { tools: codegraph.tools } : {}) };
     let workerConfigPath = codegraph.workerConfigPath;
+    if (request.worker === 'product-change') {
+      let capability;
+      try {
+        const workerConfig = workerConfigPath ? JSON.parse(await readFile(workerConfigPath, 'utf8')) : JSON.parse(runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
+        configureProductCompositionWorker(workerConfig);
+        workerConfigPath = join(dir, 'product-composition-opencode.json');
+        await writeFile(workerConfigPath, JSON.stringify(workerConfig), { mode: 0o444 });
+        capability = { status: 'configured', version: 1, tools: ['productcomposition_inspect', 'productcomposition_compose'], instructions: '/harness/skills/product-change/retained-composition.md', qualification: 'Native invocation must be observed separately; configuration is not execution evidence.' };
+      } catch {
+        capability = { status: 'unavailable', reason: 'Pinned planning image does not support the composition configuration. Workflow maintainer: update the package/workflow pin and qualify local MCP on the pinned image; do not broaden planning permissions.' };
+      }
+      const compositionContext = JSON.parse(await readFile(context, 'utf8'));
+      compositionContext.productChange ??= {};
+      compositionContext.productChange.composition = capability;
+      await writeFile(context, JSON.stringify(compositionContext));
+      runtimeReceipt.productComposition = capability;
+    }
     if (telemetry.health().status !== 'disabled') {
       try {
         const workerConfig = workerConfigPath ? JSON.parse(await readFile(workerConfigPath, 'utf8')) : JSON.parse(runOwnedDocker(config, ['run', '--rm', '--network', 'none', '--entrypoint', 'cat', config.image, '/etc/opencode/opencode.json'], { encoding: 'utf8', timeout: 30000 }));
@@ -333,7 +352,7 @@ async function main() {
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
     if (runtimeReceipt.execution.status !== 'passed') { phase = 'execution'; throw Error(executionFailure(runtimeReceipt.execution)); }
     const result = join(output, 'envelope.json'), stat = await lstat(result);
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 128000) throw Error('Invalid engine result file');
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > engineResultByteLimit(request)) throw Error('Invalid engine result file');
     const rawEnvelope = await readFile(result, 'utf8');
     let envelope;
     try { envelope = reviewOutput ? reviewEnvelope(JSON.parse(rawEnvelope), request) : JSON.parse(rawEnvelope); completionOutput(envelope, request); }
