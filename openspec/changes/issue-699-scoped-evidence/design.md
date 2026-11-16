@@ -10,3 +10,5 @@ Each artifact keeps a report file and provider citation, preserving the existing
 Scope metadata records the selection and unavailable detail. Worker instructions direct further discovery to the accepted source model and preserve evidence limitations in the assessment. Missing context cannot grant product approval or establish model absence. Callers without an issue scope retain complete-report behavior and its existing failures.
 
 Per-model-file and aggregate model fingerprints, 512 KiB report/index limits, 16 MiB prepared reports, 17 MiB installed files, safe identities and paths, baseline rechecks and complete inventory validation remain enforced. No new dependency, workflow, credential or scheduler is introduced.
+
+Extract text values from structured context before matching artifact references. JSON escape sequences are transport syntax: matching directly against serialized JSON can consume a leading `ACT` or `UC` after an escaped newline and leave only a shortened identifier. Keep the existing whole-ID matcher and text byte bound.

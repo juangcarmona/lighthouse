@@ -9,3 +9,5 @@
 - [x] Exercise a real 2,002-artifact provider model, high-reach term, byte limits and unchanged source fingerprints.
 - [x] Run repository verification, strict OpenSpec validation, citations and review.
 - [ ] Integrate the correction, publish the selected package and qualify a native adopter refinement separately.
+
+- [x] Preserve multiline reference boundaries in structured issue, owner-answer and parent context; qualify with a real-provider planning regression.

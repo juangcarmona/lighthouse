@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, stat, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { loadProductCore, productModelDigest, prepareProductEvidence } from '../packages/sdlc/src/product-change.mjs';
+import { loadProductCore, productModelDigest, prepareProductEvidence, productEvidenceScopeText } from '../packages/sdlc/src/product-change.mjs';
 import { productModelDigestFromApi } from '../packages/sdlc/src/product-change-actions.mjs';
 import { preparePlanningProductEvidence, installProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 
@@ -55,6 +55,11 @@ function provider({ count = 1, reportBytes = 0, titleBytes = 0, diagnostics = []
   return { version: '0.25.0', openRepository: async () => ({}), validateBaseline: async () => ({ diagnostics, graph: { nodes } }), inspectArtifact: (_graph, id) => ({ id, data: 'x'.repeat(reportBytes) }), analyzeImpact: (_graph, id) => ({ root: id }), emitCitation: ({ id }) => id };
 }
 
+test('scope text preserves reference boundaries in multiline issues and nested owner answers', () => {
+  const context = { issue: { title: 'Review', body: '## Scope\nACT-REVIEWER\nUC-REVIEW\tFR-DETAIL', ownerAnswers: [{ body: '## Answer\nBR-ANSWER' }] }, parentEvidence: { gap: '## Gap\nSB-RELATED' }, ignored: null };
+  assert.deepEqual(productEvidenceScopeText(context).match(/\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g), ['ACT-REVIEWER', 'UC-REVIEW', 'FR-DETAIL', 'BR-ANSWER', 'SB-RELATED']);
+});
+
 test('issue-scoped real-provider evidence supports more than 1889 artifacts and a high-reach term', async t => {
   const root = await workspace(t);
   await writeFile(join(root, '.product/config.yaml'), 'version: v1alpha2\nproduct-root: docs/product\n');
@@ -71,7 +76,7 @@ test('issue-scoped real-provider evidence supports more than 1889 artifacts and 
   assert.equal(baseline.graph.nodes.length, 2002);
   await assert.rejects(prepareProductEvidence(root, join(root, 'unscoped'), core), /byte bound/);
   const digest = await productModelDigest(root), run = join(root, 'run'); await mkdir(run);
-  await writeFile(join(run, 'context.json'), JSON.stringify({ issue: { title: 'Review TERM-COMMON', body: 'Check TERM-COMMON and FR-NOT-IN-MODEL.' }, contract: { rules: 'Original scope.' } }));
+  await writeFile(join(run, 'context.json'), JSON.stringify({ issue: { title: 'Review evidence', body: '## Scope\nTERM-COMMON\nFR-NOT-IN-MODEL' }, contract: { rules: 'Original scope.' } }));
   const result = await preparePlanningProductEvidence(root, run, { core });
   assert.equal(result.artifacts, 2002);
   assert.equal(result.baselineDigest, digest);
