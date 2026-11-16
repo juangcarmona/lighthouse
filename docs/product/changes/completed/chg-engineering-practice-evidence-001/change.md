@@ -2,7 +2,7 @@
 id: CHG-ENGINEERING-PRACTICE-EVIDENCE-001
 type: product-change
 title: Report source-bound engineering practice evidence
-status: draft
+status: applied
 base-revision: '60df0e5a371c0bdfb100cbd985910357ca89451a'
 operations:
   add:
@@ -95,3 +95,7 @@ The shared catalog and L0-L3 rules deterministically evaluate the accepted quali
 ## Out of Scope
 
 New scanners, automatic CI or hosting-rule installation, automatic activation, subjective certification, composite scores, central collection services and automatic policy tuning are outside this delivery. Mutation installation, scheduling and blocking enforcement are deferred. Historical compaction does not authorize deletion of source receipts or override retention obligations. Product Change approval/apply, merge, implementation execution, package release and adopter activation remain separate host actions.
+
+## Approval · 2026-11-16
+
+The owner approved this Product Change and authorized apply, implementation, integration, publication and adopter qualification in [issue #594](https://github.com/juangcarmona/lighthouse/issues/594#issuecomment-6923262284). This supersedes the earlier refinement-only hold. ProductShape apply and the implementation train remain separately evidenced.
