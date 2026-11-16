@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.25.1
+
+### Patch Changes
+
+- 96eaab8: # Issue-control prerequisite observations
+
+  Expose structured Refine and Propose prerequisite observations from existing source admission checks, preserving unavailable evidence and existing action decisions.
+
 ## 0.25.0
 
 ### Minor Changes
