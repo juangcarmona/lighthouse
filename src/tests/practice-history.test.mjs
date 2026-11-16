@@ -67,3 +67,8 @@ test('a forged standalone level cannot enter historical distributions', async ()
   const r = await receipt(); r.level = 'L3';
   assert.throws(() => aggregatePracticeHistory({ assessments: [r], period }), /Contradictory historical level/);
 });
+
+test('one immutable source run cannot be counted again under another commit', async () => {
+  const first = await receipt(), contradiction = await receipt({ commit: 'b'.repeat(40) });
+  assert.throws(() => aggregatePracticeHistory({ assessments: [first, contradiction], period }), /Contradictory source run revision/);
+});
