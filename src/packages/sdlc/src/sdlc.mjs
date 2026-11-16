@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { practiceCli } from './practice-cli.mjs';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -394,11 +395,13 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
+if (!['practices', 'telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <practices|telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
-if (command === 'telemetry') {
+if (command === 'practices') {
+  console.log(JSON.stringify(await practiceCli(process.argv.slice(3)), null, 2));
+} else if (command === 'telemetry') {
   await telemetryCli(process.argv.slice(3));
 } else if (command === 'contract') {
   console.log(await readFile(contractPath, 'utf8'));

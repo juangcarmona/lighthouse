@@ -105,7 +105,9 @@
     "./issue-control": "./src/issue-control.mjs",
     "./schemas/issue-control-intent.schema.json": "./schemas/issue-control-intent.schema.json",
     "./practice-catalog": "./src/practice-catalog.mjs",
-    "./practice-observation": "./src/practice-observation.mjs"
+    "./practice-observation": "./src/practice-observation.mjs",
+    "./practice-evaluator": "./src/practice-evaluator.mjs",
+    "./practice-github": "./src/practice-github.mjs"
   },
   "license": "Apache-2.0"
 }

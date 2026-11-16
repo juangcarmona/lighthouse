@@ -8,7 +8,7 @@ const practices = [
   ['specifications', 2, ['format', 'declared', 'executed', 'passed', 'failed'], 'Applicable Gherkin specifications execute and pass'],
   ['sbom', 2, ['format', 'documentDigest', 'components'], 'An identified machine-readable SBOM covers the assessed scope'],
   ['licenses', 2, ['policy', 'assessed', 'violations'], 'An explicit versioned license policy passes'],
-  ['complexity', 3, ['methods'], 'Every applicable production method: cyclomatic <= 15, CRAP <= 30'],
+  ['complexity', 3, ['modules', 'methods'], 'Every applicable production method: cyclomatic <= 15, CRAP <= 30'],
   ['dast', 3, ['critical', 'high'], 'Zero unresolved critical or high findings on the HTTP application surface'],
   ['mutation', null, ['coveredScore', 'fullScore', 'killed', 'survived', 'timedOut', 'uncovered', 'modules'], 'Covered-code target 80%; informational and nonblocking'],
   ['hygiene', null, ['checks'], 'Complementary observations; no common level threshold'],
@@ -20,7 +20,7 @@ const practices = [
   applicability: id === 'dast' ? 'HTTP application surface; a library or CLI without that surface may justify not-applicable' : 'Applicable to the assessed production scope',
 }));
 function freeze(value) { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; }
-export const practiceCatalog = freeze({ schemaVersion: 1, version, levelVersion: version, maximumAgeDays: 14,
+export const practiceCatalog = freeze({ schemaVersion: 1, version, levelVersion: version, maximumAgeDays: 14, emptyBranchSet: 'Not applicable only when the measured branch total is exactly zero',
   profiles: { library: { httpSurface: false }, cli: { httpSurface: false }, 'http-service': { httpSurface: true }, 'web-application': { httpSurface: true } },
   levels: { L0: [], L1: practices.filter(p => p.level === 1).map(p => p.id), L2: practices.filter(p => p.level && p.level <= 2).map(p => p.id), L3: practices.filter(p => p.level).map(p => p.id) }, practices,
 });

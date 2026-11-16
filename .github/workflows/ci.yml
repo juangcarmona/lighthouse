@@ -44,6 +44,8 @@ jobs:
       - name: Install Chrome for architecture rendering
         run: npx --no-install puppeteer browsers install chrome
       - run: npm run verify
+      - name: Execute practice evidence regressions
+        run: node --test src/tests/practice-evidence.test.mjs src/tests/practice-evaluator.test.mjs src/tests/practice-github.test.mjs
   continue-post-merge-review:
     timeout-minutes: 5
     needs: repository
