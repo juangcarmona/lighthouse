@@ -61,3 +61,9 @@ test('incompatible observation definitions remain visible without mixed measurem
   const group = aggregatePracticeHistory({ assessments: [r], period }).groups[0];
   assert.equal(group.incompatibleObservations, 1); assert.equal(group.observedDefinitions['tests@2.0.0/1.0.0'], 1); assert.deepEqual(group.measurementTrends, {});
 });
+
+
+test('a forged standalone level cannot enter historical distributions', async () => {
+  const r = await receipt(); r.level = 'L3';
+  assert.throws(() => aggregatePracticeHistory({ assessments: [r], period }), /Contradictory historical level/);
+});

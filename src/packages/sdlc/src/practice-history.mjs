@@ -11,10 +11,16 @@ function validateAssessment(report) {
   for (const p of report.practices) {
     if (!record(p) || !practiceCatalog.practices.some(v => v.id === p.practice) || ids.has(p.practice) || !practiceStates.includes(p.state) || typeof p.certified !== 'boolean' || !Array.isArray(p.gaps) || !Array.isArray(p.enforcementGaps)) throw Error('Invalid or duplicate historical practice receipt');
     ids.add(p.practice);
+    if (p.certified && (!['met', 'not-applicable'].includes(p.state) || p.gaps.length || p.enforcementGaps.length)) throw Error('Contradictory historical certification state');
     if (p.observation) {
       const o = requirePracticeObservation(p.observation);
-      if (o.practice !== p.practice || o.repository.id !== report.context.repository.id || o.commit !== report.context.commit || canonical(o.scope) !== canonical(report.context.scope)) throw Error('Historical observation is outside its assessment scope');
+      if (o.practice !== p.practice || o.repository.id !== report.context.repository.id || o.commit !== report.context.commit || o.ref !== report.context.ref || o.repository.fullName !== report.context.repository.fullName || canonical(o.scope) !== canonical(report.context.scope)) throw Error('Historical observation is outside its assessment scope');
     }
+  }
+  if (report.catalogVersion === practiceCatalog.version && report.levelVersion === practiceCatalog.levelVersion) {
+    const highest = ['L3', 'L2', 'L1'].find(level => practiceCatalog.levels[level].every(id => report.practices.find(p => p.practice === id).certified));
+    const negative = report.practices.some(p => practiceCatalog.levels.L1.includes(p.practice) && ['failing', 'below-standard'].includes(p.state));
+    if (report.level !== (highest ?? (negative ? 'L0' : 'unverified'))) throw Error('Contradictory historical level');
   }
 }
 function sourceEntries(report) {
