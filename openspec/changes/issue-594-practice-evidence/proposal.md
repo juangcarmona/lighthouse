@@ -1,3 +1,5 @@
+<!-- pdac-scope: cited -->
+
 # Engineering practice evidence
 
 Implement the owner-approved CHG-ENGINEERING-PRACTICE-EVIDENCE-001 for #594. ProductShape applies the accepted definition before implementation. Package-owned reporting stays in `src/packages/sdlc`; it never installs scanners or changes CI/hosting policy.

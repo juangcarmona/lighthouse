@@ -1,6 +1,6 @@
 # Issue-control completion
 
-<!-- pdac-scope: none -->
+<!-- pdac-scope: cited -->
 
 ## Decisions
 
@@ -15,3 +15,5 @@ First reproduce absent prerequisite observations in focused tests. Exercise miss
 ## Recovery
 
 The additive assessment fields require no migration. Revert their source change and the consumer display together if necessary. Retain source receipts and the private consumer journal; rollback never resends an uncertain request.
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->
