@@ -53,6 +53,7 @@ test('native source mismatch, another attempt, absent step and unavailable logs 
 
 test('TAP requires actual reconciled counts and rejects aggregate green or ambiguous output', () => {
   assert.equal(measurementsFromTap(tap).executed, 4);
+  assert.equal(measurementsFromTap(tap.replaceAll('# ', 'ℹ ')).executed, 4);
   for (const log of ['job passed', tap + tap, tap.replace('# pass 4', '# pass 0'), tap.replace('# tests 4', '# tests 0')]) assert.throws(() => measurementsFromTap(log));
   const skipped = measurementsFromTap(tap.replace('# pass 4', '# pass 3').replace('# skipped 0', '# skipped 1')); assert.equal(skipped.declared, 4); assert.equal(skipped.executed, 3);
 });

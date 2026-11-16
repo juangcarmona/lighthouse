@@ -10,7 +10,7 @@ export function githubPracticeLog(path) {
 export function measurementsFromTap(log) {
   if (typeof log !== 'string' || log.length > 16 * 1024 * 1024) throw Error('Bounded TAP execution output required');
   const read = name => {
-    const values = [...log.matchAll(new RegExp('(?:^|\\n)(?:\\d{4}-[^ ]+ )?# ' + name + ' (\\d+)\\s*(?=\\n|$)', 'g'))];
+    const values = [...log.matchAll(new RegExp('(?:^|\\n)(?:\\d{4}-[^ ]+ )?(?:#|ℹ) ' + name + ' (\\d+)\\s*(?=\\n|$)', 'g'))];
     if (values.length !== 1) throw Error('TAP must contain one unambiguous ' + name + ' summary');
     const value = Number(values[0][1]); if (!Number.isSafeInteger(value)) throw Error('Invalid TAP count'); return value;
   };
