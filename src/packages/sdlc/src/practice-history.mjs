@@ -58,7 +58,7 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
   const groups = new Map();
   const get = value => {
     const key = groupKey(value);
-    if (!groups.has(key)) groups.set(key, { context: structuredClone(sharedContext(value.context)), catalogVersion: value.catalogVersion, levelVersion: value.levelVersion, expectedSamples: null, receipts: new Map() });
+    if (!groups.has(key)) groups.set(key, { context: structuredClone(sharedContext(value.context)), catalogVersion: value.catalogVersion, levelVersion: value.levelVersion, expectedSamples: null, receipts: new Map(), receivedSources: new Map() });
     return groups.get(key);
   };
   for (const expected of expectations) {
@@ -71,6 +71,10 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
     validateAssessment(report);
     if (Date.parse(report.assessedAt) < Date.parse(period.start) || Date.parse(report.assessedAt) >= Date.parse(period.end)) throw Error('Historical receipt is outside the requested period');
     const group = get(report), sources = sourceEntries(report);
+    for (const p of report.practices.filter(p => p.observation)) {
+      const o = p.observation;
+      group.receivedSources.set(o.source.url, { url: o.source.url, attempt: o.source.attempt, result: o.source.result });
+    }
     const identity = canonical([report.context.commit, sources.length ? [...new Set(sources.map(s => s.key))] : report.assessedAt]);
     const previous = group.receipts.get(identity);
     if (!previous || compareReceipts(report, previous) > 0) group.receipts.set(identity, structuredClone(report));
@@ -108,7 +112,7 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
     return { context: group.context, catalogVersion: group.catalogVersion, levelVersion: group.levelVersion,
       coverage: { expectedSamples: group.expectedSamples, observedSamples: receipts.length, missingSamples: group.expectedSamples === null ? null : group.expectedSamples - receipts.length, unknownSamplingCoverage: group.expectedSamples === null,
         expectedPracticeSlots: receipts.length * practiceCatalog.practices.length, observedPractices, missingPractices: states.missing, unknownPractices: states.partial + states.stale + states.unavailable },
-      observedDefinitions: definitions, incompatibleObservations, levelDistribution: distribution, practiceStates: states, gaps, measurementTrends: trends, sources: [...references].sort() };
+      observedDefinitions: definitions, incompatibleObservations, levelDistribution: distribution, practiceStates: states, gaps, measurementTrends: trends, sources: [...references].sort(), supersededSources: [...group.receivedSources.values()].filter(source => !references.has(source.url)).sort((a, b) => a.url.localeCompare(b.url)) };
   });
   return { schemaVersion: 1, kind: 'historical-practice-summary', currentCertification: false, period: { start: new Date(period.start).toISOString(), end: new Date(period.end).toISOString() }, groups: summaries,
     retention: 'Source receipts remain subject to existing retention obligations; this summary authorizes no deletion' };

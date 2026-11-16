@@ -18,7 +18,7 @@ test('history deduplicates source retries and out-of-order arrivals without aver
   assert.equal(report.currentCertification, false);
   const group = report.groups[0]; assert.equal(group.coverage.observedSamples, 1); assert.equal(group.coverage.missingSamples, 2);
   assert.equal(group.levelDistribution.unverified, 1); assert.equal(group.measurementTrends['tests.passed'].last, 5);
-  assert.deepEqual(group.sources, ['https://example.com/run/123/attempt/2']); assert.ok(!Object.hasOwn(group, 'averageLevel'));
+  assert.deepEqual(group.sources, ['https://example.com/run/123/attempt/2']); assert.equal(group.supersededSources[0].attempt, 1); assert.ok(!Object.hasOwn(group, 'averageLevel'));
   assert.deepEqual(report, aggregatePracticeHistory({ assessments: [first, retry], period, expectations: [expected(3)] }));
 });
 
