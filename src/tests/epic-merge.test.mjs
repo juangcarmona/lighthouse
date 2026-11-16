@@ -42,6 +42,7 @@ test('epic merge observation refuses stale, unauthenticated or incomplete eviden
     f => { f.data.branch.object.sha = head; },
     f => { f.data.pr.draft = true; },
     f => { f.data.merge.parents[0].sha = head; },
+    f => { f.data.reviews = []; },
     f => { f.data.reviews.push({ ...f.data.reviews[0], id: 10, state: 'CHANGES_REQUESTED' }); },
     f => { f.data.reviews[0].commit_id = base; },
     f => { f.data.checks[0].conclusion = 'failure'; },

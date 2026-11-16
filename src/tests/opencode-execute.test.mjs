@@ -332,13 +332,13 @@ async function workspaceUsage(root) {
   return usage;
 }
 
-test('apply-review host preparation requalifies archived plans without resurrecting an active change', { timeout: 120000 }, async t => {
+test('host implementation preserves archived plans and the native epic review boundary', { timeout: 120000 }, async t => {
   const { mkdir, chmod } = await import('node:fs/promises');
   const { spawnSync } = await import('node:child_process');
   const plan = 'openspec/changes/issue-414-proposal', archive = 'openspec/changes/archive/2026-11-02-issue-414-proposal';
   const metadata = '# Reviewed metadata\nschema: spec-driven\ncreated: 2026-11-01\nskip_specs: true\n';
   const proposal = '# Proposal\n\n## Why\nPreserve the verified implementation.\n\n## What Changes\n- Retain verification.\n\n## Capabilities\n\n### New Capabilities\nNone.\n\n### Modified Capabilities\nNone.\n\n## Impact\nVerification only.\n';
-  for (const scenario of ['archive', 'active', 'new', 'incomplete', 'ambiguous', 'missing-metadata', 'conflicting']) await t.test(scenario, async () => {
+  for (const scenario of ['archive', 'active', 'new', 'incomplete', 'ambiguous', 'missing-metadata', 'conflicting', 'ordinary-review', 'epic-review', 'epic-new-review', 'epic-blocked', 'epic-check-failure']) await t.test(scenario, async () => {
     const root = await mkdtemp(join(tmpdir(), 'lighthouse-plan-caller-'));
     try {
       const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
@@ -348,7 +348,8 @@ test('apply-review host preparation requalifies archived plans without resurrect
         await mkdir(join(work, target), { recursive: true });
         for (const [name, content] of Object.entries({ '.openspec.yaml': metadata, 'proposal.md': proposal, 'design.md': '# Design\nPreserve existing verification.\n', 'tasks.md': '- [x] Implemented and checked.\n' })) await writeFile(join(work, target, name), content);
       };
-      if (scenario !== 'new') await writePlan(scenario === 'active' ? plan : archive);
+      const newPlan = ['new', 'epic-new-review'].includes(scenario), epic = scenario.startsWith('epic-');
+      if (!newPlan) await writePlan(scenario === 'active' ? plan : archive);
       if (scenario === 'incomplete') await writeFile(join(work, archive, 'tasks.md'), '- [ ] Not complete\n');
       if (scenario === 'ambiguous') await writePlan(archive.replace('2026-11-02', '2026-11-03'));
       if (scenario === 'missing-metadata') await rm(join(work, archive, '.openspec.yaml'));
@@ -359,6 +360,11 @@ test('apply-review host preparation requalifies archived plans without resurrect
       const checks = [['node', '-e', `const f=require('node:fs'),a=require('node:assert/strict');a.equal(f.readFileSync('demo.js','utf8'),'export const verified = true;\\n');${scenario === 'archive' ? `a.equal(f.existsSync('${plan}'),false);a.equal(f.readFileSync('${archive}/.openspec.yaml','utf8'),${JSON.stringify(metadata)});` : ''}`]];
       const request = { repository: 'owner/fixture', workflowRunId: '1', attempt: 1, taskDigest: 'd'.repeat(64), runId: 'a'.repeat(64), stage: 'implement', worker: 'apply-review', issue: 414, sourceRevision: head, baseRevision: 'b'.repeat(40), implementationReview: { issue: 414, approved: false, head, implementationIdentity: 'c'.repeat(64), feedbackDigest: 'e'.repeat(64) }, implementation: { proposal: { root: plan }, policy: { paths: ['*'], checks, reviewRequired: false } } };
       const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Independent review remains required.' }, effect: { type: 'issue-comment', body: 'Fixture only.' } };
+      if (scenario === 'ordinary-review' || epic) request.implementation.policy.reviewRequired = true;
+      if (epic) request.epic = { parent: 146, slice: 'first', planDigest: 'e'.repeat(64), base: 'lighthouse/epic-146', sourceRevision: request.baseRevision, baseSha: head };
+      if (scenario === 'epic-new-review') { delete request.worker; delete request.implementationReview; }
+      if (scenario === 'epic-blocked') { envelope.result.status = 'blocked'; envelope.result.missingEvidence.push('The required invariant proof is missing.'); }
+      if (scenario === 'epic-check-failure') checks[0] = ['node', '-e', 'process.exit(1)'];
       await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}');
       await writeFile(join(root, 'prompt'), 'Verify the existing candidate.');
       await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'f'.repeat(64)}`, implementationImage: `sha256:${'f'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture', lock: join(root, 'lock') }));
@@ -375,7 +381,7 @@ const mount=dst=>args.find(a=>a.startsWith('type=bind,src=')&&a.endsWith(',dst='
 const output=mount('/output');
 if(output){
  fs.writeFileSync(${JSON.stringify(join(root, 'engine-started'))},'yes');
- if(${JSON.stringify(scenario)}==='new'){
+ if(${newPlan}){
   const target=mount('/workspace')+'/'+${JSON.stringify(plan)};
   fs.writeFileSync(target+'/proposal.md',${JSON.stringify(proposal)});fs.writeFileSync(target+'/design.md','# Design\\nRetain verification.\\n');fs.writeFileSync(target+'/tasks.md','- [x] Implemented and checked.\\n');fs.appendFileSync(target+'/.openspec.yaml','skip_specs: true\\n');
  }
@@ -385,15 +391,19 @@ if(mount('/diagnostics')){const r=cp.spawnSync(${JSON.stringify(process.execPath
 `);
       await chmod(join(bin, 'docker'), 0o755);
       const run = spawnSync(process.execPath, [await fixtureHarness(root)], { encoding: 'utf8', timeout: 60000, env: { ...process.env, OPENSPEC_TELEMETRY: '0', PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
-      if (['archive', 'active', 'new'].includes(scenario)) {
+      if (['archive', 'active', 'new', 'ordinary-review'].includes(scenario) || epic) {
         assert.equal(run.status, 0, run.stdout + run.stderr);
         const changes = JSON.parse(await readFile(join(runDir, 'changes.json')));
-        if (scenario !== 'new') assert.deepEqual(changes, []);
+        if (!newPlan) assert.deepEqual(changes, []);
         const receipt = JSON.parse(await readFile(join(runDir, 'checks.json')));
-        assert.equal(receipt.checks[0].exitCode, 0);
+        assert.equal(receipt.checks[0].exitCode, scenario === 'epic-check-failure' ? 1 : 0);
         assert.equal(receipt.sourceRevision, head);
         assert.match(receipt.candidateTree, /^[a-f0-9]{40}$/);
-        assert.equal(JSON.parse(await readFile(join(runDir, 'envelope.json'))).result.status, 'passed');
+        const result = JSON.parse(await readFile(join(runDir, 'envelope.json'))).result;
+        assert.equal(result.status, ['ordinary-review', 'epic-blocked', 'epic-check-failure'].includes(scenario) ? 'blocked' : 'passed');
+        assert.equal(result.pendingReview.length, scenario === 'ordinary-review' ? 1 : 0);
+        if (scenario === 'epic-blocked') assert.deepEqual(result.missingEvidence, envelope.result.missingEvidence);
+        if (scenario === 'epic-check-failure') assert.match(result.missingEvidence.join(' '), /independent host checks did not all pass/);
         if (scenario === 'archive') assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).planningMetadata, undefined);
       } else {
         assert.notEqual(run.status, 0, run.stdout + run.stderr);

@@ -408,7 +408,9 @@ async function main() {
       receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
-      if (request.implementation.policy.reviewRequired) {
+      // Native epic acceptance separately authenticates the current-head owner review.
+      // Blocking a verified implementation here prevents it from reaching that review.
+      if (request.implementation.policy.reviewRequired && !request.epic) {
         envelope.result.status = 'blocked';
         envelope.result.pendingReview.push('Repository policy requires owner acceptance of this candidate; engine assertions cannot grant it.');
       }
