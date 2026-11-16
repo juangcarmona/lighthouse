@@ -21,3 +21,31 @@ A `validate --input observations.json` report can inspect local observations but
 Use `lighthouse-sdlc practices history --input history-request.json` or `aggregatePracticeHistory` from the `practice-history` export. Supply assessment receipts and a half-open `period` (`start`, `end`). Optional `expectations` identify an exact context, catalog/level versions and expected `samples` for each compatible group. Without an expected cadence, sampling coverage remains explicitly unknown. Missing periods are visible even when no assessment was collected.
 
 The report separates incompatible contexts and definitions, deduplicates exact source runs and retries, rejects contradictions and retains level distributions, observation coverage, gaps, numeric measurement ranges/first/last values and source references. Levels are never averaged. Reports are historical summaries, cannot be passed into current evaluation as observations and authorize no deletion of receipts. The caller retains authority for the original assessment receipts and their retention.
+
+## Native request example
+
+Replace every source identifier below with values from the same completed run. `stepName` must match the native step and its unique direct command in the committed workflow. The declared scope covers the tests actually executed by that command.
+
+```json
+{
+  "context": {
+    "repository": { "id": 123, "fullName": "owner/repository" },
+    "ref": "refs/heads/main",
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "scope": { "id": "node-tests", "modules": ["application"] },
+    "profile": "web-application"
+  },
+  "runId": 456,
+  "attempt": 1,
+  "jobId": 789,
+  "workflow": ".github/workflows/ci.yml",
+  "stepName": "Run npm test",
+  "command": "npm test"
+}
+```
+
+```sh
+lighthouse-sdlc practices github --input source-request.json > assessment.json
+```
+
+For library consumers, `collectGithubTests(request)` returns `observations`, its native `authority` receipt and a source resolver. Pass those observations and resolver to `evaluatePractices` with the same context. Keep the report and native source URLs together. The report can show `tests: met` while the overall level remains `unverified` because security or enforcement evidence is missing.
