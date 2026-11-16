@@ -41,6 +41,16 @@ async function mergeEnforcement(repository, branch, check, appId, request) {
   return { status: known ? 'verified' : 'unavailable', merge: required, sources };
 }
 
+export function commandBlocksTestFailure(command, scripts = {}, visiting = new Set()) {
+  if (/^node --test(?: [\w./* -]+)?$/.test(command)) return true;
+  const match = /^npm (?:test|(run) ([\w:-]+))$/.exec(command);
+  if (!match) return false;
+  const name = match[1] ? match[2] : 'test';
+  if (visiting.has(name) || typeof scripts[name] !== 'string' || /[|;`$\n\r]/.test(scripts[name])) return false;
+  const next = new Set(visiting); next.add(name);
+  return scripts[name].split('&&').some(part => commandBlocksTestFailure(part.trim(), scripts, next));
+}
+
 export async function collectGithubTests({ context, runId, attempt, jobId, workflow, stepName, command }, { request = githubRequest, readLog = githubPracticeLog } = {}) {
   const errors = validatePracticeContext(context);
   if (errors.length) throw Error(errors.join('; '));
@@ -64,7 +74,14 @@ export async function collectGithubTests({ context, runId, attempt, jobId, workf
   const step = steps[0], log = await readLog(`${base}/actions/jobs/${jobId}/logs`);
   const stepLog = log.split('\n').filter(line => { const time = Date.parse(line.split(' ')[0]); return Number.isFinite(time) && time >= Date.parse(step.started_at) && time <= Date.parse(step.completed_at) + 999; }).join('\n');
   const measurements = measurementsFromTap(stepLog);
-  const ci = !/continue-on-error\s*:|shell\s*:/.test(workflowSource);
+  let scripts = {};
+  if (command.startsWith('npm ')) {
+    try {
+      const manifest = await request(`${base}/contents/package.json?ref=${context.commit}`);
+      if (manifest.encoding === 'base64' && manifest.size < 1048576) scripts = JSON.parse(Buffer.from(manifest.content, 'base64').toString('utf8')).scripts ?? {};
+    } catch { /* Unknown script propagation cannot establish blocking CI. */ }
+  }
+  const ci = !/continue-on-error\s*:|shell\s*:/.test(workflowSource) && commandBlocksTestFailure(command, scripts);
   const enforcement = { ...await mergeEnforcement(repo.full_name, context.ref.replace(/^refs\/heads\//, ''), job.name, check.app.id, request), ci };
   const url = `https://github.com/${repo.full_name}/actions/runs/${runId}/attempts/${attempt}#job-${jobId}`;
   const observation = { schemaVersion: 1, catalogVersion: practiceCatalog.version, definitionVersion: practiceCatalog.version, practice: 'tests',

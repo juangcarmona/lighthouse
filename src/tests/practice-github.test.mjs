@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { measurementsFromTap, collectGithubTests } from '../packages/sdlc/src/practice-github.mjs';
+import { measurementsFromTap, collectGithubTests, commandBlocksTestFailure } from '../packages/sdlc/src/practice-github.mjs';
 import { evaluatePractices } from '../packages/sdlc/src/practice-evaluator.mjs';
 import { context } from './fixtures/practice-evidence.mjs';
 
@@ -14,6 +14,7 @@ function fixture({ rules = true, mutate = () => {} } = {}) {
     [`${base}/actions/runs/123/attempts/1`]: { repository: { id: 42 }, head_repository: { id: 42 }, head_sha: context.commit, head_branch: 'main', path: workflow, run_attempt: 1, status: 'completed' },
     [`${base}/actions/jobs/456`]: { run_id: 123, run_attempt: 1, head_sha: context.commit, status: 'completed', name: 'repository', check_run_url: `https://api.github.com/${base}/check-runs/10`, steps: [{ name: 'Run npm test', status: 'completed', conclusion: 'success', started_at: '2026-11-16T12:00:00Z', completed_at: '2026-11-16T12:01:00Z' }] },
     [`${base}/check-runs/10`]: { head_sha: context.commit, app: { id: 15368, slug: 'github-actions' } },
+    [`${base}/contents/package.json?ref=${context.commit}`]: { encoding: 'base64', size: 100, content: Buffer.from(JSON.stringify({ scripts: { test: 'node --test' } })).toString('base64') },
     [`${base}/contents/${workflow}?ref=${context.commit}`]: { encoding: 'base64', size: 100, content: Buffer.from('jobs:\n  repository:\n    steps:\n      - run: npm test\n').toString('base64') },
     [`${base}/rules/branches/main?per_page=100`]: [{ type: 'required_status_checks', ruleset_source_type: 'Repository', ruleset_source: 'example/project', ruleset_id: 1, parameters: { required_status_checks: [{ context: 'repository', integration_id: 15368 }] } }],
     [`${base}/rulesets/1`]: { enforcement: 'active', bypass_actors: [] },
@@ -56,4 +57,10 @@ test('TAP requires actual reconciled counts and rejects aggregate green or ambig
   assert.equal(measurementsFromTap(tap.replaceAll('# ', 'ℹ ')).executed, 4);
   for (const log of ['job passed', tap + tap, tap.replace('# pass 4', '# pass 0'), tap.replace('# tests 4', '# tests 0')]) assert.throws(() => measurementsFromTap(log));
   const skipped = measurementsFromTap(tap.replace('# pass 4', '# pass 3').replace('# skipped 0', '# skipped 1')); assert.equal(skipped.declared, 4); assert.equal(skipped.executed, 3);
+});
+
+
+test('mandatory CI needs verified failure propagation through npm scripts', () => {
+  assert.equal(commandBlocksTestFailure('npm run verify', { verify: 'npm run lint && npm test', test: 'node --test' }), true);
+  for (const scripts of [{ test: 'node --test || true' }, { test: 'node --test; true' }, { test: 'node scripts/custom-runner.mjs' }, { test: 'npm test' }, {}]) assert.equal(commandBlocksTestFailure('npm test', scripts), false);
 });
