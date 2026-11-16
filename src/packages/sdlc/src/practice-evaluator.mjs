@@ -29,7 +29,7 @@ function measuredQuality(p, o) {
   if (p.id === 'coverage') {
     if (!complete(m.modules) || new Set(m.modules.map(v => v.id)).size !== m.modules.length || m.modules.length !== o.scope.modules.length || o.scope.modules.some(id => !m.modules.some(v => v.id === id))) return outcome('partial', 'coverage does not identify every production module');
     if (m.modules.some(v => !percent(v.lines) || (!percent(v.branches) && !(v.branches === null && v.branchesTotal === 0)) )) return outcome('partial', 'module coverage measurements are incomplete');
-    return m.modules.some(v => v.lines < 80 || v.branches !== null && v.branches < 70) ? outcome('below-standard', p.quality) : outcome('met');
+    return m.modules.some(v => v.lines < p.criteria.lines || v.branches !== null && v.branches < p.criteria.branches) ? outcome('below-standard', p.quality) : outcome('met');
   }
   if (p.id === 'sbom') return ['SPDX', 'CycloneDX'].includes(m.format) && digest(m.documentDigest) && count(m.components) && m.components > 0 ? outcome('met') : outcome('partial', 'complete identified SBOM required');
   if (p.id === 'licenses') {
@@ -38,11 +38,11 @@ function measuredQuality(p, o) {
   }
   if (p.id === 'complexity') {
     if (!Array.isArray(m.methods) || !complete(m.modules) || new Set(m.modules.map(v => v.id)).size !== m.modules.length || m.modules.length !== o.scope.modules.length || o.scope.modules.some(id => !m.modules.some(v => v.id === id && count(v.declaredMethods) && v.declaredMethods === m.methods.filter(method => method.module === id).length)) || m.methods.some(v => !record(v) || !nonempty(v.id) || !o.scope.modules.includes(v.module) || !number(v.cyclomatic) || !number(v.crap)) || new Set(m.methods.map(v => canonical([v.module, v.id]))).size !== m.methods.length) return outcome('partial', 'complete module/method complexity inventory required');
-    return m.methods.some(v => v.cyclomatic > 15 || v.crap > 30) ? outcome('below-standard', p.quality) : outcome('met');
+    return m.methods.some(v => v.cyclomatic > p.criteria.cyclomatic || v.crap > p.criteria.crap) ? outcome('below-standard', p.quality) : outcome('met');
   }
   if (p.id === 'mutation') {
     if (!percent(m.coveredScore) || !percent(m.fullScore) || !['killed', 'survived', 'timedOut', 'uncovered'].every(k => count(m[k])) || !complete(m.modules)) return outcome('partial', 'mutation scores, outcomes and module detail required');
-    return m.coveredScore < 80 ? outcome('below-standard', 'informational covered-code target: 80%') : outcome('met');
+    return m.coveredScore < p.criteria.coveredScore ? outcome('below-standard', 'informational covered-code target: 80%') : outcome('met');
   }
   return Array.isArray(m[p.measurements[0]]) && m[p.measurements[0]].length > 0 ? outcome('met') : outcome('partial', 'complementary execution detail is missing');
 }
