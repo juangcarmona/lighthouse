@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "runId": "a851c4f0c5f197f073390c4b5140ecd46a4799435bbe8c0ab5b4442b45ce625e",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "evidence": [
+    {
+      "id": "integration:43850598281:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/cacddf15a92eb102d8e0e3cc06dd9599e96bddee/docs/process/20261116-711-fix-bounded-composition-of-retained-product-change-drafts-in-the/runs/43850598281/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained integration confirms the approved head was merged at 93c2c8efde6feb2be021f1b5d86ff909e6baad4e under the earlier explicit merge:true grant. This review grants no merge authority."
+    },
+    {
+      "id": "github-check:133211713144",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43841705547/job/133211713144",
+      "reason": "Authenticated repository check on accepted head 3e498c0002a661a8e28334876801a9411f02263e."
+    },
+    {
+      "id": "github-check:133245831198",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43851765774/job/133245831198",
+      "reason": "Required repository check passed on the actual merged revision; adopted post-merge ci.yml run 43851765774 completed successfully. The historical missing post-merge observation is resolved, not a failed check."
+    },
+    {
+      "id": "implementation:43846036365:1:f6842c5ab958175eafd09dd2ef9cb3aee84970a3fb866ed31ded35fff9ed34b4:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43846036365/attempts/1",
+      "reason": "Authenticated npm ci --ignore-scripts completed with exit 0 on the accepted head. Three low-severity audit warnings are reported, not independently assessed vulnerabilities introduced by this change."
+    },
+    {
+      "id": "implementation:43846036365:1:f6842c5ab958175eafd09dd2ef9cb3aee84970a3fb866ed31ded35fff9ed34b4:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43846036365/attempts/1",
+      "reason": "Authenticated env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify completed with exit 0 on the accepted head; verify includes markdownlint and node --test src/tests/*.test.mjs. The excerpt is truncated; this is suite execution evidence, not a complete per-test transcript or native-engine qualification."
+    },
+    {
+      "id": "implementation:43846036365:1:f6842c5ab958175eafd09dd2ef9cb3aee84970a3fb866ed31ded35fff9ed34b4:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43846036365/attempts/1",
+      "reason": "Authenticated OpenSpec citation verification executed with exit 0. Summary reports 0 errors, 295 stale citations and 310 warnings across the full output. Passed execution does not establish current applicability of omitted scoped rows; that separate review evidence remains unavailable."
+    },
+    {
+      "id": "implementation:43846036365:1:f6842c5ab958175eafd09dd2ef9cb3aee84970a3fb866ed31ded35fff9ed34b4:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43846036365/attempts/1",
+      "reason": "Authenticated strict issue-711 implementation-plan validation completed with exit 0. Completed task checkboxes do not independently prove historical test-first ordering."
+    },
+    {
+      "id": "review:affected-source-and-guidance",
+      "status": "passed",
+      "source": "/workspace/src/tests/product-composition.test.mjs",
+      "reason": "Read all 19 host-listed affected paths, relevant validators, worker projection, product contracts, ADR-0007 and completion policy. No blocking source defect or affected-instruction drift was established by this bounded inspection. Tests and qualified native execution are distinguished below."
+    },
+    {
+      "id": "review:product-verification-receipt",
+      "status": "unavailable",
+      "source": "/harness/product-verification.md",
+      "reason": "No supplied pdac-verification-evidence/v1alpha1 document and completed ProductShape evidence verify receipt link applicable behaviour/requirement citations to the actual test run. Inspect/impact reports and citations verify are different evidence. No explicit deferral of this review requirement was supplied."
+    },
+    {
+      "id": "review:scoped-citation-diagnostics",
+      "status": "unavailable",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43846036365/attempts/1",
+      "reason": "The host explicitly reports that scoped provider rows exceed the 8192-byte projection bound. No jsonEvidence rows are supplied. Current report citations match the inspected plan references, but do not classify all omitted command diagnostics or prove their current applicability."
+    }
+  ],
+  "missingEvidence": [
+    "Provider-format verification evidence connecting applicable SB/FR/QR citations, test IDs, actual execution and accepted source/model identity, with a retained ProductShape verification result.",
+    "Original scoped citation rows and relevant diagnostics for the changed issue-711 planning artifacts, or a supported bounded projection sufficient to classify their warnings."
+  ],
+  "unavailableChecks": [
+    "ProductShape evidence verify: no authenticated execution/result supplied for this delivery's applicable behavioural evidence; this read-only review exposes no shell command tool to produce that receipt. This is missing verification, not an executed failure."
+  ],
+  "pendingReview": [],
+  "nextAction": "SDLC verification maintainer: retain provider-verified test evidence for the accepted source/model and supply the scoped citation diagnostics through the supported host evidence route, then request a fresh review. Keep protected release, clean installation and native qualification as separate owner-controlled follow-ups; no source rewrite or reconstructed historical RED run is requested.",
+  "output": {
+    "summary": "Source integration and post-merge CI are confirmed for PR #713. No blocking source defect was established, but final review is blocked by incomplete product-derived verification evidence, not by a failed GitHub check.",
+    "identity": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 711,
+      "pr": 713,
+      "acceptedHead": "3e498c0002a661a8e28334876801a9411f02263e",
+      "mergedRevision": "93c2c8efde6feb2be021f1b5d86ff909e6baad4e",
+      "checkedRevision": "93c2c8efde6feb2be021f1b5d86ff909e6baad4e",
+      "taskDigest": "ed4961060454f76ea8cd47d2e46ea43ed3ecbeabd2e1f565c5ab2d2e07b1de32",
+      "policyFingerprint": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+      "filesFingerprint": "cfc637ecc45a195f2e183315129edb7dd8198ffed677cbc8302253c2d4460339",
+      "integrationRecordSha256": "96b373c8b3a09574731c69d6649da30beefeed8e3ad9bf02ae6f36d46a695ed8",
+      "provenance": "Host-supplied identities and authenticated observations; not independently re-proved with GitHub or git. Current review authorization has merge:false. The historical integration receipt retains its own merge:true owner dispatch."
+    },
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "accepted",
+        "kind": "historical process exception",
+        "owner": "juangcarmona",
+        "followUp": "https://github.com/juangcarmona/lighthouse/issues/711#issuecomment-6913185504",
+        "decision": "Preserve the missing authenticated historical behavioural RED as a one-off owner-accepted source-integration exception for this exact head. It remains unsatisfied historical evidence, not a passed test-first criterion. tasks.md:7 is an author statement; a missing-module failure and retrospective rerun cannot prove original behavioural ordering. No general exemption or further historical reconstruction is requested.",
+        "blocksCurrentReview": false
+      },
+      {
+        "id": "R2",
+        "classification": "fixed",
+        "kind": "command-evidence binding process gap",
+        "owner": "SDLC implementation/publisher maintainer",
+        "followUp": "https://github.com/juangcarmona/lighthouse/pull/713#issuecomment-6913410483",
+        "decision": "The supplied refreshed host receipts bind the current intent and accepted unchanged head/tree. The owner's verification-only correction is satisfied by run 43846036365; previous invalid reuse and blocked assessments remain history. Do not repeat the correction or modify source merely to regenerate history.",
+        "blocksCurrentReview": false
+      },
+      {
+        "id": "R3",
+        "classification": "accepted",
+        "kind": "unresolved current-review verification gap",
+        "owner": "SDLC verification maintainer",
+        "followUp": "Issue #711, this review record R3; /harness/product-verification.md:13-32",
+        "decision": "Record the missing provider-verified execution mapping and unavailable scoped citation diagnostics as current-review blockers. The four host commands passed; none is a supplied evidence verify receipt. The historical RED exception and exact-head approval do not waive this distinct verification requirement. Recover existing evidence when available; otherwise use the supported authorized verification route without rewriting historical outcomes.",
+        "blocksCurrentReview": true
+      },
+      {
+        "id": "R4",
+        "classification": "deferred",
+        "kind": "explicit later-stage qualification",
+        "owner": "Package release maintainer and native-runner operator, under owner authorization",
+        "followUp": "Issue #711 delivery order and owner decision 6913185504; src/packages/sdlc/README.md:68-70",
+        "decision": "Keep publication/provenance, clean installation and invocation of both tools with a complete synthetic candidate on the pinned native engine unverified. The work item and owner explicitly separate these follow-ups from source integration. They remain mandatory before adopter unblocking, but are not promoted to current-review GitHub checks.",
+        "blocksCurrentReview": false
+      },
+      {
+        "id": "R5",
+        "classification": "deferred",
+        "kind": "stale tracker status prose, not source defect",
+        "owner": "Delivery publisher maintainer",
+        "followUp": "https://github.com/juangcarmona/lighthouse/pull/713; this review record R5",
+        "decision": "The observed PR body still says awaiting integration despite authenticated merged state. Retain the actual merge receipt as authority and record this status-prose inconsistency for a separately authorized summary correction. Do not edit the PR or immutable evidence in this review.",
+        "blocksCurrentReview": false
+      }
+    ],
+    "acceptanceReview": {
+      "historicalTestFirst": "Owner-accepted exception F1, not satisfied historical ordering.",
+      "exactComposition": "product-composition.test.mjs:34-56 asserts deep equality of all 64 files, content hashes, unique 61 artifact IDs, measured 276*1024 UTF-8 bytes and exact 22-add/39-modify/0-remove sets. These are synthetic regression assertions executed by the authenticated verify suite, not measurements from an installed native worker.",
+      "refusalsAndPreservation": "product-composition.test.mjs:77-233 covers exhaustive latest replacement/omission, malformed/duplicate JSON, stale identities, duplicate paths/IDs, missing provenance, changed hashes, unsupported modes, scope, exact schema bytes, rejected fabricated validation and inclusive/exceeded bounds. Lines 235-294 cover fixed atomic output, prior-output/source preservation, symlinks, unsupported effects and inert injected text. No security probes were executed during this review.",
+      "runtimeAndCompatibility": "product-composition-runtime.mjs exposes only two named tools; opencode-execute.mjs:253-269 projects them only for product-change. Product composition reuses candidate and stage-envelope validators and requires providerValidation pending. engine-result-limits.mjs changes only Product Change encoded-envelope capacity to the existing 2-MiB artifact-member bound; 64 files/64-KiB-file/512-KiB-content limits remain unchanged. Tests at product-composition.test.mjs:111-123 and 296-309 preserve ordinary candidates, truthful blocked output and existing policy.",
+      "packagingAndSourceChecks": "The patch changeset is present. product-composition-package.test.mjs exercises packed dependency-free stdio inspect/compose; opencode-execute.test.mjs:24-81 exercises adapter projection and unsupported policy with a Docker shim. Both explicitly disclaim native qualification. Authenticated verify and strict plan checks passed on the accepted head, and post-merge repository CI passed on the actual merge.",
+      "scopeLimit": "Inspection established relevant regression adequacy at the composition/preparation boundary, not end-to-end approval/apply/continuation execution or complete isolation qualification. No broader product acceptance, deployment or release is inferred."
+    },
+    "productVerification": {
+      "provider": "@prodshape/core",
+      "providerVersion": "0.25.0",
+      "serializationVersion": "v1alpha2",
+      "sourceRevision": "93c2c8efde6feb2be021f1b5d86ff909e6baad4e",
+      "baselineDigest": "8b131e3d9eb587f390e864fdac9e5971af2ee96ab667a7b7177d4602e8b5b173",
+      "modelStatus": "Host-supplied accepted-model context; inspected artifacts retain their recorded draft status. No new product decision or model apply is asserted.",
+      "relevantCitations": [
+        "pdac:cite id=\"FR-PRODUCT-CHANGE-WORKFLOW\" digest=\"sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb\"",
+        "pdac:cite id=\"UC-PREPARE-PRODUCT-CHANGE\" digest=\"sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669\"",
+        "pdac:cite id=\"BR-PRODUCT-CHANGE-HANDOFF\" digest=\"sha256:78a85b31789efb8160bb10d404f53aff4dca3a11f326088960904631ceddda78\"",
+        "pdac:cite id=\"BR-AGENT-LAUNCH\" digest=\"sha256:1c13d980e9adc3c245bd133cc9fff99029525daf277e4ba943644510a4060146\"",
+        "pdac:cite id=\"QR-AGENT-ISOLATION\" digest=\"sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b\"",
+        "pdac:cite id=\"SB-SDLC-GATES\" digest=\"sha256:f15095c70a61bc2d6e91b87906ad13f04aa18dbb7191a0a0b79122c9a2bec5ee\"",
+        "pdac:cite id=\"SB-CHANGE-FLOW-VERIFIED\" digest=\"sha256:7d2535c7d18644afbc4cddfa5aba7af058549db02a8e59ab5c54f2c916c142da\""
+      ],
+      "lifecycleApplicability": "The supplied 144-artifact index contains no LC/domain-lifecycle artifact, and the proposal identifies no retained-composition domain lifecycle. No domain initial/terminal states or transition IDs are invented. Delivery stages and implementation checkpoint states are not substituted for a provider-defined domain lifecycle. Applicable invariants are current run/source/baseline/schema binding, exact content, no arbitrary effects, preservation on refusal and separate approval/apply authority.",
+      "traceability": [
+        {
+          "modelCoverage": "FR-PRODUCT-CHANGE-WORKFLOW and UC-PREPARE-PRODUCT-CHANGE under BR-PRODUCT-CHANGE-HANDOFF: prepare complete retained candidate without editing accepted intent or manufacturing provider success.",
+          "executableCoverage": "src/tests/product-composition.test.mjs:34-56, 77-123, 174-233; deterministic component tests prove exact content/manifest identities, explicit replacement/omission and pending validation.",
+          "execution": "Authenticated implementation receipt :2, run 43846036365 attempt 1, accepted head; npm run verify includes the inspected test files. No local rerun or native invocation was performed by this review.",
+          "acceptance": "Owner exact-head approval 5917890926 and historical F1 exception apply to source integration only. Provider external-evidence verification remains unavailable under R3."
+        },
+        {
+          "modelCoverage": "SB-SDLC-GATES illustrates UC-RUN-SDLC and BR-STAGE-GATES; SB-CHANGE-FLOW-VERIFIED illustrates UC-RUN-SDLC and BR-BOUNDED-WORKFLOW. Given a declared bounded route, a stage/change flow reports evidence, stops at failed prerequisites and distinguishes execution from human acceptance.",
+          "executableCoverage": "src/tests/product-composition.test.mjs:111-123, 174-199, 235-294 and src/tests/opencode-execute.test.mjs:24-81 test truthful blocked outcomes, refusal/preservation, unsupported policy and pending provider validation. Component/stdio plus adapter-shim levels fit this preparation boundary, not the entire delivery journey.",
+          "execution": "Included in the authenticated verify command at the accepted head. Actual merged revision has passed adopted post-merge ci.yml. No supplied provider-format test-ID/result mapping verifies these SB citations.",
+          "acceptance": "Exact-head independent owner review found no blocking source finding. Full journey/native acceptance is not established; this review remains blocked on R3."
+        },
+        {
+          "modelCoverage": "QR-AGENT-ISOLATION and BR-AGENT-LAUNCH: explicit run scope and no foreign inputs or effects.",
+          "executableCoverage": "src/tests/product-composition.test.mjs:125-199, 235-309 rejects foreign source/path/hash, stale run/task binding, symlink outputs and unsupported effects while preserving prior bytes. Runtime-policy assertions verify narrow projection. These do not prove the QR's entire concurrent-memory/stale-lease scenario; composition does not change lease or memory ownership.",
+          "execution": "Applicable composition regressions are covered by authenticated verify; a separate native isolation/installation receipt is not supplied or claimed.",
+          "acceptance": "Source-boundary review is recorded; native qualification remains R4 and provider-verified applicability remains R3."
+        }
+      ],
+      "citationLimit": "Current read-only provider reports match the inspected issue-711 plan's cited digests. The citations verify command uses its independently recorded integrationVersion 0.26.1; this is not the model serialization version or the planning core version. Its aggregate stale/warning counts are not evidence that every warning affects this change or that none does. Original scoped command rows remain unavailable.",
+      "externalEvidence": "Required verification format is pdac-verification-evidence/v1alpha1, independently of model v1alpha2. No completed evidence verify receipt or authorized deferral is supplied. Reports establish model context, tests establish executable coverage, host receipts establish suite execution, and owner review establishes only its recorded acceptance scope."
+    },
+    "guidanceReview": {
+      "paths": [
+        "AGENTS.md:5-18",
+        "src/packages/sdlc/README.md:64-70, 74-110, 182",
+        "src/packages/sdlc/skills/product-change/SKILL.md:10-22",
+        "src/packages/sdlc/skills/product-change/retained-composition.md:3-53",
+        "src/examples/opencode-engine/README.md:36-50",
+        "openspec/changes/issue-711-proposal/proposal.md:30-38",
+        "openspec/changes/issue-711-proposal/design.md:15-33",
+        "openspec/changes/issue-711-proposal/tasks.md:7-25",
+        "src/packages/sdlc/completion.md:20-61",
+        "docs/architecture/09-architecture-decisions/0007-host-execution-boundary.md:18-31"
+      ],
+      "finding": "No affected-instruction drift established. Discovery pointers resolve, configuration is explicitly distinguished from execution, installed adoption uses owning package/workflow/image paths, and unsupported capability remains an actionable technical blocker without broader planning permissions. Provider validation, approval, apply and continuation remain separate. tasks.md's historical checkbox is limited by the explicit owner disposition; PR summary status prose is stale as R5, not conflicting runtime guidance.",
+      "hostSpecificDifference": "The engine-example guide and adapter explicitly assign gh-aw completion signaling to the trusted host. This intentional custom-adapter boundary is not guidance drift; no safeoutputs installation or invocation is needed inside this review.",
+      "scope": "No UI or backend changes; visual/Taste and .NET-specific checks are not applicable. No generated workflow or image-policy file was changed in the host-listed delta. Packaging/local transport tests do not prove deployed adoption."
+    },
+    "laterStageChecks": [
+      {
+        "name": "Protected package publication and registry/tarball/source provenance",
+        "status": "unverified",
+        "intendedStage": "separate protected release",
+        "owner": "Package release maintainer",
+        "reference": "Issue #711 delivery order; owner decision 6913185504"
+      },
+      {
+        "name": "Clean-consumer package/workflow installation",
+        "status": "unverified",
+        "intendedStage": "post-release installation qualification",
+        "owner": "Adopter/workflow maintainer",
+        "reference": "src/packages/sdlc/README.md:70"
+      },
+      {
+        "name": "Pinned OpenCode 2.1.0 invokes inspect and compose and produces one complete synthetic candidate",
+        "status": "unverified; explicitly retained follow-up",
+        "intendedStage": "native qualification before adopter unblocking",
+        "owner": "Native-runner operator",
+        "reference": "src/examples/opencode-engine/README.md:50; owner decision 6913185504"
+      }
+    ],
+    "optionalChecks": "Skipped pr-state, epic-triage, client-control, ci-app and historical continuation jobs are not failed checks and are not additional forge gates. Cloudflare/dispatch/route success does not establish composition behaviour. Only repository from app 15368 is the supplied forge gate; it passed. priorPlanningReview:null is not a passed planning review and does not create an unattended-route requirement for this supervised delivery.",
+    "finalization": {
+      "policy": "src/packages/sdlc/completion.md:38 and host completion.finalization",
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "bug",
+          "pr-ready",
+          "urgency-now"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedTransition": "Blocked: keep issue open, add/remove no labels and preserve PR labels. Host owns release of agent-working reservation for every outcome; do not require cleanup before returning.",
+      "conditionalPassedTransition": "Only after a later validated passed review: trusted publisher closes issue and removes waiting-review, ready, pr-draft, pr-ready, integrate and review; preserves bug/urgency classifications and PR labels. This review does not request that transition."
+    },
+    "reviewMethods": {
+      "codeAndArchitecture": "lighthouse-code-architecture-fallback-v1, authorized by AGENTS.md:10. Manually read affected source, validators, fixtures, callers, runtime projection, ADR and evidence. No Ponytail execution is claimed. CodeGraph context query was unavailable; direct file inspection was used without investigating infrastructure.",
+      "humanWriting": "Packaged Plain English fallback, then Humanizer fallback, followed by comparison with source facts and the host receipts. Applied to effect.body and retrospective; no upstream helper execution is claimed.",
+      "agentGuidance": "Packaged Writing for Agents fallback: checked triggers, pointers, dependency order, exact tool/input/output contracts, owners, refusals and completion criteria in affected instructions.",
+      "executionLimit": "Read-only source review with no shell command tool. No commands, security probes, external-service calls, release, source edits or GitHub mutations were performed. The only intended write is this envelope; the host validates and records completion separately."
+    },
+    "retrospective": "## What went well\n- PR #713 preserved the approved head through verification-only correction. Four authenticated host commands passed, the protected integration receipt confirms merge `93c2c8e`, and post-merge `ci.yml` run 43851765774 passed.\n- The synthetic regressions check exact 64-file/276-KiB composition, 22 add/39 modify/0 remove sets, refusal/preservation and inclusive byte bounds. Guidance and test names explicitly separate source/shim evidence from native qualification. No blocking source defect or affected-instruction drift was established by inspection.\n\n## What went wrong\n- Historical behavioural RED ordering was not authenticated. Owner decision 6913185504 accepts that one-off process gap, not satisfaction of the criterion; the task checkbox cannot replace history.\n- A changed intent required fresh command receipts (owner PR comment 6913410483); the supported same-head refresh fixed that binding gap. These are observations within #711, not evidence of recurrence across work items.\n- Current review lacks a provider-verified test/citation evidence document. Citation verification passed but its scoped rows exceed the 8192-byte projection bound, leaving warning applicability incomplete (R3). The stale PR summary also still says awaiting integration (R5).\n\n## Start doing\nRetain behavioural test IDs, observed outcomes, exact source/model identities and provider verification together before final review. Carry source integration, release, installation and native receipts separately, as the existing owner decision requires. Owners: SDLC verification maintainer and release/runtime maintainers.\n\n## Stop doing\nDo not treat a task checkbox, missing-module failure, green aggregate command, projected tool configuration or packed stdio fixture as proof of historical RED ordering, current citation applicability or native acceptance. Do not reconstruct history or repeat completed same-PR corrections solely to make the record look complete.\n\n## Improvement candidates\n1. **Retain behavioural RED provenance.** Observed failure: F1 lacks authenticated behavioural ordering (owner decision 6913185504; tasks.md:7). Owner: implementation-evidence maintainer. Smallest proposed guard: retain the named failed assertion, test-byte identity and source revision separately from setup failures. Before correction, reproduce the evidence ambiguity with a synthetic missing-module result and a real assertion failure; after correction, prove the guard distinguishes both, preserves historical outcomes and cannot manufacture a RED receipt. This needs its own review/regression proof and must not erase this delivery's exception.\n2. **Make bounded provider evidence reviewable.** Observed failure: receipt :3 explicitly omits scoped rows above 8192 bytes; no evidence verify receipt is supplied (R3). Owner: verification/evidence-projection maintainer. Smallest useful guard: require a retained provider-verified test mapping and a supported bounded scoped diagnostic selection, reporting unavailable when incomplete. Reproduce with synthetic provider output exceeding the existing projection bound and a missing verification document; then prove current, stale, incomplete and failed-test cases remain distinct without increasing permissions or silently truncating proof. Proposed transport/policy changes require their own review and regressions.\n3. **Refresh status prose from confirmed outcomes.** Observed failure: current PR #713 body says awaiting integration while the retained receipt confirms merge (R5). Owner: delivery publisher maintainer. Smallest proposed guard: keep the latest confirmed outcome prominent without rewriting immutable history. Reproduce a verification-only summary followed by integration, then prove only current status prose changes while prior reports and uncertain outcomes remain intact. This is a process improvement proposal, not an implemented guard.\n\nPackage publication, clean installation and actual pinned-engine invocation are unknown here and remain the explicitly authorized later follow-ups (R4), not failed source checks. No timings, attention cost, downstream acceptance or cross-issue recurrence are inferred. This stage records learning only; it opens no issues, changes no policy or permissions, and starts no further stage."
+  }
+}

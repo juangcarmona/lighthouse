@@ -1,0 +1,21 @@
+## What went well
+- PR #713 preserved the approved head through verification-only correction. Four authenticated host commands passed, the protected integration receipt confirms merge `93c2c8e`, and post-merge `ci.yml` run 43851765774 passed.
+- The synthetic regressions check exact 64-file/276-KiB composition, 22 add/39 modify/0 remove sets, refusal/preservation and inclusive byte bounds. Guidance and test names explicitly separate source/shim evidence from native qualification. No blocking source defect or affected-instruction drift was established by inspection.
+
+## What went wrong
+- Historical behavioural RED ordering was not authenticated. Owner decision 6913185504 accepts that one-off process gap, not satisfaction of the criterion; the task checkbox cannot replace history.
+- A changed intent required fresh command receipts (owner PR comment 6913410483); the supported same-head refresh fixed that binding gap. These are observations within #711, not evidence of recurrence across work items.
+- Current review lacks a provider-verified test/citation evidence document. Citation verification passed but its scoped rows exceed the 8192-byte projection bound, leaving warning applicability incomplete (R3). The stale PR summary also still says awaiting integration (R5).
+
+## Start doing
+Retain behavioural test IDs, observed outcomes, exact source/model identities and provider verification together before final review. Carry source integration, release, installation and native receipts separately, as the existing owner decision requires. Owners: SDLC verification maintainer and release/runtime maintainers.
+
+## Stop doing
+Do not treat a task checkbox, missing-module failure, green aggregate command, projected tool configuration or packed stdio fixture as proof of historical RED ordering, current citation applicability or native acceptance. Do not reconstruct history or repeat completed same-PR corrections solely to make the record look complete.
+
+## Improvement candidates
+1. **Retain behavioural RED provenance.** Observed failure: F1 lacks authenticated behavioural ordering (owner decision 6913185504; tasks.md:7). Owner: implementation-evidence maintainer. Smallest proposed guard: retain the named failed assertion, test-byte identity and source revision separately from setup failures. Before correction, reproduce the evidence ambiguity with a synthetic missing-module result and a real assertion failure; after correction, prove the guard distinguishes both, preserves historical outcomes and cannot manufacture a RED receipt. This needs its own review/regression proof and must not erase this delivery's exception.
+2. **Make bounded provider evidence reviewable.** Observed failure: receipt :3 explicitly omits scoped rows above 8192 bytes; no evidence verify receipt is supplied (R3). Owner: verification/evidence-projection maintainer. Smallest useful guard: require a retained provider-verified test mapping and a supported bounded scoped diagnostic selection, reporting unavailable when incomplete. Reproduce with synthetic provider output exceeding the existing projection bound and a missing verification document; then prove current, stale, incomplete and failed-test cases remain distinct without increasing permissions or silently truncating proof. Proposed transport/policy changes require their own review and regressions.
+3. **Refresh status prose from confirmed outcomes.** Observed failure: current PR #713 body says awaiting integration while the retained receipt confirms merge (R5). Owner: delivery publisher maintainer. Smallest proposed guard: keep the latest confirmed outcome prominent without rewriting immutable history. Reproduce a verification-only summary followed by integration, then prove only current status prose changes while prior reports and uncertain outcomes remain intact. This is a process improvement proposal, not an implemented guard.
+
+Package publication, clean installation and actual pinned-engine invocation are unknown here and remain the explicitly authorized later follow-ups (R4), not failed source checks. No timings, attention cost, downstream acceptance or cross-issue recurrence are inferred. This stage records learning only; it opens no issues, changes no policy or permissions, and starts no further stage.
