@@ -1,4 +1,68 @@
 {
+  "722": {
+    "scope": "Implement only #722: correct retained Product Change evidence preparation and repeated working context using existing bounded input/provenance mechanisms. Preserve complete original authority/audit data, exact retained bytes/hashes, current decisions, candidate limits, stale/ambiguous-input refusals, trusted ProductShape validation/approval/apply and normal publication gates. Do not change repository policy or downstream applications. Only the explicitly admitted verification inputs may change; preserve all existing assertions. Keep the OpenSpec plan and patch changeset with code; use an H1 after changeset frontmatter and the configured verification time budget.",
+    "paths": [
+      "src/packages/sdlc/",
+      "src/tests/planning-product-evidence.test.mjs",
+      "src/tests/product-composition.test.mjs",
+      "src/tests/issue-actions.test.mjs",
+      "src/tests/opencode-execute.test.mjs",
+      "src/tests/product-context.test.mjs",
+      "src/tests/fixtures/product-context.mjs",
+      "openspec/changes/issue-722-proposal/",
+      ".changeset/"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "src/tests/planning-product-evidence.test.mjs": "Exercise actual preparation/evidence selection for admitted large retained contexts, preserving small-input behavior, provider ownership, bounds and existing assertions.",
+        "src/tests/product-composition.test.mjs": "Prove current-document projection preserves exact retained file bytes, hashes, source/schema/baseline bindings and all existing safe composition/refusal cases.",
+        "src/tests/issue-actions.test.mjs": "Cover actual Product Change preparation wiring, original authority binding and current working projection without changing existing routing/freshness/publication assertions.",
+        "src/tests/opencode-execute.test.mjs": "Cover bounded current-context and on-demand read-only audit projection through the existing engine adapter without weakening existing isolation, transport or cleanup assertions.",
+        "src/tests/product-context.test.mjs": "Add focused synthetic regression coverage for exact current-document projection, duplicate history, retained decisions, explicit supersession and stale/malformed/ambiguous refusal.",
+        "src/tests/fixtures/product-context.mjs": "Add only synthetic large retained-context fixtures for #722; no private identities, user files, downstream provenance or credentials."
+      }
+    }
+  },
   "711": {
     "scope": "Recover and complete only #711 from the immutable runner-authored seed. Preserve the accepted product contract, exact retained-input bindings, candidate bounds, isolation, existing checks and all prior assertions. Only the four named protected verification inputs below are admitted; stop before changing any other protected input. Keep the OpenSpec plan and bounded-composition changeset with the code, run all declared checks, and retain source checks, independent review, integration, release, installation and actual native-engine qualification as separate gates. Do not alter repository policy or downstream applications.",
     "paths": ["*"],
