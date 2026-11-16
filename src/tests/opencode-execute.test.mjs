@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
 import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
+import { compositionFixture } from './fixtures/product-composition.mjs';
 
 async function fixtureHarness(root) {
   const harness = join(root, 'harness');
@@ -19,6 +20,65 @@ async function fixtureHarness(root) {
   execFileSync('git', ['-C', harness, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Fixture harness']);
   return join(harness, 'src/opencode-execute.mjs');
 }
+
+test('Product Change adapter projects composition and accepts a complete 276-KiB envelope (Docker shim, not native qualification)', { timeout: 60000 }, async t => {
+  const { mkdir, chmod } = await import('node:fs/promises');
+  const { spawnSync } = await import('node:child_process');
+  for (const supported of [true, false]) await t.test(supported ? 'supported projection' : 'unsupported policy is actionable', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'lighthouse-composition-adapter-'));
+    try {
+      const { context, envelope, files } = compositionFixture();
+      const work = join(root, 'work'), bin = join(root, 'bin'), runDir = join(root, 'lighthouse-1-1');
+      for (const path of [work, bin, runDir, join(runDir, 'product-evidence')]) await mkdir(path, { recursive: true });
+      execFileSync('git', ['init', '-q', work]);
+      await writeFile(join(work, 'README.md'), 'Synthetic source, never edited.\n');
+      execFileSync('git', ['-C', work, 'add', '.']);
+      await writeFile(join(runDir, 'product-evidence/index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: '0.25.0', baselineDigest: context.request.baselineDigest, artifacts: [] }));
+      await writeFile(join(runDir, 'request.json'), JSON.stringify(context.request));
+      await writeFile(join(runDir, 'context.json'), JSON.stringify(context));
+      await writeFile(join(root, 'prompt'), 'Compose only synthetic admitted inputs.');
+      await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture-auth', model: 'fixture-unchanged', lock: join(root, 'lock') }));
+      const adapter = await fixtureHarness(root);
+      const profile = supported ? JSON.parse(await readFile(new URL('../examples/opencode-engine/opencode.json', import.meta.url), 'utf8')) : {};
+      const blocked = structuredClone(envelope);
+      blocked.result.status = 'blocked';
+      blocked.result.output.productChange = { schemaVersion: 1, outcome: 'blocked', entry: 'idea', affectedAreas: [], decisions: [], blocker: 'Composition is unsupported by the pinned policy.', recovery: 'Workflow maintainer: install and qualify the compatible planning image.' };
+      await writeFile(join(bin, 'docker'), `#!${process.execPath}
+const fs=require('node:fs'),cp=require('node:child_process'),args=process.argv.slice(2);
+require(${JSON.stringify(resourceShim)})(args);
+if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['fixture-engine']}));process.exit(0);}
+if(args.includes('chown')||args.includes('cleanup-session'))process.exit(0);
+if(args.includes('--entrypoint')&&!args.some(a=>a.startsWith('type=bind,'))){const command=args[args.indexOf('--entrypoint')+1];console.log(command==='cat'?${JSON.stringify(JSON.stringify(profile))}:command==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);}
+const mount=dst=>args.map(a=>a.match(/^type=bind,src=([^,]+),dst=([^,]+)/)).find(m=>m&&m[2]===dst)?.[1];
+const output=mount('/output');
+if(output){
+ const input=mount('/input/context.json'),context=JSON.parse(fs.readFileSync(input));
+ if(${supported}){
+  const config=JSON.parse(fs.readFileSync(mount('/etc/opencode/opencode.json')));
+  if(!config.mcp.servers.productcomposition||context.productChange.composition.status!=='configured')process.exit(3);
+  const script='import {compositionService} from '+JSON.stringify(${JSON.stringify(join(root, 'harness/src/product-composition-server.mjs'))})+'; const service=compositionService('+JSON.stringify(input)+','+JSON.stringify(output)+'); const catalog=await service("inspect",{}); await service("compose",{binding:catalog.binding,plan:catalog.paths.map(p=>({path:p.path,selected:p.objects[0].ref,omitted:[]})),envelope:'+${JSON.stringify(JSON.stringify(envelope))}+'});';
+  const run=cp.spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8'});if(run.status!==0){console.error(run.stderr);process.exit(run.status??1);}
+ }else{
+  if(context.productChange.composition.status!=='unavailable')process.exit(4);
+  fs.writeFileSync(output+'/envelope.json',${JSON.stringify(JSON.stringify(blocked))});
+ }
+}
+`);
+      await chmod(join(bin, 'docker'), 0o755);
+      const run = spawnSync(process.execPath, [adapter], { encoding: 'utf8', timeout: 45000, env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '1', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion') } });
+      assert.equal(run.status, 0, run.stdout + run.stderr);
+      const result = JSON.parse(await readFile(join(runDir, 'envelope.json'), 'utf8'));
+      assert.equal(result.result.status, supported ? 'passed' : 'blocked');
+      if (supported) assert.deepEqual(result.result.output.productChange.files, files);
+      const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json'), 'utf8'));
+      assert.equal(runtime.productComposition.status, supported ? 'configured' : 'unavailable');
+      assert.equal(runtime.model, 'fixture-unchanged');
+      assert.equal(runtime.budget.timeoutMs, 600000);
+      assert.equal(runtime.cleanup.status, 'clean');
+      assert.equal(await readFile(join(work, 'README.md'), 'utf8'), 'Synthetic source, never edited.\n');
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+});
 
 async function workspaceUsage(root) {
   const paths = (await readdir(root)).filter(name => name.startsWith('lighthouse-engine-'));
