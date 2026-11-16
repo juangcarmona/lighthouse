@@ -103,6 +103,6 @@ export async function runCompositionServer(input = process.stdin, output = proce
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  try { await runCompositionServer(); }
+  try { await runCompositionServer(process.stdin, process.stdout, compositionService('/workspace/.lighthouse-product-audit.json')); }
   catch { process.stderr.write('Product composition unavailable; preserve prior output and report a technical blocker.\n'); process.exitCode = 1; }
 }

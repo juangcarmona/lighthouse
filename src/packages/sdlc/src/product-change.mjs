@@ -255,9 +255,35 @@ export async function loadProductCore({ entry = require.resolve('@prodshape/core
 }
 
 export function productEvidenceScopeText(value) {
-  if (typeof value === 'string') return value;
-  if (value && typeof value === 'object') return Object.values(value).map(productEvidenceScopeText).join('\n');
-  return '';
+  const references = new Set();
+  let inputBytes = 0, referenceBytes = 0, entries = 0;
+  const issue = record(value?.issue) ? value.issue : null;
+  if (issue) {
+    if (issue.ownerAnswers !== undefined && (!Array.isArray(issue.ownerAnswers) || issue.ownerAnswers.length > 100)) throw Error('ProductShape evidence answer inventory exceeds bounds');
+    let authenticatedBytes = 0;
+    for (const body of [issue.body, ...(issue.ownerAnswers ?? []).map(answer => answer?.body)]) {
+      if (body === undefined || body === null) continue;
+      if (typeof body !== 'string' || (authenticatedBytes += Buffer.byteLength(body)) > 2 * 1024 * 1024) throw Error('ProductShape authenticated input text exceeds bounds');
+    }
+  }
+  // Host metadata and repeated continuation copies are not additional issue text.
+  // The complete projection input still fits the existing audit transport bound.
+  const inputLimit = (issue ? 4 : 2) * 1024 * 1024;
+  function visit(item, depth) {
+    if (depth > 64 || ++entries > 100000) throw Error('ProductShape evidence input nesting or inventory exceeds bounds');
+    if (typeof item === 'string') {
+      if ((inputBytes += Buffer.byteLength(item)) > inputLimit) throw Error('ProductShape evidence input text exceeds bounds');
+      for (const [id] of item.matchAll(/\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g)) {
+        if (references.has(id)) continue;
+        if ((referenceBytes += Buffer.byteLength(id) + (references.size ? 1 : 0)) > 256 * 1024) throw Error('ProductShape evidence reference selection exceeds bounds');
+        references.add(id);
+      }
+    } else if (item && typeof item === 'object') {
+      for (const child of Object.values(item)) visit(child, depth + 1);
+    }
+  }
+  visit(value, 0);
+  return [...references].join('\n');
 }
 
 export async function prepareProductEvidence(root, destination, core, { baselineDigest, scopeText } = {}) {
