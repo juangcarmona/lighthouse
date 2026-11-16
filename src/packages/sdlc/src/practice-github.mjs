@@ -37,7 +37,7 @@ async function mergeEnforcement(repository, branch, check, appId, request) {
       const policy = await request(endpoint); sources.push(`https://api.github.com/${endpoint}`);
       if (policy.enforcement === 'active' && Array.isArray(policy.bypass_actors) && policy.bypass_actors.length === 0) required = true;
     }
-  } catch { /* Missing authority remains unavailable unless another verified rule enforces this check. */ }
+  } catch { if (!required) known = false; }
   return { status: known ? 'verified' : 'unavailable', merge: required, sources };
 }
 

@@ -1,5 +1,5 @@
 import { practiceCatalog, practiceStates } from './practice-catalog.mjs';
-import { canonical, practiceDigest, record, requirePracticeObservation, sourceIdentity, validatePracticeContext } from './practice-observation.mjs';
+import { canonical, practiceDigest, record, requirePracticeObservation, sourceIdentity, sourceUrl, validatePracticeContext } from './practice-observation.mjs';
 
 const count = n => Number.isSafeInteger(n) && n >= 0;
 const number = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
@@ -91,7 +91,7 @@ export async function evaluatePractices({ context, observations = [], resolveSou
         else result = measuredQuality(practice, o);
         if (practice.level !== null && result.state !== 'not-applicable') {
           if (o.mode !== 'blocking') enforcementGaps.push('observation is report-only');
-          if (proof.enforcement?.status !== 'verified' || proof.enforcement.ci !== true || proof.enforcement.merge !== true || !Array.isArray(proof.enforcement.sources) || !proof.enforcement.sources.length) enforcementGaps.push('configured CI and merge enforcement is missing or unavailable');
+          if (proof.enforcement?.status !== 'verified' || proof.enforcement.ci !== true || proof.enforcement.merge !== true || !Array.isArray(proof.enforcement.sources) || !proof.enforcement.sources.length || proof.enforcement.sources.some(url => !sourceUrl(url))) enforcementGaps.push('configured CI and merge enforcement is missing or unavailable');
         }
       }
     }
