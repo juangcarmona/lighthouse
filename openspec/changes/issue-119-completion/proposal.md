@@ -1,6 +1,6 @@
 # Complete issue-control qualification
 
-<!-- pdac-scope: none -->
+<!-- pdac-scope: cited -->
 
 ## Why
 
@@ -26,3 +26,5 @@ None.
 ## Impact
 
 The SDLC fact collector, its tests and SDK guide change. The consumer displays these observations and records the actual installed SDK version in its existing protected journal. Existing review, release and source permission boundaries apply. This completes existing product behavior; it introduces no new product decision or execution authority.
+
+<!-- pdac:cite id="FR-AUTHORIZED-WORKFLOW-ENTRY" digest="sha256:b859ab077d989e855c187e1823492a04c2924fb27f7d4f59cf18822cc912ee09" -->

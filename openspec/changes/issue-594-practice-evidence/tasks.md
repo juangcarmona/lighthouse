@@ -1,3 +1,5 @@
+<!-- pdac-scope: cited -->
+
 # Delivery tasks
 
 - [x] Record owner approval; validate, preview and apply with ProductShape.
@@ -9,3 +11,5 @@
 - [x] Merge, publish and qualify the registry package in an existing adopter.
 
 See the [delivery receipts](../../../docs/delivery/evidence/issue-594/README.md) for source integration, protected publication, exact native evidence and registry-consumer qualification. The parent issue records the separately verified adopter merge and postmerge execution.
+
+<!-- pdac:cite id="FR-PRACTICE-EVIDENCE" digest="sha256:6b99125c969f9ae2afe319b4a903dbc9bd1a28a036ace06c3833bb7b0e2ec2cc" -->
