@@ -1,4 +1,32 @@
 {
+  "711": {
+    "scope": "Recover and complete only #711 from the immutable runner-authored seed. Preserve the accepted product contract, exact retained-input bindings, candidate bounds, isolation, existing checks and all prior assertions. Only the four named protected verification inputs below are admitted; stop before changing any other protected input. Keep the OpenSpec plan and bounded-composition changeset with the code, run all declared checks, and retain source checks, independent review, integration, release, installation and actual native-engine qualification as separate gates. Do not alter repository policy or downstream applications.",
+    "paths": ["*"],
+    "reviewRequired": false,
+    "seed": {
+      "base": "8c66a0ae0877cf4de7698d3e89e394d4ff453650",
+      "head": "c482b1831596e0a8eb9420987465a407ad3a9db4"
+    },
+    "checks": [
+      ["npm", "ci", "--ignore-scripts"],
+      ["env", "GITHUB_ACTIONS=true", "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium", "npm", "run", "verify"],
+      ["npx", "--no-install", "prodshape", "citations", "verify", "--provider", "openspec", "--format", "json"]
+    ],
+    "verification": {
+      "paths": [
+        "package.json", "package-lock.json", "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json", "src/packages/ui/package.json",
+        ".github/workflows/ci.yml", ".lighthouse/implement.json",
+        ".lighthouse/unattended.json", ".markdownlint-cli2.jsonc", "src/tests/", "scripts/"
+      ],
+      "corrections": {
+        "src/tests/fixtures/product-composition.mjs": "Add synthetic hash-bound retained Product Change fixtures for #711, preserving real user data and credentials outside the repository.",
+        "src/tests/opencode-execute.test.mjs": "Add #711 adapter projection and complete-envelope transport regressions; preserve every existing test and assertion, resource limits, isolation and truthful unsupported-capability outcomes. Docker shims do not prove native-engine qualification.",
+        "src/tests/product-composition-package.test.mjs": "Add #711 packed stdio composition coverage without ambient dependencies; preserve package contracts and distinguish package execution from actual pinned-engine qualification.",
+        "src/tests/product-composition.test.mjs": "Add #711 exact 64-file composition, explicit replacement/omission, request/schema/hash binding, bounds, refusal, inert input and atomic-output regressions without weakening existing verification."
+      }
+    }
+  },
   "defaults": {
     "scope": "Implement the issue and its acceptance criteria. Keep proposal, design, specs and tasks with the code.",
     "paths": [
