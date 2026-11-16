@@ -1,0 +1,25 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "repositoryId": 1427668548,
+  "sourcePullRequest": 724,
+  "versionPullRequest": 725,
+  "releaseCommit": "0283ff1a5f01650dda4a44e9c7d1732c3af52c0a",
+  "publicationRun": 43966091297,
+  "protectedDeployment": 7837625446,
+  "postmergeVerificationRun": 43966091221,
+  "registry": "https://registry.npmjs.org",
+  "packages": {
+    "@juangcarmona/lighthouse-sdlc": {
+      "version": "0.25.1",
+      "gitHead": "0283ff1a5f01650dda4a44e9c7d1732c3af52c0a",
+      "integrity": "sha512-juW3pP64OIlwtAS2XB7fGBY2cIDFU+X1L/PCn1rMTUnCjBmLBJis2L+NY/ztYHwgFFnyo2EwfKCg0TxXc+XsjA==",
+      "archiveInstallation": "verified separately after initial registry 404 responses"
+    },
+    "@juangcarmona/lighthouse": {
+      "version": "0.13.18",
+      "gitHead": "0283ff1a5f01650dda4a44e9c7d1732c3af52c0a",
+      "integrity": "sha512-gfWen4ApBiMLYmIXEm8k3PMtELlpGwdAy9+8InJzwheIt5mvuHqGtOXAMyPXZJJHHgFePe0NcyPvU7Rz/odqgg==",
+      "archiveInstallation": "verified separately after initial registry 404 responses"
+    }
+  }
+}
