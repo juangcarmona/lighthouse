@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.24.4
+
+### Patch Changes
+
+- b4e9c11: # Preserve issue reference boundaries
+
+  Preserve complete artifact IDs at newline and tab boundaries when selecting ProductShape evidence from structured issue and parent context.
+
 ## 0.24.3
 
 ### Patch Changes
