@@ -55,7 +55,7 @@ function numericMeasurements(value, path = '', result = {}) {
 
 export function aggregatePracticeHistory({ assessments, period, expectations = [] }) {
   if (!Array.isArray(assessments) || assessments.length > 10000 || !record(period) || !validTime(period.start) || !validTime(period.end) || Date.parse(period.start) >= Date.parse(period.end) || !Array.isArray(expectations) || expectations.length > 10000) throw Error('History needs a bounded receipt list and a valid half-open period');
-  const groups = new Map();
+  const groups = new Map(), sourceRevisions = new Map();
   const get = value => {
     const key = groupKey(value);
     if (!groups.has(key)) groups.set(key, { context: structuredClone(sharedContext(value.context)), catalogVersion: value.catalogVersion, levelVersion: value.levelVersion, expectedSamples: null, receipts: new Map(), receivedSources: new Map() });
@@ -69,6 +69,11 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
   }
   for (const report of assessments) {
     validateAssessment(report);
+    for (const p of report.practices.filter(p => p.observation)) {
+      const o = p.observation, source = canonical([o.repository.id, o.source.workflow, o.source.runId]), revision = canonical([o.commit, o.ref]);
+      if (sourceRevisions.has(source) && sourceRevisions.get(source) !== revision) throw Error('Contradictory source run revision');
+      sourceRevisions.set(source, revision);
+    }
     if (Date.parse(report.assessedAt) < Date.parse(period.start) || Date.parse(report.assessedAt) >= Date.parse(period.end)) throw Error('Historical receipt is outside the requested period');
     const group = get(report), sources = sourceEntries(report);
     for (const p of report.practices.filter(p => p.observation)) {

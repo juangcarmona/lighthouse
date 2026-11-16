@@ -1,5 +1,16 @@
 # @juangcarmona/lighthouse
 
+## 0.13.17
+
+### Patch Changes
+
+- e6d22ee: # Engineering practice evidence
+
+  Add the shared engineering practice catalog, exact source observations, deterministic cumulative L0–L3 evaluation, read-only GitHub test evidence collection and compatible historical summaries. Report incomplete evidence and missing CI/merge enforcement explicitly. Keep mutation complementary and nonblocking.
+
+- Updated dependencies [e6d22ee]
+  - @juangcarmona/lighthouse-sdlc@0.25.0
+
 ## 0.13.16
 
 ### Patch Changes
