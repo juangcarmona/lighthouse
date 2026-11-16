@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "state": "blocked",
+  "sha": null,
+  "acceptedHead": "3e498c0002a661a8e28334876801a9411f02263e",
+  "authorization": {
+    "issue": 711,
+    "pr": 713,
+    "head": "3e498c0002a661a8e28334876801a9411f02263e",
+    "merge": true,
+    "approval": {
+      "id": 5917890926,
+      "owner": "juangcarmona",
+      "head": "3e498c0002a661a8e28334876801a9411f02263e"
+    }
+  },
+  "binding": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 711,
+    "pr": 713,
+    "head": "3e498c0002a661a8e28334876801a9411f02263e",
+    "base": "e067d130d81155da418c6bb5f56c94db5e88a4cd",
+    "branch": "main",
+    "intent": "99c9776aa56acfc0e1e0deec4d82a15293ef655faa9ebe8f50cc7b46746fd30f",
+    "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+    "reviews": "2ef6a1db5710df90fb98bc86cd6a2dbb61494356ad4588b8d6f5ee59a588af91",
+    "prIntent": "1631248f71cbfe2178cd4711a4df0b88810fb1d2c7f56ed36d56a1e44797b9c9",
+    "files": "cfc637ecc45a195f2e183315129edb7dd8198ffed677cbc8302253c2d4460339"
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "runId": "8e8ecd649f379bd7a2c216712a17ae8e6e0b3a8818b9521e87c7fa2b9ac6a11e",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "blocked",
+  "evidence": [
+    {
+      "id": "github-check:133211713144",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43841705547/job/133211713144",
+      "reason": "The host authenticated the required repository check from app 15368 on accepted head 3e498c0002a661a8e28334876801a9411f02263e, with an eligible push origin and successful conclusion. This is the only effective required forge check."
+    },
+    {
+      "id": "implementation:43836414946:1:d774c36348808cb3d1ca80e0a63fb48c664a8ff427c1035289cf3b1028357061:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43836414946/attempts/1",
+      "reason": "Host-verified npm ci --ignore-scripts exited 0 for the published candidate tree. The output reports three low-severity dependency vulnerabilities; this is not a failed installation or a newly configured merge gate."
+    },
+    {
+      "id": "implementation:43836414946:1:d774c36348808cb3d1ca80e0a63fb48c664a8ff427c1035289cf3b1028357061:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43836414946/attempts/1",
+      "reason": "Host-verified env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify exited 0. Its command includes Markdown lint, the source test suite, documentation links and public-site verification. The supplied excerpt is truncated; successful execution does not prove test-first history or native-engine qualification."
+    },
+    {
+      "id": "implementation:43836414946:1:d774c36348808cb3d1ca80e0a63fb48c664a8ff427c1035289cf3b1028357061:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43836414946/attempts/1",
+      "reason": "Host-verified OpenSpec citation verification exited 0, with zero errors, zero tampered citations and zero unresolved citations. The aggregate includes stale citations and warnings; complete scoped rows exceed the projection bound and are not supplied. Current product reports and source citations were inspected separately for the five issue-referenced obligations."
+    },
+    {
+      "id": "implementation:43836414946:1:d774c36348808cb3d1ca80e0a63fb48c664a8ff427c1035289cf3b1028357061:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/43836414946/attempts/1",
+      "reason": "Host-verified strict implementation-plan validation passed for issue #711 on the accepted candidate. Plan validation does not authenticate every historical task-completion claim."
+    },
+    {
+      "id": "owner-review:5917890926",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/pull/713#pullrequestreview-5917890926",
+      "reason": "The host supplies the owner's independent approval of the full accepted head, reviewing bindings, selection, atomic output, narrow permissions, transport and regressions. The owner explicitly separates package publication, clean installation and actual pinned-engine invocation. No explicit disposition of absent test-first execution evidence is recorded."
+    },
+    {
+      "id": "integration:source-and-guidance-assessment",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/src/product-composition.mjs",
+      "reason": "Direct inspection of the 19 affected paths, existing candidate/envelope validators, package surface, issue-specific policy and affected guidance found no blocking source defect. Source assertions were compared with the work-item criteria and accepted product obligations, not treated as independent acceptance."
+    },
+    {
+      "id": "integration:tracker-synchronization",
+      "status": "passed",
+      "source": "/input/context.json#completion.finalization",
+      "reason": "The host plan preserves issue labels bug/pr-ready/urgency-now, preserves the separate empty PR label set, makes no stage-finalization label changes and does not close the issue. The host owns reservation acquisition and cleanup; these future effects need not have occurred before assessment."
+    },
+    {
+      "id": "acceptance:test-first-retained-composition",
+      "status": "unavailable",
+      "source": "https://github.com/juangcarmona/lighthouse/issues/711",
+      "reason": "The first acceptance criterion requires a test-first demonstration of the missing structured composition route. tasks.md marks it complete and product-composition.test.mjs contains composition regressions, but the supplied authenticated receipts contain only successful candidate checks, not a pre-fix reproduction or its ordering. No matching prior planning-review receipt is supplied. This is missing historical verification, not an observed failed candidate check."
+    }
+  ],
+  "missingEvidence": [
+    "Issue #711 acceptance criterion 1: retained evidence establishing that the structured-input composition regression demonstrated the missing route before the production correction, including the baseline/test identity and actual result. A checked task entry and current green suite do not establish that history."
+  ],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Implementation maintainer: provide the retained pre-fix structured-composition reproduction and its test/baseline identity through the authenticated evidence path, then request reassessment of PR #713. If that history is unavailable, the repository owner must explicitly resolve the unmet test-first acceptance requirement in a fresh recorded decision; the existing approval is not inferred to waive it.",
+  "output": {
+    "assessment": "Source integration is blocked by one unresolved acceptance-evidence gap. Required forge CI, declared candidate command receipts and exact-head owner approval passed. No blocking source defect was identified in the inspected material. No merge was requested or performed by this worker.",
+    "binding": {
+      "repository": "juangcarmona/lighthouse",
+      "issue": 711,
+      "pr": 713,
+      "head": "3e498c0002a661a8e28334876801a9411f02263e",
+      "base": "e067d130d81155da418c6bb5f56c94db5e88a4cd",
+      "branch": "main",
+      "intent": "99c9776aa56acfc0e1e0deec4d82a15293ef655faa9ebe8f50cc7b46746fd30f",
+      "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+      "reviews": "2ef6a1db5710df90fb98bc86cd6a2dbb61494356ad4588b8d6f5ee59a588af91",
+      "prIntent": "1631248f71cbfe2178cd4711a4df0b88810fb1d2c7f56ed36d56a1e44797b9c9",
+      "files": "cfc637ecc45a195f2e183315129edb7dd8198ffed677cbc8302253c2d4460339"
+    },
+    "provenance": {
+      "basis": "Host-supplied authenticated observations; no independent GitHub API or git identity reauthentication was attempted inside the worker.",
+      "workflowRunId": "43842544068",
+      "attempt": "1",
+      "harnessRevision": "157c078635ceb17e36a4ff792c072cf02222f7f6",
+      "harnessPackageVersion": "0.24.0",
+      "candidatePackageVersion": "0.24.4",
+      "distribution": "source",
+      "candidateTree": "500f7436c723651deeec7bc4f1bb666abb5a1c2d",
+      "implementationInputsUnchanged": true,
+      "qualification": "The harness identity, candidate package metadata and future released/installed artifact are different facts. None establishes deployment of this correction."
+    },
+    "authorization": {
+      "source": "request.authorization",
+      "issue": 711,
+      "pr": 713,
+      "head": "3e498c0002a661a8e28334876801a9411f02263e",
+      "merge": true,
+      "approvalId": 5917890926,
+      "owner": "juangcarmona",
+      "decision": "The host-supplied grant permits the trusted publisher to request normal integration only after a passed assessment and fresh authority, checks, review and reservation validation. This blocked assessment does not activate that conditional merge action."
+    },
+    "mergePlan": {
+      "pullRequestState": "open, non-draft, not merged",
+      "sourceBranch": "lighthouse/implement-711-af1cbf09a99d",
+      "targetBranch": "main",
+      "mergeable": true,
+      "method": "squash through the existing completion adapter, only after blockers are resolved",
+      "requiredChecks": [
+        "repository from app 15368 on the accepted head"
+      ],
+      "branchPolicy": "No lighthouse.json is present in the supplied snapshot; the delivery guide retains legacy publication names for consumers without that manifest. The observed existing branch is not renamed. Effective GitHub policy permits squash and enforces strict required checks and PR rules.",
+      "publicationOwner": "Trusted publisher",
+      "currentAction": "Retain the blocked assessment; do not merge, create another PR, publish a package, close the issue or start another stage.",
+      "mergeReceipt": null,
+      "postMergeReceipt": null
+    },
+    "dependencyOrder": {
+      "currentStage": "Inspect the exact candidate, independent owner review and command/forge evidence before source integration. No stacked-change dependency is declared.",
+      "laterOrder": [
+        "Retain the actual integration outcome and run configured ci.yml verification on the actual merged revision.",
+        "Enter review separately under its own authorization; it is not executed by this assessment.",
+        "Use the normal protected package publication route with its separate release authorization and registry/tarball/source provenance.",
+        "Install through the owning package/workflow installer and retain a clean-consumer receipt.",
+        "Qualify both composition tools and one complete synthetic candidate on the actual pinned OpenCode 2.1.0 planning runtime before declaring adopter unblocking."
+      ]
+    },
+    "acceptanceAssessment": [
+      {
+        "criterion": "Test-first demonstration of the missing retained structured-input route",
+        "status": "missing-evidence",
+        "source": "src/tests/product-composition.test.mjs:29-55; openspec/changes/issue-711-proposal/tasks.md:7",
+        "finding": "Tests exist, and the plan asserts test-first completion. The supplied successful receipts cannot establish the pre-fix execution or ordering. This remains the current-stage blocker."
+      },
+      {
+        "criterion": "Complete deterministic 64-file composition",
+        "status": "supported-by-source-and-host-suite",
+        "source": "src/tests/product-composition.test.mjs:34-55; src/tests/fixtures/product-composition.mjs",
+        "finding": "The synthetic fixture contains 61 provider artifacts and three wrappers, 22 added IDs, 39 modified IDs and no removals. Tests assert exact file contents, hashes, unique IDs, manifest operation sets and measured 276*1024 UTF-8 bytes. Binding covers run/task/source/baseline/change/schema. These assertions were inspected rather than inferred from a green check."
+      },
+      {
+        "criterion": "Refusal, resource bounds and durable-output preservation",
+        "status": "supported-by-source-and-host-suite",
+        "source": "src/tests/product-composition.test.mjs:77-293; src/packages/sdlc/src/product-composition-server.mjs:15-60",
+        "finding": "Coverage includes stale bindings/replacements, malformed and duplicate JSON, conflicting paths/IDs, changed or missing hashes, unsupported modes and paths, missing required files, count/byte limits, exact inclusive 64-KiB-file/512-KiB-total boundaries, symlinks and prior-output/source preservation. Composition validates before a fixed-target atomic rename. No refusal test was executed locally by this worker."
+      },
+      {
+        "criterion": "No general planning privilege or fabricated provider acceptance",
+        "status": "supported-by-source-and-independent-owner-review",
+        "source": "src/packages/sdlc/src/product-composition.mjs:137-173; src/packages/sdlc/src/product-composition-runtime.mjs; src/packages/sdlc/src/opencode-execute.mjs:253-269",
+        "finding": "Only inspect/compose are projected for Product Change workers. References select admitted objects, not arbitrary input/output paths or commands. Candidate provider validation must remain pending; the existing complete envelope validator is reused. Runtime, protocol and inert-content tests support this narrow boundary. No lease or cleanup capability is introduced."
+      },
+      {
+        "criterion": "Compatibility and transport",
+        "status": "supported-by-source-and-host-suite",
+        "source": "src/packages/sdlc/src/engine-result-limits.mjs; src/tests/opencode-execute.test.mjs:24-81; src/tests/product-composition-package.test.mjs",
+        "finding": "Only Product Change JSON envelopes use the existing 2-MiB artifact-member bound; other workers retain 128000 bytes and candidate content limits stay unchanged. Small candidates and blocked outcomes have compatibility assertions. Packed stdio and Docker-shim execution are explicitly not native-engine qualification."
+      },
+      {
+        "criterion": "Packaged/pinned native invocation",
+        "status": "explicit-later-stage-gate",
+        "source": "Issue #711 acceptance criterion 6 and delivery order; src/packages/sdlc/README.md:68-70; exact-head owner review",
+        "finding": "Actual pinned-engine invocation is not supplied. The issue permits retention of that native follow-up gate, and the owner expressly retains it before adopter unblocking. It is not marked passed and is not promoted to a current source-integration blocker."
+      },
+      {
+        "criterion": "Declared checks, release change and required review",
+        "status": "supported",
+        "source": ".lighthouse/implement.json:2-28; .changeset/bounded-retained-product-composition.md; host command receipts; owner-review:5917890926",
+        "finding": "All declared commands and the generated strict plan check have authenticated successful receipts. npm run verify includes Markdown lint and source tests. The patch changeset is present. Required forge CI and exact-head owner review passed. These facts do not resolve the separate historical test-first gap."
+      }
+    ],
+    "productAuthority": {
+      "baselineDigest": "8b131e3d9eb587f390e864fdac9e5971af2ee96ab667a7b7177d4602e8b5b173",
+      "provider": "@prodshape/core@0.25.0",
+      "serializationVersion": "v1alpha2",
+      "sourceRevision": "3e498c0002a661a8e28334876801a9411f02263e",
+      "decision": "The inspected accepted-model obligations cover bounded resumable preparation with separate provider validation, product approval, apply and continuation. The correction does not require invented product semantics or a hand-edited accepted-model change.",
+      "currentCitationsComparedWithPlan": {
+        "FR-PRODUCT-CHANGE-WORKFLOW": "sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb",
+        "UC-PREPARE-PRODUCT-CHANGE": "sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669",
+        "BR-PRODUCT-CHANGE-HANDOFF": "sha256:78a85b31789efb8160bb10d404f53aff4dca3a11f326088960904631ceddda78",
+        "BR-AGENT-LAUNCH": "sha256:1c13d980e9adc3c245bd133cc9fff99029525daf277e4ba943644510a4060146",
+        "QR-AGENT-ISOLATION": "sha256:731985a0bf28b2715a594b54342c254017eabe0e41fc14e3d12144b82240208b"
+      },
+      "behaviourScope": "SB-SDLC-GATES and SB-CHANGE-FLOW-VERIFIED require honest prerequisite reporting and authorized continuation. Candidate validation/refusal/blocked-outcome tests exercise the applicable preparation boundary, not the whole delivery journey. The supplied model inventory defines no retained-composition domain lifecycle; none is invented. Existing lease, full apply and post-merge journeys are not claimed newly qualified.",
+      "architecture": "ADR-0007 and the Product Change runtime view retain host execution, read-only accepted source, trusted provider validation and a separate publisher."
+    },
+    "guidanceReview": {
+      "method": [
+        "Packaged Plain English fallback, then Humanizer fallback, followed by evidence comparison for the report and effect.body.",
+        "Packaged Writing for Agents fallback for product-change skill and its retained-composition pointer.",
+        "lighthouse-code-architecture-fallback-v1 for affected source, tests, transport, runtime projection, validators and package boundary; no external helper was installed or claimed to run."
+      ],
+      "reviewedGuidance": [
+        "AGENTS.md",
+        "src/packages/cli/README.md",
+        "src/packages/sdlc/README.md",
+        "src/packages/sdlc/completion.md",
+        "src/packages/sdlc/skills/product-change/SKILL.md",
+        "src/packages/sdlc/skills/product-change/retained-composition.md",
+        "src/examples/opencode-engine/README.md",
+        "openspec/changes/issue-711-proposal/proposal.md",
+        "openspec/changes/issue-711-proposal/design.md",
+        "openspec/changes/issue-711-proposal/tasks.md",
+        "openspec/changes/issue-711-proposal/specs/retained-product-composition/spec.md"
+      ],
+      "findings": "Affected instructions agree on admitted inputs, exhaustive latest-per-path selection/omission, fixed atomic output, pending provider validation, unsupported-capability recovery and separate native qualification. No blocking guidance drift was found. The task-completion claim needs execution evidence as recorded in the blocker.",
+      "toolLimit": "CodeGraph context retrieval was unavailable. Direct file reads supplied the source context; this optional tool limitation is not a failed product check.",
+      "visualReview": "Not applicable: no visual or UI surface changed.",
+      "localExecution": "No tests, shell commands, network requests, merges or releases were performed by this worker. Execution findings rely on the supplied host-authenticated receipts."
+    },
+    "findings": [
+      {
+        "id": "F1",
+        "kind": "acceptance-evidence-gap",
+        "blocking": true,
+        "owner": "Implementation maintainer; repository owner if historical evidence cannot be recovered",
+        "source": "Issue #711 acceptance criterion 1; openspec/changes/issue-711-proposal/tasks.md:7; supplied implementation command inventory",
+        "finding": "The historical test-first reproduction is asserted but not established by supplied execution evidence. No conclusion is drawn that it did not happen. Current green checks and independent source approval remain valid observations, not substitutes for that missing history.",
+        "resolution": "Supply the retained pre-fix reproduction with baseline/test/result provenance, or obtain an explicit fresh owner disposition of the unmet requirement. Do not fabricate an original RED run or infer an exception."
+      },
+      {
+        "id": "F2",
+        "kind": "nonblocking-handoff-wording",
+        "blocking": false,
+        "owner": "PR maintainer",
+        "source": "/input/context.json#completion.pullRequest.body",
+        "finding": "The current PR body still asks the publisher to independently check the candidate and open a fresh implementation PR, although #713 exists and current receipts/review are supplied. Treat this as stale handoff wording, not authorization to create another PR."
+      },
+      {
+        "id": "F3",
+        "kind": "evidence-projection-limit",
+        "blocking": false,
+        "owner": "Evidence maintainer",
+        "source": "Implementation command receipt :3",
+        "finding": "The citation command passed, but its full scoped provider rows are unavailable in the bounded projection. The five affected plan citation digests match current prepared product reports on inspection. The aggregate 295 stale citations and 310 warnings are not asserted to belong to this change, and omitted rows are not invented."
+      }
+    ],
+    "laterStageGates": [
+      {
+        "name": "Actual merge receipt",
+        "status": "not-performed",
+        "intendedStage": "trusted integration publication",
+        "owner": "Trusted publisher",
+        "requirement": "Only after a passed assessment and fresh current-head authority/check/reservation validation; GitHub enforces merge rules."
+      },
+      {
+        "name": "Post-merge ci.yml",
+        "status": "not-performed",
+        "intendedStage": "post-merge verification",
+        "owner": "Trusted publisher and CI",
+        "requirement": "Verify the actual merged SHA, not merely the previously accepted PR head."
+      },
+      {
+        "name": "Retrospective review",
+        "status": "not-performed",
+        "intendedStage": "review",
+        "owner": "Separately authorized review worker",
+        "requirement": "Use retained integration and post-merge evidence; this integration assessment starts no review."
+      },
+      {
+        "name": "Package publication and provenance",
+        "status": "not-performed",
+        "intendedStage": "release",
+        "owner": "Release maintainer",
+        "requirement": "Protected publication with separate authorization and registry/tarball/source provenance."
+      },
+      {
+        "name": "Clean-consumer installation",
+        "status": "not-performed",
+        "intendedStage": "installation qualification",
+        "owner": "Package/workflow maintainer",
+        "requirement": "Use the owning installer and reviewed immutable source pin or exact published package; no live-module or image-policy patching."
+      },
+      {
+        "name": "Actual pinned-engine invocation",
+        "status": "unavailable",
+        "intendedStage": "authorized native qualification",
+        "owner": "Engine/workflow maintainer",
+        "requirement": "Observe both tools and one complete synthetic candidate on pinned OpenCode 2.1.0. Configuration, Docker shims and packed stdio tests alone are insufficient; incompatible local MCP requires owning-image review/build/repin, not broader planning permissions."
+      }
+    ],
+    "finalization": {
+      "issueState": "open",
+      "issueLabels": [
+        "bug",
+        "pr-ready",
+        "urgency-now"
+      ],
+      "pullRequestLabels": [],
+      "onBlocked": {
+        "add": [],
+        "remove": [],
+        "closeIssue": false
+      },
+      "pullRequestLabelPolicy": "preserve",
+      "reservation": "Host-owned acquisition and cleanup for every outcome; no worker lock mutation.",
+      "completionSignal": "The trusted host validates this envelope and records the terminal gh-aw noop. No safeoutputs invocation belongs to the confined worker."
+    }
+  }
+}
