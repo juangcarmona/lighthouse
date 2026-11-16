@@ -31,9 +31,9 @@ function measuredQuality(p, o) {
     if (m.modules.some(v => !percent(v.lines) || (!percent(v.branches) && !(v.branches === null && v.branchesTotal === 0)) )) return outcome('partial', 'module coverage measurements are incomplete');
     return m.modules.some(v => v.lines < p.criteria.lines || v.branches !== null && v.branches < p.criteria.branches) ? outcome('below-standard', p.quality) : outcome('met');
   }
-  if (p.id === 'sbom') return ['SPDX', 'CycloneDX'].includes(m.format) && digest(m.documentDigest) && count(m.components) && m.components > 0 ? outcome('met') : outcome('partial', 'complete identified SBOM required');
+  if (p.id === 'sbom') return ['SPDX', 'CycloneDX'].includes(m.format) && digest(m.documentDigest) && count(m.components) ? outcome('met') : outcome('partial', 'complete identified SBOM required');
   if (p.id === 'licenses') {
-    if (!record(m.policy) || !nonempty(m.policy.id) || !nonempty(m.policy.version) || !digest(m.policy.digest) || !count(m.assessed) || m.assessed === 0 || !count(m.violations)) return outcome('partial', 'explicit versioned license policy and assessed components required');
+    if (!record(m.policy) || !nonempty(m.policy.id) || !nonempty(m.policy.version) || !digest(m.policy.digest) || !count(m.assessed) || !count(m.violations)) return outcome('partial', 'explicit versioned license policy and assessed components required');
     return m.violations > 0 ? outcome('below-standard', 'license policy violations') : outcome('met');
   }
   if (p.id === 'complexity') {

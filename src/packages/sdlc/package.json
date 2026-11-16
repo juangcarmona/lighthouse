@@ -107,7 +107,8 @@
     "./practice-catalog": "./src/practice-catalog.mjs",
     "./practice-observation": "./src/practice-observation.mjs",
     "./practice-evaluator": "./src/practice-evaluator.mjs",
-    "./practice-github": "./src/practice-github.mjs"
+    "./practice-github": "./src/practice-github.mjs",
+    "./practice-history": "./src/practice-history.mjs"
   },
   "license": "Apache-2.0"
 }
