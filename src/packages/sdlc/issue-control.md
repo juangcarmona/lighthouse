@@ -1,6 +1,6 @@
 # Issue-control SDK
 
-The `./issue-control` export supplies `createIssueControl`, `parseIssueComment`, `parseIssueIntent` and `validateIssueIntent`. The [intent schema](schemas/issue-control-intent.schema.json) describes version 1; runtime validation also checks canonical JSON and UTF-8 byte limits. This implementation is awaiting packed-consumer and actual-user native qualification. Source availability does not establish a published or adopted release.
+The `./issue-control` export supplies `createIssueControl`, `parseIssueComment`, `parseIssueIntent` and `validateIssueIntent`. The [intent schema](schemas/issue-control-intent.schema.json) describes version 1; runtime validation also checks canonical JSON and UTF-8 byte limits. The original contract was published in SDLC 0.22.0 after source-owned owner-user qualification. Current release, consumer adoption and connected App-user outcomes require their own revision-bound receipts; see [issue #119](https://github.com/juangcarmona/lighthouse/issues/119).
 
 ## Adoption
 
@@ -33,6 +33,8 @@ const reconciled = await control.reconcile(prepared);
 ```
 
 `prepare` returns either a prepared object with `version`, `intent`, `key`, `payloadDigest` and `effect`, or an explicit unavailable/rejected state. Call `submit` only for a prepared object. `observe` and `prepare` perform reads only. They report source eligibility separately from execution readiness and can become stale while a request queues; source admission rechecks current authority.
+
+`observe` includes a `prerequisites` object on each Refine/Propose assessment: `installedContract`, `writeAuthority`, `repositoryPolicy`, `sourceReservations` and `stageEvidence`. Each reports `availability` and an optional reason. A check skipped after an earlier unmet prerequisite stays unavailable with `earlier-prerequisite-not-met`. Valid direct owner entry reports `owner-direct-entry`; it does not claim triage evidence. These observations add no reservation or execution authority.
 
 The transport receives `{scope, repository?, path, method, body?, optional?, apiVersion?}`. Account scope uses `GET user`; repository paths are relative to the explicitly bound repository. Use the actual connected user's credentials, honor the requested API version, return parsed provider JSON, and map optional 404 to `null`. HTTP failures expose a numeric `status`; uncertain network failures retain uncertainty. No credentials, default transport, environment token lookup or ambient network access is supplied by this module. Comments are posted directly as that user. A bot or installation token cannot substitute for the acting account.
 
