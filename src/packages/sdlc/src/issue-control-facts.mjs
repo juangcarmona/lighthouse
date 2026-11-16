@@ -82,7 +82,9 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
   if (supported) try { reservation = await reservations(read, repository, metadata.owner.login, issue, comments, capability, readArtifact); }
   catch { reservation = { availability: 'unavailable', reason: 'reservation-evidence-unavailable', active: [] }; }
   const actions = { comment: supported ? writeAllowed('commentWrite') ?? { eligible: true, availability: 'available' } : refusal('installed-contract-unsupported', 'unsupported') };
+  const stageEvidence = {};
   for (const stage of ['refine', 'propose']) {
+    stageEvidence[stage] = { availability: 'unavailable', reason: 'earlier-prerequisite-not-met' };
     if (!supported || !capability.stages.includes(stage)) { actions[stage] = refusal('stage-contract-unsupported', 'unsupported'); continue; }
     if (writeAllowed('dispatchWrite')) { actions[stage] = writeAllowed('dispatchWrite'); continue; }
     if (!policyKnown) { actions[stage] = unavailable('policy-unavailable'); continue; }
@@ -93,12 +95,32 @@ export async function collectIssueControlFacts({ api, repository, number, actor,
     if (reservation.availability !== 'available') { actions[stage] = unavailable(reservation.reason); continue; }
     if (reservation.active.length) { actions[stage] = refusal('authenticated-source-reservation'); continue; }
     try {
+      let triage;
       if (stage === 'refine' || issue.user.login !== metadata.owner.login)
-        await collectTriageAdmission({ api: read, repository, owner: metadata.owner.login, issue, comments, sourceRevision, readArtifact });
+        triage = await collectTriageAdmission({ api: read, repository, owner: metadata.owner.login, issue, comments, sourceRevision, readArtifact });
       if (stage === 'propose') await collectProposalAdmission({ api: read, repository, owner: metadata.owner.login, issue, comments, sourceRevision, taskDigest: inputDigest, readArtifact });
+      stageEvidence[stage] = { availability: 'available', reason: stage === 'propose' ? 'validated-refinement'
+        : triage ? 'validated-triage' : 'owner-direct-entry' };
       actions[stage] = { eligible: true, availability: 'available' };
-    } catch (error) { actions[stage] = error instanceof IssueAdmissionRefusal ? { ...refusal(error.reason, error.availability), message: error.message }
-      : unavailable(stage === 'refine' ? 'triage-not-verified' : 'proposal-prerequisites-not-verified'); }
+    } catch (error) {
+      actions[stage] = error instanceof IssueAdmissionRefusal ? { ...refusal(error.reason, error.availability), message: error.message }
+        : unavailable(stage === 'refine' ? 'triage-not-verified' : 'proposal-prerequisites-not-verified');
+      stageEvidence[stage] = { availability: actions[stage].availability, reason: actions[stage].reason };
+    }
+  }
+  for (const stage of ['refine', 'propose']) {
+    const authorityRefusal = writeAllowed('dispatchWrite');
+    actions[stage].prerequisites = {
+      installedContract: supported && capability.stages.includes(stage) ? { availability: 'available' }
+        : { availability: 'unsupported', reason: 'stage-contract-unsupported' },
+      writeAuthority: authorityRefusal ? { availability: authorityRefusal.availability, reason: authorityRefusal.reason } : { availability: 'available' },
+      repositoryPolicy: !policyKnown ? { availability: 'unavailable', reason: 'policy-unavailable' }
+        : !policy.automationEnabled ? { availability: 'denied', reason: 'automation-disabled' }
+          : policy.epicEnabled ? { availability: 'unsupported', reason: 'epic-admission-contract-unsupported' } : { availability: 'available' },
+      sourceReservations: reservation.availability !== 'available' ? { availability: reservation.availability, reason: reservation.reason }
+        : reservation.active.length ? { availability: 'denied', reason: 'authenticated-source-reservation' } : { availability: 'available' },
+      stageEvidence: stageEvidence[stage]
+    };
   }
   let question = { availability: 'none' };
   const pending = pendingStage(comments);

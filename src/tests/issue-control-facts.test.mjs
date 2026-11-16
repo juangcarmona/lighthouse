@@ -116,3 +116,60 @@ test('unqualified epic admission never becomes a parallel typed policy', async (
   assert.equal(facts.actions.refine.availability, 'unsupported'); assert.equal(facts.actions.refine.reason, 'epic-admission-contract-unsupported');
   assert.equal(facts.actions.comment.eligible, true);
 });
+
+
+test('stage assessments expose checked prerequisites without claiming unexamined evidence', async () => {
+  const { state, options } = fixture();
+  const facts = await collectIssueControlFacts(options);
+  assert.equal(facts.actions.refine.prerequisites.stageEvidence.availability, 'available');
+  assert.equal(facts.actions.refine.prerequisites.stageEvidence.reason, 'owner-direct-entry');
+  assert.equal(facts.actions.propose.prerequisites.stageEvidence.reason, 'ready-required');
+  assert.equal(facts.actions.refine.prerequisites.sourceReservations.availability, 'available');
+  const disabled = await collectIssueControlFacts({ ...options, readPolicy: async () => ({ automationEnabled: false, digest: 'a'.repeat(64) }) });
+  assert.equal(disabled.actions.refine.prerequisites.repositoryPolicy.reason, 'automation-disabled');
+  assert.equal(disabled.actions.refine.prerequisites.stageEvidence.reason, 'earlier-prerequisite-not-met');
+  assert.equal(disabled.actions.comment.eligible, true);
+  state.capability = false;
+  const unsupported = await collectIssueControlFacts(options);
+  assert.equal(unsupported.actions.refine.prerequisites.installedContract.availability, 'unsupported');
+  assert.equal(state.mutations, 0);
+});
+
+test('prerequisite observations preserve unavailable authority and competing reservations', async () => {
+  const { state, options } = fixture();
+  const denied = await collectIssueControlFacts({ ...options, readAuthority: async () => ({ actorId: 71, repositoryId: 42, dispatchWrite: false, commentWrite: true }) });
+  assert.equal(denied.actions.refine.prerequisites.writeAuthority.availability, 'denied');
+  const unknown = await collectIssueControlFacts({ ...options, readAuthority: undefined });
+  assert.equal(unknown.actions.refine.prerequisites.writeAuthority.availability, 'unavailable');
+  state.background = ['lighthouse-sdlc-unattended.yml'];
+  const reserved = await collectIssueControlFacts(options);
+  assert.equal(reserved.actions.refine.prerequisites.sourceReservations.availability, 'unavailable');
+  assert.equal(reserved.actions.refine.prerequisites.sourceReservations.reason, 'background-issue-binding-unavailable');
+  assert.equal(reserved.actions.refine.prerequisites.stageEvidence.reason, 'earlier-prerequisite-not-met');
+  assert.equal(state.mutations, 0);
+});
+
+test('proposal evidence is available only after the canonical refinement check succeeds', async () => {
+  const { state, options } = fixture();
+  state.issue.labels = [{ name: 'ready' }];
+  const { taskDigest } = await import('../packages/sdlc/src/digests.mjs');
+  const request = { runId: 'd'.repeat(64), workflowRunId: '901', issue: 7, stage: 'refine', sourceRevision: 'c'.repeat(40), taskDigest: taskDigest(state.issue, []) };
+  const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'passed',
+    evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Request proposal', output: {} },
+    effect: { type: 'issue-comment', body: 'Refinement passed.' } };
+  const report = { id: 902, user: { login: 'github-actions[bot]', type: 'Bot' }, created_at: '2026-01-01T00:00:00Z',
+    body: `Outcome: passed\n<!-- lighthouse-actions:${request.runId} -->\n<!-- lighthouse-stage:refine:passed -->\n[Workflow run](https://github.com/owner/repo/actions/runs/901)` };
+  const api = options.api;
+  options.api = async (path, ...args) => path.startsWith('issues/7/comments?') ? [report] : path === 'actions/runs/901'
+    ? { id: 901, status: 'completed', conclusion: 'success', run_attempt: 1, event: 'workflow_dispatch', actor, head_sha: request.sourceRevision, path: '.github/workflows/lighthouse-sdlc-router.yml' }
+    : path.startsWith('contents/openspec/changes/') ? null : path === 'pulls?state=open&per_page=100' ? [] : api(path, ...args);
+  options.readArtifact = async (_api, _repo, _run, _artifact, member) => member === 'request.json' ? request : envelope;
+  const valid = await collectIssueControlFacts(options);
+  assert.equal(valid.actions.propose.eligible, true);
+  assert.deepEqual(valid.actions.propose.prerequisites.stageEvidence, { availability: 'available', reason: 'validated-refinement' });
+  request.sourceRevision = 'e'.repeat(40);
+  const stale = await collectIssueControlFacts(options);
+  assert.equal(stale.actions.propose.eligible, false);
+  assert.equal(stale.actions.propose.prerequisites.stageEvidence.availability, 'unavailable');
+  assert.equal(state.mutations, 0);
+});

@@ -1,0 +1,18 @@
+{
+  "repository": "juangcarmona/lighthouse",
+  "repositoryId": 1427668548,
+  "runId": 43681130581,
+  "attempt": 1,
+  "sourceRevision": "1d5ff3d5ae7ea35776f05307f46074036cdd68b9",
+  "workflowConclusion": "failure",
+  "agentAssessment": "passed",
+  "publication": "failed-before-proposal-write",
+  "failingJob": 132716061781,
+  "cause": "OpenSpec strict validation rejected requirement Durable attributable comment reconciliation longer than 500 characters",
+  "artifact": {
+    "id": 14148906468,
+    "name": "lighthouse-result-119-1",
+    "envelopeSha256": "bddeaf94c40ba3502156efd673b299df277b9885e6f444dd12d36776d6c62403"
+  },
+  "recovery": "Manual completion authorized by owner; consumed attempt was not replayed; existing archived implementation and published SDK reused."
+}
