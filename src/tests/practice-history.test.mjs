@@ -55,3 +55,9 @@ test('retained gaps, states and measurement references do not certify current co
   assert.ok(Object.keys(group.gaps).some(k => k.startsWith('coverage:'))); assert.match(report.retention, /no deletion/);
   await assert.rejects(evaluatePractices({ context, observations: [report] }), /Invalid practice observation/);
 });
+
+test('incompatible observation definitions remain visible without mixed measurement trends', async () => {
+  const r = await receipt(); r.practices.find(p => p.practice === 'tests').observation.catalogVersion = '2.0.0'; seal(r.practices.find(p => p.practice === 'tests').observation);
+  const group = aggregatePracticeHistory({ assessments: [r], period }).groups[0];
+  assert.equal(group.incompatibleObservations, 1); assert.equal(group.observedDefinitions['tests@2.0.0/1.0.0'], 1); assert.deepEqual(group.measurementTrends, {});
+});

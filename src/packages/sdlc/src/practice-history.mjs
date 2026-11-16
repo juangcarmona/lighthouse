@@ -73,7 +73,8 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
     const receipts = [...group.receipts.values()].sort((a, b) => Date.parse(a.assessedAt) - Date.parse(b.assessedAt) || practiceDigest(a).localeCompare(practiceDigest(b)));
     if (group.expectedSamples !== null && group.expectedSamples < receipts.length) throw Error('Observed samples exceed the declared sampling coverage');
     const distribution = Object.fromEntries(levels.map(l => [l, 0])), states = Object.fromEntries(practiceStates.map(s => [s, 0]));
-    const trends = {}, gaps = {}, references = new Set();
+    const trends = {}, gaps = {}, definitions = {}, references = new Set();
+    let incompatibleObservations = 0;
     let observedPractices = 0;
     for (const report of receipts) {
       distribution[report.level]++;
@@ -82,7 +83,11 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
         if (p.observation) {
           observedPractices++;
           references.add(p.observation.source.url);
-          const measurements = numericMeasurements(p.observation.measurements);
+          const definition = p.observation.catalogVersion + '/' + p.observation.definitionVersion;
+          definitions[p.practice + '@' + definition] = (definitions[p.practice + '@' + definition] ?? 0) + 1;
+          const compatible = p.observation.catalogVersion === group.catalogVersion && p.observation.definitionVersion === p.definitionVersion;
+          if (!compatible) incompatibleObservations++;
+          const measurements = compatible ? numericMeasurements(p.observation.measurements) : {};
           for (const [path, value] of Object.entries(measurements)) {
             const key = p.practice + '.' + path;
             if (!trends[key]) trends[key] = { count: 0, min: value, max: value, first: value, last: value, firstAt: p.observation.source.observedAt, lastAt: p.observation.source.observedAt, firstSource: p.observation.source.url, lastSource: p.observation.source.url };
@@ -97,7 +102,7 @@ export function aggregatePracticeHistory({ assessments, period, expectations = [
     return { context: group.context, catalogVersion: group.catalogVersion, levelVersion: group.levelVersion,
       coverage: { expectedSamples: group.expectedSamples, observedSamples: receipts.length, missingSamples: group.expectedSamples === null ? null : group.expectedSamples - receipts.length, unknownSamplingCoverage: group.expectedSamples === null,
         expectedPracticeSlots: receipts.length * practiceCatalog.practices.length, observedPractices, missingPractices: states.missing, unknownPractices: states.partial + states.stale + states.unavailable },
-      levelDistribution: distribution, practiceStates: states, gaps, measurementTrends: trends, sources: [...references].sort() };
+      observedDefinitions: definitions, incompatibleObservations, levelDistribution: distribution, practiceStates: states, gaps, measurementTrends: trends, sources: [...references].sort() };
   });
   return { schemaVersion: 1, kind: 'historical-practice-summary', currentCertification: false, period: { start: new Date(period.start).toISOString(), end: new Date(period.end).toISOString() }, groups: summaries,
     retention: 'Source receipts remain subject to existing retention obligations; this summary authorizes no deletion' };
