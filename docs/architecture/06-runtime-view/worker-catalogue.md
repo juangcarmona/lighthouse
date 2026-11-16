@@ -48,6 +48,7 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `LIGHTHOUSE_PRODUCT_CHANGE_ENABLED` | Allows product preparation, approval/apply and guarded parent resumption |
 | `LIGHTHOUSE_MAINTENANCE_ENABLED` | Enables the separate maintenance scan, completed-review wakes and manual maintenance |
 | `LIGHTHOUSE_MAINTENANCE_ISSUES` | Limits subjects; `[]` admits none, absence selects open owner issues and recent unresolved final reviews, invalid data stops admission |
+| `LIGHTHOUSE_HOUSEKEEPING_REPOSITORY` | Explicit `true` gives daily inspection repository coverage while retaining the configured recovery subject limit |
 | `LIGHTHOUSE_RECOVERY_ENABLED` | Separately permits bounded retries and confirmed-effect recovery; checked again at worker admission |
 | `LIGHTHOUSE_REPORT_INDEX_ISSUE` | Selects an open owner-authored report index; absence disables reports |
 | `LIGHTHOUSE_CI_APP_CLIENT_ID` | Optional eligible CI connection, paired with the `LIGHTHOUSE_CI_APP_PRIVATE_KEY` Actions secret; grants no delivery or merge authority |

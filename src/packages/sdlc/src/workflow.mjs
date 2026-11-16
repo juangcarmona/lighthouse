@@ -1,3 +1,5 @@
+export { housekeepingFiles, housekeepingRequirements } from './housekeeping-assets.mjs';
+
 export const WORKFLOW_STATES = Object.freeze(['ready', 'running', 'waiting-human', 'blocked', 'succeeded', 'failed', 'cancelled']);
 
 const transitions = Object.freeze({

@@ -234,11 +234,13 @@ test('epic publication rejects an invalid base and revoked authority', async () 
   assert.equal(calls.some(call => call.path === 'pulls'), false);
 });
 
-test('implementation shell progress identifies the command without dumping its output', async () => {
+test('implementation shell progress identifies the command and shows a bounded output excerpt', async () => {
   const { formatOpenCodeEvent } = await import('../packages/sdlc/src/opencode-progress.mjs');
-  const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'shell', state: { status: 'completed', input: { command: 'npm run build' }, output: 'raw protocol and payload' } } }));
+  const visible = formatOpenCodeEvent(JSON.stringify({ type: 'tool_use', part: { tool: 'shell', state: { status: 'completed', input: { command: 'npm run build' }, output: 'omitted leading payload' + 'x'.repeat(10000) + '\nbuild completed' } } }));
   assert.match(visible, /shell npm run build/);
-  assert.ok(!visible.includes('payload'));
+  assert.ok(!visible.includes('omitted leading payload'));
+  assert.match(visible, /Tool output.*build completed/s);
+  assert.ok(visible.length < 2800);
 });
 
 test('patch progress names changed files without exposing the patch contents', async () => {

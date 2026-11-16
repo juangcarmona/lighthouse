@@ -5,8 +5,19 @@ on:
     types: [completed]
   schedule:
     - cron: '17,47 * * * *'
+    - cron: '23 3 * * *'
   workflow_dispatch:
     inputs:
+      housekeeping:
+        description: Inspect repository housekeeping instead of requesting recovery
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: Retain inspection evidence without tracker or continuation effects
+        required: false
+        type: boolean
+        default: true
       completed_run:
         description: Native review run from the trusted preparation callback
         required: false
@@ -22,8 +33,45 @@ env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
+  daily-housekeeping:
+    if: github.actor == github.repository_owner && ((github.event_name == 'schedule' && github.event.schedule == '23 3 * * *' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.housekeeping == true && inputs.completed_run == '' && (inputs.dry_run == true || (vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true'))))
+    concurrency:
+      group: lighthouse-worker-reports
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      issues: write
+      pull-requests: read
+    env:
+      LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
+      LIGHTHOUSE_HOUSEKEEPING_REPOSITORY: ${{ vars.LIGHTHOUSE_HOUSEKEEPING_REPOSITORY }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Inspect daily repository coverage and update the existing index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/packages/sdlc/src/worker-maintenance.mjs housekeeping
+      - name: Preserve actual daily scan evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-daily-housekeeping-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/daily-housekeeping.json
+          if-no-files-found: error
+          retention-days: 14
   scan:
-    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || ((github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.completed_run != '')) && github.actor == 'github-actions[bot]'))
+    if: (github.event_name != 'workflow_dispatch' || inputs.housekeeping != true || inputs.completed_run != '') && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || ((github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.completed_run != '')) && github.actor == 'github-actions[bot]'))
     runs-on: ubuntu-24.04
     permissions:
       contents: read

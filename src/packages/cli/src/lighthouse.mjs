@@ -16,6 +16,7 @@ let sdlcReconcile;
 let sdlcGithub;
 let sdlcAliases;
 let sdlcEvidence;
+let sdlcWorkflows;
 try {
   [sdlcCapabilities, sdlcReconcile, sdlcGithub] = await Promise.all([
     import('@juangcarmona/lighthouse-sdlc/capabilities'),
@@ -25,6 +26,7 @@ try {
 } catch { /* Standalone generated starters can run without the optional SDLC package. */ }
 try { sdlcAliases = await import('@juangcarmona/lighthouse-sdlc/aliases'); } catch { /* Older standalone installations may not publish aliases. */ }
 try { sdlcEvidence = await import('@juangcarmona/lighthouse-sdlc/evidence'); } catch { /* Older standalone installations may not publish evidence. */ }
+try { sdlcWorkflows = await import('@juangcarmona/lighthouse-sdlc/workflow'); } catch { /* Older installations do not publish managed housekeeping. */ }
 
 const root = process.cwd();
 const packageRequire = createRequire(import.meta.url);
@@ -52,6 +54,7 @@ const managedPaths = [
   '.agents/skills/lighthouse-init/SKILL.md',
   upgradeStateRelative,
   '.lighthouse/commands.json',
+  ...(sdlcWorkflows?.housekeepingFiles ? ['.github/workflows/lighthouse-worker-maintenance.yml', '.lighthouse/housekeeping.json'] : []),
 ];
 const profileManagedPaths = Object.freeze({
   'visual-theme': ['docs/design/DESIGN.md', '.agents/skills/lighthouse-ui/SKILL.md'],
@@ -85,7 +88,7 @@ function managedPathsFor(manifest) {
 function upgradeScopesFor(manifest) {
   return {
     harness: [projection, 'scripts/lighthouse-guard.mjs', '.husky/commit-msg', '.husky/pre-push', '.github/workflows/lighthouse.yml', '.agents/skills/lighthouse-init/SKILL.md', ...((manifest?.profiles ?? []).flatMap((profile) => profileManagedPaths[profile] ?? []))],
-    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json'],
+    sdlc: ['.lighthouse/sdlc.json', '.lighthouse/commands.json', ...(sdlcWorkflows?.housekeepingFiles ? ['.github/workflows/lighthouse-worker-maintenance.yml', '.lighthouse/housekeeping.json'] : [])],
   };
 }
 
@@ -440,6 +443,7 @@ function managedFiles(manifest) {
   Object.assign(files, profileAssets(manifest));
   const controlPlane = sdlcControlPlane(manifest);
   if (controlPlane) files['.lighthouse/sdlc.json'] = controlPlane;
+  if (controlPlane && sdlcWorkflows?.housekeepingFiles) Object.assign(files, sdlcWorkflows.housekeepingFiles(sdlcPackage.version));
   files['.lighthouse/commands.json'] = commandAliasProjectionText(commandAliasesProjection());
   return files;
 }
@@ -565,6 +569,13 @@ async function planUpgrade(manifest, scopes) {
       projections: { harness: '1', sdlc: files['.lighthouse/sdlc.json'] ? '1' : null },
     },
     scopes: [...scopes],
+    housekeeping: {
+      installation: scopes.has('sdlc') ? 'review managed changes below' : 'deferred: SDLC scope not selected',
+      requirements: sdlcWorkflows?.housekeepingRequirements ?? null,
+      configuration: 'Repository variables and report-index authority require operator review; not checked by local installation.',
+      activation: 'Not changed by installation; explicit opt-in required.',
+      runtime: 'No native complete-scan or verified-effect evidence is established by this plan.',
+    },
     prerequisites: problems.length ? [{ status: 'failed', message: problems.join(' ') }] : [{ status: 'passed', message: 'Ownership metadata is readable.' }],
     changes,
     verification: ['lighthouse verify'],
@@ -581,6 +592,8 @@ async function planUpgrade(manifest, scopes) {
 
 function printUpgradePlan(plan) {
   console.log('Lighthouse upgrade plan:');
+  console.log(`  Housekeeping: ${plan.housekeeping.installation}. ${plan.housekeeping.activation}`);
+  if (plan.housekeeping.requirements) console.log(`  Configure: ${plan.housekeeping.requirements.configuration.join('; ')}. Activate explicitly: ${plan.housekeeping.requirements.explicitActivation.join(', ')}. ${plan.housekeeping.runtime}`);
   console.log(`  package ${plan.source.package?.version ?? 'unknown'} -> ${plan.target.package.version}`);
   console.log(`  baseline ${plan.source.baseline ?? 'unknown'} -> ${plan.target.baseline}`);
   console.log(`  scopes ${plan.scopes.join(', ')}`);
@@ -663,12 +676,18 @@ function validate(manifest) {
     && manifest.managed.length === legacyManagedPaths.length
     && manifest.managed.every((entry, index) => entry === legacyManagedPaths[index]);
   const expectedManagedPaths = managedPathsFor(manifest);
+  const beforeHousekeeping = expectedManagedPaths.filter(path => !['.github/workflows/lighthouse-worker-maintenance.yml', '.lighthouse/housekeeping.json'].includes(path));
+  const preHousekeepingManaged = Array.isArray(manifest.managed) && manifest.managed.length === beforeHousekeeping.length && manifest.managed.every((path, index) => path === beforeHousekeeping[index]);
   const completeManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === expectedManagedPaths.length
     && manifest.managed.every((entry, index) => entry === expectedManagedPaths[index]);
   const profilelessManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === managedPaths.length
     && manifest.managed.every((entry, index) => entry === managedPaths[index]);
+  const beforeHousekeepingProfileless = managedPaths.filter(path => !['.github/workflows/lighthouse-worker-maintenance.yml', '.lighthouse/housekeeping.json'].includes(path));
+  const preHousekeepingProfilelessManaged = Array.isArray(manifest.managed)
+    && manifest.managed.length === beforeHousekeepingProfileless.length
+    && manifest.managed.every((entry, index) => entry === beforeHousekeepingProfileless[index]);
   const previousCompleteManaged = Array.isArray(manifest.managed)
     && manifest.managed.length === previousManagedPaths.length
     && manifest.managed.every((entry, index) => entry === previousManagedPaths[index]);
@@ -682,7 +701,7 @@ function validate(manifest) {
   // the foundation now leaves those files to explicit workflow adoption and never deletes them.
   const withoutOldWorkflows = Array.isArray(manifest.managed) ? manifest.managed.filter(path => !isOptionalWorkflow(path)) : [];
   const previousWorkflowManaged = withoutOldWorkflows.length === expectedManagedPaths.length && withoutOldWorkflows.every((path, index) => path === expectedManagedPaths[index]);
-  if (!previousWorkflowManaged && !legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
+  if (!preHousekeepingProfilelessManaged && !preHousekeepingManaged && !previousWorkflowManaged && !legacyManaged && !profilelessManaged && !previousCompleteManaged && !completeManaged && !preSemanticManaged && !preSemanticWithoutUpgrade) {
     problems.push(`managed must be ${legacyManagedPaths.join(', ')}, the previous Lighthouse guardrail set or the selected profile set`);
   }
   if ('repository' in manifest) {

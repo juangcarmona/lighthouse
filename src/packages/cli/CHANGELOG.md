@@ -1,5 +1,53 @@
 # @juangcarmona/lighthouse
 
+## 0.13.15
+
+### Patch Changes
+
+- Updated dependencies [b4e9c11]
+  - @juangcarmona/lighthouse-sdlc@0.24.4
+
+## 0.13.14
+
+### Patch Changes
+
+- Updated dependencies [0e7d69e]
+  - @juangcarmona/lighthouse-sdlc@0.24.3
+
+## 0.13.13
+
+### Patch Changes
+
+- Updated dependencies [6769fb9]
+  - @juangcarmona/lighthouse-sdlc@0.24.2
+
+## 0.13.12
+
+### Patch Changes
+
+- Updated dependencies [58b8c6a]
+  - @juangcarmona/lighthouse-sdlc@0.24.1
+
+## 0.13.11
+
+### Patch Changes
+
+- 4901b4e: # Preserve earlier ownership inventories
+
+  Allow existing adopters with selected profiles and the earlier base ownership inventory to upgrade to managed housekeeping. Preserve profile files and continue rejecting unknown ownership paths.
+
+## 0.13.10
+
+### Patch Changes
+
+- e4323cc: # Daily repository housekeeping
+
+  Deliver the shared daily maintenance inspection through reviewed init, reconcile and SDLC upgrades without activating execution. Preserve custom files, retain complete-scan evidence separately from recovery effects, and classify authenticated terminal PR publications without repeating candidate CI. Package publication and native adopter activation remain separate release steps.
+
+- Updated dependencies [e4323cc]
+- Updated dependencies [c8637b4]
+  - @juangcarmona/lighthouse-sdlc@0.24.0
+
 ## 0.13.9
 
 ### Patch Changes

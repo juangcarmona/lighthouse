@@ -36,3 +36,11 @@ test('errors remain visible, ordinary engine diagnostics stay in the event artif
   assert.ok(!redactLog(formatOpenCodeEvent(redactLog(escaped))).includes('ghp_'));
   assert.equal(progressText('Result', '\u001b[31mready\u001b[0m'), '[Result] ready');
 });
+
+
+test('shell output is visible but bounded and Actions control text remains inert', () => {
+  const line = formatOpenCodeEvent(event('tool_use', { tool: 'shell', state: { status: 'completed', input: { command: 'npm test' }, output: 'x'.repeat(10000) + '\n::error::untrusted\npassed' } }));
+  assert.match(line, /Tool output.*passed/s);
+  assert.ok(line.length < 2800);
+  assert.ok(line.split('\n').every(line => line.startsWith('[')));
+});

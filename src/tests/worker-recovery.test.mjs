@@ -57,6 +57,19 @@ test('read-only observation preserves an unconfirmed dispatch for operator inspe
   assert.equal(f.calls.every(call => call.method === 'GET'), true);
 });
 
+test('invalid historical receipt stays uncertain alongside valid observations and cannot authenticate recovery', async () => {
+  const f = fixture();
+  f.comments.push({ ...f.comment, id: 31 });
+  f.comment.body = dispatchReceiptBody('owner/old-name', { ...f.receipt, id: dispatchId('owner/old-name', '100') });
+  const rows = await observeRecovery(f.api, repository, owner, 7, Date.now(), f.readArtifact);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].state, 'uncertain'); assert.equal(rows[0].code, 'receipt-invalid');
+  assert.equal(rows[0].requestCommentId, 30); assert.equal(rows[0].observedRunId, '200');
+  assert.equal(rows[1].runId, '200');
+  await assert.rejects(prepareRecovery(f.api, repository, owner, 7, f.maintenance, true, Date.now(), f.readArtifact), /Invalid dispatch receipt/);
+  assert.equal(f.calls.every(c => c.method === 'GET'), true);
+});
+
 test('recovery rejects an incomplete job inventory before it can infer a safe retry', async () => {
   const f = fixture();
   const incomplete = async (path, ...rest) => path.endsWith('/jobs?per_page=100') ? { total_count: f.jobs.length + 1, jobs: f.jobs } : f.api(path, ...rest);
@@ -995,4 +1008,16 @@ test('maintenance includes closed issues from the bounded native review window w
   assert.equal(visited.includes('issues/5'), false); assert.equal(visited.includes('issues/6'), false);
   assert.deepEqual(await maintenanceIssues(async path => path.startsWith('issues?') ? [{ number: 1, user: { login: owner } }] : null, owner, repository), [1]);
   await assert.rejects(maintenanceIssues(async path => path.startsWith('issues?') ? [] : { workflow_runs: {} }, owner, repository), /inventory/);
+});
+
+test('completed closed review inventory survives a repository rename without authenticating legacy dispatches', async () => {
+  const { maintenanceIssues } = await import('../packages/sdlc/src/worker-maintenance.mjs');
+  const comment = { user: { login: 'github-actions[bot]', type: 'Bot' }, issue_url: `https://api.github.com/repos/${repository}/issues/2`, body: dispatchReceiptBody('owner/previous-name', { schemaVersion: 1, stage: 'review', id: dispatchId('owner/previous-name', '100', 'review'), digest: 'd'.repeat(64), routerRunId: '100', routerAttempt: 1, workerRunId: '202', status: 'completed' }) };
+  const run = { id: 202, path: '.github/workflows/lighthouse-sdlc-review.lock.yml', status: 'completed', conclusion: 'success', display_title: 'review #2 · request 10' };
+  const api = async path => path.startsWith('issues?') ? [{ number: 1, state: 'open', user: { login: owner } }] : path.startsWith('actions/workflows/') ? { workflow_runs: [run] } : path === 'issues/2' ? { number: 2, state: 'closed', user: { login: owner } } : comment;
+  assert.deepEqual(await maintenanceIssues(api, owner, repository), [1]);
+  run.conclusion = 'failure';
+  await assert.rejects(maintenanceIssues(api, owner, repository), /Invalid dispatch receipt/);
+  run.conclusion = 'success'; comment.user.login = 'other';
+  await assert.rejects(maintenanceIssues(api, owner, repository), /Untrusted dispatch receipt/);
 });

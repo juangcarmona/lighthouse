@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "workflow": ".github/workflows/lighthouse-worker-maintenance.yml",
+  "configuration": [
+    "LIGHTHOUSE_REPORT_INDEX_ISSUE: open owner-authored report index",
+    "LIGHTHOUSE_MAINTENANCE_ISSUES: leave unset for repository coverage; a selected subset is not complete repository coverage",
+    "LIGHTHOUSE_HOUSEKEEPING_REPOSITORY=true: inspect the repository while preserving a restricted recovery scope"
+  ],
+  "explicitActivation": [
+    "LIGHTHOUSE_AUTOMATION_ENABLED=true",
+    "LIGHTHOUSE_MAINTENANCE_ENABLED=true"
+  ],
+  "runtimeEvidence": "Not established by installation; inspect lighthouse-daily-housekeeping-<attempt>/daily-housekeeping.json and the report index.",
+  "publication": "Package publication is required before package-mode execution; source generation is not publication.",
+  "activation": "explicit repository-variable opt-in; installation never changes variables"
+}

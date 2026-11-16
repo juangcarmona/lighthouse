@@ -5,8 +5,19 @@ on:
     types: [completed]
   schedule:
     - cron: '17,47 * * * *'
+    - cron: '23 3 * * *'
   workflow_dispatch:
     inputs:
+      housekeeping:
+        description: Inspect repository housekeeping instead of requesting recovery
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: Retain inspection evidence without tracker or continuation effects
+        required: false
+        type: boolean
+        default: true
       completed_run:
         description: Native review run from the trusted preparation callback
         required: false
@@ -22,8 +33,46 @@ env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
 jobs:
+  daily-housekeeping:
+    if: github.actor == github.repository_owner && ((github.event_name == 'schedule' && github.event.schedule == '23 3 * * *' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.housekeeping == true && inputs.completed_run == '' && (inputs.dry_run == true || (vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true'))))
+    concurrency:
+      group: lighthouse-worker-reports
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      checks: read
+      issues: write
+      pull-requests: read
+    env:
+      LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
+      LIGHTHOUSE_HOUSEKEEPING_REPOSITORY: ${{ vars.LIGHTHOUSE_HOUSEKEEPING_REPOSITORY }}
+    steps:
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Inspect daily repository coverage and update the existing index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs housekeeping
+      - name: Preserve actual daily scan evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-daily-housekeeping-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/daily-housekeeping.json
+          if-no-files-found: error
+          retention-days: 14
   scan:
-    if: vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || ((github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.completed_run != '')) && github.actor == 'github-actions[bot]'))
+    if: (github.event_name != 'workflow_dispatch' || inputs.housekeeping != true || inputs.completed_run != '') && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true' && (github.actor == github.repository_owner || ((github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.completed_run != '')) && github.actor == 'github-actions[bot]'))
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -32,18 +81,19 @@ jobs:
     outputs:
       issues: ${{ steps.scan.outputs.issues }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
-          persist-credentials: false
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
       - uses: actions/setup-node@v5
         with:
           node-version: 24
       - id: scan
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs scan
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs scan
       - name: Preserve completion wake
         if: always() && (github.event_name == 'workflow_run' || inputs.completed_run != '')
         uses: actions/upload-artifact@v7
@@ -57,7 +107,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/telemetry-workflow.mjs
       - name: Preserve workflow telemetry
         if: always()
         continue-on-error: true
@@ -88,18 +138,19 @@ jobs:
     env:
       LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
-          persist-credentials: false
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
       - uses: actions/setup-node@v5
         with:
           node-version: 24
       - name: Observe workers without changing issue state
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs observe
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs observe
       - name: Preserve observations
         if: always()
         uses: actions/upload-artifact@v7
@@ -113,7 +164,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/telemetry-workflow.mjs
       - name: Preserve workflow telemetry
         if: always()
         continue-on-error: true
@@ -148,11 +199,12 @@ jobs:
     env:
       LIGHTHOUSE_ISSUE: ${{ matrix.issue }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
-          persist-credentials: false
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -162,7 +214,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_CI_APP_CLIENT_ID: ${{ vars.LIGHTHOUSE_CI_APP_CLIENT_ID }}
           LIGHTHOUSE_CI_APP_PRIVATE_KEY: ${{ secrets.LIGHTHOUSE_CI_APP_PRIVATE_KEY }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs prepare
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs prepare
       - name: Preserve request before dispatch
         if: steps.request.outputs.send == 'true'
         uses: actions/upload-artifact@v7
@@ -176,7 +228,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIGHTHOUSE_DISPATCH_COMMENT: ${{ steps.request.outputs.comment }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs send
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs send
       - name: Preserve verification recovery evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -190,7 +242,7 @@ jobs:
       - name: Resume the recovered completion through the router
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs signal-completion
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs signal-completion
       - name: Preserve observations
         if: always()
         uses: actions/upload-artifact@v7
@@ -204,7 +256,7 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/telemetry-workflow.mjs
       - name: Preserve workflow telemetry
         if: always()
         continue-on-error: true
@@ -233,11 +285,12 @@ jobs:
       LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
       LIGHTHOUSE_OBSERVED_ISSUES: ${{ needs.scan.outputs.issues }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
-          persist-credentials: false
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -248,13 +301,13 @@ jobs:
       - name: Reconcile and update worker error reports
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs report
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs report
       - name: Observe workflow telemetry
         if: always()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/telemetry-workflow.mjs
       - name: Preserve workflow telemetry
         if: always()
         continue-on-error: true
@@ -283,11 +336,12 @@ jobs:
       LIGHTHOUSE_REPORT_INDEX_ISSUE: ${{ vars.LIGHTHOUSE_REPORT_INDEX_ISSUE }}
       LIGHTHOUSE_OBSERVED_ISSUES: ${{ needs.scan.outputs.issues }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Select Node for the published harness
+        uses: actions/setup-node@v5
         with:
-          repository: juangcarmona/lighthouse
-          ref: 53c10ddd1d4c4a1ac985276bd710efc9a60c0c0a
-          persist-credentials: false
+          node-version: 24
+      - name: Install the published Lighthouse harness
+        run: npm install --prefix .lighthouse-harness --ignore-scripts --no-audit --no-fund --package-lock=true --save-exact @juangcarmona/lighthouse-sdlc@0.24.2
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -298,13 +352,13 @@ jobs:
       - name: Reconcile and update worker error reports
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/worker-maintenance.mjs report
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/worker-maintenance.mjs report
       - name: Observe workflow telemetry
         if: always()
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node src/packages/sdlc/src/telemetry-workflow.mjs
+        run: node .lighthouse-harness/node_modules/@juangcarmona/lighthouse-sdlc/src/telemetry-workflow.mjs
       - name: Preserve workflow telemetry
         if: always()
         continue-on-error: true

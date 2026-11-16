@@ -1,5 +1,51 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.24.4
+
+### Patch Changes
+
+- b4e9c11: # Preserve issue reference boundaries
+
+  Preserve complete artifact IDs at newline and tab boundaries when selecting ProductShape evidence from structured issue and parent context.
+
+## 0.24.3
+
+### Patch Changes
+
+- 0e7d69e: # Scoped product evidence
+
+  Prepare issue-scoped ProductShape reports for large models while preserving the full citation inventory, baseline binding and byte limits. Report unavailable detail explicitly instead of failing every planning worker on unrelated transitive reports.
+
+## 0.24.2
+
+### Patch Changes
+
+- 6769fb9: # Inspect historical receipts after a repository rename
+
+  Report invalid historical receipts as uncertain observations without losing the rest of an issue inspection. Permit explicit owner retirement under a recorded former namespace only when the receipt validates there and the current comment and terminal native execution belong to the same numeric repository. Recovery admission remains unchanged.
+
+## 0.24.1
+
+### Patch Changes
+
+- 58b8c6a: # Reconcile historical housekeeping
+
+  Allow explicit owner retirement of terminal historical housekeeping observations, preserving original receipts and unknown outcomes without authorizing recovery. Support a full daily inspection while retaining the existing bounded recovery scope.
+
+## 0.24.0
+
+### Minor Changes
+
+- e4323cc: # Daily repository housekeeping
+
+  Deliver the shared daily maintenance inspection through reviewed init, reconcile and SDLC upgrades without activating execution. Preserve custom files, retain complete-scan evidence separately from recovery effects, and classify authenticated terminal PR publications without repeating candidate CI. Package publication and native adopter activation remain separate release steps.
+
+### Patch Changes
+
+- c8637b4: # Preserve implementation time and expose command progress
+
+  Allow up to 60 minutes for OpenCode implementation, respect enclosing delivery deadlines and give implementation/correction steps time for independent checks and cleanup. Show managed command starts, bounded redacted log excerpts, remaining time and failure causes with recovery links. Adopters must update their package or immutable harness pin and regenerate installed workflows to receive the correction.
+
 ## 0.23.9
 
 ### Patch Changes

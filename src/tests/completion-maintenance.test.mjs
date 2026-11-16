@@ -5,6 +5,26 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { terminalPublication, reconcilePublishedCi } from '../packages/sdlc/src/publication-recovery.mjs';
+
+test('missing original request evidence is visible before any terminal PR lookup or effect', async () => {
+  const run = { id: 200, run_attempt: 1, status: 'completed', conclusion: 'success' };
+  const issue = { number: 633, user: { login: 'owner' } };
+  const comments = [{ user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-pr-state:{"pr":638,"head":"${'a'.repeat(40)}","complete":true,"run":200} -->` }];
+  const result = await reconcilePublishedCi(async () => { throw Error('No PR lookup or effect allowed'); }, 'owner/repo', 'owner', issue, comments, { dispatch: { request: { stage: 'implement' } }, run }, {}, true, Date.now(), { readReport: async () => { throw Error('Original request unavailable'); } });
+  assert.equal(result.code, 'publication-unconfirmed');
+  assert.match(result.nextAction, /original admitted request/);
+});
+
+test('authenticated terminal publications are observations, not renewed completion authority', () => {
+  const head = 'a'.repeat(40), identity = 'b'.repeat(64), proof = { pr: 638, head };
+  const pr = { number: 638, state: 'closed', merged: true, user: { login: 'github-actions[bot]', type: 'Bot' }, body: `<!-- lighthouse-implementation:${identity} -->`, head: { ref: `lighthouse/implement-633-${identity.slice(0, 12)}`, sha: head, repo: { full_name: 'owner/repo' } }, base: { ref: 'main', repo: { full_name: 'owner/repo' } } };
+  assert.equal(terminalPublication(pr, 'owner/repo', 633, proof).code, 'publication-merged');
+  assert.equal(terminalPublication({ ...pr, merged: false }, 'owner/repo', 633, proof).code, 'publication-closed');
+  assert.equal(terminalPublication({ ...pr, state: 'open', merged: false }, 'owner/repo', 633, proof), null);
+  for (const changed of [{ ...pr, number: 639 }, { ...pr, user: { login: 'owner', type: 'User' } }, { ...pr, head: { ...pr.head, sha: 'c'.repeat(40) } }]) assert.equal(terminalPublication(changed, 'owner/repo', 633, proof).code, 'publication-authority-invalid');
+  assert.equal(terminalPublication({ ...pr, merged: undefined }, 'owner/repo', 633, proof).code, 'publication-unconfirmed');
+});
 
 const entry = fileURLToPath(new URL('../packages/sdlc/src/worker-maintenance.mjs', import.meta.url));
 test('the maintenance command signals recovered integration but never starts another final review', async () => {

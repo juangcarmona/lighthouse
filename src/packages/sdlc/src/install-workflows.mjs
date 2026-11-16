@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { completionSubscriptions } from './workflow-completions.mjs';
 import { registryWorkflow } from './workflow-distribution.mjs';
 import { createIssueControlManifest } from './issue-control-contract.mjs';
+import { housekeepingFiles } from './housekeeping-assets.mjs';
 
 const [target, revision, ...flags] = process.argv.slice(2);
 if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended', '--with-epic', '--with-issue-control'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended] [--with-epic] [--with-issue-control]');
@@ -20,6 +21,14 @@ const implement = flags.includes('--with-implement') || completion;
 const propose = flags.includes('--with-propose') || implement;
 const files = [...(flags.includes('--with-maintenance') ? ['lighthouse-worker-maintenance.yml'] : []), 'lighthouse-sdlc-router.yml', 'lighthouse-sdlc-triage.md', 'lighthouse-sdlc-refine.md', 'shared/lighthouse-opencode.md', ...(propose ? ['lighthouse-sdlc-propose.md', 'lighthouse-sdlc-apply-review.md'] : []), ...(implement ? ['lighthouse-sdlc-implement.md'] : []), ...(completion ? ['lighthouse-sdlc-integrate.md', 'lighthouse-sdlc-review.md'] : []), ...(productChange ? ['lighthouse-sdlc-product-change.md', 'lighthouse-sdlc-apply-product-change.md'] : [])];
 const root = resolve(target), planned = [];
+if (flags.includes('--with-maintenance')) {
+  const path = join(root, '.lighthouse/housekeeping.json');
+  const version = packageVersion ?? JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
+  const content = housekeepingFiles(version)['.lighthouse/housekeeping.json'];
+  if (await access(path).then(() => true, () => false) && await readFile(path, 'utf8') !== content && !replace) throw Error(`Existing housekeeping declaration differs: ${path}; review before --replace-reviewed`);
+  planned.push({ path, content });
+  console.log(`${apply ? 'Write' : 'Would write'} ${path}; configure the report index and explicitly activate maintenance separately.`);
+}
 if (unattended) files.push('lighthouse-sdlc-unattended.yml');
 if (epic) files.push('lighthouse-sdlc-epic.yml');
 for (const name of files) {

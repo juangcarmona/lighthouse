@@ -7,6 +7,19 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { registryWorkflow } from '../packages/sdlc/src/workflow-distribution.mjs';
 import { createIssueControlManifest } from '../packages/sdlc/src/issue-control-contract.mjs';
+import { housekeepingFiles } from '../packages/sdlc/src/housekeeping-assets.mjs';
+
+test('daily maintenance projection is generated from the shared package without changing worker pins or activation', async () => {
+  const source = await readFile(new URL('../packages/sdlc/workflows/lighthouse-worker-maintenance.yml', import.meta.url), 'utf8');
+  const files = housekeepingFiles('1.2.3');
+  assert.equal(files['.github/workflows/lighthouse-worker-maintenance.yml'], registryWorkflow(source, '1.2.3'));
+  assert.match(source, /cron: '23 3 \* \* \*'/);
+  assert.match(source, /housekeeping:\n[\s\S]*?default: false/);
+  assert.match(source, /dry_run:\n[\s\S]*?default: true/);
+  assert.match(source, /daily-housekeeping:\n[\s\S]*?group: lighthouse-worker-reports/);
+  assert.match(source, /ref: __LIGHTHOUSE_REF__/);
+  assert.match(files['.lighthouse/housekeeping.json'], /explicit repository-variable opt-in/);
+});
 
 const workflows = ['lighthouse-sdlc-router.yml', ...['triage', 'refine', 'propose', 'implement', 'apply-review', 'integrate', 'review', 'product-change', 'apply-product-change'].map(name => `lighthouse-sdlc-${name}.md`), 'lighthouse-worker-maintenance.yml', 'lighthouse-sdlc-unattended.yml', 'lighthouse-sdlc-epic.yml', 'shared/lighthouse-opencode.md'];
 test('the complete registry projection loads the exact package and preserves adopter source checkouts', async () => {

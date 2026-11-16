@@ -29,7 +29,7 @@ on:
 if: github.run_attempt == 1 && needs.prepare.outputs.eligible == 'true'
 runs-on: [self-hosted, linux, lighthouse-workflow]
 runs-on-slim: ubuntu-24.04
-timeout-minutes: 55
+timeout-minutes: 150
 env:
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
@@ -115,6 +115,9 @@ post-steps:
       if-no-files-found: ignore
       retention-days: 14
 jobs:
+  agent:
+    # Cover the bounded host admission hook, engine slot wait and execution step.
+    timeout-minutes: 360
   prepare:
     if: github.run_attempt == 1
     concurrency:
@@ -286,6 +289,6 @@ Execute `implement` using `/input/context.json` and `/harness/skills/implement/S
 
 Report public progress before inspection and whenever a decision, test result or blocker changes the plan. Explain the evidence briefly; avoid dumping tool payloads. Use the shell to install public dependencies, edit source and run checks. Preserve content and author-owned work. Record completed tasks accurately. Store screenshots, test reports and a concise retrospective in `/output/evidence/`; the host retains them as Actions artifacts.
 
-Run the commands in `implementation.policy.checks` and relevant repository checks. The host reruns those commands independently on a clean candidate without provider or GitHub credentials. Return `/output/envelope.json` with the supplied identity. A required human visual/content decision is a real blocker: use `blocked`, record it in `pendingReview`, and still deliver the reviewable code. A passed `done` assessment requires all required evidence and reviews. Reserve time to write the envelope within the 30-minute engine limit.
+Run the commands in `implementation.policy.checks` and relevant repository checks. The host reruns those commands independently on a clean candidate without provider or GitHub credentials. Return `/output/envelope.json` with the supplied identity. A required human visual/content decision is a real blocker: use `blocked`, record it in `pendingReview`, and still deliver the reviewable code. A passed `done` assessment requires all required evidence and reviews. Read `context.executionBudget` for the effective deadline (at most 60 minutes for implementation, narrowed by any enclosing delivery deadline). Finish managed commands and write the envelope before that deadline; an incomplete command is not a passing check.
 
 The separate publisher rechecks owner authority, source revision, write scope and check receipts before opening a fresh PR. It never updates an existing branch, merges, closes the issue or starts another stage. End after writing the envelope; the adapter records gh-aw completion.

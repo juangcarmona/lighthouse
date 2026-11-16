@@ -2,6 +2,14 @@ import { execFileSync } from 'node:child_process';
 import { readFile, lstat } from 'node:fs/promises';
 import { scratchErrorCode } from './command-scratch.mjs';
 
+export function executionBudget(implementing, { deadline, now = Date.now() } = {}) {
+  const configuredMs = (implementing ? 60 : 10) * 60_000;
+  if (deadline !== undefined && !Number.isSafeInteger(deadline)) throw Error('Invalid delivery execution deadline');
+  const timeoutMs = Math.min(configuredMs, deadline === undefined ? Infinity : deadline - now);
+  if (timeoutMs <= 0) throw Error('Delivery execution deadline exceeded');
+  return { configuredMs, timeoutMs, startedAt: now, deadline: now + timeoutMs };
+}
+
 export function executionLimits(config, implementing = true) {
   const resources = config.resources === undefined ? {} : config.resources;
   if (!resources || typeof resources !== 'object' || Array.isArray(resources) || Object.keys(resources).some(key => !['implementationPids', 'planningPids'].includes(key)) ||

@@ -254,7 +254,13 @@ export async function loadProductCore({ entry = require.resolve('@prodshape/core
   return { ...core, version: metadata.version };
 }
 
-export async function prepareProductEvidence(root, destination, core, { baselineDigest } = {}) {
+export function productEvidenceScopeText(value) {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') return Object.values(value).map(productEvidenceScopeText).join('\n');
+  return '';
+}
+
+export async function prepareProductEvidence(root, destination, core, { baselineDigest, scopeText } = {}) {
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed before evidence preparation');
   const repository = await core.openRepository(resolve(root));
   const baseline = await core.validateBaseline(repository);
@@ -262,26 +268,60 @@ export async function prepareProductEvidence(root, destination, core, { baseline
   if (errors.length) throw Error(`ProductShape baseline has ${errors.length} blocking diagnostic(s); validate the adopter model before retrying`);
   const nodes = baseline.graph.nodes;
   if (!Array.isArray(nodes)) throw Error('ProductShape evidence graph is invalid');
+  if (nodes.some(node => !/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) || new Set(nodes.map(node => node.id)).size !== nodes.length) throw Error('ProductShape evidence has an unsafe artifact identity');
+  const scoped = scopeText !== undefined;
+  if (scoped && (typeof scopeText !== 'string' || Buffer.byteLength(scopeText) > 256 * 1024)) throw Error('ProductShape evidence scope is invalid');
+  const requested = scoped ? [...new Set(scopeText.match(/\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g) ?? [])].sort() : [];
+  const identities = new Set(nodes.map(node => node.id)), roots = new Set(requested.filter(id => identities.has(id)));
+  const selected = new Set(roots);
+  for (const edge of scoped ? baseline.graph.edges ?? [] : []) {
+    if (roots.has(edge.from) && identities.has(edge.to)) selected.add(edge.to);
+    if (roots.has(edge.to) && identities.has(edge.from)) selected.add(edge.from);
+  }
+  const scope = scoped ? { mode: 'issue-references-and-direct-neighbours', requested, matched: [...roots].sort(), unresolved: requested.filter(id => !identities.has(id)), selected: [...selected].sort(), unavailable: [] } : undefined;
+  const fallback = node => ({ citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }), availability: { status: 'unavailable', reason: 'not-materialized', acceptedModelPath: node.path ?? null } });
+  const compact = scoped ? new Map(nodes.map(node => [node.id, JSON.stringify(fallback(node), null, 2) + '\n'])) : null;
+  let reservedBytes = scoped ? [...compact.values()].reduce((total, content) => total + Buffer.byteLength(content), 0) : 0;
+  if (reservedBytes > 16 * 1024 * 1024 || scoped && [...compact.values()].some(content => Buffer.byteLength(content) > 512 * 1024)) throw Error('ProductShape evidence exceeds the byte bound');
   await mkdir(destination, { recursive: true });
   const index = []; let bytes = 0;
-  for (const node of nodes) {
-    if (!/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) throw Error('ProductShape evidence has an unsafe artifact identity');
-    const report = { inspect: core.inspectArtifact(baseline.graph, node.id), impact: core.analyzeImpact(baseline.graph, node.id), citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }) };
-    if (['domain-lifecycle', 'structured-behaviour'].includes(node.type)) {
+  // Materialize issue roots before their neighbours; all other artifacts retain a citation and explicit availability.
+  const ordered = scoped ? [...nodes].sort((a, b) => Number(roots.has(b.id)) - Number(roots.has(a.id)) || a.id.localeCompare(b.id)) : nodes;
+  for (const node of ordered) {
+    const materialize = !scoped || selected.has(node.id);
+    let report = materialize ? { inspect: core.inspectArtifact(baseline.graph, node.id), impact: core.analyzeImpact(baseline.graph, node.id), citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }) } : fallback(node);
+    if (materialize && ['domain-lifecycle', 'structured-behaviour'].includes(node.type)) {
       const artifact = baseline.artifacts.find(item => item.frontmatter.id === node.id);
       if (!artifact) throw Error('ProductShape lifecycle or behaviour definition is missing');
       report.definition = { frontmatter: artifact.frontmatter, body: artifact.body };
     }
-    const content = JSON.stringify(report, null, 2) + '\n'; bytes += Buffer.byteLength(content);
+    let content = JSON.stringify(report, null, 2) + '\n';
+    if (scoped && Buffer.byteLength(content) > 512 * 1024) {
+      report.impact = { status: 'unavailable', reason: 'report-byte-bound' };
+      content = JSON.stringify(report, null, 2) + '\n';
+      if (Buffer.byteLength(content) > 512 * 1024) {
+        report.inspect = { id: node.id, status: 'unavailable', reason: 'report-byte-bound', acceptedModelPath: node.path ?? null };
+        content = JSON.stringify(report, null, 2) + '\n';
+      }
+      scope.unavailable.push({ id: node.id, reason: 'report-byte-bound' });
+    }
+    if (scoped) {
+      const next = reservedBytes - Buffer.byteLength(compact.get(node.id)) + Buffer.byteLength(content);
+      if (next > 16 * 1024 * 1024) {
+        content = compact.get(node.id);
+        scope.unavailable.push({ id: node.id, reason: 'aggregate-byte-bound' });
+      } else reservedBytes = next;
+    }
+    bytes += Buffer.byteLength(content);
     if (Buffer.byteLength(content) > 512 * 1024 || bytes > 16 * 1024 * 1024) throw Error('ProductShape evidence exceeds the byte bound');
     await writeFile(join(destination, `${node.id}.json`), content, { flag: 'wx' });
     index.push({ id: node.id, type: node.type, title: node.title, report: `${node.id}.json` });
   }
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed during evidence preparation');
-  const content = JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, serializationVersion: repository.config?.version ?? null, ...(baselineDigest ? { baselineDigest } : {}), artifacts: index }, null, 2) + '\n';
+  const content = JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: core.version, serializationVersion: repository.config?.version ?? null, ...(baselineDigest ? { baselineDigest } : {}), ...(scope ? { scope } : {}), artifacts: index }, null, 2) + '\n';
   if (Buffer.byteLength(content) > 512 * 1024) throw Error('ProductShape evidence index exceeds the byte bound');
   await writeFile(join(destination, 'index.json'), content, { flag: 'wx' });
-  return { artifacts: index.length, bytes, serializationVersion: repository.config?.version ?? null };
+  return { artifacts: index.length, bytes, serializationVersion: repository.config?.version ?? null, ...(scope ? { scope } : {}) };
 }
 
 export function productReviewBinding(input) {

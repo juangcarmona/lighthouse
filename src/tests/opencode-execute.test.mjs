@@ -221,6 +221,8 @@ if (args[0] === 'run' && !args.includes('cleanup-session')) {
     assert.equal(JSON.parse(await readFile(join(root, 'safeoutputs', 'outputs.jsonl'))).type, 'noop');
     assert.deepEqual(JSON.parse(await readFile(join(runDir, 'envelope.json'))), envelope);
     assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).cleanup.status, 'clean');
+    assert.equal(JSON.parse(await readFile(join(runDir, 'runtime.json'))).budget.timeoutMs, 600000);
+    assert.match(execution.stdout, /OpenCode budget: 10 minutes; deadline/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -487,6 +489,19 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
       assert.equal(Buffer.from(edits[0].content, 'base64').toString(), 'partial implementation');
       observations.push({ attempt, before, after: await workspaceUsage(root), resources: runtime.cleanup.remaining, outcome: runtime.execution.status });
     }
+    await writeFile(shim, (await readFile(shim, 'utf8')).replace('process.exitCode=134;', 'setInterval(()=>{},1000);'));
+    const timedDir = join(root, 'lighthouse-1-5'); await mkdir(timedDir);
+    await cp(join(runDir, 'request.json'), join(timedDir, 'request.json')); await cp(join(runDir, 'context.json'), join(timedDir, 'context.json'));
+    const timed = spawnSync(process.execPath, [harness], { encoding: 'utf8', timeout: 15000, env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIGHTHOUSE_ENGINE_CONFIG: join(root, 'config'), RUNNER_TEMP: root, GITHUB_RUN_ID: '1', GITHUB_RUN_ATTEMPT: '5', GITHUB_WORKSPACE: work, GH_AW_PROMPT: join(root, 'prompt'), GH_AW_SAFE_OUTPUTS: join(root, 'completion'), LIGHTHOUSE_DELIVERY_DEADLINE: String(Date.now() + 6000) } });
+    assert.equal(timed.status, 1, timed.stdout + timed.stderr);
+    const timedReceipt = JSON.parse(await readFile(join(timedDir, 'runtime.json')));
+    assert.equal(timedReceipt.execution.status, 'timeout');
+    assert.equal(timedReceipt.budget.configuredMs, 3600000);
+    assert.ok(timedReceipt.budget.timeoutMs > 0 && timedReceipt.budget.timeoutMs <= 6000);
+    assert.equal(timedReceipt.cleanup.status, 'clean');
+    assert.ok(JSON.parse(await readFile(join(timedDir, 'changes.json'))).length > 0);
+    await assert.rejects(readFile(join(root, 'completion')));
+    await writeFile(shim, (await readFile(shim, 'utf8')).replace('setInterval(()=>{},1000);', 'process.exitCode=134;'));
     if (process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE) await writeFile(process.env.LIGHTHOUSE_ADAPTER_CLEANUP_EVIDENCE, JSON.stringify({ kind: 'complete-adapter-executions-with-docker-shim', observations }, null, 2) + '\n');
     await writeFile(shim, (await readFile(shim, 'utf8')).replace('process.exitCode=134;', "fs.mkdirSync(out+'/evidence');fs.symlinkSync('/input/context.json',out+'/evidence/unsafe-link');process.exitCode=134;"));
     const next = join(root, 'lighthouse-1-4'); await mkdir(next);

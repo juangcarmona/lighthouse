@@ -79,14 +79,14 @@ test('invalid waits fail before admission and native unattended delivery needs n
   assert.match(native.stdout, /does not reserve/);
 });
 
-test('compiled workers reserve queue time separately from the existing execution limits', async () => {
+test('compiled workers cover admission, bounded slot waits and the stage execution envelope', async () => {
   const shared = await readFile('src/packages/sdlc/workflows/shared/lighthouse-opencode.md', 'utf8');
   assert.equal(parse(shared.split('---')[1]).jobs.agent['timeout-minutes'], 180);
-  for (const [name, execution] of [['implement', 55], ['product-change', 30]]) {
+  for (const [name, execution, job] of [['implement', 150, 360], ['apply-review', 150, 360], ['product-change', 30, 180]]) {
     const compiled = parse(await readFile(`.github/workflows/lighthouse-sdlc-${name}.lock.yml`, 'utf8'));
     const agent = compiled.jobs.agent;
-    assert.equal(agent['timeout-minutes'], 180);
+    assert.equal(agent['timeout-minutes'], job);
     assert.equal(agent.steps.find(step => step.name === 'OpenCode progress and result')['timeout-minutes'], execution);
-    assert.ok(agent['timeout-minutes'] >= 120 + execution + 5);
+    assert.ok(agent['timeout-minutes'] >= 120 + (execution === 150 ? 60 : 0) + execution + 5);
   }
 });
