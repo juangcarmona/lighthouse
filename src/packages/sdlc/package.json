@@ -47,7 +47,8 @@
     "LICENSE",
     "NOTICE",
     "telemetry.md",
-    "issue-control.md"
+    "issue-control.md",
+    "practice-evidence.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -102,7 +103,9 @@
     "./telemetry-opencode": "./src/telemetry-opencode.mjs",
     "./schemas/telemetry-event.schema.json": "./schemas/telemetry-event.schema.json",
     "./issue-control": "./src/issue-control.mjs",
-    "./schemas/issue-control-intent.schema.json": "./schemas/issue-control-intent.schema.json"
+    "./schemas/issue-control-intent.schema.json": "./schemas/issue-control-intent.schema.json",
+    "./practice-catalog": "./src/practice-catalog.mjs",
+    "./practice-observation": "./src/practice-observation.mjs"
   },
   "license": "Apache-2.0"
 }
