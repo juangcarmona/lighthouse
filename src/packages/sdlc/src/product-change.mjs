@@ -254,6 +254,12 @@ export async function loadProductCore({ entry = require.resolve('@prodshape/core
   return { ...core, version: metadata.version };
 }
 
+export function productEvidenceScopeText(value) {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') return Object.values(value).map(productEvidenceScopeText).join('\n');
+  return '';
+}
+
 export async function prepareProductEvidence(root, destination, core, { baselineDigest, scopeText } = {}) {
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed before evidence preparation');
   const repository = await core.openRepository(resolve(root));

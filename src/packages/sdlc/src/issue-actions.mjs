@@ -32,7 +32,7 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { loadRefinement, loadStageReport, prepareProposal, proposalRoot, createProposalPullRequest } from './proposal.mjs';
 import { eligibleIssueAuthor } from './request-triage.mjs';
 import { projectImplementationPrState, reconcileImplementationPr, setPullRequestDraft } from './pr-state.mjs';
-import { prepareProductChange, prepareProductEvidence, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore, checkProductResumePullRequest } from './product-change.mjs';
+import { prepareProductChange, prepareProductEvidence, productEvidenceScopeText, productModelDigest, productModelDirectory, loadProductBridge, loadProductCore, checkProductResumePullRequest } from './product-change.mjs';
 import { validateProductCandidate, preparePendingProductCandidate, bindValidatedProductCandidate, publishProductChangePullRequest, loadProductApproval, applyApprovedProductChange, collectProductApplyFiles, publishProductApply } from './product-change-actions.mjs';
 import { assessDecomposition } from './epic.mjs';
 import { handoff as renderHandoff, pendingQuestion, publishObservedStop, resultHandoffState, visibleNextAction, failedCheckSummary, deliveryCiHandoff, productApplyObservation, productPublicationMessage, workerStopObservation } from './handoff.mjs';
@@ -647,7 +647,7 @@ async function main(command) {
         if (Buffer.byteLength(JSON.stringify(parentEvidence)) > 128000) throw Error('Parent evidence exceeds the bounded product context');
       }
       const productChange = await prepareProductChange(process.cwd(), productChangeName, existingFiles, bridge);
-      const productEvidence = await prepareProductEvidence(process.cwd(), join(dir, 'product-evidence'), await loadProductCore(), { baselineDigest, scopeText: JSON.stringify({ issue: context.issue, parentEvidence }) });
+      const productEvidence = await prepareProductEvidence(process.cwd(), join(dir, 'product-evidence'), await loadProductCore(), { baselineDigest, scopeText: productEvidenceScopeText({ issue: context.issue, parentEvidence }) });
       context.request.worker = 'product-change';
       context.authorization = { status: 'verified', verifiedBy: 'GitHub Actions workflow', authorizedStage: stage, owner, entry: snapshot.productEntry, event: env.GITHUB_EVENT_NAME };
       context.productChange = { ...productChange, baselineDigest, acceptedModelPath: `/workspace/${await productModelDirectory(process.cwd())}`, evidenceRoot: '/workspace/.lighthouse-product-evidence', idea: `${issue.title}\n\n${issue.body ?? ''}`, scope: issue.body ?? issue.title, ...(dispatch.request.productFeedback ? { feedback: dispatch.request.productFeedback } : {}), ...(productReview ? { review: productReview } : {}), parent: { issue: issueNumber, stage, authorizationDigest, policyDigest, sourceRevision: revision.sha, ...(snapshot.productParent ? { prerequisite: snapshot.productParent, evidence: parentEvidence } : {}) } };

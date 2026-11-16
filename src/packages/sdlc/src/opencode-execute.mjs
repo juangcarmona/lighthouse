@@ -24,7 +24,7 @@ import { verificationIntegrity } from './verification-integrity.mjs';
 import { implementationPlanMetadata, prepareImplementationPlanMetadata } from './implementation-plan.mjs';
 import { acquireEngineSlot, engineSlotWaitSeconds } from './engine-slot.mjs';
 export { acquireEngineSlot } from './engine-slot.mjs';
-import { prepareProductEvidence, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
+import { prepareProductEvidence, productEvidenceScopeText, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
 import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
 
@@ -98,7 +98,7 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   signal?.throwIfAborted();
   const baselineDigest = await productModelDigest(source), reports = join(runDir, 'evidence/host/product-context');
   const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
-  const scopeText = context.issue ? JSON.stringify({ issue: context.issue, continuation: context.continuation }) : undefined;
+  const scopeText = context.issue ? productEvidenceScopeText({ issue: context.issue, continuation: context.continuation }) : undefined;
   const result = await prepareProductEvidence(source, reports, core, { baselineDigest, scopeText });
   signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
