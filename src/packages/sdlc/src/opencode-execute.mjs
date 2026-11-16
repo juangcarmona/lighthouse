@@ -29,6 +29,21 @@ import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mj
 import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
 import { configureProductCompositionWorker } from './product-composition-runtime.mjs';
 import { engineResultByteLimit } from './engine-result-limits.mjs';
+import { productWorkingContext } from './product-context.mjs';
+
+export async function prepareProductWorkingContext(contextPath, auditPath, capability) {
+  const raw = await readFile(contextPath, 'utf8');
+  if (Buffer.byteLength(raw) > 4 * 1024 * 1024) throw Error('Product audit context exceeds bounds');
+  const original = JSON.parse(raw), auditSha256 = createHash('sha256').update(raw).digest('hex');
+  const working = productWorkingContext(original, auditSha256);
+  if (capability) working.productChange.composition = capability;
+  const serialized = JSON.stringify(working);
+  if (Buffer.byteLength(serialized) > 256 * 1024) throw Error('Product working context exceeds bounds');
+  await writeFile(auditPath, raw, { flag: 'wx', mode: 0o444 });
+  await writeFile(contextPath, serialized);
+  // The adapter still adds its execution budget before its existing final chmod.
+  return { auditSha256, originalBytes: Buffer.byteLength(raw), workingBytes: Buffer.byteLength(serialized), retained: working.productChange.currentDocuments?.measured ?? null };
+}
 
 export function completionOutput(envelope, request) {
   const errors = validateStageEnvelope(envelope, request);
@@ -261,10 +276,7 @@ async function main() {
       } catch {
         capability = { status: 'unavailable', reason: 'Pinned planning image does not support the composition configuration. Workflow maintainer: update the package/workflow pin and qualify local MCP on the pinned image; do not broaden planning permissions.' };
       }
-      const compositionContext = JSON.parse(await readFile(context, 'utf8'));
-      compositionContext.productChange ??= {};
-      compositionContext.productChange.composition = capability;
-      await writeFile(context, JSON.stringify(compositionContext));
+      runtimeReceipt.productContext = await prepareProductWorkingContext(context, join(source, '.lighthouse-product-audit.json'), capability);
       runtimeReceipt.productComposition = capability;
     }
     if (telemetry.health().status !== 'disabled') {
@@ -294,6 +306,11 @@ async function main() {
     runtimeReceipt.budget = budget;
     const executionContext = JSON.parse(await readFile(context, 'utf8'));
     executionContext.executionBudget = budget;
+    if (request.worker === 'product-change') {
+      const bytes = Buffer.byteLength(JSON.stringify(executionContext));
+      if (bytes > 256 * 1024) throw Error('Product working context exceeds bounds after host metadata');
+      runtimeReceipt.productContext.workingBytes = bytes;
+    }
     await writeFile(context, JSON.stringify(executionContext)); await chmod(context, 0o444);
     await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
     const started = budget.startedAt;

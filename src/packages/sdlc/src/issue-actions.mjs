@@ -89,6 +89,9 @@ export function continuationContext(continuation, answer) {
   const question = pendingQuestion(continuation.envelope.result.output?.handoff?.question ?? continuation.envelope.result.output?.productChange?.question);
   return { ...(question ? { question } : {}), answer: { body: answer.body, url: answer.html_url }, priorRunId: continuation.request.runId };
 }
+export async function prepareProductContextEvidence(root, destination, context, core, { baselineDigest, parentEvidence } = {}) {
+  return prepareProductEvidence(root, destination, core, { baselineDigest, scopeText: productEvidenceScopeText({ issue: context.issue, parentEvidence }) });
+}
 export function continuationHistory(continuation, answer) {
   const prior = continuation.request.answerHistory ?? [];
   if (!Array.isArray(prior) || prior.length > 16 || prior.some(item => typeof item?.question !== 'string' || typeof item.answer?.body !== 'string' || typeof item.answer?.url !== 'string' || typeof item.priorRunId !== 'string')) throw Error('Invalid retained question and answer history');
@@ -647,7 +650,7 @@ async function main(command) {
         if (Buffer.byteLength(JSON.stringify(parentEvidence)) > 128000) throw Error('Parent evidence exceeds the bounded product context');
       }
       const productChange = await prepareProductChange(process.cwd(), productChangeName, existingFiles, bridge);
-      const productEvidence = await prepareProductEvidence(process.cwd(), join(dir, 'product-evidence'), await loadProductCore(), { baselineDigest, scopeText: productEvidenceScopeText({ issue: context.issue, parentEvidence }) });
+      const productEvidence = await prepareProductContextEvidence(process.cwd(), join(dir, 'product-evidence'), context, await loadProductCore(), { baselineDigest, parentEvidence });
       context.request.worker = 'product-change';
       context.authorization = { status: 'verified', verifiedBy: 'GitHub Actions workflow', authorizedStage: stage, owner, entry: snapshot.productEntry, event: env.GITHUB_EVENT_NAME };
       context.productChange = { ...productChange, baselineDigest, acceptedModelPath: `/workspace/${await productModelDirectory(process.cwd())}`, evidenceRoot: '/workspace/.lighthouse-product-evidence', idea: `${issue.title}\n\n${issue.body ?? ''}`, scope: issue.body ?? issue.title, ...(dispatch.request.productFeedback ? { feedback: dispatch.request.productFeedback } : {}), ...(productReview ? { review: productReview } : {}), parent: { issue: issueNumber, stage, authorizationDigest, policyDigest, sourceRevision: revision.sha, ...(snapshot.productParent ? { prerequisite: snapshot.productParent, evidence: parentEvidence } : {}) } };

@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { preparePlanningProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 import { productModelDigest, loadProductCore } from '../packages/sdlc/src/product-change.mjs';
+import { prepareProductEvidence, productEvidenceScopeText } from '../packages/sdlc/src/product-change.mjs';
+import { productContextFixture } from './fixtures/product-context.mjs';
 
 async function fixture() {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-planning-product-')), source = join(dir, 'source'), run = join(dir, 'run');
@@ -34,6 +36,31 @@ test('a read-only planner receives current provider inspect, impact and citation
     assert.equal((await stat(reportPath)).mode & 0o222, 0);
     assert.equal(await readFile(f.model, 'utf8'), f.content); assert.equal(await productModelDigest(f.source), expected);
     assert.deepEqual(JSON.parse(await readFile(join(f.run, 'evidence/host/product-context/FR-ONE.json'))), report);
+  } finally { await rm(f.dir, { recursive: true, force: true }); }
+});
+
+test('actual preparation reaches provider reports for admitted 64-file history above the old flattened scope guard', async () => {
+  const f = await fixture();
+  try {
+    const { context, files } = productContextFixture({ baselineDigest: await productModelDigest(f.source) });
+    const legacyScope = Object.values(context.issue).flatMap(value => typeof value === 'string' ? value : []).join('\n');
+    assert.ok(Buffer.byteLength(legacyScope) > 256 * 1024);
+    assert.equal(files.length, 64);
+    assert.equal(files.reduce((sum, file) => sum + Buffer.byteLength(file.content), 0), 276250);
+    await assert.rejects(prepareProductEvidence(f.source, join(f.run, 'old-preparation'), f.core, { scopeText: legacyScope }), /evidence scope is invalid/);
+    const before = JSON.stringify(context.issue);
+    await writeFile(join(f.run, 'context.json'), JSON.stringify(context));
+    const result = await preparePlanningProductEvidence(f.source, f.run, { core: f.core });
+    const scope = productEvidenceScopeText({ issue: context.issue });
+    assert.ok(Buffer.byteLength(scope) < 2048);
+    assert.deepEqual(result.scope.matched, ['FR-ONE']);
+    assert.ok(result.scope.unresolved.includes('BR-ANSWER'));
+    assert.equal(JSON.stringify(context.issue), before);
+    const after = JSON.parse(await readFile(join(f.run, 'context.json'), 'utf8'));
+    assert.deepEqual(after.request, context.request);
+    assert.deepEqual(after.issue, context.issue);
+    assert.equal(JSON.parse(await readFile(join(f.source, '.lighthouse-product-evidence/FR-ONE.json'))).inspect.id, 'FR-ONE');
+    assert.equal(await readFile(f.model, 'utf8'), f.content);
   } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
 

@@ -92,8 +92,8 @@ function documents(context, binding) {
 }
 
 function inventory(context) {
-  const binding = compositionBinding(context), paths = new Map();
-  let bytes = 0, count = 0;
+  const binding = compositionBinding(context), paths = new Map(), unique = new Set();
+  let bytes = 0, count = 0, references = 0, duplicateBytes = 0;
   for (const document of documents(context, binding)) {
     if (!Array.isArray(document.files) || !document.files.length || document.files.length > PRODUCT_FILE_LIMITS.files) throw Error('Retained file inventory exceeds bounds');
     const seen = new Set();
@@ -113,14 +113,19 @@ function inventory(context) {
       if (seen.has(file.path)) throw Error('Duplicate retained path');
       seen.add(file.path);
       const size = Buffer.byteLength(file.content);
-      if (++count > 128 || (bytes += size) > PRODUCT_FILE_LIMITS.totalBytes) throw Error('Retained aggregate inventory exceeds bounds');
+      if (++references > 512) throw Error('Retained reference inventory exceeds bounds');
+      const identity = JSON.stringify([file.path, file.sha256, file.mode ?? '100644']);
+      if (!unique.has(identity)) {
+        unique.add(identity);
+        if (++count > 128 || (bytes += size) > PRODUCT_FILE_LIMITS.totalBytes) throw Error('Retained aggregate inventory exceeds bounds');
+      } else duplicateBytes += size;
       const objects = paths.get(file.path) ?? [];
       if (objects.some(item => item.revision === document.revision)) throw Error('Ambiguous retained path revision');
       objects.push({ ref: { source: document.source, sha256: file.sha256 }, revision: document.revision, bytes: size, id: artifactId(candidateFile), file: candidateFile });
       paths.set(file.path, objects);
     }
   }
-  return { binding, paths, count, bytes };
+  return { binding, paths, count, bytes, references, duplicateBytes };
 }
 
 export function retainedInventory(context, reference) {
@@ -132,6 +137,19 @@ export function retainedInventory(context, reference) {
     return { ...item.file, sha256: item.ref.sha256, source: item.ref.source, revision: item.revision };
   }
   return { binding: data.binding, measured: { objects: data.count, paths: data.paths.size, bytes: data.bytes }, paths: [...data.paths].map(([path, objects]) => ({ path, objects: objects.map(({ file: _file, ...item }) => item) })) };
+}
+
+export function currentRetainedInventory(context) {
+  const data = inventory(context);
+  return {
+    binding: data.binding,
+    measured: { objects: data.count, paths: data.paths.size, bytes: data.bytes, references: data.references, duplicateBytes: data.duplicateBytes },
+    paths: [...data.paths].map(([path, objects]) => {
+      const current = objects.reduce((a, b) => a.revision > b.revision ? a : b);
+      const describe = ({ file: _file, ...item }) => item;
+      return { path, current: describe(current), history: objects.filter(item => item !== current).map(describe) };
+    }),
+  };
 }
 
 export function composeRetainedProduct(context, args) {

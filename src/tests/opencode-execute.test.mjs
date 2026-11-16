@@ -9,8 +9,10 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
-import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
+import { snapshotSource, redactLog, acquireEngineSlot, completionOutput, prepareProductWorkingContext } from '../packages/sdlc/src/opencode-execute.mjs';
 import { compositionFixture } from './fixtures/product-composition.mjs';
+import { productContextFixture } from './fixtures/product-context.mjs';
+import { compositionService } from '../packages/sdlc/src/product-composition-server.mjs';
 
 async function fixtureHarness(root) {
   const harness = join(root, 'harness');
@@ -56,7 +58,10 @@ if(output){
  if(${supported}){
   const config=JSON.parse(fs.readFileSync(mount('/etc/opencode/opencode.json')));
   if(!config.mcp.servers.productcomposition||context.productChange.composition.status!=='configured')process.exit(3);
-  const script='import {compositionService} from '+JSON.stringify(${JSON.stringify(join(root, 'harness/src/product-composition-server.mjs'))})+'; const service=compositionService('+JSON.stringify(input)+','+JSON.stringify(output)+'); const catalog=await service("inspect",{}); await service("compose",{binding:catalog.binding,plan:catalog.paths.map(p=>({path:p.path,selected:p.objects[0].ref,omitted:[]})),envelope:'+${JSON.stringify(JSON.stringify(envelope))}+'});';
+   const audit=mount('/workspace')+'/.lighthouse-product-audit.json';
+   if(!args.some(a=>a.endsWith('dst=/workspace,readonly'))||context.productChange.audit.path!=='/workspace/.lighthouse-product-audit.json'||!context.productChange.currentDocuments||JSON.stringify(context).includes('Exact UTF-8 text'))process.exit(5);
+   if(fs.readFileSync(audit,'utf8')!==${JSON.stringify(JSON.stringify(context))})process.exit(6);
+   const script='import {compositionService} from '+JSON.stringify(${JSON.stringify(join(root, 'harness/src/product-composition-server.mjs'))})+'; const service=compositionService('+JSON.stringify(audit)+','+JSON.stringify(output)+'); const catalog=await service("inspect",{}); await service("compose",{binding:catalog.binding,plan:catalog.paths.map(p=>({path:p.path,selected:p.objects[0].ref,omitted:[]})),envelope:'+${JSON.stringify(JSON.stringify(envelope))}+'});';
   const run=cp.spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8'});if(run.status!==0){console.error(run.stderr);process.exit(run.status??1);}
  }else{
   if(context.productChange.composition.status!=='unavailable')process.exit(4);
@@ -72,12 +77,62 @@ if(output){
       if (supported) assert.deepEqual(result.result.output.productChange.files, files);
       const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json'), 'utf8'));
       assert.equal(runtime.productComposition.status, supported ? 'configured' : 'unavailable');
+      assert.ok(runtime.productContext.originalBytes > 256 * 1024);
+      assert.ok(runtime.productContext.workingBytes < 64 * 1024);
+      assert.equal(runtime.productContext.retained.paths, 64);
       assert.equal(runtime.model, 'fixture-unchanged');
       assert.equal(runtime.budget.timeoutMs, 600000);
       assert.equal(runtime.cleanup.status, 'clean');
       assert.equal(await readFile(join(work, 'README.md'), 'utf8'), 'Synthetic source, never edited.\n');
     } finally { await rm(root, { recursive: true, force: true }); }
   });
+});
+
+test('adapter keeps exact audit bytes read-only and composition inspects historical bodies on demand', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-working-context-'));
+  try {
+    const { context } = productContextFixture(), raw = JSON.stringify(context, null, 2);
+    const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.equal(measured.auditSha256, createHash('sha256').update(raw).digest('hex'));
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    assert.deepEqual(working.request, context.request);
+    assert.equal(working.productChange.audit.sha256, measured.auditSha256);
+    const service = compositionService(audit, root), catalog = await service('inspect', {});
+    for (const item of catalog.paths[0].objects) {
+      const object = await service('inspect', { reference: { path: catalog.paths[0].path, ...item.ref } });
+      assert.equal(object.content, context.productChange.schemaPin);
+    }
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('invalid product projection cannot create audit or modify input/output', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-refused-context-'));
+  try {
+    const { context } = productContextFixture(); context.productChange.baselineDigest = 'a'.repeat(64);
+    const raw = JSON.stringify(context), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw); await writeFile(join(root, 'envelope.json'), 'prior output');
+    await assert.rejects(prepareProductWorkingContext(input, audit), /binding/);
+    assert.equal(await readFile(input, 'utf8'), raw);
+    assert.equal(await readFile(join(root, 'envelope.json'), 'utf8'), 'prior output');
+    await assert.rejects(lstat(audit), { code: 'ENOENT' });
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('audit source collisions refuse without hiding source content or rewriting authority', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-audit-collision-'));
+  try {
+    const { context } = productContextFixture(), raw = JSON.stringify(context);
+    const input = join(root, 'context.json'), audit = join(root, '.lighthouse-product-audit.json');
+    await writeFile(input, raw); await writeFile(audit, 'Author-owned source.');
+    await assert.rejects(prepareProductWorkingContext(input, audit), { code: 'EEXIST' });
+    assert.equal(await readFile(input, 'utf8'), raw);
+    assert.equal(await readFile(audit, 'utf8'), 'Author-owned source.');
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 async function workspaceUsage(root) {
@@ -485,7 +540,7 @@ test('a product worker from implementation uses the read-only product engine wit
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'intent', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Continue the parent.', output: { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: [] } } }, effect: { type: 'issue-comment', body: 'Intent already covers the request.' } };
     await mkdir(join(runDir, 'product-evidence'));
     await writeFile(join(runDir, 'product-evidence/index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: '0.25.0', baselineDigest: request.baselineDigest, artifacts: [] }));
-    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Check product intent');
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), JSON.stringify({ request, productChange: {}, issue: { body: 'Check accepted intent.' } })); await writeFile(join(root, 'prompt'), 'Check product intent');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
     await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args[0]==='run'&&!args.includes('cleanup-session')){ if(!args.some(x=>x.endsWith(',dst=/workspace,readonly')))process.exit(2); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.writeFileSync(out+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))}); }\n`);
