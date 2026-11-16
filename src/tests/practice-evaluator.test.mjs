@@ -96,3 +96,11 @@ test('source attempts deduplicate; later failed retry cannot be hidden by an ear
   const contradiction = structuredClone(a); contradiction.measurements.failed = 1; seal(contradiction);
   assert.throws(() => selectPracticeObservations([a, contradiction]), /Contradictory/);
 });
+
+
+test('verified empty dependency inventories retain explicit SBOM and license policy evidence', async () => {
+  const values = passingObservations(); values.find(o => o.practice === 'sbom').measurements.components = 0; values.find(o => o.practice === 'licenses').measurements.assessed = 0; values.forEach(seal);
+  assert.equal((await assess(values)).level, 'L3');
+  values.find(o => o.practice === 'licenses').measurements.policy = {}; values.forEach(seal);
+  assert.equal((await assess(values)).level, 'L1');
+});
