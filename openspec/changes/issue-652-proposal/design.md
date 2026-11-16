@@ -23,7 +23,7 @@ See proposal.md for motivation. Existing maintenance already serializes issue re
 
 ## Risks / Trade-offs
 
-- Original #633 request artifacts are not supplied → retain unavailable-evidence classification and current public PR/lifecycle evidence, not an inferred historical approval.
+- Original #633 request artifacts were not supplied to the recovered implementation. The final [acceptance review](../../../docs/engineering/housekeeping-acceptance-2026-11-16.md#original-failure) retrieved and checked the retained request, result and publication against the actual merged PR. Its terminal disposition is `publication-merged`; the original failed maintenance observation remains unchanged.
 - GitHub pagination or evidence access fails → record partial coverage and do not advance freshness.
 - Concurrent or uncertain writes → existing report serialization, pre-write re-read and no non-idempotent creation or recovery replay.
 - Package-mode workflow references an unreleased source version → publication and native adopter acceptance remain later-stage obligations, not local test claims.
