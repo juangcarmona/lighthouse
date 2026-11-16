@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "kind": "current-practice-assessment",
+  "catalogVersion": "1.0.0",
+  "levelVersion": "1.0.0",
+  "assessedAt": "2026-11-16T18:06:55.009Z",
+  "context": {
+    "repository": {
+      "id": 1427668548,
+      "fullName": "juangcarmona/lighthouse"
+    },
+    "ref": "refs/heads/main",
+    "commit": "c9aa6e31dcb2baebc644a7ef4183fedfb200ca0b",
+    "scope": {
+      "id": "practice-evidence-regressions",
+      "modules": [
+        "practice-reporting"
+      ]
+    },
+    "profile": "library"
+  },
+  "level": "unverified",
+  "levels": {
+    "L1": {
+      "demonstrated": false,
+      "gaps": [
+        {
+          "practice": "secrets",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "vulnerabilities",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "sast",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        }
+      ]
+    },
+    "L2": {
+      "demonstrated": false,
+      "gaps": [
+        {
+          "practice": "secrets",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "vulnerabilities",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "sast",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "coverage",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "specifications",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "sbom",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "licenses",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        }
+      ]
+    },
+    "L3": {
+      "demonstrated": false,
+      "gaps": [
+        {
+          "practice": "secrets",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "vulnerabilities",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "sast",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "coverage",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "specifications",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "sbom",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "licenses",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "complexity",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        },
+        {
+          "practice": "dast",
+          "state": "missing",
+          "reasons": [
+            "no exact repository/revision/scope observation"
+          ]
+        }
+      ]
+    }
+  },
+  "practices": [
+    {
+      "practice": "secrets",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 1,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "vulnerabilities",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 1,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "sast",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 1,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "tests",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 1,
+      "state": "met",
+      "gaps": [],
+      "enforcement": {
+        "status": "verified",
+        "merge": true,
+        "sources": [
+          "https://api.github.com/repos/juangcarmona/lighthouse/rulesets/25937483"
+        ],
+        "ci": true
+      },
+      "enforcementGaps": [],
+      "certified": true,
+      "observation": {
+        "schemaVersion": 1,
+        "catalogVersion": "1.0.0",
+        "definitionVersion": "1.0.0",
+        "practice": "tests",
+        "repository": {
+          "id": 1427668548,
+          "fullName": "juangcarmona/lighthouse"
+        },
+        "ref": "refs/heads/main",
+        "commit": "c9aa6e31dcb2baebc644a7ef4183fedfb200ca0b",
+        "scope": {
+          "id": "practice-evidence-regressions",
+          "modules": [
+            "practice-reporting"
+          ]
+        },
+        "mode": "blocking",
+        "applicability": {
+          "status": "applicable",
+          "profile": "library",
+          "reason": "Declared tests in native step: Execute practice evidence regressions",
+          "source": "https://github.com/juangcarmona/lighthouse/blob/c9aa6e31dcb2baebc644a7ef4183fedfb200ca0b/.github/workflows/ci.yml"
+        },
+        "collection": {
+          "expected": 1,
+          "collected": 1,
+          "exclusions": []
+        },
+        "measurements": {
+          "declared": 19,
+          "executed": 19,
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0,
+          "todo": 0,
+          "cancelled": 0
+        },
+        "source": {
+          "workflow": ".github/workflows/ci.yml",
+          "runId": 43922711675,
+          "attempt": 1,
+          "jobId": 133493912022,
+          "url": "https://github.com/juangcarmona/lighthouse/actions/runs/43922711675/attempts/1#job-133493912022",
+          "result": "success",
+          "observedAt": "2026-11-16T17:53:53Z",
+          "producer": {
+            "name": "github-actions-tap",
+            "version": "1.0.0"
+          },
+          "reportDigest": "sha256:c4c82b2dce06d809eab36bc1b873aa96043558a7764f3dfa5c8a54a3b025ac95"
+        }
+      }
+    },
+    {
+      "practice": "coverage",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 2,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "specifications",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 2,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "sbom",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 2,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "licenses",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 2,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "complexity",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 3,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "dast",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": 3,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "mutation",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": null,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "hygiene",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": null,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "performance",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": null,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    },
+    {
+      "practice": "restoration",
+      "definitionVersion": "1.0.0",
+      "requiredFrom": null,
+      "state": "missing",
+      "gaps": [
+        "no exact repository/revision/scope observation"
+      ],
+      "enforcement": null,
+      "enforcementGaps": [],
+      "certified": false,
+      "observation": null
+    }
+  ],
+  "states": [
+    "met",
+    "below-standard",
+    "failing",
+    "missing",
+    "partial",
+    "stale",
+    "unavailable",
+    "not-applicable"
+  ],
+  "authority": {
+    "workflowDigest": "sha256:0afbd5a1fd73cea72d3756d396f74c0127dd62fd8a2e54ae83327e7da5677e1d",
+    "logDigest": "sha256:8c0207bec78708e9c48f52fc095a4cd4b57fb18cec612963e816b006a61084d0",
+    "enforcement": {
+      "status": "verified",
+      "merge": true,
+      "sources": [
+        "https://api.github.com/repos/juangcarmona/lighthouse/rulesets/25937483"
+      ],
+      "ci": true
+    }
+  }
+}
