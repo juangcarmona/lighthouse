@@ -106,3 +106,9 @@ The initial adapter should grant the engine local workspace capabilities and mod
 ## Application identity
 
 The harness distributes the [external identity contract](../../../src/packages/cli/assets/profiles/identity.md) and exposes it in generated baseline instructions and authenticated application skills. [ADR-0010](../09-architecture-decisions/0010-external-user-identity.md) establishes OIDC consumption, Keycloak as the self-hosted reference and operator ownership of shared identity infrastructure. Product-specific authorization and runtime acceptance tests remain adopter-owned. Foundation verification does not test an identity provider.
+
+## Delivery measurements
+
+The optional [measurement kernel](../../../src/packages/sdlc/measurements.md) derives versioned repository/window observations from retained source records. It preserves content identity, attempt lineage, numerator/denominator, censoring and collection gaps. Offline derivation establishes reproducibility; live source authentication remains with the owning collector and producer verifiers. It creates no service or mutation authority.
+
+<!-- pdac:cite id="FR-EVIDENCE-COVERAGE" digest="sha256:15e4d317d3d5ce93d42de5b35c783e2d694343fccfc80a6dfd51b7be6349f327" -->

@@ -49,7 +49,8 @@
     "telemetry.md",
     "issue-control.md",
     "practice-evidence.md",
-    "delivery-acceptance.md"
+    "delivery-acceptance.md",
+    "measurements.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -110,7 +111,8 @@
     "./practice-evaluator": "./src/practice-evaluator.mjs",
     "./practice-github": "./src/practice-github.mjs",
     "./practice-history": "./src/practice-history.mjs",
-    "./delivery-acceptance": "./src/delivery-acceptance.mjs"
+    "./delivery-acceptance": "./src/delivery-acceptance.mjs",
+    "./measurement": "./src/measurement.mjs"
   },
   "license": "Apache-2.0"
 }

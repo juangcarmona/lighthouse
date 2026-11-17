@@ -20,7 +20,7 @@ Extend existing host check receipts with current-input and candidate-tree bindin
 
 ## Product scope
 
-FR-CHANGE-EVIDENCE and UC-IMPLEMENT-CHANGE govern the report and Done-gate evidence. The owner accepted the minimum provenance proposal for #100 in the existing [evidence Product Change](../../../docs/product/changes/active/chg-lh-evidence-contract-001/change.md) and [research decision](../../../docs/roadmap/engineering-measurement-research.md#minimum-provenance-proposal-for-100). This implements that bounded decision without applying the broader proposed coverage/measurement change or modifying the accepted model.
+FR-CHANGE-EVIDENCE and UC-IMPLEMENT-CHANGE govern the report and Done-gate evidence. The owner accepted the minimum provenance proposal for #100 in the existing [evidence Product Change](../../../docs/product/changes/completed/chg-lh-evidence-contract-001/change.md) and [research decision](../../../docs/roadmap/engineering-measurement-research.md#minimum-provenance-proposal-for-100). This implements that bounded decision without applying the broader proposed coverage/measurement change or modifying the accepted model.
 
 Checked neighbours: human/authority boundaries, bounded workflow, foundation verification and distribution retain their existing permissions and ownership. Test adequacy and tampering qualification remain #101; zero-diff correction and missed-event scheduling remain #318/#142.
 
