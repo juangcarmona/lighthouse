@@ -1,0 +1,138 @@
+name: Lighthouse evidence qualification
+on:
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: lighthouse-evidence-qualification
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.actor == github.repository_owner && github.triggering_actor == github.repository_owner && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      actions: read
+    env:
+      LIGHTHOUSE_EXPECTED_SDLC: 0.28.0
+      LIGHTHOUSE_EXPECTED_RELEASE: f1d15f81d0bcebcac15afaec26dbdc8aa6c77285
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install the exact published SDK in an isolated consumer
+        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.0
+      - name: Retain the published source identity and package integrity
+        run: |
+          mkdir -p "$RUNNER_TEMP/lighthouse-evidence-qualification"
+          npm view @juangcarmona/lighthouse-sdlc@0.28.0 version gitHead dist.integrity --json > "$RUNNER_TEMP/lighthouse-evidence-qualification/published-metadata.json"
+      - name: Verify acceptance fixtures against the published SDK
+        env:
+          LIGHTHOUSE_TEST_ACCEPTANCE_MODULE: ${{ runner.temp }}/published-lighthouse/node_modules/@juangcarmona/lighthouse-sdlc/src/delivery-acceptance.mjs
+        run: node --test src/tests/delivery-acceptance.test.mjs
+      - name: Verify metric and collector fixtures against the published SDK
+        env:
+          LIGHTHOUSE_TEST_MEASUREMENT_MODULE: ${{ runner.temp }}/published-lighthouse/node_modules/@juangcarmona/lighthouse-sdlc/src/measurement.mjs
+        run: |
+          node --test src/tests/measurement.test.mjs
+          node --input-type=module <<'JS'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          import { execFileSync } from 'node:child_process';
+          const source = readFileSync('src/tests/measurement-github.test.mjs', 'utf8');
+          const original = "'../packages/sdlc/src/";
+          if (source.split(original).length !== 4) throw Error('Collector fixture import contract changed');
+          const target = join(process.env.RUNNER_TEMP, 'published-measurement-github.test.mjs');
+          const prefix = pathToFileURL(join(process.env.RUNNER_TEMP, 'published-lighthouse/node_modules/@juangcarmona/lighthouse-sdlc/src/')).href;
+          writeFileSync(target, source.replaceAll(original, "'" + prefix));
+          execFileSync(process.execPath, ['--test', target], { stdio: 'inherit' });
+          JS
+      - name: Install the pinned browser
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Collect real sources and qualify the published report and pending acceptance route
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/tests/qualify-delivery-evidence.mjs capture
+      - name: Retain small source and visual manifests
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-qualification-result-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/lighthouse-evidence-qualification/published-metadata.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/request.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/envelope.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/visual-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain PNG captures separately
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-qualification-visual-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-evidence-qualification/evidence/visual/*.png
+          if-no-files-found: error
+          retention-days: 30
+      - name: Retain live observations and browser qualification
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-qualification-observations-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/lighthouse-evidence-qualification/frozen.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/report.html
+            ${{ runner.temp }}/lighthouse-evidence-qualification/metrics.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/acceptance.json
+            ${{ runner.temp }}/lighthouse-evidence-qualification/qualification.json
+            ${{ runner.temp }}/published-lighthouse/package-lock.json
+          if-no-files-found: error
+          retention-days: 30
+  publish:
+    needs: capture
+    if: github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      LIGHTHOUSE_EXPECTED_SDLC: 0.28.0
+      LIGHTHOUSE_EXPECTED_RELEASE: f1d15f81d0bcebcac15afaec26dbdc8aa6c77285
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install the same exact published SDK
+        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.0
+      - uses: actions/download-artifact@v5
+        with:
+          name: lighthouse-qualification-result-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-evidence-qualification
+      - uses: actions/download-artifact@v5
+        with:
+          name: lighthouse-qualification-visual-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-evidence-qualification/evidence/visual
+      - name: Recheck source identity and retain visual proof on the protected evidence branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node src/tests/qualify-delivery-evidence.mjs publish
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: lighthouse-qualification-publication-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-evidence-qualification/publication.json
+          if-no-files-found: error
+          retention-days: 30
