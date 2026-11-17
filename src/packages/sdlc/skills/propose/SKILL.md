@@ -13,6 +13,8 @@ For proposals, change overviews, PR descriptions or agent-facing instructions, r
 
 ## Steps
 
+For proposed user-facing views or interactions, read [visual evidence](../visual-evidence/SKILL.md) and return concrete proposed examples with the design. Requests with `request.visualEvidence` also require an explicit non-applicability or unavailable assessment when appropriate.
+
 1. Read the Ready evidence and inspect the current product and architecture authorities.
 2. Create or update the OpenSpec change artifacts through the installed OpenSpec workflow. Always return `proposal.md`, `design.md` and `tasks.md`, including for documentation-only changes. For a change without spec-level behavior, return `.openspec.yaml` containing exactly `skip_specs: true` instead of a specification; the host adds it to provider-owned metadata.
 3. Describe the solution, interfaces, data effects, test impact, slices, risks and Definition of Done.

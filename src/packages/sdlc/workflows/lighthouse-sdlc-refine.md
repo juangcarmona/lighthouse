@@ -180,7 +180,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: write
-      contents: read
+      contents: write
       issues: write
       pull-requests: read
     env:

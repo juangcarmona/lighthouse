@@ -7,6 +7,8 @@ import { spawn, execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import { reviewOutputProtocol, reviewTemplate, reviewEnvelope } from './independent-review.mjs';
+import { retainVisualEvidence } from './visual-evidence.mjs';
+import { renderVisualProposal } from './visual-render.mjs';
 import { createRequire } from 'node:module';
 import { synchronizedSource, synchronizationDigest } from './source-sync.mjs';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest, withinScope } from './implementation.mjs';
@@ -140,7 +142,7 @@ async function main() {
   telemetry.emit('execution.admitted', { status: 'admitted', model: config.model, modelSource: 'requested-configuration', image: config.image });
   let outcome = 'failed', nativeCollect = () => {}, nativeTimer;
   // Sequential workers share the runner temp directory; only this stage's outputs may survive.
-  for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json']) await rm(join(runDir, file), { force: true });
+  for (const file of ['envelope.json', 'runtime.json', 'changes.json', 'checks.json', 'engine-error.json', 'visual-evidence.json']) await rm(join(runDir, file), { force: true });
   const reviewOutput = reviewOutputProtocol(request);
   const implementing = request.stage === 'implement' && request.worker !== 'product-change';
   const repository = request.repository ?? env.GITHUB_REPOSITORY;
@@ -167,7 +169,7 @@ async function main() {
   let name;
   const harness = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const runtimeReceipt = { ...await harnessIdentity(harness), image: config.image, limits, environment: environmentReceipt(selected), model: modelSelection.model, modelExecution: modelExecutionReceipt(modelSelection, request.modelSelection), engine: 'OpenCode 2.1.0', isolation: 'Docker; no AWF egress filtering', skills: await readdir(join(harness, 'skills')), sourceRevision: request.sourceRevision, seed: request.implementation?.policy.seed ?? null, seedDigest: request.seedDigest ?? null, phases: {} };
-  let phase = 'preflight', evidenceRetained = false;
+  let phase = 'preflight', evidenceRetained = false, visualCandidateTree = null;
   const phaseStarted = new Map();
   const recordPhase = async status => { runtimeReceipt.phases[phase] = status; if (status === 'running') phaseStarted.set(phase, Date.now()); telemetry.emit('execution.phase', { phase, status, durationMs: phaseStarted.has(phase) ? Date.now() - phaseStarted.get(phase) : null }); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt)); };
   const docker = args => runOwnedDocker(config, args, { stdio: 'ignore', timeout: 30000 });
@@ -405,6 +407,7 @@ async function main() {
       await materializeCandidate(baseline, changes, candidate);
       if (runtime.cleanup() === false) throw Error('Agent test service cleanup failed; operator action required');
       const receipt = await runImplementationChecks({ config, request, changes, workspace: candidate, output: join(runDir, 'evidence', 'host'), name, redact: redactLog, cancelled: () => cancelled, selected, repository, telemetry });
+      visualCandidateTree = receipt.candidateTree;
       receipt.verification = verification;
       await writeFile(join(runDir, 'checks.json'), JSON.stringify(receipt));
       await recordPhase(receipt.checks.every(c => c.exitCode === 0) ? 'passed' : 'failed');
@@ -422,6 +425,19 @@ async function main() {
       }
       if (cancelled) throw Error('Implementation cancelled before publication');
     }
+    if (!reviewOutput && request.worker !== 'independent-review') {
+      try {
+        await retainVisualEvidence(request, envelope, join(output, 'evidence'), runDir, { candidateTree: visualCandidateTree, render: item => renderVisualProposal(item, { config, directory: dir, deadline: budget.deadline }) });
+      } catch (error) {
+        const reason = redactLog(`Visual evidence could not be retained: ${error.message}`).slice(0, 500);
+        envelope.result.output.visualEvidence = { schemaVersion: 1, status: 'unavailable', reason, items: [] };
+        envelope.result.status = 'blocked';
+        envelope.result.missingEvidence.push(reason);
+        envelope.result.nextAction = 'Workflow maintainer: resolve the visual capture or renderer failure and request an authorized correction on the same issue or PR.';
+        envelope.effect.body += `\n\n${reason}`;
+      }
+    }
+    if (cancelled) throw Error('Execution cancelled before completion');
     if (!implementing) await recordPhase('passed');
     phase = 'completion'; await recordPhase('running');
     const completion = completionOutput(envelope, request);
