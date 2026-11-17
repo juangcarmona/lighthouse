@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
 import { snapshotSource, redactLog, acquireEngineSlot, completionOutput, prepareProductWorkingContext } from '../packages/sdlc/src/opencode-execute.mjs';
 import { compositionFixture } from './fixtures/product-composition.mjs';
-import { productContextFixture } from './fixtures/product-context.mjs';
+import { productContextFixture, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
 import { compositionService } from '../packages/sdlc/src/product-composition-server.mjs';
 
 async function fixtureHarness(root) {
@@ -91,7 +91,10 @@ if(output){
 test('adapter keeps exact audit bytes read-only and composition inspects historical bodies on demand', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-working-context-'));
   try {
-    const { context } = productContextFixture(), raw = JSON.stringify(context, null, 2);
+    const { context, files } = productContextFixture();
+    context.issue.ownerAnswers.push({ body: `Keep the literal historical decision.\n${embedLiteralFiles(files)}` });
+    context.issue.ownerAnswers.push({ body: `Keep the Markdown historical decision.\n${embedMarkdownFile(files[3])}` });
+    const raw = JSON.stringify(context, null, 2);
     const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
     await writeFile(input, raw);
     const measured = await prepareProductWorkingContext(input, audit);
@@ -101,10 +104,20 @@ test('adapter keeps exact audit bytes read-only and composition inspects histori
     const working = JSON.parse(await readFile(input, 'utf8'));
     assert.deepEqual(working.request, context.request);
     assert.equal(working.productChange.audit.sha256, measured.auditSha256);
+    assert.ok(measured.workingBytes < 256 * 1024);
+    assert.match(working.issue.ownerAnswers[1].body, /^Keep the literal historical decision\./);
+    assert.match(working.issue.ownerAnswers[2].body, /^Keep the Markdown historical decision\./);
+    assert.equal(working.productChange.historicalCopies.length, 2);
+    const originals = JSON.parse(await readFile(audit, 'utf8'));
+    assert.deepEqual(originals.issue.ownerAnswers, context.issue.ownerAnswers);
     const service = compositionService(audit, root), catalog = await service('inspect', {});
     for (const item of catalog.paths[0].objects) {
       const object = await service('inspect', { reference: { path: catalog.paths[0].path, ...item.ref } });
       assert.equal(object.content, context.productChange.schemaPin);
+    }
+    for (const alias of working.productChange.historicalCopies.flatMap(copy => copy.files)) {
+      const object = await service('inspect', { reference: { path: alias.path, source: alias.sources[0], sha256: alias.sha256 } });
+      assert.equal(object.content, files.find(file => file.path === alias.path).content);
     }
     assert.deepEqual((await readdir(root)).sort(), ['context.json', 'product-audit.json']);
   } finally { await rm(root, { recursive: true, force: true }); }
@@ -120,6 +133,20 @@ test('invalid product projection cannot create audit or modify input/output', as
     assert.equal(await readFile(input, 'utf8'), raw);
     assert.equal(await readFile(join(root, 'envelope.json'), 'utf8'), 'prior output');
     await assert.rejects(lstat(audit), { code: 'ENOENT' });
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('unbound historical copies refuse before adapter audit or context writes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-unbound-history-'));
+  try {
+    const { context, files } = productContextFixture();
+    context.issue.ownerAnswers.push({ body: `Keep the original decision.\n${embedLiteralFiles([{ ...files[3], content: 'Unbound historical bytes.' }])}` });
+    const raw = JSON.stringify(context), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    await assert.rejects(prepareProductWorkingContext(input, audit), /explicitly bound retained draft/);
+    assert.equal(await readFile(input, 'utf8'), raw);
+    await assert.rejects(lstat(audit), { code: 'ENOENT' });
+    assert.deepEqual(await readdir(root), ['context.json']);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

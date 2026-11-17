@@ -1,6 +1,8 @@
 import { compositionFixture, hash } from './product-composition.mjs';
 
 export const embedDraft = draft => `\x60\x60\x60json\n${JSON.stringify(draft)}\n\x60\x60\x60\n`;
+export const embedLiteralFiles = files => embedDraft({ files });
+export const embedMarkdownFile = file => `### \`${file.path}\`\n\x60\x60\x60text\n${file.content}${file.content.endsWith('\n') ? '' : '\n'}\x60\x60\x60\n`;
 
 export function productContextFixture({ baselineDigest = '4'.repeat(64) } = {}) {
   const fixture = compositionFixture();

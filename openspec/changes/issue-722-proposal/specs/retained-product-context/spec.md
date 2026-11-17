@@ -44,3 +44,14 @@ The working view SHALL expose each current retained path once with source, revis
 - **WHEN** a worker consumes the smaller working view
 - **THEN** the original issue and verified answers remain retrievable as read-only audit data
 - **AND** original request, task, source, baseline and schema bindings remain unchanged
+
+#### Scenario: Literal historical copies
+
+- **WHEN** a historical JSON file inventory or supported path-headed Markdown copy matches validated retained objects exactly
+- **THEN** the working view replaces only those document spans with bound references and read-only audit locations
+- **AND** all surrounding decisions and unique older paths survive without granting the copies supersession authority
+
+#### Scenario: Unbound or ambiguous historical copies
+
+- **WHEN** a recognized literal copy has unknown paths, changed content, ambiguous byte recovery or exceeds existing inventory or reference limits
+- **THEN** preparation refuses before execution and requests an explicitly bound retained declaration without truncating history

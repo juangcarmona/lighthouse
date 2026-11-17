@@ -19,6 +19,11 @@
 
 The recovered candidate previously encountered three existing `PRODUCT064` errors in `openspec/changes/issue-594-practice-evidence/{design,proposal,tasks}.md`. The owner supplied the separately corrected current source; fresh repository-wide citation verification now passes. This recovery changes no issue-594 files. Current-run verification, strict plan validation, focused regressions, measurements and review evidence accompany the implementation; historical results do not substitute for these receipts.
 
+## 4. Owner correction: literal historical copies
+
+- [x] 4.1 Bind supported literal JSON and Markdown copies to validated retained objects without revision authority; document the supported grammar and prove decision preservation, exact 64-file composition, audit retrieval and unbound/ambiguous/limit refusals in admitted tests.
+- [x] 4.2 Re-run all configured checks on the corrected candidate and retain completed receipts, measurements, traceability, manual fallback review and retrospective evidence.
+
 ## Workflow follow-up
 
 - Independent current-head review, normal integration, protected publication, clean consumer adoption and real native qualification remain separate; source checks do not establish delivery acceptance.

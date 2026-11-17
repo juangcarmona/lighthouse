@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { preparePlanningProductEvidence } from '../packages/sdlc/src/opencode-execute.mjs';
 import { productModelDigest, loadProductCore } from '../packages/sdlc/src/product-change.mjs';
 import { prepareProductEvidence, productEvidenceScopeText } from '../packages/sdlc/src/product-change.mjs';
-import { productContextFixture } from './fixtures/product-context.mjs';
+import { productContextFixture, embedLiteralFiles } from './fixtures/product-context.mjs';
 
 async function fixture() {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-planning-product-')), source = join(dir, 'source'), run = join(dir, 'run');
@@ -43,6 +43,7 @@ test('actual preparation reaches provider reports for admitted 64-file history a
   const f = await fixture();
   try {
     const { context, files } = productContextFixture({ baselineDigest: await productModelDigest(f.source) });
+    context.issue.ownerAnswers.push({ body: `Keep this historical preparation decision.\n${embedLiteralFiles(files)}` });
     const legacyScope = Object.values(context.issue).flatMap(value => typeof value === 'string' ? value : []).join('\n');
     assert.ok(Buffer.byteLength(legacyScope) > 256 * 1024);
     assert.equal(files.length, 64);

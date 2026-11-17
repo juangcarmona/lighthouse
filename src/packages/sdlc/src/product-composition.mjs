@@ -152,6 +152,36 @@ export function currentRetainedInventory(context) {
   };
 }
 
+// Aliases prove byte equality only. They never enter revision selection or composition.
+export function bindRetainedCopies(context, copies) {
+  const data = inventory(context);
+  const inventories = new Set([...data.paths.values()].flatMap(objects => objects.map(item => item.ref.source)));
+  const seenInventories = new Map();
+  let references = data.references;
+  const recover = detail => Error(`Unbound or ambiguous historical document copy (${detail}); supply an explicitly bound retained draft with exact path/content/hash and revision`);
+  return copies.map(copy => {
+    inventories.add(copy.inventory);
+    if (inventories.size > 8) throw Error('Retained document inventory exceeds bounds');
+    if (!Array.isArray(copy.files) || !copy.files.length || copy.files.length > PRODUCT_FILE_LIMITS.files) throw recover(copy.source);
+    const seen = seenInventories.get(copy.inventory) ?? new Set();
+    seenInventories.set(copy.inventory, seen);
+    const files = copy.files.map((file, index) => {
+      exact(file, ['path', 'content', ...(Object.hasOwn(file ?? {}, 'mode') ? ['mode'] : []), ...(Object.hasOwn(file ?? {}, 'sha256') ? ['sha256'] : [])], 'historical file');
+      text(file.content);
+      if (seen.has(file.path)) throw recover(`duplicate path in ${copy.source}`);
+      seen.add(file.path);
+      if (seen.size > PRODUCT_FILE_LIMITS.files) throw recover(`file inventory in ${copy.source}`);
+      if (++references > 512) throw Error('Retained reference inventory exceeds bounds');
+      const contents = copy.markdown && file.content.endsWith('\n') ? [file.content, file.content.slice(0, -1)] : [file.content];
+      if (copy.markdown && file.content.endsWith('\r\n')) contents.push(file.content.slice(0, -2));
+      const matches = (data.paths.get(file.path) ?? []).filter(item => contents.includes(item.file.content) && (item.file.mode ?? '100644') === (file.mode ?? '100644') && (file.sha256 === undefined || file.sha256 === item.ref.sha256));
+      if (!matches.length || new Set(matches.map(item => item.ref.sha256)).size !== 1) throw recover(`${copy.source} files[${index}]: no unique validated path/content/mode/hash identity`);
+      return { path: file.path, sha256: matches[0].ref.sha256, sources: matches.map(item => item.ref.source) };
+    });
+    return { source: copy.source, files };
+  });
+}
+
 export function composeRetainedProduct(context, args) {
   exact(args, ['binding', 'plan', 'envelope'], 'composition');
   const data = inventory(context);
