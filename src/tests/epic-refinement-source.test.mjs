@@ -118,7 +118,7 @@ test('production refinement publisher rejects dependency changes after execution
     try {
       const prepared = f.run(); assert.equal(prepared.status, 0, prepared.stderr);
       const request = JSON.parse(await readFile(join(f.dir, 'request.json')));
-      await writeFile(join(f.dir, 'envelope.json'), JSON.stringify({ schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'blocked', evidence: [], missingEvidence: ['Example operational blocker'], unavailableChecks: [], pendingReview: [], nextAction: 'Maintainer: resolve the recorded blocker.', output: {} }, effect: { type: 'issue-comment', body: 'A result cannot supersede changed dependency authority.' } }));
+      await writeFile(join(f.dir, 'envelope.json'), JSON.stringify({ schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'refine', gate: 'ready', status: 'blocked', evidence: [], missingEvidence: ['Example operational blocker'], unavailableChecks: [], pendingReview: [], nextAction: 'Maintainer: resolve the recorded blocker.', output: { visualEvidence: { schemaVersion: 1, status: 'not-applicable', reason: 'This formatter changes summary text without a product screen or interaction.', items: [] } } }, effect: { type: 'issue-comment', body: 'A result cannot supersede changed dependency authority.' } }));
       const state = JSON.parse(await readFile(join(f.dir, 'state.json')));
       state.scenario = scenario; state.calls = [];
       await writeFile(join(f.dir, 'state.json'), JSON.stringify(state));

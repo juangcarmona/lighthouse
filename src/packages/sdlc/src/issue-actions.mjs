@@ -767,6 +767,13 @@ async function main(command) {
     return;
   }
   if (snapshot.dispatch) env.LIGHTHOUSE_AUTO_IMPLEMENT = String(snapshot.autoImplement === true);
+  if (command === 'visual-artifact') {
+    const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
+    const errors = validateStageEnvelope(value, snapshot);
+    if (errors.length) throw Error(errors.join('\n'));
+    await output('visual', String(visualStages.has(snapshot.stage) && snapshot.worker !== 'product-change' && value.result.output?.visualEvidence?.status === 'provided'));
+    return;
+  }
   if (command === 'validate') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
     const errors = validateStageEnvelope(value, snapshot);
