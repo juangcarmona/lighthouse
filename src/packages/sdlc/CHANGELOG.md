@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.25.3
+
+### Patch Changes
+
+- 05e620d: # Repair retained composition protocol and answer inspection
+
+  Accept supported inert MCP progress metadata and the pinned client's string `ai.opencode/sessionID` without relaxing tool arguments or ignoring unknown metadata. Let the existing inspection tool retrieve exact indexed original answers in bounded UTF-8 chunks with audit, request and whole-answer integrity bindings. Preserve authority, history, limits and pending provider validation. Source and packed-server verification do not establish installed-native acceptance; qualify the pinned runtime separately after normal publication and managed adoption.
+
+- a570c38: # Keep native epic implementations eligible for owner review
+
+  Enforce implementation policy review at native epic acceptance so a verified child can register its PR. Preserve ordinary review stops, genuine implementation blockers, required checks and the current-head owner decision before merge.
+
 ## 0.25.2
 
 ### Patch Changes
