@@ -109,6 +109,6 @@ The harness distributes the [external identity contract](../../../src/packages/c
 
 ## Delivery measurements
 
-The optional [measurement kernel](../../../src/packages/sdlc/measurements.md) derives versioned repository/window observations from retained source records. It preserves content identity, attempt lineage, numerator/denominator, censoring and collection gaps. Offline derivation establishes reproducibility; live source authentication remains with the owning collector and producer verifiers. It creates no service or mutation authority.
+The optional [measurement kernel](../../../src/packages/sdlc/measurements.md) derives versioned repository/window observations from retained source records. It preserves content identity, attempt lineage, numerator/denominator, censoring and collection gaps. Offline derivation establishes reproducibility; live source authentication remains with the owning collector and producer verifiers. The optional GitHub collector reads bounded repository/window observations using GET requests, then the renderer generates a self-contained report from those frozen bytes. The renderer inlines the existing UI package tokens; the browser receives no credential or API client. It creates no service or mutation authority.
 
 <!-- pdac:cite id="FR-EVIDENCE-COVERAGE" digest="sha256:15e4d317d3d5ce93d42de5b35c783e2d694343fccfc80a6dfd51b7be6349f327" -->

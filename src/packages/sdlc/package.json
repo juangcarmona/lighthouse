@@ -112,7 +112,12 @@
     "./practice-github": "./src/practice-github.mjs",
     "./practice-history": "./src/practice-history.mjs",
     "./delivery-acceptance": "./src/delivery-acceptance.mjs",
-    "./measurement": "./src/measurement.mjs"
+    "./measurement": "./src/measurement.mjs",
+    "./measurement-github": "./src/measurement-github.mjs",
+    "./measurement-report": "./src/measurement-report.mjs"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@juangcarmona/lighthouse-ui": "0.2.1"
+  }
 }

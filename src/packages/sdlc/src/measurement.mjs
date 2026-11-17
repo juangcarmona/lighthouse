@@ -4,7 +4,7 @@ import { validatePublishable } from './process-publication.mjs';
 export const measurementVersion = 1;
 export const stableJson = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 export const measurementHash = value => createHash('sha256').update(stableJson(value)).digest('hex');
-const finite = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const finite = value => Number.isSafeInteger(value) && value >= 0;
 const instant = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const fullSha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const identity = value => Number.isSafeInteger(value) && value > 0;
@@ -27,15 +27,17 @@ const entries = [
 export const metricDefinitions = entries.map(([id, unit, useCase, kind, formula, classification, rules]) => ({ id, version: 1, unit, useCase, kind, formula, classification, rules, sourceRequirements: 'Numeric repository identity, stable source/event identity, retained content digest, exact revision and safe source URL; run/attempt lineage when applicable. Offline integrity is distinct from live source authentication.', window: 'UTC [start,end); event cohorts except issue lead-time cohorts and clipped wait intervals; no future or out-of-window completions.', deduplication: 'Same kind and logical ID with identical retained bytes is one event; changed bytes at one identity are conflicting and excluded. Retries remain separate attempts, never new accepted deliveries.', coverage: 'Numerator, denominator, measured count, eligible count, missing source collections, censored count and raw source references remain visible.', unavailableReason: 'No eligible measurement, required source/adapter unavailable, invalid binding, incomplete collection or contradictory source.', privacy: 'Repository scope; no transcripts, raw logs, credentials, personal scores or individual rankings.', aggregation: 'Totals and arithmetic mean over observed samples only; no imputation, scoring, price estimation or automatic policy change.' }));
 
 export function measurementRecord(repository, kind, id, time, data, source) {
-  return { kind, id, time, data, source: { ...source, repositoryId: repository.id, sha256: measurementHash(data) } };
+  const digest = measurementHash({ kind, time, data });
+  return { kind, id, time, data, source: { ...source, repositoryId: repository.id, revision: source.revision && !source.revision.startsWith('sha256:') ? source.revision : `sha256:${digest}`, sha256: digest } };
 }
 
 function validSource(record, repository) {
   const source = record.source;
-  if (!source || source.repositoryId !== repository.id || typeof source.id !== 'string' || !source.id || !instant(source.observedAt) || source.sha256 !== measurementHash(record.data) || !(fullSha(source.revision) || /^sha256:[a-f0-9]{64}$/.test(source.revision ?? ''))) return false;
+  if (!source || source.repositoryId !== repository.id || typeof source.id !== 'string' || !source.id || !instant(source.observedAt) || source.sha256 !== measurementHash({ kind: record.kind, time: record.time, data: record.data }) || !(fullSha(source.revision) || /^sha256:[a-f0-9]{64}$/.test(source.revision ?? ''))) return false;
+  if (source.revision.startsWith('sha256:') && source.revision !== `sha256:${source.sha256}`) return false;
   try {
     const url = new URL(source.url);
-    return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash && (url.hostname === 'github.com' && url.pathname.startsWith(`/${repository.fullName}/`) || url.hostname === 'api.github.com' && url.pathname.startsWith(`/repos/${repository.fullName}/`));
+    return url.protocol === 'https:' && !url.username && !url.password && !url.search && (!url.hash || /^#(?:issuecomment|pullrequestreview|event)-[1-9][0-9]*$/.test(url.hash)) && (url.hostname === 'github.com' && url.pathname.startsWith(`/${repository.fullName}/`) || url.hostname === 'api.github.com' && url.pathname.startsWith(`/repos/${repository.fullName}/`));
   } catch { return false; }
 }
 
@@ -44,7 +46,7 @@ export function deriveMeasurements(bundle) {
   if (Buffer.byteLength(stableJson(bundle)) > 4 * 1024 * 1024) throw Error('Measurement bundle exceeds 4 MiB');
   validatePublishable({ 'metadata.json': stableJson({ ...bundle, records: [] }) });
   for (const record of bundle.records) validatePublishable({ 'record.json': stableJson(record) });
-  const logicalId = record => record.kind === 'workflow-attempt' && identity(record.data?.runId) && identity(record.data?.attempt) ? `${record.data.runId}:${record.data.attempt}` : record.kind === 'usage' && record.data?.invocationId ? record.data.invocationId : record.id;
+  const logicalId = record => record.kind === 'workflow-attempt' && identity(record.data?.runId) && identity(record.data?.attempt) ? `${record.data.runId}:${record.data.attempt}` : record.kind === 'usage' && record.data?.invocationId ? record.data.invocationId : record.source?.id ?? record.id;
   const recordKey = record => `${record.kind}:${logicalId(record)}`;
   const signature = record => measurementHash({ kind: record.kind, time: record.time, data: record.data, repositoryId: record.source?.repositoryId, sha256: record.source?.sha256, revision: record.source?.revision });
   const start = Date.parse(bundle.window.start), end = Date.parse(bundle.window.end), byId = new Map(), conflicts = new Set();
@@ -111,7 +113,8 @@ export function deriveMeasurements(bundle) {
   const usableUsage = usage.filter(r => usable(r) && typeof r.data.invocationId === 'string' && r.data.invocationId && r.data.usageSource && r.data.authenticationRoute && r.data.identity && ['observed', 'incomplete', 'unavailable'].includes(r.data.coverage));
   const fieldCoverage = Object.fromEntries(fields.map(field => {
     const measured = usableUsage.filter(r => r.data.coverage !== 'unavailable' && finite(r.data[field]));
-    return [field, { value: measured.length ? measured.reduce((sum, r) => sum + r.data[field], 0) : null, measured: measured.length, eligible: usage.length, status: measured.length ? measured.length === usage.length && complete('usage') && measured.every(r => r.data.coverage === 'observed') ? 'measured' : 'incomplete' : 'unavailable' }];
+    const total = measured.reduce((sum, r) => sum + r.data[field], 0), representable = Number.isSafeInteger(total);
+    return [field, { value: measured.length && representable ? total : null, measured: measured.length, eligible: usage.length, status: measured.length && representable ? measured.length === usage.length && complete('usage') && measured.every(r => r.data.coverage === 'observed') ? 'measured' : 'incomplete' : 'unavailable' }];
   }));
   metric('model.token-usage.v1', 'usage', usage, usableUsage.filter(r => fields.some(field => finite(r.data[field])) && r.data.coverage !== 'unavailable'), null, usage.length, { fields: fieldCoverage, identities: usableUsage.map(r => ({ id: r.id, ...r.data.identity, authenticationRoute: r.data.authenticationRoute, usageSource: r.data.usageSource })), actualBilledCost: null, billableOutputTokens: null });
   const usageMetric = metrics.at(-1);

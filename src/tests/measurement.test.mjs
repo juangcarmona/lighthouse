@@ -73,6 +73,12 @@ test('confirmed reversal needs an explicit revision relation; titles remain insu
 test('duplicate bytes deduplicate; changed inputs, wrong repository and unsupported revisions expose limitations', () => {
   const stage = record('stage-result', 'stage', { status: 'passed' });
   assert.equal(metrics(bundle([stage, stage]))['execution.stage-outcome.v1'].numerator, 1);
+  const alias = structuredClone(stage); alias.id = 'another-local-label';
+  assert.equal(metrics(bundle([stage, alias]))['execution.stage-outcome.v1'].numerator, 1);
+  const shifted = structuredClone(stage); shifted.time = '2026-01-11T00:00:00Z';
+  assert.equal(metrics(bundle([shifted]))['execution.stage-outcome.v1'].status, 'unavailable');
+  const retyped = structuredClone(stage); retyped.kind = 'workflow-attempt'; retyped.data.conclusion = 'success';
+  assert.equal(metrics(bundle([retyped]))['execution.attempt-outcome.v1'].status, 'unavailable');
   const other = record('stage-result', 'stage', { status: 'failed' });
   assert.equal(metrics(bundle([stage, other]))['execution.stage-outcome.v1'].status, 'conflicting');
   const wrong = structuredClone(stage); wrong.source.repositoryId = 999;
