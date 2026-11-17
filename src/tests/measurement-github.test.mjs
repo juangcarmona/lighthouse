@@ -63,6 +63,8 @@ test('offline report is byte stable, escapes source prose and rejects active or 
   assert.ok(html.includes('&lt;script&gt;')); assert.ok(!html.includes('<script>')); assert.ok(!html.includes('href="javascript:'));
   assert.ok(html.includes("default-src 'none'"));
   assert.ok(html.includes("min-block-size:var(--lh-space-6)"));
+  assert.ok(html.includes('.scroll table{min-width:70rem}'));
+  assert.ok(html.includes('tabindex="0" role="region" aria-label="Operator findings table"'));
   assert.equal(html, renderMeasurementReport(JSON.parse(JSON.stringify(bundle))));
   stage.source.url = 'https://github.com/another/repository/issues/1';
   assert.ok(!renderMeasurementReport(bundle).includes('href="https://github.com/another/'));
