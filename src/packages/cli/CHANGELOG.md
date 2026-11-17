@@ -1,5 +1,16 @@
 # @juangcarmona/lighthouse
 
+## 0.13.22
+
+### Patch Changes
+
+- 18048c9: # Source-bound delivery acceptance
+
+  Add an explicitly adopted owner delivery-decision producer and independent source verifier, with exact candidate bindings and append-only correction history.
+
+- Updated dependencies [18048c9]
+  - @juangcarmona/lighthouse-sdlc@0.27.0
+
 ## 0.13.21
 
 ### Patch Changes
