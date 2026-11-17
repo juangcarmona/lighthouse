@@ -118,7 +118,7 @@ export async function preparePlanningProductEvidence(source, runDir, { core, ins
   const baselineDigest = await productModelDigest(source), reports = join(runDir, 'evidence/host/product-context');
   const path = join(runDir, 'context.json'), context = JSON.parse(await readFile(path, 'utf8'));
   const scopeText = context.issue ? productEvidenceScopeText({ issue: context.issue, continuation: context.continuation }) : undefined;
-  const result = await prepareProductEvidence(source, reports, core, { baselineDigest, scopeText });
+  const result = await prepareProductEvidence(source, reports, core, { baselineDigest, scopeText, appliedChange: context.request?.epicProduct });
   signal?.throwIfAborted();
   await installProductEvidence(reports, source, baselineDigest);
   const evidence = { provider: '@prodshape/core', version: core.version, serializationVersion: result.serializationVersion, baselineDigest, artifacts: result.artifacts, acceptedModelPath: `/workspace/${await productModelDirectory(source)}`, evidenceRoot: '/workspace/.lighthouse-product-evidence' };

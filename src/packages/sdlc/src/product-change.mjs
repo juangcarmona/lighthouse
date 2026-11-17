@@ -286,7 +286,7 @@ export function productEvidenceScopeText(value) {
   return [...references].join('\n');
 }
 
-export async function prepareProductEvidence(root, destination, core, { baselineDigest, scopeText } = {}) {
+export async function prepareProductEvidence(root, destination, core, { baselineDigest, scopeText, appliedChange } = {}) {
   if (baselineDigest && await productModelDigest(root) !== baselineDigest) throw Error('ProductShape baseline changed before evidence preparation');
   const repository = await core.openRepository(resolve(root));
   const baseline = await core.validateBaseline(repository);
@@ -297,14 +297,32 @@ export async function prepareProductEvidence(root, destination, core, { baseline
   if (nodes.some(node => !/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(node.id ?? '')) || new Set(nodes.map(node => node.id)).size !== nodes.length) throw Error('ProductShape evidence has an unsafe artifact identity');
   const scoped = scopeText !== undefined;
   if (scoped && (typeof scopeText !== 'string' || Buffer.byteLength(scopeText) > 256 * 1024)) throw Error('ProductShape evidence scope is invalid');
-  const requested = scoped ? [...new Set(scopeText.match(/\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g) ?? [])].sort() : [];
+  let expanded;
+  if (appliedChange) {
+    if (!namePattern.test(appliedChange.changeName ?? '') || !/^CHG-[A-Z0-9-]+$/.test(appliedChange.changeId ?? '') || !revisionPattern.test(appliedChange.base ?? '')) throw Error('ProductShape evidence change binding is invalid');
+    const path = `${(await productModelDirectory(root)).slice(0, -'/model'.length)}/changes/completed/${appliedChange.changeName}/change.md`;
+    let current = resolve(root);
+    for (const part of path.split('/')) {
+      current = join(current, part);
+      const stat = await lstat(current);
+      if (stat.isSymbolicLink() || (current === resolve(root, path) ? !stat.isFile() || stat.size > PRODUCT_FILE_LIMITS.fileBytes : !stat.isDirectory())) throw Error('ProductShape evidence change path is unsafe or exceeds bounds');
+    }
+    const loaded = await core.loadArtifactFile(current, resolve(root), repository.registry);
+    const fm = loaded.artifact?.frontmatter;
+    if (loaded.diagnostics.some(item => item.severity === 'error') || fm?.type !== 'product-change' || fm.status !== 'applied' || fm.id !== appliedChange.changeId || fm['base-revision'] !== appliedChange.base) throw Error('ProductShape evidence applied change does not match its source binding');
+    const operations = ['add', 'modify', 'remove'].map(kind => fm.operations?.[kind]);
+    if (operations.some(ids => !Array.isArray(ids)) || operations.flat().length > PRODUCT_FILE_LIMITS.files || operations.flat().some(id => !/^[A-Z0-9][A-Z0-9-]{0,159}$/.test(id))) throw Error('ProductShape evidence change operations are invalid or exceed bounds');
+    expanded = { id: fm.id, artifacts: [...new Set(operations.flat())].sort() };
+  }
+  const requested = scoped ? [...new Set([...(scopeText.match(/\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g) ?? []), ...(expanded?.artifacts ?? [])])].sort() : [];
+  if (Buffer.byteLength(requested.join('\n')) > 256 * 1024) throw Error('ProductShape evidence reference selection exceeds bounds');
   const identities = new Set(nodes.map(node => node.id)), roots = new Set(requested.filter(id => identities.has(id)));
   const selected = new Set(roots);
   for (const edge of scoped ? baseline.graph.edges ?? [] : []) {
     if (roots.has(edge.from) && identities.has(edge.to)) selected.add(edge.to);
     if (roots.has(edge.to) && identities.has(edge.from)) selected.add(edge.from);
   }
-  const scope = scoped ? { mode: 'issue-references-and-direct-neighbours', requested, matched: [...roots].sort(), unresolved: requested.filter(id => !identities.has(id)), selected: [...selected].sort(), unavailable: [] } : undefined;
+  const scope = scoped ? { mode: 'issue-references-and-direct-neighbours', requested, matched: [...roots].sort(), unresolved: requested.filter(id => !identities.has(id) && id !== expanded?.id), selected: [...selected].sort(), unavailable: [], ...(expanded ? { changes: [expanded] } : {}) } : undefined;
   const fallback = node => ({ citation: core.emitCitation({ id: node.id, digest: node.digest, form: 'payload' }), availability: { status: 'unavailable', reason: 'not-materialized', acceptedModelPath: node.path ?? null } });
   const compact = scoped ? new Map(nodes.map(node => [node.id, JSON.stringify(fallback(node), null, 2) + '\n'])) : null;
   let reservedBytes = scoped ? [...compact.values()].reduce((total, content) => total + Buffer.byteLength(content), 0) : 0;
