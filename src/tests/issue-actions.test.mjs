@@ -7,6 +7,42 @@ import { spawnSync } from 'node:child_process';
 import { routeIssue, taskDigest, checkPublication, repositoryApiUrl, pendingReply, checkReplyInputs, continuationContext, continuationHistory, refinementNextAction, checkProductEntry, productGapNextAction, publishRoutingHandoff, resolveEpicRouting, checkEpicAuthority, checkEpicTriageBinding, existingEpicTriage, createIssueApi } from '../packages/sdlc/src/issue-actions.mjs';
 import { dispatchIntent, dispatchId, epicTriageKey, dispatchReceiptBody } from '../packages/sdlc/src/stage-dispatch.mjs';
 import { ciRequestFailure } from '../packages/sdlc/src/delivery-events.mjs';
+import { prepareProductContextEvidence } from '../packages/sdlc/src/issue-actions.mjs';
+import { productContextFixture, embedLiteralFiles } from './fixtures/product-context.mjs';
+import { productModelDigest } from '../packages/sdlc/src/product-change.mjs';
+import { productWorkingContext } from '../packages/sdlc/src/product-context.mjs';
+
+test('Product Change preparation selects references from original authority and projects only the working context', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'product-preparation-wiring-'));
+  try {
+    const { mkdir } = await import('node:fs/promises');
+    await mkdir(join(root, 'docs/product/model'), { recursive: true });
+    await writeFile(join(root, 'docs/product/model/fr-one.md'), 'Synthetic baseline.\n');
+    const baselineDigest = await productModelDigest(root);
+    const { context, files } = productContextFixture({ baselineDigest });
+    context.issue.ownerAnswers.push({ body: `Keep this historical wiring decision.\n${embedLiteralFiles(files)}` });
+    const before = JSON.stringify(context);
+    const originalTask = taskDigest(context.issue, context.issue.ownerAnswers);
+    const inspected = [];
+    const nodes = ['FR-ONE', 'BR-ANSWER', 'UC-NEIGHBOUR', 'FR-UNSELECTED'].map(id => ({ id, type: 'functional-requirement', digest: 'sha256:' + 'a'.repeat(64) }));
+    const core = { version: '0.25.0', openRepository: async () => ({}), validateBaseline: async () => ({ diagnostics: [], graph: { nodes, edges: [{ from: 'FR-ONE', to: 'UC-NEIGHBOUR' }] } }), inspectArtifact: (_graph, id) => { inspected.push(id); return { id }; }, analyzeImpact: (_graph, id) => ({ id }), emitCitation: ({ id, digest }) => `pdac:cite id="${id}" digest="${digest}"` };
+    const result = await prepareProductContextEvidence(root, join(root, 'reports'), context, core, { baselineDigest, parentEvidence: { gap: { summary: 'FR-ONE', scope: 'BR-ANSWER' } } });
+    assert.deepEqual(result.scope.matched, ['BR-ANSWER', 'FR-ONE']);
+    assert.deepEqual(result.scope.selected, ['BR-ANSWER', 'FR-ONE', 'UC-NEIGHBOUR']);
+    assert.deepEqual(inspected.sort(), result.scope.selected);
+    assert.equal(JSON.parse(await readFile(join(root, 'reports/FR-UNSELECTED.json'))).availability.status, 'unavailable');
+    const working = productWorkingContext(context);
+    assert.deepEqual(working.request, context.request);
+    assert.equal(taskDigest(context.issue, context.issue.ownerAnswers), originalTask);
+    assert.notEqual(taskDigest(working.issue, working.issue.ownerAnswers), originalTask);
+    assert.equal(JSON.stringify(context), before);
+    assert.match(working.issue.ownerAnswers[0].body, /Current decision/);
+    assert.match(working.issue.ownerAnswers[1].body, /^Keep this historical wiring decision\./);
+    assert.ok(Buffer.byteLength(JSON.stringify(working)) < 256 * 1024);
+    assert.equal(working.productChange.historicalCopies[0].files.length, 64);
+    await assert.rejects(prepareProductContextEvidence(root, join(root, 'stale'), context, core, { baselineDigest: 'a'.repeat(64) }), /baseline changed/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 const denialCondition = 'GitHub Actions is not permitted to create or approve pull requests.';
 const denialPrefix = 'GitHub POST pulls: 403';

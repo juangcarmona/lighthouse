@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { retainedInventory, composeRetainedProduct, parseCompositionJson } from '../packages/sdlc/src/product-composition.mjs';
+import { retainedInventory, composeRetainedProduct, parseCompositionJson, currentRetainedInventory } from '../packages/sdlc/src/product-composition.mjs';
+import { productContextFixture } from './fixtures/product-context.mjs';
 import { compositionFixture, hash } from './fixtures/product-composition.mjs';
 import { compositionService, compositionRpc, runCompositionServer, compositionTools } from '../packages/sdlc/src/product-composition-server.mjs';
 import { configureProductCompositionWorker } from '../packages/sdlc/src/product-composition-runtime.mjs';
@@ -25,6 +26,23 @@ function smallFixture() {
   fixture.context.issue.body = embed(fixture.draft);
   return fixture;
 }
+
+test('current-document selections compose the identical 64-file path/content/hash set from repeated audit history', () => {
+  const { context, files, envelope } = productContextFixture(), before = JSON.stringify(context);
+  const current = currentRetainedInventory(context);
+  assert.equal(current.measured.bytes, 276250);
+  assert.equal(current.measured.duplicateBytes, 276250);
+  assert.equal(current.measured.references, 128);
+  assert.deepEqual(current.binding, retainedInventory(context).binding);
+  const plan = current.paths.map(({ path, current, history }) => ({ path, selected: current.ref, omitted: history.map(object => object.ref) }));
+  const result = composeRetainedProduct(context, { binding: current.binding, plan, envelope });
+  assert.deepEqual(result.envelope.result.output.productChange.files, files);
+  assert.deepEqual(result.envelope.result.output.productChange.files.map(file => [file.path, hash(file.content)]), files.map(file => [file.path, hash(file.content)]));
+  assert.equal(result.envelope.result.output.productChange.files[0].content, context.productChange.schemaPin);
+  assert.equal(result.envelope.result.output.productChange.baselineDigest, context.request.baselineDigest);
+  assert.equal(JSON.stringify(context), before);
+  assert.deepEqual(validateStageEnvelope(result.envelope, context.request), []);
+});
 
 test('confined planning has a supported structured retained-input composition route', () => {
   assert.equal(typeof retainedInventory, 'function');

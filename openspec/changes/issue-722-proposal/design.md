@@ -1,0 +1,34 @@
+# Design
+
+<!-- pdac-scope: cited -->
+<!-- pdac:cite id="FR-PRODUCT-CHANGE-WORKFLOW" digest="sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb" -->
+
+## Context
+
+See proposal.md. Evidence selection currently flattens all strings before applying its 256-KiB guard. Retained drafts already bind source, baseline, schema, path, revision and content hashes. Composition already supports bounded inspection and exhaustive explicit selections and omissions.
+
+## Goals / Non-Goals
+
+**Goals:** Keep evidence selection proportional to unique references; expose current retained paths once; preserve exact document bytes, every decision and original authority inputs.
+
+**Non-Goals:** Summarization, implicit decision replacement, a general context service, new tools or permissions, changed provider ownership, candidate limits or approval/publication rules.
+
+## Decisions
+
+1. Scan bounded input strings for artifact IDs and sort/deduplicate IDs before the existing reference-scope guard. Bound authenticated issue/answer text to 2 MiB, complete host projection input to the existing 4-MiB audit transport bound, and references to 256 KiB; also bound nesting and entry count. Metadata and repeated continuation copies do not consume the authenticated-text allowance a second time. Never truncate. Keep the existing ID matching and direct-neighbour selection semantics. Raising the old guard would retain unnecessary work and fail to separate limits.
+2. Reuse the retained inventory validator. Count repeated exact path/content objects once toward retained storage bounds, but retain all source/revision references and refuse duplicate path revisions. Bound declarations and references separately. Explicitly revised draft paths supersede prior document versions only; absent paths do not imply deletion and prose decisions never supersede one another automatically.
+3. The adapter builds a working copy, removes validated retained declaration bodies in favour of exact references, and exposes a current catalog. Keep prose in issue and answers verbatim in this ordinary projection. Replace redundant copies of those exact bodies with source pointers, not model summaries. Keep all original context bytes in `/workspace/.lighthouse-product-audit.json` through the existing read-only source mount; refuse a source-file collision. Composition reads that original input. Raw request/task identity and publication checks continue using the original host context. No read permissions change.
+4. Apply projection only to Product Change workers. Unsupported or stale declarations fail before execution, not after partial output. Literal drafting and ordinary workers remain compatible. Existing read-only input access supplies audit retrieval; existing inspect supplies retained bodies.
+5. Bind historical document fields to their exact authenticated audit source and content hash, never by comment order or inferred revision. Support fenced JSON envelopes with a validated `files` field and path-headed Markdown fences. Replace only the JSON field value, preserving all other JSON bytes and decision values in place. Duplicate keys, unsafe file declarations and ambiguous Markdown retained-byte recovery refuse. Exact current aliases retain their typed-object links; older distinct text and unique safe paths receive historical-only audit references and cannot enter composition. For Markdown with no retained match, reference the exact captured fenced body (including its final newline), rather than guessing a newline-normalized identity. Recheck source locations against original issue/answer bodies before binding; fabricated references refuse with source/hash recovery detail. Keep the eight-declaration bound exclusively for typed inventories and count all historical files against the existing 512-reference bound. Unique-prose, authenticated text, audit, working-view, retained storage and candidate limits stay unchanged. Arbitrary prose and unrelated JSON remain untouched.
+6. Only when ordinary projection exceeds 256 KiB, replace all string-valued verified answer bodies with whole-answer audit references. Publish an exhaustive `historyIndex` binding each original answer body location to its UTF-8 SHA-256 and byte count, under the original audit digest and composition binding. Keep answer metadata and null/absent bodies in place, and preserve the current issue, request and instructions. Count indexed bodies against the existing 512-reference allowance together with typed and historical document references; do not trade away document references. Selection is structural, never based on meaning, order or presumed supersession. Require reading and checking indexed bodies through the existing read-only audit before relevant product decisions; mark them unread, never reviewed. Refuse if the issue/instructions still cannot fit, or authenticated input, audit or reference bounds are exhausted. No summary, new retrieval tool or broader access is introduced.
+
+## Risks / Trade-offs
+
+- [Ambiguous history] → Refuse equal path revisions and malformed/stale bindings; preserve all other prose for worker assessment, including conflicting decisions.
+- [Large historical prose] → Use exact whole-answer transport only after ordinary projection overflows; retain authoritative unread decisions and require inspection. Current issue/instruction or reference overflow still refuses rather than truncates.
+- [Projection mistaken for authority] → Label audit path and digest, preserve request identities, and document that current references do not approve or apply a candidate.
+- [Synthetic transport differs from installed runtime] → Record local evidence separately from native qualification; do not claim adoption.
+
+## Migration Plan
+
+Ship a patch changeset after normal review, checks and integration. Adopt through the released package and reviewed workflow pin; rollback through normal package/pin selection. No data migration or historical comment edits.

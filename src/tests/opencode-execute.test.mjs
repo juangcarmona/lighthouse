@@ -9,8 +9,10 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
-import { snapshotSource, redactLog, acquireEngineSlot, completionOutput } from '../packages/sdlc/src/opencode-execute.mjs';
+import { snapshotSource, redactLog, acquireEngineSlot, completionOutput, prepareProductWorkingContext } from '../packages/sdlc/src/opencode-execute.mjs';
 import { compositionFixture } from './fixtures/product-composition.mjs';
+import { productContextFixture, combinedHistoryFixture, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
+import { compositionService } from '../packages/sdlc/src/product-composition-server.mjs';
 
 async function fixtureHarness(root) {
   const harness = join(root, 'harness');
@@ -56,7 +58,10 @@ if(output){
  if(${supported}){
   const config=JSON.parse(fs.readFileSync(mount('/etc/opencode/opencode.json')));
   if(!config.mcp.servers.productcomposition||context.productChange.composition.status!=='configured')process.exit(3);
-  const script='import {compositionService} from '+JSON.stringify(${JSON.stringify(join(root, 'harness/src/product-composition-server.mjs'))})+'; const service=compositionService('+JSON.stringify(input)+','+JSON.stringify(output)+'); const catalog=await service("inspect",{}); await service("compose",{binding:catalog.binding,plan:catalog.paths.map(p=>({path:p.path,selected:p.objects[0].ref,omitted:[]})),envelope:'+${JSON.stringify(JSON.stringify(envelope))}+'});';
+   const audit=mount('/workspace')+'/.lighthouse-product-audit.json';
+   if(!args.some(a=>a.endsWith('dst=/workspace,readonly'))||context.productChange.audit.path!=='/workspace/.lighthouse-product-audit.json'||!context.productChange.currentDocuments||JSON.stringify(context).includes('Exact UTF-8 text'))process.exit(5);
+   if(fs.readFileSync(audit,'utf8')!==${JSON.stringify(JSON.stringify(context))})process.exit(6);
+   const script='import {compositionService} from '+JSON.stringify(${JSON.stringify(join(root, 'harness/src/product-composition-server.mjs'))})+'; const service=compositionService('+JSON.stringify(audit)+','+JSON.stringify(output)+'); const catalog=await service("inspect",{}); await service("compose",{binding:catalog.binding,plan:catalog.paths.map(p=>({path:p.path,selected:p.objects[0].ref,omitted:[]})),envelope:'+${JSON.stringify(JSON.stringify(envelope))}+'});';
   const run=cp.spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8'});if(run.status!==0){console.error(run.stderr);process.exit(run.status??1);}
  }else{
   if(context.productChange.composition.status!=='unavailable')process.exit(4);
@@ -72,12 +77,193 @@ if(output){
       if (supported) assert.deepEqual(result.result.output.productChange.files, files);
       const runtime = JSON.parse(await readFile(join(runDir, 'runtime.json'), 'utf8'));
       assert.equal(runtime.productComposition.status, supported ? 'configured' : 'unavailable');
+      assert.ok(runtime.productContext.originalBytes > 256 * 1024);
+      assert.ok(runtime.productContext.workingBytes < 64 * 1024);
+      assert.equal(runtime.productContext.retained.paths, 64);
       assert.equal(runtime.model, 'fixture-unchanged');
       assert.equal(runtime.budget.timeoutMs, 600000);
       assert.equal(runtime.cleanup.status, 'clean');
       assert.equal(await readFile(join(work, 'README.md'), 'utf8'), 'Synthetic source, never edited.\n');
     } finally { await rm(root, { recursive: true, force: true }); }
   });
+});
+
+test('adapter keeps exact audit bytes read-only and composition inspects historical bodies on demand', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-working-context-'));
+  try {
+    const { context, files } = productContextFixture();
+    context.issue.ownerAnswers.push({ body: `Keep the literal historical decision.\n${embedLiteralFiles(files)}` });
+    context.issue.ownerAnswers.push({ body: `Keep the Markdown historical decision.\n${embedMarkdownFile(files[3])}` });
+    const raw = JSON.stringify(context, null, 2);
+    const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.equal(measured.auditSha256, createHash('sha256').update(raw).digest('hex'));
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    assert.deepEqual(working.request, context.request);
+    assert.equal(working.productChange.audit.sha256, measured.auditSha256);
+    assert.ok(measured.workingBytes < 256 * 1024);
+    assert.match(working.issue.ownerAnswers[1].body, /^Keep the literal historical decision\./);
+    assert.match(working.issue.ownerAnswers[2].body, /^Keep the Markdown historical decision\./);
+    assert.equal(working.productChange.historicalCopies.length, 2);
+    const originals = JSON.parse(await readFile(audit, 'utf8'));
+    assert.deepEqual(originals.issue.ownerAnswers, context.issue.ownerAnswers);
+    const service = compositionService(audit, root), catalog = await service('inspect', {});
+    for (const item of catalog.paths[0].objects) {
+      const object = await service('inspect', { reference: { path: catalog.paths[0].path, ...item.ref } });
+      assert.equal(object.content, context.productChange.schemaPin);
+    }
+    for (const alias of working.productChange.historicalCopies.flatMap(copy => copy.files)) {
+      const object = await service('inspect', { reference: { path: alias.path, source: alias.sources[0], sha256: alias.sha256 } });
+      assert.equal(object.content, files.find(file => file.path === alias.path).content);
+    }
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('adapter retains combined mixed historical bytes read-only without admitting historical versions to composition', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-mixed-history-'));
+  try {
+    const { context, olderFiles, metadata, mixedIndex } = combinedHistoryFixture();
+    const raw = JSON.stringify(context, null, 2), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.ok(measured.workingBytes < 256 * 1024);
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    const mixed = JSON.parse(working.issue.ownerAnswers[mixedIndex].body.match(/```json\n([\s\S]*?)\n```/)[1]);
+    const { files: _reference, ...rest } = mixed;
+    assert.deepEqual(rest, metadata);
+    const originals = JSON.parse(await readFile(audit, 'utf8'));
+    assert.deepEqual(originals, context);
+    const historical = working.productChange.historicalCopies.flatMap(copy => copy.files).filter(file => file.historicalOnly);
+    assert.equal(historical.length, 3);
+    const location = historical[0].audit.source.match(/^issue\.ownerAnswers\[(\d+)\]\.body#json-(\d+)$/);
+    const blocks = [...originals.issue.ownerAnswers[Number(location[1])].body.matchAll(/^```json\n([\s\S]*?)^```$/gm)];
+    const content = JSON.parse(blocks[Number(location[2])][1]).files[historical[0].audit.fileIndex].content;
+    assert.equal(content, olderFiles[0].content);
+    assert.equal(createHash('sha256').update(content).digest('hex'), historical[0].sha256);
+    const service = compositionService(audit, root);
+    await assert.rejects(service('inspect', { reference: { path: historical[0].path, source: historical[0].audit.source, sha256: historical[0].sha256 } }), /Unknown retained/);
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('adapter transports realistic whole-answer history with every original body retrievable read-only', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-whole-history-'));
+  try {
+    const { context, files, envelope } = combinedHistoryFixture({ decisionHistoryBytes: 320 * 1024 });
+    const raw = JSON.stringify(context, null, 2), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.ok(measured.workingBytes < 256 * 1024);
+    const working = JSON.parse(await readFile(input, 'utf8')), originals = JSON.parse(await readFile(audit, 'utf8'));
+    assert.equal(createHash('sha256').update(await readFile(audit)).digest('hex'), working.productChange.audit.sha256);
+    assert.equal(working.productChange.historyIndex.answers.length, originals.issue.ownerAnswers.length);
+    assert.deepEqual(working.request, context.request);
+    for (const reference of working.productChange.historyIndex.answers) {
+      const index = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1]);
+      const body = originals.issue.ownerAnswers[index].body;
+      assert.equal(body, context.issue.ownerAnswers[index].body);
+      assert.equal(createHash('sha256').update(body).digest('hex'), reference.sha256);
+      assert.equal(Buffer.byteLength(body), reference.bytes);
+    }
+    const service = compositionService(audit, root), catalog = await service('inspect', {});
+    for (const path of catalog.paths) {
+      const current = path.objects.reduce((a, b) => a.revision > b.revision ? a : b);
+      const read = await service('inspect', { reference: { path: path.path, ...current.ref } });
+      assert.equal(read.content, files.find(file => file.path === path.path).content);
+    }
+    const binding = working.productChange.currentDocuments.binding;
+    const plan = working.productChange.currentDocuments.paths.map(({ path, current, history }) => ({ path, selected: current.ref, omitted: history.map(item => item.ref) }));
+    await service('compose', { binding, plan, envelope });
+    const output = JSON.parse(await readFile(join(root, 'envelope.json'), 'utf8'));
+    assert.deepEqual(output.result.output.productChange.files, files);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'envelope.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('adapter includes composition configuration before choosing overflow-only history transport', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-history-capability-'));
+  try {
+    const { context } = productContextFixture();
+    context.issue.ownerAnswers.push({ body: 'x'.repeat(200 * 1024) });
+    const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, JSON.stringify(context));
+    const capability = { mode: 'configured', guidance: 'x'.repeat(32 * 1024) };
+    await prepareProductWorkingContext(input, audit, capability);
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    assert.equal(working.productChange.historyIndex.answers.length, 2);
+    assert.deepEqual(working.productChange.composition, capability);
+    assert.ok(Buffer.byteLength(JSON.stringify(working)) < 256 * 1024);
+    assert.deepEqual(JSON.parse(await readFile(audit, 'utf8')), context);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('ambiguous source JSON and audit/input/current-view overflows refuse before adapter writes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-history-refusals-'));
+  try {
+    const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    const ambiguous = combinedHistoryFixture({ decisionHistoryBytes: 320 * 1024 }).context;
+    const issue = JSON.stringify(ambiguous.issue);
+    for (const [raw, error] of [
+      [JSON.stringify(ambiguous).replace('"issue":' + issue, '"issue":{},"issue":' + issue), /Duplicate composition JSON key/],
+      [JSON.stringify({ ...ambiguous, padding: 'x'.repeat(4 * 1024 * 1024) }), /audit context exceeds bounds/],
+      [JSON.stringify({ ...ambiguous, issue: { ...ambiguous.issue, ownerAnswers: [{ body: 'x'.repeat(2 * 1024 * 1024) }] } }), /input text/],
+      [JSON.stringify({ ...ambiguous, contract: { rules: 'x'.repeat(256 * 1024) } }), /working context exceeds bounds after exact history transport/],
+    ]) {
+      await writeFile(input, raw);
+      await assert.rejects(prepareProductWorkingContext(input, audit), error);
+      assert.equal(await readFile(input, 'utf8'), raw);
+      await assert.rejects(lstat(audit), { code: 'ENOENT' });
+      assert.deepEqual(await readdir(root), ['context.json']);
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('invalid product projection cannot create audit or modify input/output', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-refused-context-'));
+  try {
+    const { context } = productContextFixture(); context.productChange.baselineDigest = 'a'.repeat(64);
+    const raw = JSON.stringify(context), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw); await writeFile(join(root, 'envelope.json'), 'prior output');
+    await assert.rejects(prepareProductWorkingContext(input, audit), /binding/);
+    assert.equal(await readFile(input, 'utf8'), raw);
+    assert.equal(await readFile(join(root, 'envelope.json'), 'utf8'), 'prior output');
+    await assert.rejects(lstat(audit), { code: 'ENOENT' });
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('unbound historical copies refuse before adapter audit or context writes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-unbound-history-'));
+  try {
+    const { context, files } = productContextFixture();
+    context.issue.ownerAnswers.push({ body: `Keep the original decision.\n${embedLiteralFiles([{ ...files[3], sha256: 'a'.repeat(64), content: 'Unbound historical bytes.' }])}` });
+    const raw = JSON.stringify(context), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    await assert.rejects(prepareProductWorkingContext(input, audit), /explicitly bound retained draft/);
+    assert.equal(await readFile(input, 'utf8'), raw);
+    await assert.rejects(lstat(audit), { code: 'ENOENT' });
+    assert.deepEqual(await readdir(root), ['context.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('audit source collisions refuse without hiding source content or rewriting authority', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-audit-collision-'));
+  try {
+    const { context } = productContextFixture(), raw = JSON.stringify(context);
+    const input = join(root, 'context.json'), audit = join(root, '.lighthouse-product-audit.json');
+    await writeFile(input, raw); await writeFile(audit, 'Author-owned source.');
+    await assert.rejects(prepareProductWorkingContext(input, audit), { code: 'EEXIST' });
+    assert.equal(await readFile(input, 'utf8'), raw);
+    assert.equal(await readFile(audit, 'utf8'), 'Author-owned source.');
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 async function workspaceUsage(root) {
@@ -485,7 +671,7 @@ test('a product worker from implementation uses the read-only product engine wit
     const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'implement', gate: 'done', status: 'passed', evidence: [{ id: 'intent', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Continue the parent.', output: { productChange: { schemaVersion: 1, outcome: 'aligned', entry: 'parent-handoff', affectedAreas: [], decisions: [] } } }, effect: { type: 'issue-comment', body: 'Intent already covers the request.' } };
     await mkdir(join(runDir, 'product-evidence'));
     await writeFile(join(runDir, 'product-evidence/index.json'), JSON.stringify({ schemaVersion: 1, source: '@prodshape/core', version: '0.25.0', baselineDigest: request.baselineDigest, artifacts: [] }));
-    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), '{}'); await writeFile(join(root, 'prompt'), 'Check product intent');
+    await writeFile(join(runDir, 'request.json'), JSON.stringify(request)); await writeFile(join(runDir, 'context.json'), JSON.stringify({ request, productChange: {}, issue: { body: 'Check accepted intent.' } })); await writeFile(join(root, 'prompt'), 'Check product intent');
     await writeFile(join(root, 'config'), JSON.stringify({ image: `sha256:${'a'.repeat(64)}`, uid: 20003, authVolume: 'fixture', model: 'fixture', lock: join(root, 'lock') }));
     const shim = join(bin, 'docker');
     await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args[0]==='run'&&!args.includes('cleanup-session')){ if(!args.some(x=>x.endsWith(',dst=/workspace,readonly')))process.exit(2); const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.writeFileSync(out+'/envelope.json',${JSON.stringify(JSON.stringify(envelope))}); }\n`);
