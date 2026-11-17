@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "runId": "9370e6b5394f4ad473f58147ca8156f83871cd1f6c8b0bdb8200e6f48df978f4",
+  "stage": "review",
+  "status": "blocked",
+  "gate": null,
+  "input": {
+    "repository": "juangcarmona/lighthouse",
+    "issue": 722,
+    "pullRequest": 730,
+    "requestId": "88524ecc22c4a3cb25ef670368218963338e921ef514076509bfe3ecda38b54b",
+    "requestDigest": "3a36328cec8de720f02baf7d9aa5b25b87e9dce23b051aff3834b18c60d3361d",
+    "acceptedHead": "b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa",
+    "sourceRevision": "25c581891de38b45fe22f0e9514d92318aa62747",
+    "intent": "cad9eaf079e0c5b278dc321eed12b9d1a79088e840d04073f6ec92276622c9ff",
+    "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+    "files": "ce23b68e36a9e0d8f2762b5a7d93ba9e9acff009e7d6f86ab7efa3f273567267",
+    "provenance": "Host-supplied authenticated observations; this engine did not independently query GitHub or Git."
+  },
+  "output": {
+    "summary": "PR #730 is confirmed merged and its adopted post-merge CI passed. The bounded correction has meaningful preparation, audit and composition regressions and exact-head maintainer acceptance. Final review remains blocked because the supplied record does not include provider-bound test evidence and its completed external-evidence verification receipt required by product-verification.md; this is missing proof, not an observed failing check.",
+    "delivery": {
+      "integrationEvidence": "integration:44030215418:1",
+      "acceptedHead": "b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa",
+      "mergedRevision": "25c581891de38b45fe22f0e9514d92318aa62747",
+      "integrationRecordSha256": "b1c81bedc5c98f71d7925297cb623d758d95c15805aa66e5e9988454629394c6",
+      "integrationReportCommit": "a8ef87d1b3af92c5203cfe6453732352d236243c",
+      "authorization": "The historical integration receipt binds merge:true and owner approval 5933891460 to the accepted head. This review dispatch has merge:false and grants no new integration effect.",
+      "postMerge": "ci.yml run 44031137227, attempt 1, workflow_dispatch, completed successfully on the actual merged revision. The original integration report's missing-CI observation remains historical; current host observations resolve that gap. Recovery is null, not evidence of a scheduled or recovery execution.",
+      "acceptanceBoundary": "Source acceptance and integration are established by their separate evidence. Registry publication, installation, actual installed tool invocation and downstream product acceptance are not established."
+    },
+    "findings": [
+      {
+        "id": "F1",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "finding": "Flattened document history exceeded the 256-KiB provider scope guard despite admitted retained input. productEvidenceScopeText now bounds original text and unique references separately; prepareProductEvidence preserves reference and direct-neighbour selection.",
+        "owner": "SDLC source maintainer",
+        "followUpReference": "#722 / PR #730",
+        "evidence": [
+          "src/packages/sdlc/src/product-change.mjs:257-307",
+          "src/packages/sdlc/src/issue-actions.mjs:92-94",
+          "src/tests/planning-product-evidence.test.mjs:46-69",
+          "src/tests/issue-actions.test.mjs:15-44"
+        ],
+        "decision": "Recorded as fixed on the accepted candidate, not inferred solely from CI. The preparation regression explicitly observes the legacy-scope refusal and the corrected entrypoint's reports using a synthetic provider."
+      },
+      {
+        "id": "F2",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "finding": "Earlier candidates mishandled literal inventories, mixed-envelope metadata, older distinct documents and more than eight historical aliases. Exact audit bindings now preserve surrounding values and historical-only versions without adding current composition authority or consuming typed-declaration slots.",
+        "owner": "SDLC source maintainer",
+        "followUpReference": "PR #730 reviews 5929850896 and 5930855634; resolution review 5933891460",
+        "evidence": [
+          "src/packages/sdlc/src/product-composition.mjs:178-213",
+          "src/packages/sdlc/src/product-context.mjs:20-69",
+          "src/tests/product-context.test.mjs:153-385",
+          "src/tests/opencode-execute.test.mjs:91-152"
+        ],
+        "decision": "The final exact-head approval resolves the earlier requested changes; the inspected regressions cover their concrete reproductions and refusal cases."
+      },
+      {
+        "id": "F3",
+        "classification": "fixed",
+        "kind": "source-defect",
+        "finding": "Document-only projection still refused realistically sized non-file decisions. Overflow-only whole-answer indexing now accounts for every string body by original source, SHA-256 and byte count while retaining the original read-only audit, current issue/request and unchanged limits.",
+        "owner": "SDLC source maintainer",
+        "followUpReference": "PR #730 review 5932246179; resolution review 5933891460",
+        "evidence": [
+          "src/packages/sdlc/src/product-context.mjs:100-118",
+          "src/tests/product-context.test.mjs:388-475",
+          "src/tests/opencode-execute.test.mjs:155-227",
+          "src/tests/fixtures/product-context.mjs:35-59"
+        ],
+        "decision": "Final maintainer review reports 128836 working bytes, all 28 original bodies retrievable, and exact preservation of all 64 current files. These are retained reviewer measurements, not measurements newly executed by this engine. Indexed decisions remain authoritative and unread until inspected."
+      },
+      {
+        "id": "P1",
+        "classification": "accepted",
+        "kind": "current-review-evidence-gap",
+        "finding": "No pdac-verification-evidence/v1alpha1 document linking actual test outcomes to provider-generated citations, adjacent model binding, or completed prodshape evidence verify receipt is supplied. A citations verify command and source test assertions do not replace that verification.",
+        "owner": "Lighthouse verification maintainer",
+        "followUpReference": "#722 final review; src/packages/sdlc/product-verification.md:13-32",
+        "decision": "Blocks this review. Supply retained evidence and authenticated verification results, or obtain an explicit authorized deferral. Do not represent the absent command as failed or claim it never ran elsewhere."
+      },
+      {
+        "id": "P2",
+        "classification": "accepted",
+        "kind": "process-gap",
+        "finding": "Earlier passing candidates did not cover combined document aliases and realistically sized distinct decision history. Independent review found the remaining refusal before acceptance.",
+        "owner": "SDLC test maintainer",
+        "followUpReference": "PR #730 reviews 5930855634 and 5932246179; src/tests/fixtures/product-context.mjs:35-59",
+        "decision": "Keep the combined full-size regression and original refusal evidence. These are corrections within one work item, not evidence of recurrence across issues."
+      },
+      {
+        "id": "P3",
+        "classification": "deferred",
+        "kind": "operational-process-gap",
+        "finding": "Retained owner recovery comments report preflight retention-cap refusals and execution 44019517767 stopping at evidence collection with 201 files against a 200-file bound. That execution did not complete independent checks/publication; its evidence is not reused as successful proof.",
+        "owner": "Workflow evidence/operations maintainer",
+        "followUpReference": "PR #730 comments 6935161783, 6938652588 and 6939687329",
+        "decision": "Record the reported failures and bounded-evidence improvement candidate without inspecting infrastructure or asserting a newly verified root cause. Fresh run 44025423382 supplies the accepted command receipts."
+      },
+      {
+        "id": "P4",
+        "classification": "deferred",
+        "kind": "baseline-warning-follow-up",
+        "finding": "The successful citation receipt reports 311 warnings, including 295 stale citations; npm ci reports three low-severity vulnerabilities. The projected citation rows are explicitly unavailable above the 8192-byte projection bound.",
+        "owner": "Product metadata maintainer and dependency maintainer",
+        "followUpReference": "#722 implementation run 44025423382, command receipts :1 and :3",
+        "decision": "Preserve warnings without attributing them to this patch or claiming their applicability is resolved. Changed OpenSpec citation strings inspected here match current FR/BR payloads, but omitted provider diagnostics cannot establish individual warning disposition. No dependency or accepted-model path is in the changed-file list."
+      }
+    ],
+    "productVerification": {
+      "provider": "@prodshape/core@0.25.0",
+      "serializationVersion": "v1alpha2",
+      "sourceRevision": "25c581891de38b45fe22f0e9514d92318aa62747",
+      "baselineDigest": "2ca3d55a3cf3585e9508fc729d93d8a36e7afe2d455f375caf485815cf130b7b",
+      "evidenceRoot": "/workspace/.lighthouse-product-evidence",
+      "citations": [
+        "pdac:cite id=\"FR-PRODUCT-CHANGE-WORKFLOW\" digest=\"sha256:de0a685599fb546839c0136a8d87ce1e59290343c8151bfdc46a9549102e4ceb\"",
+        "pdac:cite id=\"BR-PRODUCT-CHANGE-HANDOFF\" digest=\"sha256:78a85b31789efb8160bb10d404f53aff4dca3a11f326088960904631ceddda78\"",
+        "pdac:cite id=\"UC-PREPARE-PRODUCT-CHANGE\" digest=\"sha256:2f52f750a6288f1fb24b038352d472d69eebb3a186afdfbe03241b2d4d19d669\"",
+        "pdac:cite id=\"SB-CHANGE-FLOW-VERIFIED\" digest=\"sha256:7d2535c7d18644afbc4cddfa5aba7af058549db02a8e59ab5c54f2c916c142da\""
+      ],
+      "modelCoverage": "FR-PRODUCT-CHANGE-WORKFLOW and UC-PREPARE-PRODUCT-CHANGE cover bounded preparation, resumable answers and preservation of authority; BR-PRODUCT-CHANGE-HANDOFF separates preparation, product approval, apply and continuation. Generic SB-CHANGE-FLOW-VERIFIED illustrates UC-RUN-SDLC and BR-BOUNDED-WORKFLOW and requires evidence, stopping on failed prerequisites and distinguishing human acceptance. SB-SDLC-GATES likewise preserves citations and continuation authority. Neither generic SB is proof of this entire Product Change journey. The supplied graph has no dedicated retained-context SB; the existing FR provides the bounded correction's intent.",
+      "lifecycleApplicability": "The 146-artifact provider index contains no domain-lifecycle artifact. No LC transition or terminal-state coverage can be claimed. Product checkpoint states and Lighthouse delivery stages are not substituted for a provider-declared domain lifecycle. No new domain lifecycle is introduced by this patch.",
+      "traceability": [
+        {
+          "target": "FR-PRODUCT-CHANGE-WORKFLOW / bounded preparation",
+          "tests": [
+            "src/tests/planning-product-evidence.test.mjs:46-69 — actual preparation reaches provider reports for admitted 64-file history above the old flattened scope guard",
+            "src/tests/issue-actions.test.mjs:15-44 — Product Change preparation selects references from original authority and projects only the working context"
+          ],
+          "level": "integration with synthetic provider; exercises real preparation functions, not a connected installed product journey",
+          "checks": "Legacy scope refuses; bounded reference scope prepares reports; direct neighbours and raw task digest remain correct."
+        },
+        {
+          "target": "FR-PRODUCT-CHANGE-WORKFLOW / exact working-view and audit preservation",
+          "tests": [
+            "src/tests/product-context.test.mjs:388-437 — overflow-only whole-answer transport preserves exhaustive combined history and exact current composition",
+            "src/tests/opencode-execute.test.mjs:155-190 — adapter transports realistic whole-answer history with every original body retrievable read-only",
+            "src/tests/product-composition.test.mjs:30-45 — current-document selections compose the identical 64-file path/content/hash set from repeated audit history"
+          ],
+          "level": "domain/unit plus adapter/service integration; exact decoded strings, hashes and persisted audit bytes are observable at this boundary",
+          "checks": "All original bodies and metadata accounted for; original request/baseline/schema unchanged; highest unambiguous current revisions selected; every selected file exact; original audit unchanged and read-only."
+        },
+        {
+          "target": "FR-PRODUCT-CHANGE-WORKFLOW and BR-PRODUCT-CHANGE-HANDOFF / forbidden admission and invariant violations",
+          "tests": [
+            "src/tests/product-context.test.mjs:60-109,212-242,354-365,439-475",
+            "src/tests/opencode-execute.test.mjs:209-254",
+            "src/tests/product-composition.test.mjs:95-118,143-251,253-283"
+          ],
+          "level": "domain/unit and adapter/service integration; refusal and unchanged prior inputs/output are directly asserted",
+          "checks": "Reject stale source/task/baseline/schema bindings, duplicate/ambiguous paths and revisions, malformed declarations and unsafe histories; historical-only references cannot compose; original input/audit/reference/current-view and final-candidate bounds stay effective; fabricated successful validation refuses. These tests do not prove every later product-approval/apply route."
+        }
+      ],
+      "execution": "Host-authenticated implementation run 44025423382 attempt 1 ran env GITHUB_ACTIONS=true PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium npm run verify with exit 0 against the published accepted candidate. package.json expands this to Markdown lint, node --test src/tests/*.test.mjs, doc links and public-site verification. The command excerpt is truncated; execution is established by its exact receipt, while assertion adequacy was inspected in source. This review executed no new tests.",
+      "acceptance": "Owner review 5933891460 approves exact head b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa and resolves the earlier source corrections. It expressly excludes package release and installed-consumer acceptance. It does not expressly defer external verification evidence required by product-verification.md.",
+      "externalEvidence": {
+        "status": "unavailable",
+        "reason": "No provider-bound verification document or completed prodshape evidence verify receipt is in the supplied record. Current inspect/citation reports provide model context, not test-outcome validation."
+      }
+    },
+    "guidanceReview": {
+      "method": "Writing for Agents packaged manual fallback; source/evidence comparison. No external helper was fetched or claimed executed.",
+      "paths": [
+        "AGENTS.md",
+        "src/packages/sdlc/README.md:64-70,172-182",
+        "src/packages/sdlc/completion.md:26-61",
+        "src/packages/sdlc/skills/product-change/SKILL.md",
+        "src/packages/sdlc/skills/product-change/retained-composition.md",
+        "openspec/changes/issue-722-proposal/proposal.md",
+        "openspec/changes/issue-722-proposal/design.md",
+        "openspec/changes/issue-722-proposal/specs/retained-product-context/spec.md",
+        "openspec/changes/issue-722-proposal/tasks.md",
+        ".changeset/retained-product-context.md",
+        ".lighthouse/implement.json:1-65"
+      ],
+      "result": "No stale or conflicting affected guidance established in the inspected scope. The plan and contract both distinguish ordinary in-place metadata preservation from overflow-only whole-answer transport, require inspection of unread decisions and retain limits and separate gates. The changeset declares a patch and has an H1. All 19 host-reported changed paths fit #722's admitted source/plan/changeset paths; all six changed test/fixture paths are explicitly admitted protected inputs. No package manifest, policy or accepted-model change is reported.",
+      "boundary": "The host source-harness identity reports package 0.24.0 while the source manifest declares 0.25.1. These are different provenance dimensions, not evidence of a published correction or instruction drift. The host-specific terminal completion arrangement is not a missing product check."
+    },
+    "reviewMethods": {
+      "humanWriting": "Manual Plain English fallback, then Humanizer fallback, then comparison with source evidence under /harness/skills/audience-guidance/SKILL.md. Outcome, uncertainty, failures, owners and later-stage boundaries retained.",
+      "code": "Focused manual source/test comparison using lighthouse-code-architecture-fallback-v1 principles. Read preparation caller, reference selection, inventory/binding, projection, adapter/audit writer, composition service, affected tests and planning/guidance. This is not a fresh complete independent-code-review attestation; that acceptance is the supplied exact-head owner review. CodeGraph returned query unavailable, so source reads were used; no external helper ran.",
+      "visual": "Not applicable: no visual/UI behavior changed. No new browser or .NET acceptance claimed."
+    },
+    "laterStageVerification": [
+      {
+        "stage": "protected package publication",
+        "status": "not supplied",
+        "owner": "Release maintainer",
+        "requiredEvidence": "Published version, immutable source and registry/tarball integrity/provenance containing this correction; a patch changeset alone is insufficient.",
+        "reference": "#722; src/packages/sdlc/README.md:70"
+      },
+      {
+        "stage": "clean consumer adoption",
+        "status": "not supplied",
+        "owner": "Adopting workflow maintainer",
+        "requiredEvidence": "Clean installation of the released package and reviewed workflow/image pin via the owning installer; no installed-module patching.",
+        "reference": "#722; openspec/changes/issue-722-proposal/tasks.md:37-39"
+      },
+      {
+        "stage": "installed native qualification",
+        "status": "not supplied",
+        "owner": "Runtime/workflow maintainer",
+        "requiredEvidence": "Actual invocation of inspect and compose on the pinned OpenCode 2.1.0 planning runtime with a complete representative candidate and exact audit/file comparison. Docker shims and configured runtime receipts are not invocation evidence.",
+        "reference": "#722; src/packages/sdlc/README.md:70"
+      }
+    ],
+    "optionalObservations": "Skipped pr-state, client-control, epic-triage, ci-app and non-applicable reconciliation jobs are not failed tests and are not additional forge gates. completion.policy.checks requires repository from app 15368; it passed at both accepted head and merge revision. priorPlanningReview is null and is not promoted to a passed independent planning review for this supervised route.",
+    "finalization": {
+      "policySources": [
+        "completion.finalization",
+        "src/packages/sdlc/completion.md:38",
+        ".lighthouse/github.json"
+      ],
+      "observedIssue": {
+        "state": "open",
+        "labels": [
+          "bug",
+          "pr-ready",
+          "urgency-now"
+        ]
+      },
+      "observedPullRequest": {
+        "state": "closed",
+        "merged": true,
+        "labels": []
+      },
+      "intendedCurrentTransition": "Blocked: do not close #722, add labels or remove labels. Preserve PR labels and merged state. Trusted host cleanup releases its reservation for every outcome; no cleanup success is claimed here.",
+      "conditionalPassedTransition": "Only after a validated passed review, the adopted publisher closes the issue and removes waiting-review, ready, pr-draft, pr-ready, integrate and review where present. Preserve bug, urgency-now and PR labels. Those effects have not occurred in this engine.",
+      "authority": "Record learning only. No policy change, new issue, stage dispatch, merge, release or deployment is requested by this envelope."
+    },
+    "retrospective": "## What went well\nIndependent exact-head review caught unsupported historical shapes and the realistic remaining-history refusal before accepting PR #730. The final review reports a 128,836-byte working view, 28 retrievable original answers and 64 unchanged current files. Fresh implementation receipts and merged-revision CI preserve the distinction between source proof, acceptance and integration.\n\n## What went wrong\nEarlier fixtures covered documents but understated non-file decision history; passing checks therefore did not establish the intended continuation (reviews 5930855634 and 5932246179). Recovery comments also report retention admission failures and an evidence collection refusal at 201 files (comment 6939687329); those failed attempts remain failures. The current review lacks provider-bound test evidence and an external-evidence verification receipt. These are process/evidence gaps, separate from the source defects now recorded as fixed. No new source defect or conflicting affected guidance was established in this focused review. Retries within #722 do not establish recurrence across work items; costs and attention time are unknown.\n\n## Start doing\nCarry combined aliases, mixed envelopes, older versions and realistically sized decision prose through the real preparation and adapter boundaries from the first correction. Keep test outcomes, exact source/model identities and provider-generated citations together in the bounded review evidence. Owners: SDLC test maintainer and verification maintainer.\n\n## Stop doing\nTreating green CI, a configured tool receipt or a smaller synthetic fixture as installed native acceptance. Stop treating a successful citation command as proof that test-outcome evidence was validated. Preserve historical failures rather than relabelling later recovery as their success. Owner: delivery reviewer.\n\n## Improvement candidates\n- **Representative-history regression (source/test learning):** earlier candidates refused mixed histories and a 414,888-byte ordinary view despite passing checks (reviews 5930855634/5932246179). Owner: SDLC test maintainer. Smallest useful guard: retain the combined 320-KiB decision-history fixture at preparation, projection and composition boundaries, including exhaustive body and 64-file hash assertions. Reproduction-before-correction is the public combined-history extension in review 5932246179; corrected assertions are in product-context.test.mjs:388-475 and opencode-execute.test.mjs:155-227. Existing source checks support the correction; any additional guard needs its own review and unchanged-test RED/GREEN proof.\n- **Bounded evidence inventory (process, deferred):** owner comment 6939687329 reports collection stopped at 201 files. Owner: workflow evidence maintainer. Smallest proposed guard: measure the final evidence inventory before handoff and keep scratch trees out while preserving all required receipts in a bounded report/manifest. Before adopting a new guard, reproduce the collection refusal with synthetic over-bound evidence, then prove legal bundling preserves every required outcome and still refuses excess. No new guard or policy change was implemented or qualified here.\n- **Provider-bound review bundle (current blocker):** supplied receipts cover repository/citation/plan checks but omit the verification document and evidence-verify outcome required by product-verification.md:26-32. Owner: verification maintainer. Smallest useful guard: include that document, model binding and completed diagnostics in the existing bounded evidence handoff. Reproduce a missing/mismatched-evidence review, then demonstrate a separately reviewed correction accepts current matching evidence while preserving stale/failed outcomes and rejecting omissions. No permission expansion or new mandatory forge check is proposed.\n\nProtected publication, clean-consumer adoption and installed native qualification remain owned follow-ups under #722, not accomplishments of this review."
+  },
+  "evidence": [
+    {
+      "id": "integration:44030215418:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/blob/a8ef87d1b3af92c5203cfe6453732352d236243c/docs/process/20261117-722-fix-product-change-evidence-preparation-and-repeated-retained-dr/runs/44030215418/attempt-0001/post-integration/report.md",
+      "reason": "Host-verified retained merged receipt binds accepted head, actual merge and historical explicit owner merge authorization."
+    },
+    {
+      "id": "github-check:133856713742",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44029185467/job/133856713742",
+      "reason": "Required repository check from app 15368 passed on the accepted PR head."
+    },
+    {
+      "id": "github-check:133863096197",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44031137227/job/133863096197",
+      "reason": "Required repository check passed on actual merged revision 25c581891de38b45fe22f0e9514d92318aa62747; adopted post-merge ci.yml completed successfully."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "npm ci --ignore-scripts exited 0; three reported low-severity vulnerabilities remain disclosed, not attributed to this patch."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Configured npm run verify command exited 0 against the exact published candidate; excerpt truncation limits visible per-test detail. Source assertions were inspected separately."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Configured provider citations verify command exited 0 with zero errors and 311 warnings. Scoped rows exceed the projection bound and are not claimed inspected. This is not external test-evidence verification."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Strict implementation-plan validation for #722 exited 0."
+    },
+    {
+      "id": "review:5933891460",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/pull/730#pullrequestreview-5933891460",
+      "reason": "Supplied current-head owner approval resolves earlier requested source changes and records representative-history preservation; expressly excludes release/adoption acceptance."
+    },
+    {
+      "id": "review:722:guidance",
+      "status": "passed",
+      "source": "/workspace/src/packages/sdlc/skills/product-change/retained-composition.md",
+      "reason": "Compared affected guidance, plan, admitted paths and implementation/test contracts; no conflicting guidance established in inspected scope."
+    },
+    {
+      "id": "review:722:product-external-verification",
+      "status": "unavailable",
+      "source": "/workspace/src/packages/sdlc/product-verification.md:26-32",
+      "reason": "Required provider-bound verification document and completed evidence verify receipt are not supplied, with no explicit authorized deferral. Missing verification is not an observed failed command."
+    }
+  ],
+  "missingEvidence": [
+    "Provider-bound pdac-verification-evidence/v1alpha1 test-outcome document for this correction, with exact run/source and adjacent current model binding, or an explicit authorized deferral of that proof."
+  ],
+  "unavailableChecks": [
+    "prodshape evidence verify <evidence.json> --format json: no authenticated completed result/diagnostics supplied for the required test-evidence document; not classified as failed."
+  ],
+  "pendingReview": [],
+  "nextAction": "Lighthouse verification maintainer: supply the retained provider-bound verification document and authenticated completed evidence-verify receipt for the accepted correction/current model, or obtain an explicit authorized deferral; then request completion of this same final review. Keep #722 open; do not repeat integration or start release/adoption from this result."
+}
