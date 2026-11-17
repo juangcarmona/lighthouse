@@ -8,11 +8,11 @@ import AxeBuilder from '@axe-core/playwright';
 
 const mode = process.argv[2], env = process.env;
 const repository = 'juangcarmona/lighthouse', repositoryId = 1427668548;
-const packageRoot = resolve(env.LIGHTHOUSE_QUALIFIED_PACKAGE);
+const packageRoot = resolve(env.RUNNER_TEMP, 'published-lighthouse/node_modules/@juangcarmona/lighthouse-sdlc');
 const sdk = name => import(pathToFileURL(join(packageRoot, 'src', name + '.mjs')));
 const { createIssueApi } = await sdk('github-rest');
 const api = createIssueApi(repository, env);
-const root = resolve(env.LIGHTHOUSE_QUALIFICATION_ROOT);
+const root = resolve(env.RUNNER_TEMP, 'lighthouse-evidence-qualification');
 const metadata = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
 assert.equal(metadata.name, '@juangcarmona/lighthouse-sdlc');
 assert.equal(metadata.version, env.LIGHTHOUSE_EXPECTED_SDLC);
