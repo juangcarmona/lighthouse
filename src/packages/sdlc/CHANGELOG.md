@@ -1,5 +1,17 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.28.0
+
+### Minor Changes
+
+- 3f08e6a: # Provenance-aware measurements
+
+  Define and derive a bounded set of delivery and attention measurements from retained observations with explicit formulas, source coverage and unavailable outcomes.
+
+- c5e0c4c: # Read-only GitHub observation report
+
+  Collect a bounded repository/window snapshot with read-only GitHub permissions and render a reproducible static report with explicit coverage, source links and operator findings.
+
 ## 0.27.0
 
 ### Minor Changes
