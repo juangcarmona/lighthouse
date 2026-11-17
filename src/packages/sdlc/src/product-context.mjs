@@ -1,14 +1,17 @@
 import { createHash } from 'node:crypto';
-import { bindRetainedCopies, currentRetainedInventory, historicalFilesSpan, historicalMarkdown, parseCompositionJson } from './product-composition.mjs';
+import { bindRetainedCopies, compositionBinding, currentRetainedInventory, historicalFilesSpan, historicalMarkdown, parseCompositionJson } from './product-composition.mjs';
+import { productEvidenceScopeText } from './product-change.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fence = /^```json[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
 
 // The original remains the authority. Literal aliases require exact retained-object binding.
-export function productWorkingContext(context, auditSha256) {
+export function productWorkingContext(context, auditSha256, composition) {
   if (context.request?.worker !== 'product-change') throw Error('Current product context requires a Product Change worker');
   if (!context.productChange || typeof context.productChange !== 'object' || Array.isArray(context.productChange)) throw Error('Current product context needs host Product Change metadata');
   if (context.issue?.ownerAnswers !== undefined && !Array.isArray(context.issue.ownerAnswers)) throw Error('Unsupported retained answer inventory');
+  if ((context.issue?.ownerAnswers?.length ?? 0) > 100) throw Error('Retained answer inventory exceeds bounds');
+  if (auditSha256 !== undefined && !/^[a-f0-9]{64}$/.test(auditSha256)) throw Error('Invalid Product audit SHA-256 binding');
   const sources = [{ source: 'issue.body', body: context.issue?.body }, ...(context.issue?.ownerAnswers ?? []).map((answer, i) => ({ source: `issue.ownerAnswers[${i}].body`, body: answer.body }))];
   const retained = context.productChange?.files !== undefined || sources.some(({ body }) => typeof body === 'string' && body.includes('lighthouse-retained-product-draft/'));
   const catalog = retained ? currentRetainedInventory(context) : null;
@@ -91,8 +94,28 @@ export function productWorkingContext(context, auditSha256) {
     copy.productChange.currentDocuments = catalog;
     if (aliases.length) copy.productChange.historicalCopies = aliases;
     copy.productChange.audit = { path: '/workspace/.lighthouse-product-audit.json', sha256: auditSha256 ?? hash(JSON.stringify(context)), authority: 'Original verified inputs; read-only. Working references grant no approval or apply authority.' };
+    if (composition) copy.productChange.composition = composition;
   }
-  if (copy.contract?.rules) copy.contract.rules += ' The host projected current retained documents without summarizing authority. Read productChange.currentDocuments for exact current source/revision/hash references and explicit document history. Use productcomposition_inspect for exact bodies and productcomposition_compose for exhaustive selections/omissions against the original inputs. productChange.audit identifies the complete read-only original context at /workspace/.lighthouse-product-audit.json; read it on demand for historical evidence. Decision prose remains in the working issue and verified answers; document revisions do not supersede prose decisions, and comment order grants no supersession. Resolve conflicting decisions explicitly; this projection grants no approval, provider apply or publication authority.';
-  if (Buffer.byteLength(JSON.stringify(copy)) > 256 * 1024) throw Error('Product working context exceeds bounds; preserve original inputs and resolve unique context size');
+  if (copy.contract?.rules) copy.contract.rules += ' The host projected current retained documents without summarizing authority. Read productChange.currentDocuments for exact current source/revision/hash references and explicit document history. Use productcomposition_inspect for exact bodies and productcomposition_compose for exhaustive selections/omissions against the original inputs. productChange.audit identifies the complete read-only original context at /workspace/.lighthouse-product-audit.json; read it on demand for historical evidence. In ordinary projection, decision prose remains in the working issue and verified answers; if historyIndex is present, whole original answer bodies are indexed in the audit instead. Document revisions do not supersede prose decisions, and comment order grants no supersession. Resolve conflicting decisions explicitly; this projection grants no approval, provider apply or publication authority.';
+  if (Buffer.byteLength(JSON.stringify(copy)) > 256 * 1024) {
+    // Validate the original, not the compressed view. No overflowing input is made admissible.
+    productEvidenceScopeText(context);
+    const binding = compositionBinding(context);
+    const answers = sources.slice(1).filter(({ body }) => typeof body === 'string').map(({ source, body }) => {
+      if (Buffer.from(body, 'utf8').toString('utf8') !== body) throw Error(`Invalid whole-answer UTF-8 at ${source}; preserve original audit and supply exact UTF-8 text`);
+      return { source, sha256: hash(body), bytes: Buffer.byteLength(body) };
+    });
+    const references = (catalog?.measured.references ?? 0) + aliases.reduce((sum, alias) => sum + alias.files.length, 0) + answers.length;
+    if (references > 512) throw Error('Retained reference inventory exceeds bounds including whole-answer history');
+    // Index every transported body, including empty bodies. Null/absent bodies and all
+    // answer metadata remain in place. Nothing is chosen by order, meaning or approval.
+    copy.productChange.historyIndex = { binding, totalAnswers: context.issue?.ownerAnswers?.length ?? 0, answers, authority: 'Every indexed verified answer retains its original authority. Bodies are unread, not reviewed; inspect all relevant original decisions before resolving product decisions. No supersession or approval is inferred.' };
+    for (const reference of answers) {
+      const index = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1]);
+      copy.issue.ownerAnswers[index].body = `[Whole original answer ${reference.source}; inspect productChange.historyIndex and the read-only audit for exact SHA-256/UTF-8 bytes. Authoritative decisions remain unread until inspected, not superseded or reviewed.]`;
+    }
+    if (copy.contract?.rules) copy.contract.rules += ' Whole-answer transport is active: productChange.historyIndex exhaustively indexes original verified answer bodies. Retrieve each relevant body from productChange.audit at its exact source location, verify the audit digest and decoded body SHA-256/UTF-8 byte count, and inspect its decisions before resolving relevant product decisions. All indexed decisions retain their original authority; unread bodies are not reviewed. Report conflicts or unavailable/stale bindings explicitly rather than guessing, summarizing or inferring supersession.';
+    if (Buffer.byteLength(JSON.stringify(copy)) > 256 * 1024) throw Error(`Product working context exceeds bounds after exact history transport; current issue/instructions must fit without truncation (issue.body sha256=${hash(context.issue?.body ?? '')}); preserve original inputs and request a bounded current payload`);
+  }
   return copy;
 }

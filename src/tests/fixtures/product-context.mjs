@@ -32,7 +32,7 @@ export function productContextFixture({ baselineDigest = '4'.repeat(64) } = {}) 
   return { ...fixture, repeated };
 }
 
-export function combinedHistoryFixture(options) {
+export function combinedHistoryFixture({ decisionHistoryBytes = 0, ...options } = {}) {
   const fixture = productContextFixture(options);
   const { context, draft, files } = fixture;
   for (let i = 0; i < 3; i++) context.issue.ownerAnswers.push({ body: `Typed shard decision ${i}.\n${embedDraft({ ...draft, revision: i + 3, files: draft.files.slice(i * 16, (i + 1) * 16) })}` });
@@ -47,5 +47,14 @@ export function combinedHistoryFixture(options) {
   context.issue.ownerAnswers.push({ body: embedDraft({ files: olderFiles, remainingObligations: ['Keep older obligations.'] }) });
   const markdownFile = { ...files[4], content: 'Distinct older Markdown text.\n' };
   context.issue.ownerAnswers.push({ body: `Keep the Markdown obligation.\n${embedMarkdownFile(markdownFile)}Keep the last obligation.\n${embedMarkdownFile(files[5])}` });
-  return { ...fixture, metadata, mixedIndex, olderFiles, markdownFile };
+  const decisionStart = context.issue.ownerAnswers.length;
+  if (decisionHistoryBytes) {
+    // Distinct non-document handoffs, provenance and decisions, not repeated file padding.
+    for (let i = 0; i < 8; i++) {
+      const lines = [];
+      for (let j = 0; Buffer.byteLength(lines.join('\n')) < Math.ceil(decisionHistoryBytes / 8); j++) lines.push(`Historical answer ${i}, decision ${j}: preserve obligation ${i}-${j}; provenance synthetic-handoff-${i}; status unapproved; conflicting decisions require an explicit owner resolution. Unicode λ.\r`);
+      context.issue.ownerAnswers.push({ body: lines.join('\n'), url: `https://example.invalid/history/${i}`, author: 'synthetic-owner' });
+    }
+  }
+  return { ...fixture, metadata, mixedIndex, olderFiles, markdownFile, decisionStart };
 }

@@ -39,7 +39,11 @@ test('a read-only planner receives current provider inspect, impact and citation
   } finally { await rm(f.dir, { recursive: true, force: true }); }
 });
 
-for (const historyFixture of [productContextFixture, combinedHistoryFixture]) test(`actual preparation reaches provider reports for admitted 64-file history above the old flattened scope guard (${historyFixture.name})`, async () => {
+function realisticHistoryFixture(options) {
+  return combinedHistoryFixture({ ...options, decisionHistoryBytes: 320 * 1024 });
+}
+
+for (const historyFixture of [productContextFixture, combinedHistoryFixture, realisticHistoryFixture]) test(`actual preparation reaches provider reports for admitted 64-file history above the old flattened scope guard (${historyFixture.name})`, async () => {
   const f = await fixture();
   try {
     const { context, files } = historyFixture({ baselineDigest: await productModelDigest(f.source) });

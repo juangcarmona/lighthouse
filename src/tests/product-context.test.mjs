@@ -257,7 +257,8 @@ test('literal aliases retain existing reference, file inventory and unique-prose
   context.issue.ownerAnswers.push({ body: embedLiteralFiles([files[0]]) });
   assert.throws(() => productWorkingContext(context), /reference inventory/);
   const f = productContextFixture();
-  f.context.issue.ownerAnswers.push({ body: embedLiteralFiles(f.files) + 'Unique decision. '.repeat(20000) });
+  f.context.issue.ownerAnswers.push({ body: embedLiteralFiles(f.files) });
+  f.context.issue.body += 'Unique decision. '.repeat(20000);
   assert.throws(() => productWorkingContext(f.context), /working context exceeds bounds/);
 });
 
@@ -382,4 +383,93 @@ test('mixed JSON projection preserves field order, whitespace, escaped keys and 
     assert.ok(body.endsWith('\r\nAfter.'));
     assert.equal(JSON.stringify(context), before);
   }
+});
+
+test('overflow-only whole-answer transport preserves exhaustive combined history and exact current composition', () => {
+  const { context, files, envelope, metadata, mixedIndex, decisionStart } = combinedHistoryFixture({ decisionHistoryBytes: 320 * 1024 });
+  context.issue.ownerAnswers.push({ body: '', author: 'empty-answer' }, { body: null, note: 'No body supplied' }, { note: 'Absent body' });
+  context.request.authorizationDigest = '9'.repeat(64);
+  const original = JSON.stringify(context), audit = JSON.parse(original);
+  const working = productWorkingContext(context, hash(original)), history = working.productChange.historyIndex;
+  assert.ok(Buffer.byteLength(original) < 4 * 1024 * 1024);
+  assert.ok(Buffer.byteLength(context.issue.body) + context.issue.ownerAnswers.reduce((sum, answer) => sum + Buffer.byteLength(answer.body ?? ''), 0) < 2 * 1024 * 1024);
+  assert.ok(context.issue.ownerAnswers.slice(decisionStart).reduce((sum, answer) => sum + Buffer.byteLength(answer.body ?? ''), 0) >= 320 * 1024);
+  assert.ok(Buffer.byteLength(JSON.stringify(working)) < 256 * 1024);
+  assert.equal(history.totalAnswers, context.issue.ownerAnswers.length);
+  assert.equal(history.answers.length, context.issue.ownerAnswers.length - 2);
+  assert.equal(working.productChange.audit.sha256, hash(original));
+  assert.deepEqual(history.binding, working.productChange.currentDocuments.binding);
+  assert.deepEqual(working.request, context.request);
+  for (const key of ['baselineDigest', 'schemaPin']) assert.equal(working.productChange[key], context.productChange[key]);
+  assert.match(working.issue.body, /^Keep the original unique requirement FR-ONE\./);
+  assert.match(history.authority, /unread, not reviewed/);
+  assert.match(working.contract.rules, /inspect its decisions before resolving relevant product decisions/);
+  assert.equal(new Set(history.answers.map(reference => reference.source)).size, history.answers.length);
+  for (const [i, answer] of context.issue.ownerAnswers.entries()) {
+    const { body: _originalBody, ...metadata } = answer, { body: _workingBody, ...workingMetadata } = working.issue.ownerAnswers[i];
+    assert.deepEqual(workingMetadata, metadata);
+    const reference = history.answers.find(item => item.source === `issue.ownerAnswers[${i}].body`);
+    if (typeof answer.body !== 'string') {
+      assert.equal(reference, undefined);
+      assert.deepEqual(working.issue.ownerAnswers[i], answer);
+      continue;
+    }
+    assert.ok(reference);
+    const body = audit.issue.ownerAnswers[Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1])].body;
+    assert.equal(body, answer.body);
+    assert.equal(hash(body), reference.sha256);
+    assert.equal(Buffer.byteLength(body), reference.bytes);
+    assert.ok(working.issue.ownerAnswers[i].body.includes(reference.source));
+  }
+  const mixed = JSON.parse(audit.issue.ownerAnswers[mixedIndex].body.match(/```json\n([\s\S]*?)\n```/)[1]);
+  const { files: _files, ...nonFileDecisions } = mixed;
+  assert.deepEqual(nonFileDecisions, metadata);
+  const catalog = working.productChange.currentDocuments;
+  const normal = productWorkingContext(combinedHistoryFixture().context);
+  assert.equal(working.issue.body, normal.issue.body);
+  for (const key of ['idea', 'scope']) assert.equal(working.productChange[key], normal.productChange[key]);
+  assert.deepEqual(catalog, normal.productChange.currentDocuments);
+  assert.deepEqual(working.productChange.historicalCopies, normal.productChange.historicalCopies);
+  const plan = catalog.paths.map(({ path, current, history }) => ({ path, selected: current.ref, omitted: history.map(item => item.ref) }));
+  const composed = composeRetainedProduct(context, { binding: catalog.binding, plan, envelope }).envelope.result.output.productChange.files;
+  assert.deepEqual(composed.map(file => [file.path, file.content, hash(file.content)]), files.map(file => [file.path, file.content, hash(file.content)]));
+  assert.equal(JSON.stringify(context), original);
+});
+
+test('whole-answer fallback preserves ordinary small views and refuses original limits and stale bindings', () => {
+  const small = combinedHistoryFixture().context, ordinary = productWorkingContext(small);
+  assert.equal(ordinary.productChange.historyIndex, undefined);
+  assert.deepEqual(productWorkingContext(small), ordinary);
+  for (const [mutate, error] of [
+    [f => { f.context.issue.ownerAnswers.push({ body: 'x'.repeat(2 * 1024 * 1024) }); }, /input text/],
+    [f => { f.context.contract.rules += 'x'.repeat(4 * 1024 * 1024); }, /input text/],
+    [f => { f.context.contract.rules += 'x'.repeat(256 * 1024); }, /working context exceeds bounds after exact history transport.*sha256=/],
+    [f => { f.context.issue.body += 'x'.repeat(256 * 1024); }, /working context exceeds bounds after exact history transport.*sha256=/],
+    [f => { f.context.productChange.baselineDigest = 'a'.repeat(64); }, /binding/],
+    [f => { f.context.issue.ownerAnswers[0].body = embedDraft({ ...f.repeated, revision: 1 }); }, /Ambiguous/],
+    [f => { f.context.issue.ownerAnswers.push({ body: embedLiteralFiles([{ ...f.files[3], sha256: 'a'.repeat(64) }]) }); }, /changed hash/],
+    [f => { f.context.issue.ownerAnswers.push({ body: 'invalid surrogate \ud800' }); }, /UTF-8/],
+  ]) {
+    const f = combinedHistoryFixture({ decisionHistoryBytes: 320 * 1024 }); mutate(f);
+    const original = JSON.stringify(f.context);
+    assert.throws(() => productWorkingContext(f.context), error);
+    assert.equal(JSON.stringify(f.context), original);
+  }
+  assert.throws(() => productWorkingContext(small, 'not-an-audit-digest'), /audit SHA-256 binding/);
+});
+
+test('whole-answer references share the unchanged typed and historical reference budget', () => {
+  const { context, files, draft, repeated } = productContextFixture();
+  for (const file of files) file.content = file.content.replace(/Exact UTF-8 text:[\s\S]*/, 'Small retained body.\n');
+  draft.files = files.map(file => ({ ...file, sha256: hash(file.content) }));
+  repeated.files = structuredClone(draft.files);
+  context.issue.body = embedDraft(draft); context.issue.ownerAnswers[0].body = embedDraft(repeated);
+  delete context.continuation; delete context.answerHistory; delete context.productChange.parent;
+  context.productChange.idea = 'Bounded history'; context.productChange.scope = 'Bounded history';
+  context.issue.ownerAnswers.push(...Array.from({ length: 5 }, () => ({ body: embedLiteralFiles(files) })));
+  // 128 typed + 320 historical + 64 whole-answer references = exactly 512.
+  context.issue.ownerAnswers.push(...Array.from({ length: 58 }, () => ({ body: 'Preserve this decision. '.repeat(240) })));
+  assert.equal(productWorkingContext(context).productChange.historyIndex.answers.length, 64);
+  context.issue.ownerAnswers.push({ body: 'One more exact answer.' });
+  assert.throws(() => productWorkingContext(context), /reference inventory exceeds bounds including whole-answer/);
 });

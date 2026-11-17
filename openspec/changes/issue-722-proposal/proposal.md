@@ -12,6 +12,7 @@ Evidence selection rejects admitted retained drafts because it measures repeated
 - Present one current reference per retained path, with exact source, revision and hash provenance; retrieve bodies through existing read-only inspection.
 - Preserve decision prose and the complete original authenticated context as read-only audit evidence. Do not infer decision supersession from comment order.
 - Project validated historical JSON document fields and path-headed Markdown copies using exact authenticated audit source/hash bindings, preserving every surrounding metadata value and decision. Exact aliases do not consume typed declaration slots; older distinct texts remain historical-only, never current or composable.
+- If ordinary document projection exceeds the unchanged working bound, transport whole verified answer bodies through an exhaustive exact source/hash/byte index into the same read-only audit. Indexed decisions remain authoritative and unread until inspected; the current issue and request stay in the working view.
 - Keep candidate validation, exhaustive composition selections, approval, apply and publication gates unchanged.
 
 ## Capabilities

@@ -30,13 +30,13 @@ import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencod
 import { configureProductCompositionWorker } from './product-composition-runtime.mjs';
 import { engineResultByteLimit } from './engine-result-limits.mjs';
 import { productWorkingContext } from './product-context.mjs';
+import { parseCompositionJson } from './product-composition.mjs';
 
 export async function prepareProductWorkingContext(contextPath, auditPath, capability) {
   const raw = await readFile(contextPath, 'utf8');
   if (Buffer.byteLength(raw) > 4 * 1024 * 1024) throw Error('Product audit context exceeds bounds');
-  const original = JSON.parse(raw), auditSha256 = createHash('sha256').update(raw).digest('hex');
-  const working = productWorkingContext(original, auditSha256);
-  if (capability) working.productChange.composition = capability;
+  const original = parseCompositionJson(raw), auditSha256 = createHash('sha256').update(raw).digest('hex');
+  const working = productWorkingContext(original, auditSha256, capability);
   const serialized = JSON.stringify(working);
   if (Buffer.byteLength(serialized) > 256 * 1024) throw Error('Product working context exceeds bounds');
   await writeFile(auditPath, raw, { flag: 'wx', mode: 0o444 });

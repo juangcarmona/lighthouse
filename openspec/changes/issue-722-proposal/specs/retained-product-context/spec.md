@@ -47,13 +47,13 @@ The working view SHALL expose each current retained path once with source, revis
 
 #### Scenario: Literal historical copies
 
-- **WHEN** a historical JSON file inventory or supported path-headed Markdown copy matches validated retained objects exactly
+- **WHEN** ordinary projection fits and a historical JSON file inventory or supported path-headed Markdown copy matches validated retained objects exactly
 - **THEN** the working view replaces only those document spans with bound references and read-only audit locations
 - **AND** all surrounding decisions and unique older paths survive without granting the copies supersession authority
 
 #### Scenario: Mixed historical envelopes and audit-only versions
 
-- **WHEN** authenticated history includes metadata-bearing document envelopes, older distinct texts, unique safe paths and more than eight literal aliases
+- **WHEN** a fitting ordinary projection includes metadata-bearing document envelopes, older distinct texts, unique safe paths and more than eight literal aliases
 - **THEN** every non-document value remains in place and documents bind exact audit sources and hashes without consuming typed declaration slots
 - **AND** historical-only texts remain retrievable but cannot become current or composable without explicit typed admission
 
@@ -61,3 +61,20 @@ The working view SHALL expose each current retained path once with source, revis
 
 - **WHEN** a recognized literal copy lacks an exact authenticated source, has unsafe paths, invalid hashes, ambiguous byte recovery or exceeds existing file or reference limits
 - **THEN** preparation refuses before execution and requests an explicitly bound retained declaration without truncating history
+
+### Requirement: Exact historical answer transport
+
+When ordinary projection exceeds the working bound, the Product Change view SHALL index whole verified answer bodies by exact audit location, hash and byte count. Every indexed decision MUST retain its authority and require inspection before relevant product decisions. The current issue, request, all original audit bytes and existing input, audit, reference and working bounds MUST remain intact.
+
+#### Scenario: Combined documents and large non-file history
+
+- **WHEN** admitted combined document history and non-file answer decisions overflow ordinary projection
+- **THEN** a bounded working view accounts for every original answer through an exhaustive audit index without summaries or inferred supersession
+- **AND** every indexed body and non-file value remains exactly retrievable, with unchanged current documents and request bindings
+- **AND** indexed bodies are unread until inspected and cannot be claimed as reviewed
+
+#### Scenario: Small view and binding refusals
+
+- **WHEN** ordinary projection fits or an input, audit, reference or irreducible current-view bound is exceeded
+- **THEN** a fitting ordinary view stays unchanged, while exceeded bounds refuse before output writes
+- **AND** stale, malformed or ambiguous document sources still refuse before whole-answer transport

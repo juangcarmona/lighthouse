@@ -29,6 +29,11 @@ The recovered candidate previously encountered three existing `PRODUCT064` error
 - [x] 5.1 Preserve mixed-envelope metadata and bind older documents to exact read-only audit sources without current admission; verify combined typed shards, more than eight aliases, Markdown, every decision, exact 64-file composition and unsafe/unbound/ambiguous refusals.
 - [x] 5.2 Re-run all configured checks and retain completed receipts, product traceability, source/hash measurements, manual reviews and retrospective evidence.
 
+## 6. Owner correction: exact whole-answer transport
+
+- [x] 6.1 Add overflow-only whole-answer audit indexing and guidance; verify realistic non-file history combined with typed shards, aliases, older versions and mixed metadata, exact current composition, exhaustive body retrieval, unchanged authority and small views, and all binding/limit refusals.
+- [x] 6.2 Re-run every configured check and retain completed receipts, measurements, product traceability, fallback reviews and retrospective evidence.
+
 ## Workflow follow-up
 
 - Independent current-head review, normal integration, protected publication, clean consumer adoption and real native qualification remain separate; source checks do not establish delivery acceptance.
