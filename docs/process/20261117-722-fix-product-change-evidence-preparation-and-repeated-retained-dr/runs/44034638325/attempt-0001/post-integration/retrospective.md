@@ -1,0 +1,18 @@
+## What went well
+Exact source/hash bindings, exhaustive composition and independent current-head review preserved 64 files and all 28 representative answers; the working view fell to 128,836 bytes without raising limits (approval 5933891460). The host confirms integration and post-merge CI. Supplemental evidence in comment 6940938847 supplies four current FR-cited results and the completed provider verifier, resolving the review-input gap.
+
+## What went wrong
+Earlier fixtures missed literal/mixed histories, alias accounting and approximately 320 KiB of non-file decisions (reviews 5929850896, 5930855634, 5932246179). These were source defects, now fixed. Separately, retention admission stopped attempts, one collection saw 201 files against a 200-file cap, and bounded final-review input omitted retained provider proof. Those are process gaps, not passing checks. Retries and corrections concern this one work item; recurrence across issues is unknown. No new unresolved source defect or guidance drift was established.
+
+## Start doing
+Carry representative combined history through actual preparation and adapter boundaries, and retain a compact evidence document, completed verifier result and exact source/model comparison together. Owners: SDLC source and evidence maintainers.
+
+## Stop doing
+Treating short synthetic decisions, a configured tool, green CI or a successful author run as installed-native acceptance. Do not relabel earlier failed/cancelled attempts or reconstruct missing proof from a green job name.
+
+## Improvement candidates
+- **I1 — Representative boundary regression.** Owner: SDLC source maintainer. Evidence: the three source reviews above. Smallest guard: retain the combined typed-shard/alias/older-version/mixed-metadata/320-KiB-decision fixture at preparation and adapter boundaries. Reproduce the old refusal on the prior candidate before checking the accepted correction; compare every answer and final path/content/hash and exercise unsafe-input refusals. Existing tests provide the correction proof; any expanded guard needs independent review and unchanged-test RED/GREEN evidence. Follow-up: #722 / PR #730.
+- **I2 — Complete bounded review handoff.** Owner: SDLC evidence maintainer. Evidence: blocked review 44031670581 and supplement 6940938847. Smallest proposed guard: retain the compact external-evidence document, completed receipt, all cited-result statuses/diagnostics and source/model content comparison when the main projection overflows. First reproduce missing issue-specific rows with provider output above the 8192-byte projection bound; then prove exact retained rows/hashes and explicit unavailable handling when they cannot fit. This is a proposal, not a diagnosed source bug or implemented policy change; review and regression proof are required. Follow-up: R2.
+- **I3 — Evidence inventory before collection.** Owner: native workflow maintainer. Evidence: run 44019517767 and comment 6939687329. Smallest proposed guard: measure the evidence inventory before return, consolidating reports without dropping outcomes or increasing limits. Reproduce rejection with 201 regular files; check a compact manifest/archive retains every required receipt/hash within the existing file/byte bounds, then independently review the guard. Do not claim the original failed bundle qualified. Follow-up: R3.
+
+Release provenance, clean installation and actual installed-native invocation remain unknown later-stage evidence with named owners above. No issues were opened, policy changed or subsequent work started.
