@@ -1,9 +1,36 @@
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { bindRetainedCopies, compositionBinding, currentRetainedInventory, historicalFilesSpan, historicalMarkdown, parseCompositionJson } from './product-composition.mjs';
 import { productEvidenceScopeText } from './product-change.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fence = /^```json[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
+
+// Selectors are existing whole-answer index identities, never arbitrary field or file paths.
+export function inspectRetainedAnswer(context, auditSha256, history) {
+  const exact = (value, keys) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length !== keys.length || keys.some(key => !Object.hasOwn(value, key))) throw Error('Invalid history inspection fields');
+  };
+  exact(history, ['binding', 'auditSha256', 'answer', 'offset', 'limit']);
+  exact(history.answer, ['source', 'sha256', 'bytes']);
+  if (!/^[a-f0-9]{64}$/.test(auditSha256 ?? '') || history.auditSha256 !== auditSha256) throw Error('Stale history audit binding');
+  if (!isDeepStrictEqual(history.binding, compositionBinding(context))) throw Error('Stale history request/source/baseline/schema binding');
+  // Reuse projection's complete validation, including shared historical/answer reference bounds.
+  const index = productWorkingContext(context, auditSha256).productChange.historyIndex;
+  const reference = index?.answers.find(answer => isDeepStrictEqual(answer, history.answer));
+  if (!reference) throw Error('Unknown indexed answer source/hash/byte identity');
+  const { offset, limit } = history;
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > reference.bytes || !Number.isSafeInteger(limit) || limit < 1 || limit > 1024) throw Error('History inspection range exceeds bounds');
+  const answerIndex = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1]);
+  const bytes = Buffer.from(context.issue.ownerAnswers[answerIndex].body, 'utf8');
+  const continuation = position => position < bytes.length && (bytes[position] & 0xc0) === 0x80;
+  if (continuation(offset)) throw Error('History inspection offset splits UTF-8');
+  let end = Math.min(offset + limit, bytes.length);
+  while (continuation(end)) end--;
+  if (end === offset && offset < bytes.length) throw Error('History inspection limit splits UTF-8');
+  const content = bytes.subarray(offset, end).toString('utf8');
+  return { auditSha256, answer: reference, offset, bytes: end - offset, sha256: hash(content), content, nextOffset: end < bytes.length ? end : null };
+}
 
 // The original remains the authority. Literal aliases require exact retained-object binding.
 export function productWorkingContext(context, auditSha256, composition) {

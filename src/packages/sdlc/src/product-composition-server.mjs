@@ -1,14 +1,22 @@
 import { constants } from 'node:fs';
 import { open, lstat, rename, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { StringDecoder } from 'node:string_decoder';
 import { retainedInventory, composeRetainedProduct, parseCompositionJson } from './product-composition.mjs';
+import { inspectRetainedAnswer } from './product-context.mjs';
 
 const referenceSchema = { type: 'object', additionalProperties: false, required: ['source', 'sha256'], properties: { source: { type: 'string' }, sha256: { type: 'string' } } };
 export const compositionTools = [
-  { name: 'inspect', description: 'Inspect admitted retained Product Change objects and current binding. No reference returns the measured catalog; an exact path/source/hash reference returns one inert text object.', inputSchema: { type: 'object', additionalProperties: false, properties: { reference: { ...referenceSchema, required: ['path', 'source', 'sha256'], properties: { ...referenceSchema.properties, path: { type: 'string' } } } } } },
+  { name: 'inspect', description: 'Inspect admitted retained Product Change objects and current binding. No arguments returns the measured catalog; reference returns one exact inert document. Exclusive history retrieves an indexed original answer in at most 1024 UTF-8 bytes, bound to the raw audit digest, current binding and whole-answer source/hash/bytes. Follow nextOffset and verify the reconstructed whole answer before reviewing its decisions. No approval or execution authority.', inputSchema: { type: 'object', additionalProperties: false, properties: {
+    reference: { ...referenceSchema, required: ['path', 'source', 'sha256'], properties: { ...referenceSchema.properties, path: { type: 'string' } } },
+    history: { type: 'object', additionalProperties: false, required: ['binding', 'auditSha256', 'answer', 'offset', 'limit'], properties: {
+      binding: { type: 'object' }, auditSha256: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+      answer: { ...referenceSchema, required: ['source', 'sha256', 'bytes'], properties: { ...referenceSchema.properties, bytes: { type: 'integer', minimum: 0 } } },
+      offset: { type: 'integer', minimum: 0 }, limit: { type: 'integer', minimum: 1, maximum: 1024 },
+    } },
+  }, not: { required: ['reference', 'history'] } } },
   { name: 'compose', description: 'Compose explicit latest-per-path retained selections into /output/envelope.json atomically. Requires exhaustive selections/omissions, current binding, and a caller-authored candidate envelope without files or digest, with provider validation pending. Returns measured counts, bytes and digest; never runs provider validation or approval.', inputSchema: { type: 'object', additionalProperties: false, required: ['binding', 'plan', 'envelope'], properties: { binding: { type: 'object' }, envelope: { type: 'object' }, plan: { type: 'array', maxItems: 128, items: { type: 'object', additionalProperties: false, required: ['path', 'selected', 'omitted'], properties: { path: { type: 'string' }, selected: { anyOf: [referenceSchema, { type: 'null' }] }, omitted: { type: 'array', maxItems: 128, items: referenceSchema } } } } } } },
 ];
 
@@ -31,9 +39,12 @@ export function compositionService(contextFile = '/input/context.json', outputDi
     busy = true;
     try {
       if (!compositionTools.some(tool => tool.name === name)) throw Error('Unsupported composition capability');
-      const context = parseCompositionJson(await safeRegular(contextFile, 4 * 1024 * 1024));
+      const raw = await safeRegular(contextFile, 4 * 1024 * 1024);
+      const context = parseCompositionJson(raw);
       if (name === 'inspect') {
-        if (!args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).some(key => key !== 'reference')) throw Error('Unsupported inspection arguments');
+        if (!args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).some(key => !['reference', 'history'].includes(key)) || (Object.hasOwn(args, 'reference') && Object.hasOwn(args, 'history'))) throw Error('Unsupported inspection arguments');
+        if (Object.hasOwn(args, 'history')) return inspectRetainedAnswer(context, createHash('sha256').update(raw).digest('hex'), args.history);
+        if (Object.hasOwn(args, 'reference') && args.reference === undefined) throw Error('Invalid inspection reference');
         return retainedInventory(context, args.reference);
       }
       const candidate = composeRetainedProduct(context, args);
@@ -61,24 +72,41 @@ export function compositionService(contextFile = '/input/context.json', outputDi
 }
 
 export function compositionRpc(call) {
+  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const fields = (value, allowed) => record(value) && Object.keys(value).every(key => allowed.includes(key));
+  const metadata = value => {
+    if (!fields(value, ['progressToken']) || (Object.hasOwn(value, 'progressToken') && typeof value.progressToken !== 'string' && !(typeof value.progressToken === 'number' && Number.isFinite(value.progressToken)))) throw Error('Unsupported composition request metadata');
+  };
   return async request => {
-    if (!request || request.jsonrpc !== '2.0') throw Error('Invalid composition protocol');
-    if (request.id === undefined) return null;
     let result;
     try {
-      if (request.method === 'initialize') result = { protocolVersion: '2024-11-05', capabilities: { tools: {} }, serverInfo: { name: 'lighthouse-product-composition', version: '1.0.0' } };
-      else if (request.method === 'ping') result = {};
-      else if (request.method === 'tools/list') result = { tools: compositionTools };
+      if (!fields(request, ['jsonrpc', 'id', 'method', 'params']) || request.jsonrpc !== '2.0' || typeof request.method !== 'string') throw Error('Invalid composition protocol');
+      if (!Object.hasOwn(request, 'id')) {
+        if (request.method !== 'notifications/initialized' || (request.params !== undefined && !fields(request.params, []))) throw Error('Unsupported composition notification');
+        return null;
+      }
+      if (typeof request.id !== 'string' && !(typeof request.id === 'number' && Number.isFinite(request.id))) throw Error('Invalid composition request ID');
+      if (request.params !== undefined && !record(request.params)) throw Error('Invalid composition method parameters');
+      if (Object.hasOwn(request.params ?? {}, '_meta')) metadata(request.params._meta);
+      if (request.method === 'initialize') {
+        const params = request.params;
+        if (!fields(params, ['protocolVersion', 'capabilities', 'clientInfo', '_meta']) || typeof params.protocolVersion !== 'string' || (params.capabilities !== undefined && !record(params.capabilities)) || (params.clientInfo !== undefined && !record(params.clientInfo))) throw Error('Unsupported composition initialization fields');
+        const versions = ['2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25'];
+        result = { protocolVersion: versions.includes(params.protocolVersion) ? params.protocolVersion : versions[0], capabilities: { tools: {} }, serverInfo: { name: 'lighthouse-product-composition', version: '1.0.0' } };
+      } else if (request.method === 'ping' || request.method === 'tools/list') {
+        if (request.params !== undefined && !fields(request.params, ['_meta'])) throw Error('Unsupported composition discovery fields');
+        result = request.method === 'ping' ? {} : { tools: compositionTools };
+      }
       else if (request.method === 'tools/call') {
-        if (!request.params || Object.keys(request.params).some(key => !['name', 'arguments'].includes(key))) throw Error('Unsupported composition call fields');
-        const value = await call(request.params.name, request.params.arguments);
+        if (!fields(request.params, ['name', 'arguments', '_meta']) || !['inspect', 'compose'].includes(request.params.name) || (Object.hasOwn(request.params, 'arguments') && !record(request.params.arguments))) throw Error('Unsupported composition call fields');
+        const value = await call(request.params.name, request.params.arguments ?? {});
         result = { content: [{ type: 'text', text: JSON.stringify(value) }] };
       } else throw Error('Unsupported composition method');
       return { jsonrpc: '2.0', id: request.id, result };
     } catch (error) {
       // Do not echo input bodies, file paths from I/O errors or retained content into diagnostics.
       const message = error.code ? 'Composition I/O unavailable; preserve inputs and prior output and ask the workflow maintainer to inspect installation.' : error instanceof SyntaxError ? 'Malformed retained JSON input' : error.message;
-      return { jsonrpc: '2.0', id: request.id, error: { code: -32602, message } };
+      return { jsonrpc: '2.0', id: typeof request?.id === 'string' || (typeof request?.id === 'number' && Number.isFinite(request.id)) ? request.id : null, error: { code: -32602, message } };
     }
   };
 }
