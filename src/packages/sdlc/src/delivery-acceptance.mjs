@@ -94,7 +94,7 @@ async function authenticateProducer(api, adopted, producer, { producing = false 
 export async function produceAcceptance(api, repository, commentId, execution) {
   const authenticated = await authenticateSource(api, repository, commentId);
   const workflow = await sourceFile(api, authenticated.policy.producer.workflow, execution.revision);
-  const producer = { kind: 'github-actions', runId: execution.runId, attempt: execution.attempt, revision: execution.revision, workflowBlob: workflow.blob };
+  const producer = { kind: 'github-actions', runId: execution.runId, attempt: execution.attempt, revision: execution.revision, workflowBlob: workflow.blob, observedAt: new Date().toISOString() };
   await authenticateProducer(api, authenticated, producer, { producing: true });
   const receipt = { schemaVersion: 1, id: authenticated.id, route: 'repository-owner', decision: authenticated.decision, source: authenticated.source, producer };
   validatePublishable({ 'receipt.json': JSON.stringify(receipt) });
