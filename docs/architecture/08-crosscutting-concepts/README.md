@@ -22,7 +22,9 @@ The [host evidence builder](../../../src/packages/sdlc/src/product-change.mjs) u
 
 [Packaged verification guidance](../../../src/packages/sdlc/product-verification.md) connects refinement, proposals, implementation and review to lifecycle transitions, terminal states, invariants and structured behaviours. Evidence records distinguish model coverage, executable tests, completed runs and acceptance. ProductShape verifies supported external evidence targets; stale applicability preserves historical outcomes and requires a new validation/run rather than revised historical claims.
 
-<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:90af94bb73cab9bf61e3a4c6eb7d44f68b42513063adadaa629ba72e69150f69" -->
+The optional [delivery-acceptance adapter](../../../src/packages/sdlc/delivery-acceptance.md) records a new owner decision through a reviewed non-agent workflow. The independent verifier checks live source attribution, exact candidate and policy bindings, retained producer artifacts and correction history. Artifact expiry or inaccessible history makes acceptance unavailable. This evidence grants no delivery mutation authority.
+
+<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:ebb92b84fbb181d6be2e487dcf93b934a0f15b2d61b3b82d64f6a1c3f77ad78c" -->
 
 ## Profile and guardrail catalogs
 
