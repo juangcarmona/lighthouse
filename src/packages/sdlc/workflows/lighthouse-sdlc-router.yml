@@ -56,7 +56,11 @@ on:
         required: false
         type: string
       pull_request:
-        description: PR number for integrate or review
+        description: Existing implementation PR for correction, integrate or review
+        required: false
+        type: string
+      feedback:
+        description: Owner implementation correction; requires the exact pull_request and head
         required: false
         type: string
       product_decision_comment:
@@ -64,7 +68,7 @@ on:
         required: false
         type: string
       head:
-        description: Full accepted PR head SHA for integrate or review
+        description: Exact PR head SHA for correction, integrate or review
         required: false
         type: string
       merge:

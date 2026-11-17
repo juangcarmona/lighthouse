@@ -134,6 +134,8 @@ The [router](workflows/lighthouse-sdlc-router.yml) and [event handler](src/issue
 
 The `apply-review` worker is installed with proposal support. It also handles implementation feedback when implementation is installed, preserving its `implement` result. Verified feedback has a stable dispatch identity across repeated events. Approval retains its separate integration route.
 
+An owner can also request an implementation correction through the router's `workflow_dispatch` entry with `stage=implement`, the source `issue`, exact `pull_request` and `head`, and bounded `feedback`. This lets a reviewed recovery controller update the existing PR while the default workflow remains unchanged. The host authenticates the owner-triggered router run and immutable request, binds the feedback to the current head, rechecks its origin and discussion before publication, and uses the same `apply-review` checks and non-forced update. A cancelled or failed source request stops publication. This entry grants no approval or merge authority; stage-only client intents cannot supply correction feedback.
+
 ## GitHub read recovery
 
 Bodyless GitHub GET requests can make up to three total HTTP attempts, including the initial attempt, for responses 429, 500, 502, 503 and 504. All attempts and waits share the original thirty-second request budget; `Retry-After` is respected only when its delay fits the remaining budget. This transport retry does not automatically repeat POST/PATCH/PUT/DELETE, permanent refusals, thrown network errors or uncertain publication effects.

@@ -245,6 +245,7 @@ async function main(command) {
       }
     }
   }
+  if (['route', 'dispatch-prepare', 'prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && event.inputs?.feedback) reviewTarget(event, env.GITHUB_EVENT_NAME);
   if (command === 'product-apply-prepare') {
     const issueNumber = Number(env.LIGHTHOUSE_ISSUE);
     if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');
@@ -364,7 +365,7 @@ async function main(command) {
       await summary('No Lighthouse action for this PR.'); return;
     }
     const implementation = pr.body?.includes('<!-- lighthouse-product-implementation:') || parsePublicationBranch(pr.head?.ref)?.stage === 'implement' && !pr.body?.includes('<!-- lighthouse-product-proposal:');
-    const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation);
+    const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation, { runId: dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID, revision: dispatch?.request.routerRevision ?? env.GITHUB_SHA });
     const reports = await api(`issues/${feedback.number}/comments?per_page=100`);
     if (reports.length >= 100) throw Error('Discussion exceeds bounded collection');
     feedback.handled = reports.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(feedback.receipt));

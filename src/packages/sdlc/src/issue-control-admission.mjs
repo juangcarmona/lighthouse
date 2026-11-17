@@ -15,8 +15,8 @@ export function controlEventIntent({ event, eventName, repository, metadata, act
       || event.sender?.id !== actor.id || event.sender.type !== 'User') refuse('owner-identity-required');
   if (eventName === 'workflow_dispatch') {
     const input = event.inputs ?? {};
-    const allowed = ['issue', 'stage', 'workflow', 'client_request', 'merge', 'pull_request', 'head', 'after_run', 'after_attempt', 'epic_parent', 'epic_run', 'model_selection', 'product_decision_comment'];
-    if (Object.keys(input).some(key => !allowed.includes(key)) || ['pull_request', 'head', 'after_run', 'after_attempt', 'epic_parent', 'epic_run', 'model_selection', 'product_decision_comment'].some(key => input[key] !== undefined && input[key] !== '')
+    const allowed = ['issue', 'stage', 'workflow', 'client_request', 'merge', 'pull_request', 'head', 'after_run', 'after_attempt', 'epic_parent', 'epic_run', 'model_selection', 'product_decision_comment', 'feedback'];
+    if (Object.keys(input).some(key => !allowed.includes(key)) || ['pull_request', 'head', 'after_run', 'after_attempt', 'epic_parent', 'epic_run', 'model_selection', 'product_decision_comment', 'feedback'].some(key => input[key] !== undefined && input[key] !== '')
         || ![undefined, '', false, 'false'].includes(input.merge) || ![undefined, '', 'stage'].includes(input.workflow)) refuse('mixed-client-request');
     let intent;
     try { intent = parseIssueIntent(input.client_request); } catch { refuse('unsupported-client-request'); }
