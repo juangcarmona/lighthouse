@@ -1,9 +1,36 @@
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { bindRetainedCopies, compositionBinding, currentRetainedInventory, historicalFilesSpan, historicalMarkdown, parseCompositionJson } from './product-composition.mjs';
 import { productEvidenceScopeText } from './product-change.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fence = /^```json[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
+
+// Selectors are existing whole-answer index identities, never arbitrary field or file paths.
+export function inspectRetainedAnswer(context, auditSha256, history) {
+  const exact = (value, keys) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).length !== keys.length || keys.some(key => !Object.hasOwn(value, key))) throw Error('Invalid history inspection fields');
+  };
+  exact(history, ['binding', 'auditSha256', 'answer', 'offset', 'limit']);
+  exact(history.answer, ['source', 'sha256', 'bytes']);
+  if (!/^[a-f0-9]{64}$/.test(auditSha256 ?? '') || history.auditSha256 !== auditSha256) throw Error('Stale history audit binding');
+  if (!isDeepStrictEqual(history.binding, compositionBinding(context))) throw Error('Stale history request/source/baseline/schema binding');
+  // Reuse projection's complete validation, including shared historical/answer reference bounds.
+  const index = productWorkingContext(context, auditSha256).productChange.historyIndex;
+  const reference = index?.answers.find(answer => isDeepStrictEqual(answer, history.answer));
+  if (!reference) throw Error('Unknown indexed answer source/hash/byte identity');
+  const { offset, limit } = history;
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > reference.bytes || !Number.isSafeInteger(limit) || limit < 1 || limit > 1024) throw Error('History inspection range exceeds bounds');
+  const answerIndex = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1]);
+  const bytes = Buffer.from(context.issue.ownerAnswers[answerIndex].body, 'utf8');
+  const continuation = position => position < bytes.length && (bytes[position] & 0xc0) === 0x80;
+  if (continuation(offset)) throw Error('History inspection offset splits UTF-8');
+  let end = Math.min(offset + limit, bytes.length);
+  while (continuation(end)) end--;
+  if (end === offset && offset < bytes.length) throw Error('History inspection limit splits UTF-8');
+  const content = bytes.subarray(offset, end).toString('utf8');
+  return { auditSha256, answer: reference, offset, bytes: end - offset, sha256: hash(content), content, nextOffset: end < bytes.length ? end : null };
+}
 
 // The original remains the authority. Literal aliases require exact retained-object binding.
 export function productWorkingContext(context, auditSha256, composition) {
@@ -114,7 +141,7 @@ export function productWorkingContext(context, auditSha256, composition) {
       const index = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(reference.source)[1]);
       copy.issue.ownerAnswers[index].body = `[Whole original answer ${reference.source}; inspect productChange.historyIndex and the read-only audit for exact SHA-256/UTF-8 bytes. Authoritative decisions remain unread until inspected, not superseded or reviewed.]`;
     }
-    if (copy.contract?.rules) copy.contract.rules += ' Whole-answer transport is active: productChange.historyIndex exhaustively indexes original verified answer bodies. Retrieve each relevant body from productChange.audit at its exact source location, verify the audit digest and decoded body SHA-256/UTF-8 byte count, and inspect its decisions before resolving relevant product decisions. All indexed decisions retain their original authority; unread bodies are not reviewed. Report conflicts or unavailable/stale bindings explicitly rather than guessing, summarizing or inferring supersession.';
+    if (copy.contract?.rules) copy.contract.rules += ' Whole-answer transport is active: productChange.historyIndex exhaustively indexes original verified answer bodies. Use productcomposition_inspect with the exclusive history argument { binding: productChange.historyIndex.binding, auditSha256: productChange.audit.sha256, answer: one exact historyIndex.answers reference, offset: 0, limit: 1024 }. The service verifies the raw audit digest and current binding on every request. Check each returned auditSha256, answer, offset, content SHA-256 and UTF-8 byte count; follow nextOffset sequentially until null. Concatenate exact decoded chunks, verify the whole body SHA-256/UTF-8 byte count against the index, and inspect its decisions before resolving relevant product decisions. Offsets are UTF-8 bytes, not characters; truncated replies or partial sequences are not complete inspection. Do not rely on a line-limited read of the single-line audit or enable shell/imports to retrieve or verify it. All indexed decisions retain their original authority; unread bodies are not reviewed. Report conflicts or unavailable/stale bindings explicitly rather than guessing, summarizing or inferring supersession.';
     if (Buffer.byteLength(JSON.stringify(copy)) > 256 * 1024) throw Error(`Product working context exceeds bounds after exact history transport; current issue/instructions must fit without truncation (issue.body sha256=${hash(context.issue?.body ?? '')}); preserve original inputs and request a bounded current payload`);
   }
   return copy;
