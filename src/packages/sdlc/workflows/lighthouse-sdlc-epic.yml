@@ -84,6 +84,10 @@ jobs:
           path: .lighthouse-product-source
           fetch-depth: 0
           persist-credentials: false
+      - name: Install the pinned product replay provider
+        if: inputs.action == 'adopt-product'
+        working-directory: .lighthouse-harness
+        run: npm install --ignore-scripts --no-save --package-lock=false @prodshape/core@0.25.0
       - name: Reconcile native child issues
         env:
           GH_TOKEN: ${{ github.token }}
