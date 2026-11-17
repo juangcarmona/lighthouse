@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "runId": "1f34bb3ceec6a0f0f3e6b3fd0dfb434685f9201cc0d493f1c9fb1905cde80555",
+  "stage": "integrate",
+  "gate": "done",
+  "status": "passed",
+  "evidence": [
+    {
+      "id": "github-check:133856713742",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44029185467/job/133856713742",
+      "reason": "Host-authenticated repository check from app 15368 passed on the accepted head through an eligible push event. This is the sole required check in the supplied effective merge policy."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:1",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Host-verified npm ci --ignore-scripts completed with exit code 0 for the published candidate tree; three low-severity dependency findings remain reported, not silently cleared."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:2",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Host-verified repository verify command completed with exit code 0. Source inspection connects the changed preparation, projection, retrieval, composition and refusal assertions to this executed suite; the excerpt alone is not claimed to contain every test result."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:3",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "The required repository-wide provider citation command completed with exit code 0 and authenticated summary errors=0, tampered=0, unresolved=0. Its 311 warnings and 295 stale citations remain visible; omitted scoped rows are not independently characterized."
+    },
+    {
+      "id": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37:4",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/actions/runs/44025423382/attempts/1",
+      "reason": "Host-verified strict implementation-plan validation passed for issue #722 with exit code 0."
+    },
+    {
+      "id": "owner-review:5933891460",
+      "status": "passed",
+      "source": "https://github.com/juangcarmona/lighthouse/pull/730#pullrequestreview-5933891460",
+      "reason": "Supplied current-head owner approval explicitly resolves the earlier requested changes and records independent source comparison and representative-history verification: 128836 working bytes, all 28 answer bodies source/hash/byte bound and retrievable, and exact 64-file contents/hashes preserved. This independent review supplements, rather than substitutes for, command receipts."
+    },
+    {
+      "id": "integration-source-and-guidance-assessment",
+      "status": "passed",
+      "source": "/workspace/openspec/changes/issue-722-proposal/specs/retained-product-context/spec.md",
+      "reason": "Read-only inspection of affected source, tests, plan, changeset, repository policy and retained-composition guidance found no unresolved current-stage discrepancy with #722 and its supplied correction reviews. Protected test changes match the issue-specific admission."
+    }
+  ],
+  "missingEvidence": [],
+  "unavailableChecks": [],
+  "pendingReview": [],
+  "nextAction": "Trusted publisher: recheck the exact accepted head, base, intent, policy, reviews, required checks and reservation, then request the authorized squash merge of PR #730 under GitHub protection; retain the actual outcome and request ci.yml only after a confirmed merge.",
+  "output": {
+    "integration": {
+      "assessment": "Ready for the host-authorized integration request; no merge has been observed or performed by this assessment.",
+      "binding": {
+        "repository": "juangcarmona/lighthouse",
+        "issue": 722,
+        "pr": 730,
+        "head": "b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa",
+        "base": "5fbda733242edd58373aa1bad27ce0a50ac116fa",
+        "branch": "main",
+        "intent": "cad9eaf079e0c5b278dc321eed12b9d1a79088e840d04073f6ec92276622c9ff",
+        "policy": "3e6c12869468f10777b0e35dbdb88b54161e3689ee6042f169218ccdf5564c81",
+        "reviews": "ff5e76c562ae732adbc0f7159ee87d144fca491a6d30326a1593a1f1c6164b69",
+        "prIntent": "e860809134f79ece91e3fe1a08c530e99044fa573a79c6b216d6ee5b206b686d",
+        "files": "ce23b68e36a9e0d8f2762b5a7d93ba9e9acff009e7d6f86ab7efa3f273567267"
+      },
+      "provenance": {
+        "basis": "Host-supplied authenticated observations, not independent engine GitHub authentication.",
+        "dispatchRequestId": "9d2831e536c791586e0cfade25190fc061a5e969a0b38ded77b80573e6692435",
+        "dispatchDigest": "ffee4df808d56a6775f8dd15951f8de4c01c817a1586eeb45bca4b1a27747e8d",
+        "workflowRunId": "44030215418",
+        "implementationEvidenceId": "implementation:44025423382:1:82df4c50a1a1155bdeb4a6ff3418ac1539acde3ad43ac5d685972efcd4773e37",
+        "testedPublishedTree": "6c1f3924be825a18de90f18311dbc0d1d167733c",
+        "implementationOriginalHead": "a4420fa16895e2d69f943f9e9e845866e2fe1864",
+        "checkedPublishedHead": "b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa",
+        "baselineUnchanged": true,
+        "harness": "Host reports source-mode @juangcarmona/lighthouse-sdlc 0.24.0 at harness revision 157c078635ceb17e36a4ff792c072cf02222f7f6. The inspected candidate package metadata is 0.25.1; neither identifies an installed consumer or proves this correction is released."
+      },
+      "authorization": {
+        "merge": true,
+        "owner": "juangcarmona",
+        "approvalId": 5933891460,
+        "head": "b95f48fb9c0d2ff2d66f53fc7b5d0dbda20f25fa",
+        "scope": "Use only the supplied exact-head completion authorization. Earlier recovery comments did not authorize merge. The current grant permits the trusted publisher to request integration after fresh validation, not bypass protection, release a package, accept downstream product changes or claim native consumer delivery."
+      },
+      "mergePlan": {
+        "executor": "trusted publisher",
+        "method": "squash",
+        "sourceBranch": "lighthouse/implement-722-5b0cd09126ab",
+        "targetBranch": "main",
+        "observedMergeable": true,
+        "observedMerged": false,
+        "actualMergeRevision": null,
+        "conditions": "Preserve accepted-head identity and recheck current base, discussion, authority, policy, eligible repository check and reservation immediately before requesting merge. GitHub enforces its strict required-check and PR rules; a changed binding requires a fresh assessment."
+      },
+      "dependencies": {
+        "order": "Existing retained composition and provider evidence selection precede this bounded correction; integration precedes protected package publication, clean consumer adoption and installed native qualification.",
+        "assessment": "No stacked integration dependency is declared. The supplied administrative recovery history is corroborated by the current issue-722 test admission in .lighthouse/implement.json. The existing composition implementation and evidence selector are present in the accepted source. #273 is related context, not an added delivery prerequisite.",
+        "noAdditionalAuthority": "Historical seed and recovery records remain provenance only. This result relies on the fresh published-tree receipts and current-head review, not earlier failed executions."
+      },
+      "trackerPlan": {
+        "observedIssueState": "open",
+        "observedIssueLabels": [
+          "bug",
+          "pr-ready",
+          "urgency-now"
+        ],
+        "observedPullRequestState": "open",
+        "observedPullRequestLabels": [],
+        "add": [],
+        "remove": [],
+        "closeIssue": false,
+        "pullRequestLabels": "preserve",
+        "reservation": "Host owns agent-working acquisition and releases its reservation for every outcome; pre-assessment labels need not already contain the later reservation.",
+        "assessment": "Matches completion.finalization and the configured label roles. pr-ready describes candidate readiness, not a completed merge, release or issue acceptance."
+      }
+    },
+    "acceptanceAssessment": [
+      {
+        "criterion": "Bounded provider reference selection reaches actual preparation without enlarging the old scope guard.",
+        "sources": [
+          "src/packages/sdlc/src/issue-actions.mjs:92-94",
+          "src/packages/sdlc/src/product-change.mjs:257-307",
+          "src/packages/sdlc/src/opencode-execute.mjs:93-130",
+          "src/tests/planning-product-evidence.test.mjs:46-69",
+          "src/tests/issue-actions.test.mjs:15-44"
+        ],
+        "finding": "References are deduplicated before the unchanged 256-KiB scope guard; downstream requested IDs are sorted and direct-neighbour semantics remain. The regression exercises the old guard refusal and corrected preparation on 64 files totaling 276250 bytes, including realistic non-file history. It uses an injected provider fixture, not an installed-consumer qualification."
+      },
+      {
+        "criterion": "Current documents and complete decision history survive without inferred supersession.",
+        "sources": [
+          "src/packages/sdlc/src/product-context.mjs:15-118",
+          "src/packages/sdlc/src/product-composition.mjs:124-212",
+          "src/tests/product-context.test.mjs:304-458",
+          "src/tests/fixtures/product-context.mjs:35-60"
+        ],
+        "finding": "Typed revisions determine current documents only. Mixed JSON projection preserves non-file bytes and values; older distinct documents remain audit-only. Overflow structurally indexes every string-valued verified answer by source/hash/bytes, preserving metadata, null/absent bodies and the current issue/request. Guidance marks indexed history authoritative but unread and requires inspection before relevant decisions. The exact-head independent review reports representative-history success, not just synthetic test success."
+      },
+      {
+        "criterion": "Exact bytes, original authority and existing composition/publication boundaries remain intact.",
+        "sources": [
+          "src/packages/sdlc/src/opencode-execute.mjs:35-45",
+          "src/packages/sdlc/src/opencode-execute.mjs:270-314",
+          "src/packages/sdlc/src/product-composition-server.mjs:27-60",
+          "src/packages/sdlc/src/product-composition-server.mjs:105-107",
+          "src/packages/sdlc/src/product-composition.mjs:215-251",
+          "src/tests/opencode-execute.test.mjs:155-188",
+          "src/tests/product-composition.test.mjs:30-44"
+        ],
+        "finding": "The adapter preserves original serialized input in a read-only audit, and the composition service consumes that audit, not the projected context. Composition retains exhaustive latest-per-path selection/omission, bound request/source/baseline/schema identities and pending provider validation. Tests compare the complete 64-file set and hashes, verify all indexed original bodies, and distinguish the original task digest from the smaller working view. No changed permission or provider-approval surface appears in the supplied changed paths."
+      },
+      {
+        "criterion": "Malformed, stale, ambiguous and oversized inputs refuse before projection writes.",
+        "sources": [
+          "src/tests/product-context.test.mjs:60-139",
+          "src/tests/product-context.test.mjs:212-262",
+          "src/tests/product-context.test.mjs:354-364",
+          "src/tests/product-context.test.mjs:439-475",
+          "src/tests/opencode-execute.test.mjs:209-266",
+          "src/tests/product-composition.test.mjs:143-228"
+        ],
+        "finding": "Assertions cover duplicate keys/paths, invalid hashes, stale bindings, conflicting revisions, ambiguous Markdown bytes, nesting and input/audit/current-view limits, and the shared 512-reference boundary. Projection validation precedes audit/context writes; collision tests preserve preexisting content. These assertions and host execution evidence do not claim all possible I/O failures are atomic."
+      },
+      {
+        "criterion": "Scope, protected tests, plan and release metadata conform to the admitted correction.",
+        "sources": [
+          ".lighthouse/implement.json:2-65",
+          ".changeset/retained-product-context.md",
+          "openspec/changes/issue-722-proposal/.openspec.yaml",
+          "openspec/changes/issue-722-proposal/proposal.md",
+          "openspec/changes/issue-722-proposal/design.md",
+          "openspec/changes/issue-722-proposal/specs/retained-product-context/spec.md",
+          "openspec/changes/issue-722-proposal/tasks.md"
+        ],
+        "finding": "All 19 supplied changed paths fit the admitted source, plan, changeset and six named verification inputs. No policy, workflow, package-version or accepted-model file is listed as changed. The changeset declares a patch and has an H1 after frontmatter. Strict plan validation and the repository-wide provider citation command passed. Current plan citations match the supplied FR-PRODUCT-CHANGE-WORKFLOW and BR-PRODUCT-CHANGE-HANDOFF provider digests."
+      }
+    ],
+    "guidanceReview": {
+      "sources": [
+        "AGENTS.md",
+        "src/packages/cli/README.md",
+        "src/packages/sdlc/README.md",
+        "src/packages/sdlc/completion.md",
+        "src/packages/sdlc/skills/product-change/retained-composition.md"
+      ],
+      "finding": "No unresolved guidance drift found in the affected contract. The retained-composition guide describes overflow activation, exhaustive discovery, exact audit/body verification, unread authority, refusal handling and unchanged limits; its existing inspect/compose pointers and source contracts were inspected. Repository guidance separately requires source integration, release, clean adoption and actual tool invocation evidence.",
+      "method": "Packaged Writing for Agents manual fallback and instruction/source comparison; packaged Plain English then Humanizer fallbacks and final evidence comparison for this report. No upstream writing helper execution is claimed.",
+      "codeReviewMethod": "lighthouse-code-architecture-fallback-v1: direct inspection of affected source, callers, fixtures, policy and tests, compared with accepted criteria and host-verified checks. An installed Ponytail helper was not exposed here; the supplied independent owner review separately records its use of installed Ponytail guidance.",
+      "toolLimitation": "CodeGraph context was unavailable; direct file inspection supplied the source assessment. No shell test execution was available or claimed in this engine. Required command outcomes come from authenticated host receipts."
+    },
+    "findings": [
+      {
+        "kind": "historical-source-defects-resolved",
+        "owner": "SDLC maintainer",
+        "evidence": "PR reviews 5929850896, 5930855634 and 5932246179 identified literal-copy handling, mixed-envelope/alias admission and realistic decision-history overflow. Review 5933891460 resolves these on the accepted head; the inspected combined regressions cover those dimensions.",
+        "currentStageBlocker": false
+      },
+      {
+        "kind": "historical-process-failures",
+        "owner": "workflow maintainer",
+        "evidence": "Supplied recovery comments record pre-execution retention admission refusals and run 44019517767 evidence collection exceeding 200 files with 201 observed. Those remain failed attempts; fresh run 44025423382 supplies the successful receipts used here.",
+        "finding": "These are operational/evidence-retention failures, separate from the source defects. Retries of this one issue do not establish cross-issue recurrence. No new guard, policy change or follow-up issue is proposed or authorized by this integration assessment.",
+        "currentStageBlocker": false
+      }
+    ],
+    "evidenceLimitations": [
+      "Repository verify output is excerpt-truncated; its authenticated exit result remains usable, but omitted test-log lines are not quoted or reconstructed.",
+      "Provider scoped rows exceed the 8192-byte projection bound and no jsonEvidence rows were supplied. The authenticated repository-wide command result satisfies the declared command requirement; direct plan/provider digest comparison supports the scoped citations inspected here. Individual omitted warnings and stale rows remain unassessed, not clean or failed by inference.",
+      "npm reports three low-severity vulnerabilities; the citation summary reports 311 warnings and 295 stale citations. These are retained observations for maintainer review, not newly invented merge gates or independently diagnosed source defects.",
+      "Skipped pr-state, client-control, epic-triage, continue-post-merge-review and ci-app jobs are not successful executions. None is the required repository check or additional explicit current-stage verification requirement.",
+      "Earlier failed evidence or admission attempts are not reused as passed evidence. The representative private history is not copied into this report; its measurements and independent exact-head review are attributed to the supplied review."
+    ],
+    "laterStageEvidence": [
+      {
+        "check": "Actual merge receipt",
+        "status": "not-performed",
+        "intendedStage": "integration publication",
+        "owner": "trusted publisher",
+        "requirement": "Record GitHub's confirmed actual merge revision after fresh authority and protection checks."
+      },
+      {
+        "check": "ci.yml on the confirmed merge and retrospective review",
+        "status": "not-performed",
+        "intendedStage": "post-merge verification and review",
+        "owner": "workflow maintainer",
+        "requirement": "Verify the actual merged revision before the separately admitted review stage. This integration assessment does not execute review or close #722."
+      },
+      {
+        "check": "Protected package publication",
+        "status": "not-performed",
+        "intendedStage": "release",
+        "owner": "package maintainer",
+        "requirement": "Use normal protected publication and retain registry, tarball and source provenance; a patch changeset is not a release receipt."
+      },
+      {
+        "check": "Clean consumer adoption and actual installed native qualification",
+        "status": "not-performed",
+        "intendedStage": "consumer adoption and qualification",
+        "owner": "consumer maintainer and runtime maintainer",
+        "requirement": "Adopt the released package and reviewed workflow pin through the installer, then retain actual inspect/compose invocation and complete representative candidate evidence on the pinned native runtime. Fixture execution and configured capability do not establish installation or native product acceptance."
+      }
+    ]
+  }
+}
