@@ -24,6 +24,12 @@ The local retained-composition interface SHALL accept supported MCP request meta
 - **WHEN** a call has unknown envelope fields, invalid protocol identity, malformed metadata or unsafe tool arguments
 - **THEN** it refuses before candidate mutation
 
+#### Scenario: Pinned-client session metadata
+
+- **WHEN** an admitted call includes a string `ai.opencode/sessionID` in `_meta`, alone or alongside a supported progress token
+- **THEN** the call has the same arguments and result as the metadata-free call, with no session-derived authority
+- **AND** non-string session values, unknown metadata fields, unsafe arguments and altered bindings still refuse before candidate mutation
+
 ### Requirement: Indexed answers have exact bounded inspection
 
 The existing inspection interface SHALL retrieve only original indexed answer bodies bound to the current request, raw audit digest and whole-answer source/hash/UTF-8 byte identity. Chunks MUST preserve UTF-8 boundaries and expose continuation and integrity identities. Invalid fields, stale bindings and out-of-bounds access MUST refuse atomically, retaining all existing limits.

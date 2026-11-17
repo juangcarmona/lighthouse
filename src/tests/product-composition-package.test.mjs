@@ -76,5 +76,24 @@ await runCompositionServer(process.stdin,process.stdout,service);
     assert.ok(replies.at(-1).error);
     assert.equal(await readFile(join(root, 'context.json'), 'utf8'), raw);
     assert.deepEqual(JSON.parse(await readFile(join(output, 'envelope.json'), 'utf8')).result.output.productChange.files, files);
+    // Reproduce the owner-captured request shape with synthetic session data only.
+    // This packed transport run is not an invocation of the native client.
+    const sessionCall = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'inspect', arguments: {}, _meta: { 'ai.opencode/sessionID': 'ses_synthetic_redacted', progressToken: 2 } } };
+    const previous = await readFile(join(output, 'envelope.json'), 'utf8');
+    const sessionMessages = [
+      sessionCall,
+      ...[null, false, 2, {}, []].map(session => ({ ...sessionCall, params: { ...sessionCall.params, _meta: { ...sessionCall.params._meta, 'ai.opencode/sessionID': session } } })),
+      { ...sessionCall, params: { ...sessionCall.params, _meta: { ...sessionCall.params._meta, unknown: true } } },
+      { ...sessionCall, params: { ...sessionCall.params, arguments: { approval: true } } },
+      { ...sessionCall, params: { ...sessionCall.params, arguments: { history: { binding: { ...historyIndex.binding, runId: 'altered' }, auditSha256, answer, offset: 0, limit: 1024 } } } },
+    ];
+    const sessionRun = spawnSync(process.execPath, ['consumer.mjs'], { cwd: root, input: sessionMessages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8', env: { PATH: process.env.PATH } });
+    assert.equal(sessionRun.status, 0, sessionRun.stderr);
+    const sessionReplies = sessionRun.stdout.trim().split('\n').map(JSON.parse);
+    assert.equal(sessionReplies.length, sessionMessages.length);
+    assert.deepEqual(sessionReplies[0].result, replies[0].result);
+    for (const response of sessionReplies.slice(1)) assert.equal(response.error.code, -32602);
+    assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), previous);
+    assert.equal(await readFile(join(root, 'context.json'), 'utf8'), raw);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

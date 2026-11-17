@@ -8,7 +8,7 @@ The local composition server rejects valid MCP request metadata, and a native li
 
 ## What Changes
 
-- Validate supported MCP request envelopes and inert progress metadata separately from strict tool arguments; refuse unknown or malformed fields.
+- Validate supported MCP request envelopes and inert progress metadata separately from strict tool arguments; also admit the pinned client's `ai.opencode/sessionID` string. Refuse unknown or malformed fields.
 - Extend the existing inspection operation to retrieve indexed original answer bodies in UTF-8-safe bounded chunks, bound to the exact audit digest, request identity and whole-answer source/hash/byte identity.
 - Preserve current and historical document separation, all existing limits, exhaustive composition and atomic refusals.
 - Add synthetic source, adapter and packed-server regressions and a patch changeset. Keep installed-native qualification distinct from source verification.

@@ -359,6 +359,28 @@ test('MCP supported protocol metadata is inert and separate from strict tool arg
   assert.equal(calls.length, before);
 });
 
+test('owner-captured pinned-client metadata shape is inert (synthetic session, not native qualification)', async () => {
+  const calls = [], rpc = compositionRpc(async (name, args) => { calls.push({ name, args }); return { synthetic: true }; });
+  const request = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'inspect', arguments: {}, _meta: { 'ai.opencode/sessionID': 'ses_synthetic_redacted', progressToken: 2 } } };
+  const plain = await rpc({ ...request, params: { name: 'inspect', arguments: {} } });
+  for (const _meta of [request.params._meta, { 'ai.opencode/sessionID': 'ses_synthetic_other' }, { 'ai.opencode/sessionID': '' }]) {
+    assert.deepEqual(await rpc({ ...request, params: { ...request.params, _meta } }), plain);
+    assert.deepEqual(calls.at(-1), { name: 'inspect', args: {} });
+  }
+  const before = calls.length;
+  for (const _meta of [
+    ...[null, false, 2, {}, [], undefined].map(value => ({ 'ai.opencode/sessionID': value, progressToken: 2 })),
+    { ...request.params._meta, unknown: true },
+    { ...request.params._meta, progressToken: null },
+    { ...request.params._meta, binding: { approved: true } },
+  ]) {
+    const response = await rpc({ ...request, params: { ...request.params, _meta } });
+    assert.equal(response.error.code, -32602);
+    assert.equal(response.error.message, 'Unsupported composition request metadata');
+  }
+  assert.equal(calls.length, before);
+});
+
 test('existing inspection retrieves bound indexed answer chunks from the raw single-line audit and refuses atomically', async () => {
   const root = await mkdtemp(join(tmpdir(), 'composition-history-'));
   try {
@@ -367,7 +389,7 @@ test('existing inspection retrieves bound indexed answer chunks from the raw sin
     await writeFile(input, audit); await writeFile(join(output, 'envelope.json'), 'Prior output');
     const working = productWorkingContext(context, auditSha256), index = working.productChange.historyIndex;
     const service = compositionService(input, output), rpc = compositionRpc(service);
-    const call = args => rpc({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'inspect', arguments: args, _meta: { progressToken: 'synthetic' } } });
+    const call = args => rpc({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'inspect', arguments: args, _meta: { progressToken: 'synthetic', 'ai.opencode/sessionID': 'ses_synthetic_redacted' } } });
     const catalog = JSON.parse((await call({})).result.content[0].text);
     assert.equal(catalog.measured.bytes, 276250);
     assert.deepEqual(catalog.binding, index.binding);
@@ -405,5 +427,12 @@ test('existing inspection retrieves bound indexed answer chunks from the raw sin
     assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), previous);
     assert.equal(await readFile(input, 'utf8'), audit);
     assert.deepEqual(await readdir(output), ['envelope.json']);
+    for (const session of [null, false, 2, {}, []]) {
+      const response = await rpc({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'compose', arguments: args, _meta: { progressToken: 2, 'ai.opencode/sessionID': session } } });
+      assert.equal(response.error.code, -32602);
+      assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), previous);
+      assert.equal(await readFile(input, 'utf8'), audit);
+      assert.deepEqual(await readdir(output), ['envelope.json']);
+    }
   } finally { await rm(root, { recursive: true, force: true }); }
 });

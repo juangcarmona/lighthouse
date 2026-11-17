@@ -6,6 +6,7 @@
 ## 1. Protocol interoperability
 
 - [x] 1.1 Validate supported MCP envelopes and inert metadata without relaxing tool arguments; add protocol/refusal regressions and document the contract, verified by focused composition tests.
+- [x] 1.2 Apply the owner-captured session-metadata correction: admit only string `ai.opencode/sessionID` as inert metadata, preserve all previous assertions, and verify captured-shape success plus malformed-session, unsafe-argument and altered-binding refusals in composition and packed-server tests; update guidance and changeset.
 
 ## 2. Exact indexed-answer inspection
 
@@ -15,6 +16,7 @@
 ## 3. Candidate verification
 
 - [x] 3.1 Add a patch changeset, finish code/architecture and audience fallback reviews, and run all policy checks plus relevant provider evidence validation; retain completed receipts and a retrospective under the evidence output.
+- [x] 3.2 Re-run all configured candidate checks after the session-metadata correction and retain terminal receipts, source review and the original native failures in the new evidence output.
 
 ## Workflow follow-up
 

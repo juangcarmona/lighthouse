@@ -75,7 +75,7 @@ export function compositionRpc(call) {
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const fields = (value, allowed) => record(value) && Object.keys(value).every(key => allowed.includes(key));
   const metadata = value => {
-    if (!fields(value, ['progressToken']) || (Object.hasOwn(value, 'progressToken') && typeof value.progressToken !== 'string' && !(typeof value.progressToken === 'number' && Number.isFinite(value.progressToken)))) throw Error('Unsupported composition request metadata');
+    if (!fields(value, ['progressToken', 'ai.opencode/sessionID']) || (Object.hasOwn(value, 'progressToken') && typeof value.progressToken !== 'string' && !(typeof value.progressToken === 'number' && Number.isFinite(value.progressToken))) || (Object.hasOwn(value, 'ai.opencode/sessionID') && typeof value['ai.opencode/sessionID'] !== 'string')) throw Error('Unsupported composition request metadata');
   };
   return async request => {
     let result;
