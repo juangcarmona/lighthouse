@@ -172,7 +172,7 @@ export async function verifyAcceptance(api, repository, { binding, receipts = []
     }
     const corrected = new Set();
     for (const receipt of verified.values()) for (const id of receipt.decision.corrects) {
-      requireThat(id !== receipt.id && verified.has(id), 'Correction predecessor missing, cyclic or not earlier'); corrected.add(id);
+      requireThat(id !== receipt.id && verified.has(id), 'Correction predecessor missing or self-referential'); corrected.add(id);
     }
     const visited = new Set(), visiting = new Set();
     const visit = id => {
