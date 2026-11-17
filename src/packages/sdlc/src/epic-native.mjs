@@ -21,6 +21,7 @@ import { observeEpicMerge, mergeEpicChild } from './epic-merge.mjs';
 import { setPullRequestDraft, projectImplementationPrState } from './pr-state.mjs';
 import { ensureEpicChecks } from './epic-checks.mjs';
 import { githubAppCiTrigger } from './github-app-ci.mjs';
+import { adoptEpicProductSource, loadEpicProductSource } from './epic-product-source.mjs';
 
 const isOwnerAnswer = (comment, owner) => comment.user?.login === owner && !comment.body?.includes('<!-- lighthouse-run:') && !comment.body?.includes('<!-- lighthouse-actions:');
 const paused = issue => issue.state !== 'open' || issue.pull_request || issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info', 'waiting-review', 'execution-failed', 'triage', 'refine', 'propose', 'implement'].includes(label.name));
@@ -177,10 +178,12 @@ async function inspectEpicPublication({ api, repository, owner, child, runId, lo
     const actual = await api(`pulls/${snapshot.implementationReview.number}`);
     published = { number: actual.number, head: actual.head?.sha };
   }
-  if (snapshot?.issue !== child || snapshot.stage !== 'implement' || snapshot.runId !== digest(`${repository}:${child}:implement:${run.id}:1`) || String(snapshot.workflowRunId) !== String(run.id) || snapshot.epic?.parent !== current.parent || snapshot.epic?.slice !== current.slice || snapshot.epic?.planDigest !== current.planDigest || snapshot.epic?.base !== current.base || snapshot.epic?.sourceRevision !== current.sourceRevision || snapshot.baseRevision !== current.sourceRevision || (snapshot.implementationReview ? snapshot.implementationReview.head !== snapshot.sourceRevision || snapshot.implementationReview.base !== current.base || run.path !== '.github/workflows/lighthouse-sdlc-apply-review.lock.yml' : snapshot.epic?.baseSha !== snapshot.sourceRevision || run.path !== '.github/workflows/lighthouse-sdlc-implement.lock.yml') || validateStageEnvelope(envelope, snapshot).length || envelope.result.status !== 'passed') throw Error('Epic implementation evidence is invalid or stale');
+  if (snapshot?.issue !== child || snapshot.stage !== 'implement' || snapshot.runId !== digest(`${repository}:${child}:implement:${run.id}:1`) || String(snapshot.workflowRunId) !== String(run.id) || snapshot.epic?.parent !== current.parent || snapshot.epic?.slice !== current.slice || snapshot.epic?.planDigest !== current.planDigest || snapshot.epic?.base !== current.base || snapshot.epic?.sourceRevision !== current.sourceRevision || snapshot.baseRevision !== current.sourceRevision || (snapshot.implementationReview ? snapshot.implementationReview.head !== snapshot.sourceRevision || snapshot.implementationReview.base !== current.base || run.path !== '.github/workflows/lighthouse-sdlc-apply-review.lock.yml' : (snapshot.epicProduct?.head ?? snapshot.epic?.baseSha) !== snapshot.sourceRevision || run.path !== '.github/workflows/lighthouse-sdlc-implement.lock.yml') || validateStageEnvelope(envelope, snapshot).length || envelope.result.status !== 'passed') throw Error('Epic implementation evidence is invalid or stale');
   const dispatch = await loadDispatch(api, repository, owner, child, snapshot.dispatch?.commentId, run, readArtifact);
   const { baseSha: dispatchedBase, ...dispatchedEpic } = dispatch.request.epic ?? {};
   if (dispatch.request.id !== snapshot.dispatch.requestId || dispatch.receipt.digest !== snapshot.dispatch.digest || dispatch.request.stage !== 'implement' || dispatch.request.workflowRevision !== snapshot.workflowRevision || dispatch.request.taskDigest !== snapshot.taskDigest || dispatchedBase !== snapshot.epic.baseSha || !isDeepStrictEqual(dispatchedEpic, current) || !isDeepStrictEqual(dispatch.request.epic, snapshot.epic)) throw Error('Epic implementation dispatch changed');
+  const product = await loadEpicProductSource({ api, repository, owner, child, current, readArtifact });
+  if (!isDeepStrictEqual(product, snapshot.epicProduct ?? null) || !isDeepStrictEqual(dispatch.request.epicProduct, snapshot.epicProduct) || product && product.base !== snapshot.epic.baseSha) throw Error('Epic implementation product source changed');
   await checkDispatchClaim(api, repository, child, snapshot.dispatch, run.id);
   validateChanges(changes, snapshot.implementation.policy);
   if ((!changes.length && (!isVerificationOnlyCorrection(snapshot) || published?.head !== snapshot.sourceRevision)) || !validateCheckReceipt(checks, snapshot, changes) || !Number.isSafeInteger(published?.number) || published.number < 1 || !/^[a-f0-9]{40}$/.test(published.head ?? '')) throw Error('Epic implementation checks or publication receipt are invalid');
@@ -263,6 +266,7 @@ export async function readyEpicPullRequest({ api, repository, owner, parent, chi
     if (issue.labels.some(label => ['future', 'human-working', 'agent-working', 'needs-info'].includes(label.name))) throw Error('Epic child is paused or reserved');
     const dependencies = await inspectEpicDependencies({ api, repository, owner, child, current, load, loadPolicy, readArtifact });
     if (dependencies.baseSha !== base) throw Error('Epic base changed before readiness');
+    await loadEpicProductSource({ api, repository, owner, child, current, readArtifact });
     const pr = await api(`pulls/${number}`), target = checkImplementationPullRequest(pr, repository);
     if (target.issue !== child || target.base !== current.base || target.head !== head || pr.mergeable !== true || !/^[a-f0-9]{40}$/.test(pr.merge_commit_sha ?? '')) throw Error('Epic PR changed before readiness');
     await authenticateEpicPullRequest({ api, repository, owner, child, pr, load, readArtifact, journal });
@@ -511,14 +515,23 @@ export async function runNativeEpic({ api, repository, owner, issue, run, journa
   return reconcileEpicChildren(snapshot.plan, { repository, parent: issue, base: `lighthouse/epic-${issue}` }, host);
 }
 
-export async function runEpicAction({ api, repository, owner, issue, run, journalPath, authorizationPath, action, child, implementationRun, decision, readArtifact, load, loadPolicy, observeRefinement, ciTrigger, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
+export async function runEpicAction({ api, repository, owner, issue, run, journalPath, authorizationPath, action, child, implementationRun, decision, productRoot, readArtifact, load, loadPolicy, observeRefinement, ciTrigger, setDraft = (pr, draft) => setPullRequestDraft(process.env.GH_TOKEN, pr, draft) }) {
   if (action === 'reconcile') return runNativeEpic({ api, repository, owner, issue, run, journalPath, readArtifact, load, loadPolicy });
   if (action === 'accept-aggregate') return acceptEpicAggregate({ api, repository, owner, issue, run, load, loadPolicy, readArtifact });
-  if (!['refine-child', 'register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
+  if (!['adopt-product', 'refine-child', 'register-pr', 'ready-child', 'accept-child', 'publish-aggregate', 'ready-aggregate'].includes(action) || !['publish-aggregate', 'ready-aggregate'].includes(action) && (!Number.isSafeInteger(child) || child < 1)) throw Error('Invalid epic action or child');
   const snapshot = await prepareNativeEpic(api, repository, owner, issue, load);
   await checkEpicLeaseConfiguration(api, snapshot.sourceRevision);
   const authorize = () => authorizeNativeEpic(api, snapshot);
   const journal = await createEpicJournal({ api, repository, owner, parent: issue, sourceRevision: snapshot.sourceRevision, defaultBranch: snapshot.defaultBranch, run, path: journalPath, authorize, ...(readArtifact ? { readArtifact } : {}) });
+  if (action === 'adopt-product') {
+    const current = await authenticateEpicChild({ api, repository, owner, child, load, readArtifact });
+    if (current.parent !== issue) throw Error('Product adoption targets another epic');
+    const state = await api(`issues/${child}`);
+    if (state.labels.some(label => ['agent-working', 'human-working', 'future', 'needs-info'].includes(label.name))) throw Error('Product adoption child is paused or reserved');
+    const dependencies = await inspectEpicDependencies({ api, repository, owner, child, current, load, loadPolicy, readArtifact });
+    if (dependencies.baseSha !== decision?.base) throw Error('Product adoption base or dependencies changed');
+    return adoptEpicProductSource({ api, repository, owner, child, current, decision, root: productRoot, journal, authorize });
+  }
   if (action === 'refine-child') {
     if (!authorizationPath) throw Error('Epic refinement authorization artifact is required');
     const observe = observeRefinement ?? (await import('./epic-refinement.mjs')).observeEpicRefinement;
@@ -546,7 +559,9 @@ export async function runEpicAction({ api, repository, owner, issue, run, journa
     if (!isDeepStrictEqual(actual, decision) || await authorize() !== true) return false;
     const reviews = await list(api, `pulls/${decision.pr}/reviews`);
     const latest = reviews.filter(review => review.user?.login === owner && review.user.type === 'User' && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)).sort((a, b) => b.id - a.id)[0];
-    return latest?.id === decision.review && latest.state === 'APPROVED' && latest.commit_id === decision.head;
+    if (latest?.id !== decision.review || latest.state !== 'APPROVED' || latest.commit_id !== decision.head) return false;
+    if (!(await api(`pulls/${decision.pr}`)).merged) await loadEpicProductSource({ api, repository, owner, child, current, readArtifact });
+    return true;
   };
   const observe = () => observeEpicMerge(api, { repository, owner, child, epic: current, decision }, {
     authenticateChild: () => authenticateEpicChild({ api, repository, owner, child, load, readArtifact }),
@@ -576,7 +591,8 @@ async function main() {
   const inputs = JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8')).inputs ?? {};
   const positive = value => /^[1-9][0-9]*$/.test(value ?? '') && Number.isSafeInteger(Number(value));
   const action = inputs.action || 'reconcile';
-  if (['refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
+  if (['adopt-product', 'refine-child', 'register-pr', 'ready-child', 'accept-child'].includes(action) && !positive(inputs.child) || action === 'register-pr' && !positive(inputs.run) || ['ready-child', 'accept-child'].includes(action) && !positive(inputs['pull-request']) || action === 'accept-child' && !positive(inputs.review)) throw Error('Epic action inputs must use canonical positive numbers');
+  if (action === 'adopt-product' && (!positive(inputs['pull-request']) || !positive(inputs['product-approval']))) throw Error('Product adoption needs canonical PR and approval comment IDs');
   let result;
   if (action === 'recover-publication') {
     if (!positive(inputs.child) || !positive(inputs.run) || !positive(inputs['pull-request']) || run.actor?.login !== owner || run.triggering_actor?.login !== owner || run.path !== '.github/workflows/lighthouse-sdlc-epic.yml' || run.event !== 'workflow_dispatch' || run.status !== 'in_progress' || run.repository?.full_name !== repository || run.head_sha !== env.GITHUB_SHA) throw Error('Partial publication recovery requires an authenticated owner workflow');
@@ -584,7 +600,7 @@ async function main() {
     if (current.parent !== issue) throw Error('Partial publication recovery targets another parent');
     await checkEpicLeaseConfiguration(api, current.sourceRevision);
     result = await recoverEpicCorrection({ api, repository, owner, child: Number(inputs.child), runId: inputs.run, number: Number(inputs['pull-request']), head: inputs.head, base: inputs.base, save: value => writeFile(join(dir, 'recovery.json'), JSON.stringify({ ...value, recoveryRun: String(run.id), workflowRevision: run.head_sha })) });
-  } else result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
+  } else result = await runEpicAction({ api, repository, owner, issue, run, ciTrigger: githubAppCiTrigger(env), journalPath: join(dir, 'journal.json'), authorizationPath: join(dir, 'refinement.json'), action, ...(inputs.child ? { child: Number(inputs.child) } : {}), ...(inputs.run ? { implementationRun: inputs.run } : {}), ...(action === 'adopt-product' ? { productRoot: join(env.GITHUB_WORKSPACE, '.lighthouse-product-source'), decision: { pr: Number(inputs['pull-request']), approval: Number(inputs['product-approval']), changeName: inputs['product-change'], head: inputs.head, base: inputs.base } } : {}), ...(['ready-child', 'accept-child'].includes(action) ? { decision: { pr: Number(inputs['pull-request']), ...(action === 'accept-child' ? { review: Number(inputs.review) } : {}), head: inputs.head, base: inputs.base } } : {}) });
   await writeFile(join(dir, 'result.json'), JSON.stringify({ schemaVersion: 1, repository, parent: issue, runId: String(run.id), attempt: run.run_attempt, workflowRevision: run.head_sha, workflowRef: run.head_branch, action, result }));
   console.log(JSON.stringify(result));
   if (!['authorized', 'reconciled', 'linked', 'ready', 'accepted', 'published'].includes(result.status)) throw Error('Epic action stopped; inspect the retained journal before continuing');

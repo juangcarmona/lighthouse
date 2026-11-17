@@ -12,7 +12,7 @@ on:
         required: true
         default: reconcile
         type: choice
-        options: [reconcile, refine-child, register-pr, recover-publication, ready-child, accept-child, publish-aggregate, ready-aggregate, accept-aggregate]
+        options: [reconcile, adopt-product, refine-child, register-pr, recover-publication, ready-child, accept-child, publish-aggregate, ready-aggregate, accept-aggregate]
       child:
         description: Child issue number for PR registration or acceptance
         required: false
@@ -35,6 +35,14 @@ on:
         type: string
       base:
         description: Approved current epic branch SHA
+        required: false
+        type: string
+      product-change:
+        description: Completed Product Change directory to verify and use as child source
+        required: false
+        type: string
+      product-approval:
+        description: Unedited owner approval comment on the exact product PR head
         required: false
         type: string
 concurrency:
@@ -68,6 +76,14 @@ jobs:
       - name: Install the pinned harness
         working-directory: .lighthouse-harness
         run: npm ci --ignore-scripts
+      - name: Check out the product replay baseline
+        if: inputs.action == 'adopt-product'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.base }}
+          path: .lighthouse-product-source
+          fetch-depth: 0
+          persist-credentials: false
       - name: Reconcile native child issues
         env:
           GH_TOKEN: ${{ github.token }}

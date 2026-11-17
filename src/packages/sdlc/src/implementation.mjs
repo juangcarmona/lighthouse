@@ -137,13 +137,16 @@ export async function sourceFiles(root, baseline) {
     return files;
   } finally { if (metadata) await rm(metadata, { recursive: true, force: true }); }
 }
-export function collectChanges(before, after, policy) {
+export function collectChanges(before, after, policy, productSource) {
   const changes = [];
   const modelRoot = productModelDirectoryFromConfig(before.get('.product/config.yaml')?.content.toString('utf8') ?? '');
+  if (productSource && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productSource.changeName ?? '')) throw Error('Invalid approved Product Change identity');
+  const productHistory = productSource ? `${modelRoot.slice(0, -'/model'.length)}/changes/completed/${productSource.changeName}/` : null;
   for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
     const old = before.get(path), current = after.get(path);
     if (old && current && old.content.equals(current.content) && old.mode === current.mode) continue;
     if (path === modelRoot || path.startsWith(`${modelRoot}/`)) throw Error(`Implementation cannot change the accepted product model: ${path}; request Product Change approval and provider apply before resuming`);
+    if (productHistory && path.startsWith(productHistory)) throw Error(`Implementation cannot change its approved Product Change evidence: ${path}`);
     changes.push({ path, mode: current?.mode ?? old?.mode ?? '100644', content: current ? current.content.toString('base64') : null });
   }
   return validateChanges(changes, policy);
@@ -220,7 +223,7 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
     if (JSON.stringify(await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision)) !== JSON.stringify(synchronization)) throw Error('Source synchronization authority changed');
   }
   const epic = snapshot.epic;
-  if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : epic.baseSha !== snapshot.sourceRevision))) throw Error('Invalid epic publication base');
+  if (epic && (!Number.isSafeInteger(epic.parent) || epic.parent < 1 || epic.parent === snapshot.issue || epic.base !== `lighthouse/epic-${epic.parent}` || !/^[a-f0-9]{40}$/.test(epic.baseSha ?? '') || (snapshot.implementationReview ? snapshot.implementationReview.base !== epic.base || snapshot.implementationReview.head !== snapshot.sourceRevision : (snapshot.epicProduct?.head ?? epic.baseSha) !== snapshot.sourceRevision || snapshot.epicProduct && snapshot.epicProduct.base !== epic.baseSha))) throw Error('Invalid epic publication base');
   const branch = await selectPublicationBranch(api, snapshot, 'implement', snapshot.implementationReview?.branch ?? snapshot.productResume?.branch ?? snapshot.productAlignment?.parent.pullRequest?.branch);
   const checkEpicBase = async () => {
     if (epic && (await api(`git/ref/heads/${epic.base}`)).object?.sha !== epic.baseSha) throw Error('Epic base changed; revalidate the child');

@@ -388,13 +388,13 @@ async function main() {
     clearTimeout(timer);
     if (implementing) {
       const candidateFiles = await sourceFiles(source, trackedSource);
-      const modelChanges = collectChanges(baseline, candidateFiles, request.implementation.policy);
+      const modelChanges = collectChanges(baseline, candidateFiles, request.implementation.policy, request.epicProduct);
       const metadata = request.sourceSynchronization ? null : await implementationPlanMetadata(candidateFiles, planningBaseline ?? baseline, request, undefined, preparation.signal);
       if (metadata) {
         candidateFiles.set(metadata.path, { content: metadata.content, mode: metadata.mode });
         runtimeReceipt.planningMetadata = { provider: '@fission-ai/openspec@1.15.0', path: metadata.path, origin: metadata.origin, sha256: createHash('sha256').update(metadata.content).digest('hex') };
       }
-      const changes = metadata ? collectChanges(baseline, candidateFiles, request.implementation.policy) : modelChanges;
+      const changes = metadata ? collectChanges(baseline, candidateFiles, request.implementation.policy, request.epicProduct) : modelChanges;
       if (request.sourceSynchronization && changes.length) throw Error('Synchronized verification cannot include model file changes');
       const verification = verificationIntegrity(baseline, candidateFiles, request.implementation.policy, request.issue);
       await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
@@ -461,7 +461,7 @@ async function main() {
       try {
         try { if (name) docker(['rm', '-f', name, `${name}-checks`]); } catch {}
         restoreWorkspaceOwnership(dir, config);
-        const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy);
+        const changes = collectChanges(baseline, await sourceFiles(source, trackedSource), request.implementation.policy, request.epicProduct);
         await writeFile(join(runDir, 'changes.json'), JSON.stringify(changes));
         console.error(progressText('Recovery', 'Retained bounded candidate changes. This failed run cannot publish a PR.'));
       } catch (recoveryError) { console.error(progressText('Recovery', redactLog(`Candidate could not be retained: ${recoveryError.message}`))); }
