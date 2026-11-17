@@ -1,5 +1,6 @@
 {
   "732": {
+    "seed": { "base": "a5f075afc7c4d3342892e6dabb01d2f6544d851f", "head": "3c3962aed9442a6bb8060cb59d03777d8201cb6d" },
     "scope": "Implement only #732: repair the existing retained-composition MCP native interoperability and exact bounded inspection of original indexed answer bodies through the same authenticated read-only audit. Preserve complete authority/history, request/source/task/baseline/schema bindings, original retained bytes, independent limits, strict tool arguments, atomic refusals and ProductShape validation/decision/apply/integration boundaries. Prefer qualifying the existing supported read/inspection route; no general context service, arbitrary filesystem reader, shell/import/execution permission, new identity or broad runtime policy. Only admitted verification paths may change and all existing assertions remain. Keep OpenSpec plan and patch changeset with code, H1 after frontmatter, configured verification budget. Source/review/publication/managed adoption and actual installed-native acceptance remain distinct.",
     "paths": [
       "src/packages/sdlc/src/product-composition-server.mjs",
