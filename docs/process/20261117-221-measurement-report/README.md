@@ -1,6 +1,6 @@
 # Read-only measurement qualification
 
-The source implementation read one bounded Lighthouse sample on 2026-11-17. It retained 215 observations with explicit selection, pagination and source gaps. This sample is a source qualification observation, not exhaustive repository coverage or owner delivery acceptance. The final published-package/native qualification is recorded separately after release.
+The source implementation read one bounded Lighthouse sample on 2026-11-17. It retained 215 observations with explicit selection, pagination and source gaps. This sample is a source qualification observation, not exhaustive repository coverage or owner delivery acceptance. This source sample predates the final envelope digest binding of event kind and time. The final published-package/native qualification uses the finalized contract and is recorded separately after release.
 
 ## Independent source reconciliation
 
