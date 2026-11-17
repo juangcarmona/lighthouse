@@ -1,4 +1,70 @@
 {
+  "732": {
+    "scope": "Implement only #732: repair the existing retained-composition MCP native interoperability and exact bounded inspection of original indexed answer bodies through the same authenticated read-only audit. Preserve complete authority/history, request/source/task/baseline/schema bindings, original retained bytes, independent limits, strict tool arguments, atomic refusals and ProductShape validation/decision/apply/integration boundaries. Prefer qualifying the existing supported read/inspection route; no general context service, arbitrary filesystem reader, shell/import/execution permission, new identity or broad runtime policy. Only admitted verification paths may change and all existing assertions remain. Keep OpenSpec plan and patch changeset with code, H1 after frontmatter, configured verification budget. Source/review/publication/managed adoption and actual installed-native acceptance remain distinct.",
+    "paths": [
+      "src/packages/sdlc/src/product-composition-server.mjs",
+      "src/packages/sdlc/src/product-composition.mjs",
+      "src/packages/sdlc/skills/product-change/retained-composition.md",
+      "src/packages/sdlc/src/product-context.mjs",
+      "src/packages/sdlc/README.md",
+      "src/tests/product-composition.test.mjs",
+      "src/tests/product-composition-package.test.mjs",
+      "src/tests/product-context.test.mjs",
+      "src/tests/opencode-execute.test.mjs",
+      "src/tests/fixtures/product-context.mjs",
+      "openspec/changes/issue-732-proposal/",
+      ".changeset/"
+    ],
+    "reviewRequired": false,
+    "checks": [
+      [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      [
+        "env",
+        "GITHUB_ACTIONS=true",
+        "PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium",
+        "npm",
+        "run",
+        "verify"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "prodshape",
+        "citations",
+        "verify",
+        "--provider",
+        "openspec",
+        "--format",
+        "json"
+      ]
+    ],
+    "verification": {
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "src/packages/cli/package.json",
+        "src/packages/sdlc/package.json",
+        "src/packages/ui/package.json",
+        ".github/workflows/ci.yml",
+        ".lighthouse/implement.json",
+        ".lighthouse/unattended.json",
+        ".markdownlint-cli2.jsonc",
+        "src/tests/",
+        "scripts/"
+      ],
+      "corrections": {
+        "src/tests/product-composition.test.mjs": "Add supported protocol metadata, malformed/unknown envelope and exact bound inspection/refusal regressions; preserve every existing assertion. Preserve all existing assertions and safety gates.",
+        "src/tests/product-composition-package.test.mjs": "Exercise the repaired protocol/inspection route in the packed server without ambient dependencies; retain explicit non-native-qualification labeling. Preserve all existing assertions and safety gates.",
+        "src/tests/product-context.test.mjs": "Cover exact whole-answer source/hash/UTF-8 identities and unchanged current/historical separation, decisions, bounds and refusals. Preserve all existing assertions and safety gates.",
+        "src/tests/opencode-execute.test.mjs": "Add a long single-line audit and bounded-interface regression at the existing adapter boundary; retain read-only/collision/identity/isolation assertions and distinguish shims from native evidence. Preserve all existing assertions and safety gates.",
+        "src/tests/fixtures/product-context.mjs": "Extend synthetic combined history for >2000-character single-line audits and exact decoded answer verification; no real consumer text or provenance. Preserve all existing assertions and safety gates."
+      }
+    }
+  },
   "722": {
     "scope": "Implement only #722: correct retained Product Change evidence preparation and repeated working context using existing bounded input/provenance mechanisms. Preserve complete original authority/audit data, exact retained bytes/hashes, current decisions, candidate limits, stale/ambiguous-input refusals, trusted ProductShape validation/approval/apply and normal publication gates. Do not change repository policy or downstream applications. Only the explicitly admitted verification inputs may change; preserve all existing assertions. Keep the OpenSpec plan and patch changeset with code; use an H1 after changeset frontmatter and the configured verification time budget. Recover the exact unapproved runner candidate from execution43950956615 through its immutable seed; inspect and preserve it instead of regenerating the implementation. The original run completed execution and independent repository verification but failed inherited citation classification and then publication freshness. Recheck all original commands on current source. Existing issue594 metadata classification is maintainer administration only; do not alter its product intent, delivery status or implementation.",
     "seed": {"base": "bf774de54af305ab925ae60174e93216b9b93862", "head": "b0dd49b71cff87e3849ad49d5c27a860a591599a"},
