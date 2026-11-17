@@ -146,6 +146,12 @@ export async function collectGithubMeasurements(repository, window, { api, readA
       }
     }
   }
+  collections.issue.scope = 'Issue creation cohort in [start,end), within selected bounds';
+  collections['pull-request'].scope = 'PR creation cohort plus explicitly related PRs, within selected bounds';
+  collections['issue-pr-relation'].scope = 'Retained cross-references on selected issue timelines';
+  collections['workflow-attempt'].scope = 'Selected workflows and runs created in [start,end); event completions must also fall in the window';
+  gap('workflow-attempt', 'Earlier-created runs that may complete within the window are outside this creation-cohort collector');
+  for (const kind of ['workflow-job', 'stage-result', 'agent-step', 'usage']) collections[kind].scope = 'Native observations from the selected run creation cohort';
   for (const kind of ['human-wait', 'delegated-integration', 'revert', 'external']) gap(kind, 'No independently qualified source adapter selected by this collector; no replacement evidence is inferred', true);
   for (const kind of ['human-touch', 'issue-pr-relation']) if (collections.issue.status !== 'complete' || collections['pull-request'].status !== 'complete') gap(kind, 'Issue/PR population or relation coverage is incomplete');
   for (const kind of ['agent-step', 'workflow-job', 'stage-result', 'usage']) if (collections['workflow-attempt'].status !== 'complete') gap(kind, 'Run/attempt population coverage is incomplete');

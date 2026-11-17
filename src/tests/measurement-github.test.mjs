@@ -34,6 +34,8 @@ const window = { start: '2026-01-01T00:00:00Z', end: '2026-02-01T00:00:00Z' };
 test('collector makes GET requests only and preserves failed publication, blocked assessment and missing usage separately', async () => {
   const f = fixture(), bundle = await collectGithubMeasurements('example/project', window, options(f));
   assert.ok(f.methods.every(m => m === 'GET'));
+  assert.equal(bundle.collections.find(c => c.kind === 'workflow-attempt').status, 'incomplete');
+  assert.match(bundle.collections.find(c => c.kind === 'workflow-attempt').reason, /Earlier-created/);
   assert.equal(bundle.records.find(r => r.kind === 'stage-result').data.status, 'blocked');
   assert.equal(bundle.records.find(r => r.kind === 'workflow-job' && r.data.publication).data.conclusion, 'failure');
   assert.equal(bundle.records.find(r => r.kind === 'usage').data.coverage, 'unavailable');
