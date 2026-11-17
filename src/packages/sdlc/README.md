@@ -73,6 +73,14 @@ Adopt this correction through a released package and the normal workflow install
 
 See [workflow handoffs](handoffs.md) for outcome meanings, publication order, interruption reconciliation and bounded retry evidence.
 
+## Visual work
+
+For UI/UX issues, refinement and proposal produce concrete proposed examples. Implementation captures the actual running candidate and, for changed existing views, the admitted source for comparison. [Visual evidence](skills/visual-evidence/SKILL.md) records the view, state and viewport, distinguishes mockups from actual captures and binds retained images to their source and checked candidate tree. Required missing evidence blocks the current stage; configured human visual acceptance remains a separate decision.
+
+The publisher embeds images in the issue and delivery PR using commit-pinned GitHub URLs. It reuses the explicitly adopted `.lighthouse/github.json` evidence branch, `completion.publishEvidence` and enforced deletion/non-fast-forward protection. Images and a provenance report survive disposable workspace cleanup; historical captures remain available after corrections. Repository access rules still apply to private images. The agent receives no GitHub credentials. Updated refinement workflows grant `contents: write` only to the separate publisher so it can retain images on that adopted branch; source remains read-only during refinement.
+
+This follows the content-addressed asset publication used by [GitHub Agentic Workflows 1.2.2](https://github.com/github/gh-aw/blob/v1.2.2/actions/setup/js/upload_assets.cjs). Lighthouse's custom engine adapter retains its own trusted publisher rather than invoking safe-output tools from the agent. Upgrading the package and workflow source is required for installed workers to receive this behavior; this change does not upgrade the adopter's `gh-aw` compiler or enable automation.
+
 ## Label catalog
 
 [capabilities.json](capabilities.json) contains the exact names, roles, colors and descriptions. A matching label name does not prove Lighthouse created it. Existing labels and custom descriptions are preserved by reconciliation.

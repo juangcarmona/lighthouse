@@ -13,6 +13,8 @@ For human-facing explanations, PR summaries, agent-facing instructions or UI/vis
 
 ## Steps
 
+For user-facing view or interaction changes, read [visual evidence](../visual-evidence/SKILL.md) before editing so you can capture the admitted source and final running candidate. Requests with `request.visualEvidence` also require an explicit non-applicability or unavailable assessment when appropriate.
+
 1. Read the issue, owner answers, repository rules and acceptance criteria. If a required product decision is missing, ask one concrete question and stop.
 2. Read `/harness/skills/propose/SKILL.md` for planning and use the supplied OpenSpec instructions to create or update the proposal, specifications, design and tasks before changing production code. This is the planning part of implementation; return one final implementation envelope. Keep tasks coarse and dependency ordered. Reuse existing planning work where it still applies.
 3. Implement the tasks, with tests that exercise the changed behavior. Follow the repository's architecture and allowed write scope.

@@ -9,6 +9,8 @@ export { taskDigest } from './digests.mjs';
 import { taskDigest } from './digests.mjs';
 export { repositoryApiUrl, createIssueApi } from './github-rest.mjs';
 import { createIssueApi } from './github-rest.mjs';
+import { visualStages } from './visual-evidence.mjs';
+import { publishVisualEvidence } from './visual-publication.mjs';
 import { createTelemetry, telemetryContext, routingReason } from './telemetry.mjs';
 import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
@@ -605,11 +607,13 @@ async function main(command) {
     if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
     await output('source_revision', revision.sha);
     telemetry.bind(telemetryContext(env, snapshot));
+    if (!productWorker && visualStages.has(stage)) { snapshot.visualEvidence = { schemaVersion: 1 }; snapshot.repositoryId = repository.id; }
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
     await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
+    if (snapshot.visualEvidence) context.contract.rules += ' Assess whether this issue changes user-facing views or interaction states. Read /harness/skills/visual-evidence/SKILL.md and return output.visualEvidence for this stage. Use its inline HTML route for proposed designs in read-only planning; the host renders those without granting shell or source writes. Implementation captures must come from the actual running product and be stored under /output/evidence. Mark non-applicability with a concrete reason, or return blocked with the missing current-stage visual evidence. Images grant no approval.';
     if (epicPrerequisites) {
       context.epicPrerequisites = epicPrerequisites;
       context.contract.rules += ' context.epicPrerequisites contains the trusted host verification of accepted dependency heads, current owner reviews, checks and inclusion in the supplied epic base. Use this evidence for the current authorized stage. The host rechecks it before publication; merge and release retain their separate authorization.';
@@ -763,6 +767,13 @@ async function main(command) {
     return;
   }
   if (snapshot.dispatch) env.LIGHTHOUSE_AUTO_IMPLEMENT = String(snapshot.autoImplement === true);
+  if (command === 'visual-artifact') {
+    const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
+    const errors = validateStageEnvelope(value, snapshot);
+    if (errors.length) throw Error(errors.join('\n'));
+    await output('visual', String(visualStages.has(snapshot.stage) && snapshot.worker !== 'product-change' && value.result.output?.visualEvidence?.status === 'provided'));
+    return;
+  }
   if (command === 'validate') {
     const value = JSON.parse(await readFile(join(dir, 'envelope.json'), 'utf8'));
     const errors = validateStageEnvelope(value, snapshot);
@@ -828,6 +839,14 @@ async function main(command) {
       if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);
     }
     const runUrl = `https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID}`;
+    let visualMarkdown = '';
+    const publishVisual = async (candidateTree, beforeWrite) => {
+      if (!visualStages.has(snapshot.stage) || snapshot.worker === 'product-change' || value.result.output?.visualEvidence?.status !== 'provided') return;
+      const publication = await publishVisualEvidence(api, snapshot, value, dir, { candidateTree, beforeWrite });
+      await writeFile(join(dir, 'visual-publication.json'), JSON.stringify(publication));
+      visualMarkdown = publication.markdown;
+    };
+    if (snapshot.stage !== 'implement') await publishVisual(null, async () => { await recheckPublication(); await checkFeedback(); });
     let proposalLink = '', prStateProof = '', reviewNotice, reviewTarget = !!snapshot.proposalReview, implementationChecksFailed = false, ciDispatchFailed = false;
     if (snapshot.worker === 'product-change') {
       const product = value.result.output?.productChange;
@@ -874,7 +893,14 @@ async function main(command) {
         if (snapshot.productResume) checkProductResumePullRequest(await api(`pulls/${snapshot.productResume.pullRequest}`), repo, snapshot.productResume);
         if (!issue.labels.some(x => x.name === 'ready')) throw Error('Readiness revoked');
       };
-      const pr = snapshot.proposalReview && !snapshot.productResume ? await updateProposal(api, repo, snapshot, files, recheck) : await createProposalPullRequest(api, snapshot, files, value.effect.body, runUrl, recheck);
+      const pr = snapshot.proposalReview && !snapshot.productResume ? await updateProposal(api, repo, snapshot, files, recheck) : await createProposalPullRequest(api, snapshot, files, value.effect.body + visualMarkdown, runUrl, recheck);
+      if (visualMarkdown && snapshot.proposalReview) {
+        await recheck();
+        const visualMarker = `<!-- lighthouse-visual:${snapshot.runId} -->`;
+        const prior = await api(`issues/${pr.number}/comments?per_page=100`);
+        if (prior.length >= 100) throw Error('Proposal discussion exceeds bounded visual publication');
+        if (!prior.some(comment => comment.user?.login === 'github-actions[bot]' && comment.body?.includes(visualMarker))) await api(`issues/${pr.number}/comments`, 'POST', { body: `${visualMarkdown}\n${visualMarker}` });
+      }
       if (snapshot.proposalReview) reviewNotice = { pr, marker: snapshot.proposalReview.receipt, body: renderHandoff({ status: 'review', stage: snapshot.stage, happened: `The proposal was updated from your [feedback](${snapshot.proposalReview.feedbackUrl}).`, action: 'Owner: review the latest diff and record your decision on this PR.', next: 'The workflow waits for the required decision before continuing.', link: `[Review PR #${pr.number}](${pr.html_url})`, details: `[Execution](${runUrl})\n\n${snapshot.proposalReview.receipt}` }) };
       proposalLink = `\n\n[Review the OpenSpec proposal](${pr.html_url}). Implementation requires a separate owner decision.`;
       reviewTarget = true;
@@ -920,6 +946,7 @@ async function main(command) {
         };
         if (!changes.length) recheckVerifiedCandidate = checkAuthority;
         const recheck = async (transition = null) => { await recheckPublication(transition); if (changes.length) await checkAuthority(transition); };
+        await publishVisual(receipt.candidateTree, async () => { await recheck(); await checkAuthority(); });
         if (snapshot.ciRepair) validateCiRepairChanges(changes, snapshot.issue, await productModelDirectory(process.cwd()));
         await validatePublicationFiles(process.cwd(), changes.map(file => ({ path: file.path, content: file.content === null ? null : Buffer.from(file.content, 'base64').toString('utf8') })), { api, policyRevision: snapshot.baseRevision ?? snapshot.sourceRevision, candidateRevision: snapshot.sourceRevision });
         const candidateComplete = value.result.status === 'passed' && checksPassed;
@@ -936,7 +963,7 @@ async function main(command) {
           checkPublication(snapshot, await api(issuePath), ownerAnswers(await comments()), (await api(`commits/${repository.default_branch}`)).sha);
           await recheckPublication();
         };
-        const transition = await publishImplementationPullRequest(api, { snapshot, changes, body: value.effect.body, runUrl, draft: true, beforeWrite: () => recheck(), afterRefWrite, refreshVerification: candidateComplete, checkedTree: receipt.candidateTree });
+        const transition = await publishImplementationPullRequest(api, { snapshot, changes, body: value.effect.body + visualMarkdown, runUrl, draft: true, beforeWrite: () => recheck(), afterRefWrite, refreshVerification: candidateComplete, checkedTree: receipt.candidateTree });
         const pr = await readImplementationPublication(api, snapshot, transition);
         implementationPublication = transition;
         if (receipt.schemaVersion === 2) {
@@ -977,7 +1004,7 @@ async function main(command) {
     let action = question ? `Owner: ${question} ${reviewQuestion ? `Reply on PR #${reviewQuestion.number}.` : 'Reply here.'}` : isReview ? snapshot.worker === 'product-change' ? 'Owner: review the linked Product Change PR and approve the proposal or request changes there.' : 'Owner: open the linked result and record your decision there.' : value.result.status === 'blocked' ? productRecovery ? `Workflow maintainer: ${productRecovery}` : productGap?.action ?? visibleNextAction(value.result.nextAction, { checksFailed: implementationChecksFailed }) : refinementAction?.action ?? 'None.';
     let whatNext = question ? reviewQuestion ? 'Your PR feedback will request a correction of the same branch.' : `The answer will be checked against this question before ${snapshot.stage} continues.` : isReview ? 'The workflow waits for the required decision before continuing.' : value.result.status === 'blocked' ? productGap?.next ?? 'Work remains stopped until the blocker is resolved and continuation is authorized.' : refinementAction?.next ?? 'Any continuation follows the configured authorization.';
     if (ciHandoff) { action = action === 'None.' ? ciHandoff.action : `${action} ${ciHandoff.action}`; whatNext = question || value.result.status === 'blocked' ? `${whatNext} ${ciHandoff.next}` : ciHandoff.next; }
-    const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body });
+    const happened = productPublicationMessage({ worker: snapshot.worker, outcome: value.result.output?.productChange?.outcome, reviewTarget, agentMessage: value.effect.body }) + visualMarkdown;
     const body = renderHandoff({ status: ciHandoff && !question ? 'blocked' : projection.status, stage: snapshot.stage, happened, action, next: whatNext, link: proposalLink.trim() || undefined, details: `Outcome: ${value.result.status}\n\n[Workflow run](${runUrl}) · source \`${snapshot.sourceRevision}\`\n\n${marker}\n${resultMarker}\n<!-- lighthouse-handoff:v1 -->\n${prStateProof}\n<!-- lighthouse-stage:${snapshot.stage}:${value.result.status} -->${question && !reviewQuestion ? '\n<!-- lighthouse-question -->' : ''}${productWorkflowMarker}${continuationHint}` });
     const handoff = snapshot.worker !== 'product-change' && snapshot.stage === 'refine' && value.result.status === 'passed' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && !decompositionPlanned;
     const label = projection.label;

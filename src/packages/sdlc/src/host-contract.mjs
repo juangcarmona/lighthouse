@@ -10,6 +10,7 @@ import { validateProposalFiles } from './proposal-files.mjs';
 import { routeEvent } from './event-router.mjs';
 import { validateRequestTriage, validateEstimateRevision } from './request-triage.mjs';
 import { assessDecomposition } from './epic.mjs';
+import { validateVisualEvidence, visualStages } from './visual-evidence.mjs';
 
 const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const hex = /^[a-f0-9]{64}$/;
@@ -63,6 +64,10 @@ export function validateStageEnvelope(value, request) {
   const result = value.result;
   errors.push(...validateStageResult(result).map((error) => error.message));
   if (!record(result)) return errors;
+  if (visualStages.has(request.stage) && !['product-change', 'independent-review'].includes(request.worker)) {
+    errors.push(...validateVisualEvidence(result.output?.visualEvidence, request));
+    if (result.output?.visualEvidence?.status === 'unavailable' && result.status === 'passed') errors.push('Unavailable current-stage visual evidence blocks completion');
+  }
   if (request.client && !isDeepStrictEqual(result.input?.client, request.client)) errors.push('typed client result identity does not match the admitted request');
   const declared = stages.stages.find((stage) => stage.id === request.stage);
   if (result.runId !== request.runId || result.stage !== request.stage || result.gate !== declared?.gate) errors.push('result identity or gate does not match admission');
