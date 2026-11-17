@@ -51,7 +51,13 @@ The working view SHALL expose each current retained path once with source, revis
 - **THEN** the working view replaces only those document spans with bound references and read-only audit locations
 - **AND** all surrounding decisions and unique older paths survive without granting the copies supersession authority
 
+#### Scenario: Mixed historical envelopes and audit-only versions
+
+- **WHEN** authenticated history includes metadata-bearing document envelopes, older distinct texts, unique safe paths and more than eight literal aliases
+- **THEN** every non-document value remains in place and documents bind exact audit sources and hashes without consuming typed declaration slots
+- **AND** historical-only texts remain retrievable but cannot become current or composable without explicit typed admission
+
 #### Scenario: Unbound or ambiguous historical copies
 
-- **WHEN** a recognized literal copy has unknown paths, changed content, ambiguous byte recovery or exceeds existing inventory or reference limits
+- **WHEN** a recognized literal copy lacks an exact authenticated source, has unsafe paths, invalid hashes, ambiguous byte recovery or exceeds existing file or reference limits
 - **THEN** preparation refuses before execution and requests an explicitly bound retained declaration without truncating history

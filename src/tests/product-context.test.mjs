@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { productContextFixture, embedDraft, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
+import { productContextFixture, combinedHistoryFixture, embedDraft, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
 import { hash } from './fixtures/product-composition.mjs';
 import { productWorkingContext } from '../packages/sdlc/src/product-context.mjs';
-import { currentRetainedInventory, retainedInventory, composeRetainedProduct } from '../packages/sdlc/src/product-composition.mjs';
+import { bindRetainedCopies, currentRetainedInventory, retainedInventory, composeRetainedProduct, historicalMarkdown } from '../packages/sdlc/src/product-composition.mjs';
 import { productEvidenceScopeText } from '../packages/sdlc/src/product-change.mjs';
 
 test('large repeated history projects exact current documents once and keeps every decision and audit binding', () => {
@@ -211,17 +211,17 @@ test('literal aliases retain older unique paths, explicit replacements and confl
 
 test('unbound, malformed and ambiguous literal inventories refuse without altering original inputs', () => {
   for (const build of [
-    files => embedLiteralFiles([{ ...files[3], path: files[3].path.replace('.md', '-unknown.md') }]),
-    files => embedLiteralFiles([{ ...files[3], content: files[3].content + 'Changed' }]),
+    files => embedLiteralFiles([{ ...files[3], path: '../unsafe.md' }]),
+    files => embedLiteralFiles([{ ...files[3], content: '\0' }]),
     files => embedLiteralFiles([{ ...files[3], sha256: 'a'.repeat(64) }]),
-    files => embedLiteralFiles([{ ...files[3], mode: '100755' }]),
+    files => embedLiteralFiles([{ ...files[3], mode: '100600' }]),
     files => embedLiteralFiles([files[3], files[3]]),
     files => embedLiteralFiles([{ ...files[3], decision: 'Do not discard this.' }]),
-    files => embedDraft({ files, decision: 'Do not discard this.' }),
     files => '```json\n{"files":' + JSON.stringify(files) + ',"files":[]}\n```\n',
+    files => '```json\n{"decision":"one","files":' + JSON.stringify([files[3]]) + ',"decision":"two"}\n```\n',
     () => '```json\n{"files": [\n```\n',
     () => embedLiteralFiles([]),
-    files => embedMarkdownFile({ ...files[3], content: 'Unbound historical content.' }),
+    files => embedMarkdownFile({ ...files[3], path: files[3].path.replace('/product-change/proposed/', '/not-allowed/') }),
     files => embedMarkdownFile(files[3]) + embedMarkdownFile(files[3]),
   ]) {
     const { context, files } = productContextFixture();
@@ -241,7 +241,7 @@ test('Markdown recovery refuses when a structural newline could select different
   assert.throws(() => productWorkingContext(context), /ambiguous historical.*explicitly bound/);
 });
 
-test('literal aliases retain existing reference, inventory and unique-prose limits', () => {
+test('literal aliases retain existing reference, file inventory and unique-prose limits, not typed declaration slots', () => {
   const { context, files, draft, repeated } = productContextFixture();
   for (const file of files) file.content = file.content.replace(/Exact UTF-8 text:[\s\S]*/, 'Small retained body.\n');
   draft.files = files.map(file => ({ ...file, sha256: hash(file.content) }));
@@ -255,7 +255,7 @@ test('literal aliases retain existing reference, inventory and unique-prose limi
   assert.throws(() => productWorkingContext(context), /historical/);
   context.issue.ownerAnswers[6].body = embedLiteralFiles(files);
   context.issue.ownerAnswers.push({ body: embedLiteralFiles([files[0]]) });
-  assert.throws(() => productWorkingContext(context), /document inventory/);
+  assert.throws(() => productWorkingContext(context), /reference inventory/);
   const f = productContextFixture();
   f.context.issue.ownerAnswers.push({ body: embedLiteralFiles(f.files) + 'Unique decision. '.repeat(20000) });
   assert.throws(() => productWorkingContext(f.context), /working context exceeds bounds/);
@@ -283,7 +283,9 @@ test('Markdown structural CRLF recovery preserves content bytes without normaliz
   assert.ok(working.issue.ownerAnswers[1].body.startsWith(`Before.\r\n### \`${file.path}\`\r\n`));
   assert.ok(working.issue.ownerAnswers[1].body.endsWith('\nAfter.'));
   context.issue.ownerAnswers[1].body = embedMarkdownFile({ ...file, content: file.content.replaceAll('\n', '\r\n') });
-  assert.throws(() => productWorkingContext(context), /no unique validated/);
+  const distinct = productWorkingContext(context).productChange.historicalCopies[0].files[0];
+  assert.equal(distinct.historicalOnly, true);
+  assert.equal(distinct.sha256, hash([...context.issue.ownerAnswers[1].body.matchAll(historicalMarkdown)][0][2]));
 });
 
 test('literal aliases can bind the existing host file route without adding revisions', () => {
@@ -296,4 +298,88 @@ test('literal aliases can bind the existing host file route without adding revis
   const working = productWorkingContext(context);
   assert.equal(working.productChange.currentDocuments.paths[0].current.revision, 0);
   assert.deepEqual(working.productChange.historicalCopies[0].files[0].sources, ['productChange.files']);
+});
+
+test('combined mixed histories preserve metadata, exact current composition and every audit document without typed admission', () => {
+  const { context, files, envelope, metadata, mixedIndex, olderFiles, markdownFile } = combinedHistoryFixture();
+  const original = JSON.stringify(context), working = productWorkingContext(context, hash(original));
+  const catalog = working.productChange.currentDocuments;
+  assert.ok(Buffer.byteLength(JSON.stringify(working)) < 256 * 1024);
+  assert.equal(working.productChange.audit.sha256, hash(original));
+  assert.equal(catalog.paths.length, 64);
+  assert.equal(catalog.measured.references, 176);
+  assert.deepEqual(working.request, context.request);
+  for (let i = 0; i < 3; i++) assert.match(working.issue.ownerAnswers[i + 1].body, new RegExp(`Typed shard decision ${i}`));
+  for (let i = 0; i < 9; i++) assert.match(working.issue.ownerAnswers[i + 4].body, new RegExp(`Alias decision ${i}`));
+  const raw = context.issue.ownerAnswers[mixedIndex].body.match(/```json\n([\s\S]*?)\n```/)[1];
+  const projected = working.issue.ownerAnswers[mixedIndex].body.match(/```json\n([\s\S]*?)\n```/)[1];
+  const value = JSON.parse(projected), { files: reference, ...remaining } = value;
+  assert.deepEqual(remaining, metadata);
+  assert.match(reference, /historicalCopies/);
+  // All original bytes outside the files value survive, not just a model summary.
+  assert.equal(projected.replace(JSON.stringify(reference), 'FILES'), raw.replace(JSON.stringify(files), 'FILES'));
+  assert.match(working.issue.ownerAnswers[mixedIndex].body, /^Preserve this decision\./);
+  assert.match(working.issue.ownerAnswers[mixedIndex].body, /Preserve the later decision\.$/);
+  assert.match(working.issue.ownerAnswers[mixedIndex + 1].body, /Keep older obligations/);
+  assert.match(working.issue.ownerAnswers[mixedIndex + 2].body, /Keep the Markdown obligation/);
+  assert.match(working.issue.ownerAnswers[mixedIndex + 2].body, /Keep the last obligation/);
+  for (const copy of working.productChange.historicalCopies) {
+    const [, answer, type, index] = /^issue\.ownerAnswers\[(\d+)\]\.body#(json|markdown)-(\d+)$/.exec(copy.source);
+    const body = JSON.parse(original).issue.ownerAnswers[Number(answer)].body;
+    const blocks = [...body.matchAll(type === 'json' ? /^```json\n([\s\S]*?)^```$/gm : historicalMarkdown)];
+    for (const file of copy.files) {
+      assert.equal(file.audit.source, copy.source);
+      const content = type === 'json' ? JSON.parse(blocks[Number(index)][1]).files[file.audit.fileIndex].content : blocks[Number(index)][2];
+      assert.equal(hash(content), file.audit.sha256);
+      assert.equal(Buffer.byteLength(content), file.audit.bytes);
+      if (file.historicalOnly) {
+        assert.deepEqual(file.sources, []);
+        assert.equal(file.sha256, hash(content));
+        assert.throws(() => retainedInventory(context, { path: file.path, source: copy.source, sha256: file.sha256 }), /Unknown retained/);
+      } else for (const source of file.sources) assert.equal(hash(retainedInventory(context, { path: file.path, source, sha256: file.sha256 }).content), file.sha256);
+    }
+  }
+  const onlyHistorical = working.productChange.historicalCopies.flatMap(copy => copy.files).filter(file => file.historicalOnly);
+  assert.deepEqual(onlyHistorical.map(file => [file.path, file.sha256]), [...olderFiles, markdownFile].map(file => [file.path, hash(file.content)]));
+  assert.ok(!catalog.paths.some(item => item.path === olderFiles[1].path));
+  const plan = catalog.paths.map(({ path, current, history }) => ({ path, selected: current.ref, omitted: history.map(item => item.ref) }));
+  const composed = composeRetainedProduct(context, { binding: catalog.binding, plan, envelope }).envelope.result.output.productChange.files;
+  assert.deepEqual(composed.map(file => [file.path, file.content, hash(file.content)]), files.map(file => [file.path, file.content, hash(file.content)]));
+  plan[3].selected = { source: working.productChange.historicalCopies.at(-2).source, sha256: hash(olderFiles[0].content) };
+  assert.throws(() => composeRetainedProduct(context, { binding: catalog.binding, plan, envelope }), /Unknown.*reference/);
+  assert.equal(JSON.stringify(context), original);
+});
+
+test('historical binding refuses fabricated sources and changed copies with precise locations', () => {
+  const { context, files } = productContextFixture();
+  context.issue.ownerAnswers.push({ body: embedLiteralFiles([files[3]]) });
+  const copy = { source: 'issue.ownerAnswers[1].body#json-0', inventory: 'same', files: [files[3]] };
+  assert.equal(bindRetainedCopies(context, [copy])[0].files[0].historicalOnly, false);
+  for (const mutation of [
+    { source: 'issue.ownerAnswers[99].body#json-0' },
+    { source: 'issue.ownerAnswers[1].body#json-9' },
+    { markdown: true },
+    { files: [{ ...files[3], content: 'Forged copy' }] },
+  ]) assert.throws(() => bindRetainedCopies(context, [{ ...copy, ...mutation }]), /historical.*issue\.ownerAnswers/);
+});
+
+test('mixed JSON projection preserves field order, whitespace, escaped keys and every non-file value', () => {
+  for (const position of ['first', 'middle', 'last']) {
+    const { context, files } = productContextFixture();
+    const inventory = JSON.stringify([files[3]]);
+    const fields = ['"nested": {"files": ["a decision, not an inventory"], "status":"unapproved"}', '"approval":false'];
+    fields.splice({ first: 0, middle: 1, last: 2 }[position], 0, '"f\\u0069les" : ' + inventory);
+    const raw = '{\r\n  ' + fields.join(',\r\n  ') + '\r\n}';
+    context.issue.ownerAnswers.push({ body: 'Before.\r\n```json\r\n' + raw + '\r\n```\r\nAfter.' });
+    const before = JSON.stringify(context);
+    const body = productWorkingContext(context).issue.ownerAnswers[1].body;
+    const projected = body.match(/```json\r\n([\s\S]*?)\r\n```/)[1];
+    const result = JSON.parse(projected);
+    assert.deepEqual(result.nested, { files: ['a decision, not an inventory'], status: 'unapproved' });
+    assert.equal(result.approval, false);
+    assert.equal(projected.replace(JSON.stringify(result.files), 'FILES'), raw.replace(inventory, 'FILES'));
+    assert.ok(body.startsWith('Before.\r\n'));
+    assert.ok(body.endsWith('\r\nAfter.'));
+    assert.equal(JSON.stringify(context), before);
+  }
 });

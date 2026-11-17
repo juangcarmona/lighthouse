@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { bindRetainedCopies, currentRetainedInventory, parseCompositionJson } from './product-composition.mjs';
+import { bindRetainedCopies, currentRetainedInventory, historicalFilesSpan, historicalMarkdown, parseCompositionJson } from './product-composition.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fence = /^```json[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
@@ -19,8 +19,7 @@ export function productWorkingContext(context, auditSha256) {
     const replacements = [];
     if (catalog) {
       let markdownIndex = 0;
-      const markdown = /^### `([^`\r\n]+)`[ \t]*\r?\n```(?:markdown|md|yaml|yml|json|text)?[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
-      for (const match of body.matchAll(markdown)) {
+      for (const match of body.matchAll(historicalMarkdown)) {
         // A path outside the retained change is unrelated prose, not a document route.
         if (!match[1].startsWith(`openspec/changes/${catalog.binding.changeName}/`)) continue;
         const reference = `${source}#markdown-${markdownIndex++}`;
@@ -44,9 +43,13 @@ export function productWorkingContext(context, auditSha256) {
         }
         if (!value || Array.isArray(value) || !Object.hasOwn(value, 'files')) continue;
         value = parseCompositionJson(raw);
-        if (Object.keys(value).length !== 1) throw Error('Unsupported historical inventory fields; preserve decision prose outside the document inventory and supply a bound retained draft');
+        const field = historicalFilesSpan(raw);
         copies.push({ source: reference, inventory: reference, files: value.files });
-        replacements.push({ start: match.index, end: match.index + block.length, reference });
+        if (Object.keys(value).length === 1) replacements.push({ start: match.index, end: match.index + block.length, reference });
+        else {
+          const offset = match.index + block.indexOf('\n') + 1;
+          replacements.push({ start: offset + field.start, end: offset + field.end, reference, jsonField: true });
+        }
       }
     }
     spans.set(source, replacements);
@@ -56,7 +59,8 @@ export function productWorkingContext(context, auditSha256) {
     if (typeof body !== 'string') continue;
     let end = 0, value = '';
     for (const span of spans.get(source).sort((a, b) => a.start - b.start)) {
-      value += body.slice(end, span.start) + (span.heading ?? '') + `[${span.retained ? 'Retained draft' : 'Exact historical copy'} ${span.reference}; inspect ${span.retained ? 'currentDocuments' : 'historicalCopies and currentDocuments'} and the read-only audit input for exact content. No decision or revision authority is implied.]`;
+      const label = `[${span.retained ? 'Retained draft' : 'Exact historical copy'} ${span.reference}; inspect ${span.retained ? 'currentDocuments' : 'historicalCopies and currentDocuments'} and the read-only audit input for exact content. No decision or revision authority is implied.]`;
+      value += body.slice(end, span.start) + (span.heading ?? '') + (span.jsonField ? JSON.stringify(label) : label);
       end = span.end;
     }
     projected.set(source, value + body.slice(end));

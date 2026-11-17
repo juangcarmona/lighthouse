@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const resourceShim = fileURLToPath(new URL('./helpers/docker-resource-state.cjs', import.meta.url));
 import { snapshotSource, redactLog, acquireEngineSlot, completionOutput, prepareProductWorkingContext } from '../packages/sdlc/src/opencode-execute.mjs';
 import { compositionFixture } from './fixtures/product-composition.mjs';
-import { productContextFixture, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
+import { productContextFixture, combinedHistoryFixture, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
 import { compositionService } from '../packages/sdlc/src/product-composition-server.mjs';
 
 async function fixtureHarness(root) {
@@ -123,6 +123,35 @@ test('adapter keeps exact audit bytes read-only and composition inspects histori
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test('adapter retains combined mixed historical bytes read-only without admitting historical versions to composition', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-mixed-history-'));
+  try {
+    const { context, olderFiles, metadata, mixedIndex } = combinedHistoryFixture();
+    const raw = JSON.stringify(context, null, 2), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.ok(measured.workingBytes < 256 * 1024);
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    const mixed = JSON.parse(working.issue.ownerAnswers[mixedIndex].body.match(/```json\n([\s\S]*?)\n```/)[1]);
+    const { files: _reference, ...rest } = mixed;
+    assert.deepEqual(rest, metadata);
+    const originals = JSON.parse(await readFile(audit, 'utf8'));
+    assert.deepEqual(originals, context);
+    const historical = working.productChange.historicalCopies.flatMap(copy => copy.files).filter(file => file.historicalOnly);
+    assert.equal(historical.length, 3);
+    const location = historical[0].audit.source.match(/^issue\.ownerAnswers\[(\d+)\]\.body#json-(\d+)$/);
+    const blocks = [...originals.issue.ownerAnswers[Number(location[1])].body.matchAll(/^```json\n([\s\S]*?)^```$/gm)];
+    const content = JSON.parse(blocks[Number(location[2])][1]).files[historical[0].audit.fileIndex].content;
+    assert.equal(content, olderFiles[0].content);
+    assert.equal(createHash('sha256').update(content).digest('hex'), historical[0].sha256);
+    const service = compositionService(audit, root);
+    await assert.rejects(service('inspect', { reference: { path: historical[0].path, source: historical[0].audit.source, sha256: historical[0].sha256 } }), /Unknown retained/);
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test('invalid product projection cannot create audit or modify input/output', async () => {
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-refused-context-'));
   try {
@@ -140,7 +169,7 @@ test('unbound historical copies refuse before adapter audit or context writes', 
   const root = await mkdtemp(join(tmpdir(), 'lighthouse-unbound-history-'));
   try {
     const { context, files } = productContextFixture();
-    context.issue.ownerAnswers.push({ body: `Keep the original decision.\n${embedLiteralFiles([{ ...files[3], content: 'Unbound historical bytes.' }])}` });
+    context.issue.ownerAnswers.push({ body: `Keep the original decision.\n${embedLiteralFiles([{ ...files[3], sha256: 'a'.repeat(64), content: 'Unbound historical bytes.' }])}` });
     const raw = JSON.stringify(context), input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
     await writeFile(input, raw);
     await assert.rejects(prepareProductWorkingContext(input, audit), /explicitly bound retained draft/);

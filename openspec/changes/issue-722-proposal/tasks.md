@@ -24,6 +24,11 @@ The recovered candidate previously encountered three existing `PRODUCT064` error
 - [x] 4.1 Bind supported literal JSON and Markdown copies to validated retained objects without revision authority; document the supported grammar and prove decision preservation, exact 64-file composition, audit retrieval and unbound/ambiguous/limit refusals in admitted tests.
 - [x] 4.2 Re-run all configured checks on the corrected candidate and retain completed receipts, measurements, traceability, manual fallback review and retrospective evidence.
 
+## 5. Owner correction: mixed authenticated history
+
+- [x] 5.1 Preserve mixed-envelope metadata and bind older documents to exact read-only audit sources without current admission; verify combined typed shards, more than eight aliases, Markdown, every decision, exact 64-file composition and unsafe/unbound/ambiguous refusals.
+- [x] 5.2 Re-run all configured checks and retain completed receipts, product traceability, source/hash measurements, manual reviews and retrospective evidence.
+
 ## Workflow follow-up
 
 - Independent current-head review, normal integration, protected publication, clean consumer adoption and real native qualification remain separate; source checks do not establish delivery acceptance.

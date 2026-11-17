@@ -41,6 +41,36 @@ export function compositionBinding(context) {
   return { runId: request.runId, taskDigest: request.taskDigest, sourceRevision: request.sourceRevision, baselineDigest: request.baselineDigest, changeName: product.changeName, schemaPinSha256: hash(product.schemaPin) };
 }
 
+// Locations are audit selectors, never filesystem paths or composition admission.
+export const historicalMarkdown = /^### `([^`\r\n]+)`[ \t]*\r?\n```(?:markdown|md|yaml|yml|json|text)?[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm;
+
+export function historicalFilesSpan(raw) {
+  let depth = 0, start;
+  const tokens = [...raw.matchAll(/"(?:[^"\\]|\\[\s\S])*"|[{}\[\]:,]/g)];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i][0];
+    if (depth === 1 && token.startsWith('"') && JSON.parse(token) === 'files' && tokens[i + 1]?.[0] === ':' && tokens[i + 2]?.[0] === '[') start = tokens[i + 2].index;
+    if (token === '{' || token === '[') depth++;
+    else if (token === '}' || token === ']') {
+      depth--;
+      if (start !== undefined && depth === 1) return { start, end: tokens[i].index + 1 };
+    }
+  }
+  throw Error('Invalid historical files field');
+}
+
+function validateRetainedFile(context, binding, file) {
+  const prefix = `openspec/changes/${binding.changeName}/`;
+  const scaffolding = [
+    { path: `${prefix}.openspec.yaml`, content: context.productChange.schemaPin },
+    { path: `${prefix}product-change/change.md`, content: '---\nid: CHG-COMPOSITION-CHECK\nstatus: draft\n---\n' },
+    { path: `${prefix}product-change/proposed/composition-check.md`, content: 'Text' },
+  ];
+  const candidateFile = { path: file.path, content: file.content, ...(file.mode !== undefined ? { mode: file.mode } : {}) };
+  validateProductChangeFiles([...scaffolding.filter(item => item.path !== file.path), candidateFile], { changeName: binding.changeName });
+  return candidateFile;
+}
+
 function artifactId(file) {
   if (!file.path.includes('/product-change/proposed/')) return null;
   let id;
@@ -102,14 +132,7 @@ function inventory(context) {
       text(file.content);
       if (!hex.test(file.sha256 ?? '') || hash(file.content) !== file.sha256) throw Error('Missing or changed retained content hash');
       // Reuse the complete candidate validator for every path/type/mode, even omitted objects.
-      const prefix = `openspec/changes/${binding.changeName}/`;
-      const scaffolding = [
-        { path: `${prefix}.openspec.yaml`, content: context.productChange.schemaPin },
-        { path: `${prefix}product-change/change.md`, content: '---\nid: CHG-COMPOSITION-CHECK\nstatus: draft\n---\n' },
-        { path: `${prefix}product-change/proposed/composition-check.md`, content: 'Text' },
-      ];
-      const candidateFile = { path: file.path, content: file.content, ...(file.mode !== undefined ? { mode: file.mode } : {}) };
-      validateProductChangeFiles([...scaffolding.filter(item => item.path !== file.path), candidateFile], { changeName: binding.changeName });
+      const candidateFile = validateRetainedFile(context, binding, file);
       if (seen.has(file.path)) throw Error('Duplicate retained path');
       seen.add(file.path);
       const size = Buffer.byteLength(file.content);
@@ -152,22 +175,27 @@ export function currentRetainedInventory(context) {
   };
 }
 
-// Aliases prove byte equality only. They never enter revision selection or composition.
+// Audit bindings prove historical bytes only. They never enter revision selection or composition.
 export function bindRetainedCopies(context, copies) {
   const data = inventory(context);
-  const inventories = new Set([...data.paths.values()].flatMap(objects => objects.map(item => item.ref.source)));
   const seenInventories = new Map();
   let references = data.references;
   const recover = detail => Error(`Unbound or ambiguous historical document copy (${detail}); supply an explicitly bound retained draft with exact path/content/hash and revision`);
   return copies.map(copy => {
-    inventories.add(copy.inventory);
-    if (inventories.size > 8) throw Error('Retained document inventory exceeds bounds');
+    const location = /^(issue\.body|issue\.ownerAnswers\[(\d+)\]\.body)#(json|markdown)-(\d+)$/.exec(copy.source);
+    const body = location?.[1] === 'issue.body' ? context.issue?.body : context.issue?.ownerAnswers?.[Number(location?.[2])]?.body;
+    if (!location || typeof body !== 'string' || Boolean(copy.markdown) !== (location[3] === 'markdown')) throw recover(`${copy.source}: missing authenticated source`);
+    const blocks = [...body.matchAll(copy.markdown ? historicalMarkdown : /^```json[ \t]*\r?\n([\s\S]*?)^```[ \t]*\r?$/gm)];
+    const block = (copy.markdown ? blocks.filter(match => match[1].startsWith(`openspec/changes/${data.binding.changeName}/`)) : blocks)[Number(location[4])];
+    const original = block && (copy.markdown ? [{ path: block[1], content: block[2] }] : parseCompositionJson(block[1]).files);
+    if (!isDeepStrictEqual(original, copy.files)) throw recover(`${copy.source}: changed source; sha256=${hash(JSON.stringify(copy.files))}`);
     if (!Array.isArray(copy.files) || !copy.files.length || copy.files.length > PRODUCT_FILE_LIMITS.files) throw recover(copy.source);
     const seen = seenInventories.get(copy.inventory) ?? new Set();
     seenInventories.set(copy.inventory, seen);
     const files = copy.files.map((file, index) => {
       exact(file, ['path', 'content', ...(Object.hasOwn(file ?? {}, 'mode') ? ['mode'] : []), ...(Object.hasOwn(file ?? {}, 'sha256') ? ['sha256'] : [])], 'historical file');
-      text(file.content);
+      try { text(file.content); validateRetainedFile(context, data.binding, file); } catch { throw recover(`${copy.source} files[${index}]: unsafe path/content/mode`); }
+      if (file.sha256 !== undefined && (!hex.test(file.sha256) || file.sha256 !== hash(file.content))) throw recover(`${copy.source} files[${index}]: changed hash; sha256=${hash(file.content)}`);
       if (seen.has(file.path)) throw recover(`duplicate path in ${copy.source}`);
       seen.add(file.path);
       if (seen.size > PRODUCT_FILE_LIMITS.files) throw recover(`file inventory in ${copy.source}`);
@@ -175,8 +203,10 @@ export function bindRetainedCopies(context, copies) {
       const contents = copy.markdown && file.content.endsWith('\n') ? [file.content, file.content.slice(0, -1)] : [file.content];
       if (copy.markdown && file.content.endsWith('\r\n')) contents.push(file.content.slice(0, -2));
       const matches = (data.paths.get(file.path) ?? []).filter(item => contents.includes(item.file.content) && (item.file.mode ?? '100644') === (file.mode ?? '100644') && (file.sha256 === undefined || file.sha256 === item.ref.sha256));
-      if (!matches.length || new Set(matches.map(item => item.ref.sha256)).size !== 1) throw recover(`${copy.source} files[${index}]: no unique validated path/content/mode/hash identity`);
-      return { path: file.path, sha256: matches[0].ref.sha256, sources: matches.map(item => item.ref.source) };
+      if (new Set(matches.map(item => item.ref.sha256)).size > 1) throw recover(`${copy.source} files[${index}]: ambiguous retained bytes; sha256=${hash(file.content)}`);
+      const content = matches[0]?.file.content ?? file.content;
+      return { path: file.path, sha256: hash(content), sources: matches.map(item => item.ref.source), historicalOnly: !matches.length,
+        audit: { source: copy.source, fileIndex: index, sha256: hash(file.content), bytes: Buffer.byteLength(file.content), extraction: copy.markdown ? 'fenced-body' : 'files-content' } };
     });
     return { source: copy.source, files };
   });

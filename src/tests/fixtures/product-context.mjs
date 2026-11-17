@@ -31,3 +31,21 @@ export function productContextFixture({ baselineDigest = '4'.repeat(64) } = {}) 
   context.contract = { rules: 'Preserve original authority.' };
   return { ...fixture, repeated };
 }
+
+export function combinedHistoryFixture(options) {
+  const fixture = productContextFixture(options);
+  const { context, draft, files } = fixture;
+  for (let i = 0; i < 3; i++) context.issue.ownerAnswers.push({ body: `Typed shard decision ${i}.\n${embedDraft({ ...draft, revision: i + 3, files: draft.files.slice(i * 16, (i + 1) * 16) })}` });
+  for (let i = 0; i < 9; i++) context.issue.ownerAnswers.push({ body: `Alias decision ${i}.\n${embedLiteralFiles([files[3]])}` });
+  const metadata = { sourceRun: 'synthetic-history', sourceRevision: 'a'.repeat(40), status: 'unapproved', remainingObligations: ['Keep this obligation.', { decision: 'Do not infer approval.', nested: { files: ['unrelated metadata'] } }] };
+  const mixedIndex = context.issue.ownerAnswers.length;
+  context.issue.ownerAnswers.push({ body: `Preserve this decision.\n${embedDraft({ ...metadata, files })}Preserve the later decision.` });
+  const olderFiles = [
+    { ...files[3], content: 'Distinct older text.\n', sha256: hash('Distinct older text.\n') },
+    { ...files[3], path: files[3].path.replace('.md', '-historical.md'), content: 'Unique older path.\n' },
+  ];
+  context.issue.ownerAnswers.push({ body: embedDraft({ files: olderFiles, remainingObligations: ['Keep older obligations.'] }) });
+  const markdownFile = { ...files[4], content: 'Distinct older Markdown text.\n' };
+  context.issue.ownerAnswers.push({ body: `Keep the Markdown obligation.\n${embedMarkdownFile(markdownFile)}Keep the last obligation.\n${embedMarkdownFile(files[5])}` });
+  return { ...fixture, metadata, mixedIndex, olderFiles, markdownFile };
+}

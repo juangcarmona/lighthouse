@@ -11,7 +11,7 @@ Evidence selection rejects admitted retained drafts because it measures repeated
 - Select provider evidence through a deterministic, bounded artifact-reference projection, without raising the existing scope limit.
 - Present one current reference per retained path, with exact source, revision and hash provenance; retrieve bodies through existing read-only inspection.
 - Preserve decision prose and the complete original authenticated context as read-only audit evidence. Do not infer decision supersession from comment order.
-- Replace historical literal JSON inventories and recoverable path-headed Markdown copies only after exact binding to validated retained objects; refuse unbound or ambiguous copies without assigning them revision authority.
+- Project validated historical JSON document fields and path-headed Markdown copies using exact authenticated audit source/hash bindings, preserving every surrounding metadata value and decision. Exact aliases do not consume typed declaration slots; older distinct texts remain historical-only, never current or composable.
 - Keep candidate validation, exhaustive composition selections, approval, apply and publication gates unchanged.
 
 ## Capabilities
