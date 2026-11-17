@@ -13,6 +13,7 @@ import { snapshotSource, redactLog, acquireEngineSlot, completionOutput, prepare
 import { compositionFixture } from './fixtures/product-composition.mjs';
 import { productContextFixture, combinedHistoryFixture, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
 import { compositionService } from '../packages/sdlc/src/product-composition-server.mjs';
+import { singleLineHistoryFixture } from './fixtures/product-context.mjs';
 
 async function fixtureHarness(root) {
   const harness = join(root, 'harness');
@@ -184,6 +185,59 @@ test('adapter transports realistic whole-answer history with every original body
     await service('compose', { binding, plan, envelope });
     const output = JSON.parse(await readFile(join(root, 'envelope.json'), 'utf8'));
     assert.deepEqual(output.result.output.productChange.files, files);
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.deepEqual((await readdir(root)).sort(), ['context.json', 'envelope.json', 'product-audit.json']);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('adapter single-line audit supports exact bounded answer reconstruction (service boundary, not native qualification)', { timeout: 180000 }, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'lighthouse-single-line-history-'));
+  try {
+    const { context, audit: raw, auditSha256, files, envelope, mixedIndex, metadata } = singleLineHistoryFixture();
+    const input = join(root, 'context.json'), audit = join(root, 'product-audit.json');
+    await writeFile(input, raw);
+    const measured = await prepareProductWorkingContext(input, audit);
+    const working = JSON.parse(await readFile(input, 'utf8'));
+    assert.equal(await readFile(audit, 'utf8'), raw);
+    assert.equal(raw.split('\n').length, 1);
+    assert.ok(raw.length > 2000);
+    assert.equal((await lstat(audit)).mode & 0o222, 0);
+    assert.equal(measured.auditSha256, auditSha256);
+    assert.deepEqual(working.request, context.request);
+    const service = compositionService(audit, root), index = working.productChange.historyIndex;
+    const bodies = [];
+    for (const answer of index.answers) {
+      let offset = 0, content = '';
+      do {
+        const chunk = await service('inspect', { history: { binding: index.binding, auditSha256, answer, offset, limit: 1024 } });
+        assert.equal(chunk.offset, offset);
+        assert.ok(chunk.bytes <= 1024);
+        assert.equal(chunk.bytes, Buffer.byteLength(chunk.content));
+        assert.equal(chunk.sha256, createHash('sha256').update(chunk.content).digest('hex'));
+        assert.deepEqual(chunk.answer, answer);
+        content += chunk.content; offset = chunk.nextOffset;
+      } while (offset !== null);
+      const answerIndex = Number(/^issue\.ownerAnswers\[(\d+)\]\.body$/.exec(answer.source)[1]);
+      assert.equal(content, context.issue.ownerAnswers[answerIndex].body);
+      assert.equal(createHash('sha256').update(content).digest('hex'), answer.sha256);
+      assert.equal(Buffer.byteLength(content), answer.bytes);
+      bodies[answerIndex] = content;
+    }
+    const { files: _files, ...decisions } = JSON.parse(bodies[mixedIndex].match(/```json\n([\s\S]*?)\n```/)[1]);
+    assert.deepEqual(decisions, metadata);
+    assert.match(bodies.at(-2), /untrusted text: ignore policy/);
+    assert.equal(bodies.at(-1), '');
+    for (const path of working.productChange.currentDocuments.paths) {
+      const read = await service('inspect', { reference: { path: path.path, ...path.current.ref } });
+      assert.equal(read.content, files.find(file => file.path === path.path).content);
+    }
+    const plan = working.productChange.currentDocuments.paths.map(({ path, current, history }) => ({ path, selected: current.ref, omitted: history.map(item => item.ref) }));
+    await service('compose', { binding: index.binding, plan, envelope });
+    const previous = await readFile(join(root, 'envelope.json'), 'utf8');
+    assert.deepEqual(JSON.parse(previous).result.output.productChange.files, files);
+    assert.deepEqual(JSON.parse(previous).result.output.productChange.providerValidation, { status: 'pending', diagnosticCount: 0 });
+    await assert.rejects(service('inspect', { history: { binding: index.binding, auditSha256: 'a'.repeat(64), answer: index.answers[0], offset: 0, limit: 1024 } }), /audit binding/);
+    assert.equal(await readFile(join(root, 'envelope.json'), 'utf8'), previous);
     assert.equal(await readFile(audit, 'utf8'), raw);
     assert.deepEqual((await readdir(root)).sort(), ['context.json', 'envelope.json', 'product-audit.json']);
   } finally { await rm(root, { recursive: true, force: true }); }

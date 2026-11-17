@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { productContextFixture, combinedHistoryFixture, embedDraft, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
+import { productContextFixture, combinedHistoryFixture, singleLineHistoryFixture, embedDraft, embedLiteralFiles, embedMarkdownFile } from './fixtures/product-context.mjs';
 import { hash } from './fixtures/product-composition.mjs';
-import { productWorkingContext } from '../packages/sdlc/src/product-context.mjs';
+import { productWorkingContext, inspectRetainedAnswer } from '../packages/sdlc/src/product-context.mjs';
 import { bindRetainedCopies, currentRetainedInventory, retainedInventory, composeRetainedProduct, historicalMarkdown } from '../packages/sdlc/src/product-composition.mjs';
 import { productEvidenceScopeText } from '../packages/sdlc/src/product-change.mjs';
 
@@ -404,6 +404,10 @@ test('overflow-only whole-answer transport preserves exhaustive combined history
   assert.match(working.issue.body, /^Keep the original unique requirement FR-ONE\./);
   assert.match(history.authority, /unread, not reviewed/);
   assert.match(working.contract.rules, /inspect its decisions before resolving relevant product decisions/);
+  assert.match(working.contract.rules, /productcomposition_inspect with the exclusive history argument/);
+  assert.match(working.contract.rules, /follow nextOffset sequentially until null/);
+  assert.match(working.contract.rules, /verify the whole body SHA-256\/UTF-8 byte count/);
+  assert.match(working.contract.rules, /Do not rely on a line-limited read/);
   assert.equal(new Set(history.answers.map(reference => reference.source)).size, history.answers.length);
   for (const [i, answer] of context.issue.ownerAnswers.entries()) {
     const { body: _originalBody, ...metadata } = answer, { body: _workingBody, ...workingMetadata } = working.issue.ownerAnswers[i];
@@ -472,4 +476,59 @@ test('whole-answer references share the unchanged typed and historical reference
   assert.equal(productWorkingContext(context).productChange.historyIndex.answers.length, 64);
   context.issue.ownerAnswers.push({ body: 'One more exact answer.' });
   assert.throws(() => productWorkingContext(context), /reference inventory exceeds bounds including whole-answer/);
+});
+
+test('bounded answer inspection reconstructs exact decoded UTF-8 from a single-line audit without promoting history', () => {
+  const { context, audit, auditSha256, decisionStart, olderFiles } = singleLineHistoryFixture();
+  const working = productWorkingContext(context, auditSha256), index = working.productChange.historyIndex;
+  assert.equal(audit.split('\n').length, 1);
+  assert.ok(audit.length > 2000);
+  const answer = index.answers.find(ref => ref.source === `issue.ownerAnswers[${decisionStart}].body`);
+  const history = { binding: index.binding, auditSha256, answer, offset: 0, limit: 1024 };
+  let content = '', offset = 0;
+  do {
+    const chunk = inspectRetainedAnswer(context, auditSha256, { ...history, offset });
+    assert.equal(chunk.offset, offset);
+    assert.deepEqual(chunk.answer, answer);
+    assert.equal(chunk.auditSha256, auditSha256);
+    assert.equal(chunk.bytes, Buffer.byteLength(chunk.content));
+    assert.ok(chunk.bytes <= 1024);
+    assert.equal(chunk.sha256, hash(chunk.content));
+    assert.equal(Buffer.from(chunk.content).toString('utf8'), chunk.content);
+    content += chunk.content;
+    if (chunk.nextOffset !== null) assert.equal(chunk.nextOffset, offset + chunk.bytes);
+    offset = chunk.nextOffset;
+  } while (offset !== null);
+  assert.equal(content, context.issue.ownerAnswers[decisionStart].body);
+  assert.equal(hash(content), answer.sha256);
+  assert.equal(Buffer.byteLength(content), answer.bytes);
+  assert.ok(!working.productChange.currentDocuments.paths.some(item => item.path === olderFiles[1].path));
+  assert.deepEqual(productWorkingContext(context, auditSha256), working);
+  assert.equal(JSON.stringify(context), audit);
+});
+
+test('answer inspection refuses split Unicode, stale bindings, unindexed bodies and original bound violations', () => {
+  const { context, auditSha256 } = singleLineHistoryFixture();
+  const index = productWorkingContext(context, auditSha256).productChange.historyIndex;
+  const answer = index.answers.at(-2), body = context.issue.ownerAnswers.at(-2).body;
+  const history = { binding: index.binding, auditSha256, answer, offset: 0, limit: 1024 };
+  const unicodeOffset = Buffer.byteLength(body.slice(0, body.indexOf('λ')));
+  assert.throws(() => inspectRetainedAnswer(context, auditSha256, { ...history, offset: unicodeOffset + 1 }), /offset splits UTF-8/);
+  assert.throws(() => inspectRetainedAnswer(context, auditSha256, { ...history, offset: unicodeOffset, limit: 1 }), /limit splits UTF-8/);
+  assert.equal(inspectRetainedAnswer(context, auditSha256, { ...history, offset: unicodeOffset, limit: 2 }).content, 'λ');
+  assert.equal(inspectRetainedAnswer(context, auditSha256, { ...history, offset: unicodeOffset + 2, limit: 4 }).content, '😀');
+  assert.equal(inspectRetainedAnswer(context, auditSha256, { ...history, offset: answer.bytes }).nextOffset, null);
+  const small = combinedHistoryFixture().context;
+  assert.throws(() => inspectRetainedAnswer(small, auditSha256, { ...history, binding: currentRetainedInventory(small).binding }), /Unknown indexed answer/);
+  for (const mutate of [
+    f => { f.context.issue.ownerAnswers.push({ body: 'x'.repeat(2 * 1024 * 1024) }); },
+    f => { f.context.contract.rules += 'x'.repeat(256 * 1024); },
+    f => { f.context.issue.ownerAnswers[0].body = embedDraft({ ...f.repeated, revision: 1 }); },
+    f => { f.context.issue.ownerAnswers.push({ body: '\ud800' }); },
+  ]) {
+    const f = singleLineHistoryFixture(); mutate(f);
+    const before = JSON.stringify(f.context);
+    assert.throws(() => inspectRetainedAnswer(f.context, f.auditSha256, history));
+    assert.equal(JSON.stringify(f.context), before);
+  }
 });

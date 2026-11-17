@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { retainedInventory, composeRetainedProduct, parseCompositionJson, currentRetainedInventory } from '../packages/sdlc/src/product-composition.mjs';
-import { productContextFixture } from './fixtures/product-context.mjs';
+import { productContextFixture, singleLineHistoryFixture } from './fixtures/product-context.mjs';
+import { productWorkingContext } from '../packages/sdlc/src/product-context.mjs';
 import { compositionFixture, hash } from './fixtures/product-composition.mjs';
 import { compositionService, compositionRpc, runCompositionServer, compositionTools } from '../packages/sdlc/src/product-composition-server.mjs';
 import { configureProductCompositionWorker } from '../packages/sdlc/src/product-composition-runtime.mjs';
@@ -324,4 +325,114 @@ test('runtime projection exposes only the two named tools and preserves existing
   assert.deepEqual(config.permissions.slice(-2).map(item => item.action), compositionTools.map(tool => `productcomposition_${tool.name}`));
   assert.throws(() => configureProductCompositionWorker({}), /Unsupported OpenCode/);
   assert.throws(() => configureProductCompositionWorker(config), /Conflicting/);
+});
+
+test('MCP supported protocol metadata is inert and separate from strict tool arguments (synthetic, not a native wire capture)', async () => {
+  const calls = [], rpc = compositionRpc(async (name, args) => { calls.push({ name, args }); return { synthetic: true }; });
+  const request = { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'inspect', arguments: {} } };
+  const plain = await rpc(request);
+  for (const progressToken of ['synthetic-progress', 0, 123]) {
+    const response = await rpc({ ...request, params: { ...request.params, _meta: { progressToken } } });
+    assert.deepEqual(response, plain);
+    assert.deepEqual(calls.at(-1), { name: 'inspect', args: {} });
+  }
+  assert.deepEqual(await rpc({ ...request, params: { name: 'inspect', _meta: {} } }), plain);
+  for (const protocolVersion of ['2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25']) {
+    const initialized = await rpc({ jsonrpc: '2.0', id: 'init', method: 'initialize', params: { protocolVersion, capabilities: {}, clientInfo: { name: 'synthetic-client', version: '1' } } });
+    assert.equal(initialized.result.protocolVersion, protocolVersion);
+  }
+  assert.equal((await rpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: 'unknown-future' } })).result.protocolVersion, '2024-11-05');
+  assert.equal(await rpc({ jsonrpc: '2.0', method: 'notifications/initialized' }), null);
+  for (const method of ['tools/list', 'ping']) assert.ok((await rpc({ jsonrpc: '2.0', id: 1, method, params: { _meta: { progressToken: 'inert' } } })).result);
+  const before = calls.length;
+  for (const invalid of [
+    null, [], { ...request, jsonrpc: '1.0' }, { ...request, id: null }, { ...request, id: {} }, { ...request, id: NaN },
+    { ...request, method: null }, { ...request, command: 'unsupported' }, { ...request, _meta: {} },
+    ...[null, [], 'inspect', {}, { name: 'shell', arguments: {} }, { ...request.params, extra: true }, { ...request.params, arguments: null }, { ...request.params, arguments: [] }].map(params => ({ ...request, params })),
+    ...[null, [], 'token', { unknown: true }, { progressToken: null }, { progressToken: {} }, { progressToken: false }, { progressToken: Infinity }, { progressToken: 'ok', arguments: { approval: true } }].map(_meta => ({ ...request, params: { ...request.params, _meta } })),
+    { jsonrpc: '2.0', id: 1, method: 'tools/list', params: { cursor: 'unsupported' } },
+    { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: 1 } },
+    { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', extra: true } },
+    { jsonrpc: '2.0', method: 'notifications/initialized', params: { command: 'unsupported' } },
+    { jsonrpc: '2.0', method: 'notifications/unknown' },
+  ]) assert.ok((await rpc(invalid)).error, JSON.stringify(invalid));
+  assert.equal(calls.length, before);
+});
+
+test('owner-captured pinned-client metadata shape is inert (synthetic session, not native qualification)', async () => {
+  const calls = [], rpc = compositionRpc(async (name, args) => { calls.push({ name, args }); return { synthetic: true }; });
+  const request = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'inspect', arguments: {}, _meta: { 'ai.opencode/sessionID': 'ses_synthetic_redacted', progressToken: 2 } } };
+  const plain = await rpc({ ...request, params: { name: 'inspect', arguments: {} } });
+  for (const _meta of [request.params._meta, { 'ai.opencode/sessionID': 'ses_synthetic_other' }, { 'ai.opencode/sessionID': '' }]) {
+    assert.deepEqual(await rpc({ ...request, params: { ...request.params, _meta } }), plain);
+    assert.deepEqual(calls.at(-1), { name: 'inspect', args: {} });
+  }
+  const before = calls.length;
+  for (const _meta of [
+    ...[null, false, 2, {}, [], undefined].map(value => ({ 'ai.opencode/sessionID': value, progressToken: 2 })),
+    { ...request.params._meta, unknown: true },
+    { ...request.params._meta, progressToken: null },
+    { ...request.params._meta, binding: { approved: true } },
+  ]) {
+    const response = await rpc({ ...request, params: { ...request.params, _meta } });
+    assert.equal(response.error.code, -32602);
+    assert.equal(response.error.message, 'Unsupported composition request metadata');
+  }
+  assert.equal(calls.length, before);
+});
+
+test('existing inspection retrieves bound indexed answer chunks from the raw single-line audit and refuses atomically', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'composition-history-'));
+  try {
+    const { context, audit, auditSha256, envelope } = singleLineHistoryFixture();
+    const input = join(root, 'audit.json'), output = join(root, 'output'); await mkdir(output);
+    await writeFile(input, audit); await writeFile(join(output, 'envelope.json'), 'Prior output');
+    const working = productWorkingContext(context, auditSha256), index = working.productChange.historyIndex;
+    const service = compositionService(input, output), rpc = compositionRpc(service);
+    const call = args => rpc({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'inspect', arguments: args, _meta: { progressToken: 'synthetic', 'ai.opencode/sessionID': 'ses_synthetic_redacted' } } });
+    const catalog = JSON.parse((await call({})).result.content[0].text);
+    assert.equal(catalog.measured.bytes, 276250);
+    assert.deepEqual(catalog.binding, index.binding);
+    const answer = index.answers.at(-2);
+    const history = { binding: index.binding, auditSha256, answer, offset: 0, limit: 1024 };
+    const chunk = JSON.parse((await call({ history })).result.content[0].text);
+    assert.equal(chunk.content, context.issue.ownerAnswers.at(-2).body);
+    assert.equal(chunk.nextOffset, null);
+    assert.equal(hash(chunk.content), answer.sha256);
+    assert.equal(chunk.bytes, answer.bytes);
+    const empty = await service('inspect', { history: { ...history, answer: index.answers.at(-1) } });
+    assert.equal(empty.content, ''); assert.equal(empty.nextOffset, null); assert.equal(empty.bytes, 0);
+    for (const invalid of [
+      null, [], { ...history, extra: true }, { ...history, auditSha256: 'a'.repeat(64) },
+      ...Object.keys(index.binding).map(key => ({ ...history, binding: { ...history.binding, [key]: 'stale' } })),
+      ...[{ source: '/arbitrary/path' }, { source: 'issue.body' }, { source: 'issue.ownerAnswers[01].body' }, { source: 'issue.ownerAnswers[99].body' }, { sha256: 'a'.repeat(64) }, { bytes: answer.bytes + 1 }, { extra: true }].map(change => ({ ...history, answer: { ...answer, ...change } })),
+      ...[-1, 0.5, answer.bytes + 1, '0'].map(offset => ({ ...history, offset })),
+      ...[0, -1, 1025, 1.5, '1024'].map(limit => ({ ...history, limit })),
+    ]) {
+      assert.ok((await call({ history: invalid })).error);
+      assert.equal(await readFile(input, 'utf8'), audit);
+      assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), 'Prior output');
+    }
+    for (const args of [{ history, reference: {} }, { history, path: input }, { history, command: 'untrusted' }, { history: { ...history, binding: { ...history.binding, approved: true } } }]) assert.ok((await call(args)).error);
+    // Whitespace changes the raw audit digest even when decoded context is unchanged.
+    await writeFile(input, JSON.stringify(context, null, 2));
+    assert.match((await call({ history })).error.message, /audit binding/);
+    await writeFile(input, audit);
+    const args = argumentsFor(context, envelope);
+    await service('compose', args);
+    const previous = await readFile(join(output, 'envelope.json'), 'utf8');
+    assert.deepEqual(JSON.parse(previous).result.output.productChange.providerValidation, { status: 'pending', diagnosticCount: 0 });
+    const rejected = await rpc({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'compose', arguments: args, _meta: { progressToken: {} } } });
+    assert.ok(rejected.error);
+    assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), previous);
+    assert.equal(await readFile(input, 'utf8'), audit);
+    assert.deepEqual(await readdir(output), ['envelope.json']);
+    for (const session of [null, false, 2, {}, []]) {
+      const response = await rpc({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'compose', arguments: args, _meta: { progressToken: 2, 'ai.opencode/sessionID': session } } });
+      assert.equal(response.error.code, -32602);
+      assert.equal(await readFile(join(output, 'envelope.json'), 'utf8'), previous);
+      assert.equal(await readFile(input, 'utf8'), audit);
+      assert.deepEqual(await readdir(output), ['envelope.json']);
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
