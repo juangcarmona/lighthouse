@@ -52,3 +52,23 @@ Qualified delegated integrations retain full `head` and `merge`, a `lighthouse.i
 | Active human effort, personal productivity, health scores and automatic policy tuning | Excluded |
 
 The [research inventory](../../../docs/roadmap/engineering-measurement-research.md) remains historical context. The executable definitions and deterministic cases govern this bounded report; the original proposed fixtures do not authenticate sources or establish live outcomes. No benchmark, scheduler, service, database, cross-repository crawler or policy automation is introduced.
+
+## Read GitHub and render offline
+
+The optional collector uses GET requests for one explicitly named repository and UTC window. Use a read-only credential with Contents/read, Issues/read, Pull requests/read and Actions/read. It retains selected provider fields, content identities, retrieval times, run/attempt lineage, artifact observations and exact collection gaps. It stores no issue bodies, transcripts or raw logs. Worker assessments retain their declared meaning; they never become acceptance or integration authority.
+
+```sh
+lighthouse-sdlc measurements collect --repo owner/repo --start 2026-01-01T00:00:00Z --end 2026-02-01T00:00:00Z --output frozen.json
+lighthouse-sdlc measurements derive --input frozen.json --output metrics.json
+lighthouse-sdlc measurements render --input frozen.json --output report.html
+```
+
+Only `collect` needs `GH_TOKEN`. `derive` and `render` use the frozen bytes without credentials or network access. Output files are exclusive creations; retain each collection separately and rerender to another path when comparing bytes. Identical frozen input and implementation produce byte-identical output. There is no resume cursor or scheduler; retrying a collection creates a new observation, and logical source identity prevents duplicates within its derivation.
+
+Default bounds are two pages per inventory, 20 issues, 20 PRs, 20 runs, three attempts per run and 200 read requests. Set `--max-pages`, `--max-issues`, `--max-prs`, `--max-runs` or `--max-requests` explicitly for a different bounded sample. `--workflows file.lock.yml,other.lock.yml` selects at most eight repository workflow files. Selection and truncation remain visible; a selected population is never described as exhaustive repository coverage. Human interaction collection covers the selected issue/PR cohorts and explicitly linked PRs; other work-item interactions remain a population gap.
+
+The collector reads issue timelines for explicit same-repository PR relations, current PR details, comments/reviews, run attempts, native jobs and the exact agent wrapper step. It reads existing bounded result and telemetry JSON artifacts through the shared archive reader. Source denial, invalid or partial inventories, pagination/request limits, expired artifacts and incompatible payloads remain named gaps. A workflow success can retain a blocked assessment, and a failed publication remains a native failure independently of the worker's result.
+
+Stage blocking cause uses an explicit handoff where present; prose is never parsed into human waiting. The current collector leaves human waiting, delegated integration and reversal collections unavailable because it does not run their independent source-verification adapters. Their metric definitions remain supported for qualified retained observations supplied by an owning adapter. Billing, deployment, provider confirmation, incident rates, active effort and delivery acceptance also retain their independent source boundaries.
+
+The self-contained HTML report includes formulas, status, numerator/denominator, N/M coverage, censoring, content/revision identities, source links, collection gaps and operator findings. It escapes source prose, restricts active links to the selected GitHub repository and uses a content policy that permits no scripts, forms or network calls. The renderer inlines the pinned Lighthouse UI token stylesheet during generation; appearance follows the system theme without an asset request. It contains no browser token or action controls. Publishing or scheduling the report remains an explicit operator action; ordinary collection does neither.

@@ -4,7 +4,7 @@ import { validatePublishable } from './process-publication.mjs';
 export const measurementVersion = 1;
 export const stableJson = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 export const measurementHash = value => createHash('sha256').update(stableJson(value)).digest('hex');
-const finite = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const finite = value => Number.isSafeInteger(value) && value >= 0;
 const instant = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const fullSha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const identity = value => Number.isSafeInteger(value) && value > 0;
@@ -35,7 +35,7 @@ function validSource(record, repository) {
   if (!source || source.repositoryId !== repository.id || typeof source.id !== 'string' || !source.id || !instant(source.observedAt) || source.sha256 !== measurementHash(record.data) || !(fullSha(source.revision) || /^sha256:[a-f0-9]{64}$/.test(source.revision ?? ''))) return false;
   try {
     const url = new URL(source.url);
-    return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash && (url.hostname === 'github.com' && url.pathname.startsWith(`/${repository.fullName}/`) || url.hostname === 'api.github.com' && url.pathname.startsWith(`/repos/${repository.fullName}/`));
+    return url.protocol === 'https:' && !url.username && !url.password && !url.search && (!url.hash || /^#(?:issuecomment|pullrequestreview|event)-[1-9][0-9]*$/.test(url.hash)) && (url.hostname === 'github.com' && url.pathname.startsWith(`/${repository.fullName}/`) || url.hostname === 'api.github.com' && url.pathname.startsWith(`/repos/${repository.fullName}/`));
   } catch { return false; }
 }
 
@@ -111,7 +111,8 @@ export function deriveMeasurements(bundle) {
   const usableUsage = usage.filter(r => usable(r) && typeof r.data.invocationId === 'string' && r.data.invocationId && r.data.usageSource && r.data.authenticationRoute && r.data.identity && ['observed', 'incomplete', 'unavailable'].includes(r.data.coverage));
   const fieldCoverage = Object.fromEntries(fields.map(field => {
     const measured = usableUsage.filter(r => r.data.coverage !== 'unavailable' && finite(r.data[field]));
-    return [field, { value: measured.length ? measured.reduce((sum, r) => sum + r.data[field], 0) : null, measured: measured.length, eligible: usage.length, status: measured.length ? measured.length === usage.length && complete('usage') && measured.every(r => r.data.coverage === 'observed') ? 'measured' : 'incomplete' : 'unavailable' }];
+    const total = measured.reduce((sum, r) => sum + r.data[field], 0), representable = Number.isSafeInteger(total);
+    return [field, { value: measured.length && representable ? total : null, measured: measured.length, eligible: usage.length, status: measured.length && representable ? measured.length === usage.length && complete('usage') && measured.every(r => r.data.coverage === 'observed') ? 'measured' : 'incomplete' : 'unavailable' }];
   }));
   metric('model.token-usage.v1', 'usage', usage, usableUsage.filter(r => fields.some(field => finite(r.data[field])) && r.data.coverage !== 'unavailable'), null, usage.length, { fields: fieldCoverage, identities: usableUsage.map(r => ({ id: r.id, ...r.data.identity, authenticationRoute: r.data.authenticationRoute, usageSource: r.data.usageSource })), actualBilledCost: null, billableOutputTokens: null });
   const usageMetric = metrics.at(-1);
