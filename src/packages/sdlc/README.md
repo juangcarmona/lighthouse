@@ -4,6 +4,8 @@ For optional worker command presentation, see [compact output and complete diagn
 
 For original intent, source decisions and affected instruction evidence, see [change continuity](change-continuity.md). New implementation admissions require that assessment; unresolved guidance conflicts need their named owner before completion.
 
+Final reviews use [verified process guard dispositions](process-guards.md) to separate demonstrated guards, unqualified proposals and reasoned no-guard outcomes, retaining their evidence and maintenance owner.
+
 Use GitHub labels to request work. The router authenticates the owner, dispatches one worker and publishes its result. Installed policy can continue delivery automatically; questions, `future`, human reservations and required approvals stop it.
 
 ## Check the installed version first
