@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.30.1
+
+### Patch Changes
+
+- 6541616: # Keep informational issue comments quiet
+
+  Avoid blocked replies and acknowledgement reactions when an issue comment requests no continuation. Preserve feedback for answers to pending questions that cannot proceed, stage labels and PR review requests.
+
 ## 0.30.0
 
 ### Minor Changes
