@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile, open, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,42 @@ async function until(read) {
   for (let i = 0; i < 100; i++) { try { const value = await read(); if (value) return value; } catch {} await wait(20); }
   throw Error('Command did not reach the expected state');
 }
+
+test('caller redirection to the managed live log retains output once and completes the real command', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'lighthouse-same-log-'));
+  try {
+    const handle = await open(join(directory, 'install.log'), 'w');
+    let result;
+    try {
+      result = spawnSync(process.execPath, [script, 'run', directory, 'install', '--', process.execPath, '-e', 'console.log("stdout retained");console.error("stderr retained");process.exitCode=7'], { env: { ...process.env, LIGHTHOUSE_COMMAND_PROGRESS_ROOT: directory }, stdio: ['ignore', handle.fd, handle.fd], timeout: 2000, killSignal: 'SIGKILL' });
+    } finally { await handle.close(); }
+    assert.equal(result.status, 7, result.error?.message);
+    const receipt = JSON.parse(await readFile(join(directory, 'install.json')));
+    assert.equal(receipt.state, 'completed'); assert.equal(receipt.exitCode, 7);
+    assert.equal(await readFile(join(directory, 'install.log'), 'utf8'), 'stdout retained\nstderr retained\n');
+    await assert.rejects(access(join(directory, '.active')), { code: 'ENOENT' });
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test('log setup failure preserves another file, settles its receipt and releases the slot for a new attempt', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'lighthouse-existing-log-'));
+  try {
+    await writeFile(join(directory, 'install.log'), 'Retain this original output.\n');
+    const env = { ...process.env, LIGHTHOUSE_COMMAND_PROGRESS_ROOT: directory };
+    const result = spawnSync(process.execPath, [script, 'run', directory, 'install', '--', process.execPath, '-e', 'console.log("command executed")'], { env, encoding: 'utf8' });
+    assert.equal(result.status, 125); assert.match(result.stderr, /setup failed \(EEXIST\)/);
+    assert.ok(!result.stdout.includes('command executed'));
+    const receipt = JSON.parse(await readFile(join(directory, 'install.json')));
+    assert.equal(receipt.state, 'completed'); assert.equal(receipt.exitCode, 125);
+    assert.deepEqual(receipt.failure, { phase: 'setup', code: 'EEXIST' });
+    assert.equal(await readFile(join(directory, 'install.log'), 'utf8'), 'Retain this original output.\n');
+    await assert.rejects(access(join(directory, '.active')), { code: 'ENOENT' });
+    const next = spawnSync(process.execPath, [script, 'run', directory, 'install-retry', '--', process.execPath, '-e', 'console.log("retry executed")'], { env, encoding: 'utf8' });
+    assert.equal(next.status, 0, next.stderr); assert.match(next.stdout, /retry executed/);
+    assert.equal(JSON.parse(await readFile(join(directory, 'install-retry.json'))).state, 'completed');
+    assert.equal(JSON.parse(await readFile(join(directory, 'install.json'))).exitCode, 125);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
 
 test('workspace commands exclude overlap, retain exit status and stop their children', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'lighthouse-command-'));
