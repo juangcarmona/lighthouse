@@ -6,6 +6,8 @@ The accepted [process-evidence convention](process-evidence.md) delivers a repor
 
 ## Evidence at reconciliation
 
+This section and its gap table preserve the historical 2026-10-24 baseline. For current executable routes, use the [worker catalogue](../architecture/06-runtime-view/worker-catalogue.md) and [installed delivery guide](../../src/packages/sdlc/README.md). Historical Copilot/no-effect observations are not current package limitations.
+
 Inspected baseline: commit `434dfab`, Lighthouse `0.9.0`, SDLC `0.8.0`, 2026-10-24. Local work on other branches is not part of this baseline. The package is implemented; execution of its complete workflow in a clean consumer remains unproved here.
 
 | Gap | Evidence | Required outcome |
@@ -45,6 +47,6 @@ The architecture accepted by the maintainer on 2026-10-24 keeps the existing pro
 
 The maintainer accepted the two-entry direction on 2026-10-24; [ADR-0008](../architecture/09-architecture-decisions/0008-separate-entry-and-autonomy.md) records it. [CHG-AUTHORIZED-WORKFLOW-ENTRY-001](../product/changes/completed/chg-authorized-workflow-entry-001/change.md) proposes the product correction. This revision replaces mandatory triage as the entry for every actor and repeated human stops as the only progression model. It preserves required evidence and separately authorized integration.
 
-The current host contract remains schema 1, supervised, triage/refine only, with comment publication. Its `refine` request requires an approved triage predecessor. The declared unattended route still contains supervised human gates. Those are migration gaps, not the intended two-entry behavior.
+At that reconciliation baseline, the host contract was schema 1, supervised, triage/refine only, with comment publication and an approved triage predecessor for refinement. Those historical migration gaps do not describe the later direct-entry, multi-stage and unattended implementations linked above. Installation, configured authority and current native evidence still determine which route an adopter can use.
 
 [OpenSpec delivery change](../../openspec/changes/authorized-workflow-entry/proposal.md) owns the implementation design, scenario matrix and ordered tasks for [#70](https://github.com/juangcarmona/lighthouse/issues/70). Product semantics remain in ProductShape. The first executable slice must prove direct authorized refinement through the shared decision contract and trusted host; it must not add another independently maintained command router. Later slices add requester intake and continuation, implementation with real OpenSpec artifacts and bounded PR correction, then separately authorized integration. Installation, fixture validation and live acceptance remain distinct evidence.

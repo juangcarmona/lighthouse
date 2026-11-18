@@ -25,4 +25,6 @@ The completed change has a durable review result, classified findings and a clea
 
 Compare the accepted work item, changed paths, integrated revision and authenticated post-merge checks. Preserve missing and pending evidence. Check instructions affected by the delivered change and report stale or conflicting guidance with file references; an intentional host-specific difference is not drift by itself.
 
+Apply [change continuity](../../change-continuity.md), compare the implementation's retained `instructionReview` with the integrated source and classify unresolved findings with their responsible owner. Product and architecture observations remain separate from approved decisions.
+
 Return `output.retrospective` as Markdown covering what went well, what went wrong, start doing, stop doing and improvement candidates. State when no finding was established. Each proposed improvement identifies the observed failure, supporting evidence, affected owner, smallest useful guard and how to reproduce the failure before checking the correction. Distinguish recurrence across work items from retries of one attempt. Do not invent attention-time or cost measurements. Changes to policy or provider-owned guidance require their own review; this stage only records the finding.

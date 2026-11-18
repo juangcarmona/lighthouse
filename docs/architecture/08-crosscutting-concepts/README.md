@@ -97,6 +97,10 @@ The UI package provides semantic tokens, native recipes and `DESIGN.md`; initial
 
 ## Execution, evidence and authority
 
+The shared [change-continuity module](../../../src/packages/sdlc/src/change-continuity.mjs) retains work-item/source provenance and pointers to original intent in supervised and unattended contexts. Existing task digests reject changed owner intent before publication. Newly admitted implementations must return a structured affected-instruction assessment; unresolved findings or a claimed source missing from the candidate fail completion. This validates the report and source existence; semantic agreement still depends on worker inspection and independent review. The [owning contract](../../../src/packages/sdlc/change-continuity.md) preserves provider repairs and legitimate host-specific projections.
+
+<!-- pdac:cite id="FR-AGENT-LAUNCH" digest="sha256:2946966231a67a946baebff078c4e61d79b5e47a385be0df9e842408887ceaa5" -->
+
 Three independent checks govern proposed host execution: the host validates operational authority, Lighthouse validates stage completion, and the publisher validates each external effect. A lease is not gate approval. A valid JSON result is not completion. A CI pass is not merge authorization. The publisher binds every write to the current source revision, policy and lease, then records an idempotent receipt.
 
 The initial adapter should grant the engine local workspace capabilities and model access only. Branch publication, issue edits and integration use narrowly scoped publisher credentials. Enforcement loads validators and policy from a pinned trusted installation outside the agent-writable checkout; edits to repository dependencies or workflow files cannot replace the validator for the active run. The adapter must demonstrate its own isolation, cancellation and egress controls; naming gh-aw in a workflow does not preserve gh-aw's controls after replacing its engine path.

@@ -24,8 +24,12 @@ Keep authorization and publication in separately credentialed Actions jobs. The 
 - Execution and failure are visible in the same Actions run as the triggering event.
 - A single machine can queue multiple worker types without a persistent service per type.
 - The subscription profile disables gh-aw's AWF agent sandbox and supplies Docker isolation instead. It lacks AWF egress filtering and credential proxying; the host remains trusted infrastructure.
-- Only refinement is enabled. Additional stage triggers, unattended composition and approval adapters require their own acceptance evidence.
+- At this decision's baseline, only refinement was enabled. Additional stage triggers, unattended composition and approval adapters required their own acceptance evidence.
 - GitHub artifacts expire according to retention settings. Permanent retrospectives remain a separate concern.
+
+## Later implementation
+
+The later [worker catalogue](../06-runtime-view/worker-catalogue.md) records the implemented multi-stage routes and their installation and activation boundaries. This historical decision does not limit the current package to refinement; native qualification and delivery acceptance remain specific to the installed source and execution.
 
 ## Alternatives considered
 

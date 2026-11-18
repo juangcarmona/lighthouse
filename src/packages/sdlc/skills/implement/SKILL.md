@@ -19,7 +19,7 @@ For user-facing view or interaction changes, read [visual evidence](../visual-ev
 2. Read `/harness/skills/propose/SKILL.md` for planning and use the supplied OpenSpec instructions to create or update the proposal, specifications, design and tasks before changing production code. This is the planning part of implementation; return one final implementation envelope. Keep tasks coarse and dependency ordered. Reuse existing planning work where it still applies.
 3. Implement the tasks, with tests that exercise the changed behavior. Follow the repository's architecture and allowed write scope.
 4. Run dependency installation, builds and tests through the workspace command slot below. Capture their completed exit status and evidence before marking tasks done.
-5. Write a short PR summary: what changed, how it was checked, and any blocker. Put logs, screenshots and the retrospective in the evidence output. Complete the audience policy's human-writing reviews and evidence comparison, using its explicit fallback when the pinned helper is unavailable.
+5. Apply [change continuity and instruction review](../../change-continuity.md), returning `output.instructionReview` when requested by the host. Write a short PR summary: what changed, how it was checked, and any blocker. Put logs, screenshots and the retrospective in the evidence output. Complete the audience policy's human-writing reviews and evidence comparison, using its explicit fallback when the pinned helper is unavailable.
 6. Return the implementation stage result and envelope. Keep missing evidence, failed checks and required decisions explicit. The host publishes the branch for review.
 
 ## Completion

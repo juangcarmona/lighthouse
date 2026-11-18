@@ -1,4 +1,5 @@
 import { loadEpicProductSource } from './epic-product-source.mjs';
+import { assertRetainedIntent } from './change-continuity.mjs';
 import { loadClientDispatch, clientDispatchRoute, checkClientContinuation, checkClientSnapshot } from './issue-control-native.mjs';
 import { parseIssueComment } from './issue-comment-intent.mjs';
 import { ownerIntentComments, collectTriageAdmission, collectProposalAdmission } from './issue-admission.mjs';
@@ -138,7 +139,7 @@ export function checkPublication(snapshot, issue, comments, revision) {
   if (issue.state !== 'open' || issue.pull_request || revision !== (snapshot.baseRevision ?? snapshot.sourceRevision)) throw Error('Issue closed or source revision changed');
   if (snapshot.productAlignment && issue.labels.some(x => x.name === 'future')) throw Error('Product alignment continuation was paused');
   if (issue.labels.some(x => x.name === 'human-working') || !issue.labels.some(x => x.name === 'agent-working')) throw Error('Execution reservation revoked');
-  if (taskDigest(issue, comments) !== snapshot.taskDigest) throw Error('Issue or owner answers changed; request refinement again');
+  assertRetainedIntent(snapshot, issue, comments);
 }
 
 export function checkImplementationPrInventory(pulls, snapshot, published = null, baseRevision) {
@@ -609,6 +610,7 @@ async function main(command) {
       if (synchronization) snapshot.sourceSynchronization = synchronization;
     }
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
+    if (stage === 'implement' && !productWorker) snapshot.instructionReview = 1;
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
     await output('source_revision', revision.sha);
@@ -616,7 +618,7 @@ async function main(command) {
     if (!productWorker && visualStages.has(stage)) { snapshot.visualEvidence = { schemaVersion: 1 }; snapshot.repositoryId = repository.id; }
     await writeFile(join(dir, 'request.json'), JSON.stringify(snapshot));
     if (seed) await writeFile(join(dir, 'seed.json'), JSON.stringify(seed));
-    await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ body: c.body, url: c.html_url, author: c.user.login })) }));
+    await writeFile(join(dir, 'issue.json'), JSON.stringify({ ...issue, ownerAnswers: answers.map(c => ({ id: c.id, updatedAt: c.updated_at, body: c.body, url: c.html_url, author: c.user.login })) }));
     const contract = fileURLToPath(new URL('./host-contract.mjs', import.meta.url));
     const context = JSON.parse(execFileSync(process.execPath, [contract, 'context', join(dir, 'request.json'), join(dir, 'issue.json')], { encoding: 'utf8' }));
     if (snapshot.visualEvidence) context.contract.rules += ' Assess whether this issue changes user-facing views or interaction states. Read /harness/skills/visual-evidence/SKILL.md and return output.visualEvidence for this stage. Use its inline HTML route for proposed designs in read-only planning; the host renders those without granting shell or source writes. Implementation captures must come from the actual running product and be stored under /output/evidence. Mark non-applicability with a concrete reason, or return blocked with the missing current-stage visual evidence. Images grant no approval.';
