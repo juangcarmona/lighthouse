@@ -1,0 +1,37 @@
+{
+  "kind": "clean public npm consumer",
+  "sourceRevision": "b8f63b0846bbc3368b429c8b28523b79834c7116",
+  "packages": [
+    {
+      "name": "@juangcarmona/lighthouse-sdlc",
+      "version": "0.29.0",
+      "gitHead": "b8f63b0846bbc3368b429c8b28523b79834c7116",
+      "integrity": "sha512-o7cWfFnF6pwd1vPRUI69hTvbeSDXZCVmJNY25dnkn8F8MeKbYaOq1oDefp/pWqik3AlHDsMcAc+FXnwYXSfk0A=="
+    },
+    {
+      "name": "@juangcarmona/lighthouse",
+      "version": "0.13.25",
+      "gitHead": "b8f63b0846bbc3368b429c8b28523b79834c7116",
+      "integrity": "sha512-tzHwAm1hXZ0Q56HeITQw1RfHuRtG8e6H32tZyM4YDTDZgf15jL/FLRRz8g5wY0O9bQj6K5h7FsH6tIkjYR84Gg=="
+    }
+  ],
+  "productVerifier": {
+    "package": "@prodshape/core",
+    "version": "0.25.0",
+    "provisionedSeparately": true,
+    "integrity": "sha512-tlP42CGVfi+/XAERDz2+kjgqqPf9Q/BXH3gaE9h6t/VNoFd/Eraqx959StH4UD7jP5h5l85AH7knOXeQ2XvQ3A=="
+  },
+  "testSummary": [
+    "# tests 25",
+    "# pass 25",
+    "# fail 0",
+    "# skipped 0"
+  ],
+  "aliases": "passed",
+  "packagedGuides": "all present",
+  "nativeModuleIdentity": {
+    "compact-output.mjs": "887b9fc13b253760825a31ef765fc8db3a4272e12f315c36b019acb0d3d3faf7",
+    "managed-command.mjs": "bd682c9dc4017ff564990e7f177713e91d74a588d8f88cd52725c2fc4d45ebb1"
+  },
+  "credentials": "absent from test execution environment"
+}

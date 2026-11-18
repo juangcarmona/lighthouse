@@ -1,6 +1,6 @@
 # Releasing Lighthouse
 
-Lighthouse publishes `@juangcarmona/lighthouse` and `@juangcarmona/lighthouse-ui` as public npm packages from the protected GitHub Actions workflow in `.github/workflows/release.yml`.
+Lighthouse publishes `@juangcarmona/lighthouse`, `@juangcarmona/lighthouse-sdlc` and `@juangcarmona/lighthouse-ui` as public npm packages from the protected GitHub Actions workflow in `.github/workflows/release.yml`.
 
 ## One-time first publication
 

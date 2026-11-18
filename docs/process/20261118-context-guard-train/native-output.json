@@ -1,0 +1,15 @@
+{
+  "kind": "actual-opencode-model-worker",
+  "source": "e9a924bf75943c451a5480f09d00a3bd82eae02e",
+  "harnessArchiveSha256": "995a4cabb3af99beb6c82cf25b820e16cfac6e9443bfdec2eb56188c0fbfbdb4",
+  "image": "sha256:7137c919fea5359bab538485306e7c091804fa527835fef88b510ee5fe291406",
+  "model": "openai/gpt-6.1-sol",
+  "rtkVersion": "1.2.0",
+  "compactStatus": "compacted",
+  "failingExit": 7,
+  "independentBefore": 7,
+  "independentAfter": 7,
+  "rawDiagnosticsRecoverable": true,
+  "fixtureUnchanged": true,
+  "deliveryAcceptance": "not asserted"
+}
