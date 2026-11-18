@@ -6,6 +6,9 @@ trap 'rm -rf "$validation_dir"' EXIT
 gh api repos/rhysd/actionlint/releases/assets/384924896 -H 'Accept: application/octet-stream' > "$validation_dir/actionlint.tar.gz"
 printf '%s  %s\n' 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 "$validation_dir/actionlint.tar.gz" | sha256sum --check
 tar -xzf "$validation_dir/actionlint.tar.gz" -C "$validation_dir" actionlint
+"$validation_dir/actionlint" -shellcheck='' \
+  .github/workflows/lighthouse-delivery-acceptance.yml \
+  .github/workflows/lighthouse-evidence-qualification.yml
 git init -q "$validation_dir/consumer"
 mkdir -p "$validation_dir/consumer/tools"
 printf 'adopter tool\n' > "$validation_dir/consumer/tools/adopter.txt"

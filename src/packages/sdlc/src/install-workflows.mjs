@@ -7,7 +7,7 @@ import { createIssueControlManifest } from './issue-control-contract.mjs';
 import { housekeepingFiles } from './housekeeping-assets.mjs';
 
 const [target, revision, ...flags] = process.argv.slice(2);
-if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended', '--with-epic', '--with-issue-control'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended] [--with-epic] [--with-issue-control]');
+if (!target || revision !== 'package' && !/^[a-f0-9]{40}$/.test(revision ?? '') || flags.some(x => !['--apply', '--replace-reviewed', '--with-propose', '--with-implement', '--with-completion', '--with-maintenance', '--with-product-change', '--with-unattended', '--with-epic', '--with-issue-control', '--with-delivery-acceptance'].includes(x))) throw Error('Usage: install-workflows <repository> <immutable-lighthouse-commit|package> [--apply] [--replace-reviewed] [--with-propose] [--with-implement] [--with-completion] [--with-maintenance] [--with-product-change] [--with-unattended] [--with-epic] [--with-issue-control] [--with-delivery-acceptance]');
 const packageVersion = revision === 'package' ? JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version : null;
 const apply = flags.includes('--apply'), replace = flags.includes('--replace-reviewed');
 const compilerCommand = process.env.LIGHTHOUSE_GH_AW_EXECUTABLE ?? 'gh';
@@ -29,6 +29,7 @@ if (flags.includes('--with-maintenance')) {
   planned.push({ path, content });
   console.log(`${apply ? 'Write' : 'Would write'} ${path}; configure the report index and explicitly activate maintenance separately.`);
 }
+if (flags.includes('--with-delivery-acceptance')) files.push('lighthouse-delivery-acceptance.yml');
 if (unattended) files.push('lighthouse-sdlc-unattended.yml');
 if (epic) files.push('lighthouse-sdlc-epic.yml');
 for (const name of files) {

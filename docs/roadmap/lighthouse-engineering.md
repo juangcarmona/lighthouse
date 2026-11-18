@@ -59,7 +59,7 @@ The active evidence change adds the common record and coverage projection inside
 - [Lighthouse and adopter ownership](../architecture/09-architecture-decisions/0001-lighthouse-and-factory-ownership.md)
 - [Distribution and versioning](../architecture/09-architecture-decisions/0002-distribution.md)
 - [Source packages and adopter projections](../architecture/09-architecture-decisions/0005-source-packages-and-adopter-projections.md)
-- [Evidence contract product change](../product/changes/active/chg-lh-evidence-contract-001/change.md)
+- [Evidence contract product change](../product/changes/completed/chg-lh-evidence-contract-001/change.md)
 
 ## Real execution proof
 

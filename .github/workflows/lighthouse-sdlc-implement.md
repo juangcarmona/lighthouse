@@ -74,7 +74,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: dcb94025acd328ae1c0aedeade42a64e73aae317
+      ref: 61c28b2d8f0f41e4c6654391e0a267ef1e106a68
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized issue context
@@ -93,6 +93,7 @@ post-steps:
       path: |
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/envelope.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/runtime.json
+        ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/visual-evidence.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/engine-error.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/changes.json
         ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/checks.json
@@ -104,6 +105,14 @@ post-steps:
     with:
       name: implementation-evidence-${{ inputs.issue }}-${{ github.run_attempt }}
       path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/
+      if-no-files-found: ignore
+      retention-days: 30
+  - name: Preserve visual captures separately from bounded JSON results
+    if: always()
+    uses: actions/upload-artifact@v7
+    with:
+      name: lighthouse-visual-${{ inputs.issue }}-${{ github.run_attempt }}
+      path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/visual/*.png
       if-no-files-found: ignore
       retention-days: 30
   - name: Preserve OpenCode diagnostic events
@@ -141,7 +150,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: dcb94025acd328ae1c0aedeade42a64e73aae317
+          ref: 61c28b2d8f0f41e4c6654391e0a267ef1e106a68
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -203,7 +212,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: dcb94025acd328ae1c0aedeade42a64e73aae317
+          ref: 61c28b2d8f0f41e4c6654391e0a267ef1e106a68
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -219,6 +228,16 @@ jobs:
         with:
           name: lighthouse-implement-result-${{ inputs.issue }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Inspect the retained visual assessment
+        id: visual
+        if: needs.agent.result == 'success'
+        run: node src/packages/sdlc/src/issue-actions.mjs visual-artifact
+      - name: Load the retained visual captures
+        if: needs.agent.result == 'success' && steps.visual.outputs.visual == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: lighthouse-visual-${{ inputs.issue }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lighthouse-${{ github.run_id }}-${{ github.run_attempt }}/evidence/visual
       - name: Require an executed agent
         if: needs.agent.result != 'success'
         run: |

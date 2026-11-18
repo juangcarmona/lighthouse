@@ -1,6 +1,6 @@
 {
   "name": "@juangcarmona/lighthouse-sdlc",
-  "version": "0.25.3",
+  "version": "0.28.1",
   "type": "module",
   "description": "Provider-neutral SDLC skills, commands and route contracts for Lighthouse adopters",
   "repository": {
@@ -48,7 +48,9 @@
     "NOTICE",
     "telemetry.md",
     "issue-control.md",
-    "practice-evidence.md"
+    "practice-evidence.md",
+    "delivery-acceptance.md",
+    "measurements.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -108,7 +110,14 @@
     "./practice-observation": "./src/practice-observation.mjs",
     "./practice-evaluator": "./src/practice-evaluator.mjs",
     "./practice-github": "./src/practice-github.mjs",
-    "./practice-history": "./src/practice-history.mjs"
+    "./practice-history": "./src/practice-history.mjs",
+    "./delivery-acceptance": "./src/delivery-acceptance.mjs",
+    "./measurement": "./src/measurement.mjs",
+    "./measurement-github": "./src/measurement-github.mjs",
+    "./measurement-report": "./src/measurement-report.mjs"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@juangcarmona/lighthouse-ui": "0.2.1"
+  }
 }

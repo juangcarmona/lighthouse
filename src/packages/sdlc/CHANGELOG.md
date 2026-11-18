@@ -1,5 +1,41 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.28.1
+
+### Patch Changes
+
+- de559d0: # Keep report columns readable
+
+  Keep operator report columns readable on narrow screens and make the bounded findings table scrollable with the keyboard.
+
+## 0.28.0
+
+### Minor Changes
+
+- 3f08e6a: # Provenance-aware measurements
+
+  Define and derive a bounded set of delivery and attention measurements from retained observations with explicit formulas, source coverage and unavailable outcomes.
+
+- c5e0c4c: # Read-only GitHub observation report
+
+  Collect a bounded repository/window snapshot with read-only GitHub permissions and render a reproducible static report with explicit coverage, source links and operator findings.
+
+## 0.27.0
+
+### Minor Changes
+
+- 18048c9: # Source-bound delivery acceptance
+
+  Add an explicitly adopted owner delivery-decision producer and independent source verifier, with exact candidate bindings and append-only correction history.
+
+## 0.26.0
+
+### Minor Changes
+
+- bf877d7: # Product visual evidence
+
+  Provide proposed UI examples during planning and retain source-bound running-product captures during implementation. Embed content-addressed images in issues and delivery PRs through the adopted evidence branch, preserving explicit visual acceptance and credential-free workers.
+
 ## 0.25.3
 
 ### Patch Changes

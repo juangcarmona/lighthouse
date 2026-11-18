@@ -1,5 +1,46 @@
 # @juangcarmona/lighthouse
 
+## 0.13.24
+
+### Patch Changes
+
+- Updated dependencies [de559d0]
+  - @juangcarmona/lighthouse-sdlc@0.28.1
+
+## 0.13.23
+
+### Patch Changes
+
+- 3f08e6a: # Provenance-aware measurements
+
+  Define and derive a bounded set of delivery and attention measurements from retained observations with explicit formulas, source coverage and unavailable outcomes.
+
+- c5e0c4c: # Read-only GitHub observation report
+
+  Collect a bounded repository/window snapshot with read-only GitHub permissions and render a reproducible static report with explicit coverage, source links and operator findings.
+
+- Updated dependencies [3f08e6a]
+- Updated dependencies [c5e0c4c]
+  - @juangcarmona/lighthouse-sdlc@0.28.0
+
+## 0.13.22
+
+### Patch Changes
+
+- 18048c9: # Source-bound delivery acceptance
+
+  Add an explicitly adopted owner delivery-decision producer and independent source verifier, with exact candidate bindings and append-only correction history.
+
+- Updated dependencies [18048c9]
+  - @juangcarmona/lighthouse-sdlc@0.27.0
+
+## 0.13.21
+
+### Patch Changes
+
+- Updated dependencies [bf877d7]
+  - @juangcarmona/lighthouse-sdlc@0.26.0
+
 ## 0.13.20
 
 ### Patch Changes
