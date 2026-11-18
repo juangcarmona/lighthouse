@@ -1,3 +1,4 @@
+import { assessDelegation, validateDelegationPolicy } from './risk-delegation.mjs';
 import { createHash } from 'node:crypto';
 import { withinScope } from './implementation.mjs';
 import { validateStageCompletion } from './contracts.mjs';
@@ -20,13 +21,14 @@ const strings = (list, max = 40) => Array.isArray(list) && list.length > 0 && li
 const command = value => Array.isArray(value) && value.length > 0 && value.length <= 30 && value.every(arg => typeof arg === 'string' && arg.length > 0 && arg.length <= 1000 && !/[\0\r\n]/.test(arg));
 
 export function validateUnattendedPolicy(policy, route) {
-  if (!record(policy) || Object.keys(policy).some(k => !['schemaVersion', 'enabled', 'routes', 'paths', 'reviewerProfile', 'allowFivePoint', 'merge', 'maxCorrections', 'timeoutSeconds', 'hotfix'].includes(k)) ||
+  if (!record(policy) || Object.keys(policy).some(k => !['schemaVersion', 'enabled', 'routes', 'paths', 'reviewerProfile', 'allowFivePoint', 'merge', 'maxCorrections', 'timeoutSeconds', 'hotfix', 'delegation'].includes(k)) ||
       policy.schemaVersion !== 1 || policy.enabled !== true || !['ff', 'hotfix'].includes(route) ||
       !Array.isArray(policy.routes) || !policy.routes.includes(route) || policy.routes.some(r => !['ff', 'hotfix'].includes(r)) ||
       !strings(policy.paths) || !['plan', 'build', 'fast'].includes(policy.reviewerProfile) ||
       typeof policy.allowFivePoint !== 'boolean' || typeof policy.merge !== 'boolean' ||
       !Number.isInteger(policy.maxCorrections) || policy.maxCorrections < 0 || policy.maxCorrections > 2 ||
       !Number.isInteger(policy.timeoutSeconds) || policy.timeoutSeconds < 60 || policy.timeoutSeconds > 7200) throw Error('Invalid or disabled bounded unattended policy');
+  if (policy.delegation !== undefined) validateDelegationPolicy(policy.delegation);
   if (route === 'hotfix') {
     const hotfix = policy.hotfix;
     if (!record(hotfix) || Object.keys(hotfix).sort().join(',') !== 'failurePattern,modules,regressionCommand,setupCommands,testPaths' || !strings(hotfix.testPaths) ||
@@ -115,9 +117,19 @@ export async function runUnattended({ route, policy, host, signal }) {
     await host.recheck();
   };
   const evidence = [];
+  let admission, finalReview;
+  const delegation = (phase, assessment, candidate) => {
+    if (policy.delegation === undefined) return;
+    const decision = assessDelegation({ policy, binding: host.binding, phase, assessment, admitted: admission,
+      files: candidate?.files, checks: candidate?.receipt?.checks, review: finalReview });
+    evidence.push({ kind: 'delegation', decision });
+    if (decision.status !== 'continue') throw Error(decision.reasons.join('; '));
+    return decision;
+  };
   try {
     await check();
     const refined = await host.refine();
+    admission = delegation('admission', refined.delegation);
     admitUnattended(refined.eligibility, policy, route);
     let plan = route === 'hotfix' ? regressionPlan(refined.hotfix) : await host.propose(refined), planningRound = 0;
     for (;;) {
@@ -154,6 +166,7 @@ export async function runUnattended({ route, policy, host, signal }) {
     for (let round = 0; round <= policy.maxCorrections - planningRound; round++) {
       await check();
       candidate = await host.implement({ refined, plan, red, previous: candidate, round });
+      delegation('candidate', candidate.envelope?.result?.output?.delegation ?? candidate.delegation, candidate);
       admitUnattended(candidate.eligibility, policy, route);
       if (route === 'hotfix') {
         hotfixScope(candidate.files, policy);
@@ -178,13 +191,16 @@ export async function runUnattended({ route, policy, host, signal }) {
       await check();
       const review = await host.reviewCandidate(candidate);
       evidence.push({ kind: 'candidate', round, review });
-      if (review.accepted === true) { accepted = true; break; }
+      if (review.accepted === true) { accepted = true; finalReview = review; break; }
       if (review.verdict !== 'request-changes') throw Error('Independent review stopped delivery: ' + ((review.findings ?? []).join(' ').slice(0, 3000) || 'Inspect the independent review evidence before continuing'));
       candidate.feedback = review.findings;
     }
     if (!accepted) throw Error('Unattended correction limit exhausted' + (candidate?.feedback?.length ? ': ' + candidate.feedback.join(' ').slice(0, 3000) : ''));
     await check();
-    const published = await host.publish(candidate);
+    delegation('publication', candidate.envelope?.result?.output?.delegation ?? candidate.delegation, candidate);
+    const decisions = evidence.filter(item => item.kind === 'delegation').map(item => item.decision);
+    if (Buffer.byteLength(JSON.stringify(decisions)) > 128000) throw Error('Risk delegation receipts exceed the bounded publication evidence budget');
+    const published = await host.publish(candidate, decisions);
     await check();
     if (!policy.merge) return { status: 'waiting-human', published, planningRound, evidence, nextAction: 'Authorize integration of the reviewed PR head' };
     const integrated = await host.integrate(candidate, published);

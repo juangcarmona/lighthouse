@@ -53,7 +53,8 @@
     "measurements.md",
     "compact-output.md",
     "change-continuity.md",
-    "process-guards.md"
+    "process-guards.md",
+    "risk-delegation.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
@@ -117,7 +118,8 @@
     "./delivery-acceptance": "./src/delivery-acceptance.mjs",
     "./measurement": "./src/measurement.mjs",
     "./measurement-github": "./src/measurement-github.mjs",
-    "./measurement-report": "./src/measurement-report.mjs"
+    "./measurement-report": "./src/measurement-report.mjs",
+    "./risk-delegation": "./src/risk-delegation.mjs"
   },
   "license": "Apache-2.0",
   "dependencies": {

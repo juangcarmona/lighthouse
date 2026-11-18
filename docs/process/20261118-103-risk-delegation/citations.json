@@ -1,0 +1,29 @@
+{
+  "sourceBaseline": "31f281032f971d63a157b8b9dba50f00067e227e",
+  "targeted": {
+    "change": {
+      "total": 12,
+      "current": 12,
+      "stale": 0,
+      "tampered": 0,
+      "unresolved": 0,
+      "errors": 0,
+      "warnings": 18
+    },
+    "runtime": {
+      "total": 3,
+      "current": 3,
+      "stale": 0,
+      "tampered": 0,
+      "unresolved": 0,
+      "errors": 0,
+      "warnings": 18
+    }
+  },
+  "globalBaseline": {
+    "stale": 307,
+    "unclassified": 1,
+    "passed": false
+  },
+  "newProductMeaning": false
+}

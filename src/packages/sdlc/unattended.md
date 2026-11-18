@@ -19,6 +19,8 @@ gh workflow run lighthouse-sdlc-unattended.yml -f issue=<number> -f route=hotfix
 
 Only an authenticated owner dispatch is admitted initially. The issue must be open, authored by the owner, and free of human reservations, pauses and pending answer/review gates. External intake uses the existing owner-admission route before it can become eligible; this composition does not broaden that route. Installation and workflow availability are separate from successful execution.
 
+For opt-in separation of inherent risk, outstanding findings, evidence confidence and exact assessed files, read [risk-bound continuation](risk-delegation.md). Project sensitive-surface stops only restrict the existing authority.
+
 ## Verification inputs and test corrections
 
 Upgraded unattended execution requires `verification` in the adopted `.lighthouse/implement.json` policy. Declare every test entrypoint, transitive wrapper, manifest/lockfile and relevant runner configuration; paths are exact files or directory prefixes, without globs. The host protects complete bytes and modes, including newly added files under a declared prefix. This declaration is an operator inventory, not automatic dependency discovery.

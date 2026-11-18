@@ -33,6 +33,12 @@ flowchart TD
 
 <!-- pdac:cite id="FR-HOTFIX-ROUTE" digest="sha256:09b863353e0b8f4fa61b6826e2eb3e754ef68ae5e092a84336306b95a3da43e3" -->
 
+## Optional risk assessment
+
+When project policy selects the additional assessment, the trusted composition evaluates declared risk at refinement, compares actual changed files with that exact scope after implementation, and checks executed receipts plus the fresh independent verdict before publication. The adapter retains source/intent/policy-bound decisions in its existing report and command evidence. Sensitive-path rules apply to actual files as well as model declarations. Current-authority callbacks remain responsible for rechecks before effects; the evaluator grants no permissions. [The packaged host guide](../../../src/packages/sdlc/risk-delegation.md) owns the protocol and operator selection.
+
+<!-- pdac:cite id="FR-FAST-FORWARD-DELIVERY" digest="sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e" -->
+
 ## Boundaries and outcomes
 
 Fast-forward requires a low-risk estimate, reversible scope and resolved dependencies. Hotfix requires a trusted assertion failure against unchanged production code and preserves the exact test bytes through GREEN and independent review. Setup failures cannot serve as RED. Distinct configured implementation/reviewer models must resolve to distinct model identifiers; that configuration does not prove provider identity or independence of reasoning.

@@ -888,3 +888,50 @@ test('RED prerequisite stops retain the concrete unavailable check or human deci
     } finally { await rm(f.root, { recursive: true, force: true }); }
   });
 });
+
+// Synthetic GitHub/provider/engine adapters; this exercises the actual trusted orchestrator, not a live model.
+test('opted-in native adapter supplies risk guidance and retains host-bound continuation evidence', async () => {
+  const { riskAssessment, riskPolicy } = await import('./helpers/risk-delegation-fixture.mjs');
+  for (const route of ['ff', 'hotfix']) {
+    const f = await fixture({ route }), execute = f.execute;
+    f.policy.delegation = riskPolicy();
+    try {
+      const outcome = await runGithubUnattended({ env: f.env, api: f.api, execute: async options => {
+        assert.deepEqual(options.context.unattended.delegation.policy, f.policy.delegation);
+        assert.match(options.prompt, /risk-delegation.md/);
+        if (options.context.review?.purpose === 'candidate') {
+          assert.deepEqual(options.context.review.details.delegation.admission, riskAssessment());
+          assert.deepEqual(options.context.review.details.delegation.candidate, riskAssessment());
+        }
+        const result = await execute(options);
+        if (['triage', 'refine', 'implement'].includes(options.request.stage)) result.envelope.result.output.delegation = riskAssessment();
+        return result;
+      } });
+      assert.equal(outcome.status, 'waiting-human');
+      const report = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/report.json')));
+      const decisions = report.evidence.filter(e => e.kind === 'delegation').map(e => e.decision);
+      assert.deepEqual(decisions.map(d => d.phase), ['admission', 'candidate', 'publication']);
+      assert.equal(decisions[0].binding.sourceRevision, f.revision);
+      const proof = JSON.parse(await readFile(join(f.root, 'lighthouse-unattended-123/implementation-evidence.json')));
+      assert.deepEqual(proof.unattended.delegation, decisions);
+      assert.equal(f.labels.includes('agent-working'), false);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  }
+});
+
+test('a sensitive opted-in adapter assessment preserves its blocker and publishes no candidate', async () => {
+  const { riskAssessment, riskPolicy } = await import('./helpers/risk-delegation-fixture.mjs');
+  const f = await fixture(), execute = f.execute;
+  f.policy.delegation = riskPolicy();
+  try {
+    const outcome = await runGithubUnattended({ env: f.env, api: f.api, execute: async options => {
+      const result = await execute(options), assessment = riskAssessment(); assessment.inherentRisk.level = 'sensitive';
+      result.envelope.result.output.delegation = assessment; return result;
+    } });
+    assert.equal(outcome.status, 'blocked');
+    assert.equal(f.executions.length, 1);
+    assert.equal(outcome.evidence[0].decision.status, 'blocked');
+    assert.ok(!f.writes.some(w => w.path === 'pulls' || w.path === 'git/refs'));
+    assert.equal(f.labels.includes('agent-working'), false);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});

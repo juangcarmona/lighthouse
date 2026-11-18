@@ -1,3 +1,4 @@
+import { delegationAssessmentContract } from './risk-delegation.mjs';
 import { committedSourceLinks } from './source-link-tree.mjs';
 import { isIssuePublicationBranch } from './publication-branch.mjs';
 import { createIssueApi } from './github-rest.mjs';
@@ -146,10 +147,10 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       workflowRunId, attempt, taskDigest: intent,
       ...(worker === 'independent-review' ? { reviewOutput: { protocol: 'verdict-v1', binding: extra.review.binding, purpose: extra.review.purpose } } : {}),
       ...(stage === 'implement' ? { instructionReview: 1, ...(sourceLinks ? { sourceLinks } : {}), implementation: { ...implementation, policy: selectedPolicy } } : {}) };
-    const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks }, ...extra };
+    const context = { ...stageContext(request, issueContext), unattended: { route, eligibility: refined?.eligibility, scope: policy.paths, implementationChecks: selectedPolicy.checks, ...(policy.delegation ? { delegation: { policy: policy.delegation, assessment: delegationAssessmentContract } } : {}) }, ...extra };
     if (Buffer.byteLength(JSON.stringify(context)) > 2 * 1024 * 1024) throw Error('Review or execution context exceeds its 2 MiB bound');
     const result = await execute({ env, root, request, source: working, context,
-      prompt: 'Use context.unattended.implementationChecks to plan verification; this admitted inventory is not an execution receipt. Keep additional agent observations and later forge CI explicit. ' + text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal, deadline });
+      prompt: (policy.delegation ? 'For refinement/triage and implementation, return output.delegation matching context.unattended.delegation.assessment. Read /harness/risk-delegation.md. Name exact affected files, dependent impact and source evidence; keep inherent risk, defects and evidence confidence separate. The project stopPaths rule cannot be overridden. Reviewers assess this report against actual changes and checks. ' : '') + 'Use context.unattended.implementationChecks to plan verification; this admitted inventory is not an execution receipt. Keep additional agent observations and later forge CI explicit. ' + text, ...(worker === 'independent-review' ? { modelProfile: policy.reviewerProfile } : {}), signal: controller.signal, deadline });
     if (result.runtime.execution?.status !== 'passed') throw Error('Host cannot verify completed model execution');
     if (stage === 'implement' && (!Array.isArray(result.receipt?.checks) || result.receipt.checks.length !== selectedPolicy.checks.length || result.receipt.checks.some((check, index) => JSON.stringify(check.command) !== JSON.stringify(selectedPolicy.checks[index]) || !Number.isInteger(check.exitCode) || check.exitCode === 0 && check.execution?.status !== 'passed'))) throw Error('Required host check inventory is unavailable or differs from the admitted policy');
     if (worker === 'independent-review' && result.runtime.model !== reviewer.model || stage === 'implement' && result.runtime.model !== producer.model) throw Error('Operator model selection changed during delivery');
@@ -184,6 +185,7 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
     await api('issues/' + issueNumber + '/labels', 'POST', { labels: ['agent-working'] }); reserved = true;
     await notify(handoff({ status: 'working', stage: route, happened: 'The authorized bounded delivery has started.', action: 'None. Wait for the result or a specific blocker.', next: 'The workflow will publish its actual outcome and any required decision.' }));
     const outcome = await runUnattended({ route, policy, signal: controller.signal, host: {
+      binding: { repository, issue: issueNumber, sourceRevision: revision, taskDigest: intent, policyDigest, route },
       recheck,
       refine: async () => {
         const result = await step(route === 'hotfix' ? 'triage' : 'refine', route === 'hotfix' ? 'triage' : 'refine',
@@ -244,14 +246,15 @@ export async function runGithubUnattended({ env = process.env, api = (...args) =
       },
       reviewCandidate: candidate => review('candidate', { refinement: refined, scope: { implementationPaths: policy.paths, planningRoots: route === 'ff' ? [proposalRoot(issueNumber) + '/'] : [] }, changes: candidate.changes,
         originalFiles: Object.fromEntries(candidate.changes.map(c => [c.path, source.get(c.path)?.content.toString('base64') ?? null])),
+        ...(policy.delegation ? { delegation: { admission: refined.delegation, candidate: candidate.envelope.result.output.delegation } } : {}),
         red: candidate.red, verification: candidate.receipt.verification, checks: candidate.receipt }, lastStep),
-      publish: async candidate => {
+      publish: async (candidate, delegationEvidence) => {
         const snapshot = { repository, issue: issueNumber, sourceRevision: revision, defaultBranch: metadata.default_branch, runId, title: issue.title, implementation };
         const transition = await publishImplementationPullRequest(publicationApi, { snapshot, changes: candidate.changes, body: 'Bounded ' + route + ' delivery with independent review. ' + candidate.envelope.effect.body, runUrl, draft: true, beforeWrite: recheck, checkedTree: lastStep.receipt.candidateTree });
         published = await readImplementationPublication(publicationApi, snapshot, transition);
         const testedTree = (await api(`git/commits/${published.head.sha}`)).tree.sha;
         const retainedReceipt = { ...lastStep.receipt, checks: lastStep.receipt.checks.map(({ log, ...check }) => check) };
-        const commandEvidence = { ...implementationEvidenceBundle(lastStep.request, retainedReceipt, lastStep.changes, { pr: published.number, head: published.head.sha, tree: testedTree }), unattended: { route, policyDigest } };
+        const commandEvidence = { ...implementationEvidenceBundle(lastStep.request, retainedReceipt, lastStep.changes, { pr: published.number, head: published.head.sha, tree: testedTree }), unattended: { route, policyDigest, ...(policy.delegation ? { delegation: delegationEvidence } : {}) } };
         await writeFile(join(root, 'implementation-evidence.json'), JSON.stringify(commandEvidence));
         await recheck();
         await projectImplementationPrState(api, issueNumber, true);
