@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { changesDigest, collectChanges, materializeCandidate, validateCheckReceipt } from './implementation.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
+import { retainedChangeContext, instructionReviewContract } from './change-continuity.mjs';
 import { reviewOutputProtocol, reviewTemplate } from './independent-review.mjs';
 import resultSchema from '../schemas/stage-result.schema.json' with { type: 'json' };
 import estimateSchema from '../schemas/estimate.schema.json' with { type: 'json' };
@@ -74,7 +75,8 @@ export function stageContext(request, issue) {
   const review = reviewOutputProtocol(request);
   const estimate = !review && ['triage', 'refine'].includes(request.stage)
     ? { schema: estimateSchema, status: request.stage === 'triage' ? 'provisional' : 'confirmed' } : null;
-  return { request, issue, contract: {
+  return { request, issue, continuity: retainedChangeContext(request, issue), contract: {
+    ...(request.instructionReview === 1 ? { instructionReview: instructionReviewContract } : {}),
     ...(estimate ? { estimate } : {}),
     ...(review ? { review: reviewTemplate(review) } : { resultSchema,
     envelope: { schemaVersion: 1, result: { schemaVersion: 1, ...(request.client ? { input: { client: structuredClone(request.client) } } : {}), runId: request.runId, stage: request.stage, status: 'passed', gate, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Return to the trusted host', output: {} }, effect: { type: 'issue-comment', body: 'Result and next action' } } }),

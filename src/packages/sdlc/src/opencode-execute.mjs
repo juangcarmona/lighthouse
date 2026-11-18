@@ -12,6 +12,7 @@ import { renderVisualProposal } from './visual-render.mjs';
 import { createRequire } from 'node:module';
 import { synchronizedSource, synchronizationDigest } from './source-sync.mjs';
 import { sourceFiles, collectChanges, isVerificationOnlyCorrection, materializeCandidate, validateChanges, changesDigest, withinScope } from './implementation.mjs';
+import { validateInstructionReview } from './change-continuity.mjs';
 import { candidateOrigin, prepareImplementationWorkspace, copyEvidence, runImplementationChecks, restoreWorkspaceOwnership, scratchArgs } from './implementation-runtime.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
@@ -389,6 +390,10 @@ async function main() {
     if (implementing) {
       const candidateFiles = await sourceFiles(source, trackedSource);
       const modelChanges = collectChanges(baseline, candidateFiles, request.implementation.policy, request.epicProduct);
+      if (request.instructionReview === 1 && envelope.result.status === 'passed') {
+        const findings = validateInstructionReview(envelope.result.output?.instructionReview, candidateFiles);
+        if (findings.length) throw Error(findings.join('; '));
+      }
       const metadata = request.sourceSynchronization ? null : await implementationPlanMetadata(candidateFiles, planningBaseline ?? baseline, request, undefined, preparation.signal);
       if (metadata) {
         candidateFiles.set(metadata.path, { content: metadata.content, mode: metadata.mode });
