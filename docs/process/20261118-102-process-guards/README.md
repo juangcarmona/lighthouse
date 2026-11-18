@@ -1,0 +1,9 @@
+# From command capture failure to an existing guard
+
+The [verified guard record](managed-command.json) exercises the [packaged review contract](../../../src/packages/sdlc/process-guards.md) using the actual failure fixed in [PR #750](https://github.com/juangcarmona/lighthouse/pull/750). It separates the code defect from the missing regression coverage and retains the owning source, record version, adoption scope, rollback, retirement and pilot follow-up.
+
+The [red/green receipt](red-green-receipt.json) records two behavioral failures against the original runner and two passing assertions against the corrected runner. The original EEXIST reproduction also confirmed a running receipt after owner-slot release. To repeat the comparison, extract the SDLC package at the red revision into an isolated directory, copy `src/tests/managed-command.test.mjs` from the recorded test-source revision and run the receipt's command there. Run the same command against the corrected source. The tests remain part of the existing `npm test`; no additional recurring test mechanism is introduced.
+
+The correction separately passed deterministic non-root execution in the operator's pinned engine: real exit 7, output retained once, terminal completed receipt and owner slot released. That native command was not a model-completion claim. The review record's shape check verifies required fields and red/green dispositions; actual source authentication and semantic review remain with the reviewer.
+
+Operational recurrence, false-positive rates and pilot maintenance cost remain unavailable with reasons. One incident and its retries do not establish a recurrence rate. The SDLC maintainers retain this follow-up in #99; this implementation neither fabricates pilot measurements nor makes its retrospective authority to alter policy.

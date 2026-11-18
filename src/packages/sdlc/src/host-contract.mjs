@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { retainedChangeContext, instructionReviewContract, validateInstructionReview } from './change-continuity.mjs';
+import { processGuardContract, validateProcessGuards } from './process-guards.mjs';
 export { digest } from './digests.mjs';
 import { digest } from './digests.mjs';
 import { readFile } from 'node:fs/promises';
@@ -66,6 +67,7 @@ export function validateStageEnvelope(value, request) {
   errors.push(...validateStageResult(result).map((error) => error.message));
   if (!record(result)) return errors;
   if (request.instructionReview === 1 && result.status === 'passed') errors.push(...validateInstructionReview(result.output?.instructionReview));
+  if (request.processGuardReview === 1 && result.status === 'passed') errors.push(...validateProcessGuards(result.output?.processGuards));
   if (visualStages.has(request.stage) && !['product-change', 'independent-review'].includes(request.worker)) {
     errors.push(...validateVisualEvidence(result.output?.visualEvidence, request));
     if (result.output?.visualEvidence?.status === 'unavailable' && result.status === 'passed') errors.push('Unavailable current-stage visual evidence blocks completion');
@@ -134,6 +136,7 @@ export async function hostContractMain(args) {
     const resultSchema = JSON.parse(await readFile(new URL('../schemas/stage-result.schema.json', import.meta.url), 'utf8'));
     console.log(JSON.stringify({ instructions: skill, request, issue, predecessor, continuity: retainedChangeContext(request, issue), output: '/output/envelope.json', contract: {
       ...(request.instructionReview === 1 ? { instructionReview: instructionReviewContract } : {}),
+      ...(request.processGuardReview === 1 ? { processGuards: processGuardContract } : {}),
       resultSchema,
       ...(productWorker ? { productChangeSchema: JSON.parse(await readFile(new URL('../schemas/product-change.schema.json', import.meta.url), 'utf8')) } : {}),
       envelope: { schemaVersion: 1, result: { schemaVersion: 1, ...(request.client ? { input: { client: structuredClone(request.client) } } : {}), runId: request.runId, stage: request.stage, gate: stages.stages.find((s) => s.id === request.stage)?.gate, status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'await owner decision', output: {} }, effect: { type: 'issue-comment', body: 'Triage assessment or refined story, or a precise clarification question.' } },

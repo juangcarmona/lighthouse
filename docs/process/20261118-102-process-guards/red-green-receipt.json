@@ -1,0 +1,23 @@
+{
+  "red": {
+    "revision": "0f6d6dac74cdc0f5b08dff7e876a2cc639207cee",
+    "exitCode": 1,
+    "failed": 2,
+    "originalError": "EEXIST",
+    "originalReceipt": "running after owner slot release",
+    "logSha256": "4fefd8ea64373c703b87e72827a2108ede755063092128b9c7f3f7b24d989197"
+  },
+  "green": {
+    "revision": "8407a9e8bba3d069b2ff9ce204795b3e6a124271",
+    "exitCode": 0,
+    "passed": 2,
+    "logSha256": "6f3305da286e87be50f18e26ffb1ff573e43a9fdd96f6012489bb728d140bd8d"
+  },
+  "testSource": "8407a9e8bba3d069b2ff9ce204795b3e6a124271:src/tests/managed-command.test.mjs",
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=caller redirection|log setup failure",
+    "src/tests/managed-command.test.mjs"
+  ]
+}

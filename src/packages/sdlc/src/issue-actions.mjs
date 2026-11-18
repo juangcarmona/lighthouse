@@ -611,6 +611,7 @@ async function main(command) {
     }
     if (stage === 'triage') snapshot.originalRequest = issue.body ?? '';
     if (stage === 'implement' && !productWorker) snapshot.instructionReview = 1;
+    if (stage === 'review' && !productWorker) snapshot.processGuardReview = 1;
     if (triage) snapshot.triageEstimate = triage.envelope.result.output.estimate;
     if (epicPrerequisites) snapshot.epicPrerequisites = epicPrerequisites;
     await output('source_revision', revision.sha);
