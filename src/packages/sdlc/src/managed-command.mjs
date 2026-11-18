@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:os';
 import { commandScratch, scratchCapacity, scratchDiagnostic, scratchErrorCode } from './command-scratch.mjs';
+import { compactCommandOutput } from './compact-output.mjs';
 
 const number = path => { try { const value = Number(readFileSync(path, 'utf8').trim()); return Number.isSafeInteger(value) && value >= 0 ? value : null; } catch { return null; } };
 const counter = (path, key) => { try { const line = readFileSync(path, 'utf8').split('\n').find(line => line.startsWith(key + ' ')); return line ? Number(line.split(' ')[1]) : null; } catch { return null; } };
@@ -94,7 +95,16 @@ export async function managedCommand(directory, id, command, { createScratch = c
       if (!released && state.exitCode === 0) state.exitCode = 125;
       if (state.exitCode !== 0 && state.scratch) console.error(scratchDiagnostic(state.scratch));
       sample();
-      if (logOwned) { closeSync(logFd); logFd = undefined; await pipeline(createReadStream(log), process.stdout, { end: false }); }
+      if (logOwned) {
+        closeSync(logFd); logFd = undefined;
+        const presentation = compactCommandOutput(log, command, state.exitCode);
+        if (presentation) { const { text, ...receipt } = presentation; state.output = receipt; sample(); }
+        if (presentation?.status === 'compacted') process.stdout.write(`${presentation.text}\nFull command output: ${log}\n`);
+        else {
+          if (presentation) console.error(`Compact output unavailable (${presentation.reason}); showing complete output: ${log}`);
+          await pipeline(createReadStream(log), process.stdout, { end: false });
+        }
+      }
       return state.exitCode;
     } finally { process.removeListener('SIGTERM', forceStop); process.removeListener('SIGINT', forceStop); }
   } catch (error) {
