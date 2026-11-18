@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.30.0
+
+### Minor Changes
+
+- 09c1309: # Risk-bound continuation
+
+  Add optional source-bound risk assessments to FF/hotfix continuation, with project sensitive-surface stops, exact reviewed scope, separate defect/evidence findings and retained host decisions. Existing authorization, checks, repair limits and separate merge authority remain in force.
+
 ## 0.29.0
 
 ### Minor Changes
