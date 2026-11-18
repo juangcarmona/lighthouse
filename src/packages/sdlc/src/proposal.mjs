@@ -92,7 +92,7 @@ export async function loadStageReport(api, repo, report, current, readArtifact =
     if (!['triage', 'refine', 'propose', 'implement'].includes(request.stage) || !report.body.includes(`<!-- lighthouse-stage:${request.stage}:`)) throw Error('Unexpected dispatched stage');
     const dispatch = await loadDispatch(api, repo, current.owner, current.issue, request.dispatch.commentId, run, readArtifact);
     const dispatchedRevision = request.baseRevision ?? request.sourceRevision;
-    if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== dispatchedRevision || dispatch.request.workflowRevision !== request.workflowRevision || !isDeepStrictEqual(dispatch.request.epic, request.epic)) throw Error('Dispatched report identity mismatch');
+    if (dispatch.request.stage !== request.stage || dispatch.request.id !== request.dispatch.requestId || dispatch.request.sourceRevision !== dispatchedRevision || dispatch.request.workflowRevision !== request.workflowRevision || !isDeepStrictEqual(dispatch.request.epic, request.epic) || !isDeepStrictEqual(dispatch.request.epicProduct, request.epicProduct)) throw Error('Dispatched report identity mismatch');
     const client = await loadClientDispatch({ api, repository: repo, owner: current.owner, native: dispatch.request, readArtifact });
     checkClientSnapshot(client, dispatch.request, request);
     await checkDispatchClaim(api, repo, current.issue, request.dispatch, run.id);

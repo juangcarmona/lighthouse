@@ -56,6 +56,7 @@ test('package-mode installer preserves existing provider files, hooks and agent 
     const epic = await readFile(join(root, '.github/workflows/lighthouse-sdlc-epic.yml'), 'utf8');
     assert.match(epic, /working-directory: \.lighthouse-harness\n\s+run: npm ci --ignore-scripts/);
     assert.match(epic, /node \.lighthouse-harness\/node_modules\/@juangcarmona\/lighthouse-sdlc\/src\/epic-native.mjs/);
+    assert.match(epic, /name: Install the pinned product replay provider\n\s+if: inputs.action == 'adopt-product'\n\s+working-directory: \.lighthouse-harness\n\s+run: npm install --ignore-scripts --no-save --package-lock=false @prodshape\/core@0\.25\.0/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

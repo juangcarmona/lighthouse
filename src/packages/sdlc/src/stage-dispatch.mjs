@@ -26,7 +26,7 @@ export const dispatchArtifact = request => `lighthouse-dispatch-${request.id}`;
 export const dispatchIntent = request => digest(JSON.stringify({
   repository: request.repository, issue: request.issue, stage: request.stage, worker: workerFor(request),
   task: request.taskDigest, source: request.sourceRevision, workflow: request.workflowRevision,
-  feedback: request.feedbackKey, epic: request.epic, completion: request.completionAuthorization,
+  feedback: request.feedbackKey, epic: request.epic, epicProduct: request.epicProduct, completion: request.completionAuthorization,
   autoImplement: request.autoImplement, productChangeEnabled: request.productChangeEnabled,
   client: request.client ? { payloadDigest: request.client.payloadDigest, action: request.client.action, scope: request.client.scope } : undefined,
   integration: request.integrationRequest, productApproval: request.productApproval,

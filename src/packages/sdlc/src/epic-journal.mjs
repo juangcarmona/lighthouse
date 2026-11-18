@@ -5,10 +5,17 @@ import { readActionsJson } from './actions-artifact.mjs';
 import { epicCorrelation, epicJournalKey } from './epic-github.mjs';
 
 const marker = '<!-- lighthouse-epic-journal:';
+const productMarker = '<!-- lighthouse-epic-product-source:';
+const journalComment = comment => comment.body?.includes(marker) || comment.body?.includes(productMarker);
 const positive = value => Number.isSafeInteger(Number(value)) && /^[1-9][0-9]*$/.test(String(value));
 const sha = value => /^[a-f0-9]{40}$/.test(value ?? '');
 const keyFor = epicJournalKey;
 const artifactName = (parent, attempt) => `lighthouse-epic-journal-${parent}-${attempt}`;
+
+export function checkEpicProductReceipt(value) {
+  if (!value || Object.keys(value).sort().join(',') !== 'approval,base,changeId,changeName,child,filesDigest,head,provider,version' || !Number.isSafeInteger(value.child) || !positive(value.child) || !Number.isSafeInteger(value.approval) || !positive(value.approval) || !sha(value.base) || !sha(value.head) || !/^CHG-[A-Z0-9-]+$/.test(value.changeId ?? '') || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.changeName ?? '') || !/^[a-f0-9]{64}$/.test(value.filesDigest ?? '') || value.provider !== '@prodshape/core' || value.version !== '0.25.0') throw Error('Invalid epic product source receipt');
+  return value;
+}
 
 function checkedReceipt(key, receipt, repository, parent) {
   if (!receipt || receipt.schemaVersion !== 1 || !['intent', 'created', 'linked', 'cancelled', 'merging', 'accepted'].includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, epicCorrelation(receipt.correlation)) || receipt.correlation.repository !== repository || receipt.correlation.parent !== parent || keyFor(receipt.correlation) !== key) throw Error('Invalid epic journal receipt');
@@ -22,6 +29,9 @@ function checkedReceipt(key, receipt, repository, parent) {
   const refusal = receipt.refusal;
   if (refusal !== undefined && (receipt.correlation.kind !== 'pull-request' || receipt.state !== 'linked' || !refusal || refusal.status !== 405 || !sha(refusal.head) || !sha(refusal.base) || !sha(refusal.candidate) || !Number.isSafeInteger(refusal.review) || refusal.review < 1 || Object.keys(refusal).sort().join(',') !== 'base,candidate,head,review,status')) throw Error('Epic refusal receipt is invalid');
   const readiness = receipt.readiness;
+  const product = receipt.product;
+  if (receipt.correlation.kind === 'product-source' && ['created', 'linked'].includes(receipt.state)) checkEpicProductReceipt(product);
+  else if (product !== undefined || receipt.correlation.kind === 'product-source' && !['intent', 'cancelled'].includes(receipt.state)) throw Error('Invalid epic product source state');
   if (readiness !== undefined && (receipt.correlation.kind !== 'aggregate' || receipt.state !== 'linked' || !readiness || !sha(readiness.head) || !sha(readiness.base) || !sha(readiness.candidate) || Object.keys(readiness).sort().join(',') !== 'base,candidate,head')) throw Error('Epic aggregate readiness receipt is invalid');
   for (const field of ['checks', 'headChecks']) {
     const checks = receipt[field];
@@ -31,14 +41,14 @@ function checkedReceipt(key, receipt, repository, parent) {
     if (!['pull-request', 'aggregate'].includes(receipt.correlation.kind) || !resource || !checks || !identity || !sha(identity.head) || !sha(identity.base) || !sha(identity.candidate) || identity.branch !== `lighthouse/verification-${resource.number}-${identity.candidate}` || !Array.isArray(identity.workflows) || !identity.workflows.length || identity.workflows.length > 8 || new Set(identity.workflows).size !== identity.workflows.length || identity.workflows.some(name => !/^[\w.-]+\.ya?ml$/.test(name)) || !['not-sent', 'requested', 'observed'].includes(checks.reference) || !checks.requests || Array.isArray(checks.requests) || typeof checks.requests !== 'object' || Object.keys(checks).sort().join(',') !== 'identity,reference,requests' || Object.keys(identity).sort().join(',') !== 'base,branch,candidate,head,workflows') throw Error('Epic check identity is invalid');
     for (const [name, request] of Object.entries(checks.requests)) if (!identity.workflows.includes(name) || !request || !['requested', 'acknowledged', 'observed'].includes(request.state) || Object.keys(request).sort().join(',') !== (request.state === 'observed' ? 'run,state' : 'state') || request.state === 'observed' && !positive(request.run)) throw Error('Epic CI request is invalid');
   }
-  const expected = [...(receipt.checks ? ['checks'] : []), ...(receipt.headChecks ? ['headChecks'] : []), 'correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(readiness ? ['readiness'] : []), ...(refusal ? ['refusal'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
+  const expected = [...(receipt.checks ? ['checks'] : []), ...(receipt.headChecks ? ['headChecks'] : []), 'correlation', ...(merge ? ['merge'] : []), ...(publication ? ['publication'] : []), ...(product ? ['product'] : []), ...(readiness ? ['readiness'] : []), ...(refusal ? ['refusal'] : []), ...(resource ? ['resource'] : []), 'schemaVersion', 'state'].sort().join(',');
   if (Object.keys(receipt).sort().join(',') !== expected) throw Error('Epic receipt has unexpected fields');
   return receipt;
 }
 
 function parseEntry(comment, repository, parent) {
   if (comment.user?.login !== 'github-actions[bot]' || comment.user.type !== 'Bot' || comment.issue_url !== `https://api.github.com/repos/${repository}/issues/${parent}` || !positive(comment.id)) throw Error('Untrusted epic journal comment');
-  const matches = [...(comment.body ?? '').matchAll(/<!-- lighthouse-epic-journal:(\{[^\n]*\}) -->/g)];
+  const matches = [...(comment.body ?? '').matchAll(/<!-- lighthouse-epic-(?:journal|product-source):(\{[^\n]*\}) -->/g)];
   if (matches.length !== 1) throw Error('Missing or ambiguous epic journal marker');
   const value = JSON.parse(matches[0][1]);
   const workflow = value.workflowRevision !== undefined || value.workflowRef !== undefined;
@@ -46,6 +56,7 @@ function parseEntry(comment, repository, parent) {
   const fields = ['attempt', 'key', 'parent', 'receipt', 'repository', 'revision', 'runId', 'schemaVersion', ...(workflow ? ['workflowRevision', 'workflowRef'] : [])].sort().join(',');
   if (Object.keys(value).sort().join(',') !== fields || value.schemaVersion !== 1 || value.repository !== repository || value.parent !== parent || !positive(value.runId) || !Number.isSafeInteger(value.attempt) || value.attempt < 1 || !sha(value.revision) || typeof value.key !== 'string') throw Error('Invalid epic journal identity');
   checkedReceipt(value.key, value.receipt, repository, parent);
+  if ((value.receipt.correlation.kind === 'product-source') !== comment.body.includes(productMarker)) throw Error('Epic journal marker responsibility mismatch');
   return value;
 }
 
@@ -54,7 +65,7 @@ export async function readEpicResourceReceipt({ api, repository, owner, correlat
   if (!isDeepStrictEqual(correlation, epicCorrelation(correlation)) || correlation.repository !== repository || !sha(sourceRevision) || !defaultBranch || resource && (!positive(resource.id) || !positive(resource.number)) || !Array.isArray(allowedStates) || !allowedStates.length || allowedStates.some(state => !['linked', 'accepted'].includes(state))) throw Error('Invalid epic resource admission');
   const parent = correlation.parent, key = keyFor(correlation);
   const comments = await issueComments(api, parent);
-  const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
+  const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && journalComment(c)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
   if (candidates.length !== 1) throw Error('Epic resource journal is missing or ambiguous');
   const { comment, entry } = candidates[0], receipt = entry.receipt;
   if (entry.revision !== sourceRevision || !allowedStates.includes(receipt.state) || !isDeepStrictEqual(receipt.correlation, correlation) || resource && !isDeepStrictEqual(receipt.resource, resource)) throw Error('Epic resource receipt does not match the current identity');
@@ -74,7 +85,7 @@ export async function readEpicAggregateReceipt(input) {
   if (input.correlation?.kind !== 'aggregate' || !input.resource) throw Error('Invalid epic aggregate admission');
   const { api, repository, correlation } = input;
   const comments = await issueComments(api, correlation.parent);
-  const matches = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => parseEntry(c, repository, correlation.parent)).filter(entry => entry.key === keyFor(correlation));
+  const matches = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && journalComment(c)).map(c => parseEntry(c, repository, correlation.parent)).filter(entry => entry.key === keyFor(correlation));
   if (matches.length !== 1) throw Error('Epic aggregate journal is missing or ambiguous');
   const sourceRevision = matches[0].revision;
   const receipt = await readEpicResourceReceipt({ ...input, sourceRevision });
@@ -92,7 +103,7 @@ export async function createEpicJournal({ api, repository, owner, parent, source
   await save();
   async function readReceipt(key) {
     const comments = await issueComments(api, parent);
-    const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body?.includes(marker)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
+    const candidates = comments.filter(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && journalComment(c)).map(c => ({ comment: c, entry: parseEntry(c, repository, parent) })).filter(item => item.entry.key === key);
     if (candidates.length > 1) throw Error('Duplicate epic journal receipts');
     if (!candidates.length) { loaded.set(key, null); return null; }
     const { comment, entry } = candidates[0];
@@ -121,10 +132,11 @@ export async function createEpicJournal({ api, repository, owner, parent, source
       const { commit: previousCommit, ...prior } = previous.receipt.merge;
       if (!isDeepStrictEqual(identity, prior) || previousCommit && previousCommit !== receipt.merge?.commit || !isDeepStrictEqual(previous.receipt.publication, receipt.publication)) throw Error('Epic merge identity changed');
     }
+    if (previous?.receipt.product && !isDeepStrictEqual(previous.receipt.product, receipt.product)) throw Error('Epic product source identity changed');
     if (!previous && receipt.state !== 'intent') throw Error('Epic journal must start with intent');
     if (await authorize() !== true) throw Error('Epic journal authorization changed');
     const entry = { schemaVersion: 1, repository, parent, revision: sourceRevision, ...workflow, runId: String(run.id), attempt: run.run_attempt, key, receipt };
-    const body = `${marker}${JSON.stringify(entry).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e')} -->`;
+    const body = `${receipt.correlation.kind === 'product-source' ? productMarker : marker}${JSON.stringify(entry).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e')} -->`;
     const comment = previous ? await api(`issues/comments/${previous.comment.id}`, 'PATCH', { body }) : await api(`issues/${parent}/comments`, 'POST', { body });
     if (!isDeepStrictEqual(parseEntry(comment, repository, parent), entry)) throw Error('Epic journal write could not be confirmed');
     journal.entries[key] = { commentId: comment.id, receipt };

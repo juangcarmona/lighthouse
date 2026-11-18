@@ -15,7 +15,7 @@ function fixture() {
   const estimate = { points: 1, status: 'provisional', rationale: { scope: 'One bounded slice', dependencies: 'None', verification: 'Unit checks' }, confidence: 'medium', uncertainty: [] };
   const output = { estimate, requestAnalysis: { originalRequest: issue.body, problem: 'A bounded issue', desiredResult: 'An independently checked result', inferences: [], unknowns: [], questions: [] } };
   const envelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: request.runId, stage: 'triage', gate: 'triaged', status: 'passed', evidence: [{ id: 'triage', status: 'passed' }], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Await authorized refinement.', output }, effect: { type: 'issue-comment', body: 'Triage completed.' } };
-  const api = async path => path === `issues/${child}` ? issue : path.startsWith(`issues/${child}/comments?`) ? comments : assert.fail(path);
+  const api = async path => path.startsWith('issues/146/comments?') ? [] : path === `issues/${child}` ? issue : path.startsWith(`issues/${child}/comments?`) ? comments : assert.fail(path);
   const options = { api, repository, owner, child, authenticate: async () => epic, loadReport: async () => ({ request, envelope, run: { id: 100, run_attempt: 1 } }) };
   return { issue, report, comments, request, envelope, options };
 }

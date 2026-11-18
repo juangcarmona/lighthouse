@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, realpath, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -86,6 +86,51 @@ transitions:
   for (const [id, given, when, then, transition] of scenarios) files.set(`sb-${id.toLowerCase()}`, artifact(`SB-${id}`, 'structured-behaviour', `illustrates: [UC-PUBLICATION, BR-PUBLICATION]\ngiven: [${given}]\nwhen: ${when}\nthen: [${then}]${transition ? `\ncovers-transition: {lifecycle: LC-DOCUMENT, transition: ${transition}}` : ''}`, [['Intent', then], ['Boundaries', 'Only the named context and stimulus.']]));
   for (const [name, text] of files) await writeFile(join(root, 'docs/product/model', name + '.md'), text);
 }
+
+async function appliedPublication(root) {
+  const binding = { changeName: 'publication', changeId: 'CHG-PUBLICATION', base: 'b'.repeat(40) };
+  const path = join(root, 'docs/product/changes/completed/publication/change.md');
+  const content = artifact(binding.changeId, 'product-change', `base-revision: '${binding.base}'\noperations:\n  add: [LC-DOCUMENT, SB-PUBLISH]\n  modify: [BR-PUBLICATION]\n  remove: []`, ['Problem', 'Intended Product Outcome', 'Rationale', 'Affected Product Areas', 'Open Questions', 'Product Acceptance', 'Out of Scope'].map(name => [name, 'Owner-approved publication semantics.'])).replace('status: active', 'status: applied');
+  await mkdir(dirname(path), { recursive: true }); await writeFile(path, content);
+  return { binding, path, content };
+}
+
+test('an authenticated applied change reference materializes affected lifecycle and behaviour reports for the actual planner', async t => {
+  const root = await workspace(t); await domainModel(root);
+  const { binding } = await appliedPublication(root), planning = join(root, 'planning'); await mkdir(planning);
+  const context = { request: { epicProduct: binding }, issue: { title: 'Publication foundation', body: 'Use CHG-PUBLICATION and retain CHG-UNKNOWN as unresolved.' }, contract: { rules: 'Original scope.' } };
+  const before = await productModelDigest(root);
+  await writeFile(join(planning, 'context.json'), JSON.stringify(context));
+  const result = await preparePlanningProductEvidence(root, planning, { core: await loadProductCore() });
+  assert.deepEqual(result.scope.changes, [{ id: binding.changeId, artifacts: ['BR-PUBLICATION', 'LC-DOCUMENT', 'SB-PUBLISH'] }]);
+  assert.deepEqual(result.scope.unresolved, ['CHG-UNKNOWN']);
+  assert.ok(result.scope.matched.includes('LC-DOCUMENT')); assert.ok(result.scope.matched.includes('SB-PUBLISH'));
+  for (const id of ['LC-DOCUMENT', 'SB-PUBLISH']) {
+    const report = JSON.parse(await readFile(join(root, `.lighthouse-product-evidence/${id}.json`)));
+    assert.ok(report.inspect); assert.ok(report.definition.frontmatter); assert.match(report.citation, new RegExp(id)); assert.equal(report.availability, undefined);
+  }
+  assert.equal(await productModelDigest(root), before);
+  const after = JSON.parse(await readFile(join(planning, 'context.json')));
+  assert.deepEqual(after.request, context.request); assert.deepEqual(after.issue, context.issue);
+});
+
+test('evidence expansion refuses changed identities, unapplied manifests, unsafe paths and excessive operations', async t => {
+  const root = await workspace(t); await domainModel(root);
+  const { binding, path, content } = await appliedPublication(root), core = await loadProductCore();
+  for (const [name, change, text] of [
+    ['id', { ...binding, changeId: 'CHG-OTHER' }, content],
+    ['base', { ...binding, base: 'c'.repeat(40) }, content],
+    ['traversal', { ...binding, changeName: '../publication' }, content],
+    ['unapplied', binding, content.replace('status: applied', 'status: approved')],
+    ['operations', binding, content.replace('add: [LC-DOCUMENT, SB-PUBLISH]', `add: [${Array(65).fill('LC-DOCUMENT').join(', ')}]`)],
+  ]) {
+    await writeFile(path, text);
+    await assert.rejects(prepareProductEvidence(root, join(root, `bad-${name}`), core, { scopeText: binding.changeId, appliedChange: change }), /ProductShape evidence/);
+  }
+  await writeFile(path, content);
+  const external = join(root, 'external-change.md'); await writeFile(external, content); await rm(path); await symlink(external, path);
+  await assert.rejects(prepareProductEvidence(root, join(root, 'bad-link'), core, { scopeText: binding.changeId, appliedChange: binding }), /unsafe/);
+});
 
 test('lifecycle and SB context reaches workers; real runs retain failed and stale evidence separately', async t => {
   const root = await workspace(t); await domainModel(root);

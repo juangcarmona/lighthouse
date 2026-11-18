@@ -4,12 +4,24 @@ import { proposalRoot, validateProposalFiles } from './proposal-files.mjs';
 import { productImplementationProof, productProposalProof } from './product-change.mjs';
 import { parsePublicationBranch, selectPublicationBranch } from './publication-branch.mjs';
 
-export const reviewDigest = (kind, value) => digest(JSON.stringify(kind === 'ci' ? { id: value.id, attempt: value.run_attempt, repository: value.repository?.full_name, path: value.path, event: value.event, head: value.head_sha, branch: value.head_branch, status: value.status, conclusion: value.conclusion } : value));
+export const reviewDigest = (kind, value, selection) => digest(JSON.stringify(kind === 'workflow' ? {
+  id: value.id, repository: value.repository?.full_name, path: value.path, event: value.event, head: value.head_sha, branch: value.head_branch,
+  actor: value.actor?.login, actorType: value.actor?.type, triggeringActor: value.triggering_actor?.login, triggeringActorType: value.triggering_actor?.type,
+  stopped: ![undefined, null, '', 'success'].includes(value.conclusion),
+  number: selection.number, issue: selection.issue, requestedHead: selection.head, feedback: selection.feedback,
+} : kind === 'ci' ? { id: value.id, attempt: value.run_attempt, repository: value.repository?.full_name, path: value.path, event: value.event, head: value.head_sha, branch: value.head_branch, status: value.status, conclusion: value.conclusion } : value));
 
 export const feedbackKey = review => digest(`${review.number}:${review.kind}:${review.id}:${review.feedbackDigest}`);
 export const feedbackWorker = review => review && !review.approved ? 'apply-review' : undefined;
 
 export function reviewTarget(event, eventName) {
+  if (eventName === 'workflow_dispatch' && event.inputs?.feedback) {
+    const number = Number(event.inputs.pull_request);
+    if (!/^[1-9][0-9]*$/.test(event.inputs.pull_request ?? '') || !Number.isSafeInteger(number)) throw Error('Workflow correction requires a valid PR number');
+    const input = event.inputs;
+    if (input.stage !== 'implement' || ![undefined, '', 'stage'].includes(input.workflow) || !/^[1-9][0-9]*$/.test(input.issue ?? '') || !/^[a-f0-9]{40}$/.test(input.head ?? '') || typeof input.feedback !== 'string' || !input.feedback.trim() || Buffer.byteLength(input.feedback) > 12000 || ![undefined, '', false, 'false'].includes(input.merge) || ['client_request', 'after_run', 'epic_parent', 'epic_run', 'product_decision_comment'].some(key => input[key])) throw Error('Workflow correction cannot mix stage, product, continuation or merge grants');
+    return number;
+  }
   if (['issue_comment', 'pull_request_review_comment', 'pull_request_review'].includes(eventName) && !legacyControlComment(eventName === 'pull_request_review' ? event.review : event.comment)) return null;
   if (eventName === 'issue_comment' && event.issue?.pull_request) return event.issue.number;
   if (['pull_request_review', 'pull_request_review_comment'].includes(eventName)) return event.pull_request?.number;
@@ -44,10 +56,19 @@ export function checkAlignedImplementationPullRequest(pr, repository, alignment,
   return checkImplementationPullRequest(pr, repository, { issue: parent.issue, head: publishedHead ?? expected.head, branch: expected.branch, base: alignment.defaultBranch });
 }
 
-export async function loadProposalReview(api, repo, owner, event, eventName, implementation = false) {
+export async function loadProposalReview(api, repo, owner, event, eventName, implementation = false, origin = {}) {
   const number = reviewTarget(event, eventName);
   if (!number) return null;
   const pr = await api(`pulls/${number}`), target = (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo);
+  if (eventName === 'workflow_dispatch') {
+    const input = event.inputs, id = Number(origin.runId), path = `actions/runs/${id}`;
+    if (!implementation || input.stage !== 'implement' || ![undefined, '', 'stage'].includes(input.workflow) || input.issue !== String(target.issue) || input.head !== target.head || !/^[a-f0-9]{40}$/.test(input.head ?? '') || !Number.isSafeInteger(id) || id < 1 || !/^[a-f0-9]{40}$/.test(origin.revision ?? '') || typeof input.feedback !== 'string' || !input.feedback.trim() || Buffer.byteLength(input.feedback) > 12000 || ![undefined, '', false, 'false'].includes(input.merge) || ['client_request', 'after_run', 'epic_parent', 'epic_run', 'product_decision_comment'].some(key => input[key])) throw Error('Owner workflow correction needs an exact implementation PR, issue, head and bounded feedback');
+    const run = await api(path);
+    if (run.id !== id || run.repository?.full_name !== repo || run.event !== 'workflow_dispatch' || run.path !== '.github/workflows/lighthouse-sdlc-router.yml' || run.head_sha !== origin.revision || !run.head_branch || run.actor?.login !== owner || run.actor.type !== 'User' || run.triggering_actor?.login !== owner || run.triggering_actor.type !== 'User' || ![undefined, null, '', 'success'].includes(run.conclusion)) throw Error('Correction workflow origin is not an authenticated owner request');
+    const selection = { ...target, kind: 'workflow', id, path, feedback: input.feedback, feedbackUrl: run.html_url, approved: false };
+    const feedbackDigest = reviewDigest('workflow', run, selection);
+    return { ...selection, feedbackDigest, receipt: `<!-- lighthouse-review:workflow:${id}:${feedbackDigest} -->` };
+  }
   const kind = eventName === 'pull_request_review' ? 'review' : eventName === 'pull_request_review_comment' ? 'inline' : 'comment';
   const id = kind === 'review' ? event.review?.id : event.comment?.id;
   if (!Number.isSafeInteger(id) || id < 1) throw Error('Missing feedback identity');
@@ -96,7 +117,7 @@ export async function checkReviewCurrent(api, repo, review, implementation = fal
   if (publishedHead !== undefined && (!implementation || !/^[a-f0-9]{40}$/.test(publishedHead))) throw Error('Invalid published implementation head');
   const pr = await api(`pulls/${review.number}`);
   (implementation ? checkImplementationPullRequest : checkProposal)(pr, repo, publishedHead === undefined ? review : { ...review, head: publishedHead });
-  if (reviewDigest(review.kind, await api(review.path)) !== review.feedbackDigest) throw Error('Review feedback changed; no update published');
+  if (reviewDigest(review.kind, await api(review.path), review) !== review.feedbackDigest) throw Error('Review feedback changed; no update published');
   return pr;
 }
 

@@ -16,8 +16,10 @@ async function fixture(stage = 'refine', scenario = 'current') {
   const issue = { number: child, title: 'Format the accepted summary', body: 'Consume the four-count summarizer accepted in A.', user: { login: 'github-actions[bot]', type: 'Bot' }, state: 'open', labels: [{ name: 'triaged' }] };
   const triage = { issue: child, runId: 'e'.repeat(64), stage: 'triage', sourceRevision: main, originalRequest: issue.body, taskDigest: taskDigest(issue, []), epic };
   const triageEnvelope = { schemaVersion: 1, result: { schemaVersion: 1, runId: triage.runId, stage: 'triage', gate: 'triaged', status: 'passed', evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Refine after A is accepted.', output: { estimate, requestAnalysis: { originalRequest: issue.body, problem: 'Format counts', desiredResult: 'Exact text', inferences: [], unknowns: [], questions: [] } } }, effect: { type: 'issue-comment', body: 'Triage passed.' } };
+  const product = scenario.startsWith('product') ? { child, approval: 40, base: accepted, head: '4'.repeat(40), changeName: 'example', changeId: 'CHG-EXAMPLE', filesDigest: '5'.repeat(64), provider: '@prodshape/core', version: '0.25.0', pullRequest: 22 } : undefined;
+  if (product) { triage.sourceRevision = product.head; triage.epicProduct = product; }
   const event = { inputs: { issue: String(child), stage, workflow: 'stage' } };
-  const request = { id: 'f'.repeat(64), repository, issue: child, stage, sourceRevision: main, workflowRevision: workflow, routerRunId: '100', routerAttempt: 1, taskDigest: taskDigest(issue, []), epic: { ...epic, ...(['refine', 'implement'].includes(stage) && scenario !== 'missing-base' ? { baseSha: accepted } : {}) }, event, eventName: 'workflow_dispatch', handoff: false, autoImplement: false };
+  const request = { id: 'f'.repeat(64), repository, issue: child, stage, sourceRevision: main, workflowRevision: workflow, routerRunId: '100', routerAttempt: 1, taskDigest: taskDigest(issue, []), ...(product ? { epicProduct: product } : {}), epic: { ...epic, ...(['refine', 'implement'].includes(stage) && scenario !== 'missing-base' ? { baseSha: accepted } : {}) }, event, eventName: 'workflow_dispatch', handoff: false, autoImplement: false };
   await writeFile(join(dir, 'state.json'), JSON.stringify({ scenario, issue, triage, triageEnvelope, request, calls: [] }));
   await writeFile(join(dir, 'event.json'), JSON.stringify({ inputs: { 'dispatch-request': '1' } }));
   const modules = new URL('../packages/sdlc/src/', import.meta.url).href;
@@ -32,8 +34,10 @@ globalThis.fetch = async (url, options) => {
   let value;
   if (!path) value = { default_branch: 'main' };
   else if (path === 'commits/main') value = { sha: '${main}' };
+  else if (path === 'git/commits/${'4'.repeat(40)}') value = { sha: '${'4'.repeat(40)}', tree: { sha: '${accepted}' } };
   else if (path === 'git/commits/${accepted}') value = { sha: '${accepted}', tree: { sha: '${accepted}' } };
   else if (path === 'git/trees/${accepted}?recursive=1') value = { truncated: false, tree: [] };
+  else if (path.startsWith('issues/146/comments?')) value = [];
   else if (path === 'issues/18') value = s.issue;
   else if (path.startsWith('issues/18/comments?')) value = [{ id: 10, user: s.issue.user, body: '<!-- lighthouse-stage:triage:passed -->' }];
   else if (path === 'issues/18/labels' && options.method === 'POST') { s.issue.labels.push(...JSON.parse(options.body).labels.map(name => ({ name }))); value = s.issue.labels; }
@@ -48,8 +52,9 @@ registerHooks({ load(url, context, next) {
   const original = JSON.stringify(url + '?actual');
   let extra;
   if (url.endsWith('/stage-dispatch.mjs')) extra = 'export async function admitDispatch() { return { admitted: true, commentId: 1, request: JSON.parse(readFileSync(file)).request, receipt: { digest: "' + '0'.repeat(64) + '" } }; } export async function checkDispatchClaim() {} export async function assertCurrentDispatch() {} export async function loadDispatch() { return {request:JSON.parse(readFileSync(file)).request}; }';
-  if (url.endsWith('/proposal.mjs')) extra = 'export async function loadStageReport() { const s=JSON.parse(readFileSync(file)); return { request:s.triage, envelope:s.triageEnvelope }; } export async function loadRefinement(api,repo,reports,current) { if(current.sourceRevision!=="${accepted}") throw Error("Wrong refinement context source"); return {}; }';
+  if (url.endsWith('/proposal.mjs')) extra = 'export async function loadStageReport() { const s=JSON.parse(readFileSync(file)); return { request:s.triage, envelope:s.triageEnvelope }; } export async function loadRefinement(api,repo,reports,current) { if(current.sourceRevision!=="${scenario.startsWith('product') ? '4'.repeat(40) : accepted}") throw Error("Wrong refinement context source"); return {}; }';
   if (url.endsWith('/implementation.mjs')) extra = 'export async function loadImplementation() { return {policy:{scope:"Only the formatter",paths:["src/"],checks:[["node","--version"]],reviewRequired:false},proposal:{root:"openspec/changes/issue-18-proposal"}}; } export async function loadImplementationSeed() { return null; }';
+  if (url.endsWith('/epic-product-source.mjs')) extra = 'export async function loadEpicProductSource() { const s=JSON.parse(readFileSync(file)); if(s.scenario==="product-revoked") throw Error("Product source approval revoked"); return s.request.epicProduct ?? null; }';
   if (url.endsWith('/epic-native.mjs')) extra = 'export async function authenticateEpicChild() { return ' + ${JSON.stringify(JSON.stringify(epic))} + '; } export async function inspectEpicDependencies() { const s=JSON.parse(readFileSync(file)); if(s.scenario==="revoked") throw Error("Epic dependency owner approval was revoked"); return {baseSha:s.scenario==="base-moved"?"' + '9'.repeat(40) + '":"${accepted}",dependencies:[{slice:"A",issue:17,pullRequest:20,head:"' + '1'.repeat(40) + '",mergeCommit:"${accepted}",approvedBase:"${main}",checkedCandidate:"' + '2'.repeat(40) + '",review:5,checks:"passed",includedIn:"${accepted}",historyStatus:"identical"}]}; } export async function checkEpicCapacity() { if(JSON.parse(readFileSync(file)).request.stage!=="implement") throw Error("Refinement must not reserve implementation capacity"); }';
   if (!extra) return next(url, context);
   return { format:'module', shortCircuit:true, source:'import { readFileSync } from "node:fs"; const file='+JSON.stringify(file)+'; export * from '+original+'; '+extra };
@@ -126,6 +131,24 @@ test('production refinement publisher rejects dependency changes after execution
       assert.notEqual(published.status, 0);
       assert.match(published.stderr, scenario === 'revoked' ? /approval was revoked/ : /Epic base changed before publication/);
       assert.equal(JSON.parse(await readFile(join(f.dir, 'state.json'))).calls.some(call => call.method !== 'GET'), false);
+    } finally { await rm(f.dir, { recursive: true, force: true }); }
+  }
+});
+
+
+test('production triage, refinement and implementation select the authenticated applied product head while retaining main policy and the epic merge base', async () => {
+  for (const stage of ['triage', 'refine', 'implement']) {
+    const f = await fixture(stage, 'product');
+    try {
+      const run = f.run(); assert.equal(run.status, 0, run.stderr);
+      const request = JSON.parse(await readFile(join(f.dir, 'request.json')));
+      assert.equal(request.sourceRevision, '4'.repeat(40));
+      assert.equal(request.baseRevision, main);
+      assert.equal(request.epicProduct.base, accepted);
+      assert.equal(request.epicProduct.changeId, 'CHG-EXAMPLE');
+      if (stage !== 'triage') assert.equal(request.epic.baseSha, accepted);
+      const context = JSON.parse(await readFile(join(f.dir, 'context.json')));
+      assert.match(context.contract.rules, /trusted host replayed the explicitly owner-approved ProductShape apply/);
     } finally { await rm(f.dir, { recursive: true, force: true }); }
   }
 });

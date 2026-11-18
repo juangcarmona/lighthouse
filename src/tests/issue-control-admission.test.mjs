@@ -32,7 +32,8 @@ test('typed stage entry cannot inherit global implementation or product-change a
     const native = controlStageDispatch(f);
     assert.equal(native.stage, action); assert.equal(native.autoImplement, false); assert.equal(native.productChangeEnabled, false);
     assert.equal(native.handoff, false); assert.equal(native.client.scope, 'stage-only');
-    for (const injected of [{ merge: 'true' }, { model_selection: '{}' }, { workflow: 'product-change' }, { after_run: '1' }, { epic_parent: '8' }])
+    assert.deepEqual(controlEventIntent({ ...f, event: { ...f.event, inputs: { ...f.event.inputs, feedback: '' } } }), f.intent);
+    for (const injected of [{ merge: 'true' }, { model_selection: '{}' }, { workflow: 'product-change' }, { after_run: '1' }, { epic_parent: '8' }, { feedback: 'Complete the implementation' }])
       assert.throws(() => controlEventIntent({ ...f, event: { ...f.event, inputs: { ...f.event.inputs, ...injected } } }), /mixed-client/);
   }
 });

@@ -1,3 +1,4 @@
+import { loadEpicProductSource } from './epic-product-source.mjs';
 import { loadClientDispatch, clientDispatchRoute, checkClientContinuation, checkClientSnapshot } from './issue-control-native.mjs';
 import { parseIssueComment } from './issue-comment-intent.mjs';
 import { ownerIntentComments, collectTriageAdmission, collectProposalAdmission } from './issue-admission.mjs';
@@ -163,9 +164,9 @@ export async function checkEpicAuthority(epic, authenticate) {
   if (!epic) return;
   if (!isDeepStrictEqual(await authenticate(), epic)) throw Error('Epic parent authority changed');
 }
-export function checkEpicTriageBinding(epic, triage) {
+export function checkEpicTriageBinding(epic, triage, product) {
   const { baseSha, ...identity } = epic ?? {};
-  if (epic && !isDeepStrictEqual(triage?.request?.epic, identity)) throw Error('Child triage does not match the current authenticated epic plan');
+  if (epic && (!isDeepStrictEqual(triage?.request?.epic, identity) || !isDeepStrictEqual(triage?.request?.epicProduct, product))) throw Error('Child triage does not match the current authenticated epic plan');
 }
 export function existingEpicTriage(request, issue, comments) {
   if (request.stage !== 'triage' || request.worker || !request.epic || request.issue !== issue.number || issue.state !== 'open' || issue.labels.some(label => ['future', 'human-working', 'needs-info', 'waiting-review'].includes(label.name)) || request.intent !== dispatchIntent(request)) return null;
@@ -244,6 +245,7 @@ async function main(command) {
       }
     }
   }
+  if (['route', 'dispatch-prepare', 'prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'workflow_dispatch' && event.inputs?.feedback) reviewTarget(event, env.GITHUB_EVENT_NAME);
   if (command === 'product-apply-prepare') {
     const issueNumber = Number(env.LIGHTHOUSE_ISSUE);
     if (dispatch?.request.worker !== 'apply-product-change' || !dispatch.request.productApproval) throw Error('Trusted Product Change apply dispatch is missing');
@@ -363,7 +365,7 @@ async function main(command) {
       await summary('No Lighthouse action for this PR.'); return;
     }
     const implementation = pr.body?.includes('<!-- lighthouse-product-implementation:') || parsePublicationBranch(pr.head?.ref)?.stage === 'implement' && !pr.body?.includes('<!-- lighthouse-product-proposal:');
-    const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation);
+    const feedback = await loadProposalReview(api, repo, owner, event, env.GITHUB_EVENT_NAME, implementation, { runId: dispatch?.request.routerRunId ?? env.GITHUB_RUN_ID, revision: dispatch?.request.routerRevision ?? env.GITHUB_SHA });
     const reports = await api(`issues/${feedback.number}/comments?per_page=100`);
     if (reports.length >= 100) throw Error('Discussion exceeds bounded collection');
     feedback.handled = reports.some(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && c.body.includes(feedback.receipt));
@@ -426,6 +428,7 @@ async function main(command) {
       if (stage === 'implement') await native.checkEpicCapacity({ api, repository: repo, owner, child: issueNumber, current: epicContext, capacity: Number(env.LIGHTHOUSE_EPIC_CAPACITY || '1') });
       epicContext = { ...epicContext, baseSha };
     }
+    const epicProduct = epicContext ? await loadEpicProductSource({ api, repository: repo, owner, child: issueNumber, current: epicContext }) : null;
     const productEntry = ['product-change', 'apply-product-change'].includes(route.worker);
     const installed = productEntry ? env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true' : (env.LIGHTHOUSE_ENABLED_STAGES ?? stages.join(',')).split(',').includes(stage);
     if (!route.run || route.issue !== issueNumber || !installed || env.LIGHTHOUSE_STAGE && env.LIGHTHOUSE_STAGE !== stage) throw Error('Stage dispatch is not authorized');
@@ -452,7 +455,7 @@ async function main(command) {
     // Review events can run on a PR merge ref, which is not a dispatchable branch.
     // Only an explicit owner dispatch selects a workflow branch; native events use main.
     const manual = env.GITHUB_EVENT_NAME === 'workflow_dispatch' && env.GITHUB_ACTOR === owner && env.GITHUB_TRIGGERING_ACTOR === owner;
-    const request = { schemaVersion: 1, ...(route.admissionBinding ? { admissionBinding: route.admissionBinding, admissionReviewsDigest: route.admissionReviewsDigest } : {}), ...(after?.completionRecovery ? { completionRecovery: after.completionRecovery } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), ...(integrationRequest ? { integrationRequest } : {}), id: dispatchId(repo, epicIdentity ?? feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(epicIdentity ? { epicKey: epicIdentity } : {}), ...(epicContext ? { epic: epicContext } : {}), ...(worker ? { worker, ...(feedbackIdentity ? { feedbackKey: feedbackIdentity } : {}) } : {}), ...(route.productApproval?.approval ? { productApproval: { ...route.productApproval.approval, pullRequest: route.productApproval.pullRequest, head: route.productApproval.head, issue: route.productApproval.issue, changeName: route.productApproval.changeName } } : {}), ...(route.productFeedback ? { productFeedback: route.productFeedback } : {}), ...(route.productParent ? { productParent: route.productParent } : {}), ...(route.productResume ? { productResume: route.productResume } : {}), ...(route.productAlignment ? { productAlignment: route.productAlignment } : {}), ...(route.productReview && !route.productApproval?.approval ? { productReview: { pullRequest: route.productReview.pullRequest, head: route.productReview.head, issue: route.productReview.issue, changeName: route.productReview.changeName, ...(route.productReview.checkpoint?.parent ? { parent: route.productReview.checkpoint.parent } : {}) } } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: !epicContext && stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && (!route.productResume || route.productResume.parent.autoImplement) && (!route.productAlignment || route.productAlignment.parent.autoImplement), productChangeEnabled: env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true', taskDigest: taskDigest(issue, answers) };
+    const request = { schemaVersion: 1, ...(route.admissionBinding ? { admissionBinding: route.admissionBinding, admissionReviewsDigest: route.admissionReviewsDigest } : {}), ...(after?.completionRecovery ? { completionRecovery: after.completionRecovery } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), ...(integrationRequest ? { integrationRequest } : {}), id: dispatchId(repo, epicIdentity ?? feedbackIdentity ?? eventRunId ?? env.GITHUB_RUN_ID, stage), ...(epicIdentity ? { epicKey: epicIdentity } : {}), ...(epicContext ? { epic: epicContext } : {}), ...(epicProduct ? { epicProduct } : {}), ...(worker ? { worker, ...(feedbackIdentity ? { feedbackKey: feedbackIdentity } : {}) } : {}), ...(route.productApproval?.approval ? { productApproval: { ...route.productApproval.approval, pullRequest: route.productApproval.pullRequest, head: route.productApproval.head, issue: route.productApproval.issue, changeName: route.productApproval.changeName } } : {}), ...(route.productFeedback ? { productFeedback: route.productFeedback } : {}), ...(route.productParent ? { productParent: route.productParent } : {}), ...(route.productResume ? { productResume: route.productResume } : {}), ...(route.productAlignment ? { productAlignment: route.productAlignment } : {}), ...(route.productReview && !route.productApproval?.approval ? { productReview: { pullRequest: route.productReview.pullRequest, head: route.productReview.head, issue: route.productReview.issue, changeName: route.productReview.changeName, ...(route.productReview.checkpoint?.parent ? { parent: route.productReview.checkpoint.parent } : {}) } } : {}), repository: repo, issue: issueNumber, stage, routerRunId: env.GITHUB_RUN_ID, routerAttempt: Number(env.GITHUB_RUN_ATTEMPT), routerRevision: router.head_sha, routerRef: router.head_branch, workflowRevision: manual ? router.head_sha : revision, sourceRevision: revision, ref: manual ? router.head_branch : metadata.default_branch, eventName: env.GITHUB_EVENT_NAME, event, handoff, queue, ...(handoff ? { predecessor: route.predecessor } : {}), ...(eventRunId ? { eventRunId } : {}), autoImplement: !epicContext && stage === 'refine' && env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true' && (!route.productResume || route.productResume.parent.autoImplement) && (!route.productAlignment || route.productAlignment.parent.autoImplement), productChangeEnabled: env.LIGHTHOUSE_PRODUCT_CHANGE_ENABLED === 'true', taskDigest: taskDigest(issue, answers) };
     executionModelSelection(request);
     if (['integrate', 'review'].includes(stage)) request.completionAuthorization = await (await import('./completion-events.mjs')).authorizeCompletionEvent(api, repo, after ?? event, { ...env, ...(after ? { GITHUB_EVENT_NAME: 'workflow_run' } : {}) }, stage, integrationRequest);
     request.intent = dispatchIntent(request);
@@ -506,6 +509,7 @@ async function main(command) {
     const handoff = env.LIGHTHOUSE_IMPLEMENT_HANDOFF === 'true';
     if (handoff && !after) route = { run: env.GITHUB_ACTOR === owner && !reviewTarget(event, env.GITHUB_EVENT_NAME) && ['issues', 'issue_comment', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), stage: 'implement', issue: issueNumber };
     const productWorker = dispatch?.request.worker === 'product-change';
+    const epicProduct = dispatch?.request.epicProduct;
     const productResume = dispatch?.request.productResume;
     const productAlignment = dispatch?.request.productAlignment;
     const alignedPr = productAlignment?.parent.pullRequest;
@@ -520,6 +524,8 @@ async function main(command) {
     if (dispatch?.request.epic) {
       const { baseSha, ...epic } = dispatch.request.epic;
       const native = await import('./epic-native.mjs');
+      const currentProduct = await loadEpicProductSource({ api, repository: repo, owner, child: issueNumber, current: epic });
+      if (!isDeepStrictEqual(currentProduct, epicProduct ?? null)) throw Error('Epic product source changed before stage preparation');
       await checkEpicAuthority(epic, () => native.authenticateEpicChild({ api, repository: repo, owner, child: issueNumber }));
       if (epicSource) {
         const observed = await native.inspectEpicDependencies({ api, repository: repo, owner, child: issueNumber, current: epic });
@@ -528,9 +534,9 @@ async function main(command) {
         epicPrerequisites = { status: 'verified', verifiedBy: 'trusted-host', base: epic.base, baseSha, dependencies: observed.dependencies };
       } else if (baseSha !== undefined) throw Error('Unexpected epic implementation base');
     }
-    const revision = { sha: productResume ? productResume.head : alignedPr ? alignedPr.head : implementationReview ? implementationReview.head : epicSource ? dispatch.request.epic.baseSha : proposalReview?.productProposal ? proposalReview.head : baseRevision };
+    const revision = { sha: productResume ? productResume.head : alignedPr ? alignedPr.head : implementationReview ? implementationReview.head : epicProduct ? epicProduct.head : epicSource ? dispatch.request.epic.baseSha : proposalReview?.productProposal ? proposalReview.head : baseRevision };
     if (alignedPr) checkAlignedImplementationPullRequest(await api(`pulls/${alignedPr.number}`), repo, productAlignment);
-    if (!proposalReview && !implementationReview && !productResume && !alignedPr && !epicSource && revision.sha !== (dispatch?.request.sourceRevision ?? env.GITHUB_SHA)) throw Error('Workflow must run against the current default branch');
+    if (!proposalReview && !implementationReview && !productResume && !alignedPr && !epicSource && !epicProduct && revision.sha !== (dispatch?.request.sourceRevision ?? env.GITHUB_SHA)) throw Error('Workflow must run against the current default branch');
     const all = await comments(), answers = ownerAnswers(all);
     if (dispatch && (dispatch.request.sourceRevision !== baseRevision || dispatch.request.taskDigest !== taskDigest(issue, answers))) throw Error('Dispatched source or owner intent changed');
     if (dispatch && route.stage !== dispatch.request.stage) throw Error('Dispatched request no longer selects its stage');
@@ -562,8 +568,8 @@ async function main(command) {
     await output('artifact_prefix', stage === 'implement' ? 'implement-' : '');
     let predecessor, implementation, seed, planningReference, triage;
     if (!productWorker && (stage === 'refine' || issue.user.login !== owner && !proposalReview && !implementationReview && ['propose', 'implement'].includes(stage))) {
-      triage = await collectTriageAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha) });
-      if (stage === 'refine' && triage) checkEpicTriageBinding(dispatch?.request.epic, triage);
+      triage = await collectTriageAdmission({ api, repository: repo, owner, issue, comments: all, sourceRevision: epicProduct?.head ?? productResume?.baseRevision ?? (epicSource || alignedPr ? baseRevision : revision.sha) });
+      if (stage === 'refine' && triage) checkEpicTriageBinding(dispatch?.request.epic, triage, epicProduct);
     }
     if (stage === 'implement' && !productWorker) {
       if (handoff) {
@@ -597,7 +603,7 @@ async function main(command) {
     if (productWorker && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productChangeName)) throw Error('Invalid Product Change name');
     const baselineDigest = productWorker ? await productModelDigest(process.cwd()) : undefined;
     const sourceLinks = stage === 'implement' ? await sourceLinksFromApi(api, revision.sha) : undefined;
-    const snapshot = { ...(sourceLinks ? { sourceLinks } : {}), ...(dispatch?.request.client ? { client: dispatch.request.client } : {}), ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
+    const snapshot = { ...(sourceLinks ? { sourceLinks } : {}), ...(dispatch?.request.client ? { client: dispatch.request.client } : {}), ...(dispatch?.request.epic ? { epic: dispatch.request.epic } : {}), ...(epicProduct ? { epicProduct, baseRevision } : {}), ...(dispatch && executionModelSelection(dispatch.request) ? { modelSelection: executionModelSelection(dispatch.request) } : {}), ...(route.ciRepair ? { ciRepair: route.ciRepair } : {}), autoImplement: env.LIGHTHOUSE_AUTO_IMPLEMENT === 'true', productChangeEnabled: dispatch?.request.productChangeEnabled === true, ...(dispatch ? { worker: dispatch.request.worker, workflowRevision: env.GITHUB_SHA, dispatch: { commentId: dispatch.commentId, requestId: dispatch.request.id, digest: dispatch.receipt.digest, routerRunId: dispatch.request.routerRunId, routerAttempt: dispatch.request.routerAttempt, ...(dispatch.request.recovery ? { recovery: dispatch.request.recovery } : {}) } } : {}), ...(productWorker ? { authorizationDigest, policyDigest, productChangeName, baselineDigest, productEntry: dispatch.request.productFeedback ? 'feedback' : dispatch.request.productParent ? 'parent-handoff' : 'idea', ...((dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation?.request.productParent) ? { productParent: dispatch.request.productParent ?? dispatch.request.productReview?.parent ?? continuation.request.productParent } : {}) } : {}), ...(planningReference ? { planningReference } : {}), ...(productResume ? { productResume, baseRevision } : {}), ...(dispatch?.request.productAlignment ? { productAlignment: dispatch.request.productAlignment, ...(alignedPr ? { baseRevision } : {}) } : {}), ...(implementationReview ? { implementationReview, baseRevision } : epicSource ? { baseRevision } : {}), ...(proposalReview ? { proposalReview, ...(proposalReview.productProposal ? { baseRevision } : {}) } : {}), repository: repo, runId: id, issue: issueNumber, stage, title: issue.title, defaultBranch: repository.default_branch, sourceRevision: revision.sha, taskDigest: taskDigest(issue, answers), workflowRunId: env.GITHUB_RUN_ID, attempt: Number(env.GITHUB_RUN_ATTEMPT), ...(predecessor ? { refinement: predecessor } : {}), ...(continuation ? { replyTo: continuation.request.runId, commentId: continuationAnswer.id, answerHistory: continuationHistory(continuation, continuationAnswer) } : {}), ...(implementation ? { implementation } : {}), ...(seed ? { seedDigest: changesDigest(seed) } : {}) };
     if (isVerificationOnlyCorrection(snapshot) && !snapshot.epic && !snapshot.productResume && !snapshot.productAlignment && implementation.policy.verification?.synchronizeBase === true) {
       const synchronization = await prepareSourceSynchronization(api, snapshot.sourceRevision, snapshot.baseRevision);
       if (synchronization) snapshot.sourceSynchronization = synchronization;
@@ -618,6 +624,7 @@ async function main(command) {
       context.epicPrerequisites = epicPrerequisites;
       context.contract.rules += ' context.epicPrerequisites contains the trusted host verification of accepted dependency heads, current owner reviews, checks and inclusion in the supplied epic base. Use this evidence for the current authorized stage. The host rechecks it before publication; merge and release retain their separate authorization.';
     }
+    if (epicProduct) context.contract.rules += ' The trusted host replayed the explicitly owner-approved ProductShape apply and supplied its exact product source. Preserve that product model. This source is a prerequisite only; the child still requires independent implementation checks, owner acceptance and its authenticated epic merge.';
     if (productResume) { context.productResume = productResume; context.contract.rules += ' The approved Product Change was applied to the supplied issue branch. Resume only the original parent stage and its existing authorization. Preserve the applied product files and branch; product approval does not authorize merge or broaden implementation scope.'; }
     if (snapshot.productAlignment) { context.productAlignment = snapshot.productAlignment; context.contract.rules += ' The authenticated Product Change worker found that accepted product intent already covers this request. Resume only the original parent stage and its existing authorization. This observation grants no new product decision, implementation scope or merge authority.'; }
     if (snapshot.sourceSynchronization) context.contract.rules += ' The trusted host synchronizes nonconflicting changes from the admitted default branch before execution. Preserve all supplied files, including verification inputs. Return no file changes; only the host may publish the independently checked synchronization.';
@@ -805,6 +812,8 @@ async function main(command) {
       }
       if (!snapshot.epic) return;
       const { baseSha, ...epic } = snapshot.epic, native = await import('./epic-native.mjs');
+      const currentProduct = await loadEpicProductSource({ api, repository: repo, owner, child: issueNumber, current: epic });
+      if (!isDeepStrictEqual(currentProduct, snapshot.epicProduct ?? null)) throw Error('Epic product source changed before publication');
       await checkEpicAuthority(epic, () => native.authenticateEpicChild({ api, repository: repo, owner, child: issueNumber }));
       if (snapshot.stage === 'refine' && snapshot.dispatch) {
         const worker = await api(`actions/runs/${env.GITHUB_RUN_ID}/attempts/${env.GITHUB_RUN_ATTEMPT}`);

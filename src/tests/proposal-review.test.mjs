@@ -1,10 +1,64 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkProposal, reviewTarget, loadProposalReview, loadProposalFiles, updateProposal, reviewThread, checkReviewCurrent } from '../packages/sdlc/src/proposal-review.mjs';
+import { checkProposal, reviewTarget, loadProposalReview, loadProposalFiles, updateProposal, reviewThread, checkReviewCurrent, feedbackKey, feedbackWorker } from '../packages/sdlc/src/proposal-review.mjs';
 const repo = 'owner/repo', head = 'a'.repeat(40);
 const pr = { number: 60, state: 'open', user: { login: 'github-actions[bot]', type: 'Bot' }, head: { sha: head, ref: `lighthouse/propose-47-${'b'.repeat(12)}`, repo: { full_name: repo } }, base: { ref: 'main', repo: { full_name: repo } }, body: `<!-- lighthouse-proposal:${'b'.repeat(64)} -->`, html_url: 'https://github.com/owner/repo/pull/60' };
 const comment = { id: 7, body: 'Support phones', user: { login: 'owner', type: 'User' }, issue_url: `https://api.github.com/repos/${repo}/issues/60` };
 const event = { issue: { number: 60, pull_request: {} }, comment };
+
+function workflowCorrection() {
+  const implementation = structuredClone(pr);
+  implementation.head.ref = implementation.head.ref.replace('propose-', 'implement-');
+  implementation.base.ref = 'lighthouse/epic-4';
+  implementation.body = `<!-- lighthouse-implementation:${'b'.repeat(64)} -->`;
+  const event = { inputs: { issue: '47', stage: 'implement', workflow: 'stage', pull_request: '60', head, feedback: 'Complete the open implementation tasks. This does not approve merge.' } };
+  const origin = { runId: '90', revision: 'c'.repeat(40) };
+  const run = { id: 90, repository: { full_name: repo }, path: '.github/workflows/lighthouse-sdlc-router.yml', event: 'workflow_dispatch', head_sha: origin.revision, head_branch: 'reviewed-controller', actor: { login: 'owner', type: 'User' }, triggering_actor: { login: 'owner', type: 'User' }, status: 'in_progress', conclusion: null, html_url: `https://github.com/${repo}/actions/runs/90` };
+  const api = async path => { if (path === 'pulls/60') return implementation; if (path === 'actions/runs/90') return run; throw Error(`Unexpected API read: ${path}`); };
+  return { implementation, event, origin, run, api, load: () => loadProposalReview(api, repo, 'owner', event, 'workflow_dispatch', true, origin) };
+}
+
+test('an explicit owner workflow corrects the exact existing implementation through apply-review without a comment or approval', async () => {
+  const f = workflowCorrection(), review = await f.load();
+  assert.equal(reviewTarget(f.event, 'workflow_dispatch'), 60);
+  assert.equal(review.head, head); assert.equal(review.base, 'lighthouse/epic-4'); assert.equal(review.kind, 'workflow');
+  assert.equal(review.feedback, f.event.inputs.feedback); assert.equal(review.approved, false); assert.equal(feedbackWorker(review), 'apply-review');
+  f.run.status = 'completed'; f.run.conclusion = 'success';
+  assert.equal(feedbackKey(await f.load()), feedbackKey(review), 'normal source completion must not duplicate a correction');
+  await checkReviewCurrent(f.api, repo, review, true);
+  f.implementation.head.sha = 'd'.repeat(40);
+  await checkReviewCurrent(f.api, repo, review, true, { publishedHead: f.implementation.head.sha });
+  await assert.rejects(checkReviewCurrent(f.api, repo, review, true), /changed/);
+});
+
+test('workflow corrections refuse another target, source, actor, stage, mixed grant or unbounded input', async () => {
+  for (const mutate of [
+    f => { f.event.inputs.head = 'd'.repeat(40); }, f => { f.event.inputs.issue = '48'; },
+    f => { f.event.inputs.stage = 'integrate'; }, f => { f.event.inputs.workflow = 'product-change'; },
+    f => { f.event.inputs.feedback = ' '; }, f => { f.event.inputs.feedback = 'x'.repeat(12001); },
+    f => { f.event.inputs.merge = 'true'; }, f => { f.event.inputs.after_run = '12'; },
+    f => { f.event.inputs.client_request = '{}'; }, f => { f.origin.runId = undefined; },
+    f => { f.run.repository.full_name = 'other/repo'; }, f => { f.run.actor.login = 'other'; },
+    f => { f.run.actor.type = 'Bot'; }, f => { f.run.triggering_actor.login = 'other'; },
+    f => { f.run.event = 'push'; }, f => { f.run.path = '.github/workflows/other.yml'; },
+    f => { f.run.head_sha = 'd'.repeat(40); }, f => { f.run.conclusion = 'cancelled'; },
+    f => { f.implementation.user = { login: 'owner', type: 'User' }; },
+    f => { f.implementation.head.repo.full_name = 'fork/repo'; },
+  ]) { const f = workflowCorrection(); mutate(f); await assert.rejects(f.load()); }
+  for (const target of [undefined, '0', '-1', 'bad', '9007199254740992']) assert.throws(() => reviewTarget({ inputs: { feedback: 'Complete', pull_request: target } }, 'workflow_dispatch'), /valid PR/);
+  const f = workflowCorrection();
+  await assert.rejects(loadProposalReview(f.api, repo, 'owner', f.event, 'workflow_dispatch', false, f.origin));
+});
+
+test('publication rejects a revoked workflow or changed feedback without treating normal completion as a change', async () => {
+  for (const mutate of [f => { f.run.conclusion = 'failure'; }, f => { f.run.actor.login = 'other'; }, f => { f.run.head_sha = 'd'.repeat(40); }]) {
+    const f = workflowCorrection(), review = await f.load(); mutate(f);
+    await assert.rejects(checkReviewCurrent(f.api, repo, review, true), /feedback changed/);
+  }
+  const f = workflowCorrection(), review = await f.load();
+  await assert.rejects(checkReviewCurrent(f.api, repo, { ...review, feedback: 'Different instruction' }, true), /feedback changed/);
+});
+
 test('only existing bot proposal branches with intact identity can be updated', () => {
   assert.equal(checkProposal(pr, repo).issue, 47);
   for (const bad of [{ ...pr, state: 'closed' }, { ...pr, user: comment.user }, { ...pr, body: '' }, { ...pr, head: { ...pr.head, repo: { full_name: 'fork/repo' } } }]) assert.throws(() => checkProposal(bad, repo));
