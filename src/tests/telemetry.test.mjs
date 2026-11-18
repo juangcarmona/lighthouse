@@ -84,6 +84,36 @@ test('disabled, capacity, unsafe paths and truncated journals report explicit li
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
+test('native model identity supports OpenCode 2.1 and legacy references without retaining malformed values', () => {
+  const cases = [
+    [{ id: 'current-model', providerID: 'test-provider' }, 'current-model'],
+    [{ modelID: 'legacy-model', providerID: 'test-provider' }, 'legacy-model'],
+    [{ id: 'current-model', modelID: 'legacy-model', providerID: 'test-provider' }, 'current-model'],
+    [undefined, null],
+    [{ providerID: 'test-provider' }, null],
+    [{ id: 42, modelID: 'legacy-model', providerID: 'test-provider' }, null],
+    [{ id: { secret: 'source-body' }, providerID: 'test-provider' }, null],
+    [{ id: 'invalid model', providerID: 'test-provider' }, null],
+  ];
+  for (const terminal of ['session.step.ended', 'session.step.failed']) {
+    for (const [model, expected] of cases) {
+      const events = [], observer = openCodeObserver((type, attributes) => events.push({ type, attributes }));
+      observer({ id: 'start', type: 'session.step.started', created: 1000, data: { assistantMessageID: 'message', model } });
+      observer({ id: 'end', type: terminal, created: 1500, data: { assistantMessageID: 'message', tokens } });
+      assert.equal(events.length, 2);
+      for (const event of events) {
+        assert.equal(event.attributes.model, expected);
+        assert.equal(event.attributes.provider, model?.providerID ?? null);
+      }
+      assert.equal(events[1].type, terminal);
+      assert.equal(events[1].attributes.inputTokens, tokens.input);
+      assert.equal(events[1].attributes.outputTokens, tokens.output);
+      assert.equal(events[1].attributes.reasoningTokens, tokens.reasoning);
+      assert.ok(!JSON.stringify(events).includes('source-body'));
+    }
+  }
+});
+
 test('native activity strips payloads, preserves timing, deduplicates and reconciles usage', () => {
   const directory = fixture();
   try {
