@@ -56,4 +56,4 @@ No slice stores agent transcripts, model output or shared budgets in the reposit
 
 ## Product Change
 
-The product boundaries for this plan are [CHG-SDLC-DELIVERY-001](../product/changes/active/chg-sdlc-delivery-001/change.md), [CHG-CAPABILITY-RECONCILIATION-001](../product/changes/active/chg-capability-reconciliation-001/change.md) and [CHG-LH-EVIDENCE-CONTRACT-001](../product/changes/active/chg-lh-evidence-contract-001/change.md). ProductShape remains the source of record for their lifecycle state; this plan records the implementation evidence without replacing that authority.
+The product boundaries for this plan are [CHG-SDLC-DELIVERY-001](../product/changes/active/chg-sdlc-delivery-001/change.md), [CHG-CAPABILITY-RECONCILIATION-001](../product/changes/active/chg-capability-reconciliation-001/change.md) and [CHG-LH-EVIDENCE-CONTRACT-001](../product/changes/completed/chg-lh-evidence-contract-001/change.md). ProductShape remains the source of record for their lifecycle state; this plan records the implementation evidence without replacing that authority.

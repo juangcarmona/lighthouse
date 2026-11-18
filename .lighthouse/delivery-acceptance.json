@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "route": "repository-owner",
+  "repositoryId": 1427668548,
+  "ownerId": 2834629,
+  "producer": {
+    "workflow": ".github/workflows/lighthouse-delivery-acceptance.yml",
+    "workflowBlob": "864ef64b4ba0f35ae4371305c88e1160fc4572bf",
+    "operator": "repository-owner"
+  }
+}

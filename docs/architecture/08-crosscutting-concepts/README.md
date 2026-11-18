@@ -22,7 +22,9 @@ The [host evidence builder](../../../src/packages/sdlc/src/product-change.mjs) u
 
 [Packaged verification guidance](../../../src/packages/sdlc/product-verification.md) connects refinement, proposals, implementation and review to lifecycle transitions, terminal states, invariants and structured behaviours. Evidence records distinguish model coverage, executable tests, completed runs and acceptance. ProductShape verifies supported external evidence targets; stale applicability preserves historical outcomes and requires a new validation/run rather than revised historical claims.
 
-<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:90af94bb73cab9bf61e3a4c6eb7d44f68b42513063adadaa629ba72e69150f69" -->
+The optional [delivery-acceptance adapter](../../../src/packages/sdlc/delivery-acceptance.md) records a new owner decision through a reviewed non-agent workflow. The independent verifier checks live source attribution, exact candidate and policy bindings, retained producer artifacts and correction history. Artifact expiry or inaccessible history makes acceptance unavailable. This evidence grants no delivery mutation authority.
+
+<!-- pdac:cite id="FR-CHANGE-EVIDENCE" digest="sha256:ebb92b84fbb181d6be2e487dcf93b934a0f15b2d61b3b82d64f6a1c3f77ad78c" -->
 
 ## Profile and guardrail catalogs
 
@@ -104,3 +106,9 @@ The initial adapter should grant the engine local workspace capabilities and mod
 ## Application identity
 
 The harness distributes the [external identity contract](../../../src/packages/cli/assets/profiles/identity.md) and exposes it in generated baseline instructions and authenticated application skills. [ADR-0010](../09-architecture-decisions/0010-external-user-identity.md) establishes OIDC consumption, Keycloak as the self-hosted reference and operator ownership of shared identity infrastructure. Product-specific authorization and runtime acceptance tests remain adopter-owned. Foundation verification does not test an identity provider.
+
+## Delivery measurements
+
+The optional [measurement kernel](../../../src/packages/sdlc/measurements.md) derives versioned repository/window observations from retained source records. It preserves content identity, attempt lineage, numerator/denominator, censoring and collection gaps. Offline derivation establishes reproducibility; live source authentication remains with the owning collector and producer verifiers. The optional GitHub collector reads bounded repository/window observations using GET requests, then the renderer generates a self-contained report from those frozen bytes. The renderer inlines the existing UI package tokens; the browser receives no credential or API client. It creates no service or mutation authority.
+
+<!-- pdac:cite id="FR-EVIDENCE-COVERAGE" digest="sha256:15e4d317d3d5ce93d42de5b35c783e2d694343fccfc80a6dfd51b7be6349f327" -->

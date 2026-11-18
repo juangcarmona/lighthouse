@@ -14,6 +14,14 @@ The policy includes reviewed immutable [source pins](skills/audience-guidance/so
 
 When repository instructions explicitly authorize it, the [code and architecture fallback](skills/audience-guidance/SKILL.md#code-and-architecture-review) lets an isolated worker complete its required review without a missing global helper. Record the fallback method, reviewed source, findings and missing evidence. Packaging that guidance does not prove a native worker used it or change any approval gate.
 
+## Delivery measurements
+
+Use the optional [versioned measurements](measurements.md) to derive repository-scoped observations with explicit source coverage and missing-data states.
+
+## Delivery acceptance
+
+Use the optional [owner delivery-decision producer and source verifier](delivery-acceptance.md) to record acceptance of an exact candidate. It requires separate adoption and a new explicit owner decision.
+
 ## GitHub Actions
 
 These actions require installed workers, enabled automation and the repository owner as actor. Opening an issue alone starts no agent. Every result links to its execution; an Actions success can contain a blocked assessment.

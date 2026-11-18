@@ -21,7 +21,7 @@ The product owner selected the existing evidence change for the initial definiti
 - `src/packages/sdlc/src/model-profiles.mjs` distinguishes requested and resolved configuration from provider-reported settings. The latter are explicitly unverified; actual billing and subscription usage are unknown.
 - `src/packages/sdlc/src/opencode-execute.mjs` records selected runtime configuration and execution context. Configuration is not proof of actual provider model, reasoning effort, bill or successful completion.
 - `docs/roadmap/process-evidence.md` defines retained immutable phase bundles and distinguishes reports from final integration. Artifact availability and collection coverage must still be checked per observation.
-- `docs/product/changes/active/chg-lh-evidence-contract-001/change.md` is proposed. `docs/architecture/09-architecture-decisions/0007-host-execution-boundary.md` is accepted and leaves execution enforcement with the host.
+- `docs/product/changes/completed/chg-lh-evidence-contract-001/change.md` is proposed. `docs/architecture/09-architecture-decisions/0007-host-execution-boundary.md` is accepted and leaves execution enforcement with the host.
 
 These observations establish implemented mechanisms, not that a particular adopter installed, configured, tested or exercised them. Real-run evidence must be assessed separately for each capability.
 

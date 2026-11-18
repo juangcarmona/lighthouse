@@ -2,7 +2,7 @@
 id: CHG-LH-EVIDENCE-CONTRACT-001
 type: product-change
 title: Make delivery evidence traceable across product and architecture authorities
-status: proposed
+status: applied
 base-revision: '2dca1ef'
 operations:
   add:
@@ -28,7 +28,7 @@ The change also defines a bounded first set of provenance-aware delivery and att
 
 ## Rationale
 
-The product owner accepted incorporating the first measurement set into this existing change on 2026-11-01. The owner also accepted the minimum provenance proposal for #100; that decision does not establish that authentication and freshness are implemented or that the complete Product Change has been applied.
+The product owner accepted incorporating the first measurement set into this existing change on 2026-11-01 and explicitly authorized implementation of #220 followed by #221 in the delivery train on 2026-11-17. This application is limited to the existing evidence and bounded measurement scope. The owner also accepted the minimum provenance proposal for #100; that decision does not establish that authentication and freshness are implemented or that the complete Product Change has been applied.
 
 Evidence is a cross-cutting delivery fact rather than a property of one Product Change. A large change may span several work items, commits and runs, while one product requirement may be covered by several changes. A neutral record and many-to-many coverage projection closes that traceability gap without turning Lighthouse into a product authority or a quality-scoring platform.
 

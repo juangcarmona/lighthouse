@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { measurementCli } from './measurement-cli.mjs';
+import { acceptanceCli } from './delivery-acceptance-cli.mjs';
 import { practiceCli } from './practice-cli.mjs';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
@@ -395,11 +397,15 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['practices', 'telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <practices|telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
+if (!['measurements', 'delivery-acceptance', 'practices', 'telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <measurements|delivery-acceptance|practices|telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
   process.exit(2);
 }
-if (command === 'practices') {
+if (command === 'measurements') {
+  await measurementCli(process.argv.slice(3));
+} else if (command === 'delivery-acceptance') {
+  await acceptanceCli(process.argv.slice(3));
+} else if (command === 'practices') {
   console.log(JSON.stringify(await practiceCli(process.argv.slice(3)), null, 2));
 } else if (command === 'telemetry') {
   await telemetryCli(process.argv.slice(3));

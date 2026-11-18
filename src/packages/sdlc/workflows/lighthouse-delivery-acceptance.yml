@@ -1,0 +1,38 @@
+name: Lighthouse delivery acceptance
+on:
+  workflow_dispatch:
+    inputs:
+      decision_comment:
+        description: Numeric ID of the owner's unedited delivery-decision issue comment
+        type: string
+        required: true
+permissions: {}
+jobs:
+  record:
+    if: github.actor == github.repository_owner && github.triggering_actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: juangcarmona/lighthouse
+          ref: __LIGHTHOUSE_REF__
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Authenticate and retain the explicit owner decision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTHOUSE_DECISION_COMMENT: ${{ inputs.decision_comment }}
+        run: node src/packages/sdlc/src/sdlc.mjs delivery-acceptance produce --output receipt.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-delivery-acceptance-${{ inputs.decision_comment }}-${{ github.run_attempt }}
+          path: receipt.json
+          if-no-files-found: error
+          retention-days: 90
