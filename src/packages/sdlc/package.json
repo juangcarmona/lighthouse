@@ -50,7 +50,9 @@
     "issue-control.md",
     "practice-evidence.md",
     "delivery-acceptance.md",
-    "measurements.md"
+    "measurements.md",
+    "compact-output.md",
+    "change-continuity.md"
   ],
   "bin": {
     "lighthouse-sdlc": "./src/sdlc.mjs"
