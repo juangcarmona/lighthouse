@@ -1,0 +1,93 @@
+{
+  "kind": "actual-installed-model-workers-with-host-owned-memory",
+  "package": "0.30.0",
+  "packageSource": "1f40faf4ce78945325ce534eb1de49d1e8f42e38",
+  "image": "sha256:7137c919fea5359bab538485306e7c091804fa527835fef88b510ee5fe291406",
+  "requestedModel": "openai/gpt-6.1-sol",
+  "crossProjectRecall": 0,
+  "staleAfterInvalidation": 0,
+  "disabledOptionalWorkerCompleted": true,
+  "automaticWorkflowInjection": false,
+  "nativeGitHubActions": false,
+  "eligibility": "exact host-reviewed non-sensitive record allowlist; not a general privacy classifier",
+  "sourceUnchanged": true,
+  "ownerDeliveryAcceptance": "not asserted",
+  "retention": "one day; invalidated at end of exercise",
+  "completedAt": "2026-11-18T20:18:21.531Z",
+  "hostBinding": "Operator constructed separate read/write/management grants; no worker-supplied grant or eligibility policy.",
+  "initialDriverAssertions": [
+    "Accepted equivalent absolute source paths after inspecting the original report.",
+    "Matched actual shell tool and Node test reporter after inspecting the original native events."
+  ],
+  "workerReexecutionForDriverRepairs": false,
+  "moduleSha256": {
+    "memory.mjs": "1ef037f94b9878de0f0424d6f35bbf1fc45950b27b25abd34bf3be683f4cdc3a",
+    "memory-sqlite.mjs": "fac571cd51902dc9569ebf54883e11799c37dff73d33e7c5766b4d2930229eff",
+    "engine-slot.mjs": "481f6276d9a0ddbcc907cc5d5240bd8344d4408c09ce6eff2a8c2509b41c3443"
+  },
+  "projection": "Source project identity and source references are retained only in the private operator receipt; hashes bind this projection to those inputs.",
+  "operatorReceiptSha256": "ccf939d493ea86ee807705a49d91a532db10e890109e799e9d197ab47f4206c9",
+  "repositoryIdentitySha256": "6dd375180e61a1ff0d746bac189bac8cd59adcd9c41b20ec0bb4fce4f05bbcf4",
+  "sourceRevision": "9628bcf6764e3d6e5b93929fcfb401d67d700706",
+  "runs": [
+    {
+      "runId": "qualification-270-worker-1-1795032889516",
+      "exitCode": 0,
+      "report": {
+        "command": "node --test src/summary.test.mjs",
+        "exitCode": 0,
+        "sourceFile": "/workspace/src/summary.test.mjs",
+        "memoryStatus": "unavailable",
+        "observedTests": 34
+      },
+      "eventSha256": "05af64ec75e4b77ba39e5d3411ddc7767c1da98acfbc1ba926d3433e0ce2f082",
+      "contextSha256": "6359c075a99b4f19685fd565948094883d680ae7a53f758e7398237530e05c5e",
+      "storageMounted": false,
+      "providerHandleExposed": false,
+      "containerAbsent": true,
+      "sourceReferenceSha256": "467db28ffe5c30ddb914fb5c51006b62202bea26085cc39f810d806b2679e862"
+    },
+    {
+      "runId": "qualification-270-worker-2-1795033067663",
+      "exitCode": 0,
+      "report": {
+        "command": "node --test src/summary.test.mjs",
+        "exitCode": 0,
+        "sourceFile": "src/summary.test.mjs",
+        "memoryStatus": "available",
+        "originRunId": "qualification-270-worker-1-1795032889516",
+        "observedTests": 34,
+        "recalledSourceSha256": "467db28ffe5c30ddb914fb5c51006b62202bea26085cc39f810d806b2679e862"
+      },
+      "eventSha256": "c7832644bb79f4956e4d508e2d74d946630bce2e319209436cd43c0b90512864",
+      "contextSha256": "766c977bcf5d5ff4db4a71f23436b4e52c4c0d4387b660d9118ffdc1bfb001ca",
+      "storageMounted": false,
+      "providerHandleExposed": false,
+      "containerAbsent": true,
+      "sourceReferenceSha256": "467db28ffe5c30ddb914fb5c51006b62202bea26085cc39f810d806b2679e862"
+    }
+  ],
+  "recalledRecord": {
+    "scope": "project",
+    "runId": "qualification-270-worker-1-1795032889516",
+    "revision": "9628bcf6764e3d6e5b93929fcfb401d67d700706",
+    "workItem": "270",
+    "provenance": [
+      "execution:qualification-270-worker-1-1795032889516",
+      "sha256:05af64ec75e4b77ba39e5d3411ddc7767c1da98acfbc1ba926d3433e0ce2f082"
+    ],
+    "confidence": "verified",
+    "sensitivity": "non-sensitive",
+    "retention": "2026-11-19T20:17:47.653Z",
+    "topics": [
+      "verification"
+    ],
+    "value": {
+      "finding": "node --test src/summary.test.mjs"
+    },
+    "version": 1,
+    "contextOnly": true,
+    "authority": "untrusted",
+    "sourceReferenceSha256": "467db28ffe5c30ddb914fb5c51006b62202bea26085cc39f810d806b2679e862"
+  }
+}
