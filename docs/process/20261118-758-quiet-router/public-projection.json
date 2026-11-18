@@ -1,0 +1,9 @@
+{
+  "kind": "published-installer-replay",
+  "packageVersion": "0.30.1",
+  "release": "db3c062f4df3774cd98c16333e4bb5c8f7958a9c",
+  "compiler": "0.93.2",
+  "filesCompared": 39,
+  "drift": [],
+  "configurationPreserved": true
+}
