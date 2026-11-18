@@ -20,6 +20,8 @@ The policy includes reviewed immutable [source pins](skills/audience-guidance/so
 
 When repository instructions explicitly authorize it, the [code and architecture fallback](skills/audience-guidance/SKILL.md#code-and-architecture-review) lets an isolated worker complete its required review without a missing global helper. Record the fallback method, reviewed source, findings and missing evidence. Packaging that guidance does not prove a native worker used it or change any approval gate.
 
+For optional FF/hotfix assessments of sensitive surfaces, exact scope and evidence, see [risk-bound continuation](risk-delegation.md).
+
 ## Delivery measurements
 
 Use the optional [versioned measurements](measurements.md) to derive repository-scoped observations with explicit source coverage and missing-data states.
