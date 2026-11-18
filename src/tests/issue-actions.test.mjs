@@ -284,6 +284,53 @@ test('owner replies resume the blocked stage and never approve the next stage', 
     for (const label of ['human-working', 'agent-working']) assert.equal(routeIssue({ ...event, issue: { ...event.issue, labels: [...event.issue.labels, { name: label }] } }, 'owner', 'owner', 'issue_comment', [report(stage)]).run, false);
   }
 });
+
+test('wired router keeps informational comments quiet and preserves requested continuation feedback', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-quiet-router-'));
+  try {
+    const scenarios = [
+      { name: 'open informational', labels: [], reports: [], run: false, posts: 0 },
+      { name: 'closed informational', state: 'closed', labels: [], reports: [], run: false, posts: 0 },
+      { name: 'reserved informational', labels: ['agent-working'], reports: [], run: false, posts: 0 },
+      { name: 'historical question', labels: [], reports: [report('refine')], run: false, posts: 0 },
+      { name: 'pending answer', labels: ['needs-info'], reports: [report('refine')], run: true, posts: 1 },
+      { name: 'reserved answer', labels: ['needs-info', 'agent-working'], reports: [report('refine')], run: false, posts: 2, reason: 'Issue reserved' },
+      { name: 'uninstalled answer', labels: ['needs-info'], reports: [report('refine')], enabled: 'triage', run: false, posts: 2, reason: 'Requested workflow is not installed' },
+      { name: 'closed answer', state: 'closed', labels: ['needs-info'], reports: [report('refine')], run: false, posts: 2, reason: 'closed/non-issue target' },
+      { name: 'unauthorized answer', actor: 'stranger', labels: ['needs-info'], reports: [report('refine')], run: false, posts: 0 }
+    ];
+    for (const scenario of scenarios) {
+      const currentIssue = { ...issue, state: scenario.state ?? 'open', labels: scenario.labels.map(name => ({ name })) };
+      await writeFile(join(dir, 'event.json'), JSON.stringify({ action: 'created', issue: currentIssue, comment: reply }));
+      await writeFile(join(dir, 'output'), '');
+      await writeFile(join(dir, 'summary'), '');
+      await writeFile(join(dir, 'calls'), '');
+      await writeFile(join(dir, 'mock.mjs'), `
+        import { appendFileSync } from 'node:fs';
+        globalThis.fetch = async (url, options = {}) => {
+          const path = new URL(url).pathname.replace('/repos/owner/repo/', '');
+          if (options.method && options.method !== 'GET') {
+            appendFileSync(${JSON.stringify(join(dir, 'calls'))}, JSON.stringify({ path, method: options.method, body: JSON.parse(options.body) }) + '\\n');
+            return Response.json({ id: 20 });
+          }
+          if (path === 'issues/${issue.number}') return Response.json(${JSON.stringify(currentIssue)});
+          if (path === 'issues/${issue.number}/comments') return Response.json(${JSON.stringify(scenario.reports)});
+          throw Error('Unexpected router call: ' + path);
+        };
+      `);
+      const result = spawnSync(process.execPath, ['--import', join(dir, 'mock.mjs'), new URL('../packages/sdlc/src/issue-actions.mjs', import.meta.url).pathname, 'route'], {
+        encoding: 'utf8', env: { ...process.env, GITHUB_REPOSITORY: 'owner/repo', GITHUB_REPOSITORY_OWNER: 'owner', GITHUB_ACTOR: scenario.actor ?? 'owner', GITHUB_TRIGGERING_ACTOR: scenario.actor ?? 'owner', GITHUB_EVENT_NAME: 'issue_comment', GITHUB_EVENT_PATH: join(dir, 'event.json'), RUNNER_TEMP: dir, GH_TOKEN: 'fixture', GITHUB_RUN_ID: '123', GITHUB_OUTPUT: join(dir, 'output'), GITHUB_STEP_SUMMARY: join(dir, 'summary'), LIGHTHOUSE_ENABLED_STAGES: scenario.enabled ?? 'triage,refine', LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: 'false', LIGHTHOUSE_EPIC_ENABLED: 'false' }
+      });
+      assert.equal(result.status, 0, `${scenario.name}: ${result.stderr}`);
+      assert.match(await readFile(join(dir, 'output'), 'utf8'), new RegExp(`^run=${scenario.run}$`, 'm'), scenario.name);
+      const calls = (await readFile(join(dir, 'calls'), 'utf8')).trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+      assert.equal(calls.length, scenario.posts, scenario.name);
+      assert.ok(calls.every(call => call.method === 'POST' && /reactions|comments$/.test(call.path)), scenario.name);
+      if (scenario.reason) assert.ok(calls.some(call => call.body.body?.includes(scenario.reason)), scenario.name);
+      assert.match(await readFile(join(dir, 'summary'), 'utf8'), /Routing/);
+    }
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
 test('pending reply ignores stale, empty and spoofed reports and cannot replay after publication', () => {
   const event = { comment: reply };
   assert.equal(pendingReply(event, [report()]).stage, 'propose');
