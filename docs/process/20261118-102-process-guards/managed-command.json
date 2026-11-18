@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "outcome": "recorded",
+  "reason": "Extend the existing command regressions for a demonstrated capture/receipt defect; no new guard framework is needed.",
+  "records": [
+    {
+      "id": "managed-command-terminal-capture",
+      "version": "1.0.0",
+      "failure": {
+        "claim": "A managed command retains its actual exit status and terminal receipt before releasing workspace ownership.",
+        "outcome": "Caller redirection created the managed capture file. EEXIST prevented command execution, retained a running receipt and released its owner slot.",
+        "codeDefect": "Exclusive capture creation collided with inherited stdout; setup exceptions bypassed terminal receipt settlement.",
+        "processGap": "The existing command checks omitted caller-created capture files and setup-failure receipt/ownership consistency.",
+        "evidence": [
+          "https://github.com/juangcarmona/lighthouse/pull/750",
+          "red-green-receipt.json"
+        ]
+      },
+      "owner": "Lighthouse SDLC maintainers",
+      "source": "src/tests/managed-command.test.mjs",
+      "check": {
+        "command": "node --test --test-name-pattern=\"caller redirection|log setup failure\" src/tests/managed-command.test.mjs",
+        "red": {
+          "revision": "0f6d6dac74cdc0f5b08dff7e876a2cc639207cee",
+          "exitCode": 1,
+          "evidence": [
+            "red-green-receipt.json: red; two behavioral assertions fail; original capture contains EEXIST and receipt remains running."
+          ]
+        },
+        "green": {
+          "revision": "8407a9e8bba3d069b2ff9ce204795b3e6a124271",
+          "exitCode": 0,
+          "evidence": [
+            "red-green-receipt.json: green; both behavioral assertions pass.",
+            "https://github.com/juangcarmona/lighthouse/pull/750#issuecomment-6969362960"
+          ]
+        }
+      },
+      "adoption": {
+        "version": "Guard 1.0.0 in source 8407a9e8bba3d069b2ff9ce204795b3e6a124271; released adopter installation is a separate train step.",
+        "scope": "Existing npm test and required repository CI; managed command capture and setup-failure receipt ownership.",
+        "rollback": "Revert a proven false-positive assertion through maintainer review while retaining this failure record; preserve terminal receipt and existing-log safety.",
+        "retireWhen": "The owning managed-command route is retired or an equivalent verified assertion covers both behaviors; document the replacement.",
+        "followUp": "Lighthouse SDLC maintainers, issue #99 pilot: observe adoption, independent recurrence and false positives before expanding scope."
+      },
+      "observations": {
+        "recurrence": "Unavailable as a pilot rate: this record establishes one observed work-item failure and retries, not independent recurring incidents.",
+        "falsePositives": "Unavailable as an operational rate; two corrected regression cases and the pinned-engine native command pass.",
+        "maintenanceCost": "Unavailable as a pilot measurement; the guard reuses two tests in the existing suite and adds no service."
+      }
+    }
+  ]
+}
