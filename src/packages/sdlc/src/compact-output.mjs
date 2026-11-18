@@ -1,4 +1,4 @@
-import { openSync, closeSync, statSync } from 'node:fs';
+import { openSync, closeSync, statSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { basename } from 'node:path';
 
@@ -12,6 +12,7 @@ export function compactCommandOutput(log, command, exitCode, { env = process.env
     : ({ rg: 'rg', grep: 'grep', find: 'find', fd: 'fd', tsc: 'tsc', pytest: 'pytest', vitest: 'vitest' })[name];
   if (!filter) return { ...raw, reason: 'unsupported-command' };
   if (statSync(log).size > 4 * 1024 * 1024) return { ...raw, reason: 'output-bound' };
+  if (/\b(?:fatal|panic|exception|errors?|failed|failure)\b/i.test(readFileSync(log, 'utf8'))) return { ...raw, reason: 'diagnostics-present' };
   const fd = openSync(log, 'r');
   try {
     const result = execute('rtk', ['pipe', '--filter', filter], { stdio: [fd, 'pipe', 'pipe'], encoding: 'utf8', timeout: 10000, maxBuffer: 256 * 1024, env });
