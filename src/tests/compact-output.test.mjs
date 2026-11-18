@@ -23,6 +23,8 @@ test('disabled, failed and unsupported commands keep full output without calling
     assert.equal(compactCommandOutput(f.log, ['git', 'status'], 7, { env, execute }).reason, 'command-failed');
     assert.equal(compactCommandOutput(f.log, ['node', 'build.mjs'], 0, { env, execute }).reason, 'unsupported-command');
     assert.equal(readFileSync(f.log, 'utf8'), original);
+    writeFileSync(f.log, 'FATAL error: a command reported success despite a critical diagnostic.\n');
+    assert.equal(compactCommandOutput(f.log, ['git', 'status'], 0, { env, execute }).reason, 'diagnostics-present');
   } finally { f.cleanup(); }
 });
 
