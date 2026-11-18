@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.28.1
+
+### Patch Changes
+
+- de559d0: # Keep report columns readable
+
+  Keep operator report columns readable on narrow screens and make the bounded findings table scrollable with the keyboard.
+
 ## 0.28.0
 
 ### Minor Changes
