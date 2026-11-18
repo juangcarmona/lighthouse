@@ -91,7 +91,6 @@ if (mode === 'capture') {
       await page.keyboard.press('Tab');
       assert.equal(await page.evaluate(() => document.activeElement.tagName), 'A');
       assert.equal(network.length, 0);
-      browserChecks.push({ colorScheme, viewport, noPageOverflow: true, accessibilityViolations: 0, keyboardLinkFocus: true, externalRequests: 0 });
       if (colorScheme === 'dark') {
         const id = viewport.width > 1000 ? 'operator-report-wide' : 'operator-report-narrow';
         const path = id + '.png';
@@ -99,6 +98,16 @@ if (mode === 'capture') {
         await page.screenshot({ path: join(root, path) });
         captures.push({ id, kind: 'candidate', view: 'Lighthouse delivery observation report', state: 'Real bounded GitHub observations and explicit coverage gaps', viewport, path, baseline: 'new', baselineReason: 'The static operator report is a new view introduced by issue #221.' });
       }
+      const findings = page.getByRole('region', { name: 'Operator findings table', exact: true });
+      assert.ok((await findings.locator('thead th').evaluateAll(cells => cells.map(cell => cell.getBoundingClientRect().width))).every(width => width >= 96), 'Finding columns must remain readable');
+      await findings.focus();
+      assert.equal(await findings.evaluate(element => element === document.activeElement), true);
+      if (await findings.evaluate(element => element.scrollWidth > element.clientWidth)) {
+        await page.keyboard.press('ArrowRight');
+        await page.waitForFunction(() => document.querySelector('.scroll').scrollLeft > 0);
+        await findings.evaluate(element => { element.scrollLeft = 0; });
+      }
+      browserChecks.push({ colorScheme, viewport, noPageOverflow: true, accessibilityViolations: 0, keyboardLinkFocus: true, keyboardTableAccess: true, readableFindingColumns: true, externalRequests: 0 });
       await context.close();
     }
   } finally { await browser.close(); }
