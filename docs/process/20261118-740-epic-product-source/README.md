@@ -1,0 +1,13 @@
+# Approved product prerequisites in serial epics
+
+[Issue #740](https://github.com/juangcarmona/lighthouse/issues/740) is qualified by an installed, operator-owned serial epic. The operator retains the adopter's identities, source, workflow artifacts and acceptance receipts outside this repository.
+
+The first child was accepted before the second encountered a real product gap. The owner approved the second child's Product Change once and applied it through ProductShape. The trusted host replayed that apply, compared the complete product delta and admitted fresh triage, refinement and implementation against the verified product source. The epic's accepted dependency base stayed unchanged during that handoff.
+
+Provider source `0f6d6dac74cdc0f5b08dff7e876a2cc639207cee` published a checked partial runtime candidate. Its blocked result retained the missing work. An exact-head owner correction exercised the new router entry. That correction exposed the managed command log collision repaired separately in [PR #750](https://github.com/juangcarmona/lighthouse/pull/750), source `1741b4c4cc0cb84f480f976ef27a61ee9f24015f`.
+
+The worker did not complete the runtime independently. The owner completed the existing candidate branch, preserving all approved product and completed-change bytes. A native verification-only correction then passed with zero source changes and three passing independent host commands. Required forge checks passed on the head and merge candidate. Native registration, readiness, current-head owner review and acceptance authenticated the second child's squash merge into the epic branch. The accepted tree exactly matched the checked candidate; the merge had only the previous accepted epic base as parent. The default branch remained unchanged.
+
+The retained final acceptance receipt has merge tree `03e287eab92880df49fb2088361d0c712fad2a52`. Its original verification bundle was seal-verified and archived with its journal preserved, seal `95251beac5e1514a611944a537c7d973d8733ace0eeb2ce8f0e8ff655e2c0a91`. Subsequent child triage started against the new authenticated epic base. This proves prerequisite continuation and accepted child history. The remaining adopter epic, aggregate delivery, release and deployment have their own evidence and are not completed by this provider correction.
+
+Source regressions cover credential-free provider replay, exact product bytes and paths, lifecycle evidence materialization, stale approvals, changed bindings, unsafe file scope, protected product content, workflow correction origins, cancellation and mixed authority. The current-main integration must pass repository and package-consumer CI before merge. Publication and installation of the released provider remain separate steps.
