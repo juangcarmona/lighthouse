@@ -1,5 +1,5 @@
 // Runs inside the workload: one command group, one receipt, bounded child cleanup.
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync, openSync, closeSync, createReadStream } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync, existsSync, openSync, closeSync, createReadStream, fstatSync, lstatSync } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,7 +27,7 @@ export async function managedCommand(directory, id, command, { createScratch = c
     if (error.code !== 'EEXIST') throw error;
     throw Error('Another command owns this workspace command slot; wait for its receipt or stop it before retrying');
   }
-  let child, interval, scratch, logFd, stopping = false;
+  let child, interval, scratch, logFd, logOwned = false, receiptStarted = false, stopping = false;
   const signalGroup = signal => { if (child?.pid) { try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; } } };
   const stop = () => { stopping = true; signalGroup('SIGTERM'); };
   process.once('SIGTERM', stop); process.once('SIGINT', stop);
@@ -52,6 +52,7 @@ export async function managedCommand(directory, id, command, { createScratch = c
     if (existsSync(receipt)) throw Error('Command ID already has a receipt; use a new ID for the next attempt');
     atomic(join(lock, 'owner.json'), { pid: process.pid, startTicks: state.startTicks });
     sample();
+    receiptStarted = true;
     try { scratch = createScratch(process.env); }
     catch (error) {
       state.scratch = { npmCache: 'allocation-failed', errorCode: scratchErrorCode(error), beforeCommand: scratchCapacity() };
@@ -62,7 +63,12 @@ export async function managedCommand(directory, id, command, { createScratch = c
     }
     if (scratch) state.scratch = scratch.receipt;
     const log = process.env.LIGHTHOUSE_COMMAND_PROGRESS_ROOT && resolve(directory) === resolve(process.env.LIGHTHOUSE_COMMAND_PROGRESS_ROOT) ? join(directory, id + '.log') : null;
-    if (log) logFd = openSync(log, 'wx', 0o644);
+    if (log) {
+      const stdout = fstatSync(1, { bigint: true });
+      const existing = existsSync(log) ? lstatSync(log, { bigint: true }) : null;
+      if (stdout.isFile() && existing?.isFile() && stdout.dev === existing.dev && stdout.ino === existing.ino) logFd = 1;
+      else { logFd = openSync(log, 'wx', 0o644); logOwned = true; }
+    }
     // Regular-file output also survives commands that exit without flushing pipe writes.
     child = spawn(command[0], command.slice(1), { stdio: log ? ['inherit', logFd, logFd] : 'inherit', detached: true, env: scratch?.environment ?? process.env });
     let killTimer;
@@ -88,13 +94,23 @@ export async function managedCommand(directory, id, command, { createScratch = c
       if (!released && state.exitCode === 0) state.exitCode = 125;
       if (state.exitCode !== 0 && state.scratch) console.error(scratchDiagnostic(state.scratch));
       sample();
-      if (log) { closeSync(logFd); logFd = undefined; await pipeline(createReadStream(log), process.stdout, { end: false }); }
+      if (logOwned) { closeSync(logFd); logFd = undefined; await pipeline(createReadStream(log), process.stdout, { end: false }); }
       return state.exitCode;
     } finally { process.removeListener('SIGTERM', forceStop); process.removeListener('SIGINT', forceStop); }
+  } catch (error) {
+    if (receiptStarted && !child && state.state === 'running') {
+      scratch?.release();
+      state.state = 'completed'; state.exitCode = 125;
+      state.failure = { phase: 'setup', code: /^[A-Z0-9_]{1,32}$/.test(error.code ?? '') ? error.code : 'COMMAND_SETUP_FAILED' };
+      sample();
+      console.error(`Managed command setup failed (${state.failure.code}); inspect the terminal command receipt.`);
+      return state.exitCode;
+    }
+    throw error;
   } finally {
     clearInterval(interval);
     signalGroup('SIGKILL');
-    if (logFd !== undefined) closeSync(logFd);
+    if (logOwned && logFd !== undefined) closeSync(logFd);
     scratch?.release();
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
     rmSync(lock, { recursive: true, force: true });

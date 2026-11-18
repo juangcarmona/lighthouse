@@ -28,7 +28,7 @@ Return `passed` when the bounded candidate is ready and its available workspace 
 
 ## Workspace command slot
 
-Run installation, build, verification and browser commands sequentially with `node /harness/src/managed-command.mjs run /output/evidence/commands <unique-attempt-id> -- <executable> <arguments...>`. Create the evidence directory first and redirect each attempt's output to its own log. The wrapper rejects overlapping commands and writes `/output/evidence/commands/<unique-attempt-id>.json`.
+Run installation, build, verification and browser commands sequentially with `node /harness/src/managed-command.mjs run /output/evidence/commands <unique-attempt-id> -- <executable> <arguments...>`. Create the evidence directory first and redirect each attempt's output to `/output/evidence/<unique-attempt-id>.log`. The wrapper owns the receipt and live capture files under `/output/evidence/commands/`; it rejects overlapping commands and writes `/output/evidence/commands/<unique-attempt-id>.json`.
 
 When the shell tool backgrounds a command, poll that receipt until `state` is `completed` or `cancelled`. A tool response or a quiet log does not establish command completion. Read `exitCode` before editing the workspace or starting the next command. To interrupt an attempt, run `node /harness/src/managed-command.mjs stop /output/evidence/commands` and wait for its terminal receipt before retrying with a new ID.
 
