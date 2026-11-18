@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "repository": "juangcarmona/lighthouse",
+  "issue": 221,
+  "runId": "qualification-44208244755-1",
+  "workflowRunId": "44208244755",
+  "attempt": 1,
+  "stage": "implement",
+  "sourceRevision": "3f08e6a43ff63a86d610ef5b165b9818efb2ec5a",
+  "candidateTree": "6a4d3754e57e2230566741f54856f342733ec5f5",
+  "assessmentSha256": "760951cd6c5c4db4ee561345676e3ba7082f9269e5ffd6e2526ff42fbcaaee74",
+  "status": "provided",
+  "reason": "Native published-package qualification of the actual Lighthouse operator report; no visual or delivery acceptance is asserted.",
+  "items": [
+    {
+      "id": "operator-report-wide",
+      "kind": "candidate",
+      "view": "Lighthouse delivery observation report",
+      "state": "Real bounded GitHub observations and explicit coverage gaps",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "baseline": "new",
+      "baselineReason": "The static operator report is a new view introduced by issue #221.",
+      "path": "evidence/visual/dfd1f5c3d4d16b3ea6613f276789677c26fb0ebaa70d70ffe1062b1222695f8f.png",
+      "sha256": "dfd1f5c3d4d16b3ea6613f276789677c26fb0ebaa70d70ffe1062b1222695f8f",
+      "bytes": 270040,
+      "producer": "agent-declared capture"
+    },
+    {
+      "id": "operator-report-narrow",
+      "kind": "candidate",
+      "view": "Lighthouse delivery observation report",
+      "state": "Real bounded GitHub observations and explicit coverage gaps",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "baseline": "new",
+      "baselineReason": "The static operator report is a new view introduced by issue #221.",
+      "path": "evidence/visual/f580933b3041692a778c66817a8cc7aaab4c7d63bdc3643957c853bf12996d3a.png",
+      "sha256": "f580933b3041692a778c66817a8cc7aaab4c7d63bdc3643957c853bf12996d3a",
+      "bytes": 76669,
+      "producer": "agent-declared capture"
+    }
+  ]
+}
