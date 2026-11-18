@@ -6,7 +6,7 @@
   "ownerId": 2834629,
   "producer": {
     "workflow": ".github/workflows/lighthouse-delivery-acceptance.yml",
-    "workflowBlob": "f6af387c849433ba7d4173311881635bb4dfec35",
+    "workflowBlob": "864ef64b4ba0f35ae4371305c88e1160fc4572bf",
     "operator": "repository-owner"
   }
 }

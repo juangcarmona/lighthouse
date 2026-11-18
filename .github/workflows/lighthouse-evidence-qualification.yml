@@ -16,8 +16,8 @@ jobs:
       pull-requests: read
       actions: read
     env:
-      LIGHTHOUSE_EXPECTED_SDLC: 0.28.0
-      LIGHTHOUSE_EXPECTED_RELEASE: f1d15f81d0bcebcac15afaec26dbdc8aa6c77285
+      LIGHTHOUSE_EXPECTED_SDLC: 0.28.1
+      LIGHTHOUSE_EXPECTED_RELEASE: 61c28b2d8f0f41e4c6654391e0a267ef1e106a68
     steps:
       - uses: actions/checkout@v5
         with:
@@ -29,11 +29,11 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Install the exact published SDK in an isolated consumer
-        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.0
+        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.1
       - name: Retain the published source identity and package integrity
         run: |
           mkdir -p "$RUNNER_TEMP/lighthouse-evidence-qualification"
-          npm view @juangcarmona/lighthouse-sdlc@0.28.0 version gitHead dist.integrity --json > "$RUNNER_TEMP/lighthouse-evidence-qualification/published-metadata.json"
+          npm view @juangcarmona/lighthouse-sdlc@0.28.1 version gitHead dist.integrity --json > "$RUNNER_TEMP/lighthouse-evidence-qualification/published-metadata.json"
       - name: Verify acceptance fixtures against the published SDK
         env:
           LIGHTHOUSE_TEST_ACCEPTANCE_MODULE: ${{ runner.temp }}/published-lighthouse/node_modules/@juangcarmona/lighthouse-sdlc/src/delivery-acceptance.mjs
@@ -103,8 +103,8 @@ jobs:
       contents: write
       actions: read
     env:
-      LIGHTHOUSE_EXPECTED_SDLC: 0.28.0
-      LIGHTHOUSE_EXPECTED_RELEASE: f1d15f81d0bcebcac15afaec26dbdc8aa6c77285
+      LIGHTHOUSE_EXPECTED_SDLC: 0.28.1
+      LIGHTHOUSE_EXPECTED_RELEASE: 61c28b2d8f0f41e4c6654391e0a267ef1e106a68
     steps:
       - uses: actions/checkout@v5
         with:
@@ -116,7 +116,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Install the same exact published SDK
-        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.0
+        run: npm install --prefix "$RUNNER_TEMP/published-lighthouse" --ignore-scripts --no-audit --no-fund --save-exact @juangcarmona/lighthouse-sdlc@0.28.1
       - uses: actions/download-artifact@v5
         with:
           name: lighthouse-qualification-result-${{ github.run_attempt }}
