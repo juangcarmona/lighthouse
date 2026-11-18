@@ -6,8 +6,8 @@
 - [x] Implement closed, bounded policy/assessment validation and source/intent/policy-bound restrictive decisions.
 - [x] Integrate exact assessed scope, actual candidate inventory, independent review and retained decision evidence in FF/hotfix.
 - [x] Cover routine continuation, sensitive risk, scope growth, exhausted repairs, unavailable proof and revoked authority with focused fixtures.
-- [ ] Verify repository, provider citations, package consumer and exact-head CI; complete code, instruction and human-prose reviews.
-- [ ] Publish the reviewed package versions, verify their public artifacts and adopt the immutable release through the installer.
+- [x] Verify repository, provider citations, package consumer and exact-head CI; complete code, instruction and human-prose reviews.
+- [x] Publish the reviewed package versions, verify public artifacts and prepare the reviewed immutable-release adoption through the installer.
 
 <!-- pdac:cite id="FR-FAST-FORWARD-DELIVERY" digest="sha256:cc98eedbd3f9938c82ea59e4f7499d90a1cf4cf52da707d740d9f24d800bec2e" -->
 

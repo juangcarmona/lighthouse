@@ -25,5 +25,14 @@
     "unclassified": 1,
     "passed": false
   },
-  "newProductMeaning": false
+  "newProductMeaning": false,
+  "archivedBaseline": {
+    "total": 3,
+    "current": 3,
+    "stale": 0,
+    "tampered": 0,
+    "unresolved": 0,
+    "errors": 0,
+    "warnings": 18
+  }
 }

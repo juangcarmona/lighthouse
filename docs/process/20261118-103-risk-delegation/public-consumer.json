@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "1f40faf4ce78945325ce534eb1de49d1e8f42e38",
+  "registry": "https://registry.npmjs.org",
+  "packages": {
+    "@juangcarmona/lighthouse-sdlc@0.30.0": {
+      "version": "0.30.0",
+      "gitHead": "1f40faf4ce78945325ce534eb1de49d1e8f42e38",
+      "integrity": "sha512-MgVAwFr7t1BAJC/lBBYRA8YhlgthZOOJ+gZetoM+yV4Z8DLXLuV+1xpTiFeamgqJITq7+s6EwCt8l01EKldPTg=="
+    },
+    "@juangcarmona/lighthouse@0.13.26": {
+      "version": "0.13.26",
+      "gitHead": "1f40faf4ce78945325ce534eb1de49d1e8f42e38",
+      "integrity": "sha512-1/nIhZMPamdnkoJoFa5yGSlmyBj9a75jKrSGpmla0UAqT6ACs+siO5jDHYIsMHMa4yMJBbNa4A38aIeWfg5QZw=="
+    }
+  },
+  "sourceHashes": {
+    "src/risk-delegation.mjs": "295783b0d19ed2565221ce850493541c076da1145e01cb9b78cb19c5d3e80e4c",
+    "src/unattended.mjs": "30f762343e2f5f63ae8fe4e81d7674ae4a71b94c816ac23bfadb7ceeb552e0c7",
+    "src/unattended-actions.mjs": "1ae429da70acf7e197680269c63f82be1d8afbade810f5ae36796091ad186ac7",
+    "src/install-workflows.mjs": "960e2c2e543c597feffa3e91b4c13b2b1d488c05bd09a6d0551ee2e8f941858b",
+    "src/workflow-distribution.mjs": "8053f59a8c7cff3ad7ecd4622b43621954647d6794eb4973f687e34b6a99f5bb",
+    "risk-delegation.md": "068ee9f6b1eec43cc4ea40d6d5e31acbdcd24435431ba1a1da643e79449c156c",
+    "skills/independent-review/SKILL.md": "cf4460c6fcd5e9c365d8a4554b4dafa675ecee2e9c5e92af6c4a8a6636cb9b68",
+    "workflows/lighthouse-delivery-acceptance.yml": "a699c5a461482cf0f6fe4c941ab2cfc7f1df73b8134e6810a2c8a98b5e6d4f43",
+    "workflows/lighthouse-host.yml": "175ce1d377dcee0f25fe18faec5b50ca5cca695781a8fccc84292a6817eaa6d7",
+    "workflows/lighthouse-sdlc-apply-product-change.lock.yml": "5f4608cefef13fcdc2ba842f1c68c1c235e6bcde97390353d91b049c0d6051e6",
+    "workflows/lighthouse-sdlc-apply-product-change.md": "881f276a7fe9e4e165a18e711e64d6777e6aab523b4fd4afbeae7ed754b60752",
+    "workflows/lighthouse-sdlc-apply-review.lock.yml": "cf9edf518432d62ab2e57dba5461c3f4d4b5d7d4d733f1af61a2523307e5dba1",
+    "workflows/lighthouse-sdlc-apply-review.md": "20b417117b06464b612d04e0a2ba63a7bef25f613c4a8494fbc937296e5ffda9",
+    "workflows/lighthouse-sdlc-epic.yml": "69dfd26fb2591b49e604c5ebeb359f2092c14c063cbd872a06d59a9a5757c819",
+    "workflows/lighthouse-sdlc-implement.lock.yml": "de92a8c40862354b6d25ec87678caf012d9f79369a0ff68ea5d70382d0952b96",
+    "workflows/lighthouse-sdlc-implement.md": "3c6e90544cf0a5e2a6787ab9bf784beaa5f2c30d754f7dfc19c235bb8062aee8",
+    "workflows/lighthouse-sdlc-integrate.lock.yml": "6b82d0efb3625dd67486f048fce554fbcf07359cb5d930e6edefee0cee565d48",
+    "workflows/lighthouse-sdlc-integrate.md": "35bd952123cf18a9b210a62d02fd7ac3a1901090d6be6bf39600ea998eb663b6",
+    "workflows/lighthouse-sdlc-product-change.lock.yml": "0197585e5baecf2257fb52b68a1c30ab98a68c4845dea660f48f163dc5830399",
+    "workflows/lighthouse-sdlc-product-change.md": "54340e11bf5b6c181ede0bbef7ce9fa9e655d0d780e3ccabe0aadfd6da495fc8",
+    "workflows/lighthouse-sdlc-propose.lock.yml": "10723d1ec7245533890c2d76e835a063811c4c228e28e44f99bba1927dff4faf",
+    "workflows/lighthouse-sdlc-propose.md": "78cf8ef42d22e026cb0d809cefa8f87dc262ffe760c51fc8383f4b6b34c4ff77",
+    "workflows/lighthouse-sdlc-refine.lock.yml": "a26eae24152ea2d41a2bf00a1265c097ff962ecfe630f439cef3d7538c3d94f4",
+    "workflows/lighthouse-sdlc-refine.md": "9d0b68b37082fd74f9386bfd131e7d6d535d62b306bb9815c224488dacedecab",
+    "workflows/lighthouse-sdlc-review.lock.yml": "f70347eb8e5507825aa36ec9a1177da30a82ec98f2d701fcb64f06e43e945040",
+    "workflows/lighthouse-sdlc-review.md": "e158e060450dbb1ad4ee856d44036d4855f6f27f45480693516ce1fd271c5732",
+    "workflows/lighthouse-sdlc-router.yml": "0641da7145c75af3c2c63c515eae9a9fffcebee668f0c9d70812baf92684f85a",
+    "workflows/lighthouse-sdlc-triage.lock.yml": "639d836b970d65c606425971b422529c70bbc9b978734769e974d0015420913b",
+    "workflows/lighthouse-sdlc-triage.md": "a968012b291c1604e8503ea0413c235dd184f6e972e1c4a091a880435c2fe04f",
+    "workflows/lighthouse-sdlc-unattended.yml": "db4251ed2d67c992dee5063beaec84b1f59fb16f1dc56ae8eceb49cc19e41632",
+    "workflows/lighthouse-worker-maintenance.yml": "a20403e055b2ee2c7517c030a13f9754f392c1772f3d2689ada0eab0d5e819bd"
+  },
+  "checks": {
+    "publicRiskTests": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "cliAliases": true
+  },
+  "liveModelExecuted": false,
+  "liveForgeEffects": false
+}
