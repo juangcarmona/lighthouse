@@ -389,12 +389,14 @@ async function main(command) {
   const issuePath = `issues/${issueNumber}`;
   const comments = () => issueComments(api, issueNumber);
   const ownerAnswers = all => ownerIntentComments(all, owner);
+  let pendingIssueReply;
   if (['route', 'prepare', 'dispatch-prepare'].includes(command) && env.GITHUB_EVENT_NAME === 'issue_comment' && !proposalReview && !implementationReview && !productApproval) {
     const fresh = await api(issuePath);
     const currentComments = await comments();
+    if (event.action === 'created' && fresh.labels.some(label => ['needs-info', 'waiting-review'].includes(label.name))) pendingIssueReply = pendingReply(event, currentComments);
     route = clientRequest ? clientDispatchRoute(clientRequest, dispatch.request, fresh, currentComments)
       : routeIssue({ ...event, issue: fresh }, env.GITHUB_ACTOR, owner, env.GITHUB_EVENT_NAME, currentComments);
-    if (command === 'route' && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
+    if (command === 'route' && pendingIssueReply && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot') {
       await api(`issues/comments/${event.comment.id}/reactions`, 'POST', { content: 'eyes' });
     }
   }
@@ -503,7 +505,7 @@ async function main(command) {
     const routedDetails = `[Routing execution](https://github.com/${repo}/actions/runs/${env.GITHUB_RUN_ID})`;
     if (implementationReview) await publishRoutingHandoff(api, implementationReview.number, `${repo}:review:${feedbackKey(implementationReview)}`, renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'implement', happened: implementationReview.handled ? 'This feedback has already been applied.' : route.reason, action: implementationReview.handled ? 'Owner: review the latest PR state.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated blocker on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No new worker has been requested by this event.', link: `[Open PR](${implementationReview.url})`, details: routedDetails }));
     else if (proposalReview) await publishRoutingHandoff(api, proposalReview.number, `${repo}:review:${feedbackKey(proposalReview)}`, renderHandoff({ status: route.run ? 'requested' : 'blocked', stage: route.stage ?? 'propose', happened: proposalReview.handled ? 'This feedback has already been applied.' : proposalReview.approved ? `Approval was received for commit \`${proposalReview.head}\`. Implementation has not started.` : route.reason, action: proposalReview.handled ? 'Owner: review the latest proposal diff.' : route.run ? 'None. Wait for the result.' : 'Owner: follow the stated next step on this PR.', next: route.run ? 'The workflow will check admission before starting work.' : 'No implementation has been authorized by this acknowledgement.', link: `[Open PR](${proposalReview.url})`, details: routedDetails }));
-    else if (env.GITHUB_EVENT_NAME === 'issue_comment' && env.GITHUB_ACTOR === owner && !route.run) await publishRoutingHandoff(api, issueNumber, `${repo}:issue-comment:${event.comment.id}`, renderHandoff({ status: 'blocked', stage: route.stage ?? 'stage not identified', happened: `No agent started: ${route.reason}.`, action: route.reason === 'Issue reserved' ? 'None. Wait for the current reservation to end.' : 'None. To request work, add the relevant stage label; provide proposal feedback on its PR.', next: 'The workflow starts only after an authorized stage request or an answer to a pending question.', details: routedDetails }));
+    else if (pendingIssueReply && env.GITHUB_ACTOR === owner && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && !route.run) await publishRoutingHandoff(api, issueNumber, `${repo}:issue-comment:${event.comment.id}`, renderHandoff({ status: 'blocked', stage: route.stage ?? pendingIssueReply.stage, happened: `No agent started: ${route.reason}.`, action: route.reason === 'Issue reserved' ? 'None. Wait for the current reservation to end.' : 'Owner: resolve the stated blocker before requesting continuation.', next: 'The workflow starts only after an authorized stage request or an answer to a pending question.', details: routedDetails }));
     console.log(route.reason); await summary(`### Routing\n${route.reason}`); return;
   }
   if (command === 'prepare') {
