@@ -11,8 +11,70 @@ import { createTelemetry, telemetryContext, readTelemetry, telemetryHealth, expo
 import { openCodeObserver, observeCli, usageSummary, nativeEventFile, collectNativeFile } from '../packages/sdlc/src/telemetry-opencode.mjs';
 import { installTelemetry, jobHook, runRunner } from '../packages/sdlc/src/telemetry-runner.mjs';
 import { workflowTelemetry } from '../packages/sdlc/src/telemetry-workflow.mjs';
+import { claudeUsageSummary, runClaudeTelemetry } from '../packages/sdlc/src/telemetry-claude.mjs';
 const fixture = () => mkdtempSync(join(tmpdir(), 'lh-telemetry-'));
 const tokens = { input: 100, output: 5, reasoning: 2, cache: { read: 50, write: 0 } };
+
+test('opt-in Claude Code metrics become safe Lighthouse events with source deduplication and separate usage totals', async () => {
+  const directory = fixture();
+  try {
+    const resource = [
+      { key: 'service.name', value: { stringValue: 'claude-code' } },
+      { key: 'user.email', value: { stringValue: 'private@example.test' } },
+      { key: 'vcs.owner.name', value: { stringValue: 'example-owner' } },
+      { key: 'vcs.repository.name', value: { stringValue: 'example-repo' } },
+    ];
+    const point = (type, count) => ({ attributes: [
+      { key: 'type', value: { stringValue: type } }, { key: 'model', value: { stringValue: 'claude-test-model' } },
+      { key: 'skill.name', value: { stringValue: 'telemetry-test' } }, { key: 'agent.name', value: { stringValue: 'reviewer' } },
+      { key: 'query_source', value: { stringValue: 'main' } }, { key: 'session.id', value: { stringValue: 'session-private' } },
+      { key: 'user.email', value: { stringValue: 'private@example.test' } }, { key: 'user.account_uuid', value: { stringValue: 'account-private' } },
+      { key: 'prompt', value: { stringValue: 'private prompt' } },
+    ], startTimeUnixNano: '1795043720000000000', timeUnixNano: '1795043721000000000', asDouble: count });
+    const payload = { resourceMetrics: [{ resource: { attributes: resource }, scopeMetrics: [{ metrics: [
+      { name: 'claude_code.token.usage', unit: 'tokens', sum: { dataPoints: [point('input', 250), point('cacheRead', 40)] } },
+      { name: 'claude_code.cost.usage', unit: 'USD', sum: { dataPoints: [point('input', 0.0125)] } },
+      { name: 'claude_code.unrecognized.metric', unit: '1', sum: { dataPoints: [point('input', 99)] } },
+    ] }] }] };
+    const mock = `const payload=${JSON.stringify(JSON.stringify(payload))}; const endpoint=process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT; if(process.env.CLAUDE_CODE_ENABLE_TELEMETRY!=='1'||process.env.OTEL_LOGS_EXPORTER!=='none'||process.env.OTEL_TRACES_EXPORTER!=='none'||process.env.OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE!=='delta'||process.env.OTEL_LOG_TOOL_DETAILS!=='1'||process.env.OTEL_EXPORTER_OTLP_ENDPOINT) process.exit(3); for(let i=0;i<2;i++){const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:payload}); if(!response.ok) process.exit(4)};`;
+    const cli = fileURLToPath(new URL('../packages/sdlc/src/sdlc.mjs', import.meta.url));
+    const childEnv = { ...process.env, LIGHTHOUSE_TELEMETRY_DIR: directory, LIGHTHOUSE_CLAUDE_STAGE: 'implement', LIGHTHOUSE_CLAUDE_ISSUE: '768', LIGHTHOUSE_CLAUDE_RUN_ID: 'claude-run-42', LIGHTHOUSE_CLAUDE_INCLUDE_REPOSITORY: 'true', LIGHTHOUSE_CLAUDE_INCLUDE_SESSION_ID: 'true' };
+    const cliResult = spawnSync(process.execPath, [cli, 'telemetry', 'claude', 'run', '--', process.execPath, '-e', mock], { env: childEnv, encoding: 'utf8', timeout: 10000 });
+    assert.equal(cliResult.status, 0, cliResult.stderr);
+    assert.equal(await runClaudeTelemetry([process.execPath, '-e', mock], { directory, env: { ...process.env, LIGHTHOUSE_CLAUDE_STAGE: 'implement', LIGHTHOUSE_CLAUDE_ISSUE: '768', LIGHTHOUSE_CLAUDE_RUN_ID: 'claude-run-42', LIGHTHOUSE_CLAUDE_INCLUDE_REPOSITORY: 'true', LIGHTHOUSE_CLAUDE_INCLUDE_SESSION_ID: 'true' } }), 0);
+    const events = readTelemetry(directory);
+    const samples = events.filter(event => event.source.kind === 'claude-code');
+    assert.equal(samples.length, 3);
+    assert.equal(new Set(samples.map(event => event.source.id)).size, samples.length);
+    const input = samples.find(event => event.type === 'claude.usage.observed' && event.attributes.tokenType === 'input');
+    const cache = samples.find(event => event.attributes.tokenType === 'cacheRead');
+    const cost = samples.find(event => event.type === 'claude.cost.observed');
+    assert.equal(input.attributes.inputTokens, 250);
+    assert.equal(input.attributes.model, 'claude-test-model');
+    assert.equal(input.attributes.skill, 'telemetry-test');
+    assert.equal(input.attributes.provider, 'anthropic');
+    assert.equal(input.correlation.stage, 'implement');
+    assert.equal(input.correlation.issue, '768');
+    assert.equal(input.correlation.runId, 'claude-run-42');
+    assert.match(input.correlation.sessionId, /^claude-[a-f0-9]{24}$/);
+    assert.equal(input.correlation.repository, 'example-owner/example-repo');
+    assert.equal(cache.attributes.cacheReadTokens, 40);
+    assert.equal(cost.attributes.costUsd, 0.0125);
+    assert.equal(cost.attributes.costSource, 'claude-estimated');
+    assert.equal(claudeUsageSummary(events).tokens.input, 250);
+    assert.equal(claudeUsageSummary(events).tokens.cacheRead, 40);
+    assert.equal(claudeUsageSummary(events).estimatedCostUsd, 0.0125);
+    assert.equal(claudeUsageSummary(events).billedCostUsd, null);
+    assert.equal(claudeUsageSummary(events).bySkill['telemetry-test'].input, 250);
+    assert.equal(claudeUsageSummary(events).byModel['claude-test-model'].estimatedCostUsd, 0.0125);
+    assert.equal(claudeUsageSummary(events).bySkill['telemetry-test'].estimatedCostUsd, 0.0125);
+    assert.ok(!JSON.stringify(samples).includes('private@example.test'));
+    assert.ok(!JSON.stringify(samples).includes('account-private'));
+    assert.ok(!JSON.stringify(samples).includes('private prompt'));
+    const schema = JSON.parse(readFileSync(new URL('../packages/sdlc/schemas/telemetry-event.schema.json', import.meta.url)));
+    for (const event of samples) for (const key of Object.keys(event.attributes)) assert.ok(key in schema.properties.attributes.properties);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
 
 test('runner registration BOM is accepted and malformed optional identity preserves command exit', () => {
   const directory = fixture(), state = join(directory, 'telemetry');

@@ -3,6 +3,7 @@ import { setTimeout as pause } from 'node:timers/promises';
 import { createTelemetry, readTelemetry, telemetryDirectory, telemetryHealth, telemetrySettings, exportTelemetry } from './telemetry.mjs';
 import { usageSummary } from './telemetry-opencode.mjs';
 import { installTelemetry } from './telemetry-runner.mjs';
+import { claudeUsageSummary, runClaudeTelemetry } from './telemetry-claude.mjs';
 
 export async function telemetryCli(args, env = process.env) {
   const [command] = args, option = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
@@ -22,11 +23,18 @@ export async function telemetryCli(args, env = process.env) {
       if (!args.includes('--follow')) break;
       await pause(250);
     } while (true);
-  } else if (command === 'usage') print(usageSummary(readTelemetry(directory).filter(e => !option('--run') || e.correlation.runId === option('--run')), { health: telemetryHealth(directory) }));
+  } else if (command === 'usage') {
+    const events = readTelemetry(directory).filter(e => !option('--run') || e.correlation.runId === option('--run'));
+    print({ ...usageSummary(events, { health: telemetryHealth(directory) }), claudeCode: claudeUsageSummary(events) });
+  } else if (command === 'claude' && args[1] === 'run') {
+    const separator = args.indexOf('--');
+    if (separator < 0) throw Error('Use telemetry claude run -- <claude command> [arguments]');
+    process.exitCode = await runClaudeTelemetry(args.slice(separator + 1), { env, directory });
+  }
   else if (command === 'export') {
     const endpoint = option('--endpoint') ?? env.LIGHTHOUSE_TELEMETRY_OTLP_ENDPOINT ?? telemetrySettings(directory)?.otlpEndpoint;
     if (!endpoint) throw Error('Configure an explicit OTLP HTTP JSON /v1/logs endpoint');
     const headers = env.LIGHTHOUSE_TELEMETRY_OTLP_HEADERS ? JSON.parse(env.LIGHTHOUSE_TELEMETRY_OTLP_HEADERS) : {};
     do { print(await exportTelemetry(directory, { endpoint, headers })); if (!args.includes('--follow')) break; await pause(2000); } while (true);
-  } else throw Error('Usage: lighthouse-sdlc telemetry <install|status|read|usage|export> [--directory <operator-state>] [--stream <id> --after <sequence> --follow]');
+  } else throw Error('Usage: lighthouse-sdlc telemetry <install|status|read|usage|export|claude run -- <command>> [--directory <operator-state>] [--stream <id> --after <sequence> --follow]');
 }

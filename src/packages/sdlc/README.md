@@ -213,7 +213,7 @@ Lighthouse-authored material in this package is licensed under [Apache-2.0](LICE
 
 ## Runner telemetry
 
-The [telemetry contract](telemetry.md) covers collection from first startup, native OpenCode activity, resource observations, hosted workflow artifacts, per-stream replay and optional OTLP export. Independent applications and collectors own presentation. Existing installations adopt the runner wrapper and refreshed workflow projection through their documented update routes.
+The [telemetry contract](telemetry.md) covers collection from first startup, native OpenCode activity, opt-in Claude Code usage metrics, resource observations, hosted workflow artifacts, per-stream replay and optional OTLP export. Independent applications and collectors own presentation. Existing installations adopt the runner wrapper and refreshed workflow projection through their documented update routes.
 
 ## Engineering practice evidence
 
