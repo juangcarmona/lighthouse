@@ -12,7 +12,7 @@ const version = JSON.parse(readFileSync(new URL('../package.json', import.meta.u
 const hash = value => createHash('sha256').update(value).digest('hex');
 const identifier = value => typeof value === 'string' && /^[\w./:@#-]{1,256}$/.test(value) && !/(?:Bearer|sk-|ghp_|github_pat_|eyJ)/i.test(value) ? value : null;
 const numeric = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
-const attributes = new Set(['phase', 'status', 'reasonCode', 'reasonDigest', 'eventName', 'action', 'label', 'actorClass', 'authorization', 'decision', 'tool', 'callId', 'messageId', 'model', 'provider', 'modelSource', 'finishReason', 'requestKind', 'adapter', 'capability', 'image', 'signal', 'exitCode', 'durationMs', 'queueDurationMs', 'inputTokens', 'outputTokens', 'reasoningTokens', 'cacheReadTokens', 'cacheWriteTokens', 'stepStarts', 'stepFinishes', 'toolCalls', 'sourceEvents', 'omittedEvents', 'cpuUsageUsec', 'memoryBytes', 'memoryPeakBytes', 'pids', 'pidsPeak', 'pidsDenied', 'oomKills', 'readBytes', 'writeBytes', 'networkRxBytes', 'networkTxBytes', 'cpuLimit', 'memoryLimitBytes', 'pidsLimit', 'httpStatus', 'attempt', 'delayMs', 'streamConnected']);
+const attributes = new Set(['phase', 'status', 'reasonCode', 'reasonDigest', 'eventName', 'action', 'label', 'actorClass', 'authorization', 'decision', 'tool', 'callId', 'messageId', 'model', 'provider', 'modelSource', 'finishReason', 'requestKind', 'adapter', 'capability', 'image', 'signal', 'exitCode', 'durationMs', 'queueDurationMs', 'inputTokens', 'outputTokens', 'reasoningTokens', 'cacheReadTokens', 'cacheWriteTokens', 'stepStarts', 'stepFinishes', 'toolCalls', 'sourceEvents', 'omittedEvents', 'cpuUsageUsec', 'memoryBytes', 'memoryPeakBytes', 'pids', 'pidsPeak', 'pidsDenied', 'oomKills', 'readBytes', 'writeBytes', 'networkRxBytes', 'networkTxBytes', 'cpuLimit', 'memoryLimitBytes', 'pidsLimit', 'httpStatus', 'attempt', 'delayMs', 'streamConnected', 'skill', 'agent', 'querySource', 'tokenType', 'costUsd', 'costSource']);
 const correlationKeys = ['repository', 'issue', 'pullRequest', 'revision', 'worker', 'stage', 'runId', 'workflowRunId', 'workflowAttempt', 'job', 'runner', 'sessionId', 'parentSessionId', 'requestId', 'routerRunId', 'routerAttempt', 'signalId'];
 export function metadata(values = {}) {
   return Object.fromEntries(Object.entries(values).filter(([key]) => attributes.has(key)).map(([key, value]) => [key, typeof value === 'boolean' ? value : typeof value === 'number' ? numeric(value) : identifier(value)]));
@@ -41,7 +41,7 @@ export function telemetrySettings(directory) {
   return selected;
 }
 export const telemetryCapabilities = {
-  lifecycle: 'host-observed', opencode: 'native-2.1-plugin-with-cli-fallback', usage: 'observed-with-coverage',
+  lifecycle: 'host-observed', opencode: 'native-2.1-plugin-with-cli-fallback', claudeCode: 'opt-in-native-otlp-metrics', usage: 'observed-with-coverage',
   resources: 'linux-cgroup-v2-and-proc', billing: 'unavailable', payloads: 'disabled', transport: 'ndjson-and-otlp-http-json-logs',
 };
 

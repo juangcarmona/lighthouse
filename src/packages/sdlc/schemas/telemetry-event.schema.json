@@ -424,6 +424,24 @@
         },
         "queueDurationMs": {
           "$ref": "#/$defs/metadataValue"
+        },
+        "skill": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "agent": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "querySource": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "tokenType": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "costUsd": {
+          "$ref": "#/$defs/metadataValue"
+        },
+        "costSource": {
+          "$ref": "#/$defs/metadataValue"
         }
       }
     }
