@@ -734,6 +734,44 @@ test('visual-theme init projects the UI guide and skill and verifies the token c
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
+test('consumer CSS checking is separately opt-in before and after reviewed visual upgrades', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-css-opt-in-'));
+  try {
+    assert.equal(run(dir, 'init', ['--name', 'Visual', '--profile', 'visual-theme']).status, 0);
+    await seedProductModel(dir);
+    await writeFile(join(dir, 'src/app.css'), '.a { color: var(--lh-undefined); background: red; width: 390px; }');
+    const verify = () => { const executed = run(dir, 'verify', ['--format', 'json']); return { executed, report: JSON.parse(executed.stdout) }; };
+    const before = verify();
+    assert.equal(before.executed.status, 0, before.executed.stderr);
+    assert.equal(before.report.results.find(item => item.id === 'visual.design-contract').status, 'passed');
+    assert.equal(before.report.results.find(item => item.id === 'visual.semantic-tokens').status, 'not-applicable');
+    const upgrade = run(dir, 'upgrade', ['--scope', 'harness', '--format', 'json']);
+    assert.equal(upgrade.status, 0, upgrade.stderr);
+    assert.equal(run(dir, 'upgrade', ['--scope', 'harness', '--apply']).status, 0);
+    const after = verify();
+    assert.equal(after.executed.status, 0, after.executed.stderr);
+    assert.equal(after.report.results.find(item => item.id === 'visual.semantic-tokens').status, 'not-applicable');
+    assert.equal(after.report.results.find(item => item.id === 'visual.design-contract').status, 'passed');
+    const selected = JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8'));
+    selected.semanticTokens = { enabled: true, files: ['src/app.css'] };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+    const failed = verify();
+    assert.equal(failed.executed.status, 1);
+    assert.ok(failed.report.blocking.includes('visual.semantic-tokens'));
+    assert.equal(failed.report.results.find(item => item.id === 'visual.design-contract').status, 'passed');
+    assert.match(failed.report.problems.join('\n'), /undefined-role/);
+    await writeFile(join(dir, 'src/app.css'), '.a { color: var(--lh-text); background: var(--lh-surface); width: 390px; }');
+    assert.equal(verify().executed.status, 0);
+    assert.equal(run(dir, 'upgrade', ['--scope', 'harness', '--apply']).status, 0);
+    assert.deepEqual(JSON.parse(await readFile(join(dir, 'lighthouse.json'), 'utf8')).semanticTokens, selected.semanticTokens);
+    assert.equal(verify().report.results.find(item => item.id === 'visual.semantic-tokens').status, 'passed');
+    selected.semanticTokens = { enabled: false };
+    await writeFile(join(dir, 'lighthouse.json'), JSON.stringify(selected));
+    await writeFile(join(dir, 'src/app.css'), '.a { color: var(--lh-missing); }');
+    assert.equal(verify().executed.status, 0);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('react web profile projects its guidance and requires the visual contract', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-react-web-profile-'));
   try {

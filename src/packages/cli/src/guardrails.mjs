@@ -80,6 +80,14 @@ function result(descriptor, status, evidence = [], problems = []) {
 }
 
 async function runDeterministicCheck(descriptor, context) {
+  if (descriptor.check === 'semantic-tokens') {
+    if (context.manifest.semanticTokens === undefined || context.manifest.semanticTokens?.enabled === false) return result(descriptor, 'not-applicable');
+    let checkSemanticTokens;
+    try { ({ checkSemanticTokens } = await import('./semantic-tokens.mjs')); }
+    catch (error) { return result(descriptor, 'unavailable', [], [`Optional standalone CSS checker is unavailable: ${error.message}; use the installed Lighthouse CLI package.`]); }
+    const checked = await checkSemanticTokens({ root: context.resolve('.'), manifest: context.manifest, managedFiles: context.managedFiles, installed: context.uiAuthority });
+    return { ...result(descriptor, checked.status, checked.evidence, checked.problems), coverage: checked.coverage, diagnostics: checked.diagnostics ?? [] };
+  }
   if (descriptor.check === 'manifest') return result(descriptor, 'passed', [{ path: 'lighthouse.json' }]);
   if (descriptor.check === 'layout') {
     const missing = [];
@@ -120,13 +128,13 @@ async function runDeterministicCheck(descriptor, context) {
   return result(descriptor, 'unavailable', [], [`No deterministic checker is registered for ${descriptor.id}.`]);
 }
 
-export async function evaluateGuardrails({ catalog, manifest, manifestProblems, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens }) {
+export async function evaluateGuardrails({ catalog, manifest, manifestProblems, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens, uiAuthority }) {
   if (manifestProblems.length) {
     const descriptor = catalog.guardrails.find((item) => item.check === 'manifest') ?? catalog.guardrails[0];
     const failed = result(descriptor, 'failed', [{ path: 'lighthouse.json' }], manifestProblems.map((problem) => `Invalid lighthouse.json: ${problem}`));
     return report([failed]);
   }
-  const context = { manifest, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens };
+  const context = { manifest, repository, managedFiles, resolve, exists, isDirectory, readFile, validateGitConventions, branch, uiTokens, uiAuthority };
   const results = [];
   for (const descriptor of catalog.guardrails) {
     if (!appliesTo(descriptor, manifest)) {

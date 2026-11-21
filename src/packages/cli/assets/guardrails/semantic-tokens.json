@@ -1,0 +1,16 @@
+{
+  "$schema": "../schemas/guardrails.schema.json",
+  "schemaVersion": 1,
+  "guardrails": [
+    {
+      "id": "visual.semantic-tokens",
+      "owner": "@juangcarmona/lighthouse",
+      "appliesTo": { "baseline": true, "profiles": [] },
+      "level": "required",
+      "kind": "hard",
+      "verification": "deterministic",
+      "check": "semantic-tokens",
+      "failureHint": "Review semanticTokens inventory, adopted visual authority, diagnostics and exact product exceptions; run lighthouse verify --format json again. Unselected checking is not applicable."
+    }
+  ]
+}

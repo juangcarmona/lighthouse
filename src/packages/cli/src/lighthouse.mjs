@@ -97,6 +97,14 @@ function packageAsset(packageName, entry) {
   return readFileSync(path, 'utf8');
 }
 
+function installedUiAuthority() {
+  try {
+    const metadata = JSON.parse(packageAsset('@juangcarmona/lighthouse-ui', 'package.json'));
+    if (metadata.exports?.['./tokens.css'] !== './tokens.css' || metadata.exports?.['./DESIGN.md'] !== './DESIGN.md') return null;
+    return { name: metadata.name, version: metadata.version, source: '@juangcarmona/lighthouse-ui/tokens.css', tokens: packageAsset('@juangcarmona/lighthouse-ui', 'tokens.css') };
+  } catch { return null; }
+}
+
 function profileAssets(manifest) {
   const assets = {};
   if ((manifest?.profiles ?? []).includes('visual-theme')) {
@@ -614,7 +622,7 @@ function printUpgradePlan(plan) {
 function validate(manifest) {
   const problems = [];
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return ['manifest must be an object'];
-  const allowed = ['$schema', 'schemaVersion', 'baseline', 'product', 'application', 'profiles', 'integrations', 'packages', 'managed', 'repository'];
+  const allowed = ['$schema', 'schemaVersion', 'baseline', 'product', 'application', 'profiles', 'integrations', 'packages', 'managed', 'repository', 'semanticTokens'];
   for (const key of Object.keys(manifest)) if (!allowed.includes(key)) problems.push(`unknown field ${key}`);
   for (const key of ['schemaVersion', 'baseline', 'product', 'profiles', 'integrations', 'managed']) {
     if (!(key in manifest)) problems.push(`missing ${key}`);
@@ -1473,6 +1481,7 @@ async function verify(manifest, format = 'text') {
     validateGitConventions,
     branch: gitBranch(),
     uiTokens: manifest?.profiles?.includes('visual-theme') ? packageAsset('@juangcarmona/lighthouse-ui', 'tokens.css') : null,
+    uiAuthority: manifest?.semanticTokens?.enabled === true ? installedUiAuthority() : null,
   });
   const profileComposition = composeProfiles(readProfileCatalog(), manifest);
   report.profiles = profileComposition;
