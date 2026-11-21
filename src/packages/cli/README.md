@@ -79,7 +79,55 @@ Only `passed` and `not-applicable` satisfy a required guardrail; `pending-review
 
 To add a future guardrail, the catalog owner adds a JSON entry under the packaged `assets/guardrails/` surface, validates it against `assets/schemas/guardrails.schema.json`, declares its profile applicability and repair hint, and uses an existing checker or an explicit semantic or human verification method; in this delivery the surface belongs to the CLI package, and the CLI core does not change.
 
-A new deterministic checker mechanism or a new engineering practice is outside this catalog and requires a separate Product Change.
+The catalog alone does not authorize a new checker or engineering practice. The separately selected standalone CSS checker below implements the accepted profile contract; other mechanisms require their own product authority.
+
+## Optional standalone CSS checking
+
+Consumer CSS checking is **not selected** by `visual-theme`, initialization or upgrade. To select it locally, adopt the visual profile, review its upgrade first, and add this independent field to `lighthouse.json`:
+
+```json
+{
+  "semanticTokens": {
+    "enabled": true,
+    "files": ["src/app.css", "dist/generated.css"],
+    "exclude": [{"path": "dist/generated.css", "reason": "Generated from src/app.css; inspect authored input instead"}],
+    "exceptions": []
+  }
+}
+```
+
+Run `lighthouse verify --format json` and inspect `visual.semantic-tokens`: authority evidence, inspected hashes, exclusions, limitations and diagnostics. A selected failing check blocks verification. Omit the field or set `enabled: false` to leave it unselected; existing visual-profile checks and their consequences remain unchanged. Reviewed upgrades preserve this adopter-owned selection and inventory.
+
+Authority comes from `profiles`, `packages.ui`, the managed `docs/design/DESIGN.md` and UI skill, their `.lighthouse/upgrade.json` ownership hashes and installed UI exports. The guide's `source`, `packages.ui`, `tokenPrefix` and `primitiveTokens` metadata identify the supported token authority. A root `DESIGN.md` never overrides it. Missing, ambiguous or drifted authority fails with a repair hint: review `lighthouse reconcile` or `lighthouse upgrade`, preserve product changes, and apply only the reviewed owned projections. Never replace hashes merely to silence a failure.
+
+### Source and syntax boundary
+
+`files` is an exact, unique list of relative standalone `.css` paths: no globs, automatic traversal, hidden paths, dependencies or symlinks. Every exclusion names an inventory path and a reason. Generated `dist/`, `build/`, `coverage/` and `*.min.css` inputs require explicit exclusions and authored-source inventory. Empty/all-excluded inventories fail. Files outside the list, inline styles, HTML/template style blocks and CSS-in-JS are always reported as uninspected, not verified.
+
+Supported syntax is flat selector rules, declaration lists, comments, quoted strings and grouping `@media`, `@supports` and `@layer` rules. Values support balanced `var()` with recursive fallbacks and structural `calc`, `min`, `max`, `clamp`, `repeat`, `minmax` and `fit-content` functions. Raw `rgb`, `rgba`, `hsl` and `hsla` color functions require exact exceptions. Imports are not followed: list authored sources separately and resolve/remove imports from the selected checking surface. Imports, nesting, escapes/interpolation, unknown at-rules, properties, functions and product aliases are coverage limitations that fail complete checking of that selected file. This is not a browser CSS validator or arbitrary framework checker.
+
+Semantic values are required for colors/background, border/outline colors, fill/stroke, caret/accent color, font family/size, line height, letter spacing, radii, shadows and motion duration/delay. Border/outline shorthands permit numeric pixel widths and line styles alongside semantic colors. `transition` permits semantic duration with color/background-color/border-color/opacity/transform and standard ease/linear keywords. Values and fallbacks must use known nonprimitive `--lh-*` roles; raw colors, font stacks, radii, shadows and durations need exact exceptions. Global inheritance/reset keywords, `transparent`, `currentColor`, `none` and zero are supported literal classes.
+
+Geometry and structure are not universally token-only. Supported literal properties include display/position/insets, sizing, margin/padding/gaps, grid/flex alignment, overflow, box sizing, aspect ratio, object fitting, cursor/pointer/visibility, text alignment/decoration/wrapping, lists/tables, border widths/styles, outline offsets, opacity, color scheme, content, font weight/style, vertical alignment, isolation, appearance, resize, selection and touch action. Every `--lh-*` reference is still validated on these properties. Strings/comments containing token-like text are not references. Unsupported properties are reported rather than silently accepted.
+
+### Product exceptions
+
+Add an exact exception only after the product decision is reviewed. For example, a deliberate branded semantic override can declare:
+
+```json
+{
+  "path": "src/app.css",
+  "property": "--lh-action",
+  "value": "#2459a6",
+  "selector": ".product-brand",
+  "role": "--lh-action",
+  "reason": "Approved product action color; retain contrast qualification",
+  "owner": "product-owner",
+  "review": "2027-01-15"
+}
+```
+
+`path`, `property` and the complete trimmed source `value` match exactly; optional `selector` and `role` narrow the match. `reason`, `owner` and an ISO review date are required and are reported as evidence. The date records a review checkpoint, not automated approval or expiry. No wildcard exceptions exist. A role definition requires an exception even when its value references another role. An exception permits only that raw value or product override: it never permits undefined roles, primitive references, unrelated declarations or unsupported syntax. Canonical installed token definitions remain authority-owned; do not copy them into component CSS or use palette primitives as semantic roles.
 
 ## Optional GitHub repository profile
 

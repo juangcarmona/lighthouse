@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/semantic-tokens.schema.json",
+  "title": "Optional standalone CSS semantic-token checking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enabled"],
+  "properties": {
+    "enabled": {"type": "boolean"},
+    "files": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_/-]+(?:[.][A-Za-z0-9_-]+)*[.]css$"}},
+    "exclude": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "reason"], "properties": {"path": {"type": "string", "minLength": 1}, "reason": {"type": "string", "minLength": 1}}}},
+    "exceptions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "property", "value", "reason", "owner", "review"], "properties": {
+      "path": {"type": "string", "minLength": 1},
+      "property": {"type": "string", "minLength": 1},
+      "value": {"type": "string", "minLength": 1},
+      "selector": {"type": "string", "minLength": 1},
+      "role": {"type": "string", "pattern": "^--lh-[a-z0-9-]+$"},
+      "reason": {"type": "string", "minLength": 1},
+      "owner": {"type": "string", "minLength": 1},
+      "review": {"type": "string", "format": "date"}
+    }}}
+  },
+  "allOf": [{"if": {"properties": {"enabled": {"const": true}}}, "then": {"required": ["files"]}}]
+}

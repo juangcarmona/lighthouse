@@ -1,10 +1,21 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
-for (const theme of ['light', 'dark']) {
-  test(`${theme}: accessible semantics, contrast and viewport`, async ({ page }, info) => {
+test.use({ launchOptions: process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {} });
+
+for (const appearance of [
+  { theme: 'light', system: 'light', name: 'light' },
+  { theme: 'dark', system: 'dark', name: 'dark' },
+  { theme: 'system', system: 'light', name: 'system-light' },
+  { theme: 'system', system: 'dark', name: 'system-dark' },
+]) {
+  const { theme, system, name } = appearance;
+  test(`${name}: accessible semantics, contrast and viewport`, async ({ page }, info) => {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    await page.emulateMedia({ colorScheme: system, reducedMotion: 'reduce' });
     await page.goto('/gallery/');
     await page.getByLabel('Appearance', { exact: true }).selectOption(theme);
     await expect(page.locator('html')).toHaveAttribute('data-lh-theme', theme);
@@ -33,8 +44,49 @@ for (const theme of ['light', 'dark']) {
       return result;
     });
     for (const pair of contrasts) expect(pair.ratio, `${pair.a} / ${pair.b}`).toBeGreaterThanOrEqual(4.5);
+    const effective = await page.evaluate(() => {
+      const probe = document.createElement('span');
+      document.body.append(probe);
+      const comparisons = [
+        ['body', 'backgroundColor', '--lh-canvas'], ['body', 'color', '--lh-text'],
+        ['.lh-card', 'backgroundColor', '--lh-surface'],
+        ['.lh-input', 'borderTopColor', '--lh-border-strong'],
+        ['.lh-button:not([data-variant])', 'backgroundColor', '--lh-action'],
+        ['.lh-button:not([data-variant])', 'color', '--lh-on-action'],
+        ['.lh-badge[data-tone="positive"]', 'color', '--lh-positive'],
+      ].map(([selector, property, role]) => {
+        probe.style[property] = `var(${role})`;
+        return { selector, property, role, actual: getComputedStyle(document.querySelector(selector))[property], expected: getComputedStyle(probe)[property] };
+      });
+      const motion = { scroll: getComputedStyle(document.documentElement).scrollBehavior, duration: getComputedStyle(document.querySelector('.lh-button')).transitionDuration };
+      probe.remove();
+      return { comparisons, motion };
+    });
+    for (const item of effective.comparisons) expect(item.actual, `${item.selector} ${item.property} uses ${item.role}`).toBe(item.expected);
+    expect(effective.motion.scroll).toBe('auto');
+    expect(effective.motion.duration.split(',').every(duration => parseFloat(duration) === 0)).toBe(true);
+    const opener = page.getByRole('button', { name: 'Open example' });
+    await opener.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(opener).toBeFocused();
+    const focus = await opener.evaluate(element => {
+      const style = getComputedStyle(element), probe = document.createElement('span');
+      probe.style.outlineColor = 'var(--lh-focus)'; element.append(probe);
+      const result = { visible: element.matches(':focus-visible'), width: style.outlineWidth, style: style.outlineStyle, actual: style.outlineColor, expected: getComputedStyle(probe).outlineColor };
+      probe.remove(); return result;
+    });
+    expect(focus.visible).toBe(true);
+    expect(parseFloat(focus.width)).toBeGreaterThanOrEqual(2);
+    expect(focus.style).toBe('solid');
+    expect(focus.actual).toBe(focus.expected);
     expect(errors).toEqual([]);
-    await page.screenshot({ path: `test-results/visual/${info.project.name}-${theme}.png`, fullPage: true });
+    await page.screenshot({ path: `test-results/visual/${info.project.name}-${name}.png`, fullPage: true });
+    if (process.env.LIGHTHOUSE_VISUAL_EVIDENCE_DIR) {
+      await mkdir(process.env.LIGHTHOUSE_VISUAL_EVIDENCE_DIR, { recursive: true });
+      await page.screenshot({ path: join(process.env.LIGHTHOUSE_VISUAL_EVIDENCE_DIR, `${info.project.name}-${name}.png`), fullPage: false });
+      await info.attach('semantic-style-and-contrast', { body: JSON.stringify({ appearance, viewport: page.viewportSize(), effective, contrasts, focus, errors }, null, 2), contentType: 'application/json' });
+    }
   });
 }
 

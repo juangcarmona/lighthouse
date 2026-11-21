@@ -32,6 +32,7 @@
     "src/aliases.mjs",
     "src/init-plan.mjs",
     "src/guardrails.mjs",
+    "src/semantic-tokens.mjs",
     "assets",
     "README.md",
     "src/profiles.mjs",

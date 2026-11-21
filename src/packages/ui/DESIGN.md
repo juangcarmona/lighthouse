@@ -5,6 +5,7 @@ source: ./tokens.css
 packages:
   ui: '@juangcarmona/lighthouse-ui'
 tokenPrefix: '--lh-'
+primitiveTokens: [--lh-white, --lh-night, --lh-navy, --lh-slate, --lh-blue-deep, --lh-blue, --lh-blue-light, --lh-ice, --lh-slate-light, --lh-slate-muted]
 modes: [light, dark, system]
 framework: framework-neutral CSS
 ---
@@ -13,7 +14,7 @@ framework: framework-neutral CSS
 
 This document is the design contract installed with the Lighthouse visual delivery. `tokens.css` is the machine-readable source of truth; this file explains how an adopter and its agents use those tokens and the optional native recipes.
 
-During `init`, Lighthouse projects this guide into the adopter, creates the soft design-system skill and creates a deterministic token verifier when the selected stack can support one.
+During `init`, Lighthouse projects this guide and the soft design-system skill into the adopter. The visual profile verifies these managed projections and installed token presence. Consumer-source checking is separately opt-in; selecting or upgrading the visual profile does not enable it.
 
 ## Visual intent
 
@@ -28,6 +29,8 @@ The default palette is the Lighthouse blue and night palette in `tokens.css`. An
 - Use the four-pixel spacing rhythm and the provided control and panel radii before adding a new value.
 - Use `--lh-font-sans` for interface text and `--lh-font-mono` for commands, identifiers and compact technical labels.
 - Use the feedback pairs `--lh-positive`, `--lh-caution` and `--lh-negative` with their matching surfaces and readable text.
+
+For standalone CSS checking, explicitly configure `semanticTokens` in `lighthouse.json` using the installed CLI guide's **Optional standalone CSS checking** section. The checker resolves this managed guide through adoption and upgrade ownership, then reads the installed UI token export; a root `DESIGN.md` cannot replace that authority. Product overrides need exact, reasoned exceptions with an owner and review date. Geometry is not universally forbidden, and this bounded check does not inspect templates, inline styles or CSS-in-JS.
 
 ## Appearance
 

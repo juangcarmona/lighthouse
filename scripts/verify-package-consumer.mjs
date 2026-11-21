@@ -105,6 +105,43 @@ try {
     process.exit(visualVerify.status || 1);
   }
 
+  // Exercise the actual packed checker independently of visual-profile selection.
+  const cssPath = join(visualFixture, 'src/app.css');
+  await writeFile(cssPath, '.product { color: var(--lh-undefined); background: red; width: 390px; }');
+  const visualReport = () => {
+    const executed = spawnSync(bin, ['verify', '--format', 'json'], { cwd: visualFixture, encoding: 'utf8' });
+    if (!executed.stdout.trim()) throw new Error(executed.stderr || 'Packed visual verification produced no report');
+    return { executed, report: JSON.parse(executed.stdout) };
+  };
+  const assertVisual = (result, expected) => {
+    if (result.report.results.find(item => item.id === 'visual.design-contract')?.status !== 'passed'
+      || result.report.results.find(item => item.id === 'visual.semantic-tokens')?.status !== expected) throw new Error(`Unexpected packed visual/checker result: ${JSON.stringify(result.report)}`);
+  };
+  const unselected = visualReport();
+  assertVisual(unselected, 'not-applicable');
+  if (unselected.executed.status !== 0) throw new Error(unselected.executed.stderr);
+  run(bin, ['upgrade', '--scope', 'harness', '--format', 'json'], visualFixture);
+  run(bin, ['upgrade', '--scope', 'harness', '--apply'], visualFixture);
+  const upgradedUnselected = visualReport();
+  assertVisual(upgradedUnselected, 'not-applicable');
+  if (upgradedUnselected.executed.status !== 0) throw new Error(upgradedUnselected.executed.stderr);
+  const selectedVisual = JSON.parse(await readFile(join(visualFixture, 'lighthouse.json'), 'utf8'));
+  selectedVisual.semanticTokens = { enabled: true, files: ['src/app.css'] };
+  await writeFile(join(visualFixture, 'lighthouse.json'), JSON.stringify(selectedVisual));
+  const invalidCss = visualReport();
+  assertVisual(invalidCss, 'failed');
+  if (invalidCss.executed.status !== 1 || !invalidCss.report.problems.some(problem => problem.includes('undefined-role'))) throw new Error('Packed checker must reject an undefined consumer role');
+  await writeFile(cssPath, '.product { color: var(--lh-text); background: var(--lh-surface); width: 390px; }');
+  const selectedPass = visualReport();
+  assertVisual(selectedPass, 'passed');
+  if (selectedPass.executed.status !== 0) throw new Error(selectedPass.executed.stderr);
+  if (JSON.stringify(selectedPass.report) !== JSON.stringify(visualReport().report)) throw new Error('Packed consumer verification must be repeatable');
+  run(bin, ['upgrade', '--scope', 'harness', '--apply'], visualFixture);
+  const retainedSelection = JSON.parse(await readFile(join(visualFixture, 'lighthouse.json'), 'utf8')).semanticTokens;
+  if (JSON.stringify(retainedSelection) !== JSON.stringify(selectedVisual.semanticTokens)) throw new Error('Reviewed upgrade must preserve explicit checker selection');
+  assertVisual(visualReport(), 'passed');
+  console.log('Packed standalone CSS checker: unselected, upgraded-unselected, selected failure/recovery, deterministic report and retained selection passed.');
+
   const dotnetFixture = join(temp, '.fixture/dotnet-profile');
   const dotnetCreate = spawnSync(bin, ['create-dotnet', dotnetFixture, '--name', 'Workshop'], { cwd: temp, encoding: 'utf8' });
   if (dotnetCreate.status !== 0 || !(await readFile(join(dotnetFixture, 'docs/profiles/dotnet/README.md'), 'utf8')).includes('Minimal APIs')) {

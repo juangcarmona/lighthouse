@@ -227,7 +227,8 @@
       "surfaces": [
         "semantic design tokens",
         "DESIGN.md",
-        "UI design skill"
+        "UI design skill",
+        "separately opt-in standalone CSS source verification (semanticTokens.enabled)"
       ],
       "verification": {
         "layers": [
@@ -273,7 +274,7 @@
       ],
       "combinations": [],
       "consumerFixture": "src/tests/lighthouse.test.mjs",
-      "upgradeStrategy": "Preserve project-owned design content and reconcile only Lighthouse-owned visual projections.",
+      "upgradeStrategy": "Preserve project-owned design content and reconcile only Lighthouse-owned visual projections. Never select consumer CSS checking implicitly; preserve explicit semanticTokens configuration.",
       "guardrails": [
         {
           "id": "static",

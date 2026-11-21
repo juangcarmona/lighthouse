@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 
 test('the UI artifact contains the complete visual contract', () => {
   const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -41,6 +42,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'assets/dotnet-template/tests/Lighthouse.Example.Tests/Lighthouse.Example.Tests.csproj',
       'assets/dotnet-template/tests/Lighthouse.Example.Tests/packages.lock.json',
       'assets/guardrails/catalog.json',
+      'assets/guardrails/semantic-tokens.json',
       'assets/profiles/catalog.json',
       'assets/profiles/dotnet/README.md',
       'assets/profiles/dotnet/SKILL.md',
@@ -85,6 +87,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'assets/schemas/lighthouse-manifest.schema.json',
       'assets/schemas/lighthouse-upgrade.schema.json',
       'assets/schemas/profile-catalog.schema.json',
+      'assets/schemas/semantic-tokens.schema.json',
       'assets/skills/init/SKILL.md',
       'github-profile.md',
       'package.json',
@@ -96,6 +99,7 @@ test('the UI artifact contains the complete visual contract', () => {
       'src/lighthouse.mjs',
       'src/product-definition.mjs',
       'src/profiles.mjs',
+      'src/semantic-tokens.mjs',
       'src/verify-dotnet.mjs',
       'upgrades/0.3.0.md',
       'upgrades/0.4.0.md',
@@ -110,4 +114,17 @@ test('the UI artifact contains the complete visual contract', () => {
     assert.equal(artifact.name, name);
     assert.deepEqual(artifact.files.map((file) => file.path).sort(), [...files, 'LICENSE', 'NOTICE'].sort());
   }
+});
+
+test('the installed visual guide declares canonical exported authority and separate consumer selection', async () => {
+  const uiRoot = new URL('../packages/ui/', import.meta.url);
+  const guide = await readFile(new URL('DESIGN.md', uiRoot), 'utf8');
+  const tokens = await readFile(new URL('tokens.css', uiRoot), 'utf8');
+  const pkg = JSON.parse(await readFile(new URL('package.json', uiRoot), 'utf8'));
+  assert.match(guide, /^source: [.]\/tokens[.]css$/mu);
+  assert.equal(pkg.exports['./tokens.css'], './tokens.css');
+  assert.match(guide, /Consumer-source checking is separately opt-in/);
+  const primitiveNames = guide.match(/^primitiveTokens: \[([^\]]+)\]$/mu)[1].split(',').map(name => name.trim());
+  for (const name of primitiveNames) assert.ok(tokens.includes(`${name}:`));
+  for (const role of ['--lh-canvas', '--lh-text', '--lh-action', '--lh-focus']) assert.ok(!primitiveNames.includes(role));
 });
