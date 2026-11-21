@@ -66,7 +66,7 @@ steps:
     uses: actions/checkout@v5
     with:
       repository: juangcarmona/lighthouse
-      ref: 1a840951ccb911a45407552caf70aca64f372e38
+      ref: 98db254ed623aeebb3a29a3b814266335e08744a
       path: .lighthouse-harness
       persist-credentials: false
   - name: Load the authorized product request
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1a840951ccb911a45407552caf70aca64f372e38
+          ref: 98db254ed623aeebb3a29a3b814266335e08744a
           persist-credentials: false
       - name: Check out the adopter's current product source
         uses: actions/checkout@v5
@@ -199,7 +199,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: 1a840951ccb911a45407552caf70aca64f372e38
+          ref: 98db254ed623aeebb3a29a3b814266335e08744a
           path: .lighthouse-harness
           persist-credentials: false
       - uses: actions/setup-node@v5
