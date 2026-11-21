@@ -31,7 +31,7 @@ The evaluator SHALL validate explicitly simulated traces for design advice, scop
 
 ### Requirement: Required protocol and preserved authority
 
-The evaluator SHALL require context before work, forbid advice and out-of-scope writes, and reject repeated or accepted-decision interviews and accepted-decision replacements.
+The evaluator SHALL require context before work, forbid advice/refinement and out-of-scope implementation writes, and reject duplicate interviews or changes to accepted decisions.
 
 <!-- pdac:cite id="FR-SKILL-CONTRACTS" digest="sha256:9cc9969f26d71771ee0de0cd973841ad2f8fe33a5169594f4a8a88a052f48c9b" -->
 
@@ -41,6 +41,12 @@ The evaluator SHALL require context before work, forbid advice and out-of-scope 
 
 - **WHEN** otherwise complete advice writes any project path or a scoped trace writes outside its contract
 - **THEN** protocol fails even if selection and requester delivery succeed
+
+#### Scenario: Refinement preserves project files
+
+- **WHEN** direct engineering refinement produces a valid bounded output but writes within its proposed future implementation scope
+- **THEN** protocol fails independently while selection and otherwise valid completion remain observable
+- **AND** proposed future implementation scope grants no refinement write permission
 
 #### Scenario: Missing or late context
 
@@ -62,6 +68,25 @@ The evaluator SHALL require a structured scenario-appropriate result, all declar
 
 - **WHEN** selection and required reads occur but no complete result is produced
 - **THEN** completion fails
+
+#### Scenario: Incomplete bounded refinement
+
+- **WHEN** a refinement omits its bounded problem, criteria, scope, resolved dependencies, confirmed explained estimate or any caller-requested work
+- **THEN** completion fails without requiring a triage predecessor or matching prose phrases
+
+#### Scenario: Cross-request or cross-run delivery
+
+- **WHEN** an otherwise valid delivery or result belongs to another request or run
+- **THEN** completion fails independently of selection and protocol
+
+### Requirement: Concrete bounded findings
+
+Every assertion SHALL retain its stable identity and provide a bounded reason, relevant observation references and applicability. Missing evidence MUST be explicit, and inapplicable obligations MUST NOT be described as observed work. Structural rejection SHALL remain distinct from behavioral failure.
+
+#### Scenario: Missing context observation
+
+- **WHEN** a declared repository rule or supplied owner decision lacks a timely matching read
+- **THEN** the protocol finding identifies the missing context and references the contract and relevant observations
 
 #### Scenario: Generated but not delivered
 

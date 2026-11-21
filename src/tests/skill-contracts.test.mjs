@@ -8,13 +8,13 @@ import { evaluateSkillTrace, validateSkillTrace } from '../packages/sdlc/src/ski
 
 // Every trace in this file is synthetic simulation, not provider measurement.
 function simulation(scenario = 'design-advice') {
-  const roles = scenario === 'design-advice' ? ['request', 'product', 'design'] : ['request', 'product', 'architecture'];
+  const roles = scenario === 'design-advice' ? ['request', 'product', 'design'] : ['request', 'product', 'architecture', 'repository-rules', 'owner-decisions'];
   const requiredContext = roles.map(role => ({ id: role === 'design' ? 'projected/DESIGN.md' : role, revision: 'simulation-v1', role }));
-  const contract = { scenario, skill: scenario === 'design-advice' ? 'design-advice' : `lighthouse-sdlc-${scenario === 'refinement' ? 'refine' : 'implement'}`, requester: 'simulation-parent', requiredContext, acceptedDecisions: ['accepted-product', 'accepted-design'], writeScope: scenario === 'design-advice' ? [] : ['src/feature/'], requiredChecks: scenario === 'implementation' ? ['unit', 'integration'] : [] };
+  const contract = { scenario, skill: scenario === 'design-advice' ? 'design-advice' : `lighthouse-sdlc-${scenario === 'refinement' ? 'refine' : 'implement'}`, requester: 'simulation-parent', requestId: 'simulation-request', runId: 'simulation-run', requiredContext, acceptedDecisions: ['accepted-product', 'accepted-design'], writeScope: scenario === 'implementation' ? ['src/feature/'] : [], requiredChecks: scenario === 'implementation' ? ['unit', 'integration'] : [], ...(scenario === 'refinement' ? { implementationScope: ['src/feature/'], requiredWork: ['keyboard-action', 'focus-state'] } : {}) };
   const output = scenario === 'design-advice'
     ? { kind: scenario, recommendations: [{ decisionId: 'accepted-design', action: 'Use the accepted layout with a visible focus indicator.' }] }
     : scenario === 'refinement'
-      ? { kind: scenario, scope: ['src/feature/view.mjs'], acceptanceCriteria: ['Keyboard users can reach the primary action.'] }
+      ? { kind: scenario, problem: 'Keyboard users cannot reach the primary action.', scope: ['src/feature/view.mjs'], acceptanceCriteria: ['Keyboard users can reach the primary action.'], dependencies: [{ id: 'accepted-layout', owner: 'simulation-owner', status: 'resolved' }], estimate: { points: 3, status: 'confirmed', rationale: { scope: 'One bounded view.', dependencies: 'Layout accepted.', verification: 'Keyboard and focus checks.' }, confidence: 'high', uncertainty: [] }, completedWork: [...contract.requiredWork] }
       : { kind: scenario, changes: ['src/feature/view.mjs'], checks: ['unit', 'integration'] };
   return {
     schemaVersion: 1, mode: 'simulation', contract,
@@ -22,8 +22,8 @@ function simulation(scenario = 'design-advice') {
       { type: 'selected', skill: contract.skill },
       ...requiredContext.map(context => ({ type: 'read', contextId: context.id, revision: context.revision })),
       ...(scenario === 'implementation' ? [{ type: 'write', path: 'src/feature/view.mjs' }, ...contract.requiredChecks.map(id => ({ type: 'check', id, status: 'passed' }))] : []),
-      { type: 'result', id: 'simulation-result', output },
-      { type: 'delivered', resultId: 'simulation-result', requester: contract.requester },
+      { type: 'result', id: 'simulation-result', requestId: contract.requestId, runId: contract.runId, output },
+      { type: 'delivered', resultId: 'simulation-result', requester: contract.requester, requestId: contract.requestId, runId: contract.runId },
     ],
   };
 }
@@ -37,6 +37,7 @@ const nearMisses = [
   ['selection.expected', 'design-advice', trace => { trace.events[0].skill = 'unrelated-skill'; }],
   ['protocol.context', 'design-advice', trace => { trace.events = trace.events.filter(event => event.contextId !== 'projected/DESIGN.md'); }],
   ['protocol.advice-read-only', 'design-advice', trace => beforeResult(trace, { type: 'write', path: 'src/unsolicited.mjs' })],
+  ['protocol.refinement-read-only', 'refinement', trace => beforeResult(trace, { type: 'write', path: 'src/feature/view.mjs' })],
   ['protocol.scope', 'implementation', trace => { trace.events.find(event => event.type === 'write').path = 'src/feature-other/view.mjs'; trace.events.find(event => event.type === 'result').output.changes = ['src/feature-other/view.mjs']; }],
   ['protocol.no-duplicate-interview', 'refinement', trace => beforeResult(trace, { type: 'interview', decisionId: 'unresolved-option' }, { type: 'interview', decisionId: 'unresolved-option' })],
   ['protocol.no-reinterview', 'refinement', trace => beforeResult(trace, { type: 'interview', decisionId: 'accepted-product' })],
@@ -44,14 +45,84 @@ const nearMisses = [
   ['completion.result', 'refinement', trace => { trace.events.find(event => event.type === 'result').output.scope = ['outside/']; }],
   ['completion.checks', 'implementation', trace => { trace.events.find(event => event.type === 'check').status = 'failed'; }],
   ['completion.delivery', 'design-advice', trace => { trace.events = trace.events.filter(event => event.type !== 'delivered'); }],
+  ['completion.request-binding', 'implementation', trace => { trace.events.at(-1).requestId = 'another-request'; }],
+  ['completion.run-binding', 'implementation', trace => { trace.events.at(-1).runId = 'another-run'; }],
 ];
 
 function assertNearMiss(evaluate, id, trace) {
+  assert.deepEqual(validateSkillTrace(trace), [], 'near miss must be structurally valid');
   const report = evaluate(trace);
   assert.equal(report.status, 'failed', `${id} must reject the near miss`);
   assert.deepEqual(report.assertions.filter(item => item.status === 'failed').map(item => item.id), [id]);
   for (const dimension of ['selection', 'protocol', 'completion']) assert.equal(report[dimension], id.startsWith(`${dimension}.`) ? 'failed' : 'passed');
 }
+
+test('simulation: refinement has no write permission even within proposed future scope', () => {
+  const trace = simulation('refinement');
+  assert.deepEqual(trace.contract.writeScope, []);
+  assert.equal(evaluateSkillTrace(trace).status, 'passed');
+  beforeResult(trace, { type: 'write', path: 'src/feature/view.mjs' });
+  assertNearMiss(evaluateSkillTrace, 'protocol.refinement-read-only', trace);
+  trace.contract.writeScope = ['src/'];
+  assert.equal(evaluateSkillTrace(trace).status, 'invalid', 'future scope cannot grant refinement write permission');
+});
+
+test('simulation: direct refinement requires the complete bounded deliverable and every requested work identity', () => {
+  for (const mutation of ['problem', 'dependencies', 'estimate', 'completedWork', 'scope', 'criteria', 'unresolved', 'duplicate-dependency', 'provisional', 'missing-work']) {
+    const trace = simulation('refinement');
+    const output = trace.events.at(-2).output;
+    if (['problem', 'dependencies', 'estimate', 'completedWork'].includes(mutation)) delete output[mutation];
+    if (mutation === 'scope') output.scope = [];
+    if (mutation === 'criteria') output.acceptanceCriteria = [];
+    if (mutation === 'unresolved') output.dependencies[0].status = 'unresolved';
+    if (mutation === 'duplicate-dependency') output.dependencies.push(structuredClone(output.dependencies[0]));
+    if (mutation === 'provisional') output.estimate.status = 'provisional';
+    if (mutation === 'missing-work') output.completedWork.pop();
+    if (mutation === 'criteria') assert.equal(evaluateSkillTrace(trace).status, 'invalid');
+    else assertNearMiss(evaluateSkillTrace, 'completion.result', trace);
+  }
+  const trace = simulation('refinement');
+  trace.events.at(-2).output.dependencies = [];
+  assert.equal(evaluateSkillTrace(trace).status, 'passed', 'explicitly no dependencies needs no invented prerequisite');
+  assert.ok(!JSON.stringify(trace).includes('triage'));
+});
+
+test('simulation: request/run binding includes the completed result, not just its delivery', () => {
+  for (const field of ['requestId', 'runId']) {
+    for (const target of ['result', 'delivered', 'both']) {
+      const trace = simulation('implementation');
+      for (const event of trace.events) if (event.type === target || (target === 'both' && ['result', 'delivered'].includes(event.type))) event[field] = `another-${field}`;
+      assertNearMiss(evaluateSkillTrace, field === 'requestId' ? 'completion.request-binding' : 'completion.run-binding', trace);
+    }
+  }
+});
+
+test('simulation: assertion findings are concrete, bounded, referential and honest about applicability', () => {
+  for (const [id, scenario, mutate] of nearMisses) {
+    const trace = simulation(scenario);
+    mutate(trace);
+    for (const finding of evaluateSkillTrace(trace).assertions) {
+      assert.ok(finding.reason.trim().length > 0 && finding.reason.length <= 2048);
+      assert.ok(finding.observationRefs.length > 0 && finding.observationRefs.length <= 32);
+      for (const ref of finding.observationRefs) {
+        assert.ok(ref.startsWith('/'));
+        assert.notEqual(ref.slice(1).split('/').reduce((value, key) => value?.[key], trace), undefined, `${id}: ${ref} must resolve`);
+      }
+      assert.ok(['applicable', 'not-applicable'].includes(finding.applicability));
+    }
+    assert.equal(evaluateSkillTrace(trace).assertions.find(item => item.id === id).applicability, 'applicable');
+  }
+  const trace = simulation('refinement');
+  trace.events = trace.events.filter(event => event.contextId !== 'repository-rules');
+  const finding = evaluateSkillTrace(trace).assertions.find(item => item.id === 'protocol.context');
+  assert.match(finding.reason, /Missing timely matching context reads: repository-rules@simulation-v1/);
+  trace.events = trace.events.filter(event => ['selected', 'read'].includes(event.type));
+  const report = evaluateSkillTrace(trace);
+  assert.match(report.assertions.find(item => item.id === 'completion.result').reason, /Missing result observation/);
+  assert.match(report.assertions.find(item => item.id === 'completion.delivery').reason, /Missing ordered delivery/);
+  assert.equal(report.assertions.find(item => item.id === 'protocol.advice-read-only').applicability, 'not-applicable');
+  assert.equal(report.assertions.find(item => item.id === 'completion.checks').applicability, 'not-applicable');
+});
 
 for (const scenario of ['design-advice', 'refinement', 'implementation']) {
   test(`simulation: ${scenario} selects, follows protocol and delivers independently`, () => {

@@ -13,6 +13,7 @@ Selecting a skill or reading its references does not prove that an agent followe
 - Preserve accepted product/design decisions, enforce declared writes and require linked completion and requester-delivery events.
 - Document the evidence boundary in the packaged skills and guide; exercise the evaluator and schema in an isolated packed consumer and include a patch changeset.
 - Apply only the owner-approved citation declaration/payload additions to `openspec/changes/issue-590-product-change/tasks.md`; retain its six tasks verbatim.
+- Correct refinement's read-only boundary and complete bounded output, add concrete assertion findings and request/run delivery bindings, and retain packed-artifact proof. Apply the review-admitted managed-command diagnostic-routing prerequisite without changing verification inputs or cache activation.
 
 ## Capabilities
 
