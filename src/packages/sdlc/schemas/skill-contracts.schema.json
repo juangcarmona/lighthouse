@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/juangcarmona/lighthouse/schemas/skill-contracts.schema.json",
+  "title": "Bounded simulated skill trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "contract", "events"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mode": { "const": "simulation" },
+    "contract": { "$ref": "#/$defs/contract" },
+    "events": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/event" } }
+  },
+  "$defs": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "\\S" },
+    "path": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)[A-Za-z0-9_.@-]+(?:/[A-Za-z0-9_.@-]+)*/?$" },
+    "names": { "type": "array", "maxItems": 128, "uniqueItems": true, "items": { "$ref": "#/$defs/name" } },
+    "paths": { "type": "array", "maxItems": 128, "uniqueItems": true, "items": { "$ref": "#/$defs/path" } },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "revision", "role"],
+      "properties": {
+        "id": { "$ref": "#/$defs/name" },
+        "revision": { "$ref": "#/$defs/name" },
+        "role": { "enum": ["request", "product", "design", "architecture", "repository-rules", "owner-decisions"] }
+      }
+    },
+    "contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scenario", "skill", "requester", "requestId", "runId", "requiredContext", "acceptedDecisions", "writeScope", "requiredChecks"],
+      "properties": {
+        "scenario": { "enum": ["design-advice", "refinement", "implementation"] },
+        "skill": { "$ref": "#/$defs/name" },
+        "requester": { "$ref": "#/$defs/name" },
+        "requestId": { "$ref": "#/$defs/name" },
+        "runId": { "$ref": "#/$defs/name" },
+        "requiredContext": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "$ref": "#/$defs/context" } },
+        "acceptedDecisions": { "$ref": "#/$defs/names" },
+        "writeScope": { "$ref": "#/$defs/paths" },
+        "implementationScope": { "$ref": "#/$defs/paths" },
+        "requiredWork": { "$ref": "#/$defs/names" },
+        "requiredChecks": { "$ref": "#/$defs/names" }
+      }
+    },
+    "output": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "recommendations"],
+          "properties": {
+            "kind": { "const": "design-advice" },
+            "recommendations": {
+              "type": "array", "minItems": 1, "maxItems": 32,
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["decisionId", "action"],
+                "properties": { "decisionId": { "$ref": "#/$defs/name" }, "action": { "$ref": "#/$defs/text" } }
+              }
+            }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "scope", "acceptanceCriteria"],
+          "properties": {
+            "kind": { "const": "refinement" },
+            "problem": { "$ref": "#/$defs/text" },
+            "scope": { "$ref": "#/$defs/paths" },
+            "completedWork": { "$ref": "#/$defs/names" },
+            "dependencies": {
+              "type": "array", "maxItems": 32,
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["id", "owner", "status"],
+                "properties": {
+                  "id": { "$ref": "#/$defs/name" },
+                  "owner": { "$ref": "#/$defs/name" },
+                  "status": { "enum": ["resolved", "unresolved"] }
+                }
+              }
+            },
+            "estimate": {
+              "type": "object", "additionalProperties": false,
+              "required": ["points", "status", "rationale", "confidence", "uncertainty"],
+              "properties": {
+                "points": { "enum": [1, 2, 3, 5, 8, 13] },
+                "status": { "enum": ["provisional", "confirmed"] },
+                "confidence": { "enum": ["low", "medium", "high"] },
+                "uncertainty": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/text" } },
+                "rationale": {
+                  "type": "object", "additionalProperties": false,
+                  "required": ["scope", "dependencies", "verification"],
+                  "properties": {
+                    "scope": { "$ref": "#/$defs/text" },
+                    "dependencies": { "$ref": "#/$defs/text" },
+                    "verification": { "$ref": "#/$defs/text" }
+                  }
+                }
+              }
+            },
+            "acceptanceCriteria": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "$ref": "#/$defs/text" } }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["kind", "changes", "checks"],
+          "properties": {
+            "kind": { "const": "implementation" },
+            "changes": { "$ref": "#/$defs/paths" },
+            "checks": { "$ref": "#/$defs/names" }
+          }
+        }
+      ]
+    },
+    "event": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "skill"],
+          "properties": { "type": { "const": "selected" }, "skill": { "$ref": "#/$defs/name" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "contextId", "revision"],
+          "properties": { "type": { "const": "read" }, "contextId": { "$ref": "#/$defs/name" }, "revision": { "$ref": "#/$defs/name" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "path"],
+          "properties": { "type": { "const": "write" }, "path": { "$ref": "#/$defs/path" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "decisionId"],
+          "properties": { "type": { "const": "interview" }, "decisionId": { "$ref": "#/$defs/name" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "decisionId"],
+          "properties": { "type": { "const": "replace-decision" }, "decisionId": { "$ref": "#/$defs/name" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "id", "status"],
+          "properties": { "type": { "const": "check" }, "id": { "$ref": "#/$defs/name" }, "status": { "enum": ["passed", "failed", "unavailable"] } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "id", "requestId", "runId", "output"],
+          "properties": { "type": { "const": "result" }, "id": { "$ref": "#/$defs/name" }, "requestId": { "$ref": "#/$defs/name" }, "runId": { "$ref": "#/$defs/name" }, "output": { "$ref": "#/$defs/output" } }
+        },
+        {
+          "type": "object", "additionalProperties": false, "required": ["type", "resultId", "requester", "requestId", "runId"],
+          "properties": { "type": { "const": "delivered" }, "resultId": { "$ref": "#/$defs/name" }, "requester": { "$ref": "#/$defs/name" }, "requestId": { "$ref": "#/$defs/name" }, "runId": { "$ref": "#/$defs/name" } }
+        }
+      ]
+    }
+  }
+}
