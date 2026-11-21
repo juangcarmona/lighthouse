@@ -13,7 +13,7 @@ on:
   pull_request:
     types: [ready_for_review, converted_to_draft, closed, reopened]
   workflow_run:
-    workflows: ["refine","integrate","unattended","triage","propose","apply review","implement","product-change","apply-product-change","Lighthouse verification","Lighthouse epic reconciliation"]
+    workflows: ["refine","integrate","triage","propose","apply review","implement","product-change","apply-product-change","Lighthouse verification","unattended","Lighthouse epic reconciliation"]
     types: [completed]
   schedule:
     - cron: '*/5 * * * *'
@@ -103,7 +103,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: db3c062f4df3774cd98c16333e4bb5c8f7958a9c
+          ref: 868640fc56253b1767dcb38a633a568ecbd98974
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -148,7 +148,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: db3c062f4df3774cd98c16333e4bb5c8f7958a9c
+          ref: 868640fc56253b1767dcb38a633a568ecbd98974
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -206,7 +206,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: db3c062f4df3774cd98c16333e4bb5c8f7958a9c
+          ref: 868640fc56253b1767dcb38a633a568ecbd98974
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -263,7 +263,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: db3c062f4df3774cd98c16333e4bb5c8f7958a9c
+          ref: 868640fc56253b1767dcb38a633a568ecbd98974
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
@@ -328,7 +328,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: juangcarmona/lighthouse
-          ref: db3c062f4df3774cd98c16333e4bb5c8f7958a9c
+          ref: 868640fc56253b1767dcb38a633a568ecbd98974
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
