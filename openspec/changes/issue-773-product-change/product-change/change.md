@@ -2,7 +2,7 @@
 id: CHG-LIGHTHOUSE-CONTEXT-SKILL-VISUAL
 type: product-change
 title: Bound instruction growth and verify skill and visual evidence contracts
-status: draft
+status: applied
 base-revision: '4b1fb0530b501d7ade25feef19d7cf34777c9a3f'
 operations:
   add:
