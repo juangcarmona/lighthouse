@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { instructionBudgetCoverage, measureInstructionBudgets, readInstructionBudgets, supportedInstructionBranches, validateInstructionBudgets } from '../packages/sdlc/src/instruction-budgets.mjs';
 
@@ -19,7 +21,8 @@ async function fixture() {
   const sources = new Map();
   for (const branch of inventory.branches) {
     for (const source of [branch.entry, ...branch.references]) {
-      const bytes = Buffer.from(`Synthetic UTF-8: é 🔦 ${source.path}\r\n`, 'utf8');
+      const actual = await readFile(new URL(`../packages/sdlc/${source.path}`, import.meta.url));
+      const bytes = Buffer.concat([Buffer.from('Synthetic UTF-8: é 🔦\r\n\r\n', 'utf8'), actual]);
       sources.set(source.path, bytes);
       source.bytes = bytes.length;
       source.sha256 = createHash('sha256').update(bytes).digest('hex');
@@ -223,4 +226,91 @@ test('coverage exclusions and public selection copies cannot waive mandatory gui
   branches[0].references.length = 0;
   assert.ok(instructionBudgetCoverage().uncoveredBranches.length);
   assert.deepEqual(supportedInstructionBranches()[0].references.map(source => source.path), refinement);
+});
+
+// Independent source-content fixtures use real copied sources and the real owning
+// process. They are not simulation traces or installed-provider measurements.
+test('owning process binds actual entry and transitive reference surfaces despite refreshed observations', async t => {
+  const cases = [
+    ['skills/refine/SKILL.md', 'add'],
+    ['change-continuity.md', 'add'],
+    ['skills/refine/SKILL.md', 'remove'],
+    ['skills/propose/SKILL.md', 'remove'],
+    ['skills/refine/SKILL.md', 'redirect'],
+    ['skills/refine/SKILL.md', 'condition'],
+    ['skills/refine/SKILL.md', 'plain-control'],
+    ['change-continuity.md', 'plain-control'],
+    ['skills/refine/SKILL.md', 'reference-definition'],
+    ['change-continuity.md', 'literal-path']
+  ];
+  for (const [path, mutation] of cases) await t.test(`${path}: ${mutation}`, async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'lighthouse-budget-binding-'));
+    try {
+      const packageRoot = join(workspace, 'src/packages/sdlc');
+      await mkdir(join(workspace, 'scripts'), { recursive: true });
+      await cp(join(root, 'src/packages/sdlc'), packageRoot, { recursive: true });
+      await cp(join(root, 'scripts/check-instruction-budgets.mjs'), join(workspace, 'scripts/check-instruction-budgets.mjs'));
+      const run = () => spawnSync(process.execPath, ['scripts/check-instruction-budgets.mjs'], { cwd: workspace, encoding: 'utf8' });
+      const control = run();
+      assert.equal(control.status, 0, `${control.stdout}\n${control.stderr}`);
+      const baseline = JSON.parse(control.stdout);
+      assert.deepEqual(baseline.errors, []);
+      assert.ok(!baseline.branches[0].references.some(source => source.path === visual), 'conditional visual input stays unselected');
+      assert.ok(baseline.branches.every(branch => !branch.references.some(source => source.path === 'compact-output.md')), 'lookup/recovery input stays unselected');
+
+      const sourcePath = join(packageRoot, path);
+      const original = await readFile(sourcePath, 'utf8');
+      const paragraphs = original.split('\n\n');
+      const index = paragraphs.findIndex(paragraph => {
+        if (mutation === 'remove' || mutation === 'redirect' || mutation === 'condition') return paragraph.includes('[product-derived verification]');
+        return paragraph.length > 180 && !paragraph.includes('.md') && !paragraph.includes('](');
+      });
+      assert.ok(index >= 0, 'independently selected real source paragraph exists');
+      const previous = paragraphs[index];
+      let replacement;
+      if (mutation === 'add') replacement = 'Read and apply [mandatory additional guidance](additional-required.md) before continuing.';
+      if (mutation === 'reference-definition') replacement = 'Read and apply [mandatory additional guidance][required].\n\n[required]: additional-required.md';
+      if (mutation === 'literal-path') replacement = 'Read and apply `additional-required.md` before continuing.';
+      if (mutation === 'remove') replacement = 'This paragraph no longer selects the former guidance.';
+      if (mutation === 'redirect') replacement = previous.replace('../../product-verification.md', '../../additional-required.md');
+      if (mutation === 'condition') replacement = previous.replace('read and apply', 'skip and omit');
+      if (mutation === 'plain-control') replacement = `X${previous.slice(1)}`;
+      assert.ok(Buffer.byteLength(replacement) <= Buffer.byteLength(previous));
+      paragraphs[index] = replacement + ' '.repeat(Buffer.byteLength(previous) - Buffer.byteLength(replacement));
+      const changed = paragraphs.join('\n\n');
+      assert.equal(Buffer.byteLength(changed), Buffer.byteLength(original), 'same-size source edit');
+      assert.notEqual(changed, original);
+      await writeFile(sourcePath, changed);
+      // Make a real, over-budget new input; refusal must not pretend to measure it.
+      await writeFile(join(packageRoot, path.startsWith('skills/') ? 'skills/refine/additional-required.md' : 'additional-required.md'), 'x'.repeat(91584));
+      const inventoryPath = join(packageRoot, 'instruction-budgets.json');
+      const inventory = JSON.parse(await readFile(inventoryPath, 'utf8'));
+      const before = structuredClone(inventory);
+      for (const branch of inventory.branches) for (const source of [branch.entry, ...branch.references]) {
+        if (source.path === path) source.sha256 = createHash('sha256').update(changed).digest('hex');
+      }
+      for (const [i, branch] of inventory.branches.entries()) {
+        assert.deepEqual(branch.caps, before.branches[i].caps);
+        assert.deepEqual(branch.totals, before.branches[i].totals);
+        assert.deepEqual(branch.references.map(source => source.path), before.branches[i].references.map(source => source.path));
+      }
+      await writeFile(inventoryPath, JSON.stringify(inventory));
+      const result = run();
+      const report = JSON.parse(result.stdout);
+      if (mutation === 'plain-control') {
+        assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+        assert.deepEqual(report.errors, []);
+      } else {
+        assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
+        assert.equal(report.status, 'failed');
+        assert.equal(report.errors.length, 1, 'refreshed observations and unchanged caps leave only the binding failure');
+        assert.equal(report.errors[0].code, 'budget.selection-binding');
+        assert.ok(report.errors[0].message.startsWith(`${path}:`));
+      }
+      assert.ok(report.branches.every(branch => !branch.references.some(source => source.path.includes('additional-required'))));
+      assert.deepEqual(report.branches.map(branch => branch.totals), baseline.branches.map(branch => branch.totals));
+    } finally {
+      await rm(workspace, { recursive: true, force: true });
+    }
+  });
 });

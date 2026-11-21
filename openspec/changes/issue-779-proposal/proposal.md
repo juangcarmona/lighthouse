@@ -10,6 +10,7 @@ Instruction growth in refinement and implementation is not measured against expl
 
 - Inventory four existing refinement/implementation branches with selected references, UTF-8 byte totals, SHA-256 identities and explicit caps.
 - Add offline verification and deterministic failure fixtures to ordinary Node test discovery.
+- Bind supported selections to actual entry and transitive source reference surfaces, refusing unreviewed source-selection changes even when inventory observations are refreshed.
 - Distribute the module, inventory and schema through additive SDLC exports, with a real packed-consumer check.
 - Explain coverage and preserve all existing instructions, decisions and evidence access; no instruction reduction is planned.
 

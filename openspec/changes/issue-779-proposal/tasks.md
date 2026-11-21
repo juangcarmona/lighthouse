@@ -19,3 +19,8 @@
 ## Workflow follow-up
 
 - The host independently checks the candidate before publishing; exact-head owner review, forge CI, merge and release remain separate decisions.
+
+## 4. Source-selection correction
+
+- [x] 4.1 Bind reviewed reference-bearing source paragraphs to the supported selections and document conservative refusal; verify same-size entry and transitive source additions with refreshed observations, selected-reference removal, and valid controls through the copied owning script without changing caps.
+- [x] 4.2 Recheck the complete candidate and packed consumer with all configured commands; retain completed receipts, product and instruction review, and correction evidence.

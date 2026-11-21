@@ -38,6 +38,32 @@ const supported = [
   { id: 'implement-existing-view', entry: 'skills/implement/SKILL.md', references: [...implement, visual] }
 ];
 
+// Bind actual source instructions to the reviewed branch selections, independently
+// of refreshable byte observations. Whole paragraphs retain trigger/negation text.
+// This is a bounded reference-surface guard, not recursive Markdown consumption:
+// any changed surface (even an excluded link) requires explicit selection review.
+function referenceSurface(text) {
+  return text.split(/\r?\n\s*\r?\n/u)
+    .filter(paragraph => /\[[^\]\n]*\]\s*\(|^\s*\[[^\]\n]+\]:|\.(?:md|json)\b/imu.test(paragraph))
+    .join('\n\n');
+}
+
+const reviewedSelectionSurfaces = {
+  // Reviewed against supported above, including conditional/external/lookup exclusions.
+  'skills/refine/SKILL.md': 'aa4aacd9435456bccfd7a20aaa5520fd218c5d6b7e0f790f443664eee370af41',
+  'product-verification.md': '6a126799b3113f0b14fd4d2a135d28c804ee397594870f5571ae5824705638be',
+  'skills/audience-guidance/SKILL.md': '9bfbd3276b5399c0b97abd3a2b1d649c70854f48ccce3104e081c70c91bac753',
+  'skills/audience-guidance/sources.json': '12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb',
+  'README.md': '0d38dca416cd6402de90baf41cd563563ab2a91e7238409e7112c016812a07f5',
+  'schemas/estimate.schema.json': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  'epic-delivery.md': '66bd35c2693ad5c8ff58dfb927531785b3c363270efe123d0466289d2269e209',
+  'request-triage.md': '39ce2ca62ab39372b02750b105e4908883d1907ea2c9699482c14151d9442832',
+  'skills/visual-evidence/SKILL.md': 'e54b77e3c777d92531b23884a4811d8b015b2edad8d5d8712a497a1632de0e61',
+  'skills/implement/SKILL.md': 'ee7531fd8946c90c7f6c1e2437b1bad57727f3c0dbba9265acd4784fba8c6d62',
+  'skills/propose/SKILL.md': 'e74bb694f860c6e6c87a17b050c2cb3443d0e971201b47405f440bff09a7dc46',
+  'change-continuity.md': '370d739fe10063c48fb10f5bff423b66c29a69bb101ab04ead019f2fcb3e1e00'
+};
+
 // Return copies: callers cannot change the checker's independent selections.
 export const supportedInstructionBranches = () => structuredClone(supported);
 export const instructionBudgetCoverage = () => structuredClone(coverage);
@@ -118,7 +144,12 @@ export async function measureInstructionBudgets({ root = packageRoot, inventory,
           const bytes = await load(source.path);
           if (!Buffer.isBuffer(bytes) && !(bytes instanceof Uint8Array)) throw new Error('Source reader must return bytes.');
           // Reject invalid UTF-8 instead of labeling arbitrary bytes as UTF-8 text.
-          new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          const surface = createHash('sha256').update(referenceSurface(text)).digest('hex');
+          if (surface !== reviewedSelectionSurfaces[source.path]) errors.push({
+            code: 'budget.selection-binding',
+            message: `${source.path}: reference-bearing instructions changed or have no reviewed binding; review supported selections and exclusions before refreshing the binding.`
+          });
           observed.set(source.path, { path: source.path, bytes: bytes.byteLength, sha256: createHash('sha256').update(bytes).digest('hex') });
         } catch {
           observed.set(source.path, null);
