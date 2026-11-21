@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, writeFile, mkdir, symlink, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -128,6 +129,73 @@ test('publisher rechecks authority before a create-only branch and preserves dra
   await assert.rejects(createImplementationPullRequest(api, request, [change], '', '', false, async () => { throw Error('revoked'); }), /revoked/);
   assert.ok(!calls.some(c => ['git/refs', 'pulls'].includes(c.path)));
   assert.throws(() => checkPublication(request, { state: 'open', labels: [] }, [], 'changed'), /revision/);
+});
+
+test('publication retries a confirmed blob refusal with identical tree input and fresh authority', async () => {
+  const bytes = Buffer.from(change.content, 'base64');
+  const blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+  const tree = 'd'.repeat(40), calls = [];
+  const refusal = Object.assign(Error(`GitHub POST git/trees: 422: tree.sha ${blob} is not a valid blob`), { status: 422 });
+  let trees = 0;
+  const api = async (path, method = 'GET', body) => {
+    calls.push({ path, method, body });
+    if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+    if (path.startsWith('git/commits/')) return { tree: { sha: 'base-tree' } };
+    if (path === 'git/blobs') return { sha: blob };
+    if (path === `git/blobs/${blob}`) return { sha: blob, encoding: 'base64', size: bytes.length, content: change.content.slice(0, 12) + '\n' + change.content.slice(12) };
+    if (path === 'git/trees') { if (++trees < 3) throw refusal; return { sha: tree }; }
+    return { sha: 'created', html_url: 'https://example.test/pr/34' };
+  };
+  await createImplementationPullRequest(api, request, [change], 'Verified candidate', '', true, async () => calls.push({ path: 'authorize' }));
+  const writes = calls.filter(call => call.path === 'git/trees');
+  assert.equal(writes.length, 3);
+  assert.deepEqual(writes.map(call => call.body), Array(3).fill({ base_tree: 'base-tree', tree: [{ path: change.path, mode: change.mode, type: 'blob', sha: blob }] }));
+  assert.equal(calls.filter(call => call.path === 'git/blobs').length, 1, 'never re-upload a confirmed blob');
+  assert.equal(calls.filter(call => call.path === `git/blobs/${blob}`).length, 2);
+  for (const call of writes.slice(1)) assert.equal(calls[calls.indexOf(call) - 1].path, 'authorize');
+  assert.ok(calls.indexOf(writes.at(-1)) < calls.findIndex(call => call.path === 'git/refs'));
+});
+
+test('blob-refusal recovery excludes uncertainty, absent or conflicting bytes and revoked authority', async () => {
+  const bytes = Buffer.from(change.content, 'base64');
+  const blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+  for (const scenario of ['network', 'server', 'other-refusal', 'unknown-blob', 'missing-blob', 'wrong-sha', 'wrong-size', 'wrong-encoding', 'wrong-bytes', 'revoked', 'exhausted']) {
+    const calls = [], rejected = scenario === 'unknown-blob' ? 'e'.repeat(40) : blob;
+    const error = scenario === 'network' ? Error('connection lost') : Object.assign(Error(scenario === 'server' ? 'GitHub POST git/trees: 503' : scenario === 'other-refusal' ? 'GitHub POST git/trees: 422: Invalid base tree' : `GitHub POST git/trees: 422: tree.sha ${rejected} is not a valid blob`), { status: scenario === 'server' ? 503 : 422 });
+    const api = async (path, method = 'GET', body) => {
+      calls.push({ path, method, body });
+      if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+      if (path.startsWith('git/commits/')) return { tree: { sha: 'base-tree' } };
+      if (path === 'git/blobs') return { sha: blob };
+      if (path === `git/blobs/${blob}`) return scenario === 'missing-blob' ? null : { sha: scenario === 'wrong-sha' ? 'e'.repeat(40) : blob, encoding: scenario === 'wrong-encoding' ? 'utf-8' : 'base64', size: scenario === 'wrong-size' ? bytes.length + 1 : bytes.length, content: scenario === 'wrong-bytes' ? Buffer.from('different').toString('base64') : change.content };
+      if (path === 'git/trees') throw error;
+      return { sha: 'created' };
+    };
+    await assert.rejects(createImplementationPullRequest(api, request, [change], '', '', true, async () => { if (scenario === 'revoked') throw Error('authority revoked'); }), undefined, scenario);
+    assert.equal(calls.filter(call => call.path === 'git/trees').length, scenario === 'exhausted' ? 3 : 1, scenario);
+    assert.ok(!calls.some(call => ['git/commits', 'git/refs', 'pulls'].includes(call.path)), scenario);
+  }
+});
+
+test('blob-refusal recovery rechecks the epic base before repeating tree creation', async () => {
+  const bytes = Buffer.from(change.content, 'base64');
+  const blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+  const calls = [], epic = { parent: 42, base: 'lighthouse/epic-42', baseSha: request.sourceRevision };
+  let observations = 0;
+  const api = async (path, method = 'GET', body) => {
+    calls.push({ path, method, body });
+    if (path.startsWith('contents/lighthouse.json?ref=')) return null;
+    if (path === `git/ref/heads/${epic.base}`) return { object: { sha: ++observations === 1 ? request.sourceRevision : 'c'.repeat(40) } };
+    if (path.startsWith('git/commits/')) return { tree: { sha: 'base-tree' } };
+    if (path === 'git/blobs') return { sha: blob };
+    if (path === `git/blobs/${blob}`) return { sha: blob, encoding: 'base64', size: bytes.length, content: change.content };
+    if (path === 'git/trees') throw Object.assign(Error(`GitHub POST git/trees: 422: tree.sha ${blob} is not a valid blob`), { status: 422 });
+    return { sha: 'created' };
+  };
+  await assert.rejects(createImplementationPullRequest(api, { ...request, epic }, [change], '', '', true, async () => {}), /Epic base changed/);
+  assert.equal(observations, 2);
+  assert.equal(calls.filter(call => call.path === 'git/trees').length, 1);
+  assert.ok(!calls.some(call => ['git/commits', 'git/refs', 'pulls'].includes(call.path)));
 });
 
 test('publication recovers only an explicitly rejected commit with the same observed tree and current authority', async () => {
