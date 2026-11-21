@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, authenticateEpicPullRequest, reconcileEpicPullRequest, inspectEpicDependencies, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic, runEpicAction, acceptEpicAggregate } from '../packages/sdlc/src/epic-native.mjs';
+import { prepareNativeEpic, authorizeNativeEpic, authenticateEpicChild, authenticateEpicPullRequest, reconcileEpicPullRequest, inspectEpicDependencies, checkEpicLeaseConfiguration, ensureEpicBase, runNativeEpic, runEpicAction, acceptEpicAggregate, findEpicCandidates } from '../packages/sdlc/src/epic-native.mjs';
 import { epicCorrelation, epicJournalKey, epicMarker, readEpicMarker } from '../packages/sdlc/src/epic-github.mjs';
 import { epicPlanDigest } from '../packages/sdlc/src/epic.mjs';
 import { createEpicJournal } from '../packages/sdlc/src/epic-journal.mjs';
@@ -24,10 +24,54 @@ const request = { schemaVersion: 1, runId: 'run', issue, stage: 'refine', workfl
 const result = { schemaVersion: 1, runId: 'run', stage: 'refine', gate: 'ready', status: 'passed', output: { estimate, decomposition }, evidence: [], missingEvidence: [], unavailableChecks: [], pendingReview: [], nextAction: 'Review the plan.' };
 const envelope = { schemaVersion: 1, result, effect: { type: 'issue-comment', body: 'Plan ready.' } };
 
+test('epic inventory excludes unrelated history but retains new orphans and updated copied markers', async () => {
+  const created = '2026-11-19T21:38:00Z';
+  const correlation = epicCorrelation({ repository, parent: issue, slice: 'a', planDigest: 'b'.repeat(64), base: 'lighthouse/epic-146', dependencies: [] });
+  const oldPlan = { ...correlation, planDigest: 'c'.repeat(64) };
+  const history = Array.from({ length: 600 }, (_, index) => ({ number: index + 1000, body: 'Unrelated historical issue', updated_at: '2026-01-01T00:00:00Z' }));
+  const orphan = { number: 200, body: epicMarker(oldPlan), created_at: created, updated_at: created };
+  const copied = { number: 90, body: epicMarker(correlation), created_at: '2026-01-01T00:00:00Z', updated_at: '2026-11-20T00:00:00Z', user: { login: 'human', type: 'User' } };
+  const calls = [];
+  const api = async path => {
+    calls.push(path);
+    if (path === `issues/${issue}`) return { number: issue, created_at: created };
+    const query = new URL(`https://example.test/${path}`);
+    assert.equal(query.pathname, '/issues');
+    assert.equal(query.searchParams.get('state'), 'all');
+    assert.equal(query.searchParams.get('per_page'), '100');
+    const since = query.searchParams.get('since');
+    assert.equal(since, '2026-11-19T21:37:59Z');
+    assert.equal(query.searchParams.has('creator'), false);
+    const rows = [...history, orphan, copied].filter(row => Date.parse(row.updated_at) > Date.parse(since));
+    const page = Number(query.searchParams.get('page'));
+    return rows.slice((page - 1) * 100, page * 100);
+  };
+  assert.deepEqual(await findEpicCandidates(api, correlation), [orphan, copied]);
+  assert.equal(calls.length, 2);
+});
+
+test('epic inventory refuses an unknown parent timestamp and a truncated relevant inventory', async () => {
+  const correlation = epicCorrelation({ repository, parent: issue, slice: 'a', planDigest: 'b'.repeat(64), base: 'lighthouse/epic-146', dependencies: [] });
+  for (const parent of [{ number: issue }, { number: issue, created_at: 'invalid' }, { number: issue + 1, created_at: '2026-11-19T21:38:00Z' }]) {
+    await assert.rejects(findEpicCandidates(async path => {
+      assert.equal(path, `issues/${issue}`);
+      return parent;
+    }, correlation), /parent.*creation/i);
+  }
+  let pages = 0;
+  await assert.rejects(findEpicCandidates(async path => {
+    if (path === `issues/${issue}`) return { number: issue, created_at: '2026-11-19T21:38:00Z' };
+    assert.ok(path.includes('since='));
+    pages++;
+    return Array.from({ length: 100 }, () => ({ body: 'Recent unrelated item' }));
+  }, correlation), /inventory exceeds bounds/);
+  assert.equal(pages, 5);
+});
+
 async function fixture(t) {
   const dir = await mkdtemp(join(tmpdir(), 'lighthouse-epic-native-test-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
-  const parent = { number: issue, title: 'Parent', body: 'Bounded request', state: 'open', user: { login: owner, type: 'User' }, labels: [{ name: 'ready' }] };
+  const parent = { number: issue, title: 'Parent', body: 'Bounded request', state: 'open', created_at: '2026-11-19T21:38:00Z', user: { login: owner, type: 'User' }, labels: [{ name: 'ready' }] };
   const bot = { login: 'github-actions[bot]', type: 'Bot' };
   const report = { id: 1, user: bot, issue_url: `https://api.github.com/repos/${repository}/issues/${issue}`, html_url: 'https://example.test/report', body: '<!-- lighthouse-stage:refine:passed -->' };
   const comments = [report], issues = [], parents = new Map(), dependencies = new Map(), calls = [];
@@ -47,7 +91,7 @@ async function fixture(t) {
     if (path.startsWith(`issues/${issue}/comments?`)) return comments;
     if (path === `issues/${issue}/comments` && method === 'POST') { const comment = { id: comments.length + 1, user: bot, issue_url: report.issue_url, body: body.body }; comments.push(comment); return structuredClone(comment); }
     if (path.startsWith('issues/comments/') && method === 'PATCH') { const comment = comments.find(c => c.id === Number(path.split('/')[2])); comment.body = body.body; return structuredClone(comment); }
-    if (path === 'issues?state=all&per_page=100&page=1') return issues;
+    if (path === 'issues?state=all&since=2026-11-19T21%3A37%3A59Z&per_page=100&page=1') return issues;
     if (path === 'issues' && method === 'POST') { const child = { id: 1000 + issues.length, number: 200 + issues.length, user: bot, ...body }; issues.push(child); return structuredClone(child); }
     const parentMatch = path.match(/^issues\/(\d+)\/parent$/);
     if (parentMatch) return parents.get(Number(parentMatch[1])) ?? null;

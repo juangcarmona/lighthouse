@@ -292,9 +292,14 @@ export async function readyEpicPullRequest({ api, repository, owner, parent, chi
 }
 
 export async function findEpicCandidates(api, correlation) {
+  const parent = await api(`issues/${correlation.parent}`);
+  const created = Date.parse(parent?.created_at ?? '');
+  if (parent?.number !== correlation.parent || parent.pull_request || !Number.isFinite(created)) throw Error('Epic parent creation time unavailable');
+  // Children cannot predate their parent; updated copies must remain visible across authors and plans.
+  const since = encodeURIComponent(new Date(Math.floor(created / 1000) * 1000 - 1000).toISOString().replace('.000Z', 'Z'));
   const candidates = [];
   for (let page = 1; page <= 5; page++) {
-    const issues = await api(`issues?state=all&per_page=100&page=${page}`);
+    const issues = await api(`issues?state=all&since=${since}&per_page=100&page=${page}`);
     if (!Array.isArray(issues)) throw Error('Epic issue inventory unavailable');
     for (const issue of issues) {
       const marker = readEpicMarker(issue.body);

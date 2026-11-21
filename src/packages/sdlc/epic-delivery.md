@@ -40,6 +40,8 @@ The credentialed host must supply `withLease(parentKey, work)` with a serialized
 
 The adapter records intent before creation, records returned native IDs before linking, attaches children with the native sub-issues endpoint and records native blocked-by relationships. It never edits the parent's body or lifecycle. Retries verify exact metadata, receipt identity and native relationships. Duplicate, copied or changed correlations block. A lost create response stops at uncertainty rather than reposting; the host must establish a verified resource receipt before resuming. Confirmed link writes can reconcile on retry. Cancelled receipts cannot be recreated. Partial failures retain already-created children and stop downstream creation.
 
+Candidate discovery lists issues updated since the parent's creation, with a one-second overlap for timestamp precision. This includes new orphan creations and older issues updated to copy a marker, across authors and plan revisions, without scanning unchanged history from before the parent existed. A missing parent timestamp or more than five full pages of relevant updates stops reconciliation; a partial inventory never establishes that a child is absent.
+
 The native host supplies those callbacks through an owner-triggered workflow and retained Actions artifacts. Do not invoke the adapter without a durable journal and lease, and do not describe fixture tests as full delivery. See the tracked [implementation tasks](../../../openspec/changes/issue-146-proposal/tasks.md).
 
 ## An approved product prerequisite before implementation
