@@ -9,6 +9,8 @@ For product context, scenario selection, tests or evidence review, read and appl
 
 Deliver the issue in one branch, including its OpenSpec plan.
 
+For fixed packaged-input measurements of scoped implementation with or without existing-view visual evidence, use the [instruction budget coverage](../../README.md#instruction-budgets). The inventory is a measurement aid, not permission to omit startup, security, authority, planning or full-evidence obligations.
+
 Read the required request, repository rules, supplied owner decisions, accepted product/design decisions and architecture context before changing the project. Preserve accepted decisions without duplicate interviews or unrequested replacements. Change only declared paths, run required checks after the final change, and deliver the same bounded result with completed check evidence to the intended requesting parent or user in the same request and run. Reference reads, file creation and a generated but undelivered answer are not completion. For simulated trace evaluation, use the [bounded skill contract](../../README.md#bounded-skill-behavior); its independent selection, protocol and completion findings include bounded reasons and observation references. Supplied request/run identities do not authenticate a native trace or qualify an installed provider.
 
 For human-facing explanations, PR summaries, agent-facing instructions or UI/visual changes, read and apply [the audience policy](../audience-guidance/SKILL.md). Record the pinned helper or fallback review used; visual acceptance follows the accepted UI contract.

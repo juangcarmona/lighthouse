@@ -95,6 +95,9 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'src/contracts.mjs',
     'src/skill-contracts.mjs',
     'schemas/skill-contracts.schema.json',
+    'src/instruction-budgets.mjs',
+    'instruction-budgets.json',
+    'schemas/instruction-budgets.schema.json',
     'src/capabilities.mjs',
     'src/control-plane.mjs',
     'src/decompose.mjs',
@@ -156,6 +159,28 @@ import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { evaluateSkillTrace, validateSkillTrace } from '@juangcarmona/lighthouse-sdlc/skill-contracts';
 import schema from '@juangcarmona/lighthouse-sdlc/schemas/skill-contracts.schema.json' with { type: 'json' };
+import { measureInstructionBudgets, validateInstructionBudgets, readInstructionBudgets } from '@juangcarmona/lighthouse-sdlc/instruction-budgets';
+import budgets from '@juangcarmona/lighthouse-sdlc/instruction-budgets.json' with { type: 'json' };
+import budgetSchema from '@juangcarmona/lighthouse-sdlc/schemas/instruction-budgets.schema.json' with { type: 'json' };
+for (const subpath of ['instruction-budgets', 'instruction-budgets.json', 'schemas/instruction-budgets.schema.json']) {
+  const path = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/' + subpath)));
+  assert.ok(path.startsWith(${JSON.stringify(packageDir)} + '/'));
+  assert.ok(!path.startsWith(${JSON.stringify(root)} + '/'));
+}
+assert.equal(budgetSchema.$schema, 'https://json-schema.org/draft/2020-12/schema');
+assert.equal(budgetSchema.additionalProperties, false);
+assert.deepEqual(await readInstructionBudgets(), budgets);
+assert.deepEqual(validateInstructionBudgets(budgets), []);
+const measured = await measureInstructionBudgets();
+assert.equal(measured.qualification, 'native-source-selection');
+assert.equal(measured.status, 'passed', JSON.stringify(measured.errors));
+assert.equal(measured.branches.length, 4);
+assert.deepEqual(measured, await measureInstructionBudgets());
+assert.deepEqual(measured.branches.map(branch => branch.totals), budgets.branches.map(branch => branch.totals));
+const uncapped = structuredClone(budgets);
+delete uncapped.branches[0].caps;
+assert.equal((await measureInstructionBudgets({ inventory: uncapped })).status, 'failed');
+console.log('Packed instruction budgets: four branches passed; fixed UTF-8 bytes only.');
 const resolved = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/skill-contracts')));
 const resolvedSchema = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/schemas/skill-contracts.schema.json')));
 assert.ok(resolved.startsWith(${JSON.stringify(packageDir)} + '/'));
@@ -223,6 +248,7 @@ console.log('Packed evaluator and schema: simulation passed; provider unmeasured
     const consumer = spawnSync(process.execPath, ['consumer.mjs'], { cwd: dir, encoding: 'utf8' });
     assert.equal(consumer.status, 0, `${consumer.stdout}\n${consumer.stderr}`);
     assert.match(consumer.stdout, /simulation passed; provider unmeasured/);
+    assert.match(consumer.stdout, /Packed instruction budgets: four branches passed/);
     console.log(JSON.stringify({ kind: 'packed-skill-consumer', artifact: { name: artifact.name, version: artifact.version, filename: artifact.filename, shasum: artifact.shasum, integrity }, terminal: { exitCode: consumer.status, signal: consumer.signal, stdout: consumer.stdout.trim() }, mode: 'simulation', providerMeasurement: 'unmeasured' }));
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
