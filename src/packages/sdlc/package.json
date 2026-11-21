@@ -65,6 +65,8 @@
     "./request-triage": "./src/request-triage.mjs",
     "./schemas/estimate.schema.json": "./schemas/estimate.schema.json",
     "./contracts": "./src/contracts.mjs",
+    "./skill-contracts": "./src/skill-contracts.mjs",
+    "./schemas/skill-contracts.schema.json": "./schemas/skill-contracts.schema.json",
     "./control-plane": "./src/control-plane.mjs",
     "./model-profiles": "./src/model-profiles.mjs",
     "./profile-delegation": "./src/profile-delegation.mjs",

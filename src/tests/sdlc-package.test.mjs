@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildDecompositionPlan } from '../packages/sdlc/src/decompose.mjs';
@@ -92,6 +92,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'src/openspec-provider.mjs',
     'capabilities.json',
     'src/contracts.mjs',
+    'src/skill-contracts.mjs',
+    'schemas/skill-contracts.schema.json',
     'src/capabilities.mjs',
     'src/control-plane.mjs',
     'src/decompose.mjs',
@@ -129,6 +131,55 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
   const aliasReport = JSON.parse(aliases.stdout);
   assert.equal(aliasReport.status, 'valid');
   assert.equal(aliasReport.aliases.find((item) => item.alias === '/lh:impl').canonical, '/lighthouse:implement');
+});
+
+test('simulation: real packed skill evaluator and schema execute in an isolated offline consumer', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-skill-consumer-'));
+  try {
+    const packed = spawnSync('npm', ['pack', '--workspace', '@juangcarmona/lighthouse-sdlc', '--ignore-scripts', '--json', '--pack-destination', dir], { cwd: root, encoding: 'utf8' });
+    assert.equal(packed.status, 0, packed.stderr);
+    const [artifact] = JSON.parse(packed.stdout);
+    const packageDir = join(dir, 'node_modules/@juangcarmona/lighthouse-sdlc');
+    await mkdir(packageDir, { recursive: true });
+    const extracted = spawnSync('tar', ['-xzf', join(dir, artifact.filename), '--strip-components=1', '-C', packageDir], { encoding: 'utf8' });
+    assert.equal(extracted.status, 0, extracted.stderr);
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
+    // This is a simulated behavior trace. No runtime/provider is invoked.
+    await writeFile(join(dir, 'consumer.mjs'), `
+import assert from 'node:assert/strict';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { evaluateSkillTrace, validateSkillTrace } from '@juangcarmona/lighthouse-sdlc/skill-contracts';
+import schema from '@juangcarmona/lighthouse-sdlc/schemas/skill-contracts.schema.json' with { type: 'json' };
+const resolved = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/skill-contracts')));
+assert.ok(resolved.startsWith(${JSON.stringify(packageDir)} + '/'));
+assert.ok(!resolved.startsWith(${JSON.stringify(root)} + '/'));
+assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
+assert.equal(schema.additionalProperties, false);
+assert.equal(schema.properties.mode.const, 'simulation');
+const contract = { scenario: 'implementation', skill: 'lighthouse-sdlc-implement', requester: 'simulation-parent', requiredContext: ['request', 'product', 'architecture'].map(role => ({ id: role, revision: 'simulation-v1', role })), acceptedDecisions: ['product', 'design'], writeScope: ['src/'], requiredChecks: ['unit'] };
+const trace = { schemaVersion: 1, mode: 'simulation', contract, events: [
+  { type: 'selected', skill: contract.skill },
+  ...contract.requiredContext.map(context => ({ type: 'read', contextId: context.id, revision: context.revision })),
+  { type: 'write', path: 'src/example.mjs' },
+  { type: 'check', id: 'unit', status: 'passed' },
+  { type: 'result', id: 'result', output: { kind: 'implementation', changes: ['src/example.mjs'], checks: ['unit'] } },
+  { type: 'delivered', resultId: 'result', requester: contract.requester }
+] };
+assert.deepEqual(validateSkillTrace(trace), []);
+assert.equal(evaluateSkillTrace(trace).status, 'passed');
+assert.equal(evaluateSkillTrace(trace).providerMeasurement, 'unmeasured');
+trace.events.pop();
+assert.equal(evaluateSkillTrace(trace).completion, 'failed');
+assert.equal(evaluateSkillTrace({ ...trace, extra: true }).status, 'invalid');
+assert.equal(evaluateSkillTrace({ ...trace, mode: 'provider' }).status, 'invalid');
+assert.equal(evaluateSkillTrace({ ...trace, events: [{ type: 'result', id: 'x', output: 'done' }] }).status, 'invalid');
+console.log('Packed evaluator and schema: simulation passed; provider unmeasured.');
+`);
+    const consumer = spawnSync(process.execPath, ['consumer.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(consumer.status, 0, `${consumer.stdout}\n${consumer.stderr}`);
+    assert.match(consumer.stdout, /simulation passed; provider unmeasured/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test('the SDLC alias contract is deterministic and fails closed on collisions', async () => {

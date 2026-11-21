@@ -9,6 +9,8 @@ For product context, scenario selection, tests or evidence review, read and appl
 
 Turn the admitted work item into a problem that can be designed. Direct engineering authorization permits refinement without a triage predecessor; it does not approve implementation or integration.
 
+For an already scoped request, read the required request, accepted product/design decisions and architecture context before producing the refinement. Reuse accepted answers rather than repeating an interview or replacing those decisions. Return the bounded scope and testable acceptance criteria to the requesting parent or user; reading references or generating an undelivered result is not completion. Do not expand scope or start implementation. When evaluating a simulated trace, use the [bounded skill contract](../../README.md#bounded-skill-behavior); simulation does not qualify a real provider.
+
 For human-facing problem statements or agent-facing instructions, read and apply [the audience policy](../audience-guidance/SKILL.md) before returning the result. Record the pinned helper or fallback review used.
 
 ## Steps
