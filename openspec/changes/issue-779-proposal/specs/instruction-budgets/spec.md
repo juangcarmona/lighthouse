@@ -53,6 +53,11 @@ The system MUST reject exceeded or missing caps, stale recorded identities or to
 - **WHEN** an entry or selected transitive source adds or removes a required reference through a same-size edit and only its recorded content observation is refreshed
 - **THEN** verification refuses the unreviewed selection independently of unchanged caps and totals, without claiming the new target was measured or consumed.
 
+#### Scenario: Surrounding selection conditions change
+
+- **WHEN** instruction context outside reference-bearing paragraphs changes while existing links, selections and caps remain unchanged and observations are refreshed
+- **THEN** native verification refuses the unreviewed selection conditions rather than qualifying the former selection; synthetic byte-accounting reports do not qualify native source selection.
+
 ### Requirement: Explicit coverage and preserved authority
 
 Budget reports MUST identify uncovered branches and exclude variable issue, model and project context from fixed-input claims. Bytes MUST NOT be called actual model tokens, billing or savings. Budget guidance MUST retain mandatory policy, exact decisions and access to full evidence; a pointer MUST NOT imply unread content was reviewed. Any instruction reduction MUST pass supported behavioral evaluator scenarios.

@@ -39,29 +39,22 @@ const supported = [
 ];
 
 // Bind actual source instructions to the reviewed branch selections, independently
-// of refreshable byte observations. Whole paragraphs retain trigger/negation text.
-// This is a bounded reference-surface guard, not recursive Markdown consumption:
-// any changed surface (even an excluded link) requires explicit selection review.
-function referenceSurface(text) {
-  return text.split(/\r?\n\s*\r?\n/u)
-    .filter(paragraph => /\[[^\]\n]*\]\s*\(|^\s*\[[^\]\n]+\]:|\.(?:md|json)\b/imu.test(paragraph))
-    .join('\n\n');
-}
-
-const reviewedSelectionSurfaces = {
+// of refreshable byte observations. Conditions may occur anywhere in the source;
+// every byte is bound, without guessing instruction meaning from link syntax.
+const reviewedSelectionSources = {
   // Reviewed against supported above, including conditional/external/lookup exclusions.
-  'skills/refine/SKILL.md': 'aa4aacd9435456bccfd7a20aaa5520fd218c5d6b7e0f790f443664eee370af41',
-  'product-verification.md': '6a126799b3113f0b14fd4d2a135d28c804ee397594870f5571ae5824705638be',
-  'skills/audience-guidance/SKILL.md': '9bfbd3276b5399c0b97abd3a2b1d649c70854f48ccce3104e081c70c91bac753',
+  'skills/refine/SKILL.md': 'b35286c59292e3bab651f2c547ec52c3b7d2816cd7dc0a84bc3ae30e40200b0a',
+  'product-verification.md': 'e7b000b2814ce2a688ce68cf617f5937145064989b7ddbe613457e37bc6ffdb6',
+  'skills/audience-guidance/SKILL.md': '1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771',
   'skills/audience-guidance/sources.json': '12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb',
-  'README.md': '0d38dca416cd6402de90baf41cd563563ab2a91e7238409e7112c016812a07f5',
-  'schemas/estimate.schema.json': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-  'epic-delivery.md': '66bd35c2693ad5c8ff58dfb927531785b3c363270efe123d0466289d2269e209',
-  'request-triage.md': '39ce2ca62ab39372b02750b105e4908883d1907ea2c9699482c14151d9442832',
-  'skills/visual-evidence/SKILL.md': 'e54b77e3c777d92531b23884a4811d8b015b2edad8d5d8712a497a1632de0e61',
-  'skills/implement/SKILL.md': 'ee7531fd8946c90c7f6c1e2437b1bad57727f3c0dbba9265acd4784fba8c6d62',
-  'skills/propose/SKILL.md': 'e74bb694f860c6e6c87a17b050c2cb3443d0e971201b47405f440bff09a7dc46',
-  'change-continuity.md': '370d739fe10063c48fb10f5bff423b66c29a69bb101ab04ead019f2fcb3e1e00'
+  'README.md': 'b4b91b6401bf3d9db991cbefafcf09b601fb3d4f26fc4177c7b621d3725f0caa',
+  'schemas/estimate.schema.json': 'f9200a4b17627dc954f13d5d697482b7220d2aa971691db6616cb2d3c17658d2',
+  'epic-delivery.md': '719636b0eaf8ae4218bc8b7cf5715d917bab7adac62c4661bf1b0bc81fbfe02b',
+  'request-triage.md': '63349abcff1ffa7aa27dfddc3a6fa61b4e2d4a076edac5f5e8139cf273eb4d99',
+  'skills/visual-evidence/SKILL.md': '1ec4e71cd4f977fa5977c3bbdd0ea26b8d6d1bf5597b556a8aa4239e87b94ea7',
+  'skills/implement/SKILL.md': '91b3c93ef246566d0c9c32c784c4db127ade84466d856e0eb2ff1da733742db3',
+  'skills/propose/SKILL.md': '5526031a3f58146c5a02bf3428aad0548540b6cbc00f7fc09a2c89b4fde5152f',
+  'change-continuity.md': '8f37834a11d2fb6fa8b17cfd4b77a162a0ad7c05a35d9acaa9d88c2ce64e8af1'
 };
 
 // Return copies: callers cannot change the checker's independent selections.
@@ -127,11 +120,12 @@ async function readPackagedSource(root, path) {
   return readFile(target);
 }
 
-/** Offline verifier. readSource is an explicit byte-reader seam for synthetic tests. Never writes or refreshes caps. */
+/** Offline verifier. readSource is synthetic accounting only, not native selection qualification. Never refreshes caps. */
 export async function measureInstructionBudgets({ root = packageRoot, inventory, readSource } = {}) {
   if (inventory === undefined) inventory = await readInstructionBudgets(root);
   const errors = validateInstructionBudgets(inventory);
-  const report = { schemaVersion: 1, status: 'failed', method: INSTRUCTION_MEASUREMENT_METHOD, coverage: instructionBudgetCoverage(), branches: [], errors };
+  const qualification = readSource === undefined ? 'native-source-selection' : 'synthetic-byte-accounting';
+  const report = { schemaVersion: 1, status: 'failed', qualification, method: INSTRUCTION_MEASUREMENT_METHOD, coverage: instructionBudgetCoverage(), branches: [], errors };
   // Do not read arbitrary paths from invalid/unreviewed inventory data.
   if (errors.length) return report;
   const load = readSource ?? (path => readPackagedSource(root, path));
@@ -144,13 +138,13 @@ export async function measureInstructionBudgets({ root = packageRoot, inventory,
           const bytes = await load(source.path);
           if (!Buffer.isBuffer(bytes) && !(bytes instanceof Uint8Array)) throw new Error('Source reader must return bytes.');
           // Reject invalid UTF-8 instead of labeling arbitrary bytes as UTF-8 text.
-          const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-          const surface = createHash('sha256').update(referenceSurface(text)).digest('hex');
-          if (surface !== reviewedSelectionSurfaces[source.path]) errors.push({
+          new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+          const sha256 = createHash('sha256').update(bytes).digest('hex');
+          if (qualification === 'native-source-selection' && sha256 !== reviewedSelectionSources[source.path]) errors.push({
             code: 'budget.selection-binding',
-            message: `${source.path}: reference-bearing instructions changed or have no reviewed binding; review supported selections and exclusions before refreshing the binding.`
+            message: `${source.path}: complete instruction context changed or has no reviewed binding; review supported selections and exclusions before refreshing the binding.`
           });
-          observed.set(source.path, { path: source.path, bytes: bytes.byteLength, sha256: createHash('sha256').update(bytes).digest('hex') });
+          observed.set(source.path, { path: source.path, bytes: bytes.byteLength, sha256 });
         } catch {
           observed.set(source.path, null);
           errors.push({ code: 'budget.source', message: `${source.path}: missing, unreadable, outside package root or invalid UTF-8.` });

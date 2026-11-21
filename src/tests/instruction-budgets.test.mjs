@@ -42,6 +42,7 @@ test('ordinary test discovery invokes the owning offline instruction-budget chec
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
   const report = JSON.parse(run.stdout);
   assert.equal(report.status, 'passed');
+  assert.equal(report.qualification, 'native-source-selection');
   assert.deepEqual(report.errors, []);
   assert.deepEqual(report.branches.map(branch => branch.id), ids);
 });
@@ -74,6 +75,7 @@ test('UTF-8 measurement is reproducible, preserves input, counts raw bytes and d
   const first = await measureInstructionBudgets({ ...input, readSource: async path => { calls.push(path); return input.readSource(path); } });
   const second = await measureInstructionBudgets(input);
   assert.equal(first.status, 'passed');
+  assert.equal(first.qualification, 'synthetic-byte-accounting');
   assert.deepEqual(first, second);
   assert.deepEqual(input.inventory, before);
   assert.equal(calls.length, input.sources.size, 'shared sources are read once, counted once in each branch');
@@ -230,7 +232,7 @@ test('coverage exclusions and public selection copies cannot waive mandatory gui
 
 // Independent source-content fixtures use real copied sources and the real owning
 // process. They are not simulation traces or installed-provider measurements.
-test('owning process binds actual entry and transitive reference surfaces despite refreshed observations', async t => {
+test('owning process binds complete entry and transitive context despite refreshed observations', async t => {
   const cases = [
     ['skills/refine/SKILL.md', 'add'],
     ['change-continuity.md', 'add'],
@@ -240,6 +242,9 @@ test('owning process binds actual entry and transitive reference surfaces despit
     ['skills/refine/SKILL.md', 'condition'],
     ['skills/refine/SKILL.md', 'plain-control'],
     ['change-continuity.md', 'plain-control'],
+    ['skills/refine/SKILL.md', 'plain-edit'],
+    ['change-continuity.md', 'plain-edit'],
+    ['skills/implement/SKILL.md', 'surrounding-condition'],
     ['skills/refine/SKILL.md', 'reference-definition'],
     ['change-continuity.md', 'literal-path']
   ];
@@ -255,6 +260,8 @@ test('owning process binds actual entry and transitive reference surfaces despit
       assert.equal(control.status, 0, `${control.stdout}\n${control.stderr}`);
       const baseline = JSON.parse(control.stdout);
       assert.deepEqual(baseline.errors, []);
+      assert.equal(baseline.qualification, 'native-source-selection');
+      assert.ok(!baseline.branches[2].references.some(source => source.path === visual), 'nonvisual implementation control omits visual guidance');
       assert.ok(!baseline.branches[0].references.some(source => source.path === visual), 'conditional visual input stays unselected');
       assert.ok(baseline.branches.every(branch => !branch.references.some(source => source.path === 'compact-output.md')), 'lookup/recovery input stays unselected');
 
@@ -262,6 +269,7 @@ test('owning process binds actual entry and transitive reference surfaces despit
       const original = await readFile(sourcePath, 'utf8');
       const paragraphs = original.split('\n\n');
       const index = paragraphs.findIndex(paragraph => {
+        if (mutation === 'surrounding-condition') return paragraph === 'Deliver the issue in one branch, including its OpenSpec plan.';
         if (mutation === 'remove' || mutation === 'redirect' || mutation === 'condition') return paragraph.includes('[product-derived verification]');
         return paragraph.length > 180 && !paragraph.includes('.md') && !paragraph.includes('](');
       });
@@ -274,15 +282,22 @@ test('owning process binds actual entry and transitive reference surfaces despit
       if (mutation === 'remove') replacement = 'This paragraph no longer selects the former guidance.';
       if (mutation === 'redirect') replacement = previous.replace('../../product-verification.md', '../../additional-required.md');
       if (mutation === 'condition') replacement = previous.replace('read and apply', 'skip and omit');
-      if (mutation === 'plain-control') replacement = `X${previous.slice(1)}`;
+      if (mutation === 'plain-control') replacement = previous;
+      if (mutation === 'plain-edit') replacement = `X${previous.slice(1)}`;
+      if (mutation === 'surrounding-condition') replacement = 'Always read the visual evidence below for nonvisual work too.';
       assert.ok(Buffer.byteLength(replacement) <= Buffer.byteLength(previous));
       paragraphs[index] = replacement + ' '.repeat(Buffer.byteLength(previous) - Buffer.byteLength(replacement));
       const changed = paragraphs.join('\n\n');
       assert.equal(Buffer.byteLength(changed), Buffer.byteLength(original), 'same-size source edit');
-      assert.notEqual(changed, original);
+      if (mutation === 'plain-control') assert.equal(changed, original, 'unchanged source remains valid after observation refresh');
+      else assert.notEqual(changed, original);
+      if (mutation === 'surrounding-condition') {
+        assert.deepEqual(changed.match(/\[[^\]\n]*\]\([^\n)]*\)/gu), original.match(/\[[^\]\n]*\]\([^\n)]*\)/gu), 'existing Markdown links are untouched');
+        assert.ok(!replacement.includes('.md') && !replacement.includes(']('), 'condition is outside reference-bearing text');
+      }
       await writeFile(sourcePath, changed);
       // Make a real, over-budget new input; refusal must not pretend to measure it.
-      await writeFile(join(packageRoot, path.startsWith('skills/') ? 'skills/refine/additional-required.md' : 'additional-required.md'), 'x'.repeat(91584));
+      if (mutation !== 'surrounding-condition') await writeFile(join(packageRoot, path.startsWith('skills/') ? 'skills/refine/additional-required.md' : 'additional-required.md'), 'x'.repeat(91584));
       const inventoryPath = join(packageRoot, 'instruction-budgets.json');
       const inventory = JSON.parse(await readFile(inventoryPath, 'utf8'));
       const before = structuredClone(inventory);
@@ -297,6 +312,7 @@ test('owning process binds actual entry and transitive reference surfaces despit
       await writeFile(inventoryPath, JSON.stringify(inventory));
       const result = run();
       const report = JSON.parse(result.stdout);
+      assert.equal(report.qualification, 'native-source-selection');
       if (mutation === 'plain-control') {
         assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
         assert.deepEqual(report.errors, []);

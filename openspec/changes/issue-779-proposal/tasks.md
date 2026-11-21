@@ -24,3 +24,8 @@
 
 - [x] 4.1 Bind reviewed reference-bearing source paragraphs to the supported selections and document conservative refusal; verify same-size entry and transitive source additions with refreshed observations, selected-reference removal, and valid controls through the copied owning script without changing caps.
 - [x] 4.2 Recheck the complete candidate and packed consumer with all configured commands; retain completed receipts, product and instruction review, and correction evidence.
+
+## 5. Complete instruction-context correction
+
+- [x] 5.1 Replace paragraph heuristics with whole-source bindings, document synthetic accounting qualification, and verify the real owning-process condition fixture, unchanged-source controls and all previous regressions without changing selected inputs.
+- [x] 5.2 Review exact source identities and zero-growth caps, run all configured checks and packed-consumer verification to completion, and retain correction and review evidence.

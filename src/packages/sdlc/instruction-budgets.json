@@ -15,14 +15,14 @@
         { "path": "product-verification.md", "bytes": 4806, "sha256": "e7b000b2814ce2a688ce68cf617f5937145064989b7ddbe613457e37bc6ffdb6", "reason": "Product context, scenario selection and evidence review are required." },
         { "path": "skills/audience-guidance/SKILL.md", "bytes": 9122, "sha256": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771", "reason": "Human prose and agent instructions use packaged manual reviews." },
         { "path": "skills/audience-guidance/sources.json", "bytes": 3537, "sha256": "12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb", "reason": "Audience helper availability and pins are checked before using the fallback." },
-         { "path": "README.md", "bytes": 48084, "sha256": "6e2fbedb887b2d7f75f49fe4264aa37900bda84b4f071dda492c18987942dcef", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
+         { "path": "README.md", "bytes": 48017, "sha256": "b4b91b6401bf3d9db991cbefafcf09b601fb3d4f26fc4177c7b621d3725f0caa", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
         { "path": "schemas/estimate.schema.json", "bytes": 862, "sha256": "f9200a4b17627dc954f13d5d697482b7220d2aa971691db6616cb2d3c17658d2", "reason": "Refinement returns a confirmed explained estimate." },
         { "path": "epic-delivery.md", "bytes": 11926, "sha256": "719636b0eaf8ae4218bc8b7cf5715d917bab7adac62c4661bf1b0bc81fbfe02b", "reason": "Check the greater-than-eight decomposition boundary; this branch stays at most eight." },
         { "path": "request-triage.md", "bytes": 3275, "sha256": "63349abcff1ffa7aa27dfddc3a6fa61b4e2d4a076edac5f5e8139cf273eb4d99", "reason": "Epic estimate guidance selects the intake scale, not a hypothetical triage predecessor." }
       ],
-       "totals": { "entry": 4696, "references": 81612, "combined": 86308 },
-       "caps": { "entry": 4696, "references": 81612, "combined": 86308 },
-       "capReview": { "method": "implementation-source-review", "reason": "PR #783 correction: reviewed source-selection bindings and unchanged selected set; README grows by 898 bytes to document bounded syntax and conservative refusal. Reference and combined caps increase by exactly 898 bytes to the measured baseline, with zero silent-growth allowance. No instruction reduction or human approval claimed." }
+       "totals": { "entry": 4696, "references": 81545, "combined": 86241 },
+       "caps": { "entry": 4696, "references": 81545, "combined": 86241 },
+       "capReview": { "method": "implementation-source-review", "reason": "PR #783 condition-context correction: reviewed complete-source bindings with unchanged selections and exclusions. README accounting documentation shrinks by 67 bytes; reference and combined caps decrease by exactly 67 bytes to the measured baseline, with zero silent-growth allowance. No workflow obligation reduction or human approval claimed." }
     },
     {
       "id": "refine-proposed-visual",
@@ -31,15 +31,15 @@
         { "path": "product-verification.md", "bytes": 4806, "sha256": "e7b000b2814ce2a688ce68cf617f5937145064989b7ddbe613457e37bc6ffdb6", "reason": "Product context, scenario selection and evidence review are required." },
         { "path": "skills/audience-guidance/SKILL.md", "bytes": 9122, "sha256": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771", "reason": "Human prose and agent instructions use packaged manual reviews." },
         { "path": "skills/audience-guidance/sources.json", "bytes": 3537, "sha256": "12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb", "reason": "Audience helper availability and pins are checked before using the fallback." },
-         { "path": "README.md", "bytes": 48084, "sha256": "6e2fbedb887b2d7f75f49fe4264aa37900bda84b4f071dda492c18987942dcef", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
+         { "path": "README.md", "bytes": 48017, "sha256": "b4b91b6401bf3d9db991cbefafcf09b601fb3d4f26fc4177c7b621d3725f0caa", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
         { "path": "schemas/estimate.schema.json", "bytes": 862, "sha256": "f9200a4b17627dc954f13d5d697482b7220d2aa971691db6616cb2d3c17658d2", "reason": "Refinement returns a confirmed explained estimate." },
         { "path": "epic-delivery.md", "bytes": 11926, "sha256": "719636b0eaf8ae4218bc8b7cf5715d917bab7adac62c4661bf1b0bc81fbfe02b", "reason": "Check the greater-than-eight decomposition boundary; this branch stays at most eight." },
         { "path": "request-triage.md", "bytes": 3275, "sha256": "63349abcff1ffa7aa27dfddc3a6fa61b4e2d4a076edac5f5e8139cf273eb4d99", "reason": "Epic estimate guidance selects the intake scale, not a hypothetical triage predecessor." },
         { "path": "skills/visual-evidence/SKILL.md", "bytes": 6173, "sha256": "1ec4e71cd4f977fa5977c3bbdd0ea26b8d6d1bf5597b556a8aa4239e87b94ea7", "reason": "This branch triggers proposed visual examples or actual existing-view capture and its evidence requirements." }
       ],
-       "totals": { "entry": 4696, "references": 87785, "combined": 92481 },
-       "caps": { "entry": 4696, "references": 87785, "combined": 92481 },
-       "capReview": { "method": "implementation-source-review", "reason": "PR #783 correction: reviewed source-selection bindings and unchanged selected set; README grows by 898 bytes to document bounded syntax and conservative refusal. Reference and combined caps increase by exactly 898 bytes to the measured baseline, with zero silent-growth allowance. No instruction reduction or human approval claimed." }
+       "totals": { "entry": 4696, "references": 87718, "combined": 92414 },
+       "caps": { "entry": 4696, "references": 87718, "combined": 92414 },
+       "capReview": { "method": "implementation-source-review", "reason": "PR #783 condition-context correction: reviewed complete-source bindings with unchanged selections and exclusions. README accounting documentation shrinks by 67 bytes; reference and combined caps decrease by exactly 67 bytes to the measured baseline, with zero silent-growth allowance. No workflow obligation reduction or human approval claimed." }
     },
     {
       "id": "implement-scoped-no-view",
@@ -48,13 +48,13 @@
         { "path": "product-verification.md", "bytes": 4806, "sha256": "e7b000b2814ce2a688ce68cf617f5937145064989b7ddbe613457e37bc6ffdb6", "reason": "Product context, scenario selection and evidence review are required." },
         { "path": "skills/audience-guidance/SKILL.md", "bytes": 9122, "sha256": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771", "reason": "Human prose and agent instructions use packaged manual reviews." },
         { "path": "skills/audience-guidance/sources.json", "bytes": 3537, "sha256": "12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb", "reason": "Audience helper availability and pins are checked before using the fallback." },
-         { "path": "README.md", "bytes": 48084, "sha256": "6e2fbedb887b2d7f75f49fe4264aa37900bda84b4f071dda492c18987942dcef", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
+         { "path": "README.md", "bytes": 48017, "sha256": "b4b91b6401bf3d9db991cbefafcf09b601fb3d4f26fc4177c7b621d3725f0caa", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
         { "path": "skills/propose/SKILL.md", "bytes": 2514, "sha256": "5526031a3f58146c5a02bf3428aad0548540b6cbc00f7fc09a2c89b4fde5152f", "reason": "Scoped implementation includes OpenSpec planning before code; /harness is the host projection of this packaged skill." },
         { "path": "change-continuity.md", "bytes": 2714, "sha256": "8f37834a11d2fb6fa8b17cfd4b77a162a0ad7c05a35d9acaa9d88c2ce64e8af1", "reason": "Embedded proposal and implementation retain intent and review affected instructions." }
       ],
-       "totals": { "entry": 6213, "references": 70777, "combined": 76990 },
-       "caps": { "entry": 6213, "references": 70777, "combined": 76990 },
-       "capReview": { "method": "implementation-source-review", "reason": "PR #783 correction: reviewed source-selection bindings and unchanged selected set; README grows by 898 bytes to document bounded syntax and conservative refusal. Reference and combined caps increase by exactly 898 bytes to the measured baseline, with zero silent-growth allowance. No instruction reduction or human approval claimed." }
+       "totals": { "entry": 6213, "references": 70710, "combined": 76923 },
+       "caps": { "entry": 6213, "references": 70710, "combined": 76923 },
+       "capReview": { "method": "implementation-source-review", "reason": "PR #783 condition-context correction: reviewed complete-source bindings with unchanged selections and exclusions. README accounting documentation shrinks by 67 bytes; reference and combined caps decrease by exactly 67 bytes to the measured baseline, with zero silent-growth allowance. No workflow obligation reduction or human approval claimed." }
     },
     {
       "id": "implement-existing-view",
@@ -63,14 +63,14 @@
         { "path": "product-verification.md", "bytes": 4806, "sha256": "e7b000b2814ce2a688ce68cf617f5937145064989b7ddbe613457e37bc6ffdb6", "reason": "Product context, scenario selection and evidence review are required." },
         { "path": "skills/audience-guidance/SKILL.md", "bytes": 9122, "sha256": "1c31395ac333b359ed666f4c503ce8ea3d95c21e179a2093b56477b3eed99771", "reason": "Human prose and agent instructions use packaged manual reviews." },
         { "path": "skills/audience-guidance/sources.json", "bytes": 3537, "sha256": "12945e24e50d4b91f7faf618d1bd56b8e9b8ed4cf330b27607ad8fcc14e819eb", "reason": "Audience helper availability and pins are checked before using the fallback." },
-         { "path": "README.md", "bytes": 48084, "sha256": "6e2fbedb887b2d7f75f49fe4264aa37900bda84b4f071dda492c18987942dcef", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
+         { "path": "README.md", "bytes": 48017, "sha256": "b4b91b6401bf3d9db991cbefafcf09b601fb3d4f26fc4177c7b621d3725f0caa", "reason": "Read the delivery guide and bounded skill behavior contract; measure the whole file, not its linked documents." },
         { "path": "skills/propose/SKILL.md", "bytes": 2514, "sha256": "5526031a3f58146c5a02bf3428aad0548540b6cbc00f7fc09a2c89b4fde5152f", "reason": "Scoped implementation includes OpenSpec planning before code; /harness is the host projection of this packaged skill." },
         { "path": "change-continuity.md", "bytes": 2714, "sha256": "8f37834a11d2fb6fa8b17cfd4b77a162a0ad7c05a35d9acaa9d88c2ce64e8af1", "reason": "Embedded proposal and implementation retain intent and review affected instructions." },
         { "path": "skills/visual-evidence/SKILL.md", "bytes": 6173, "sha256": "1ec4e71cd4f977fa5977c3bbdd0ea26b8d6d1bf5597b556a8aa4239e87b94ea7", "reason": "This branch triggers proposed visual examples or actual existing-view capture and its evidence requirements." }
       ],
-       "totals": { "entry": 6213, "references": 76950, "combined": 83163 },
-       "caps": { "entry": 6213, "references": 76950, "combined": 83163 },
-       "capReview": { "method": "implementation-source-review", "reason": "PR #783 correction: reviewed source-selection bindings and unchanged selected set; README grows by 898 bytes to document bounded syntax and conservative refusal. Reference and combined caps increase by exactly 898 bytes to the measured baseline, with zero silent-growth allowance. No instruction reduction or human approval claimed." }
+       "totals": { "entry": 6213, "references": 76883, "combined": 83096 },
+       "caps": { "entry": 6213, "references": 76883, "combined": 83096 },
+       "capReview": { "method": "implementation-source-review", "reason": "PR #783 condition-context correction: reviewed complete-source bindings with unchanged selections and exclusions. README accounting documentation shrinks by 67 bytes; reference and combined caps decrease by exactly 67 bytes to the measured baseline, with zero silent-growth allowance. No workflow obligation reduction or human approval claimed." }
     }
   ]
 }

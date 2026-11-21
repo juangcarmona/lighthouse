@@ -172,6 +172,7 @@ assert.equal(budgetSchema.additionalProperties, false);
 assert.deepEqual(await readInstructionBudgets(), budgets);
 assert.deepEqual(validateInstructionBudgets(budgets), []);
 const measured = await measureInstructionBudgets();
+assert.equal(measured.qualification, 'native-source-selection');
 assert.equal(measured.status, 'passed', JSON.stringify(measured.errors));
 assert.equal(measured.branches.length, 4);
 assert.deepEqual(measured, await measureInstructionBudgets());
