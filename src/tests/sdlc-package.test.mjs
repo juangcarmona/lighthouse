@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { buildDecompositionPlan } from '../packages/sdlc/src/decompose.mjs';
 import { validateControlPlane, validateLaunchRequest } from '../packages/sdlc/src/control-plane.mjs';
 import { createGithubSubIssues, readGithubIssue, readGithubLabels } from '../packages/sdlc/src/github.mjs';
@@ -92,6 +93,8 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
     'src/openspec-provider.mjs',
     'capabilities.json',
     'src/contracts.mjs',
+    'src/skill-contracts.mjs',
+    'schemas/skill-contracts.schema.json',
     'src/capabilities.mjs',
     'src/control-plane.mjs',
     'src/decompose.mjs',
@@ -129,6 +132,99 @@ test('the SDLC artifact contains its contract and lifecycle assets', async () =>
   const aliasReport = JSON.parse(aliases.stdout);
   assert.equal(aliasReport.status, 'valid');
   assert.equal(aliasReport.aliases.find((item) => item.alias === '/lh:impl').canonical, '/lighthouse:implement');
+});
+
+test('simulation: real packed skill evaluator and schema execute in an isolated offline consumer', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'lighthouse-skill-consumer-'));
+  try {
+    const packed = spawnSync('npm', ['pack', '--workspace', '@juangcarmona/lighthouse-sdlc', '--ignore-scripts', '--json', '--pack-destination', dir], { cwd: root, encoding: 'utf8' });
+    assert.equal(packed.status, 0, packed.stderr);
+    const [artifact] = JSON.parse(packed.stdout);
+    const tarball = await readFile(join(dir, artifact.filename));
+    const integrity = `sha512-${createHash('sha512').update(tarball).digest('base64')}`;
+    assert.equal(artifact.integrity, integrity, 'record the identity of the actual packed bytes');
+    assert.equal(artifact.shasum, createHash('sha1').update(tarball).digest('hex'));
+    const packageDir = join(dir, 'node_modules/@juangcarmona/lighthouse-sdlc');
+    await mkdir(packageDir, { recursive: true });
+    const extracted = spawnSync('tar', ['-xzf', join(dir, artifact.filename), '--strip-components=1', '-C', packageDir], { encoding: 'utf8' });
+    assert.equal(extracted.status, 0, extracted.stderr);
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
+    // This is a simulated behavior trace. No runtime/provider is invoked.
+    await writeFile(join(dir, 'consumer.mjs'), `
+import assert from 'node:assert/strict';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { evaluateSkillTrace, validateSkillTrace } from '@juangcarmona/lighthouse-sdlc/skill-contracts';
+import schema from '@juangcarmona/lighthouse-sdlc/schemas/skill-contracts.schema.json' with { type: 'json' };
+const resolved = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/skill-contracts')));
+const resolvedSchema = realpathSync(fileURLToPath(import.meta.resolve('@juangcarmona/lighthouse-sdlc/schemas/skill-contracts.schema.json')));
+assert.ok(resolved.startsWith(${JSON.stringify(packageDir)} + '/'));
+assert.ok(!resolved.startsWith(${JSON.stringify(root)} + '/'));
+assert.ok(resolvedSchema.startsWith(${JSON.stringify(packageDir)} + '/'));
+assert.ok(!resolvedSchema.startsWith(${JSON.stringify(root)} + '/'));
+assert.equal(schema.$schema, 'https://json-schema.org/draft/2020-12/schema');
+assert.equal(schema.additionalProperties, false);
+assert.equal(schema.properties.mode.const, 'simulation');
+assert.ok(schema.$defs.contract.required.includes('requestId'));
+assert.ok(schema.$defs.contract.required.includes('runId'));
+assert.ok(schema.$defs.context.properties.role.enum.includes('repository-rules'));
+assert.ok(schema.$defs.context.properties.role.enum.includes('owner-decisions'));
+const contract = { scenario: 'implementation', skill: 'lighthouse-sdlc-implement', requester: 'simulation-parent', requestId: 'simulation-request', runId: 'simulation-run', requiredContext: ['request', 'product', 'architecture', 'repository-rules', 'owner-decisions'].map(role => ({ id: role, revision: 'simulation-v1', role })), acceptedDecisions: ['product', 'design'], writeScope: ['src/'], requiredChecks: ['unit'] };
+const trace = { schemaVersion: 1, mode: 'simulation', contract, events: [
+  { type: 'selected', skill: contract.skill },
+  ...contract.requiredContext.map(context => ({ type: 'read', contextId: context.id, revision: context.revision })),
+  { type: 'write', path: 'src/example.mjs' },
+  { type: 'check', id: 'unit', status: 'passed' },
+  { type: 'result', id: 'result', requestId: contract.requestId, runId: contract.runId, output: { kind: 'implementation', changes: ['src/example.mjs'], checks: ['unit'] } },
+  { type: 'delivered', resultId: 'result', requester: contract.requester, requestId: contract.requestId, runId: contract.runId }
+] };
+assert.deepEqual(validateSkillTrace(trace), []);
+assert.equal(evaluateSkillTrace(trace).status, 'passed');
+assert.equal(evaluateSkillTrace(trace).providerMeasurement, 'unmeasured');
+const original = structuredClone(trace);
+for (const field of ['requestId', 'runId']) {
+  const crossBound = structuredClone(trace);
+  crossBound.events.at(-1)[field] = 'another-identity';
+  assert.deepEqual(validateSkillTrace(crossBound), []);
+  const report = evaluateSkillTrace(crossBound);
+  assert.equal(report.selection, 'passed');
+  assert.equal(report.protocol, 'passed');
+  assert.equal(report.completion, 'failed');
+  assert.ok(report.assertions.some(item => item.status === 'failed' && item.reason && item.observationRefs.length));
+  const invalid = structuredClone(trace);
+  delete invalid.events.at(-1)[field];
+  assert.ok(validateSkillTrace(invalid).length, 'exported schema requires delivery identity');
+  assert.equal(evaluateSkillTrace(invalid).status, 'invalid');
+}
+assert.deepEqual(trace, original);
+const refinement = structuredClone(trace);
+Object.assign(refinement.contract, { scenario: 'refinement', skill: 'lighthouse-sdlc-refine', writeScope: [], implementationScope: ['src/'], requiredWork: ['requested-action'], requiredChecks: [] });
+refinement.events = refinement.events.filter(event => !['write', 'check'].includes(event.type));
+refinement.events[0].skill = refinement.contract.skill;
+refinement.events.at(-2).output = { kind: 'refinement', problem: 'The action is unavailable.', scope: ['src/example.mjs'], acceptanceCriteria: ['The action is available.'], dependencies: [], estimate: { points: 3, status: 'confirmed', rationale: { scope: 'One action.', dependencies: 'None.', verification: 'Action test.' }, confidence: 'high', uncertainty: [] }, completedWork: ['requested-action'] };
+assert.deepEqual(validateSkillTrace(refinement), []);
+assert.equal(evaluateSkillTrace(refinement).status, 'passed');
+refinement.events.splice(-2, 0, { type: 'write', path: 'src/example.mjs' });
+assert.deepEqual(validateSkillTrace(refinement), []);
+assert.equal(evaluateSkillTrace(refinement).protocol, 'failed');
+assert.equal(evaluateSkillTrace(refinement).completion, 'passed');
+refinement.events.splice(-3, 1);
+delete refinement.events.at(-2).output.estimate;
+assert.deepEqual(validateSkillTrace(refinement), []);
+assert.equal(evaluateSkillTrace(refinement).completion, 'failed');
+trace.events.pop();
+assert.equal(evaluateSkillTrace(trace).completion, 'failed');
+assert.equal(evaluateSkillTrace({ ...trace, extra: true }).status, 'invalid');
+assert.ok(validateSkillTrace({ ...trace, extra: true }).length);
+assert.equal(evaluateSkillTrace({ ...trace, mode: 'provider' }).status, 'invalid');
+assert.equal(evaluateSkillTrace({ ...trace, events: [{ type: 'result', id: 'x', output: 'done' }] }).status, 'invalid');
+console.log('Packed evaluator and schema: simulation passed; provider unmeasured.');
+`);
+    const consumer = spawnSync(process.execPath, ['consumer.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.equal(consumer.status, 0, `${consumer.stdout}\n${consumer.stderr}`);
+    assert.match(consumer.stdout, /simulation passed; provider unmeasured/);
+    console.log(JSON.stringify({ kind: 'packed-skill-consumer', artifact: { name: artifact.name, version: artifact.version, filename: artifact.filename, shasum: artifact.shasum, integrity }, terminal: { exitCode: consumer.status, signal: consumer.signal, stdout: consumer.stdout.trim() }, mode: 'simulation', providerMeasurement: 'unmeasured' }));
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test('the SDLC alias contract is deterministic and fails closed on collisions', async () => {

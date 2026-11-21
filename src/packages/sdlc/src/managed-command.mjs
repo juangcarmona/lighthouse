@@ -93,7 +93,15 @@ export async function managedCommand(directory, id, command, { createScratch = c
       state.exitCode = exit.code ?? 128 + (constants.signals[exit.signal] ?? 0);
       if (stopping && state.exitCode === 0) state.exitCode = 143;
       if (!released && state.exitCode === 0) state.exitCode = 125;
-      if (state.exitCode !== 0 && state.scratch) console.error(scratchDiagnostic(state.scratch));
+      if (state.exitCode !== 0 && state.scratch) {
+        state.scratchDiagnostic = scratchDiagnostic(state.scratch);
+        // A caller may redirect both inherited streams to the live child log.
+        // Keep its exact child bytes; diagnostics still belong in the receipt.
+        const stderr = fstatSync(2, { bigint: true });
+        const live = logFd === 1 ? fstatSync(1, { bigint: true }) : null;
+        const sharesLiveLog = stderr.isFile() && live?.isFile() && stderr.dev === live.dev && stderr.ino === live.ino;
+        if (!sharesLiveLog) console.error(state.scratchDiagnostic);
+      }
       sample();
       if (logOwned) {
         closeSync(logFd); logFd = undefined;
