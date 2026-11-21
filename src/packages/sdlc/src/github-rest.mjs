@@ -2,6 +2,15 @@ import { setTimeout as pause } from 'node:timers/promises';
 
 export const repositoryApiUrl = (repository, path = '') => `https://api.github.com/repos/${repository}${path ? `/${path}` : ''}`;
 
+function rateLimitMetadata(response) {
+  const result = {};
+  for (const [field, header] of [['limit', 'x-ratelimit-limit'], ['remaining', 'x-ratelimit-remaining'], ['reset', 'x-ratelimit-reset'], ['retryAfterSeconds', 'retry-after']]) {
+    const value = response.headers?.get(header);
+    if (typeof value === 'string' && /^\d{1,16}$/.test(value) && Number.isSafeInteger(Number(value))) result[field] = Number(value);
+  }
+  return result;
+}
+
 async function denialMessage(response, token) {
   let reader;
   try {
@@ -58,8 +67,15 @@ export function createIssueApi(repo, env, fetchRequest = fetch, { now = Date.now
     if (optional && r.status === 404) return null;
     if (!r.ok) {
       const error = Object.assign(Error(`GitHub ${method} ${path}: ${r.status}`), { status: r.status });
-      const message = await denialMessage(r, env.GH_TOKEN);
-      if (message) error.message += `: ${message}`;
+      const rateLimit = r.status === 403 ? rateLimitMetadata(r) : {};
+      if (Object.keys(rateLimit).length) {
+        error.rateLimit = rateLimit;
+        error.message += ` [rate-limit ${Object.entries(rateLimit).map(([key, value]) => `${key}=${value}`).join(' ')}]`;
+        try { void r.body?.cancel().catch(() => {}); } catch {}
+      } else {
+        const message = await denialMessage(r, env.GH_TOKEN);
+        if (message) error.message += `: ${message}`;
+      }
       throw error;
     }
     if (/^actions\/jobs\/[1-9][0-9]*\/logs$/.test(path)) {
