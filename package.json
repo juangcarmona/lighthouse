@@ -18,7 +18,7 @@
     "verify:dotnet": "node src/packages/cli/internal/verify-dotnet.mjs",
     "verify:package-consumer": "node scripts/verify-package-consumer.mjs",
     "test:e2e": "playwright test --config src/gallery/playwright.config.mjs",
-    "test:visual": "npm run test:e2e",
+    "test:visual": "playwright test --config src/gallery/playwright.config.mjs",
     "verify:all": "npm run verify && npm run verify:dotnet && npm run verify:adoption && npm run test:e2e",
     "verify:adoption": "node scripts/verify-adoption.mjs",
     "gallery": "node src/gallery/serve.mjs",

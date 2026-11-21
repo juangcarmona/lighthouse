@@ -200,7 +200,7 @@ async function main() {
     const ensureOwner = () => config.resourceOwner ??= createExecutionOwner(ownershipDirectory, { repository: request.repository ?? env.GITHUB_REPOSITORY, runId: request.runId, workflowRunId: String(env.GITHUB_RUN_ID), attempt: Number(env.GITHUB_RUN_ATTEMPT) });
     await recoverExecutionWorkspaces(ownershipDirectory, { restoreOwnership: root => { ensureOwner(); restoreWorkspaceOwnership(root, config); } });
     ensureOwner();
-    dir = await config.resourceOwner.allocateWorkspace(env.RUNNER_TEMP);
+    dir = await config.resourceOwner.allocateWorkspace();
     source = join(dir, 'source'); output = join(dir, 'output');
     await mkdir(source); await mkdir(output); await chmod(output, 0o777);
     name = `${config.resourceOwner.prefix}-engine`;
