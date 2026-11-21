@@ -131,6 +131,16 @@ try {
   const invalidCss = visualReport();
   assertVisual(invalidCss, 'failed');
   if (invalidCss.executed.status !== 1 || !invalidCss.report.problems.some(problem => problem.includes('undefined-role'))) throw new Error('Packed checker must reject an undefined consumer role');
+  for (const declaration of [
+    'font-family: TOKEN', 'font-family: var(--lh-font-sans, TOKEN)',
+    'font-family: transparent', 'font-family: currentColor', 'font-family: none',
+    'text-decoration: underline #fff', 'text-decoration: underline red',
+  ]) {
+    await writeFile(cssPath, `.product { ${declaration}; }`);
+    const bypass = visualReport();
+    assertVisual(bypass, 'failed');
+    if (bypass.executed.status !== 1 || !bypass.report.problems.some(problem => problem.includes('raw-presentation'))) throw new Error(`Packed checker accepted a raw presentation value: ${declaration}`);
+  }
   await writeFile(cssPath, '.product { color: var(--lh-text); background: var(--lh-surface); width: 390px; }');
   const selectedPass = visualReport();
   assertVisual(selectedPass, 'passed');

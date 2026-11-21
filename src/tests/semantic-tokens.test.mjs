@@ -86,6 +86,32 @@ for (const [name, css, code] of [
   assert.ok(inspect(css).limitations.some(item => item.code === code));
 });
 
+test('literal font names and decoration colors cannot masquerade as semantic references', async t => {
+  const context = await fixture(t);
+  for (const declaration of [
+    'font-family: TOKEN', 'font-family: token', 'font-family: var(--lh-font-sans, TOKEN)',
+    'font-family: transparent', 'font-family: currentColor', 'font-family: none', 'font-family: 0',
+    'color: TOKEN', 'border: 1px solid TOKEN', 'transition: TOKEN',
+    'text-decoration: underline #fff', 'text-decoration: underline red',
+    'text-decoration: underline var(--lh-text, red)',
+  ]) {
+    const css = `.a { ${declaration}; }`;
+    assert.ok(inspect(css).diagnostics.some(item => item.code === 'raw-presentation'), declaration);
+    await context.write('src/app.css', css);
+    assert.equal((await checkSemanticTokens(context)).status, 'failed', declaration);
+  }
+  for (const declaration of [
+    'font-family: var(--lh-font-sans)', 'font-family: inherit',
+    'font-family: var(--lh-font-sans, var(--lh-font-mono))',
+    'text-decoration: underline var(--lh-text)', 'text-decoration: underline',
+    'text-decoration: underline dotted currentColor', 'text-decoration: none',
+    'color: currentColor', 'background: transparent', 'box-shadow: none', 'border: 0',
+  ]) clean(inspect(`.a { ${declaration}; }`));
+  const reviewed = exception({ property: 'text-decoration', value: 'underline #fff' });
+  clean(inspect('.a { text-decoration: underline #fff; }', [reviewed]));
+  assert.ok(inspect('.a { color: \u0000; }').limitations.some(item => item.code === 'unsupported-syntax'));
+});
+
 test('raw exceptions match exact declarations and retain review information', () => {
   const permitted = exception();
   const result = inspect('.a { color: #2459a6; width: 1440px; }', [permitted]);

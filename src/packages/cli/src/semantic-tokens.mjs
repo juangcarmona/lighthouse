@@ -12,8 +12,8 @@ const sourcePath = (value) => text(value) && /^[A-Za-z0-9_/-]+(?:[.][A-Za-z0-9_-
   && !value.startsWith('/') && value.split('/').every(part => part && part !== '..' && !part.startsWith('.') && part !== 'node_modules');
 const exactKeys = (value, keys) => object(value) && Object.keys(value).every(key => keys.includes(key));
 const globals = /^(?:inherit|initial|unset|revert|revert-layer)$/iu;
-const structural = new Set(`display position inset top right bottom left z-index width min-width max-width height min-height max-height inline-size min-inline-size max-inline-size block-size min-block-size max-block-size margin margin-top margin-right margin-bottom margin-left margin-inline margin-block margin-inline-start margin-inline-end padding padding-top padding-right padding-bottom padding-left padding-inline padding-block padding-inline-start padding-inline-end gap row-gap column-gap grid grid-template-columns grid-template-rows grid-column grid-row grid-auto-flow grid-auto-columns grid-auto-rows align-items align-content align-self justify-items justify-content justify-self place-items place-content flex flex-direction flex-wrap flex-grow flex-shrink flex-basis order overflow overflow-x overflow-y box-sizing aspect-ratio object-fit object-position cursor pointer-events visibility white-space text-align text-decoration text-transform text-overflow overflow-wrap word-break list-style list-style-type table-layout border-collapse border-spacing border-width border-style outline-width outline-style outline-offset opacity color-scheme content font-weight font-style vertical-align isolation appearance resize user-select touch-action`.split(' '));
-const presentation = new Set(`color background background-color border-color border-top-color border-right-color border-bottom-color border-left-color outline-color fill stroke caret-color accent-color font-family font-size line-height letter-spacing border-radius border-top-left-radius border-top-right-radius border-bottom-left-radius border-bottom-right-radius box-shadow text-shadow transition transition-duration transition-delay animation-duration animation-delay`.split(' '));
+const structural = new Set(`display position inset top right bottom left z-index width min-width max-width height min-height max-height inline-size min-inline-size max-inline-size block-size min-block-size max-block-size margin margin-top margin-right margin-bottom margin-left margin-inline margin-block margin-inline-start margin-inline-end padding padding-top padding-right padding-bottom padding-left padding-inline padding-block padding-inline-start padding-inline-end gap row-gap column-gap grid grid-template-columns grid-template-rows grid-column grid-row grid-auto-flow grid-auto-columns grid-auto-rows align-items align-content align-self justify-items justify-content justify-self place-items place-content flex flex-direction flex-wrap flex-grow flex-shrink flex-basis order overflow overflow-x overflow-y box-sizing aspect-ratio object-fit object-position cursor pointer-events visibility white-space text-align text-transform text-overflow overflow-wrap word-break list-style list-style-type table-layout border-collapse border-spacing border-width border-style outline-width outline-style outline-offset opacity color-scheme content font-weight font-style vertical-align isolation appearance resize user-select touch-action`.split(' '));
+const presentation = new Set(`text-decoration color background background-color border-color border-top-color border-right-color border-bottom-color border-left-color outline-color fill stroke caret-color accent-color font-family font-size line-height letter-spacing border-radius border-top-left-radius border-top-right-radius border-bottom-left-radius border-bottom-right-radius box-shadow text-shadow transition transition-duration transition-delay animation-duration animation-delay`.split(' '));
 const borders = new Set(['border', 'border-top', 'border-right', 'border-bottom', 'border-left', 'outline']);
 const functions = new Set(['var', 'calc', 'min', 'max', 'clamp', 'repeat', 'minmax', 'fit-content', 'rgb', 'rgba', 'hsl', 'hsla']);
 
@@ -84,6 +84,7 @@ export function inspectCss(source, { path, roles, primitives, exceptions = [] })
   const diagnostics = [], limitations = [], usedExceptions = [];
   const mask = masked(source), css = mask.value;
   const add = (list, code, message, offset = 0) => list.push({ path, line: source.slice(0, offset).split('\n').length, code, message });
+  if (source.includes('\u0000')) add(limitations, 'unsupported-syntax', 'Null characters are outside standalone CSS coverage');
   if (mask.incomplete) add(limitations, 'unsupported-syntax', 'Unterminated comment or string');
   if (/\\|\$\{|#\{/u.test(css)) add(limitations, 'unsupported-syntax', 'Escapes and template interpolation are outside standalone CSS coverage');
 
@@ -126,7 +127,8 @@ export function inspectCss(source, { path, roles, primitives, exceptions = [] })
           const fallback = references(input.slice(comma + 1, end - 1));
           if (enforced && !allowed(fallback, property)) raw('Prohibited raw fallback');
         }
-        result += 'TOKEN'; cursor = end; regex.lastIndex = end;
+        // Raw CSS nulls are rejected above, so authored identifiers cannot impersonate references.
+        result += '\u0000'; cursor = end; regex.lastIndex = end;
       }
       return result + input.slice(cursor);
     }
@@ -141,10 +143,16 @@ export function inspectCss(source, { path, roles, primitives, exceptions = [] })
 
   function allowed(value, property) {
     value = value.trim();
-    if (globals.test(value) || /^(?:TOKEN|transparent|currentColor|none|0)$/iu.test(value)) return true;
-    if (borders.has(property)) return /^(?:(?:TOKEN|0|\d+(?:\.\d+)?px|solid|dashed|dotted|double|none)\s*)+$/u.test(value) && /TOKEN|^0$|^none$/u.test(value);
-    if (property === 'transition') return /^(?:(?:TOKEN|color|background-color|border-color|opacity|transform|ease|ease-in|ease-out|ease-in-out|linear)\s*[, ]?\s*)+$/u.test(value);
-    return /^(?:TOKEN\s*)+$/u.test(value);
+    if (globals.test(value) || /^(?:\u0000\s*)+$/u.test(value)) return true;
+    if (property === 'font-family') return false;
+    if (/^(?:transparent|currentColor)$/iu.test(value)
+      && (property === 'color' || property === 'background' || property.endsWith('-color') || ['fill', 'stroke'].includes(property))) return true;
+    if (value === 'none' && ['background', 'fill', 'stroke', 'box-shadow', 'text-shadow', 'transition'].includes(property)) return true;
+    if (value === '0' && ['font-size', 'line-height', 'letter-spacing', 'border-radius', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius'].includes(property)) return true;
+    if (borders.has(property)) return /^(?:(?:\u0000|0|\d+(?:\.\d+)?px|solid|dashed|dotted|double|none)\s*)+$/u.test(value) && /\u0000|^0$|^none$/u.test(value);
+    if (property === 'text-decoration') return /^(?:(?:\u0000|underline|overline|line-through|none|solid|double|dotted|dashed|wavy|auto|from-font|currentColor|transparent)\s*)+$/iu.test(value);
+    if (property === 'transition') return /^(?:(?:\u0000|color|background-color|border-color|opacity|transform|ease|ease-in|ease-out|ease-in-out|linear)\s*[, ]?\s*)+$/u.test(value);
+    return false;
   }
 
   // Split blocks only outside parentheses/brackets; delimiters in comments/strings are masked.
