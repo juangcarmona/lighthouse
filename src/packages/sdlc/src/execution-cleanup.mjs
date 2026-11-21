@@ -53,7 +53,10 @@ function openOwner(path, record, run) {
   const prefix = `lighthouse-${record.key.slice(0, 24)}`;
   return {
     prefix,
-    allocateWorkspace(parent) { return allocateWorkspace(record, parent, () => persist(path, record), dirname(path)); },
+    allocateWorkspace(parent = join(dirname(path), 'workspaces')) {
+      mkdirSync(parent, { recursive: true, mode: 0o700 });
+      return allocateWorkspace(record, parent, () => persist(path, record), dirname(path));
+    },
     checkpointWorkspace(baseline, tracked, policy) { return checkpointWorkspace(record, baseline, tracked, policy, () => persist(path, record)); },
     cleanupWorkspace(options) { return disposeWorkspace(record, () => persist(path, record), dirname(path), options); },
     prepare(args) {
