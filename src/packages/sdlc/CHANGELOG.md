@@ -1,5 +1,13 @@
 # @juangcarmona/lighthouse-sdlc
 
+## 0.30.2
+
+### Patch Changes
+
+- 4b1fb05: # Claude Code telemetry
+
+  Add opt-in Claude Code OTLP metrics collection to the Lighthouse telemetry contract.
+
 ## 0.30.1
 
 ### Patch Changes
