@@ -267,7 +267,27 @@ async function writeImplementationPullRequest(api, { snapshot, changes, body, ru
   }
   if (synchronization) entries.push(...synchronization.files.map(({ path, sha, mode }) => ({ path, sha, mode, type: 'blob' })));
   if (verificationRefresh && (commit.sha !== snapshot.sourceRevision || !/^[a-f0-9]{40}$/.test(commit.tree?.sha ?? ''))) throw Error('Checked verification tree changed');
-  const tree = verificationRefresh ? commit.tree : await api('git/trees', 'POST', { base_tree: commit.tree.sha, tree: entries });
+  let tree = commit.tree;
+  if (!verificationRefresh) {
+    const treeBody = { base_tree: commit.tree.sha, tree: entries };
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { tree = await api('git/trees', 'POST', treeBody); break; }
+      catch (error) {
+        // Repeat only a refused write whose newly created blob is now readable.
+        const rejected = /^GitHub POST git\/trees: 422: tree\.sha ([a-f0-9]{40}) is not a valid blob$/.exec(error.message ?? '');
+        const file = rejected && changes[entries.findIndex(entry => entry.sha === rejected[1])];
+        if (attempt === 2 || error.status !== 422 || !file || file.content === null) throw error;
+        const bytes = Buffer.from(file.content, 'base64');
+        const expected = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+        if (rejected[1] !== expected) throw error;
+        const observed = await api(`git/blobs/${expected}`, 'GET', undefined, true);
+        if (observed?.sha !== expected || observed.encoding !== 'base64' || observed.size !== bytes.length || typeof observed.content !== 'string' || !Buffer.from(observed.content, 'base64').equals(bytes)) throw error;
+        await setTimeout(250 * 2 ** attempt);
+        await beforeWrite();
+        await checkEpicBase();
+      }
+    }
+  }
   if (synchronization && tree.sha !== checkedTree) throw Error('Synchronized publication differs from the independently checked tree');
   const message = verificationRefresh ? `chore: refresh verification for issue #${snapshot.issue}\n\nLighthouse-CI-Base: ${snapshot.baseRevision}` : `feat: implement issue #${snapshot.issue}`;
   const commitBody = { message, tree: tree.sha, parents: synchronization ? [snapshot.sourceRevision, snapshot.baseRevision] : [snapshot.sourceRevision] };
