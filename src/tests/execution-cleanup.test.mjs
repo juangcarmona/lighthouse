@@ -174,6 +174,35 @@ async function workspaceFixture(f) {
   writeFileSync(join(path, 'output/evidence/report.txt'), 'diagnostic');
   return path;
 }
+test('failed evidence retention survives runner temporary-directory cleanup', async () => {
+  const f = fixture();
+  try {
+    const runnerTemp = join(f.directory, 'runner-temp');
+    mkdirSync(runnerTemp); writeFileSync(join(runnerTemp, 'job-output'), 'ephemeral');
+    const path = await f.owner.allocateWorkspace();
+    assert.equal(path.startsWith(join(f.directory, 'workspaces') + '/'), true);
+    mkdirSync(join(path, 'source')); mkdirSync(join(path, 'output/evidence'), { recursive: true });
+    const baseline = new Map([['demo.js', { content: Buffer.from('original'), mode: '100644' }]]);
+    writeFileSync(join(path, 'source/demo.js'), 'candidate');
+    await f.owner.checkpointWorkspace(baseline, baseline, { paths: ['*'] });
+    for (let i = 0; i < 201; i++) writeFileSync(join(path, 'output/evidence', `${i}.log`), 'diagnostic');
+    assert.equal(f.owner.cleanup().status, 'clean');
+    await assert.rejects(f.owner.cleanupWorkspace(), /Evidence exceeds 200 files/);
+    rmSync(runnerTemp, { recursive: true });
+    assert.equal(readFileSync(join(path, 'source/demo.js'), 'utf8'), 'candidate');
+    assert.equal(JSON.parse(readFileSync(join(path, 'recovery.json'))).baseline.length, 1);
+    assert.equal(readdirSync(join(path, 'output/evidence')).length, 201);
+    // Only this test owns these fixtures; normal recovery never prunes evidence.
+    rmSync(join(path, 'output/evidence/200.log'));
+    await recoverExecutionWorkspaces(f.directory, { isStopped: () => true });
+    assert.equal(existsSync(path), false);
+    const [bundle] = readdirSync(join(f.directory, 'retained'));
+    const [change] = JSON.parse(readFileSync(join(f.directory, 'retained', bundle, 'changes.json')));
+    assert.equal(Buffer.from(change.content, 'base64').toString(), 'candidate');
+    assert.equal(readdirSync(join(f.directory, 'retained', bundle, 'evidence')).length, 200);
+  } finally { f.dispose(); }
+});
+
 test('workspace recovery requires stopped ownership and runtime absence, then retains edits before disposal', async () => {
   const f = fixture();
   try {

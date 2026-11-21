@@ -321,14 +321,15 @@ test('audit source collisions refuse without hiding source content or rewriting 
 });
 
 async function workspaceUsage(root) {
-  const paths = (await readdir(root)).filter(name => name.startsWith('lighthouse-engine-'));
+  const directory = join(root, 'lock.resources/workspaces');
+  const paths = (await readdir(directory).catch(error => { if (error.code === 'ENOENT') return []; throw error; })).filter(name => name.startsWith('lighthouse-engine-'));
   const usage = { paths, allocatedBytes: 0, apparentBytes: 0, inodes: 0 };
   async function visit(path) {
     const stat = await lstat(path);
     usage.allocatedBytes += stat.blocks * 512; usage.apparentBytes += stat.size; usage.inodes++;
     if (stat.isDirectory()) for (const name of await readdir(path)) await visit(join(path, name));
   }
-  for (const name of paths) await visit(join(root, name));
+  for (const name of paths) await visit(join(directory, name));
   return usage;
 }
 
@@ -765,8 +766,8 @@ test('a failed implementation retains its bounded candidate but cannot emit succ
     await writeFile(shim, `#!${process.execPath}\nrequire(${JSON.stringify(resourceShim)})(process.argv.slice(2));\nconst fs=require('node:fs'); const args=process.argv.slice(2); if(args[0]==='image'){console.log(JSON.stringify({entrypoint:['/usr/local/bin/lighthouse-engine']}));process.exit(0);} if(args.includes('chown'))process.exit(0);if(args.includes('--entrypoint')&&!args.some(arg=>arg.startsWith('type=bind,'))){console.log(args[args.indexOf('--entrypoint')+1]==='opencode'?'opencode v2.1.0':'v24.22.1');process.exit(0);} if(args.includes('chown')) process.exit(0); const mount=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/workspace')); if(mount){ const source=mount.slice(14,-15); fs.writeFileSync(source+'/demo.js','partial implementation'); for(const folder of ['node_modules','.cache']){fs.mkdirSync(source+'/'+folder);fs.writeFileSync(source+'/'+folder+'/generated',Buffer.alloc(8192));} const out=args.find(x=>x.startsWith('type=bind,src=')&&x.endsWith(',dst=/output')).slice(14,-12); fs.mkdirSync(out+'/execution'); fs.writeFileSync(out+'/execution/engine.json',JSON.stringify({signal:'SIGABRT',resources:{pidsLimit:1024,pidsPeak:1024,pidsDenied:2,oomKills:0}})); process.exitCode=134; }\n`);
     await chmod(shim, 0o755);
     const harness = await fixtureHarness(root);
-    const probe = join(root, 'lighthouse-engine-measurement-control');
-    await mkdir(probe); await writeFile(join(probe, 'data'), Buffer.alloc(8192));
+    const probe = join(root, 'lock.resources/workspaces/lighthouse-engine-measurement-control');
+    await mkdir(probe, { recursive: true }); await writeFile(join(probe, 'data'), Buffer.alloc(8192));
     const measured = await workspaceUsage(root);
     assert.equal(measured.inodes, 2); assert.ok(measured.allocatedBytes >= 8192);
     await rm(probe, { recursive: true });

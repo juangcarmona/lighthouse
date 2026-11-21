@@ -9,6 +9,7 @@ export default defineConfig({
   testDir: resolve(galleryRoot, 'tests'),
   outputDir: resolve(repositoryRoot, 'test-results'),
   fullyParallel: true,
+  workers: 1,
   retries: 0,
   reporter: [['list'], ['html', { outputFolder: resolve(repositoryRoot, 'playwright-report'), open: 'never' }]],
   use: { baseURL: 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
