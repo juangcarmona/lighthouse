@@ -205,7 +205,22 @@
         "src/tests/",
         "scripts/"
       ],
-      "corrections": {}
+      "corrections": {
+        "src/packages/sdlc/package.json": "Ship only the #773 skill-contract and instruction-budget modules, schema and budget inventory through existing package exports/files. Preserve dependencies, versioning, all current exports and verification commands.",
+        "src/packages/cli/package.json": "Expose only the #773 optional semantic-token checker when needed by the existing CLI package. Preserve dependencies, versioning, all current exports and verification commands.",
+        "src/tests/skill-contracts.test.mjs": "Add deterministic #773 positive and near-miss evaluator tests, with inline synthetic traces; distinguish selection, protocol and delivered completion. Preserve all existing assertions and label simulation.",
+        "src/tests/instruction-budgets.test.mjs": "Add #773 branch inventory, cap, source identity and stale/reference mutation regressions with inline fixtures. Preserve authoritative context and every existing assertion.",
+        "src/tests/sdlc-package.test.mjs": "Verify #773 evaluator and instruction-budget artifacts from the packed SDLC package and a clean consumer. Preserve every existing package assertion.",
+        "scripts/check-instruction-budgets.mjs": "Add the #773 offline instruction-budget entrypoint; fail exceeded, uncapped and stale supported inputs. Preserve ordinary repository verification and all existing checks.",
+        "src/tests/semantic-tokens.test.mjs": "Add #773 opt-in adoption, authority discovery, supported standalone CSS, undefined role, fallback, exception and unsupported syntax tests using inline temporary consumer fixtures. Preserve all existing assertions.",
+        "src/tests/lighthouse.test.mjs": "Extend #773 consumer-token opt-in and reviewed-upgrade tests without changing existing visual-profile compliance or removing current assertions.",
+        "src/tests/theme-package.test.mjs": "Verify #773 canonical visual authority and supported consumer behavior while retaining all existing token, recipe and package assertions.",
+        "scripts/verify-package-consumer.mjs": "Extend the existing clean packaged-consumer check for the #773 selected CSS capability and distributed SDLC contracts. Preserve every existing consumer check and refusal.",
+        "src/tests/visual-evidence.test.mjs": "Extend #773 current/stale capture-time identity, declared coverage, browser-failure and narrow inert-metadata fixtures inline. Preserve every existing identity, image and failure assertion.",
+        "src/tests/visual-publication.test.mjs": "Extend #773 producer-to-publisher freshness, required coverage, unavailable publication and immutable history tests. Preserve all existing publication and source-binding assertions.",
+        "src/tests/opencode-execute.test.mjs": "Extend only #773 trusted capture-time source and terminal visual evidence coverage tests; preserve cancellation, isolation, retention and resource assertions.",
+        "src/tests/host-contract.test.mjs": "Extend only #773 visual evidence appearance/coverage/freshness contract tests; preserve all existing envelope, authority and refusal assertions."
+      }
     }
   },
   "125": {
