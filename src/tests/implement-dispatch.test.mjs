@@ -21,6 +21,8 @@ function fixture(stage = 'implement') {
     if (path === 'actions/runs/100/attempts/1') return parent;
     if (path === 'actions/runs/200') return worker;
     if (path.endsWith('/dispatches')) return null;
+    if (path === `issues/${issue}`) return { number: issue, state: 'open', labels: [] };
+    if (path.startsWith('actions/runs?')) return { total_count: 0, workflow_runs: [] };
     throw Error(`Unexpected API request: ${method} ${path}`);
   };
   const readArtifact = async (apiArg, repository, run, name, file) => {

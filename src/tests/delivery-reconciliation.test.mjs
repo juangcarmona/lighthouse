@@ -35,6 +35,8 @@ function fixture() {
     if (path === 'actions/runs/200') return run;
     if (path === 'actions/runs/100/attempts/1') return parent;
     if (path.endsWith('/dispatches')) return null;
+    if (path === 'issues/18') return { number: 18, state: 'open', labels: [] };
+    if (path.startsWith('actions/runs?')) return { total_count: 0, workflow_runs: [] };
     throw Error('Unexpected API: ' + path);
   };
   const readArtifact = async (api, repo, id, name) => { assert.equal(repo, repository); return name.startsWith('lighthouse-dispatch-') ? request : snapshot; };

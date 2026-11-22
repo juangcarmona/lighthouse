@@ -43,6 +43,9 @@ An npm upgrade does not update installed Actions workflows. The [installer](../.
 | `--with-delivery-acceptance` | Adds the opt-in [non-agent owner-decision producer](../../../src/packages/sdlc/workflows/lighthouse-delivery-acceptance.yml); the [source contract](../../../src/packages/sdlc/delivery-acceptance.md) requires separate adoption and an explicit decision bound to a candidate |
 | `--with-epic` | Adds the [serial epic workflow](../../../src/packages/sdlc/workflows/lighthouse-sdlc-epic.yml) and completion workers; activation remains separate |
 | `LIGHTHOUSE_AUTOMATION_ENABLED` | Repository admission switch; does not supply missing policy or approval |
+| `LIGHTHOUSE_ISSUE_STAGE_RUNS` | Agent attempts allowed per issue and worker in 24 hours; default 3 |
+| `LIGHTHOUSE_CONSECUTIVE_FAILURES` | Consecutive failed or cancelled attempts that pause an issue's worker; default 2 |
+| `LIGHTHOUSE_DAILY_AGENT_RUNS` | Agent worker runs allowed per repository in 24 hours; default 20 |
 | `LIGHTHOUSE_ENABLED_STAGES` | Installer-selected lifecycle stages in the reviewed router |
 | `LIGHTHOUSE_AUTO_IMPLEMENT` | Allows authorized refinement to request implementation; `future` still pauses it |
 | `LIGHTHOUSE_COMPLETION_ENABLED` | Allows integration/review routing; grants no merge permission |

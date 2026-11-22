@@ -2,6 +2,7 @@ import { digest } from './digests.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
 import { handoff } from './handoff.mjs';
 import { isDeepStrictEqual } from 'node:util';
+import { readBudgetLimits, pauseLabels, issueStageBudget, budgetResetTime, countDailyAgentRuns, dailyBudget, explainRefusal, budgetResult } from './dispatch-budget.mjs';
 
 const routerPath = '.github/workflows/lighthouse-sdlc-router.yml';
 export const stages = ['triage', 'refine', 'propose', 'implement', 'integrate', 'review'];
@@ -81,10 +82,11 @@ export async function issueComments(api, issue) {
 
 // The router dispatch job serializes receipt creation per issue. Workers acquire
 // the existing issue concurrency group before claiming a receipt.
-export async function recordDispatch(api, repository, request) {
+export async function recordDispatch(api, repository, request, options = {}) {
   if (request.intent !== undefined && request.intent !== dispatchIntent(request)) throw Error('Invalid dispatch intent binding');
   if (Buffer.byteLength(JSON.stringify(request)) > 128000) throw Error('Dispatch request exceeds its artifact bound');
   const comments = await issueComments(api, request.issue);
+  const history = [];
   let equivalent;
   for (const comment of comments) {
     if (comment.user?.login !== 'github-actions[bot]' || !comment.body.includes('<!-- lighthouse-dispatch:')) continue;
@@ -93,6 +95,7 @@ export async function recordDispatch(api, repository, request) {
     if (receipt.id === request.id) return { send: false, comment, receipt, reason: 'This authenticated request is already recorded; no automatic resend.' };
     if (!receipt.workerRunId) throw Error('An earlier stage dispatch is unconfirmed; reconcile it before requesting another');
     const run = await api(`actions/runs/${receipt.workerRunId}`);
+    history.push({ comment, receipt, run });
     if (request.intent && !request.recovery && receipt.intent === request.intent) {
       if (run.path !== stagePath(workerFor(receipt)) || String(run.id) !== String(receipt.workerRunId) || run.repository?.full_name !== repository || run.head_sha !== request.workflowRevision) throw Error('Dispatch worker identity changed');
       if (run.status !== 'completed' || receipt.status === 'completed' && run.conclusion === 'success') equivalent = { send: false, comment, receipt, state: run.status !== 'completed' ? 'queued' : 'completed', reason: run.status !== 'completed' ? 'Equivalent work already has a queued or running execution.' : 'Equivalent work already completed; follow its retained result.' };
@@ -102,9 +105,33 @@ export async function recordDispatch(api, repository, request) {
     if (run.path !== stagePath(workerFor(receipt)) || run.status !== 'completed' && request.queue !== true) throw Error('A stage execution is still pending or running');
   }
   if (equivalent) return equivalent;
+  const refused = await guardDispatch(api, request, comments, history, options);
+  if (refused) return refused;
   const receipt = { schemaVersion: 1, ...(request.client ? { clientKey: request.client.key, clientPayloadDigest: request.client.payloadDigest } : {}), ...(request.intent ? { intent: request.intent } : {}), stage: request.stage, ...(request.recovery ? { recovery: request.recovery, issue: request.issue } : {}), ...(request.worker ? { worker: request.worker } : {}), ...(request.feedbackKey ? { feedbackKey: request.feedbackKey } : {}), ...(request.epicKey ? { epicKey: request.epicKey } : {}), status: 'requested', ...(request.eventRunId ? { eventRunId: request.eventRunId } : {}), id: request.id, digest: digest(JSON.stringify(request)), routerRunId: request.routerRunId, routerAttempt: request.routerAttempt, workerRunId: null };
   const comment = await api(`issues/${request.issue}/comments`, 'POST', { body: dispatchReceiptBody(repository, receipt) });
   return { send: true, comment, receipt };
+}
+
+// Cost guardrails: a paused issue, an exhausted issue/worker budget or the
+// repository daily cap refuses the dispatch with a typed result.
+async function guardDispatch(api, request, comments, history, { limits = readBudgetLimits(), now = Date.now() } = {}) {
+  const worker = workerFor(request);
+  const issue = await api(`issues/${request.issue}`);
+  const paused = (issue.labels ?? []).map(label => label.name ?? label).find(name => pauseLabels.includes(name));
+  if (paused) return budgetResult({ scope: 'paused', reason: `The \`${paused}\` label pauses automated work on this issue.` }, null);
+  const budget = { limits, now, workerOf: workerFor };
+  let refusal = issueStageBudget(history, worker, budget);
+  if (refusal) {
+    const resetAt = await budgetResetTime(api, request.issue);
+    if (resetAt) refusal = issueStageBudget(history, worker, { ...budget, resetAt });
+  }
+  if (!refusal) {
+    const count = await countDailyAgentRuns(api, { now, cap: limits.dailyAgentRuns, workerPaths: workers.map(stagePath) });
+    refusal = dailyBudget(count, limits);
+  }
+  if (!refusal) return null;
+  const latestReceiptId = history.at(-1)?.comment.id ?? 0;
+  return budgetResult(refusal, await explainRefusal(api, request, worker, refusal, comments, { now, latestReceiptId }));
 }
 
 export async function sendDispatch(api, repository, request, commentId) {

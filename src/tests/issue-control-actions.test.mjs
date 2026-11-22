@@ -22,6 +22,7 @@ function fixture() {
     if (path === 'issues/7') return { id: 33, number: 7, state: 'open' };
     if (path.startsWith('issues/7/comments?')) return state.comments;
     if (path.startsWith('actions/artifacts?')) return { total_count: 0, artifacts: [] };
+    if (path.startsWith('actions/runs?')) return { total_count: 0, workflow_runs: [] };
     throw Error('Unexpected API path ' + path);
   };
   const options = { api, repository, event, eventName: 'workflow_dispatch', runId: 44, attempt: 1,

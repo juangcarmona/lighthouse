@@ -2,6 +2,7 @@ import { retryLimit, retryDelayMs } from './recovery-policy.mjs';
 export { retryLimit, retryDelayMs } from './recovery-policy.mjs';
 import { digest } from './digests.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
+import { pauseLabels } from './dispatch-budget.mjs';
 import { issueComments, readDispatchReceipt, loadDispatch, workerFor, stagePath, recordDispatch, claimDispatch, checkDispatchClaim, finishDispatch } from './stage-dispatch.mjs';
 import { publishObservedStop, handoff, pendingQuestion, resultHandoffState, visibleNextAction, productApplyObservation, workerExecutionObservation, publishStep } from './handoff.mjs';
 import { readActionsJson } from './actions-artifact.mjs';
@@ -28,7 +29,7 @@ export function classifyTechnicalFailure({ run, jobs, evidence = {} }) {
   if (!['failure', 'timed_out'].includes(run.conclusion)) return 'none';
   if (evidence.result === 'present' || evidence.result === 'invalid') return 'substantive-failure';
   if (evidence.result === 'unknown') return 'evidence-unavailable';
-  if (['out-of-memory', 'process-limit', 'aborted', 'cancelled'].includes(evidence.execution?.status)) return 'substantive-failure';
+  if (['out-of-memory', 'process-limit', 'aborted', 'cancelled', 'token-limit'].includes(evidence.execution?.status)) return 'substantive-failure';
   const failed = agent?.conclusion === 'skipped' ? jobs.find(job => ['pre_activation', 'activation'].includes(job.name) && ['failure', 'timed_out'].includes(job.conclusion)) : agent;
   const started = Date.parse(failed?.started_at), ended = Date.parse(failed?.completed_at);
   if (!Number.isFinite(started) || !Number.isFinite(ended) || ended < started) return 'duration-unknown';
@@ -80,7 +81,7 @@ export function recoveryDecision({ request, receipt, run, jobs, issue, comments,
   if (receipt.status === 'waiting') return result('waiting-human', 'human-decision', 'Answer the recorded question; no automatic retry.');
   if (receipt.status === 'blocked') return result('blocked', 'stage-blocked', 'Resolve the recorded blocker before requesting an authorized continuation.');
   if (receipt.status === 'completed' && run.conclusion === 'success') return result('succeeded', 'worker-completed', 'No recovery needed.');
-  if (issue.state !== 'open' || issue.user?.login !== owner || issue.pull_request || issue.labels.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working'].includes(l.name))) return result('blocked', 'issue-paused', 'Inspect the issue decision or reservation before requesting work.');
+  if (issue.state !== 'open' || issue.user?.login !== owner || issue.pull_request || issue.labels.some(l => ['future', 'needs-info', 'waiting-review', 'human-working', 'agent-working', ...pauseLabels].includes(l.name))) return result('blocked', 'issue-paused', 'Inspect the issue decision or reservation before requesting work.');
   if (request.sourceRevision !== revision || request.workflowRevision !== workflowRevision || request.taskDigest !== intent(issue, comments, owner)) return result('blocked', 'authority-changed', 'Request fresh work against the current source and owner intent.');
   if (!['refine', 'propose', 'implement'].includes(request.stage) || !['failure', 'timed_out'].includes(run.conclusion)) return result('uncertain', 'manual-recovery', 'Inspect the outcome and request a new authorized execution if needed.');
   const preparation = jobs.find(j => j.name === 'Authorize and reserve issue');

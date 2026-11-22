@@ -31,6 +31,8 @@ function fixture() {
     if (path.startsWith('actions/runs/')) return runs.get(path.split('/')[2]);
     if (path.includes('/runs?')) return { total_count: 0, workflow_runs: [] };
     if (path.endsWith('/dispatches')) return null;
+    if (path.startsWith('issues/7/events?')) return [];
+    if (path === 'issues/7/labels' && method === 'POST') return [];
     throw Error(`Unexpected ${method} ${path}`);
   };
   const readArtifact = async (_api, _repo, id) => artifacts.get(String(id));
@@ -402,7 +404,36 @@ test('missing original artifacts and spoofed receipts fail closed', async () => 
   assert.equal(expired.request, undefined);
 });
 
-test('a newer request supersedes older failures and two linked retries exhaust the budget', async () => {
+async function failedRetries(f, count) {
+  const results = [];
+  for (let attempt = 1; attempt <= count; attempt++) {
+    const parent = { ...f.maintenance, id: 299 + attempt };
+    f.runs.set(String(parent.id), parent);
+    const result = await prepareRecovery(f.api, repository, owner, 7, parent, true, Date.now(), f.readArtifact);
+    results.push(result);
+    if (!result.request) break;
+    f.artifacts.set(String(parent.id), result.request);
+    const run = { ...f.run, id: 200 + attempt };
+    f.runs.set(String(run.id), run);
+    const comment = f.comments.at(-1), receipt = readDispatchReceipt(comment, repository, 7);
+    comment.body = dispatchReceiptBody(repository, { ...receipt, workerRunId: String(run.id), status: 'failed' });
+  }
+  return results;
+}
+
+test('the default consecutive-failure budget stops recovery after one failed retry', async () => {
+  const f = fixture();
+  const [first, second] = await failedRetries(f, 2);
+  assert.equal(first.request.recovery.attempt, 1);
+  assert.equal(second.request, undefined);
+  assert.ok(f.calls.some(call => call.path === 'issues/7/labels' && call.body.labels.includes('lighthouse:budget-exceeded')));
+});
+
+test('a newer request supersedes older failures and two linked retries exhaust the budget', async t => {
+  // Isolate recovery's own two-retry limit from the dispatch cost budget.
+  const previous = process.env.LIGHTHOUSE_CONSECUTIVE_FAILURES;
+  process.env.LIGHTHOUSE_CONSECUTIVE_FAILURES = '3';
+  t.after(() => { if (previous === undefined) delete process.env.LIGHTHOUSE_CONSECUTIVE_FAILURES; else process.env.LIGHTHOUSE_CONSECUTIVE_FAILURES = previous; });
   const f = fixture();
   for (let attempt = 1; attempt <= 2; attempt++) {
     const parent = { ...f.maintenance, id: 299 + attempt };

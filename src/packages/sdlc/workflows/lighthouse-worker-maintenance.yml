@@ -32,6 +32,9 @@ env:
   LIGHTHOUSE_MAINTENANCE_ENABLED: ${{ vars.LIGHTHOUSE_MAINTENANCE_ENABLED }}
   LIGHTHOUSE_RECOVERY_ENABLED: ${{ vars.LIGHTHOUSE_RECOVERY_ENABLED }}
   LIGHTHOUSE_MAINTENANCE_ISSUES: ${{ vars.LIGHTHOUSE_MAINTENANCE_ISSUES }}
+  LIGHTHOUSE_DAILY_AGENT_RUNS: ${{ vars.LIGHTHOUSE_DAILY_AGENT_RUNS }}
+  LIGHTHOUSE_ISSUE_STAGE_RUNS: ${{ vars.LIGHTHOUSE_ISSUE_STAGE_RUNS }}
+  LIGHTHOUSE_CONSECUTIVE_FAILURES: ${{ vars.LIGHTHOUSE_CONSECUTIVE_FAILURES }}
 jobs:
   daily-housekeeping:
     if: github.actor == github.repository_owner && ((github.event_name == 'schedule' && github.event.schedule == '23 3 * * *' && vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.housekeeping == true && inputs.completed_run == '' && (inputs.dry_run == true || (vars.LIGHTHOUSE_AUTOMATION_ENABLED == 'true' && vars.LIGHTHOUSE_MAINTENANCE_ENABLED == 'true'))))
