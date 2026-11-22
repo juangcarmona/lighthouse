@@ -82,3 +82,18 @@ export function usageSummary(events, { health = [] } = {}) {
   const coverage = started > 0 && started === finished.length && !lost && !unique.some(e => ['collection.gap', 'cli.diagnostic_omitted'].includes(e.type) || e.attributes?.omittedEvents > 0) ? 'observed' : started ? 'incomplete' : 'unavailable';
   return { schemaVersion: 1, source: native ? 'opencode-native' : 'opencode-cli', coverage, stepStarts: started, stepFinishes: finished.length, tokens: Object.fromEntries(fields.map(key => [key, finished.length && finished.every(e => typeof e.attributes[key] === 'number') ? finished.reduce((sum, e) => sum + e.attributes[key], 0) : null])), actualBilledCost: null, toolCalls: selected.filter(e => ['session.tool.success', 'session.tool.failed', 'cli.tool_use'].includes(e.type)).length };
 }
+
+// One Markdown block per engine run for the Actions job summary.
+export function tokenUsageSummary(usage, cap) {
+  const value = number => number === null || number === undefined ? 'unavailable' : String(number);
+  const rows = [
+    ['Coverage', usage.coverage],
+    ['Steps', `${usage.stepFinishes}/${usage.stepStarts}`],
+    ['Input tokens', value(usage.tokens.inputTokens)],
+    ['Output tokens', value(usage.tokens.outputTokens)],
+    ['Reasoning tokens', value(usage.tokens.reasoningTokens)],
+    ['Cache read tokens', value(usage.tokens.cacheReadTokens)],
+    ['Token cap', `${cap.observedTokens}/${cap.limit} (${cap.status})`],
+  ];
+  return `\n### Engine token usage\n\n| Metric | Value |\n| --- | --- |\n${rows.map(([name, item]) => `| ${name} | ${item} |`).join('\n')}\n`;
+}

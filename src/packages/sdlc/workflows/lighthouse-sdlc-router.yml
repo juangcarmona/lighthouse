@@ -16,7 +16,7 @@ on:
     workflows: ["refine", "triage", "propose", "implement", "apply review", "product-change", "apply-product-change", "integrate", "unattended"]
     types: [completed]
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       issue:
@@ -83,6 +83,9 @@ env:
   LIGHTHOUSE_AUTO_IMPLEMENT: true
   LIGHTHOUSE_COMPLETION_ENABLED: true
   LIGHTHOUSE_PRODUCT_CHANGE_ENABLED: false
+  LIGHTHOUSE_DAILY_AGENT_RUNS: ${{ vars.LIGHTHOUSE_DAILY_AGENT_RUNS }}
+  LIGHTHOUSE_ISSUE_STAGE_RUNS: ${{ vars.LIGHTHOUSE_ISSUE_STAGE_RUNS }}
+  LIGHTHOUSE_CONSECUTIVE_FAILURES: ${{ vars.LIGHTHOUSE_CONSECUTIVE_FAILURES }}
 jobs:
   pr-state:
     if: >-

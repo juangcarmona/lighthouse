@@ -18,7 +18,7 @@ import { validateStageEnvelope } from './host-contract.mjs';
 import { formatOpenCodeEvent, progressText, boundedEventLines } from './opencode-progress.mjs';
 import { selectEnvironment, startEnvironment, environmentArgs, environmentReceipt, redactEnvironmentLog } from './execution-environment.mjs';
 import { resolveModelProfile, modelExecutionReceipt } from './model-profiles.mjs';
-import { executionLimits, executionBudget, resourceArgs, imageCommand, executionReceipt, executionFailure } from './execution-resources.mjs';
+import { executionLimits, executionBudget, resourceArgs, imageCommand, executionReceipt, executionFailure, executionTokenLimit, tokenMeter } from './execution-resources.mjs';
 import { commandProgress } from './command-progress.mjs';
 import { codegraphSelection, startCodegraph, stopCodegraph } from './codegraph-runtime.mjs';
 import { createExecutionOwner, recoverExecutionOwners, recoverExecutionWorkspaces, ownedDockerArgs, runOwnedDocker } from './execution-cleanup.mjs';
@@ -29,7 +29,7 @@ import { acquireEngineSlot, engineSlotWaitSeconds } from './engine-slot.mjs';
 export { acquireEngineSlot } from './engine-slot.mjs';
 import { prepareProductEvidence, productEvidenceScopeText, productModelDigest, productModelDirectory, loadProductCore } from './product-change.mjs';
 import { createTelemetry, telemetryContext, readTelemetry } from './telemetry.mjs';
-import { observeCli, collectNativeFile, usageSummary } from './telemetry-opencode.mjs';
+import { observeCli, collectNativeFile, usageSummary, tokenUsageSummary } from './telemetry-opencode.mjs';
 import { configureProductCompositionWorker } from './product-composition-runtime.mjs';
 import { engineResultByteLimit } from './engine-result-limits.mjs';
 import { productWorkingContext } from './product-context.mjs';
@@ -149,6 +149,7 @@ async function main() {
   const repository = request.repository ?? env.GITHUB_REPOSITORY;
   if (implementing) candidateOrigin(repository);
   const limits = executionLimits(config, implementing);
+  const tokens = tokenMeter(executionTokenLimit(config, implementing));
   let projectModels = null;
   try {
     const directory = join(env.GITHUB_WORKSPACE, '.lighthouse'), directoryStat = await lstat(directory);
@@ -328,6 +329,12 @@ async function main() {
       const redacted = redact(normalized);
       try { observeCli(telemetry, JSON.parse(redacted)); } catch { /* Non-event engine logs have no telemetry payload. */ }
       try { if (JSON.parse(redacted).type === 'error') engineError = true; } catch {}
+      try {
+        if (tokens.observe(JSON.parse(redacted)) && !stopReason) {
+          report(progressText('Budget', `Token limit of ${tokens.limit} reached; stopping the engine.`));
+          cancel('token-limit');
+        }
+      } catch { /* Non-event lines carry no usage. */ }
       appendFileSync(eventsPath, redacted + '\n');
       const visible = formatOpenCodeEvent(redacted);
       if (visible) report(visible);
@@ -363,6 +370,7 @@ async function main() {
       timer = setTimeout(() => cancel('timeout'), budget.timeoutMs);
     });
     runtimeReceipt.execution = await executionReceipt(join(output, 'execution/engine.json'), exit, stopReason);
+    runtimeReceipt.tokens = tokens.receipt();
     await recordPhase(runtimeReceipt.execution.status);
     if (exit.code !== 0 || cancelled || runtimeReceipt.execution.status !== 'passed') throw Error(executionFailure(runtimeReceipt.execution));
     if (engineError) throw Error('OpenCode reported an execution error; no model fallback attempted');
@@ -512,7 +520,9 @@ async function main() {
         const events = readTelemetry(telemetry.directory, { stream: telemetry.stream });
         await mkdir(join(runDir, 'evidence/host'), { recursive: true });
         await writeFile(join(runDir, 'evidence/host/telemetry.jsonl'), events.map(e => JSON.stringify(e)).join('\n') + '\n');
-        await writeFile(join(runDir, 'evidence/host/telemetry-usage.json'), JSON.stringify(usageSummary(events, { health: [telemetry.health()] })));
+        const usage = usageSummary(events, { health: [telemetry.health()] });
+        await writeFile(join(runDir, 'evidence/host/telemetry-usage.json'), JSON.stringify(usage));
+        if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, tokenUsageSummary(usage, tokens.receipt()));
         runtimeReceipt.telemetry = telemetry.health(); await writeFile(join(runDir, 'runtime.json'), JSON.stringify(runtimeReceipt));
       } catch { console.error('Telemetry retention incomplete; inspect collector health.'); }
       if (workspaceCleanupError) {

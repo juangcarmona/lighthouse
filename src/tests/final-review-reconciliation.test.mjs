@@ -95,6 +95,7 @@ test('duplicate scheduled and native signals consume one original-CI worker requ
       const comment = { ...f.comments[0], id: 2, body: body.body }; f.comments.push(comment); return comment;
     }
     if (path === 'issues/comments/2') return f.comments[1];
+    if (path.startsWith('actions/runs?')) return { total_count: 0, workflow_runs: [] };
     return f.api(path, method, body);
   };
   await reconcilePostMergeReviews(api, repository, 'owner', 'main', f.services);

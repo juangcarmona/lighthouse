@@ -81,7 +81,7 @@ By default, repositories with a `verify` npm script use `npm ci --ignore-scripts
 
 OpenCode edits a temporary copy, with at most 60 minutes to return an envelope, narrowed by any enclosing delivery deadline. The adapter validates at most 512 changed regular files, 4 MiB per file and 16 MiB total, excluding Git-ignored new output while retaining every tracked edit. New reports follow the project’s `.gitignore`; an ignore rule cannot hide changes to existing source. It reconstructs the exact candidate and reruns the configured commands in a fresh container without provider or GitHub credentials. Each independent host check has a 15-minute limit. The implementation and correction steps allow 150 minutes for execution, verification and cleanup, within a 360-minute agent job that also accommodates the bounded host admission and engine-slot waits. Other stages retain their existing job limits. Only the candidate files enter the PR; logs, screenshots and the retrospective remain in the `implementation-evidence` Actions artifact for 30 days. Result receipts and redacted OpenCode events retain their existing 14-day lifetime. These artifacts are evidence delivery, not permanent archival.
 
-The publisher rechecks source, owner answers, reservation and policy before creating a new branch. Starting implementation removes the issue's `ready` label. A linked draft PR projects `pr-draft`; a complete candidate becomes `pr-ready` only when required CI passes and GitHub marks the PR ready. A successful CI job may call `pr-state-actions.mjs` with `LIGHTHOUSE_CI_RECONCILE=true` to project that state immediately; the script verifies the current run and required checks. The router also rechecks open implementation PRs every five minutes because GitHub can suppress completion events in chained workflows. The issue comment links to the PR, whose description uses `Refs #...` until post-merge review closes the issue. Owner PR feedback updates the same branch with a non-forced push and returns it to draft while corrections run. A changed head or edited feedback stops publication. The subscription engine still has outbound networking and provider authentication inside its container; shell permissions are not credential isolation. Use only owner-authorized work on the dedicated host.
+The publisher rechecks source, owner answers, reservation and policy before creating a new branch. Starting implementation removes the issue's `ready` label. A linked draft PR projects `pr-draft`; a complete candidate becomes `pr-ready` only when required CI passes and GitHub marks the PR ready. A successful CI job may call `pr-state-actions.mjs` with `LIGHTHOUSE_CI_RECONCILE=true` to project that state immediately; the script verifies the current run and required checks. The router also rechecks open implementation PRs every 30 minutes because GitHub can suppress completion events in chained workflows. The issue comment links to the PR, whose description uses `Refs #...` until post-merge review closes the issue. Owner PR feedback updates the same branch with a non-forced push and returns it to draft while corrections run. A changed head or edited feedback stops publication. The subscription engine still has outbound networking and provider authentication inside its container; shell permissions are not credential isolation. Use only owner-authorized work on the dedicated host.
 
 To recover a failed candidate, an owner may add `"seed": {"base": "<40-character commit>", "head": "<40-character commit>"}` to that issue’s implementation policy. The head must be one commit directly on the declared base in the same repository. Preparation rejects out-of-scope files, links and changes whose base file no longer matches the current default branch. It binds the validated seed to the request and restores it in the disposable workspace. The engine continues that candidate, reruns checks and creates a fresh PR; the seed branch is never modified. A seed supplies work to inspect, not completion or approval evidence.
 
@@ -141,6 +141,30 @@ An owner can also request an implementation correction through the router's `wor
 Bodyless GitHub GET requests can make up to three total HTTP attempts, including the initial attempt, for responses 429, 500, 502, 503 and 504. All attempts and waits share the original thirty-second request budget; `Retry-After` is respected only when its delay fits the remaining budget. This transport retry does not automatically repeat POST/PATCH/PUT/DELETE, permanent refusals, thrown network errors or uncertain publication effects.
 
 This reduces transient-read interruptions during unattended observation, but does not establish publication or delivery success. Exhausted HTTP reads retain their terminal diagnostic, including a safe provider message when available. Unknown publication still requires inspecting and reconciling actual effects through [Worker maintenance](#worker-maintenance) and [Worker error reports](#worker-error-reports) before another request.
+
+## Cost guardrails
+
+Every worker dispatch from the router, issue control and maintenance recovery passes the same budget check before its receipt is recorded. A refusal returns `budget-exhausted` or `dispatch-paused`, dispatches no worker and spends no model tokens.
+
+| Guardrail | Default | Configuration |
+| --- | --- | --- |
+| Attempts per issue and worker in 24 hours | 3 | `LIGHTHOUSE_ISSUE_STAGE_RUNS` |
+| Consecutive failed or cancelled attempts per issue and worker | 2 | `LIGHTHOUSE_CONSECUTIVE_FAILURES` |
+| Agent worker runs per repository in 24 hours | 20 | `LIGHTHOUSE_DAILY_AGENT_RUNS` |
+| Tokens per engine run (uncached input, output and reasoning) | 5,000,000 implementing, 1,000,000 otherwise | `resources.implementationTokens` and `resources.planningTokens` in the operator runner config |
+
+Repository variables must be positive integers; missing or invalid values use the defaults. An exhausted issue budget adds the `lighthouse:budget-exceeded` label and posts one explanation per worker. Removing that label resets the issue's counted window. The daily cap posts one explanation per day and does not label the issue; it lifts as the 24-hour window rolls over.
+
+`execution-failed` and `lighthouse:budget-exceeded` pause the issue. The router, maintenance recovery and scheduled CI-repair wake-ups ignore a paused issue, and worker reservation no longer clears `execution-failed`. The owner resumes work by removing the label after inspecting the failure. Scheduled CI-repair wake-ups also stop once repair for the current PR head was requested or stopped.
+
+The engine meters `step_finish` usage that OpenCode reports on its JSON event stream and stops the container with status `token-limit` once a run exceeds its cap. Recovery treats that status as a substantive failure, not a retry candidate. Each run writes token telemetry to `evidence/host/telemetry-usage.json` and the job summary. If an engine reports no usage, the receipt records the cap as `unobserved` and only the time budget applies.
+
+To stop admission across repositories, preview and then apply the kill switch. It sets `LIGHTHOUSE_AUTOMATION_ENABLED` and `LIGHTHOUSE_MAINTENANCE_ENABLED` to `false`; running Actions runs must be cancelled separately.
+
+```bash
+lighthouse-sdlc kill-switch --repos owner/one,owner/two
+lighthouse-sdlc kill-switch --repos-file repositories.txt --apply
+```
 
 ## Worker maintenance
 

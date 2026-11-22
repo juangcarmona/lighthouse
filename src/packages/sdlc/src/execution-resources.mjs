@@ -10,13 +10,45 @@ export function executionBudget(implementing, { deadline, now = Date.now() } = {
   return { configuredMs, timeoutMs, startedAt: now, deadline: now + timeoutMs };
 }
 
+const tokenKeys = ['implementationTokens', 'planningTokens'];
+// Defaults bound one engine run; operators tune them in the runner config.
+export const defaultTokenLimits = Object.freeze({ implementationTokens: 5_000_000, planningTokens: 1_000_000 });
+
 export function executionLimits(config, implementing = true) {
   const resources = config.resources === undefined ? {} : config.resources;
-  if (!resources || typeof resources !== 'object' || Array.isArray(resources) || Object.keys(resources).some(key => !['implementationPids', 'planningPids'].includes(key)) ||
-      Object.values(resources).some(value => !Number.isSafeInteger(value) || value < 128 || value > 4096)) {
+  const pids = Object.entries(resources ?? {}).filter(([key]) => !tokenKeys.includes(key));
+  if (!resources || typeof resources !== 'object' || Array.isArray(resources) || pids.some(([key]) => !['implementationPids', 'planningPids'].includes(key)) ||
+      pids.some(([, value]) => !Number.isSafeInteger(value) || value < 128 || value > 4096)) {
     throw Error('Invalid operator resources: implementationPids and planningPids must be integers from 128 to 4096');
   }
   return { cpus: 2, memory: implementing ? '4g' : '2g', pids: resources[implementing ? 'implementationPids' : 'planningPids'] ?? (implementing ? 1024 : 128) };
+}
+
+// Token cap per engine run, counted from the engine's own step_finish usage.
+export function executionTokenLimit(config, implementing = true) {
+  const key = implementing ? 'implementationTokens' : 'planningTokens';
+  const value = config.resources?.[key];
+  if (value === undefined) return defaultTokenLimits[key];
+  if (!Number.isSafeInteger(value) || value < 10_000 || value > 100_000_000) throw Error('Invalid operator resources: implementationTokens and planningTokens must be integers from 10000 to 100000000');
+  return value;
+}
+
+// Counts uncached input, output and reasoning tokens reported by OpenCode CLI
+// step_finish events. Cache reads are excluded. When the engine reports no
+// usage the meter stays at zero and the cap cannot fire: status 'unobserved'.
+export function tokenMeter(limit) {
+  let total = 0, steps = 0;
+  return {
+    limit,
+    observe(event) {
+      const tokens = event?.type === 'step_finish' ? event.part?.tokens : null;
+      if (!tokens) return false;
+      steps++;
+      for (const key of ['input', 'output', 'reasoning']) if (Number.isSafeInteger(tokens[key]) && tokens[key] > 0) total += tokens[key];
+      return total > limit;
+    },
+    receipt: () => ({ limit, observedTokens: total, observedSteps: steps, status: steps ? total > limit ? 'exceeded' : 'enforced' : 'unobserved' }),
+  };
 }
 
 export const resourceArgs = limits => ['--cpus', String(limits.cpus), '--memory', limits.memory, '--pids-limit', String(limits.pids)];
@@ -64,6 +96,7 @@ export function executionFailure(receipt) {
     'process-limit': 'Container process/thread limit reached',
     'out-of-memory': 'Container memory limit triggered an OOM kill',
     timeout: 'Execution timed out',
+    'token-limit': 'Execution reached its token limit',
     cancelled: 'Execution cancelled',
     aborted: 'Execution aborted (SIGABRT)',
     failed: 'Execution failed',

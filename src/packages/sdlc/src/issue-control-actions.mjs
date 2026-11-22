@@ -49,6 +49,7 @@ export async function admitControlInvocation({ api, repository, prepared, event,
     return { result: createControlResult(request, { status: 'rejected', reason: error instanceof IssueControlRefusal ? error.reason : 'source-admission-unavailable' }), commentId: comment.id };
   }
   const dispatch = await recordDispatch(api, repository, native);
+  if (dispatch.code) return { result: createControlResult(request, { status: 'rejected', reason: dispatch.code }), commentId: comment.id };
   if (!dispatch.send) throw Error('Native request already exists; reconcile its source receipt');
   await writeDispatch(native);
   return { native, dispatchCommentId: dispatch.comment.id, commentId: comment.id };

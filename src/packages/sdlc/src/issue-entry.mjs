@@ -2,6 +2,7 @@ import capabilityCatalog from '../capabilities.json' with { type: 'json' };
 import { legacyControlComment } from './issue-comment-intent.mjs';
 import { taskDigest } from './digests.mjs';
 import { validateStageEnvelope } from './host-contract.mjs';
+import { pauseLabels } from './dispatch-budget.mjs';
 
 export function pendingStage(comments) {
   const report = [...comments].reverse().find(c => c.user?.login === 'github-actions[bot]' && c.user.type === 'Bot' && /<!-- lighthouse-actions:[a-f0-9]{64} -->/.test(c.body));
@@ -35,6 +36,7 @@ export function routeIssue(event, actor, owner, eventName, comments = []) {
   const labels = event.issue?.labels?.map(x => x.name) ?? [];
   if (labels.includes('future') && (event.label?.name === 'implement' || event.inputs?.stage === 'implement')) return { run: false, reason: 'Implementation paused by future label' };
   if (labels.some(x => ['human-working', 'agent-working'].includes(x))) return { run: false, reason: 'Issue reserved' };
+  if (labels.some(x => pauseLabels.includes(x))) return { run: false, reason: 'Automated work paused; the owner removes the pause label to resume' };
   if (eventName === 'issues' && event.action === 'unlabeled' && event.label?.name === 'future' && labels.includes('implement')) return { run: true, stage: 'implement', issue: event.issue.number, reason: 'Owner resumed implementation' };
   if (eventName === 'issues' && event.action === 'labeled' && issueCommandLabels.includes(event.label?.name)) return { run: true, stage: event.label.name, issue: event.issue.number, reason: `Owner requested ${event.label.name}` };
   if (eventName === 'issue_comment' && event.action === 'created' && event.comment?.user?.login === owner && event.comment.user.type !== 'Bot' && pendingReplyState(event.issue)) {

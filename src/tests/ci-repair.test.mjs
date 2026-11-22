@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCiRepair, signalCurrentCiRepair } from '../packages/sdlc/src/ci-repair.mjs';
+import { ciRepairAfterChecks, ciRepairKey, ciRepairStopMarker, validateCiRepairChanges, signalCiRepair, signalCurrentCiRepair } from '../packages/sdlc/src/ci-repair.mjs';
 import { taskDigest } from '../packages/sdlc/src/issue-actions.mjs';
 import { loadImplementation } from '../packages/sdlc/src/implementation.mjs';
+import { checkImplementationPullRequest } from '../packages/sdlc/src/proposal-review.mjs';
 
 const repository = 'owner/repo', head = 'a'.repeat(40), base = 'c'.repeat(40), identity = 'b'.repeat(64);
 const file = value => ({ content: Buffer.from(JSON.stringify(value)).toString('base64') });
@@ -190,9 +191,12 @@ test('CI correction cannot supersede an active ordinary feedback correction', as
 test('existing scheduled reconciliation signals the same router, preserving approval waits and latest CI facts', async () => {
   const { state } = fixture(), writes = [];
   let runs = [state.run, { ...state.run, id: 124, event: 'pull_request', conclusion: 'action_required' }];
+  const issue = { number: 47, state: 'open', labels: [] }, comments = [];
   const api = async (path, method, body) => {
     if (method === 'POST') { writes.push({ path, body }); return; }
     if (path === '') return { default_branch: 'main' };
+    if (path === 'issues/47') return issue;
+    if (path.startsWith('issues/47/comments?')) return comments;
     assert.equal(path, `actions/runs?head_sha=${head}&per_page=100`);
     return { total_count: runs.length, workflow_runs: runs };
   };
@@ -200,9 +204,22 @@ test('existing scheduled reconciliation signals the same router, preserving appr
   assert.deepEqual(writes, [{ path: 'actions/workflows/lighthouse-sdlc-router.yml/dispatches', body: { ref: 'main', inputs: { issue: '47', stage: 'implement', after_run: '123' } } }]);
   runs.push({ ...state.run, id: 125, conclusion: 'success' });
   assert.equal(await signalCiRepair(api, repository, state.pr, state.config), false);
+  runs = runs.filter(run => run.id !== 125);
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), true);
+  // Cost guardrail: a published stop for this head or a paused issue ends the wake-ups.
+  const bot = { login: 'github-actions[bot]', type: 'Bot' };
+  comments.push({ id: 9, user: bot, body: `Stopped.\n\n${ciRepairStopMarker(state.pr.number, state.pr.head.sha)}` });
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), false);
+  comments.length = 0;
+  issue.labels = [{ name: 'execution-failed' }];
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), false);
+  issue.labels = [];
+  const key = ciRepairKey({ number: state.pr.number, implementationIdentity: checkImplementationPullRequest(state.pr, repository).implementationIdentity, head: state.pr.head.sha });
+  comments.push({ id: 10, user: bot, body: `<!-- lighthouse-dispatch:${JSON.stringify({ worker: 'apply-review', feedbackKey: key })} -->` });
+  assert.equal(await signalCiRepair(api, repository, state.pr, state.config), false);
   state.config.completion.ciRepair.enabled = false;
   assert.equal(await signalCiRepair(async () => { throw Error('Disabled mode reads no subjects'); }, repository, {}, state.config), false);
-  assert.equal(writes.length, 1);
+  assert.equal(writes.length, 2);
 });
 
 test('superseded failures on an unchanged head and current owner draft holds cannot request repair', async () => {

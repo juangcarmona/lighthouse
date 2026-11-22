@@ -47,6 +47,7 @@ globalThis.fetch = async (url, options) => {
  else if (endpoint.startsWith('issues/7/comments?')) value = state.comments;
  else if (endpoint.startsWith('issues/comments/')) value = state.comments.find(comment => endpoint === 'issues/comments/' + comment.id);
  else if (endpoint.startsWith('actions/artifacts?')) value = { total_count: 0, artifacts: [] };
+ else if (endpoint.startsWith('actions/runs?')) value = { total_count: 0, workflow_runs: [] };
  else if (endpoint.startsWith('contents/.lighthouse/issue-control.json')) value = content(state.manifest);
  else if (endpoint.startsWith('contents/.github/workflows/')) value = content(state.router);
  else throw Error('Unexpected GET ' + endpoint);

@@ -14,7 +14,7 @@ import { createIssueApi } from './github-rest.mjs';
 import { visualStages } from './visual-evidence.mjs';
 import { publishVisualEvidence } from './visual-publication.mjs';
 import { createTelemetry, telemetryContext, routingReason } from './telemetry.mjs';
-import { ciRepairAfterChecks, ciRepairKey, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
+import { ciRepairAfterChecks, ciRepairKey, ciRepairStopMarker, validateCiRepairChanges, signalCurrentCiRepair } from './ci-repair.mjs';
 import { validatePublicationFiles } from './publication-checks.mjs';
 import { refinementAfterRun, signalRefinementContinuation, productAlignmentAfterRun, signalProductAlignment, productGapAfterRun, signalProductGap, signalProductApplyContinuation, productApplyAfterRun } from './stage-transition.mjs';
 import { dispatchId, dispatchArtifact, dispatchIntent, recordDispatch, sendDispatch, admitDispatch, loadDispatch, claimDispatch, assertCurrentDispatch, checkDispatchClaim, finishDispatch, completedEvent, readDispatchReceipt, issueComments, stages, executionModelSelection, isBotEpicTriage, isBotEpicRefinement, epicTriageKey, epicRefinementKey } from './stage-dispatch.mjs';
@@ -345,7 +345,7 @@ async function main(command) {
     if (event.inputs?.after_run && route.run && (Number(event.inputs.issue) !== route.issue || event.inputs.stage !== route.stage)) throw Error('Completion replay target differs from the verified continuation');
   }
   if (route.ciRepairStop && ['route', 'dispatch-prepare'].includes(command)) {
-    await publishRoutingHandoff(api, route.issue, `${repo}:ci-stop:${route.pr}:${route.head}:${route.ciRepairStop}`, renderHandoff({ status: 'blocked', stage: 'implement', happened: route.ciRepairStop, action: 'Maintainer: inspect the linked CI failure and current PR; reconcile the stated blocker before requesting further work.', next: 'No automatic correction or merge is authorized by this stop.', link: `[PR #${route.pr}](https://github.com/${repo}/pull/${route.pr})`, details: `[Failed CI](https://github.com/${repo}/actions/runs/${route.ciRun})` }));
+    await publishRoutingHandoff(api, route.issue, `${repo}:ci-stop:${route.pr}:${route.head}:${route.ciRepairStop}`, renderHandoff({ status: 'blocked', stage: 'implement', happened: route.ciRepairStop, action: 'Maintainer: inspect the linked CI failure and current PR; reconcile the stated blocker before requesting further work.', next: 'No automatic correction or merge is authorized by this stop.', link: `[PR #${route.pr}](https://github.com/${repo}/pull/${route.pr})`, details: `[Failed CI](https://github.com/${repo}/actions/runs/${route.ciRun})\n\n${ciRepairStopMarker(route.pr, route.head)}` }));
     await output('run', 'false'); await output('send', 'false'); return;
   }
   if (command === 'dispatch-prepare' && after && !route.run) {
@@ -482,6 +482,13 @@ async function main(command) {
       await output('send', 'false');
       await publishRoutingHandoff(api, issueNumber, `${repo}:dispatch-stop:${request.intent}:${error.message}`, renderHandoff({ status: error.message.includes('pending or running') ? 'blocked' : 'unknown', stage, happened: error.message, action: 'Workflow maintainer: reconcile the existing request and execution before retrying.', next: 'No additional worker was dispatched.' }));
       await summary(error.message); return;
+    }
+    if (recorded.code) {
+      // Cost guardrail refusal: the issue is paused or its agent budget is spent.
+      await output('send', 'false');
+      const link = recorded.comment ? `[Budget explanation](${recorded.comment.html_url})` : undefined;
+      await publishRoutingHandoff(api, issueNumber, `${repo}:${recorded.code}:${request.intent ?? request.id}:${recorded.scope}`, renderHandoff({ status: 'blocked', stage, happened: recorded.reason, action: 'Owner: inspect earlier attempts, then remove the pause or budget label to allow new work.', next: 'No worker was dispatched and no model tokens were spent.', link }));
+      await summary(`${recorded.code}: ${recorded.reason} No worker dispatched.`); return;
     }
     if (!recorded.send) {
       await consumeReconciledLabel(api, owner, request, recorded.state);
@@ -707,7 +714,8 @@ async function main(command) {
     await writeFile(join(dir, 'context.json'), JSON.stringify(context));
     await api(`${issuePath}/labels`, 'POST', { labels: ['agent-working'] });
     await writeFile(join(dir, 'reserved'), id);
-    for (const label of ['needs-info', 'waiting-review', 'execution-failed', ...(stage === 'refine' || stage === 'implement' ? ['ready'] : [])]) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
+    // execution-failed is a pause the owner clears explicitly; reservation never removes it.
+    for (const label of ['needs-info', 'waiting-review', ...(stage === 'refine' || stage === 'implement' ? ['ready'] : [])]) if (issue.labels.some(x => x.name === label)) await api(`${issuePath}/labels/${label}`, 'DELETE');
     if (stage === 'implement' && implementationReview) {
       const pr = await api(`pulls/${implementationReview.number}`);
       if (!pr.draft) await setPullRequestDraft(env.GH_TOKEN, pr, true);

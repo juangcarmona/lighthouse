@@ -101,7 +101,7 @@ export function handoff({ status, stage, happened, action, next, link, details }
 // A newer authenticated dispatch owns current status, even if an older cleanup finishes late.
 export function executionStopDetails(runtime) {
   const status = runtime?.execution?.status;
-  const descriptions = { timeout: 'OpenCode reached its execution deadline', 'out-of-memory': 'The container exceeded its memory limit', 'process-limit': 'The container exhausted its process/thread limit', aborted: 'The engine aborted', cancelled: 'The engine was cancelled', failed: 'The engine exited unsuccessfully' };
+  const descriptions = { timeout: 'OpenCode reached its execution deadline', 'token-limit': 'OpenCode reached its per-run token limit', 'out-of-memory': 'The container exceeded its memory limit', 'process-limit': 'The container exhausted its process/thread limit', aborted: 'The engine aborted', cancelled: 'The engine was cancelled', failed: 'The engine exited unsuccessfully' };
   if (!Object.hasOwn(descriptions, status)) return '';
   const budget = runtime.budget?.timeoutMs;
   const duration = status === 'timeout' && Number.isSafeInteger(budget) && budget > 0 && budget <= 3600000 ? ` (${Math.ceil(budget / 60000)} minute budget)` : '';

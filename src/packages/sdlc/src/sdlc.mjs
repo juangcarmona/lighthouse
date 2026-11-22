@@ -21,6 +21,7 @@ import { buildEvidenceIndex, evidenceReport, validateEvidenceIndex, validateEvid
 import { readCapabilityCatalog, validateCapabilityCatalog } from './capabilities.mjs';
 import { readCommandAliases, validateCommandAliases, verifyCommandAliases } from './aliases.mjs';
 import { telemetryCli } from './telemetry-cli.mjs';
+import { killSwitchCli } from './kill-switch.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const contractPath = resolve(packageRoot, 'contract.json');
@@ -397,8 +398,8 @@ async function runGithubLabels(args) {
 }
 
 const command = process.argv[2] ?? 'verify';
-if (!['measurements', 'delivery-acceptance', 'practices', 'telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels'].includes(command)) {
-  console.error('Usage: lighthouse-sdlc <measurements|delivery-acceptance|practices|telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels>');
+if (!['measurements', 'delivery-acceptance', 'practices', 'telemetry', 'contract', 'verify', 'aliases', 'triage', 'state', 'stage-result', 'browser-e2e', 'evidence', 'control-plane', 'memory', 'launch', 'decompose', 'stacked', 'route', 'github-triage', 'github-decompose', 'reconcile-labels', 'github-labels', 'kill-switch'].includes(command)) {
+  console.error('Usage: lighthouse-sdlc <measurements|delivery-acceptance|practices|telemetry|contract|verify|aliases|triage|state|stage-result|browser-e2e|evidence|control-plane|memory|launch|decompose|stacked|route|github-triage|github-decompose|reconcile-labels|github-labels|kill-switch>');
   process.exit(2);
 }
 if (command === 'measurements') {
@@ -443,6 +444,9 @@ if (command === 'measurements') {
   await runReconcileLabels(process.argv.slice(3));
 } else if (command === 'github-labels') {
   await runGithubLabels(process.argv.slice(3));
+} else if (command === 'kill-switch') {
+  const report = await killSwitchCli(process.argv.slice(3));
+  if (report.results.some(result => ['error', 'unverified'].includes(result.status))) process.exit(1);
 } else {
   const problems = await verifyContract();
   if (problems.length) {
