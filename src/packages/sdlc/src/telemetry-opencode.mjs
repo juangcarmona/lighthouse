@@ -6,6 +6,11 @@ export function tokenMetadata(tokens) {
   return { inputTokens: tokens?.input ?? null, outputTokens: tokens?.output ?? null, reasoningTokens: tokens?.reasoning ?? null, cacheReadTokens: tokens?.cache?.read ?? null, cacheWriteTokens: tokens?.cache?.write ?? null };
 }
 
+function modelIdentity(model) {
+  const id = model?.id ?? model?.modelID;
+  return typeof id === 'string' ? id : null;
+}
+
 export function openCodeObserver(emit) {
   const tools = new Map(), steps = new Map(), seen = new Set();
   return event => {
@@ -23,10 +28,10 @@ export function openCodeObserver(emit) {
       send(event.type, { tool: tool?.name, callId: data.id, messageId: data.assistantMessageID, status: event.type.endsWith('success') ? 'completed' : 'failed', durationMs: tool ? time - tool.started : null }); tools.delete(data.id);
     } else if (event.type === 'session.step.started') {
       steps.set(data.assistantMessageID, { started: data.started ?? time, model: data.model });
-      send(event.type, { model: data.model?.modelID, provider: data.model?.providerID, messageId: data.assistantMessageID, modelSource: 'runtime-reported', status: 'running' });
+      send(event.type, { model: modelIdentity(data.model), provider: data.model?.providerID, messageId: data.assistantMessageID, modelSource: 'runtime-reported', status: 'running' });
     } else if (['session.step.ended', 'session.step.failed'].includes(event.type)) {
       const step = steps.get(data.assistantMessageID);
-      send(event.type, { ...tokenMetadata(data.tokens), messageId: data.assistantMessageID, model: step?.model?.modelID, provider: step?.model?.providerID, durationMs: step ? time - step.started : null, finishReason: data.finish, status: event.type.endsWith('ended') ? 'completed' : 'failed' }); steps.delete(data.assistantMessageID);
+      send(event.type, { ...tokenMetadata(data.tokens), messageId: data.assistantMessageID, model: modelIdentity(step?.model), provider: step?.model?.providerID, durationMs: step ? time - step.started : null, finishReason: data.finish, status: event.type.endsWith('ended') ? 'completed' : 'failed' }); steps.delete(data.assistantMessageID);
     } else if (event.type === 'session.step.streamed') {
       const step = steps.get(data.assistantMessageID);
       send(event.type, { messageId: data.assistantMessageID, durationMs: step ? time - step.started : null });
