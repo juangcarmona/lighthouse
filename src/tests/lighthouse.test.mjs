@@ -275,6 +275,26 @@ test('init creates a projection and refuses to overwrite product work', async ()
     assert.equal(spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir }).status, 0);
     await writeFile(message, 'not conventional\n');
     assert.notEqual(spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir }).status, 0);
+    for (const signed of [
+      'feat: add a fixture\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n',
+      'feat: add a fixture\n\nco-authored-by: Copilot <copilot@github.com>\n',
+      'feat: add a fixture\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n',
+      'feat: add a fixture\n\nGenerated with Codex\n',
+    ]) {
+      await writeFile(message, signed);
+      const rejected = spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir, encoding: 'utf8' });
+      assert.notEqual(rejected.status, 0, signed);
+      assert.match(rejected.stderr, /agent harness signature/);
+    }
+    await writeFile(message, 'feat: add a fixture\n\nCo-Authored-By: Ada Lovelace <ada@example.com>\n# Co-Authored-By: Claude <noreply@anthropic.com>\n# ------------------------ >8 ------------------------\n+Generated with Claude Code\n');
+    assert.equal(spawnSync(process.execPath, [guard, 'commit-msg', message], { cwd: dir }).status, 0, 'human co-authors, comments and the verbose diff are not signatures');
+    const body = (text) => spawnSync(process.execPath, [guard, 'signature'], { cwd: dir, env: { ...process.env, LIGHTHOUSE_TEXT: text } }).status;
+    assert.notEqual(body('## Summary\n\nFixes the thing.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n'), 0);
+    assert.equal(body('## Summary\n\nDocuments the [Claude Code](https://claude.com/claude-code) telemetry wrapper.\n'), 0);
+    assert.equal(body(''), 0);
+    const guardrails = await readFile(join(dir, '.github/workflows/lighthouse.yml'), 'utf8');
+    assert.match(guardrails, /types: \[opened, edited, reopened, synchronize\]/);
+    assert.match(guardrails, /LIGHTHOUSE_TEXT: \$\{\{ github\.event\.pull_request\.body \}\}\n\s+run: node scripts\/lighthouse-guard\.mjs signature/);
     const again = run(dir, 'init');
     assert.equal(again.status, 1);
     assert.match(again.stderr, /refusing to overwrite/);
