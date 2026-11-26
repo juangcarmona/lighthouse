@@ -310,15 +310,39 @@ function branch() {
   try { return execFileSync('git', ['branch', '--show-current'], { encoding: 'utf8' }).trim(); }
   catch { return ''; }
 }
+const harnesses = 'claude|anthropic|openai|codex|chatgpt|copilot|cursor|gemini|devin|aider|windsurf|codeium|jules';
+const signatures = [
+  new RegExp('^\\\\s*co-authored-by:[^\\\\n]*(?:' + harnesses + ')', 'imu'),
+  new RegExp('generated\\\\s+(?:with|by|using)\\\\s+\\\\[?(?:' + harnesses + ')', 'iu'),
+  /🤖[^\\n]*(?:generated|claude|codex|copilot)/iu,
+];
+function signature(text) {
+  for (const pattern of signatures) {
+    const match = text.match(pattern);
+    if (match) return match[0].trim();
+  }
+  return null;
+}
+function rejectSignature(text, where) {
+  const found = signature(text);
+  if (found) fail(where + ' contains an agent harness signature: "' + found + '". Remove it; authorship belongs to the human who submits the change.');
+}
 if (mode === 'commit-msg') {
   const file = process.argv[3];
   if (!file) fail('Usage: lighthouse-guard commit-msg <message-file>');
-  const message = readFileSync(file, 'utf8').split('\\n').find((line) => line.trim() && !line.startsWith('#'))?.trim() ?? '';
+  const raw = readFileSync(file, 'utf8');
+  const scissors = raw.search(/^# -+ >8 -+$/mu);
+  const lines = (scissors === -1 ? raw : raw.slice(0, scissors)).split('\\n').filter((line) => !line.startsWith('#'));
+  const message = lines.find((line) => line.trim())?.trim() ?? '';
   if (!/^(?:feat|fix|docs|refactor|test|chore|build|ci|perf|revert)(?:\\([^)]+\\))?!?: .+/u.test(message)) fail('Commit message must follow Conventional Commits.');
+  rejectSignature(lines.join('\\n'), 'Commit message');
+} else if (mode === 'signature') {
+  const file = process.argv[3];
+  rejectSignature(file ? readFileSync(file, 'utf8') : process.env.LIGHTHOUSE_TEXT ?? '', file ?? 'Text');
 } else if (mode === 'branch' || mode === 'verify') {
   const current = branch();
   if (current && !['main', 'master'].includes(current) && !branchPattern.test(current)) fail('Branch ' + current + ' does not match ' + branchPattern.source + '.');
-} else fail('Usage: lighthouse-guard <commit-msg|branch|verify>');
+} else fail('Usage: lighthouse-guard <commit-msg|signature|branch|verify>');
 `;
 }
 
@@ -335,15 +359,7 @@ function workflow() {
 
 on:
   pull_request:
-    paths:
-      - "lighthouse.json"
-      - "LIGHTHOUSE.md"
-      - "src/**"
-      - "docs/**"
-      - "infra/**"
-      - "scripts/**"
-      - ".husky/**"
-      - ".github/workflows/lighthouse.yml"
+    types: [opened, edited, reopened, synchronize]
   push:
     branches: [main]
     paths:
@@ -361,8 +377,37 @@ permissions:
   contents: read
 
 jobs:
+  attribution:
+    name: Reject agent harness signatures
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check pull request description
+        env:
+          LIGHTHOUSE_TEXT: \${{ github.event.pull_request.body }}
+        run: node scripts/lighthouse-guard.mjs signature
+      - name: Check pull request commit messages
+        if: github.event.action != 'edited'
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          status=0
+          for commit in $(git rev-list "$BASE_SHA..$HEAD_SHA"); do
+            git log -1 --format=%B "$commit" > "$RUNNER_TEMP/message"
+            node scripts/lighthouse-guard.mjs signature "$RUNNER_TEMP/message" || { echo "Commit $commit"; status=1; }
+          done
+          exit "$status"
   verify:
     name: Verify Lighthouse foundation
+    if: github.event_name != 'pull_request' || github.event.action != 'edited'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
